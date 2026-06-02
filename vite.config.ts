@@ -5,7 +5,7 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react({ include: /\.(jsx?|tsx?)$/ }), tailwindcss()],
   resolve: {
     alias: {
       // "@" covers all sub-paths (@/components, @/lib, etc.)
