@@ -1,107 +1,226 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-body {
-  margin: 0;
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Class-based dark mode — <html class="dark"> toggled by ThemeProvider */
+@custom-variant dark (&:is(.dark *));
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
+/* ─────────────────────────────────────────────────────────────────────────
+   Tailwind theme layer
+   Maps CSS custom properties → Tailwind utility classes.
+   Actual values are set in the :root / .dark blocks below.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Fonts */
+  --font-sans:    "Manrope", sans-serif;
+  --font-mono:    "JetBrains Mono", monospace;
+  --font-heading: var(--font-sans);
 
-/* Global CSS file */
-.Toastify__close-button {
-  color: #ffffff !important; /* White color */
-  opacity: 1;
-  align-self: flex-start !important; /* Align with title */
-  margin-top: 8px;
-}
+  /* Semantic colors */
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  /* Extended primary state tokens — generates bg-primary-hover, bg-primary-active, etc. */
+  --color-primary-hover:       var(--primary-hover);
+  --color-primary-active:      var(--primary-active);
+  --color-primary-muted:       var(--primary-muted);
+  --color-secondary:           var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-destructive:         var(--destructive);
+  --color-border:              var(--border);
+  --color-input:               var(--input);
+  --color-ring:                var(--ring);
 
-.Toastify__close-button:hover {
-  opacity: 1;
-}
+  /* ── Severity & status semantic tokens ───────────────────────────────────
+     Generates: text-sev-critical, bg-sev-critical-soft, border-sev-critical…  */
+  --color-sev-critical:      var(--sev-critical);
+  --color-sev-critical-soft: var(--sev-critical-soft);
+  --color-sev-high:          var(--sev-high);
+  --color-sev-high-soft:     var(--sev-high-soft);
+  --color-sev-medium:        var(--sev-medium);
+  --color-sev-medium-soft:   var(--sev-medium-soft);
+  --color-sev-low:           var(--sev-low);
+  --color-sev-low-soft:      var(--sev-low-soft);
+  --color-success:           var(--success);
+  --color-success-soft:      var(--success-soft);
+  --color-warning:           var(--warning);
+  --color-warning-soft:      var(--warning-soft);
+  --color-info:              var(--info);
+  --color-info-soft:         var(--info-soft);
+  --color-purple:            var(--purple);
+  --color-purple-soft:       var(--purple-soft);
 
-.Toastify__close-button > svg {
-  height: 20px !important;
-  width: 20px !important;
-}
+  /* Chart palette */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
-input[type="time"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  display: none;
-  -webkit-appearance: none;
-}
-input[type="time"]::-webkit-clear-button {
-  display: none;
-}
+  /* Sidebar */
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
 
-input[type="time"]::-webkit-inner-spin-button,
-input[type="time"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="time"]::-webkit-datetime-edit-text,
-input[type="time"]::-webkit-datetime-edit-hour-field,
-input[type="time"]::-webkit-datetime-edit-minute-field,
-input[type="time"]::-webkit-datetime-edit-ampm-field {
-  color: transparent;
-}
-input[type="time"]:not(:focus):invalid::-webkit-datetime-edit {
-  color: transparent;
-}
-
-/* Hide native number spinners so we can use custom chevrons */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-/* Themed scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #404040 #1c1c1c;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #1c1c1c;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #404040;
-  border-radius: 9999px;
-  border: 2px solid #1c1c1c;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background-color: #606060;
+  /* Radius scale */
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Override browser autofill background and text color */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus {
-  -webkit-text-fill-color: #d4d4d4;
-  box-shadow: 0 0 0px 1000px transparent inset;
-  transition: background-color 9999s ease-in-out 0s;
+/* ─────────────────────────────────────────────────────────────────────────
+   Light mode tokens  (applied when <html class="light">)
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --background:             hsl(0 0% 97%);
+  --foreground:             hsl(0 0% 10%);
+  --card:                   hsl(0 0% 100%);
+  --card-foreground:        hsl(0 0% 10%);
+  --popover:                hsl(0 0% 100%);
+  --popover-foreground:     hsl(0 0% 10%);
+  --primary:                hsl(20 95% 55%);
+  --primary-foreground:     hsl(0 0% 100%);
+  --primary-hover:          hsl(20 95% 48%);   /* ~7 pts darker — hover state    */
+  --primary-active:         hsl(20 95% 40%);   /* ~15 pts darker — pressed state  */
+  --primary-muted:          hsl(20 95% 55% / 0.08); /* subtle tint on light surfaces */
+  --secondary:              hsl(0 0% 92%);
+  --secondary-foreground:   hsl(0 0% 15%);
+  --muted:                  hsl(0 0% 92%);
+  --muted-foreground:       hsl(0 0% 40%);
+  --accent:                 hsl(20 95% 95%);
+  --accent-foreground:      hsl(20 80% 30%);
+  --destructive:            hsl(0 84% 60%);
+  --border:                 hsl(0 0% 85%);
+  --input:                  hsl(0 0% 85%);
+  --ring:                   hsl(20 95% 55%);
+  --radius:                 0.5rem;
+
+  /* Severity tokens */
+  --sev-critical:      hsl(0 84% 60%);
+  --sev-critical-soft: hsl(0 84% 60% / 0.12);
+  --sev-high:          hsl(21 95% 55%);
+  --sev-high-soft:     hsl(21 95% 55% / 0.12);
+  --sev-medium:        hsl(40 96% 50%);
+  --sev-medium-soft:   hsl(40 96% 50% / 0.12);
+  --sev-low:           hsl(214 87% 60%);
+  --sev-low-soft:      hsl(214 87% 60% / 0.12);
+  --success:           hsl(142 70% 45%);
+  --success-soft:      hsl(142 70% 45% / 0.12);
+  --warning:           hsl(40 96% 50%);
+  --warning-soft:      hsl(40 96% 50% / 0.12);
+  --info:              hsl(214 87% 60%);
+  --info-soft:         hsl(214 87% 60% / 0.12);
+  --purple:            hsl(270 95% 65%);
+  --purple-soft:       hsl(270 95% 65% / 0.12);
+
+  /* Chart — warm palette anchored on orange primary */
+  --chart-1: hsl(20 95% 55%);
+  --chart-2: hsl(199 89% 48%);
+  --chart-3: hsl(158 64% 40%);
+  --chart-4: hsl(262 80% 58%);
+  --chart-5: hsl(40 96% 50%);
+
+  /* Sidebar */
+  --sidebar:                    hsl(0 0% 96%);
+  --sidebar-foreground:         hsl(0 0% 10%);
+  --sidebar-primary:            hsl(20 95% 55%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent:             hsl(0 0% 90%);
+  --sidebar-accent-foreground:  hsl(0 0% 15%);
+  --sidebar-border:             hsl(0 0% 85%);
+  --sidebar-ring:               hsl(20 95% 55%);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dark mode tokens  (applied when <html class="dark"> — the default)
+   ───────────────────────────────────────────────────────────────────────── */
+.dark {
+  --background:             hsl(0 0% 7%);
+  --foreground:             hsl(0 0% 95%);
+  --card:                   hsl(0 0% 9%);
+  --card-foreground:        hsl(0 0% 95%);
+  --popover:                hsl(0 0% 9%);
+  --popover-foreground:     hsl(0 0% 95%);
+  --primary:                hsl(20 95% 55%);
+  --primary-foreground:     hsl(0 0% 100%);
+  --primary-hover:          hsl(20 95% 48%);   /* same as light — hue/sat unchanged */
+  --primary-active:         hsl(20 95% 40%);   /* same as light — hue/sat unchanged */
+  --primary-muted:          hsl(20 95% 55% / 0.12); /* slightly more visible on dark surfaces */
+  --secondary:              hsl(0 0% 13%);
+  --secondary-foreground:   hsl(0 0% 95%);
+  --muted:                  hsl(0 0% 13%);
+  --muted-foreground:       hsl(0 0% 60%);
+  --accent:                 hsl(20 80% 12%);
+  --accent-foreground:      hsl(20 95% 75%);
+  --destructive:            hsl(0 70% 55%);
+  --border:                 hsl(0 0% 15%);
+  --input:                  hsl(0 0% 15%);
+  --ring:                   hsl(20 95% 55%);
+
+  /* Severity tokens — same hues, dark mode unchanged */
+  --sev-critical:      hsl(0 84% 60%);
+  --sev-critical-soft: hsl(0 84% 60% / 0.15);
+  --sev-high:          hsl(21 95% 55%);
+  --sev-high-soft:     hsl(21 95% 55% / 0.15);
+  --sev-medium:        hsl(40 96% 50%);
+  --sev-medium-soft:   hsl(40 96% 50% / 0.15);
+  --sev-low:           hsl(214 87% 60%);
+  --sev-low-soft:      hsl(214 87% 60% / 0.15);
+  --success:           hsl(142 70% 45%);
+  --success-soft:      hsl(142 70% 45% / 0.15);
+  --warning:           hsl(40 96% 50%);
+  --warning-soft:      hsl(40 96% 50% / 0.15);
+  --info:              hsl(214 87% 60%);
+  --info-soft:         hsl(214 87% 60% / 0.15);
+  --purple:            hsl(270 95% 65%);
+  --purple-soft:       hsl(270 95% 65% / 0.15);
+
+  /* Chart — same palette, dark mode needs no adjustments */
+  --chart-1: hsl(20 95% 55%);
+  --chart-2: hsl(199 89% 48%);
+  --chart-3: hsl(158 64% 40%);
+  --chart-4: hsl(262 80% 58%);
+  --chart-5: hsl(40 96% 50%);
+
+  /* Sidebar — 1% lighter than card so it reads as a separate surface */
+  --sidebar:                    hsl(0 0% 8%);
+  --sidebar-foreground:         hsl(0 0% 95%);
+  --sidebar-primary:            hsl(20 95% 55%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent:             hsl(0 0% 13%);
+  --sidebar-accent-foreground:  hsl(0 0% 95%);
+  --sidebar-border:             hsl(0 0% 13%);
+  --sidebar-ring:               hsl(20 95% 55%);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Base element styles
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }

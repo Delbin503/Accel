@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npx shadcn@latest add popover --yes)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(node bundle.cjs)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

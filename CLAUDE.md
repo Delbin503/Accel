@@ -1,34 +1,20 @@
-# Delbin Accel UI — AI Coding Rules
+# Dashboard Project — AI Coding Rules
 
-This is a **pure frontend component showcase**. No API calls, no backend integration. Components built here are designed to be copy-pasted into `trms-accel-fe`. Every piece of code you generate must follow these rules exactly so components drop into the target project without modification.
-
----
-
-## Project Purpose
-
-- Delbin (designer) builds UI components using vibe coding
-- Developers copy finished components into `trms-accel-fe`
-- Components must match `trms-accel-fe` structure, tokens, and patterns exactly
-- No data fetching, no backend calls — use hardcoded mock data for demos
+This is a **React + TypeScript dashboard**. All code generated here must follow these conventions exactly so components are consistent, composable, and drop-in ready across the project.
 
 ---
 
 ## Tech Stack
 
-| Tool | Version | Notes |
-|------|---------|-------|
-| React | 18.3.1 | CRA (Create React App), NOT Next.js |
-| React Router DOM | 6.16.0 | Page navigation within the showcase |
-| Tailwind CSS | 3.3.3 | Only styling method — no raw hex, no inline styles |
-| clsx | 2.1.1 | Conditional className |
-| tailwind-merge | 3.4.0 | Merge Tailwind classes safely |
-| Day.js | 1.11.10 | Date display in components |
-| Recharts | 3.5.1 | Chart components |
-| React Select | 5.10.2 | Dropdown/select components |
-| React Toastify | 11.0.5 | Toast notification components |
-| Prop-types | 15.8.1 | Runtime prop validation |
-
-**No TypeScript. No API calls. No state management libraries.** Use `useState` and `useReducer` for local component state only.
+| Tool | Purpose |
+|------|---------|
+| React + TypeScript + Vite | App framework and bundler |
+| Tailwind CSS v4 | Styling — `@tailwindcss/vite` plugin, CSS-first config |
+| shadcn/ui | Base design system — owns `components/ui/` |
+| TanStack Query | Server state — data fetching, caching, loading/error states |
+| Zustand | Client state — UI state, preferences, ephemeral app state |
+| Lucide React | Icons — only icon library used in this project |
+| Recharts | Charts — all chart components live in `components/charts/` |
 
 ---
 
@@ -36,211 +22,270 @@ This is a **pure frontend component showcase**. No API calls, no backend integra
 
 ```
 src/
-├── components/         # Reusable UI components (the main output)
-│   ├── common/        # Badge, Button, Input*, Table, etc.
-│   └── layout/        # Sidebar, Header, Layout wrappers
-├── pages/             # Showcase pages (one per feature area)
-├── routes/
-│   └── index.js       # React Router route definitions
-├── utils/
-│   └── common/        # cn() utility only
-├── mocks/             # Hardcoded mock data for demos
-├── App.js
-├── index.js
-└── index.css
+├── components/
+│   ├── ui/          # shadcn primitives — managed by shadcn CLI, we own the code
+│   ├── custom/      # custom components built on shadcn patterns (see conventions below)
+│   ├── layout/      # Sidebar, Header, page wrappers
+│   ├── charts/      # Recharts-based chart components
+│   └── shared/      # composite components reused across multiple pages
+├── pages/           # one file or folder per route
+├── lib/             # utilities — cn(), formatters, constants
+├── hooks/           # custom React hooks
+├── stores/          # Zustand stores
+└── types/           # shared TypeScript types and interfaces
 ```
 
 ---
 
-## Styling Rules
+## Component Conventions
 
-### Use Tailwind only. Never use raw hex colors or inline styles.
+### 1. Prefer shadcn components from `components/ui/`
 
-**Color tokens (defined in `tailwind.config.js`):**
+Always reach for a shadcn primitive first. Check `components/ui/` before building anything new.
 
-| Token | Value | Use for |
-|-------|-------|---------|
-| `primary` | `#FCFCFD` | Primary text / icon color |
-| `primaryHover` | `#484858` | Hover states |
-| `secondary` | `#DD7224` | Accent / brand color |
-| `secondaryHover` | `#FF8B37` | Accent hover |
-| `textPrimary` | `#FCFCFD` | Body text |
-| `textSecondary` | `#D4D4D4` | Muted / secondary text |
-| `neutral-850` | `#242424` | Card / panel backgrounds |
-| `neutral-750` | `#212121` | Page background |
-| `warning-500` | `#FEAA01` | Warning / caution states |
-| `gradient-red` | linear-gradient | Primary buttons, accents |
-
-**Correct:**
-```jsx
-<div className="bg-neutral-850 text-textPrimary rounded-lg p-4">
-  <span className="text-secondary font-semibold">Accent text</span>
-</div>
+```tsx
+// Good — use the shadcn primitive
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 ```
 
-**Never:**
-```jsx
-// Raw hex
-<div style={{ backgroundColor: "#242424", color: "#FCFCFD" }}>
+### 2. Modifying a shadcn component
 
-// Inline styles for layout
-<div style={{ display: "flex", gap: "8px" }}>
+When a shadcn component needs a tweak, **edit the file in `components/ui/` directly** — we own this code. Leave a comment explaining why.
+
+```tsx
+// In components/ui/button.tsx
+// Added `loading` variant to support async button states across the dashboard.
+const buttonVariants = cva(/* ... */, {
+  variants: {
+    variant: {
+      // ...existing variants
+      loading: "opacity-70 cursor-not-allowed",
+    },
+  },
+});
 ```
 
-### `cn()` utility for conditional classes
+### 3. Building a custom component in `components/custom/`
 
-```js
-// src/utils/common/index.js
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+When shadcn doesn't have what we need, build it here following shadcn's exact patterns:
 
-export function cn(...inputs) {
-  return twMerge(clsx(inputs));
+**Use CVA for variants:**
+```tsx
+import { cva, type VariantProps } from "class-variance-authority";
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+```
+
+**Use `cn()` for class merging:**
+```tsx
+import { cn } from "@/lib/utils";
+
+<div className={cn("base-classes", isActive && "active-class", className)} />
+```
+
+**Use Radix UI for accessibility on interactive components:**
+```tsx
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+// Build on Radix primitives rather than writing ARIA handling from scratch
+```
+
+**Use `forwardRef` and proper TypeScript types:**
+```tsx
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  title: string;
+  value: string;
+  trend?: "up" | "down" | "neutral";
 }
+
+const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
+  ({ title, value, trend, className, ...props }, ref) => {
+    return (
+      <div ref={ref} className={cn("rounded-xl border bg-card p-5", className)} {...props}>
+        {/* ... */}
+      </div>
+    );
+  }
+);
+StatCard.displayName = "StatCard";
+
+export { StatCard };
 ```
 
-Usage:
-```jsx
-import { cn } from "utils/common";
+**Use CSS variables — never hardcode colors or border-radius:**
+```tsx
+// Good — uses design tokens
+<div className="bg-background text-foreground border-border" />
+<div className="rounded-[var(--radius)]" />
 
-<div className={cn("base-class", isActive && "text-secondary", className)}>
+// Bad — hardcoded values
+<div style={{ backgroundColor: "#fff", borderRadius: "8px" }} />
+<div className="bg-white rounded-lg" />
 ```
 
-### Typography
+### 4. Never install duplicate UI libraries
 
-- Font: Manrope — `font-sans` applies it automatically
-- Use Tailwind size tokens only: `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl`
-
-### Border radius
-
-`rounded-sm` (4px) · `rounded` / `rounded-md` (6px) · `rounded-lg` (8px) · `rounded-xl` (12px) · `rounded-2xl` (16px) · `rounded-full`
+Do not install component libraries that duplicate shadcn functionality (Chakra UI, MUI, Ant Design, Mantine, etc.). If a component is missing, build it in `components/custom/`.
 
 ---
 
-## Component Pattern
+## Styling Conventions
 
-Every component follows this exact structure:
+### Tailwind classes only — no inline styles
 
-```jsx
-import PropTypes from "prop-types";
-import { cn } from "utils/common";
+```tsx
+// Good
+<div className="flex items-center gap-3 px-4 py-2" />
 
-function Badge({ variant = "default", size = "md", className, children }) {
-  const variantStyles = {
-    default: "bg-neutral-850 text-textPrimary",
-    success: "bg-green-900 text-green-300",
-    warning: "bg-yellow-900 text-warning-500",
-    danger:  "bg-red-900 text-red-400",
-  };
+// Bad
+<div style={{ display: "flex", alignItems: "center", gap: "12px" }} />
+```
 
-  const sizeStyles = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-3 py-1 text-sm",
-    lg: "px-4 py-1.5 text-base",
-  };
+### Semantic color tokens — never raw Tailwind palette colors
 
-  return (
-    <span className={cn("inline-flex items-center rounded-full font-medium", variantStyles[variant], sizeStyles[size], className)}>
-      {children}
-    </span>
+The design uses CSS variable-backed tokens. Always use those.
+
+```tsx
+// Good — semantic tokens
+<p className="text-foreground" />
+<p className="text-muted-foreground" />
+<div className="bg-background" />
+<div className="bg-card" />
+<div className="border-border" />
+<span className="text-destructive" />
+
+// Bad — raw palette colors
+<p className="text-gray-900" />
+<div className="bg-white" />
+<div className="border-gray-200" />
+<span className="text-red-500" />
+```
+
+### `cn()` for conditional classes
+
+```tsx
+import { cn } from "@/lib/utils";
+
+<button
+  className={cn(
+    "base-button-classes",
+    isActive && "bg-primary text-primary-foreground",
+    isDisabled && "opacity-50 pointer-events-none",
+    className
+  )}
+/>
+```
+
+### Dark mode must work for every component
+
+All color usage must be expressed with semantic tokens — those automatically handle dark mode via the `.dark` class on `<html>`. Never write `dark:` overrides that use raw palette colors.
+
+```tsx
+// Good — tokens switch automatically
+<div className="bg-card text-card-foreground border-border" />
+
+// Bad — requires manual dark: override, breaks easily
+<div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white" />
+```
+
+---
+
+## Code Conventions
+
+### TypeScript strict mode
+
+All files must pass strict TypeScript. No `any`, no `@ts-ignore` without a comment explaining why.
+
+### Always include loading, empty, and error states for data-driven components
+
+Every component that receives async data must handle all three states explicitly.
+
+```tsx
+function UserList() {
+  const { data, isLoading, error } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
+
+  if (isLoading) return <UserListSkeleton />;
+
+  if (error) return (
+    <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+      <AlertCircle className="size-5" />
+      <p className="text-sm">Failed to load users.</p>
+    </div>
   );
-}
 
-Badge.propTypes = {
-  variant: PropTypes.oneOf(["default", "success", "warning", "danger"]),
-  size: PropTypes.oneOf(["sm", "md", "lg"]),
-  className: PropTypes.string,
-  children: PropTypes.node.isRequired,
-};
+  if (!data?.length) return (
+    <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+      <Users className="size-5" />
+      <p className="text-sm">No users found.</p>
+    </div>
+  );
 
-export default Badge;
-```
-
-**Rules:**
-- Functional components only — no class components
-- One `export default` per file, at the bottom
-- Destructure props with default values in the function signature
-- Always include `PropTypes`
-- Always accept a `className` prop, merged with `cn()`
-- Use variant/size maps (plain objects) for style variations
-- Use hardcoded mock data for any displayed values — no props that expect API data
-
----
-
-## File Naming
-
-| Artifact | Convention | Example |
-|----------|-----------|---------|
-| Component | `PascalCase.js` | `Badge.js`, `InputText.js` |
-| Page | `PascalCase/index.js` | `cameras/index.js` |
-| Route file | camelCase | `routes/index.js` |
-| Utility | camelCase | `utils/common/index.js` |
-| Mock data | camelCase | `mocks/cameras.js` |
-
----
-
-## Local State
-
-Use `useState` and `useReducer` for component state. Nothing else.
-
-```jsx
-// Fine for toggles, tabs, open/close
-const [isOpen, setIsOpen] = useState(false);
-const [activeTab, setActiveTab] = useState("overview");
-```
-
-No Zustand. No Context. No Redux. No external state libraries.
-
----
-
-## Mock Data
-
-Put hardcoded demo data in `src/mocks/`. Import it directly into components or pages.
-
-```js
-// src/mocks/cameras.js
-export const mockCameras = [
-  { id: "CAM-001", name: "Camera Entrance A", status: "online", area: "Lobby" },
-  { id: "CAM-002", name: "Camera Parking B", status: "offline", area: "Parking" },
-];
-```
-
----
-
-## Code Quality
-
-### `.prettierrc`
-
-```json
-{
-  "printWidth": 100,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": false,
-  "jsxSingleQuote": false,
-  "trailingComma": "es5",
-  "bracketSpacing": true,
-  "bracketSameLine": false,
-  "arrowParens": "always",
-  "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindFunctions": ["clsx", "cn"]
+  return <ul>{data.map((u) => <UserRow key={u.id} user={u} />)}</ul>;
 }
 ```
 
-### Comments
+### Use Lucide icons — not emojis, not other icon libraries
 
-No comments unless the WHY is non-obvious. Never explain what the code does.
+```tsx
+import { ArrowUpRight, CircleAlert, LoaderCircle } from "lucide-react";
 
----
+// Size with the size prop or Tailwind
+<ArrowUpRight className="size-4" />
+<LoaderCircle className="size-4 animate-spin" />
+```
 
-## What NOT to Do
+### Prefer composition over prop explosion
 
-- Do not use TypeScript
-- Do not use raw hex colors — use Tailwind tokens only
-- Do not use inline `style={{}}` — use Tailwind classes
-- Do not make API calls (`fetch`, `axios`, `useQuery`, etc.)
-- Do not install Zustand, React Query, Axios, or Socket.io
-- Do not create class-based components
-- Do not write comments that describe what the code does
+When a component needs more than ~4 configurable regions, use composition (slot pattern) instead of adding more props.
+
+```tsx
+// Bad — prop explosion
+<DataCard
+  title="..."
+  subtitle="..."
+  icon={<Users />}
+  value="..."
+  trend="up"
+  trendLabel="..."
+  footer="..."
+  footerAction={<Button />}
+/>
+
+// Good — composable
+<DataCard>
+  <DataCardHeader>
+    <DataCardIcon><Users className="size-4" /></DataCardIcon>
+    <DataCardTitle>Active Users</DataCardTitle>
+  </DataCardHeader>
+  <DataCardContent>
+    <DataCardValue>12,480</DataCardValue>
+    <DataCardTrend direction="up">+8% this week</DataCardTrend>
+  </DataCardContent>
+</DataCard>
+```
+
+### State management boundaries
+
+- **TanStack Query** — anything fetched from a server: lists, details, mutations, pagination
+- **Zustand** — client-only UI state that needs to persist across unmounts or be shared between distant components: sidebar collapsed state, active filters, selected rows, theme preference
+- **`useState`** — local component state: form inputs, toggles, open/closed
+
+Do not use TanStack Query for client-only state. Do not use Zustand for data that belongs in a query cache.
