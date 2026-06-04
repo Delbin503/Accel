@@ -41,6 +41,7 @@ const EMPTY_FILTERS: CaseFilters = { status: [], severity: [], site: [] };
 /* ─── KPI cards ──────────────────────────────────────────────────────────── */
 
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 
 const KPI_CONFIGS: {
   key: KpiFilter;
@@ -490,60 +491,27 @@ export default function IncidentCasesPage() {
         ))}
       </KpiGrid>
 
-      {/* Date filter row (outside Filters panel) */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-        <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Date Range
-        </span>
-        {([
-          { key: "all" as const,   label: "All time" },
-          { key: "today" as const, label: "Today" },
-          { key: "week" as const,  label: "This Week" },
-          { key: "month" as const, label: "This Month" },
-          { key: "custom" as const, label: "Custom Date" },
-        ]).map((p) => (
-          <button
-            key={p.key}
-            onClick={() => { setDatePreset(p.key); if (p.key !== "custom") { setDateFrom(""); setDateTo(""); } }}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
-              datePreset === p.key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
-            )}
-          >
-            {p.label}
-          </button>
-        ))}
-        {datePreset === "custom" && (
-          <div className="ml-1 flex items-center gap-1.5">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              max={dateTo || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            />
-            <span className="text-[12px] text-muted-foreground">to</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              min={dateFrom || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            />
-          </div>
-        )}
-        {(datePreset !== "all" || dateFrom || dateTo) && (
-          <button
-            onClick={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
-            className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {/* Date filter row */}
+      <DateRangeBar
+        presets={[
+          { key: "all",   label: "All time" },
+          { key: "today", label: "Today" },
+          { key: "week",  label: "This Week" },
+          { key: "month", label: "This Month" },
+        ]}
+        active={datePreset}
+        onSelect={(k) => { setDatePreset(k as typeof datePreset); if (k !== "custom") { setDateFrom(""); setDateTo(""); } }}
+        customFrom={dateFrom}
+        customTo={dateTo}
+        onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
+        onClear={
+          datePreset !== "all" || dateFrom || dateTo
+            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }
+            : undefined
+        }
+      />
 
       <ActiveFilterBar
         filters={filters}

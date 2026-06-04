@@ -13,7 +13,6 @@ import {
   Film,
   Play,
   Pause,
-  Calendar,
   Clock,
   MapPin,
   Video,
@@ -32,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { cn } from "@/lib/utils";
 import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -653,7 +653,6 @@ const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "yesterday", label: "Yesterday" },
   { key: "week",      label: "This Week" },
   { key: "month",     label: "This Month" },
-  { key: "custom",    label: "Custom Date" },
 ];
 
 const NOW_REF = new Date("2026-05-25T10:15:00").getTime();
@@ -804,35 +803,21 @@ export default function RecordingsPage() {
         ))}
       </KpiGrid>
 
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-        <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Date
-        </span>
-        {DATE_PRESETS.map((p) => (
-          <button key={p.key} onClick={() => { setDatePreset(p.key); if (p.key !== "custom") { setDateFrom(""); setDateTo(""); } setPage(1); }}
-            className={cn("rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
-              datePreset === p.key ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground")}>
-            {p.label}
-          </button>
-        ))}
-        {datePreset === "custom" && (
-          <div className="ml-1 flex items-center gap-1.5">
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} max={dateTo || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none" />
-            <span className="text-[12px] text-muted-foreground">to</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} min={dateFrom || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none" />
-          </div>
-        )}
-        {(datePreset !== "all" || dateFrom || dateTo) && (
-          <button onClick={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
-            className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary">
-            Clear date
-          </button>
-        )}
-      </div>
+      <DateRangeBar
+        presets={DATE_PRESETS}
+        active={datePreset}
+        onSelect={(k) => { setDatePreset(k as DatePreset); if (k !== "custom") { setDateFrom(""); setDateTo(""); } setPage(1); }}
+        customFrom={dateFrom}
+        customTo={dateTo}
+        onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); setPage(1); }}
+        onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
+        onClear={
+          datePreset !== "all" || dateFrom || dateTo
+            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }
+            : undefined
+        }
+      />
 
       <FilterPanel filters={filters} onChange={(f) => { setFilters(f); setPage(1); }} search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} />
 

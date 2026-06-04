@@ -12,7 +12,6 @@ import {
   Check,
   Link2,
   CheckSquare,
-  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
 import type { EscalateFormData } from "./EscalateModal";
@@ -809,65 +809,22 @@ export default function DetectionFeedPage() {
         ))}
       </KpiGrid>
 
-      {/* ── Date preset row (outside filter panel) ──────────────────────── */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-        <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Date Range
-        </span>
-        {DATE_PRESETS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => { setDatePreset(p.key); setDateFrom(""); setDateTo(""); }}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
-              datePreset === p.key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
-            )}
-          >
-            {p.label}
-          </button>
-        ))}
-        <button
-          onClick={() => setDatePreset("custom")}
-          className={cn(
-            "rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
-            datePreset === "custom"
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
-          )}
-        >
-          Custom Date
-        </button>
-        {datePreset === "custom" && (
-          <div className="ml-1 flex items-center gap-1.5">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              max={dateTo || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            />
-            <span className="text-[12px] text-muted-foreground">to</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              min={dateFrom || undefined}
-              className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            />
-          </div>
-        )}
-        {(datePreset !== "all" || dateFrom || dateTo) && (
-          <button
-            onClick={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
-            className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {/* ── Date preset row ─────────────────────────────────────────────── */}
+      <DateRangeBar
+        presets={DATE_PRESETS}
+        active={datePreset}
+        onSelect={(k) => { setDatePreset(k as DatePreset); if (k !== "custom") { setDateFrom(""); setDateTo(""); } }}
+        customFrom={dateFrom}
+        customTo={dateTo}
+        onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
+        onClear={
+          datePreset !== "all" || dateFrom || dateTo
+            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }
+            : undefined
+        }
+      />
 
       {/* ── Active filter bar ────────────────────────────────────────────── */}
       <ActiveFilterBar

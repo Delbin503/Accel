@@ -925,6 +925,7 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
 /* ── Score cards ─────────────────────────────────────────────────────────── */
 
 import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 
 function ScoreHeroCard({ result, compact = false }: { result: AnalysisResult; compact?: boolean }) {
   const tone = result.status;
@@ -2378,83 +2379,33 @@ function HistoryTab({
       ))}
     </div>
 
-    {/* Date preset row (Detection Feed pattern) */}
-    <div className="rounded-xl border border-border bg-card px-3.5 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
-          {DATE_PRESETS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setDatePreset(p.key)}
-              className={cn(
-                "rounded-md border px-3 py-1.5 text-[12px] font-medium transition-colors",
-                datePreset === p.key
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary hover:text-primary"
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-          <button
-            onClick={() => setDatePreset("custom")}
-            className={cn(
-              "rounded-md border px-3 py-1.5 text-[12px] font-medium transition-colors",
-              datePreset === "custom"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:border-primary hover:text-primary"
-            )}
-          >
-            Custom range
-          </button>
-        </div>
-        <div className="hidden text-[12px] text-muted-foreground sm:block">
-          {datePreset === "custom" && dateFrom && dateTo ? (
-            <>
-              Showing <strong className="text-foreground">{dateFrom}</strong>
-              {" – "}
-              <strong className="text-foreground">{dateTo}</strong>
-            </>
-          ) : datePreset === "custom" ? (
-            <span className="text-muted-foreground/60">Select a date range below</span>
-          ) : (
-            <>
-              Showing{" "}
-              <strong className="text-foreground">
-                {DATE_PRESETS.find((p) => p.key === datePreset)?.label}
-              </strong>
-            </>
-          )}
-        </div>
-      </div>
-      {/* Custom date inputs */}
-      {datePreset === "custom" && (
-        <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-border pt-3">
-          <span className="text-[12px] text-muted-foreground">From</span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2.5 text-[12px] text-foreground focus:border-primary focus:outline-none"
-          />
-          <span className="text-[12px] text-muted-foreground">to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2.5 text-[12px] text-foreground focus:border-primary focus:outline-none"
-          />
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(""); setDateTo(""); }}
-              className="text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+    {/* Date preset row — shared canonical design */}
+    <DateRangeBar
+      presets={DATE_PRESETS}
+      active={datePreset}
+      onSelect={(k) => { setDatePreset(k as DatePreset); if (k !== "custom") { setDateFrom(""); setDateTo(""); } }}
+      customFrom={dateFrom}
+      customTo={dateTo}
+      onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
+      onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); }}
+      onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
+      showingLabel={
+        datePreset === "custom" && dateFrom && dateTo ? (
+          <>
+            Showing <strong className="text-foreground">{dateFrom}</strong>
+            {" – "}
+            <strong className="text-foreground">{dateTo}</strong>
+          </>
+        ) : (
+          <>
+            Showing{" "}
+            <strong className="text-foreground">
+              {DATE_PRESETS.find((p) => p.key === datePreset)?.label ?? "Custom range"}
+            </strong>
+          </>
+        )
+      }
+    />
 
     {/* Collapsible filter panel (Detection Feed pattern) */}
     <div className="rounded-xl border border-border bg-card">

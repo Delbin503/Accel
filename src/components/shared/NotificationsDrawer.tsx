@@ -16,7 +16,7 @@ const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: Re
   billing:  { bg: "bg-warning/15",      text: "text-warning",      icon: CreditCard,    label: "Billing" },
 };
 
-type DateRange = "all" | "today" | "yesterday" | "week" | "month";
+type DateRange = "all" | "today" | "yesterday" | "week" | "month" | "custom";
 
 /* Fixed reference "today" so the prototype's seed data lines up with the filters. */
 const REFERENCE_TODAY = "2026-05-25";
@@ -51,6 +51,8 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
 
   const [range, setRange] = React.useState<DateRange>("all");
   const [showUnreadOnly, setShowUnreadOnly] = React.useState(false);
+  const [customFrom, setCustomFrom] = React.useState(shiftDate(REFERENCE_TODAY, -7));
+  const [customTo, setCustomTo] = React.useState(REFERENCE_TODAY);
 
   const bounds = React.useMemo<{ from: string; to: string } | null>(() => {
     if (range === "all")       return null;
@@ -58,8 +60,14 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
     if (range === "yesterday") return { from: shiftDate(REFERENCE_TODAY, -1), to: shiftDate(REFERENCE_TODAY, -1) };
     if (range === "week")      return { from: shiftDate(REFERENCE_TODAY, -6), to: REFERENCE_TODAY };
     if (range === "month")     return { from: shiftDate(REFERENCE_TODAY, -29), to: REFERENCE_TODAY };
+    if (range === "custom") {
+      // Tolerate from > to by swapping.
+      const from = customFrom <= customTo ? customFrom : customTo;
+      const to   = customFrom <= customTo ? customTo   : customFrom;
+      return { from, to };
+    }
     return null;
-  }, [range]);
+  }, [range, customFrom, customTo]);
 
   const filtered = React.useMemo(() => {
     return items.filter((n) => {
@@ -105,6 +113,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
     { key: "yesterday", label: "Yesterday" },
     { key: "week",      label: "This Week" },
     { key: "month",     label: "This Month" },
+    { key: "custom",    label: "Custom" },
   ];
 
   return (
@@ -163,6 +172,32 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
               );
             })}
           </div>
+
+          {/* Custom date range — collapsible. Two date inputs side by side. */}
+          {range === "custom" && (
+            <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
+              <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="font-semibold uppercase tracking-wider text-[10px]">From</span>
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  max={customTo}
+                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-[11px] text-foreground"
+                />
+              </label>
+              <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="font-semibold uppercase tracking-wider text-[10px]">To</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  min={customFrom}
+                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-[11px] text-foreground"
+                />
+              </label>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <input

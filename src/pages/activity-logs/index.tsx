@@ -6,7 +6,6 @@ import {
   X,
   Download,
   ScrollText,
-  Calendar,
   CheckCircle2,
   XCircle,
   Building2,
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { cn } from "@/lib/utils";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES, type ActivityKind, type ActivityLog } from "@/mocks/activityLogs";
 
@@ -89,7 +89,6 @@ export default function ActivityLogsPage() {
   const [dateRange, setDateRange] = React.useState<DateRange>("30d");
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
-  const [customOpen, setCustomOpen] = React.useState(false);
   const [typeFilter, setTypeFilter] = React.useState<ActivityKind[]>([]);
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
 
@@ -167,59 +166,24 @@ export default function ActivityLogsPage() {
         <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="sev-critical" />
       </KpiGrid>
 
-      {/* Unified date + filters bar (mirrors Detection Feed pattern) */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-        <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Date
-        </span>
-        {DATE_FILTERS.map((f) => {
-          const active = dateRange === f.key;
-          return (
-            <button key={f.key} onClick={() => setDateRange(f.key)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              )}>
-              {f.label}
-            </button>
-          );
-        })}
-        <Popover open={customOpen} onOpenChange={setCustomOpen}>
-          <PopoverTrigger asChild>
-            <button onClick={() => setDateRange("custom")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                dateRange === "custom" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              )}>
-              <Calendar className="size-3" />
-              Custom date
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Custom range</p>
-            <div className="space-y-2">
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">From</label>
-                <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-8 text-[12px]" />
-              </div>
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">To</label>
-                <Input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="h-8 text-[12px]" />
-              </div>
-              <div className="flex justify-end gap-1.5">
-                <Button variant="ghost" size="sm" onClick={() => { setCustomFrom(""); setCustomTo(""); setDateRange("30d"); setCustomOpen(false); }}>
-                  Reset
-                </Button>
-                <Button size="sm" onClick={() => setCustomOpen(false)}>Apply</Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <span className="ml-auto text-[11px] text-muted-foreground">
-          Showing <strong className="text-foreground">{rangeLabel()}</strong> · <strong className="text-foreground">{filtered.length}</strong> event{filtered.length === 1 ? "" : "s"}
-        </span>
-      </div>
+      {/* Unified date bar — shared canonical design */}
+      <DateRangeBar
+        presets={DATE_FILTERS}
+        active={dateRange}
+        onSelect={(k) => setDateRange(k as DateRange)}
+        customFrom={customFrom}
+        customTo={customTo}
+        onCustomChange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+        onCustomApply={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+        onCustomReset={() => { setCustomFrom(""); setCustomTo(""); setDateRange("30d"); }}
+        showingLabel={
+          <>
+            Showing <strong className="text-foreground">{rangeLabel()}</strong> ·{" "}
+            <strong className="text-foreground">{filtered.length}</strong>{" "}
+            event{filtered.length === 1 ? "" : "s"}
+          </>
+        }
+      />
 
       {/* Filters row (mirrors Detection Feed / Recordings pattern) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">

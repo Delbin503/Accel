@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   ScrollText,
   MapPin,
-  Calendar,
   Filter,
   Check,
   ChevronDown,
@@ -23,6 +22,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
+import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -60,6 +60,48 @@ const SEV_STYLES = {
   medium:   { bg: "bg-warning/15",      text: "text-warning",      label: "Medium",   dot: "bg-warning" },
   low:      { bg: "bg-info/15",         text: "text-info",         label: "Low",      dot: "bg-info" },
 };
+
+type SevKind = keyof typeof SEV_STYLES;
+
+/** Compact severity chip used in the per-site detection cards. */
+function SevPill({ kind, value }: { kind: SevKind; value: number }) {
+  const s = SEV_STYLES[kind];
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold",
+        s.bg, s.text, "border-current/30"
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", s.dot)} />
+      {value}
+    </span>
+  );
+}
+
+/** Severity row used inside the per-site popover — label + bar + count. */
+function SevRow({ kind, value, total }: { kind: SevKind; value: number; total: number }) {
+  const s = SEV_STYLES[kind];
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <span className={cn("inline-flex items-center gap-1 font-bold", s.text)}>
+        <span className={cn("size-1.5 rounded-full", s.dot)} />
+        {s.label}
+      </span>
+      <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full rounded-full", s.dot)}
+          style={{ width: `${Math.max(2, pct)}%` }}
+        />
+      </div>
+      <span className="w-12 text-right font-mono text-foreground">
+        {value}{" "}
+        <span className="text-muted-foreground">· {pct}%</span>
+      </span>
+    </div>
+  );
+}
 
 const ZONE_STATUS_STYLES = {
   critical: { bg: "bg-sev-critical/15", border: "border-sev-critical/40", text: "text-sev-critical", label: "Critical", dot: "bg-sev-critical" },
@@ -240,7 +282,6 @@ export default function DashboardPage() {
   const [dateRange, setDateRange] = React.useState<DateRange>("today");
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
-  const [customOpen, setCustomOpen] = React.useState(false);
 
   const dateFilters: { key: DateRange; label: string }[] = [
     { key: "today",     label: "Today" },
@@ -424,59 +465,22 @@ export default function DashboardPage() {
       </PageHeader>
 
       {/* Date filter row */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Date Range
-        </span>
-        {dateFilters.map((f) => {
-          const active = dateRange === f.key;
-          return (
-            <button key={f.key} onClick={() => setDateRange(f.key)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              )}>
-              {f.label}
-            </button>
-          );
-        })}
-        <Popover open={customOpen} onOpenChange={setCustomOpen}>
-          <PopoverTrigger asChild>
-            <button onClick={() => setDateRange("custom")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                dateRange === "custom" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              )}>
-              <Calendar className="size-3" />
-              Custom Date
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Custom range</p>
-            <div className="space-y-2">
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">From</label>
-                <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px]" />
-              </div>
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">To</label>
-                <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px]" />
-              </div>
-              <div className="flex justify-end gap-1.5">
-                <Button variant="ghost" size="sm" onClick={() => { setCustomFrom(""); setCustomTo(""); setDateRange("today"); setCustomOpen(false); }}>Reset</Button>
-                <Button size="sm" onClick={() => setCustomOpen(false)}>Apply</Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <span className="ml-auto text-[11px] text-muted-foreground">
-          Showing <strong className="text-foreground">{dateLabel}</strong>
-          <span className="ml-2 text-muted-foreground/60">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
-        </span>
-      </div>
+      <DateRangeBar
+        presets={dateFilters}
+        active={dateRange}
+        onSelect={(k) => setDateRange(k as DateRange)}
+        customFrom={customFrom}
+        customTo={customTo}
+        onCustomChange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+        onCustomApply={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+        onCustomReset={() => { setCustomFrom(""); setCustomTo(""); setDateRange("today"); }}
+        showingLabel={
+          <>
+            Showing <strong className="text-foreground">{dateLabel}</strong>
+            <span className="ml-2 text-muted-foreground/60">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
+          </>
+        }
+      />
 
       {/* Top KPI strip */}
       <KpiGrid cols={4}>
@@ -550,28 +554,78 @@ export default function DashboardPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {detectionsBySite.slice(0, 4).map((s, i) => (
-                    <button
-                      key={s.site}
-                      onClick={() => navigate("/detection-feed")}
-                      className="rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:border-primary/40"
-                    >
-                      <p className="inline-flex items-center gap-1.5 truncate text-[11px] font-semibold text-foreground">
-                        <span className="size-2 flex-shrink-0 rounded-full" style={{ background: siteColor(s.site, i) }} />
-                        {s.site}
-                      </p>
-                      <p className="mt-1 inline-flex items-baseline gap-1 font-mono">
-                        <span className="text-[18px] font-bold text-foreground">{s.total}</span>
-                        <span className="text-[10px] text-muted-foreground">total</span>
-                      </p>
-                      <p className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{s.critical}</span>
-                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{s.medium}</span>
-                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{s.low}</span>
-                      </p>
-                    </button>
-                  ))}
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {detectionsBySite.slice(0, 4).map((s, i) => {
+                    const color = siteColor(s.site, i);
+                    return (
+                      <Popover key={s.site}>
+                        <PopoverTrigger asChild>
+                          <button
+                            className="group flex flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
+                          >
+                            {/* Row 1: site name + colored dot */}
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="size-2.5 flex-shrink-0 rounded-full"
+                                style={{ background: color }}
+                              />
+                              <p className="min-w-0 flex-1 truncate text-[11px] font-semibold text-foreground">
+                                {s.site}
+                              </p>
+                            </div>
+                            {/* Row 2: big number */}
+                            <p className="inline-flex items-baseline gap-1 font-mono">
+                              <span className="text-[22px] font-bold leading-none text-foreground">
+                                {s.total}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                detections
+                              </span>
+                            </p>
+                            {/* Row 3: severity breakdown chips */}
+                            <div className="flex items-center gap-1.5 text-[10px]">
+                              <SevPill kind="critical" value={s.critical} />
+                              <SevPill kind="medium"   value={s.medium} />
+                              <SevPill kind="low"      value={s.low} />
+                            </div>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-64 p-0">
+                          <div className="border-b border-border px-3 py-2.5">
+                            <p className="inline-flex items-center gap-1.5 text-[12px] font-bold text-foreground">
+                              <span
+                                className="size-2.5 flex-shrink-0 rounded-full"
+                                style={{ background: color }}
+                              />
+                              {s.site}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                              <strong className="font-mono text-foreground">{s.total}</strong> detections in this range
+                            </p>
+                          </div>
+                          <div className="px-3 py-3">
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Severity breakdown
+                            </p>
+                            <div className="space-y-1.5">
+                              <SevRow kind="critical" value={s.critical} total={s.total} />
+                              <SevRow kind="medium"   value={s.medium}   total={s.total} />
+                              <SevRow kind="low"      value={s.low}      total={s.total} />
+                            </div>
+                          </div>
+                          <div className="border-t border-border bg-muted/20 px-3 py-2.5">
+                            <button
+                              onClick={() => navigate("/detection-feed")}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                            >
+                              View feed for this site
+                              <ArrowUpRight className="size-3" />
+                            </button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -780,18 +834,18 @@ export default function DashboardPage() {
                   contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
                   cursor={{ fill: "var(--muted)", opacity: 0.4 }}
                 />
-                <Bar dataKey="online" stackId="a" fill="var(--primary)" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="var(--warning)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
+                <Bar dataKey="offline" stackId="a" fill="var(--sev-critical)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-2 flex items-center justify-center gap-4 text-[11px]">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <span className="size-2 rounded-sm bg-primary" />
+              <span className="size-2 rounded-sm bg-success" />
               Online
             </span>
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <span className="size-2 rounded-sm bg-warning" />
+              <span className="size-2 rounded-sm bg-sev-critical" />
               Offline
             </span>
           </div>
@@ -806,34 +860,50 @@ export default function DashboardPage() {
             </Button>
           }
         >
-          <div className="divide-y divide-border/60">
-            {recentActivity.map((a) => {
-              const ks = ACTIVITY_KIND_STYLES[a.kind];
-              return (
-                <div key={a.id} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
-                  <div className={cn("flex size-7 flex-shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-semibold",
-                    a.actor.role === "owner" ? "bg-success/15 text-success" :
-                    a.actor.role === "admin" ? "bg-info/15 text-info" :
-                    a.actor.role === "system" ? "bg-muted text-muted-foreground" :
-                    "bg-secondary/15 text-secondary"
-                  )}>
-                    {a.actor.initials}
+          {/* Height matches the Cameras by Site chart (h-[260px] + ~24px legend = ~300px) */}
+          <div className="-mx-4 -my-4">
+            <div className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border bg-muted/30 px-4 py-2">
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">When</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Activity</p>
+            </div>
+            <div className="h-[268px] overflow-y-auto">
+              {recentActivity.map((a) => {
+                const ks = ACTIVITY_KIND_STYLES[a.kind];
+                return (
+                  <div
+                    key={a.id}
+                    className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 hover:bg-muted/20"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-mono text-[10px] text-muted-foreground">
+                        {a.whenRelative}
+                      </p>
+                      <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">
+                        {a.module}
+                      </p>
+                    </div>
+                    <div>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                          ks.bg,
+                          ks.text
+                        )}
+                      >
+                        {ACTIVITY_KIND_LABELS[a.kind]}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-[12px] leading-snug text-foreground">
+                        <span className="font-semibold">{a.actor.name}</span>{" "}
+                        <span className="text-muted-foreground">{a.text}</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] text-foreground">
-                      <span className="font-semibold">{a.actor.name}</span>
-                      <span className="ml-1.5 text-muted-foreground">{a.text}</span>
-                    </p>
-                    <p className="mt-0.5 inline-flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span className={cn("rounded px-1.5 py-px font-semibold", ks.bg, ks.text)}>{ACTIVITY_KIND_LABELS[a.kind]}</span>
-                      <span className="truncate">{a.module}</span>
-                      <span className="text-muted-foreground/40">·</span>
-                      <span className="font-mono">{a.whenRelative}</span>
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </Section>
       </div>

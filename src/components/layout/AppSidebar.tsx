@@ -26,6 +26,9 @@ import {
   User,
   CreditCard,
   Info,
+  ShieldCheck,
+  CircleUser,
+  Eye,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -58,6 +61,38 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { NotificationsDrawer } from "@/components/shared/NotificationsDrawer";
+import type { UserRole } from "@/stores/useAuthStore";
+
+/* ─── Role badge (mirrors User Management's RoleBadge) ────────────────── */
+
+const PROFILE_ROLE_STYLES: Record<
+  UserRole,
+  {
+    label: string;
+    icon: React.ElementType;
+    classes: string;
+  }
+> = {
+  admin:    { label: "Admin",    icon: ShieldCheck, classes: "bg-info/15 border-info/30 text-info" },
+  operator: { label: "Operator", icon: CircleUser,  classes: "bg-warning/15 border-warning/30 text-warning" },
+  viewer:   { label: "Viewer",   icon: Eye,         classes: "bg-success/15 border-success/30 text-success" },
+};
+
+function ProfileRoleBadge({ role }: { role: UserRole }) {
+  const s = PROFILE_ROLE_STYLES[role];
+  const Icon = s.icon;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        s.classes
+      )}
+    >
+      <Icon className="size-3" />
+      {s.label}
+    </span>
+  );
+}
 
 /* ─── Nav data ──────────────────────────────────────────────────────────── */
 
@@ -258,41 +293,25 @@ function UserProfile({ onBell }: { onBell: () => void }) {
 
   return (
     <div className="border-t border-border px-2 py-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-              {user.initials}
-            </div>
+      <div className="flex items-stretch gap-2">
+        {/* Profile card — opens dropdown menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-transparent bg-card/40 px-2.5 py-2 text-left transition-colors hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {user.initials}
+              </div>
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-              <p className="truncate text-xs capitalize text-muted-foreground">{user.role}</p>
-            </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+                <p className="truncate text-xs capitalize text-primary">{user.role}</p>
+              </div>
 
-            <div className="flex shrink-0 items-center gap-1">
-              {/* Bell — clickable separately to open the notifications drawer */}
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); onBell(); }}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onBell(); } }}
-                aria-label={`${unreadCount} unread notifications`}
-                className="relative flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <Bell className="size-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex min-w-[14px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </span>
-              <ChevronRight className="size-3.5 text-muted-foreground" />
-            </div>
-          </button>
-        </DropdownMenuTrigger>
+              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
 
-        <DropdownMenuContent side="top" align="start" className="w-64 p-0">
+          <DropdownMenuContent side="top" align="start" className="w-64 p-0">
           <div className="border-b border-border px-3 py-3">
             <div className="flex items-center gap-2.5">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
@@ -301,9 +320,9 @@ function UserProfile({ onBell }: { onBell: () => void }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-bold text-foreground">{user.name}</p>
                 <p className="truncate text-[11px] text-muted-foreground">{user.email}</p>
-                <span className="mt-0.5 inline-flex items-center rounded-full bg-secondary/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-secondary">
-                  {user.role}
-                </span>
+                <div className="mt-1">
+                  <ProfileRoleBadge role={user.role} />
+                </div>
               </div>
             </div>
           </div>
@@ -334,7 +353,27 @@ function UserProfile({ onBell }: { onBell: () => void }) {
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownMenu>
+
+        {/* Bell card — its own button, opens the notifications drawer */}
+        <button
+          type="button"
+          onClick={onBell}
+          aria-label={
+            unreadCount > 0
+              ? `${unreadCount} unread notifications`
+              : "Open notifications"
+          }
+          className="relative flex size-12 shrink-0 items-center justify-center rounded-md border border-transparent bg-card/40 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Bell className="size-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
