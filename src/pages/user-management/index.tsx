@@ -871,34 +871,42 @@ function InviteUsersModal({
     sites.length > 0 &&
     !overSeat;
 
+  const siteLabel =
+    sites.length === 0                 ? "Select sites" :
+    sites.length === USER_SITES.length ? "All sites" :
+    sites.length === 1                 ? (USER_SITES.find((s) => s.value === sites[0])?.label ?? "1 site") :
+                                         `${sites.length} sites selected`;
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             Invitees receive a one-time email link valid for 7 days.
           </p>
         </DialogHeader>
-        <div className="space-y-4 px-5 py-4">
-          {/* Seat summary strip */}
-          <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
+
+        {/* Scrollable body — modal height is fixed; content scrolls inside. */}
+        <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
+          {/* Seat summary strip (kept) */}
+          <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
             {(["owner", "admin", "user"] as UserRole[]).map((r) => {
               const s = seatUsage[r];
               const isLow = s.available === 0;
               const isSelected = role === r;
               return (
                 <div key={r} className={cn(
-                  "rounded-md border px-2.5 py-2 transition-colors",
+                  "rounded-md border px-2 py-1.5 transition-colors",
                   isSelected ? "border-primary bg-primary/5" : "border-border bg-card"
                 )}>
-                  <div className="mb-1 flex items-center justify-between gap-1.5">
+                  <div className="mb-0.5 flex items-center justify-between gap-1">
                     <RoleBadge role={r} withIcon={false} />
-                    <span className={cn("font-mono text-[10px] font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                    <span className={cn("font-mono text-[9px] font-bold", isLow ? "text-sev-critical" : "text-success")}>
                       {s.available} left
                     </span>
                   </div>
-                  <p className="font-mono text-[11px] text-muted-foreground">
+                  <p className="font-mono text-[10px] text-muted-foreground">
                     {s.assigned} / {s.total} used
                   </p>
                 </div>
@@ -906,13 +914,71 @@ function InviteUsersModal({
             })}
           </div>
 
+          {/* Site Access — moved ABOVE the email field, rendered as a dropdown */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Site Access
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-[13px] transition-colors",
+                    sites.length === 0
+                      ? "border-input text-muted-foreground"
+                      : "border-primary/50 text-foreground"
+                  )}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin className="size-3.5 text-muted-foreground" />
+                    {siteLabel}
+                  </span>
+                  <ChevronDown className="size-3.5 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
+                <button
+                  onClick={() => setSites(sites.length === USER_SITES.length ? [] : USER_SITES.map((s) => s.value))}
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-primary hover:bg-primary/10"
+                >
+                  <span>{sites.length === USER_SITES.length ? "Clear all" : "Select all"}</span>
+                  <span className="font-mono text-muted-foreground">{sites.length}/{USER_SITES.length}</span>
+                </button>
+                <div className="mt-1 max-h-48 overflow-y-auto border-t border-border pt-1">
+                  {USER_SITES.map((s) => {
+                    const checked = sites.includes(s.value);
+                    return (
+                      <button
+                        key={s.value}
+                        onClick={() =>
+                          setSites((curr) => (curr.includes(s.value) ? curr.filter((v) => v !== s.value) : [...curr, s.value]))
+                        }
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] hover:bg-muted/60"
+                      >
+                        <span className={cn(
+                          "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
+                          checked ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                        )}>
+                          {checked && <Check className="size-2.5" strokeWidth={3} />}
+                        </span>
+                        <span className="truncate text-foreground">{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Emails */}
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Email Addresses
-              </p>
+              </label>
               {parsed.valid.length > 0 && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground">
                   <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>{parsed.valid.length}</strong> valid
                   {parsed.invalid.length > 0 && <> · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid</>}
                   {parsed.duplicates.length > 0 && <> · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate</>}
@@ -923,36 +989,30 @@ function InviteUsersModal({
               value={emails}
               onChange={(e) => setEmails(e.target.value)}
               placeholder="alice@acme.com, bob@acme.com…"
-              rows={3}
+              rows={2}
               className={cn(
-                "w-full rounded-lg border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none",
-                parsed.invalid.length > 0 ? "border-sev-critical/40 focus:border-sev-critical" : "border-border focus:border-primary"
+                "w-full rounded-md border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none",
+                parsed.invalid.length > 0 ? "border-sev-critical/40 focus:border-sev-critical" : "border-input focus:border-primary"
               )}
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
-
-            {/* Validation feedback */}
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-3 py-2 text-[11px] text-sev-critical">
-                <AlertTriangle className="mt-0.5 size-3.5 flex-shrink-0" />
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-[11px] text-sev-critical">
+                <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:</p>
                   <p className="font-mono text-[10px] opacity-80">{parsed.invalid.slice(0, 5).join(", ")}{parsed.invalid.length > 5 ? ` +${parsed.invalid.length - 5} more` : ""}</p>
                 </div>
               </div>
             )}
-            {parsed.duplicates.length > 0 && (
-              <p className="mt-1.5 text-[11px] text-warning">
-                Removed {parsed.duplicates.length} duplicate{parsed.duplicates.length === 1 ? "" : "s"}.
-              </p>
-            )}
           </div>
 
+          {/* Role */}
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Role</p>
-            <div className="space-y-2">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Role</label>
+            <div className="space-y-1.5">
               {(["admin", "user"] as const).map((r) => {
                 const s = seatUsage[r];
                 const willExceed = role === r && parsed.valid.length > s.available;
@@ -961,17 +1021,15 @@ function InviteUsersModal({
                     key={r}
                     onClick={() => setRole(r)}
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
+                      "flex w-full items-start gap-2.5 rounded-md border bg-background px-2.5 py-2 text-left transition-colors",
                       role === r ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "mt-0.5 flex size-4 flex-shrink-0 items-center justify-center rounded-full border",
-                        role === r ? "border-primary" : "border-muted-foreground/40"
-                      )}
-                    >
-                      {role === r && <span className="size-2 rounded-full bg-primary" />}
+                    <div className={cn(
+                      "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
+                      role === r ? "border-primary" : "border-muted-foreground/40"
+                    )}>
+                      {role === r && <span className="size-1.5 rounded-full bg-primary" />}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
@@ -982,10 +1040,10 @@ function InviteUsersModal({
                           s.available <= 2 ? "text-warning" :
                           "text-success"
                         )}>
-                          {s.available} of {s.total} seats available
+                          {s.available}/{s.total} seats
                         </span>
                       </div>
-                      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                      <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
                         {USER_ROLE_DESCRIPTIONS[r]}
                       </p>
                     </div>
@@ -993,54 +1051,26 @@ function InviteUsersModal({
                 );
               })}
             </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-[10px] text-muted-foreground/70">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
 
-          {/* Seat shortfall warning */}
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5 text-[12px] text-sev-critical">
-              <AlertTriangle className="mt-0.5 size-3.5 flex-shrink-0" />
+            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-[11px] text-sev-critical">
+              <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (
-                  <p><strong>No {seatUsage[role].label} seats remaining.</strong> Purchase more seats from Billing & License before inviting.</p>
+                  <p><strong>No {seatUsage[role].label} seats remaining.</strong> Purchase more from Billing & License.</p>
                 ) : (
-                  <p><strong>Not enough seats.</strong> You're inviting {parsed.valid.length} {seatUsage[role].label.toLowerCase()}{parsed.valid.length === 1 ? "" : "s"} but only {seatsLeft} {seatsLeft === 1 ? "seat is" : "seats are"} available. Remove some addresses or purchase more seats.</p>
+                  <p><strong>Not enough seats.</strong> Inviting {parsed.valid.length} but only {seatsLeft} available.</p>
                 )}
               </div>
             </div>
           )}
-
-          <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site Access</p>
-            <div className="grid grid-cols-1 gap-1.5">
-              {USER_SITES.map((s) => {
-                const checked = sites.includes(s.value);
-                return (
-                  <button
-                    key={s.value}
-                    onClick={() =>
-                      setSites((curr) => (curr.includes(s.value) ? curr.filter((v) => v !== s.value) : [...curr, s.value]))
-                    }
-                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left transition-colors hover:border-primary/40"
-                  >
-                    <div
-                      className={cn(
-                        "flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                        checked ? "border-primary bg-primary" : "border-muted-foreground/40"
-                      )}
-                    >
-                      {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-                    </div>
-                    <span className="text-[13px] text-foreground">{s.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
-        <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
+
+        <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3">
           <Button size="sm" disabled={!canSubmit} onClick={() => onInvite(emails, role, sites)} className="gap-1.5">
             <Mail className="size-3.5" />
             Send {parsed.valid.length > 0 ? `${parsed.valid.length} Invite${parsed.valid.length === 1 ? "" : "s"}` : "Invites"}
@@ -1505,8 +1535,11 @@ function EditUserModal({
 
   React.useEffect(() => {
     if (open && user) {
-      setFullName(user.fullName);
-      setDisplayName(user.displayName);
+      // Treat "Pending Invite" / placeholder "—" values as empty so the placeholder text shows.
+      const isPlaceholder = (v: string) =>
+        v === "Pending Invite" || v === "—" || v.trim() === "";
+      setFullName(isPlaceholder(user.fullName) ? "" : user.fullName);
+      setDisplayName(isPlaceholder(user.displayName) ? "" : user.displayName);
       setPhone(user.phone ?? "");
       setDepartment(user.department ?? "");
     }
@@ -1537,11 +1570,11 @@ function EditUserModal({
           </div>
 
           {[
-            { label: "Full Name",    value: fullName,    set: setFullName,    mono: false },
-            { label: "Display Name", value: displayName, set: setDisplayName, mono: false },
-            { label: "Phone",        value: phone,       set: setPhone,       mono: true  },
-            { label: "Department",   value: department,  set: setDepartment,  mono: false },
-          ].map(({ label, value, set, mono }) => (
+            { label: "Full Name",    value: fullName,    set: setFullName,    mono: false, placeholder: "e.g. Delbin Arkar" },
+            { label: "Display Name", value: displayName, set: setDisplayName, mono: false, placeholder: "e.g. Delbin (shown to teammates)" },
+            { label: "Phone",        value: phone,       set: setPhone,       mono: true,  placeholder: "+65 9123 4567" },
+            { label: "Department",   value: department,  set: setDepartment,  mono: false, placeholder: "e.g. Operations, Security, IT" },
+          ].map(({ label, value, set, mono, placeholder }) => (
             <div key={label}>
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {label}
@@ -1549,6 +1582,7 @@ function EditUserModal({
               <input
                 value={value}
                 onChange={(e) => set(e.target.value)}
+                placeholder={placeholder}
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
                   mono && "font-mono"

@@ -1693,15 +1693,18 @@ function UnlinkConfirmModal({
 interface AddNvrFields {
   id: string;          // auto-generated
   name: string;
+  /** "" while the user hasn't picked a model — surfaces a "Select model" placeholder option. */
   model: string;
   siteId: string;
   areaId: string;
   ipAddress: string;
-  httpPort: number;
-  totalStorageGb: number;
-  channelCount: number;
-  retentionDays: number;
-  cleanupSchedule: NvrData["cleanupSchedule"];
+  /** String-typed in form to keep "empty placeholder" UX; parsed on submit. */
+  httpPort: string;
+  totalStorageGb: string;
+  /** String so the field can be empty before user picks; parsed on submit. */
+  channelCount: string;
+  retentionDays: string;
+  cleanupSchedule: NvrData["cleanupSchedule"] | "";
 }
 
 function nextNvrId(takenIds: string[]): string {
@@ -1718,36 +1721,24 @@ function AddNvrModal({
   onClose: () => void;
   onConfirm: (fields: AddNvrFields) => void;
 }) {
-  const [fields, setFields] = React.useState<AddNvrFields>(() => ({
+  const blank = (): AddNvrFields => ({
     id: nextNvrId(takenIds),
     name: "",
-    model: "Hikvision DS-9664NI-I8",
-    siteId: CAMERA_SITES[0]?.value ?? "",
-    areaId: CAMERA_AREAS[0]?.value ?? "",
-    ipAddress: "10.10.0.",
-    httpPort: 80,
-    totalStorageGb: 8000,
-    channelCount: 16,
-    retentionDays: 30,
-    cleanupSchedule: "auto-age",
-  }));
+    model: "",
+    siteId: "",
+    areaId: "",
+    ipAddress: "",
+    httpPort: "",
+    totalStorageGb: "",
+    channelCount: "",
+    retentionDays: "",
+    cleanupSchedule: "",
+  });
+
+  const [fields, setFields] = React.useState<AddNvrFields>(blank);
 
   React.useEffect(() => {
-    if (open) {
-      setFields({
-        id: nextNvrId(takenIds),
-        name: "",
-        model: "Hikvision DS-9664NI-I8",
-        siteId: CAMERA_SITES[0]?.value ?? "",
-        areaId: CAMERA_AREAS[0]?.value ?? "",
-        ipAddress: "10.10.0.",
-        httpPort: 80,
-        totalStorageGb: 8000,
-        channelCount: 16,
-        retentionDays: 30,
-        cleanupSchedule: "auto-age",
-      });
-    }
+    if (open) setFields(blank());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -1758,9 +1749,12 @@ function AddNvrModal({
   const canSubmit =
     fields.name.trim() &&
     fields.model.trim() &&
+    fields.siteId &&
+    fields.areaId &&
     fields.ipAddress.trim() &&
-    fields.channelCount > 0 &&
-    fields.totalStorageGb > 0;
+    Number(fields.channelCount) > 0 &&
+    Number(fields.totalStorageGb) > 0 &&
+    fields.cleanupSchedule !== "";
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1797,6 +1791,7 @@ function AddNvrModal({
                 onChange={(e) => set("model", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select an NVR model</option>
                 <option value="Hikvision DS-9664NI-I8">Hikvision DS-9664NI-I8 (64-ch)</option>
                 <option value="Hikvision DS-7716NI-I4">Hikvision DS-7716NI-I4 (16-ch)</option>
                 <option value="Dahua NVR5864-4KS2">Dahua NVR5864-4KS2 (64-ch)</option>
@@ -1811,6 +1806,7 @@ function AddNvrModal({
                 onChange={(e) => set("siteId", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select a site</option>
                 {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -1821,6 +1817,7 @@ function AddNvrModal({
                 onChange={(e) => set("areaId", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select an area</option>
                 {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -1838,17 +1835,19 @@ function AddNvrModal({
               <input
                 type="number"
                 value={fields.httpPort}
-                onChange={(e) => set("httpPort", Number(e.target.value) || 80)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
+                onChange={(e) => set("httpPort", e.target.value)}
+                placeholder="80"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
               <select
-                value={String(fields.channelCount)}
-                onChange={(e) => set("channelCount", Number(e.target.value))}
+                value={fields.channelCount}
+                onChange={(e) => set("channelCount", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select channels</option>
                 {[4, 8, 16, 32, 64].map((c) => (
                   <option key={c} value={c}>{c} channels</option>
                 ))}
@@ -1859,8 +1858,9 @@ function AddNvrModal({
               <input
                 type="number"
                 value={fields.totalStorageGb}
-                onChange={(e) => set("totalStorageGb", Number(e.target.value) || 1000)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
+                onChange={(e) => set("totalStorageGb", e.target.value)}
+                placeholder="8000"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -1868,8 +1868,9 @@ function AddNvrModal({
               <input
                 type="number"
                 value={fields.retentionDays}
-                onChange={(e) => set("retentionDays", Number(e.target.value) || 30)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                onChange={(e) => set("retentionDays", e.target.value)}
+                placeholder="30"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -1879,6 +1880,7 @@ function AddNvrModal({
                 onChange={(e) => set("cleanupSchedule", e.target.value as NvrData["cleanupSchedule"])}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select cleanup mode</option>
                 <option value="auto-age">Auto · Age based</option>
                 <option value="auto-channel">Auto · Channel based</option>
                 <option value="manual">Manual only</option>
@@ -1910,9 +1912,10 @@ interface NvrFormFields {
   siteId: string;
   areaId: string;
   ipAddress: string;
-  httpPort: number;
-  retentionDays: number;
-  cleanupSchedule: NvrData["cleanupSchedule"];
+  httpPort: string;
+  totalStorageGb: string;
+  retentionDays: string;
+  cleanupSchedule: NvrData["cleanupSchedule"] | "";
 }
 
 function EditNvrModal({
@@ -1924,7 +1927,7 @@ function EditNvrModal({
   onConfirm: (fields: NvrFormFields) => void;
 }) {
   const [fields, setFields] = React.useState<NvrFormFields>({
-    name: "", siteId: "", areaId: "", ipAddress: "", httpPort: 80, retentionDays: 30, cleanupSchedule: "auto-age",
+    name: "", siteId: "", areaId: "", ipAddress: "", httpPort: "", totalStorageGb: "", retentionDays: "", cleanupSchedule: "",
   });
 
   React.useEffect(() => {
@@ -1934,8 +1937,9 @@ function EditNvrModal({
         siteId: nvr.siteId,
         areaId: nvr.areaId,
         ipAddress: nvr.ipAddress,
-        httpPort: nvr.httpPort,
-        retentionDays: nvr.retentionDays,
+        httpPort: String(nvr.httpPort),
+        totalStorageGb: String(nvr.totalStorageGb),
+        retentionDays: String(nvr.retentionDays),
         cleanupSchedule: nvr.cleanupSchedule,
       });
     }
@@ -1947,7 +1951,7 @@ function EditNvrModal({
     setFields((curr) => ({ ...curr, [key]: value }));
   }
 
-  const canSubmit = fields.name.trim() && fields.ipAddress.trim();
+  const canSubmit = fields.name.trim() && fields.ipAddress.trim() && fields.siteId && fields.areaId;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1987,7 +1991,8 @@ function EditNvrModal({
               <input
                 value={fields.name}
                 onChange={(e) => set("name", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                placeholder="e.g. FedEx Changi · NVR-A"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -1997,6 +2002,7 @@ function EditNvrModal({
                 onChange={(e) => set("siteId", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select a site</option>
                 {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -2007,6 +2013,7 @@ function EditNvrModal({
                 onChange={(e) => set("areaId", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select an area</option>
                 {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -2015,7 +2022,8 @@ function EditNvrModal({
               <input
                 value={fields.ipAddress}
                 onChange={(e) => set("ipAddress", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
+                placeholder="10.10.0.10"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -2023,8 +2031,19 @@ function EditNvrModal({
               <input
                 type="number"
                 value={fields.httpPort}
-                onChange={(e) => set("httpPort", Number(e.target.value) || 80)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
+                onChange={(e) => set("httpPort", e.target.value)}
+                placeholder="80"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
+              <input
+                type="number"
+                value={fields.totalStorageGb}
+                onChange={(e) => set("totalStorageGb", e.target.value)}
+                placeholder="8000"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -2032,17 +2051,19 @@ function EditNvrModal({
               <input
                 type="number"
                 value={fields.retentionDays}
-                onChange={(e) => set("retentionDays", Number(e.target.value) || 30)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                onChange={(e) => set("retentionDays", e.target.value)}
+                placeholder="30"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
-            <div>
+            <div className="col-span-2">
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
               <select
                 value={fields.cleanupSchedule}
                 onChange={(e) => set("cleanupSchedule", e.target.value as NvrFormFields["cleanupSchedule"])}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
               >
+                <option value="">Select cleanup mode</option>
                 <option value="auto-age">Auto · Age based</option>
                 <option value="auto-channel">Auto · Channel based</option>
                 <option value="manual">Manual only</option>
@@ -2512,7 +2533,13 @@ export default function NvrDevicesPage() {
         onConfirm={(fields) => {
           const site = CAMERA_SITES.find((s) => s.value === fields.siteId);
           const area = CAMERA_AREAS.find((a) => a.value === fields.areaId);
-          const channels = Array.from({ length: fields.channelCount }, (_, i) => ({
+          // Parse string-typed form fields into the numbers the data model expects.
+          const channelCount  = Number(fields.channelCount)  || 16;
+          const httpPort      = Number(fields.httpPort)      || 80;
+          const totalStorage  = Number(fields.totalStorageGb) || 8000;
+          const retentionDays = Number(fields.retentionDays) || 30;
+          const cleanup       = (fields.cleanupSchedule || "auto-age") as NvrData["cleanupSchedule"];
+          const channels = Array.from({ length: channelCount }, (_, i) => ({
             channel: i + 1,
             cameraId: null,
             cameraName: null,
@@ -2528,14 +2555,14 @@ export default function NvrDevicesPage() {
             areaName: area?.label ?? fields.areaId,
             status: "online",
             ipAddress: fields.ipAddress.trim(),
-            httpPort: fields.httpPort,
-            totalStorageGb: fields.totalStorageGb,
+            httpPort,
+            totalStorageGb: totalStorage,
             usedStorageGb: 0,
-            retentionDays: fields.retentionDays,
-            cleanupSchedule: fields.cleanupSchedule,
+            retentionDays,
+            cleanupSchedule: cleanup,
             channels,
             channelsInUse: 0,
-            channelCount: fields.channelCount,
+            channelCount,
             lastSeenAt: now.toISOString(),
             lastSeenDisplay: "Just now",
             activeAt: now.toISOString(),
@@ -2562,9 +2589,10 @@ export default function NvrDevicesPage() {
             areaId: fields.areaId,
             areaName: area?.label ?? n.areaName,
             ipAddress: fields.ipAddress.trim(),
-            httpPort: fields.httpPort,
-            retentionDays: fields.retentionDays,
-            cleanupSchedule: fields.cleanupSchedule,
+            httpPort: Number(fields.httpPort) || n.httpPort,
+            totalStorageGb: Number(fields.totalStorageGb) || n.totalStorageGb,
+            retentionDays: Number(fields.retentionDays) || n.retentionDays,
+            cleanupSchedule: (fields.cleanupSchedule || n.cleanupSchedule) as NvrData["cleanupSchedule"],
           } : n));
           setModal(null);
           toast.success(`${fields.name} updated`);

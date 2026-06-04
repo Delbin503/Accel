@@ -382,6 +382,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                     ["Name", name || "—"],
                     ["Timezone", timezone],
                     ["Address", address || "—"],
+                    ["Operating Hours", `${opFrom} – ${opTo}`],
                     ["Floor Plan", floorPlanUrl ? `Uploaded · ${floorPlanLabel || "Floor Plan"}` : "Not provided — can be added later"],
                   ] as [string, string][]).map(([label, value]) => (
                     <div key={label} className="flex flex-col gap-0.5">
@@ -449,7 +450,13 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   <Button variant="outline" onClick={next}>Skip for now</Button>
                 )}
                 <Button onClick={next}
-                  disabled={(step === "details" && !canNextFromDetails) || (step === "areas" && !canNextFromAreas)}
+                  disabled={
+                    (step === "details"    && !canNextFromDetails) ||
+                    (step === "areas"      && !canNextFromAreas)   ||
+                    // Floor plan: Continue only enabled once user picks/uploads a floor plan.
+                    // The "Skip for now" button above remains available for users who want to defer.
+                    (step === "floor-plan" && !floorPlanUrl)
+                  }
                   className="gap-1.5">
                   Continue
                   <ChevronRight className="size-3.5" />

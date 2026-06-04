@@ -17,6 +17,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
@@ -222,6 +223,12 @@ function ChangeStatusModal({
 
 /* ── Reassign modal ──────────────────────────────────────────────────────── */
 
+const ROLE_STYLES: Record<NonNullable<CaseAssignee["role"]>, { bg: string; text: string; label: string }> = {
+  owner: { bg: "bg-success/15 border-success/30",     text: "text-success",   label: "Owner" },
+  admin: { bg: "bg-info/15 border-info/30",           text: "text-info",      label: "Admin" },
+  user:  { bg: "bg-warning/15 border-warning/30",     text: "text-warning",   label: "User"  },
+};
+
 function ReassignModal({
   open,
   current,
@@ -234,46 +241,115 @@ function ReassignModal({
   onConfirm: (a: CaseAssignee) => void;
 }) {
   const [picked, setPicked] = React.useState<CaseAssignee>(current);
+  const [search, setSearch] = React.useState("");
+  const [roleFilter, setRoleFilter] = React.useState<"all" | "owner" | "admin" | "user">("all");
 
   React.useEffect(() => {
-    if (open) setPicked(current);
+    if (open) { setPicked(current); setSearch(""); setRoleFilter("all"); }
   }, [open, current]);
+
+  const filtered = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return ASSIGNEES.filter((a) => {
+      if (roleFilter !== "all" && a.role !== roleFilter) return false;
+      if (q && !`${a.name} ${a.id} ${a.role ?? ""}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [search, roleFilter]);
+
+  const ROLE_PILLS: { key: typeof roleFilter; label: string }[] = [
+    { key: "all",   label: "All" },
+    { key: "owner", label: "Owners" },
+    { key: "admin", label: "Admins" },
+    { key: "user",  label: "Users" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Reassign Case</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             Transfer ownership to another team member.
           </p>
         </DialogHeader>
 
-        <div className="space-y-1.5 p-5">
-          {ASSIGNEES.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setPicked(a)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg border px-4 py-2.5 text-left transition-colors",
-                picked.id === a.id
-                  ? "border-primary bg-primary-muted"
-                  : "border-border bg-muted/30 hover:border-primary"
-              )}
-            >
-              <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">
-                {a.name.charAt(0)}
-              </div>
-              <div className="flex-1">
-                <div className="text-[13px] font-semibold text-foreground">{a.name}</div>
-                <div className="font-mono text-[11px] text-muted-foreground">{a.id}</div>
-              </div>
-              {picked.id === a.id && <Check className="size-4 text-primary" />}
-            </button>
-          ))}
+        {/* Filter bar */}
+        <div className="flex-shrink-0 space-y-2 border-b border-border px-5 py-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, user ID or role…"
+              className="h-9 pl-9 text-[13px]"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Role</span>
+            {ROLE_PILLS.map((p) => {
+              const active = roleFilter === p.key;
+              const count = p.key === "all" ? ASSIGNEES.length : ASSIGNEES.filter((a) => a.role === p.key).length;
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => setRoleFilter(p.key)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  )}
+                >
+                  {p.label} <span className="font-mono opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex-1 space-y-1.5 overflow-y-auto p-5">
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-[12px] italic text-muted-foreground">
+              No members match the current filters.
+            </p>
+          ) : filtered.map((a) => {
+            const role = a.role ? ROLE_STYLES[a.role] : null;
+            return (
+              <button
+                key={a.id}
+                onClick={() => setPicked(a)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border px-4 py-2.5 text-left transition-colors",
+                  picked.id === a.id
+                    ? "border-primary bg-primary-muted"
+                    : "border-border bg-muted/30 hover:border-primary"
+                )}
+              >
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">
+                  {a.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold text-foreground">{a.name}</span>
+                    {role && (
+                      <span className={cn(
+                        "inline-flex items-center rounded-full border px-1.5 py-px text-[9px] font-bold uppercase tracking-wider",
+                        role.bg, role.text
+                      )}>
+                        {role.label}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-[11px] text-muted-foreground">{a.id}</div>
+                </div>
+                {picked.id === a.id && <Check className="size-4 text-primary" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>

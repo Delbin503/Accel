@@ -1596,14 +1596,18 @@ interface CameraFormFields {
   siteId: string;
   areaId: string;
   ipAddress: string;
-  rtspPort: number;
+  /** String-typed in the form so empty inputs render as placeholders; parsed on submit. */
+  rtspPort: string;
   rtspUrl: string;          // full RTSP URL the user provides (or auto-built from IP:port)
   resolution: string;
-  frameRate: number;
-  retentionDays: number;
+  /** String-typed in the form so empty inputs render as placeholders; parsed on submit. */
+  frameRate: string;
+  /** String-typed in the form so empty inputs render as placeholders; parsed on submit. */
+  retentionDays: string;
   nvrId: string;
   channel: number | null;
-  recordingMode: RecordingMode;
+  /** "" while the user hasn't picked yet — surfaces a "Select mode" placeholder option. */
+  recordingMode: RecordingMode | "";
   scheduleDays: number[];
   scheduleStart: string;
   scheduleEnd: string;
@@ -1619,20 +1623,20 @@ function emptyForm(takenIds: string[]): CameraFormFields {
   return {
     id: nextCameraId(takenIds),
     name: "",
-    siteId: CAMERA_SITES[0]?.value ?? "",
-    areaId: CAMERA_AREAS[0]?.value ?? "",
-    ipAddress: "10.10.0.",
-    rtspPort: 554,
-    resolution: "1920x1080",
-    frameRate: 25,
-    retentionDays: 30,
+    siteId: "",
+    areaId: "",
+    ipAddress: "",
+    rtspPort: "",
+    resolution: "",
+    frameRate: "",
+    retentionDays: "",
     nvrId: "",
     channel: null,
     rtspUrl: "",
-    recordingMode: "scheduled",
-    scheduleDays: [...DEFAULT_DAYS],
-    scheduleStart: "08:00",
-    scheduleEnd: "18:00",
+    recordingMode: "",
+    scheduleDays: [],
+    scheduleStart: "",
+    scheduleEnd: "",
   };
 }
 
@@ -1649,11 +1653,11 @@ function fromCamera(c: CameraData): CameraFormFields {
     siteId: c.siteId,
     areaId: c.areaId,
     ipAddress: c.ipAddress,
-    rtspPort: c.rtspPort,
+    rtspPort: String(c.rtspPort),
     rtspUrl: c.rtspUrl,
     resolution: c.stream.resolution,
-    frameRate: c.stream.frameRate,
-    retentionDays: c.recording.retentionDays,
+    frameRate: String(c.stream.frameRate),
+    retentionDays: String(c.recording.retentionDays),
     nvrId: c.nvrId ?? "",
     channel: c.channel,
     recordingMode: mode,
@@ -1826,14 +1830,14 @@ function CameraFormModal({
               <FormSelect
                 value={fields.siteId}
                 onChange={(v) => set("siteId", v)}
-                options={CAMERA_SITES}
+                options={[{ value: "", label: "Select a site" }, ...CAMERA_SITES]}
               />
             </FormField>
             <FormField label="Area">
               <FormSelect
                 value={fields.areaId}
                 onChange={(v) => set("areaId", v)}
-                options={CAMERA_AREAS}
+                options={[{ value: "", label: "Select an area" }, ...CAMERA_AREAS]}
               />
             </FormField>
             <FormField label="IP Address">
@@ -1847,7 +1851,8 @@ function CameraFormModal({
             <FormField label="RTSP Port">
               <TextInput
                 value={fields.rtspPort}
-                onChange={(v) => set("rtspPort", Number(v) || 554)}
+                onChange={(v) => set("rtspPort", v)}
+                placeholder="554"
                 type="number"
                 mono
               />
@@ -1857,6 +1862,7 @@ function CameraFormModal({
                 value={fields.resolution}
                 onChange={(v) => set("resolution", v)}
                 options={[
+                  { value: "",          label: "Select resolution" },
                   { value: "1280x720",  label: "1280×720 (HD)" },
                   { value: "1920x1080", label: "1920×1080 (Full HD)" },
                   { value: "2560x1440", label: "2560×1440 (2K)" },
@@ -1866,9 +1872,10 @@ function CameraFormModal({
             </FormField>
             <FormField label="Frame Rate">
               <FormSelect
-                value={String(fields.frameRate)}
-                onChange={(v) => set("frameRate", Number(v))}
+                value={fields.frameRate}
+                onChange={(v) => set("frameRate", v)}
                 options={[
+                  { value: "",   label: "Select frame rate" },
                   { value: "15", label: "15 fps" },
                   { value: "20", label: "20 fps" },
                   { value: "25", label: "25 fps" },
@@ -1880,7 +1887,8 @@ function CameraFormModal({
             <FormField label="Retention (days)" span={2}>
               <TextInput
                 value={fields.retentionDays}
-                onChange={(v) => set("retentionDays", Number(v) || 30)}
+                onChange={(v) => set("retentionDays", v)}
+                placeholder="30"
                 type="number"
               />
             </FormField>
@@ -1888,7 +1896,7 @@ function CameraFormModal({
               <TextInput
                 value={fields.rtspUrl}
                 onChange={(v) => set("rtspUrl", v)}
-                placeholder={`rtsp://${fields.ipAddress || "10.10.0.x"}:${fields.rtspPort}/Streaming/Channels/101`}
+                placeholder={`rtsp://${fields.ipAddress || "10.10.0.x"}:${fields.rtspPort || "554"}/Streaming/Channels/101`}
                 mono
               />
             </FormField>
@@ -1946,6 +1954,7 @@ function CameraFormModal({
                 value={fields.recordingMode}
                 onChange={(v) => set("recordingMode", v as RecordingMode)}
                 options={[
+                  { value: "",           label: "Select recording mode" },
                   { value: "continuous", label: "Continuous · 24/7 recording" },
                   { value: "scheduled",  label: "Scheduled · selected days & hours" },
                 ]}
@@ -2142,6 +2151,11 @@ export default function CamerasPage() {
     const site = CAMERA_SITES.find((s) => s.value === fields.siteId);
     const area = CAMERA_AREAS.find((a) => a.value === fields.areaId);
     const nvr = fields.nvrId ? MOCK_NVRS.find((n) => n.id === fields.nvrId) : null;
+    // Parse string-typed form numerics into actual numbers, with sensible defaults when empty.
+    const rtspPort      = Number(fields.rtspPort)      || 554;
+    const frameRate     = Number(fields.frameRate)     || 25;
+    const retentionDays = Number(fields.retentionDays) || 30;
+    const recordingMode = fields.recordingMode || "continuous";
     return {
       id: fields.id.trim(),
       name: fields.name.trim(),
@@ -2151,20 +2165,20 @@ export default function CamerasPage() {
       areaName: area?.label ?? fields.areaId,
       status: base?.status ?? "offline",
       ipAddress: fields.ipAddress.trim(),
-      rtspPort: fields.rtspPort,
-      rtspUrl: fields.rtspUrl.trim() || `rtsp://${fields.ipAddress.trim()}:${fields.rtspPort}/Streaming/Channels/101`,
+      rtspPort,
+      rtspUrl: fields.rtspUrl.trim() || `rtsp://${fields.ipAddress.trim()}:${rtspPort}/Streaming/Channels/101`,
       stream: {
         codec: base?.stream.codec ?? "h264",
-        resolution: fields.resolution,
-        frameRate: fields.frameRate,
+        resolution: fields.resolution || "1920x1080",
+        frameRate,
       },
       recording: {
-        retentionDays: fields.retentionDays,
+        retentionDays,
         bitrateKbps: base?.recording.bitrateKbps ?? 4096,
-        schedule: fields.recordingMode === "continuous" ? "always" : "custom",
-        scheduleDays: fields.recordingMode === "continuous" ? [0, 1, 2, 3, 4, 5, 6] : fields.scheduleDays,
-        scheduleStart: fields.recordingMode === "continuous" ? "00:00" : fields.scheduleStart,
-        scheduleEnd: fields.recordingMode === "continuous" ? "23:59" : fields.scheduleEnd,
+        schedule: recordingMode === "continuous" ? "always" : "custom",
+        scheduleDays: recordingMode === "continuous" ? [0, 1, 2, 3, 4, 5, 6] : fields.scheduleDays,
+        scheduleStart: recordingMode === "continuous" ? "00:00" : (fields.scheduleStart || "08:00"),
+        scheduleEnd:   recordingMode === "continuous" ? "23:59" : (fields.scheduleEnd   || "18:00"),
       },
       nvrId: fields.nvrId || null,
       nvrName: nvr?.name ?? null,

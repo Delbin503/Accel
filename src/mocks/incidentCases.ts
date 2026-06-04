@@ -1,11 +1,11 @@
 import type { IncidentCase, CaseAssignee } from "@/types/incidents";
 
 export const ASSIGNEES: CaseAssignee[] = [
-  { name: "Sze Hui", id: "USR-001" },
-  { name: "KC Loke", id: "USR-002" },
-  { name: "Jon", id: "USR-003" },
-  { name: "Olivia", id: "USR-004" },
-  { name: "Ahmad", id: "USR-005" },
+  { name: "Sze Hui", id: "USR-001", role: "owner" },
+  { name: "KC Loke", id: "USR-002", role: "admin" },
+  { name: "Jon",     id: "USR-003", role: "admin" },
+  { name: "Olivia",  id: "USR-004", role: "user"  },
+  { name: "Ahmad",   id: "USR-005", role: "user"  },
 ];
 
 export const MOCK_CASES: IncidentCase[] = [

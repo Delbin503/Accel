@@ -25,6 +25,8 @@ export interface CaseActivity {
 export interface CaseAssignee {
   name: string;
   id: string;
+  /** Optional role label shown in pickers ("Owner", "Admin", "User"). */
+  role?: "owner" | "admin" | "user";
 }
 
 export interface IncidentCase {

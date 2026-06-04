@@ -1311,7 +1311,7 @@ function RuleBuilder({
                 <Input
                   value={s.name}
                   onChange={(e) => patch({ name: e.target.value })}
-                  placeholder="Enter rule name"
+                  placeholder="e.g. Helmet not worn in Armoury-B"
                   className="h-10 text-[13px]"
                 />
               </div>
@@ -1322,7 +1322,7 @@ function RuleBuilder({
                 <textarea
                   value={s.description}
                   onChange={(e) => patch({ description: e.target.value })}
-                  placeholder="What does this rule detect and when does it fire?"
+                  placeholder="e.g. Triggers when a person is detected inside Armoury-B without a helmet for more than 5 seconds during operating hours."
                   rows={2}
                   className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                 />
@@ -1585,7 +1585,9 @@ export default function RulesLibraryPage() {
     // the new rule lands directly in the Rule Library panel of the model editor.
     if (cameFromModel.current && builderMode === "create") {
       cameFromModel.current = false;
-      navigate("/models");
+      // Replace history so the browser back button doesn't bounce the user into the
+      // rules library; land on the bare /models page (no model selected).
+      navigate("/models", { replace: true });
       return;
     }
     setView("list");

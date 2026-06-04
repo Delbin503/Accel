@@ -568,7 +568,7 @@ function AddStepModal({
             <Input
               value={actionLabel}
               onChange={(e) => setActionLabel(e.target.value)}
-              placeholder="Describe what the AI should verify at this step…"
+              placeholder="e.g. Verify worker is wearing approved helmet"
               className="h-10 text-[13px]"
             />
           </div>
@@ -580,7 +580,7 @@ function AddStepModal({
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="Enter label (e.g. Model AI)"
+              placeholder="e.g. Helmet Detection v2.1"
               className="h-10 text-[13px]"
             />
           </div>

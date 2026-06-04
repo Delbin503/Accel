@@ -467,6 +467,11 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
   );
 }
 
+const TIMEZONES = [
+  "Asia/Singapore", "Asia/Tokyo", "Asia/Hong_Kong", "Asia/Kuala_Lumpur",
+  "Asia/Bangkok", "Australia/Sydney", "Europe/London", "America/New_York",
+];
+
 function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null; open: boolean; onClose: () => void; onSave: (patch: Partial<SiteData>) => void }) {
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
@@ -486,20 +491,26 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
         <div className="space-y-3 px-5 py-4">
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-[13px]" />
+            <Input value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Astra HQ" className="h-9 text-[13px]" />
           </div>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} className="h-9 text-[13px]" />
+            <Input value={address} onChange={(e) => setAddress(e.target.value)}
+              placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-[13px]" />
           </div>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
-            <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} className="h-9 text-[13px]" />
+            <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
+              {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
+            </select>
           </div>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground focus:border-primary focus:outline-none" />
+              placeholder="A short description of this site…"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
