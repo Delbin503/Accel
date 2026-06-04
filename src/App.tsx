@@ -48,6 +48,10 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import OnboardingSitePage from "@/pages/auth/OnboardingSite";
 import OnboardingSubscriptionPage from "@/pages/auth/OnboardingSubscription";
 
+// On-Premise flow (offline single-site appliance)
+import OnPremSignInPage from "@/pages/auth/onprem/OnPremSignIn";
+import OnPremSetupPage from "@/pages/auth/onprem/OnPremSetup";
+
 function App() {
   return (
     <>
@@ -59,6 +63,13 @@ function App() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Route>
+
+      {/* On-Premise flow — testable via URL. Kept outside RedirectIfAuthed
+          so /on-premise/* renders regardless of current cloud auth state. */}
+      <Route path="/on-premise" element={<Navigate to="/on-premise/signin" replace />} />
+      <Route path="/on-premise/signin" element={<OnPremSignInPage />} />
+      <Route path="/on-premise/setup"  element={<OnPremSetupPage />} />
+      <Route path="/on-premise/signup" element={<Navigate to="/on-premise/setup" replace />} />
 
       {/* Onboarding pages — require auth, enforce step order */}
       <Route path="/onboarding/site"         element={<RequireOnboardingStep step="site" />}>

@@ -12,6 +12,10 @@ export interface AuthUser {
   notificationCount: number;
   /** Organization name picked at signup. */
   orgName?: string;
+  /** "cloud" (default) or "onprem" (offline single-site appliance). */
+  deploymentMode?: "cloud" | "onprem";
+  /** Username (on-prem only — appliance accounts don't use email login). */
+  username?: string;
 }
 
 interface AuthState {
