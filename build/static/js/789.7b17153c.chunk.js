@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkvibe_coding_accel=self.webpackChunkvibe_coding_accel||[]).push([[789],{789(e,c,s){s.r(c),s.d(c,{default:()=>n});var l=s(579);const n=()=>(0,l.jsx)("div",{className:"flex h-full items-center justify-center bg-neutral-850",children:(0,l.jsx)("img",{src:"/underDevelopment.png",className:"mb-4 w-[1038px]"})})}}]);
+//# sourceMappingURL=789.7b17153c.chunk.js.map

@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkvibe_coding_accel=self.webpackChunkvibe_coding_accel||[]).push([[673],{5673(e,c,s){s.r(c),s.d(c,{default:()=>i});var n=s(5043),r=s(5544),a=s(579);const d=()=>{const e=(0,n.useState)(0),c=(0,r.A)(e,2),s=c[0],d=c[1];return(0,a.jsxs)("div",{children:[(0,a.jsxs)("h1",{children:["Counter: ",s]}),(0,a.jsx)("button",{onClick:()=>d(s+1),children:"Increment"})]})},i=()=>(0,a.jsx)("div",{className:"App",children:(0,a.jsx)("header",{className:"App-header",children:(0,a.jsx)(d,{})})})}}]);
+//# sourceMappingURL=673.c5db55d4.chunk.js.map
