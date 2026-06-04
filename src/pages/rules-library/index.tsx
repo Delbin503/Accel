@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -1502,16 +1503,9 @@ export default function RulesLibraryPage() {
   }
   const [userTemplates, setUserTemplates] = React.useState<UserTemplate[]>([]);
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(null);
-  const [toast, setToast] = React.useState<string | null>(null);
   const [templateSearch, setTemplateSearch] = React.useState("");
   const [templateTagFilter, setTemplateTagFilter] = React.useState<string[]>([]);
   const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2400);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // Aggregate existing tags for autocomplete (built-in tags + tags from any rule)
   const existingRuleTags = React.useMemo(() => {
@@ -1616,7 +1610,7 @@ export default function RulesLibraryPage() {
       savedAtDisplay: display,
     };
     setUserTemplates((curr) => [tpl, ...curr]);
-    setToast(`Template "${tpl.name}" saved`);
+    toast.success(`Template "${tpl.name}" saved`);
   }
 
   function openTemplateInBuilder(tpl: UserTemplate) {
@@ -1807,16 +1801,10 @@ export default function RulesLibraryPage() {
             onConfirm={() => {
               setUserTemplates((curr) => curr.filter((t) => t.id !== deleteTemplateId));
               setDeleteTemplateId(null);
-              setToast("Template deleted");
+              toast.success("Template deleted");
             }}
             onCancel={() => setDeleteTemplateId(null)}
           />
-        )}
-        {toast && (
-          <div className="fixed right-5 top-5 z-[70] flex items-center gap-2.5 rounded-lg border border-border bg-card px-4 py-3 shadow-xl">
-            <Check className="size-4 text-success" />
-            <p className="text-[13px] font-medium text-foreground">{toast}</p>
-          </div>
         )}
       </div>
     );

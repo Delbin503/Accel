@@ -141,7 +141,7 @@ export const MOCK_CAMERAS: CameraData[] = [
     id: "Cam-32", name: "Parking P1 — Gate",
     siteId: "astra", siteName: "Astra HQ",
     areaId: "astra-parking-p1", areaName: "Parking P1",
-    status: "pending", ip: "10.10.0.132", zones: 0, events24h: 0,
+    status: "offline", ip: "10.10.0.132", zones: 0, events24h: 0,
     lastSeen: "2026-05-24T16:00:00", lastSeenDisplay: "24 May 2026, 16:00",
     activeAt: "2026-05-24T16:00:00", activeAtDisplay: "24 May 2026, 16:00",
   }),

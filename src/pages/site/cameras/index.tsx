@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -19,6 +20,7 @@ import {
   Trash2,
   MoreHorizontal,
   Pencil,
+  Clock,
   Play,
   Link2,
   Cpu,
@@ -41,6 +43,7 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_DEPLOYMENTS } from "@/mocks/deployments";
 import { getRecordingsForCamera, type RecordingDisplay } from "@/mocks/recordings";
 import type { CameraData, CameraStatus, BoundaryZone } from "@/types/cameras";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import type { DeploymentData } from "@/types/deployments";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -49,7 +52,6 @@ const STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: strin
   online:              { bg: "bg-success/15 border-success/30",           text: "text-success",          dot: "bg-success",          label: "Online" },
   offline:             { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline" },
   "connection-failed": { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
-  pending:             { bg: "bg-warning/15 border-warning/30",           text: "text-warning",          dot: "bg-warning",          label: "Pending" },
 };
 
 function StatusPill({ status }: { status: CameraStatus }) {
@@ -76,93 +78,15 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: CameraData[]) => number;
 }[] = [
-  {
-    key: "all",
-    label: "Total Cameras",
-    sub: "Across all sites",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
-    getValue: (items) => items.length,
-  },
-  {
-    key: "online",
-    label: "Online",
-    sub: "Streaming + healthy",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
-    getValue: (items) => items.filter((c) => c.status === "online").length,
-  },
-  {
-    key: "offline",
-    label: "Offline",
-    sub: "Last seen > threshold",
-    barClass: "bg-muted-foreground",
-    valueClass: "text-muted-foreground",
-    activeClass: "border-muted-foreground",
-    getValue: (items) => items.filter((c) => c.status === "offline").length,
-  },
-  {
-    key: "connection-failed",
-    label: "Connection Failed",
-    sub: "RTSP unreachable",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    activeClass: "border-sev-critical",
-    getValue: (items) => items.filter((c) => c.status === "connection-failed").length,
-  },
-  {
-    key: "unlinked",
-    label: "Unlinked to NVR",
-    sub: "Events have no footage",
-    barClass: "bg-warning",
-    valueClass: "text-warning",
-    activeClass: "border-warning",
-    getValue: (items) => items.filter((c) => !c.nvrId).length,
-  },
+  { key: "all",               label: "Total Cameras",     sub: "Across all sites",        accent: "primary",      getValue: (i) => i.length },
+  { key: "online",            label: "Online",            sub: "Streaming + healthy",     accent: "success",      getValue: (i) => i.filter((c) => c.status === "online").length },
+  { key: "offline",           label: "Offline",           sub: "Last seen > threshold",   accent: "muted",        getValue: (i) => i.filter((c) => c.status === "offline").length },
+  { key: "connection-failed", label: "Connection Failed", sub: "RTSP unreachable",        accent: "sev-critical", getValue: (i) => i.filter((c) => c.status === "connection-failed").length },
+  { key: "unlinked",          label: "Unlinked to NVR",   sub: "Events have no footage",  accent: "warning",      getValue: (i) => !i ? 0 : i.filter((c) => !c.nvrId).length },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[number];
-  items: CameraData[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
 
@@ -247,7 +171,6 @@ const STATUS_OPTS: FilterOption[] = [
   { value: "online",            label: "Online" },
   { value: "offline",           label: "Offline" },
   { value: "connection-failed", label: "Failed" },
-  { value: "pending",           label: "Pending" },
 ];
 
 function FilterPanel({
@@ -364,41 +287,42 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   );
 }
 
+// Unified compact StatCard — delegates to the shared KpiCard so accent bar + sizing match.
 function StatCard({
   label,
   value,
-  icon,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  icon: _icon,
   valueClass,
   sub,
 }: {
   label: string;
   value: React.ReactNode;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   valueClass?: string;
   sub?: string;
 }) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-3">
-      <div className="mb-1 flex items-center gap-1.5">
-        {icon}
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {label}
-        </p>
-      </div>
-      <p className={cn("text-[18px] font-bold leading-none text-foreground", valueClass)}>{value}</p>
-      {sub && <p className="mt-1 text-[11px] text-muted-foreground">{sub}</p>}
-    </div>
-  );
+  // Derive accent from valueClass (text-success / text-info / text-sev-critical / text-warning).
+  const accent: KpiAccent =
+    valueClass?.includes("text-success")      ? "success" :
+    valueClass?.includes("text-info")         ? "info" :
+    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-warning")      ? "warning" :
+    valueClass?.includes("text-purple")       ? "purple" :
+    "primary";
+  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
 
 /* ── Deployment status pill (mini, drawer-only) ──────────────────────────── */
 
+// Status colors mirror the Model Deployment History KPI cards exactly:
+//   active=success  paused=warning  pending=info  stopped=muted  failed=sev-critical
 const DEPLOY_STATUS_STYLES: Record<DeploymentData["status"], { bg: string; text: string; dot: string; label: string }> = {
-  active:           { bg: "bg-success/15 border-success/30",           text: "text-success",      dot: "bg-success",      label: "Active" },
-  paused:           { bg: "bg-warning/15 border-warning/30",           text: "text-warning",      dot: "bg-warning",      label: "Paused" },
-  "pending-camera": { bg: "bg-info/15 border-info/30",                 text: "text-info",         dot: "bg-info",         label: "Pending" },
-  stopped:          { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical", label: "Stopped" },
-  failed:           { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical", label: "Failed" },
+  active:           { bg: "bg-success/15 border-success/30",           text: "text-success",          dot: "bg-success",          label: "Active" },
+  paused:           { bg: "bg-warning/15 border-warning/30",           text: "text-warning",          dot: "bg-warning",          label: "Paused" },
+  "pending-camera": { bg: "bg-info/15 border-info/30",                 text: "text-info",             dot: "bg-info",             label: "Pending" },
+  stopped:          { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Stopped" },
+  failed:           { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
 };
 
 function DeployStatusPill({ status }: { status: DeploymentData["status"] }) {
@@ -495,7 +419,7 @@ function RecordingCard({ r, isSelected, onToggle, onOpen }: {
 
 /* ── Draw zone modal ─────────────────────────────────────────────────────── */
 
-function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpdateZone, onRemoveZone }: {
+function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpdateZone, onRemoveZone, onUpdateZoneBox }: {
   open: boolean;
   cameraName: string;
   existingZones: BoundaryZone[];
@@ -503,9 +427,11 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
   onSave: (label: string, box: [number, number, number, number]) => void;
   onUpdateZone: (zoneId: string, label: string) => void;
   onRemoveZone: (zoneId: string) => void;
+  onUpdateZoneBox: (zoneId: string, box: [number, number, number, number]) => void;
 }) {
   const [label, setLabel] = React.useState("");
-  const [box, setBox] = React.useState<{ x: number; y: number; w: number; h: number }>({ x: 0.25, y: 0.25, w: 0.4, h: 0.4 });
+  // null = no draft, else a draft new zone the user is drawing/positioning
+  const [draft, setDraft] = React.useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [editingZoneId, setEditingZoneId] = React.useState<string | null>(null);
   const [editingLabel, setEditingLabel] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -514,10 +440,14 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
   React.useEffect(() => {
     if (open) {
       setLabel("");
-      setBox({ x: 0.25, y: 0.25, w: 0.4, h: 0.4 });
+      setDraft(null);
       setEditingZoneId(null);
+      setEditingLabel("");
     }
   }, [open]);
+
+  // Live-edited box for the currently-edited existing zone
+  const editingZone = editingZoneId ? existingZones.find((z) => z.id === editingZoneId) : null;
 
   if (!open) return null;
 
@@ -531,16 +461,19 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
   }
 
   function onMouseDownContainer(e: React.MouseEvent) {
+    // If user clicks on an existing zone, that zone's handler runs instead.
     if ((e.target as HTMLElement).closest("[data-zone-box]")) return;
     if ((e.target as HTMLElement).closest("[data-existing-zone]")) return;
+    // Empty canvas click → start a new draft box
+    setEditingZoneId(null);
     const [x, y] = normalizedPoint(e);
     drawRef.current = { startX: x, startY: y, mode: "draw" };
-    setBox({ x, y, w: 0, h: 0 });
+    setDraft({ x, y, w: 0, h: 0 });
     const onMove = (ev: MouseEvent) => {
       const ctx = drawRef.current;
       if (!ctx || ctx.mode !== "draw") return;
       const [cx, cy] = normalizedPoint(ev);
-      setBox({
+      setDraft({
         x: Math.min(ctx.startX, cx),
         y: Math.min(ctx.startY, cy),
         w: Math.abs(cx - ctx.startX),
@@ -556,20 +489,19 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
     window.addEventListener("mouseup", onUp);
   }
 
-  function onMouseDownBox(e: React.MouseEvent) {
+  // Generic drag-to-move for any rectangle. updateFn receives the new (x, y).
+  function dragBox(e: React.MouseEvent, current: { x: number; y: number; w: number; h: number }, updateFn: (x: number, y: number) => void) {
     e.stopPropagation();
-    const [x, y] = normalizedPoint(e);
-    const offsetX = x - box.x;
-    const offsetY = y - box.y;
+    const [px, py] = normalizedPoint(e);
+    const offsetX = px - current.x;
+    const offsetY = py - current.y;
     drawRef.current.mode = "move";
     const onMove = (ev: MouseEvent) => {
       if (drawRef.current.mode !== "move") return;
       const [cx, cy] = normalizedPoint(ev);
-      setBox((curr) => ({
-        ...curr,
-        x: Math.max(0, Math.min(1 - curr.w, cx - offsetX)),
-        y: Math.max(0, Math.min(1 - curr.h, cy - offsetY)),
-      }));
+      const nx = Math.max(0, Math.min(1 - current.w, cx - offsetX));
+      const ny = Math.max(0, Math.min(1 - current.h, cy - offsetY));
+      updateFn(nx, ny);
     };
     const onUp = () => {
       drawRef.current.mode = null;
@@ -580,15 +512,14 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
     window.addEventListener("mouseup", onUp);
   }
 
-  function onResizeBox(e: React.MouseEvent) {
+  // Generic corner-resize for any rectangle.
+  function resizeBox(e: React.MouseEvent, current: { x: number; y: number }, updateFn: (w: number, h: number) => void) {
     e.stopPropagation();
     const onMove = (ev: MouseEvent) => {
       const [cx, cy] = normalizedPoint(ev);
-      setBox((curr) => ({
-        ...curr,
-        w: Math.max(0.05, Math.min(1 - curr.x, cx - curr.x)),
-        h: Math.max(0.05, Math.min(1 - curr.y, cy - curr.y)),
-      }));
+      const w = Math.max(0.05, Math.min(1 - current.x, cx - current.x));
+      const h = Math.max(0.05, Math.min(1 - current.y, cy - current.y));
+      updateFn(w, h);
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
@@ -599,35 +530,42 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
   }
 
   function commit() {
-    if (!label.trim() || box.w < 0.05 || box.h < 0.05) return;
-    onSave(label.trim(), [box.x, box.y, box.x + box.w, box.y + box.h]);
+    if (!draft || !label.trim() || draft.w < 0.05 || draft.h < 0.05) return;
+    onSave(label.trim(), [draft.x, draft.y, draft.x + draft.w, draft.y + draft.h]);
     setLabel("");
-    setBox({ x: 0.25, y: 0.25, w: 0.4, h: 0.4 });
+    setDraft(null);
   }
 
-  function commitEdit() {
-    if (editingZoneId && editingLabel.trim()) {
-      onUpdateZone(editingZoneId, editingLabel.trim());
-    }
-    setEditingZoneId(null);
-    setEditingLabel("");
+  function moveExistingZone(zoneId: string, nx: number, ny: number) {
+    const z = existingZones.find((x) => x.id === zoneId);
+    if (!z) return;
+    const w = z.box[2] - z.box[0];
+    const h = z.box[3] - z.box[1];
+    onUpdateZoneBox(zoneId, [nx, ny, nx + w, ny + h]);
+  }
+
+  function resizeExistingZone(zoneId: string, nw: number, nh: number) {
+    const z = existingZones.find((x) => x.id === zoneId);
+    if (!z) return;
+    onUpdateZoneBox(zoneId, [z.box[0], z.box[1], z.box[0] + nw, z.box[1] + nh]);
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="flex-shrink-0 border-b border-border px-5 py-4">
-          <p className="text-base font-bold text-foreground">Edit Detection Zones</p>
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[85vh] w-[840px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Edit Detection Zones</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            View, edit and draw boundary zones on <strong className="text-foreground">{cameraName}</strong>. Drag a new rectangle on the canvas, or click any existing zone to edit.
+            View, draw and edit boundary zones on <strong className="text-foreground">{cameraName}</strong>.
+            Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.
           </p>
-        </div>
+        </DialogHeader>
         <div className="flex-1 overflow-y-auto p-5">
-          {/* Camera canvas with existing + new zones */}
+          {/* Camera canvas — bigger so zones are easier to manipulate */}
           <div
             ref={containerRef}
             onMouseDown={onMouseDownContainer}
-            className="relative aspect-video w-full select-none overflow-hidden rounded-lg border-2 border-border bg-neutral-950"
+            className="relative aspect-video w-full cursor-crosshair select-none overflow-hidden rounded-lg border-2 border-border bg-neutral-950"
             style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }}
           >
             <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -637,7 +575,16 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
             </span>
             <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white/85 backdrop-blur-sm">{cameraName}</span>
 
-            {/* Existing zones — info color */}
+            {/* Empty-state hint */}
+            {existingZones.length === 0 && !draft && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="rounded-lg border border-dashed border-white/30 bg-black/40 px-4 py-2 text-center text-[11px] text-white/70 backdrop-blur-sm">
+                  Click and drag anywhere on the canvas to draw a new zone
+                </div>
+              </div>
+            )}
+
+            {/* Existing zones */}
             {existingZones.map((z, i) => {
               const [x0, y0, x1, y1] = z.box;
               const w = x1 - x0;
@@ -647,9 +594,22 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                 <div
                   key={z.id}
                   data-existing-zone
+                  onMouseDown={(e) => {
+                    if (!isEditing) {
+                      // First click: enter edit mode
+                      e.stopPropagation();
+                      setEditingZoneId(z.id);
+                      setEditingLabel(z.label);
+                      return;
+                    }
+                    // Already editing → drag to move
+                    dragBox(e, { x: x0, y: y0, w, h }, (nx, ny) => moveExistingZone(z.id, nx, ny));
+                  }}
                   className={cn(
                     "absolute border-2 transition-colors",
-                    isEditing ? "border-warning bg-warning/15" : "border-info bg-info/15 hover:border-info/80"
+                    isEditing
+                      ? "cursor-move border-warning bg-warning/20 ring-2 ring-warning/40"
+                      : "cursor-pointer border-info bg-info/15 hover:border-info/80 hover:bg-info/25"
                   )}
                   style={{
                     left: `${x0 * 100}%`, top: `${y0 * 100}%`,
@@ -660,55 +620,112 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                     "absolute -top-5 left-0 rounded px-1.5 py-px font-mono text-[10px] font-bold",
                     isEditing ? "bg-warning text-neutral-900" : "bg-info text-white"
                   )}>
-                    {i + 1}. {z.label}
+                    {i + 1}. {z.label}{isEditing && " · editing"}
                   </span>
+                  {/* Corner resize handle (only when editing) */}
+                  {isEditing && (
+                    <div onMouseDown={(e) => resizeBox(e, { x: x0, y: y0 }, (nw, nh) => resizeExistingZone(z.id, nw, nh))}
+                      className="absolute -bottom-1.5 -right-1.5 z-10 size-4 cursor-nwse-resize rounded-sm border-2 border-warning bg-warning"
+                      title="Resize" />
+                  )}
                 </div>
               );
             })}
 
-            {/* New zone being drawn — primary color */}
-            {box.w > 0 && box.h > 0 && (
+            {/* Draft (new) zone */}
+            {draft && draft.w > 0 && draft.h > 0 && (
               <div
                 data-zone-box
-                onMouseDown={onMouseDownBox}
-                className="absolute cursor-move border-2 border-primary bg-primary/15"
+                onMouseDown={(e) => dragBox(e, draft, (nx, ny) => setDraft((d) => d && ({ ...d, x: nx, y: ny })))}
+                className="absolute cursor-move border-2 border-primary bg-primary/20 ring-2 ring-primary/40"
                 style={{
-                  left: `${box.x * 100}%`, top: `${box.y * 100}%`,
-                  width: `${box.w * 100}%`, height: `${box.h * 100}%`,
+                  left: `${draft.x * 100}%`, top: `${draft.y * 100}%`,
+                  width: `${draft.w * 100}%`, height: `${draft.h * 100}%`,
                 }}
               >
                 <span className="absolute -top-5 left-0 rounded bg-primary px-1.5 py-px text-[10px] font-bold text-primary-foreground">
-                  {label || "New zone (drawing…)"}
+                  {label || "New zone"}
                 </span>
-                <div onMouseDown={onResizeBox}
-                  className="absolute -bottom-1 -right-1 size-3 cursor-nwse-resize rounded-sm bg-primary"
+                <div onMouseDown={(e) => resizeBox(e, draft, (nw, nh) => setDraft((d) => d && ({ ...d, w: nw, h: nh })))}
+                  className="absolute -bottom-1.5 -right-1.5 z-10 size-4 cursor-nwse-resize rounded-sm border-2 border-primary bg-primary"
                   title="Resize" />
               </div>
             )}
           </div>
 
-          {/* New zone form */}
-          <div className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-primary/30 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <Plus className="-mt-0.5 mr-1 inline size-3 text-primary" /> Add a new zone
-              </label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)}
-                placeholder="Name (e.g. Entrance, Counter, Loading Dock…)"
-                className="h-9 text-[13px]" />
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                Box: [{box.x.toFixed(2)}, {box.y.toFixed(2)}, {(box.x + box.w).toFixed(2)}, {(box.y + box.h).toFixed(2)}]
-              </p>
-            </div>
-            <div className="flex items-end">
-              <Button disabled={!label.trim() || box.w < 0.05 || box.h < 0.05} onClick={commit} className="gap-1.5">
-                <Check className="size-3.5" />
-                Add Zone
-              </Button>
-            </div>
+          {/* Both editor cards always render when applicable so user can draw AND edit names simultaneously */}
+          <div className="mt-4 space-y-3">
+            {/* New zone form — appears when user has dragged a draft */}
+            {draft && (
+              <div className="grid grid-cols-1 gap-3 rounded-lg border border-primary/40 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-primary">
+                    <Plus className="-mt-0.5 mr-1 inline size-3" /> Name your new zone
+                  </label>
+                  <Input value={label} onChange={(e) => setLabel(e.target.value)}
+                    autoFocus placeholder="e.g. Entrance, Counter, Loading Dock…"
+                    onKeyDown={(e) => { if (e.key === "Enter" && label.trim() && draft.w >= 0.05) commit(); }}
+                    className="h-9 text-[13px]" />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Box: [{draft.x.toFixed(2)}, {draft.y.toFixed(2)}, {(draft.x + draft.w).toFixed(2)}, {(draft.y + draft.h).toFixed(2)}]
+                  </p>
+                </div>
+                <div className="flex items-end gap-1.5">
+                  <Button variant="ghost" size="sm" onClick={() => { setDraft(null); setLabel(""); }}>Discard</Button>
+                  <Button disabled={!label.trim() || draft.w < 0.05 || draft.h < 0.05} onClick={commit} className="gap-1.5">
+                    <Check className="size-3.5" />
+                    Add Zone
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Rename form — appears when user clicked an existing zone */}
+            {editingZone && (
+              <div className="rounded-lg border border-warning/40 bg-warning/[0.06] p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-warning">
+                    <Pencil className="-mt-0.5 mr-1 inline size-3" />
+                    Renaming zone {existingZones.findIndex((z) => z.id === editingZone.id) + 1}
+                  </label>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    [{editingZone.box.map((n) => n.toFixed(2)).join(", ")}]
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input value={editingLabel} onChange={(e) => setEditingLabel(e.target.value)}
+                    autoFocus placeholder="Zone name"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && editingLabel.trim()) {
+                        onUpdateZone(editingZone.id, editingLabel.trim());
+                        setEditingZoneId(null);
+                      }
+                      if (e.key === "Escape") setEditingZoneId(null);
+                    }}
+                    className="h-9 flex-1 text-[13px]" />
+                  <Button size="sm" className="gap-1.5"
+                    disabled={!editingLabel.trim() || editingLabel === editingZone.label}
+                    onClick={() => { onUpdateZone(editingZone.id, editingLabel.trim()); setEditingZoneId(null); }}>
+                    <Check className="size-3" />
+                    Save Name
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setEditingZoneId(null)}>Cancel</Button>
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  You can also drag the highlighted zone on the canvas to reposition · drag its corner handle to resize.
+                </p>
+              </div>
+            )}
+
+            {/* Default hint when nothing is being drawn or edited */}
+            {!draft && !editingZone && (
+              <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3 text-center text-[11px] text-muted-foreground">
+                Drag on the canvas above to create a new zone · click any existing zone (or its row below) to rename it.
+              </div>
+            )}
           </div>
 
-          {/* Existing zones list with inline edit / delete */}
+          {/* Existing zones list — click on row OR canvas to edit */}
           <div className="mt-4">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Current zones ({existingZones.length})
@@ -722,46 +739,33 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                 {existingZones.map((z, i) => {
                   const isEditing = editingZoneId === z.id;
                   return (
-                    <div key={z.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                      <span className="font-mono text-[10px] font-bold text-info">{i + 1}</span>
-                      <span className="rounded bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                        {z.id}
-                      </span>
-                      {isEditing ? (
-                        <Input value={editingLabel} onChange={(e) => setEditingLabel(e.target.value)}
-                          autoFocus
-                          onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") { setEditingZoneId(null); setEditingLabel(""); } }}
-                          className="h-7 flex-1 text-[13px]" />
-                      ) : (
-                        <span className="flex-1 text-[13px] font-semibold text-foreground">{z.label}</span>
-                      )}
-                      <span className="font-mono text-[10px] text-muted-foreground/70">
+                    <div key={z.id}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border bg-background px-3 py-2 transition-colors",
+                        isEditing ? "border-warning bg-warning/[0.04]" : "border-border"
+                      )}>
+                      <span className={cn("font-mono text-[10px] font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
+                      <span className="rounded bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">{z.id}</span>
+                      <span className="flex-1 text-[13px] font-semibold text-foreground">{z.label}</span>
+                      <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:inline">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
-                      {isEditing ? (
-                        <>
-                          <Button size="sm" className="gap-1.5" onClick={commitEdit}>
-                            <Check className="size-3" />
-                            Save
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setEditingZoneId(null); setEditingLabel(""); }}>
-                            Cancel
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => { setEditingZoneId(z.id); setEditingLabel(z.label); }}
-                            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
-                            title="Edit label">
-                            <Pencil className="size-3" />
-                          </button>
-                          <button onClick={() => onRemoveZone(z.id)}
-                            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-sev-critical/40 hover:text-sev-critical"
-                            title="Remove zone">
-                            <Trash2 className="size-3" />
-                          </button>
-                        </>
-                      )}
+                      {/* Explicit Edit + Delete buttons (always visible) */}
+                      <button
+                        onClick={() => { setEditingZoneId(z.id); setEditingLabel(z.label); }}
+                        className={cn(
+                          "flex size-7 items-center justify-center rounded border transition-colors",
+                          isEditing ? "border-warning bg-warning/15 text-warning"
+                                    : "border-border text-muted-foreground hover:border-warning/40 hover:text-warning"
+                        )}
+                        title="Rename zone">
+                        <Pencil className="size-3" />
+                      </button>
+                      <button onClick={() => { onRemoveZone(z.id); if (isEditing) setEditingZoneId(null); }}
+                        className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-sev-critical/40 hover:text-sev-critical"
+                        title="Remove zone">
+                        <Trash2 className="size-3" />
+                      </button>
                     </div>
                   );
                 })}
@@ -772,8 +776,8 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3.5">
           <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -790,6 +794,129 @@ const RECORDING_DATE_FILTERS: { key: string; label: string }[] = [
   { key: "custom",    label: "Custom Date" },
 ];
 
+/* ── Link NVR modal — pick an NVR + free channel at the camera's site ── */
+
+function LinkNvrModal({
+  open, camera, onClose, onLink,
+}: {
+  open: boolean;
+  camera: CameraData | null;
+  onClose: () => void;
+  onLink: (cameraId: string, nvrId: string, nvrName: string, channel: number) => void;
+}) {
+  const [search, setSearch] = React.useState("");
+  const [selection, setSelection] = React.useState<{ nvrId: string; channel: number } | null>(null);
+
+  React.useEffect(() => {
+    if (open) { setSearch(""); setSelection(null); }
+  }, [open]);
+
+  if (!camera) return null;
+
+  const siteNvrs = MOCK_NVRS.filter((n) => n.siteId === camera.siteId);
+
+  // Build the candidate channel rows — only free channels are linkable.
+  const rows = siteNvrs.flatMap((n) =>
+    n.channels.map((ch) => ({
+      nvrId: n.id,
+      nvrName: n.name,
+      nvrModel: n.model,
+      nvrIp: n.ipAddress,
+      channel: ch.channel,
+      cameraId: ch.cameraId,
+    }))
+  );
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? rows.filter((r) =>
+        `${r.nvrId} ${r.nvrName} ${r.nvrModel} ${r.nvrIp} ch${r.channel} ${r.cameraId ?? ""}`.toLowerCase().includes(q)
+      )
+    : rows;
+
+  function commit() {
+    if (!selection || !camera) return;
+    const row = rows.find((r) => r.nvrId === selection.nvrId && r.channel === selection.channel);
+    if (!row) return;
+    onLink(camera.id, row.nvrId, row.nvrName, row.channel);
+    onClose();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Link NVR Channel</DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            Choose a channel for <span className="font-mono text-foreground">{camera.id}</span> · {camera.name}
+          </p>
+        </DialogHeader>
+        <div className="border-b border-border px-5 py-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by NVR name, model, IP or channel…" className="h-9 pl-9 text-[13px]" />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-3">
+          {siteNvrs.length === 0 ? (
+            <p className="py-8 text-center text-[12px] italic text-muted-foreground">
+              No NVRs registered for this site yet.
+            </p>
+          ) : filtered.length === 0 ? (
+            <p className="py-8 text-center text-[12px] italic text-muted-foreground">No channels match "{search}".</p>
+          ) : (
+            <ul className="space-y-1">
+              {filtered.map((r) => {
+                const inUse = !!r.cameraId;
+                const selected = selection?.nvrId === r.nvrId && selection?.channel === r.channel;
+                return (
+                  <li key={`${r.nvrId}-${r.channel}`}>
+                    <button
+                      disabled={inUse}
+                      onClick={() => setSelection({ nvrId: r.nvrId, channel: r.channel })}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                        inUse ? "cursor-not-allowed border-border bg-muted/30 opacity-60"
+                        : selected ? "border-primary bg-primary/10"
+                        : "border-border bg-card hover:border-primary/40 hover:bg-muted/30"
+                      )}
+                    >
+                      <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-md bg-info/10 text-info">
+                        <HardDrive className="size-3.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
+                          <span className="truncate">{r.nvrName}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">Ch {String(r.channel).padStart(2, "0")}</span>
+                        </p>
+                        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                          {r.nvrModel} · {r.nvrIp}
+                        </p>
+                      </div>
+                      {inUse ? (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">In use · {r.cameraId}</span>
+                      ) : (
+                        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Available</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border px-5 py-3.5">
+          <Button onClick={commit} disabled={!selection} className="gap-1.5">
+            <Link2 className="size-3.5" />
+            Link Channel
+          </Button>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 interface CameraDrawerProps {
   camera: CameraData | null;
   open: boolean;
@@ -799,9 +926,12 @@ interface CameraDrawerProps {
   onDelete: () => void;
   onUndeploy: (deploymentId: string) => void;
   onDeployNewModel: () => void;
+  onLinkNvrRequest: (cameraId: string) => void;
+  onUnlinkNvr: (cameraId: string) => void;
   onZoneAdd: (cameraId: string, label: string, box?: [number, number, number, number]) => void;
   onZoneRemove: (cameraId: string, zoneId: string) => void;
   onZoneUpdate: (cameraId: string, zoneId: string, label: string) => void;
+  onZoneUpdateBox: (cameraId: string, zoneId: string, box: [number, number, number, number]) => void;
 }
 
 function CameraDrawer({
@@ -813,9 +943,12 @@ function CameraDrawer({
   onDelete,
   onUndeploy,
   onDeployNewModel,
+  onLinkNvrRequest,
+  onUnlinkNvr,
   onZoneAdd,
   onZoneRemove,
   onZoneUpdate,
+  onZoneUpdateBox,
 }: CameraDrawerProps) {
   const navigate = useNavigate();
   const [tab, setTab] = React.useState<DrawerTab>("overview");
@@ -826,7 +959,6 @@ function CameraDrawer({
   const [selectedRecordingIds, setSelectedRecordingIds] = React.useState<Set<string>>(new Set());
   const [zonesEditing, setZonesEditing] = React.useState(false);
   const [zoneDrawOpen, setZoneDrawOpen] = React.useState(false);
-  const [, setToast] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
@@ -1089,26 +1221,35 @@ function CameraDrawer({
             <div>
               <SectionTitle>NVR Storage</SectionTitle>
               {nvr && camera.nvrId && camera.nvrName ? (
-                <button
-                  onClick={() => onOpenNvr(camera.nvrId!)}
-                  className="group flex w-full items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/30"
-                >
-                  <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
-                    <HardDrive className="size-4 text-info" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary">
-                      {camera.nvrName}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {nvr.model} · {camera.nvrId} · Channel {camera.channel} · IP {nvr.ipAddress}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Used: <span className="font-semibold text-foreground">{nvr.usedStorageGb.toFixed(1)}</span> / {nvr.totalStorageGb.toFixed(1)} TB
-                    </p>
-                  </div>
-                  <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary" />
-                </button>
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
+                  <button
+                    onClick={() => onOpenNvr(camera.nvrId!)}
+                    className="group flex min-w-0 flex-1 items-center gap-3 text-left transition-colors"
+                  >
+                    <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
+                      <HardDrive className="size-4 text-info" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary">
+                        {camera.nvrName}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {nvr.model} · {camera.nvrId} · Channel {camera.channel} · IP {nvr.ipAddress}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        Used: <span className="font-semibold text-foreground">{nvr.usedStorageGb.toFixed(1)}</span> / {nvr.totalStorageGb.toFixed(1)} TB
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => onUnlinkNvr(camera.id)}
+                    title="Unlink NVR"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-sev-critical/30 px-2.5 py-1 text-[11px] font-semibold text-sev-critical transition-colors hover:bg-sev-critical/10"
+                  >
+                    <Unlink className="size-3" />
+                    Unlink
+                  </button>
+                </div>
               ) : (
                 <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
                   <AlertTriangle className="size-4 flex-shrink-0 text-warning" />
@@ -1118,7 +1259,7 @@ function CameraDrawer({
                       Detection events from this camera will have no replayable footage.
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onLinkNvrRequest(camera.id)}>
                     <Link2 className="size-3.5" />
                     Link NVR
                   </Button>
@@ -1344,7 +1485,7 @@ function CameraDrawer({
                 <p className="max-w-xs text-center text-[11px]">
                   Link an NVR to start recording footage from this camera.
                 </p>
-                <Button variant="outline" size="sm" className="mt-2 gap-1.5">
+                <Button variant="outline" size="sm" className="mt-2 gap-1.5" onClick={() => onLinkNvrRequest(camera.id)}>
                   <Link2 className="size-3.5" />
                   Link NVR
                 </Button>
@@ -1398,7 +1539,7 @@ function CameraDrawer({
                 onClick={() => {
                   const count = selectedRecordingIds.size;
                   setSelectedRecordingIds(new Set());
-                  setToast(`${count} recording${count === 1 ? "" : "s"} deleted`);
+                  toast.success(`${count} recording${count === 1 ? "" : "s"} deleted`);
                 }}>
                 <Trash2 className="size-3.5" />
                 Delete {selectedRecordingIds.size}
@@ -1435,6 +1576,7 @@ function CameraDrawer({
           onSave={(label, box) => onZoneAdd(camera.id, label, box)}
           onUpdateZone={(zoneId, label) => onZoneUpdate(camera.id, zoneId, label)}
           onRemoveZone={(zoneId) => onZoneRemove(camera.id, zoneId)}
+          onUpdateZoneBox={(zoneId, box) => onZoneUpdateBox(camera.id, zoneId, box)}
         />
       )}
     </Sheet>
@@ -1446,6 +1588,8 @@ function CameraDrawer({
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DEFAULT_DAYS = [1, 2, 3, 4, 5]; // Mon–Fri
 
+type RecordingMode = "continuous" | "scheduled";
+
 interface CameraFormFields {
   id: string;
   name: string;
@@ -1453,11 +1597,13 @@ interface CameraFormFields {
   areaId: string;
   ipAddress: string;
   rtspPort: number;
+  rtspUrl: string;          // full RTSP URL the user provides (or auto-built from IP:port)
   resolution: string;
   frameRate: number;
   retentionDays: number;
   nvrId: string;
   channel: number | null;
+  recordingMode: RecordingMode;
   scheduleDays: number[];
   scheduleStart: string;
   scheduleEnd: string;
@@ -1482,6 +1628,8 @@ function emptyForm(takenIds: string[]): CameraFormFields {
     retentionDays: 30,
     nvrId: "",
     channel: null,
+    rtspUrl: "",
+    recordingMode: "scheduled",
     scheduleDays: [...DEFAULT_DAYS],
     scheduleStart: "08:00",
     scheduleEnd: "18:00",
@@ -1489,6 +1637,12 @@ function emptyForm(takenIds: string[]): CameraFormFields {
 }
 
 function fromCamera(c: CameraData): CameraFormFields {
+  // Recording mode: derive from schedule shape. Always-on = continuous; otherwise scheduled.
+  const mode: RecordingMode =
+    c.recording.schedule === "always" ||
+    ((c.recording.scheduleDays ?? []).length === 7 && (c.recording.scheduleStart ?? "00:00") <= "00:00" && (c.recording.scheduleEnd ?? "23:59") >= "23:59")
+      ? "continuous"
+      : "scheduled";
   return {
     id: c.id,
     name: c.name,
@@ -1496,11 +1650,13 @@ function fromCamera(c: CameraData): CameraFormFields {
     areaId: c.areaId,
     ipAddress: c.ipAddress,
     rtspPort: c.rtspPort,
+    rtspUrl: c.rtspUrl,
     resolution: c.stream.resolution,
     frameRate: c.stream.frameRate,
     retentionDays: c.recording.retentionDays,
     nvrId: c.nvrId ?? "",
     channel: c.channel,
+    recordingMode: mode,
     scheduleDays: c.recording.scheduleDays ?? [...DEFAULT_DAYS],
     scheduleStart: c.recording.scheduleStart ?? "00:00",
     scheduleEnd: c.recording.scheduleEnd ?? "23:59",
@@ -1626,8 +1782,8 @@ function CameraFormModal({
   const canSubmit =
     fields.name.trim() &&
     fields.ipAddress.trim() &&
-    fields.scheduleDays.length > 0 &&
-    fields.scheduleStart < fields.scheduleEnd;
+    (fields.recordingMode === "continuous" ||
+      (fields.scheduleDays.length > 0 && fields.scheduleStart < fields.scheduleEnd));
 
   const nvrOptions = siteNvrs.length === 0
     ? [{ value: "", label: "— No NVR at this site —" }]
@@ -1728,6 +1884,14 @@ function CameraFormModal({
                 type="number"
               />
             </FormField>
+            <FormField label="RTSP URL" span={2} hint="Full RTSP feed URL. Leave blank to auto-build from IP + port.">
+              <TextInput
+                value={fields.rtspUrl}
+                onChange={(v) => set("rtspUrl", v)}
+                placeholder={`rtsp://${fields.ipAddress || "10.10.0.x"}:${fields.rtspPort}/Streaming/Channels/101`}
+                mono
+              />
+            </FormField>
           </div>
 
           {/* NVR linkage */}
@@ -1777,59 +1941,76 @@ function CameraFormModal({
               Recording Schedule
             </p>
 
-            <div className="mb-3">
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                Days
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {DAY_LABELS.map((label, idx) => {
-                  const selected = fields.scheduleDays.includes(idx);
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => toggleDay(idx)}
-                      className={cn(
-                        "h-9 min-w-[44px] rounded-md border px-2.5 text-[12px] font-semibold transition-colors",
-                        selected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      )}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              {fields.scheduleDays.length === 0 && (
-                <p className="mt-1 text-[11px] text-sev-critical">Select at least one day.</p>
-              )}
-              {fields.scheduleDays.length === 7 && (
-                <p className="mt-1 text-[11px] text-muted-foreground">Recording every day.</p>
-              )}
-            </div>
+            <FormField label="Mode" span={2} hint="Continuous records 24/7. Scheduled lets you pick specific days and times.">
+              <FormSelect
+                value={fields.recordingMode}
+                onChange={(v) => set("recordingMode", v as RecordingMode)}
+                options={[
+                  { value: "continuous", label: "Continuous · 24/7 recording" },
+                  { value: "scheduled",  label: "Scheduled · selected days & hours" },
+                ]}
+              />
+            </FormField>
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Start Time">
-                <input
-                  type="time"
-                  value={fields.scheduleStart}
-                  onChange={(e) => set("scheduleStart", e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
-                />
-              </FormField>
-              <FormField label="End Time">
-                <input
-                  type="time"
-                  value={fields.scheduleEnd}
-                  min={fields.scheduleStart}
-                  onChange={(e) => set("scheduleEnd", e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
-                />
-              </FormField>
-            </div>
-            {fields.scheduleStart >= fields.scheduleEnd && (
-              <p className="mt-1 text-[11px] text-sev-critical">End time must be after start time.</p>
+            {fields.recordingMode === "continuous" ? (
+              <div className="mt-3 flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-[12px] text-info">
+                <Clock className="size-3.5 flex-shrink-0" />
+                Recording continuously — all 7 days, 00:00 to 23:59.
+              </div>
+            ) : (
+              <>
+                <div className="mb-3 mt-3">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Days
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {DAY_LABELS.map((label, idx) => {
+                      const selected = fields.scheduleDays.includes(idx);
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => toggleDay(idx)}
+                          className={cn(
+                            "h-9 min-w-[44px] rounded-md border px-2.5 text-[12px] font-semibold transition-colors",
+                            selected
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {fields.scheduleDays.length === 0 && (
+                    <p className="mt-1 text-[11px] text-sev-critical">Select at least one day.</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Start Time">
+                    <input
+                      type="time"
+                      value={fields.scheduleStart}
+                      onChange={(e) => set("scheduleStart", e.target.value)}
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </FormField>
+                  <FormField label="End Time">
+                    <input
+                      type="time"
+                      value={fields.scheduleEnd}
+                      min={fields.scheduleStart}
+                      onChange={(e) => set("scheduleEnd", e.target.value)}
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </FormField>
+                </div>
+                {fields.scheduleStart >= fields.scheduleEnd && (
+                  <p className="mt-1 text-[11px] text-sev-critical">End time must be after start time.</p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -1895,21 +2076,6 @@ function ConfirmModal({
 
 /* ── Toast ───────────────────────────────────────────────────────────────── */
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  React.useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className="fixed right-5 top-5 z-[70] flex items-start gap-2.5 rounded-lg border border-border bg-card px-4 py-3 shadow-xl">
-      <Check className="size-4 flex-shrink-0 text-success" />
-      <p className="text-[13px] font-medium text-foreground">{message}</p>
-      <button onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground">
-        <X className="size-3.5" />
-      </button>
-    </div>
-  );
-}
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
@@ -1942,7 +2108,6 @@ export default function CamerasPage() {
     | { kind: "undeploy"; deploymentId: string }
     | null
   >(null);
-  const [toast, setToast] = React.useState<string | null>(null);
   const pageSize = 10;
 
   const filtered = React.useMemo(() => {
@@ -1965,6 +2130,7 @@ export default function CamerasPage() {
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
   const drawerCamera = drawerId ? cameras.find((c) => c.id === drawerId) ?? null : null;
+  const [linkNvrCameraId, setLinkNvrCameraId] = React.useState<string | null>(null);
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpiFilter !== "all");
 
   function handleKpiClick(key: KpiFilter) {
@@ -1983,10 +2149,10 @@ export default function CamerasPage() {
       siteName: site?.label ?? fields.siteId,
       areaId: fields.areaId,
       areaName: area?.label ?? fields.areaId,
-      status: base?.status ?? "pending",
+      status: base?.status ?? "offline",
       ipAddress: fields.ipAddress.trim(),
       rtspPort: fields.rtspPort,
-      rtspUrl: `rtsp://${fields.ipAddress.trim()}:${fields.rtspPort}/Streaming/Channels/101`,
+      rtspUrl: fields.rtspUrl.trim() || `rtsp://${fields.ipAddress.trim()}:${fields.rtspPort}/Streaming/Channels/101`,
       stream: {
         codec: base?.stream.codec ?? "h264",
         resolution: fields.resolution,
@@ -1995,12 +2161,10 @@ export default function CamerasPage() {
       recording: {
         retentionDays: fields.retentionDays,
         bitrateKbps: base?.recording.bitrateKbps ?? 4096,
-        schedule: fields.scheduleDays.length === 7 && fields.scheduleStart === "00:00" && fields.scheduleEnd >= "23:00"
-          ? "always"
-          : "custom",
-        scheduleDays: fields.scheduleDays,
-        scheduleStart: fields.scheduleStart,
-        scheduleEnd: fields.scheduleEnd,
+        schedule: fields.recordingMode === "continuous" ? "always" : "custom",
+        scheduleDays: fields.recordingMode === "continuous" ? [0, 1, 2, 3, 4, 5, 6] : fields.scheduleDays,
+        scheduleStart: fields.recordingMode === "continuous" ? "00:00" : fields.scheduleStart,
+        scheduleEnd: fields.recordingMode === "continuous" ? "23:59" : fields.scheduleEnd,
       },
       nvrId: fields.nvrId || null,
       nvrName: nvr?.name ?? null,
@@ -2018,13 +2182,13 @@ export default function CamerasPage() {
     const newCam = buildCameraFromFields(fields);
     addCamera(newCam);
     setModal(null);
-    setToast(`${newCam.name} added`);
+    toast.success(`${newCam.name} added`);
   }
   function handleEdit(fields: CameraFormFields) {
     const updated = buildCameraFromFields(fields, cameras.find((c) => c.id === fields.id));
     updateCamera(fields.id, updated);
     setModal(null);
-    setToast("Camera updated");
+    toast.success("Camera updated");
   }
   function handleDelete(cameraId: string) {
     const target = cameras.find((c) => c.id === cameraId);
@@ -2032,12 +2196,12 @@ export default function CamerasPage() {
     setDeployments((curr) => curr.filter((d) => d.cameraId !== cameraId));
     setModal(null);
     setDrawerId(null);
-    setToast(`${target?.name ?? "Camera"} deleted`);
+    toast.success(`${target?.name ?? "Camera"} deleted`);
   }
   function handleUndeploy(deploymentId: string) {
     setDeployments((curr) => curr.filter((d) => d.id !== deploymentId));
     setModal(null);
-    setToast("Model undeployed from camera");
+    toast.success("Model undeployed from camera");
   }
 
   const editingCamera = modal?.kind === "edit" ? cameras.find((c) => c.id === modal.cameraId) : null;
@@ -2068,17 +2232,19 @@ export default function CamerasPage() {
       </PageHeader>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <KpiGrid cols={5}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={cameras}
+            label={cfg.label}
+            value={cfg.getValue(cameras)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* Filter panel */}
       <FilterPanel
@@ -2272,7 +2438,28 @@ export default function CamerasPage() {
         onEdit={() => drawerCamera && setModal({ kind: "edit", cameraId: drawerCamera.id })}
         onDelete={() => drawerCamera && setModal({ kind: "delete", cameraId: drawerCamera.id })}
         onUndeploy={(deploymentId) => setModal({ kind: "undeploy", deploymentId })}
-        onDeployNewModel={() => navigate("/deployments")}
+        onLinkNvrRequest={(cameraId) => setLinkNvrCameraId(cameraId)}
+        onUnlinkNvr={(cameraId) => {
+          const target = cameras.find((c) => c.id === cameraId);
+          if (!target) return;
+          updateCamera(cameraId, { nvrId: null, nvrName: null, channel: null });
+          toast.success(`Unlinked ${target.id} from ${target.nvrName ?? "NVR"}`);
+        }}
+        onDeployNewModel={() => {
+          if (!drawerCamera) return;
+          navigate("/deployment", {
+            state: {
+              prefill: {
+                siteId:   drawerCamera.siteId,
+                siteName: drawerCamera.siteName,
+                areaId:   drawerCamera.areaId,
+                areaName: drawerCamera.areaName,
+                cameraId: drawerCamera.id,
+                cameraName: drawerCamera.name,
+              },
+            },
+          });
+        }}
         onZoneAdd={(cameraId, label, box) => {
           const target = cameras.find((c) => c.id === cameraId);
           if (!target) return;
@@ -2280,7 +2467,7 @@ export default function CamerasPage() {
           updateCamera(cameraId, {
             boundaryZones: [...target.boundaryZones, { id, label, box: box ?? [0.1, 0.1, 0.4, 0.4] }],
           });
-          setToast(`Zone "${label}" added`);
+          toast.success(`Zone "${label}" added`);
         }}
         onZoneRemove={(cameraId, zoneId) => {
           const target = cameras.find((c) => c.id === cameraId);
@@ -2288,7 +2475,7 @@ export default function CamerasPage() {
           updateCamera(cameraId, {
             boundaryZones: target.boundaryZones.filter((z) => z.id !== zoneId),
           });
-          setToast("Zone removed");
+          toast.success("Zone removed");
         }}
         onZoneUpdate={(cameraId, zoneId, label) => {
           const target = cameras.find((c) => c.id === cameraId);
@@ -2298,7 +2485,27 @@ export default function CamerasPage() {
               z.id === zoneId ? { ...z, label } : z
             ),
           });
-          setToast(`Zone renamed to "${label}"`);
+          toast.success(`Zone renamed to "${label}"`);
+        }}
+        onZoneUpdateBox={(cameraId, zoneId, box) => {
+          const target = cameras.find((c) => c.id === cameraId);
+          if (!target) return;
+          updateCamera(cameraId, {
+            boundaryZones: target.boundaryZones.map((z) =>
+              z.id === zoneId ? { ...z, box } : z
+            ),
+          });
+        }}
+      />
+
+      {/* Link NVR */}
+      <LinkNvrModal
+        open={linkNvrCameraId !== null}
+        camera={linkNvrCameraId ? cameras.find((c) => c.id === linkNvrCameraId) ?? null : null}
+        onClose={() => setLinkNvrCameraId(null)}
+        onLink={(cameraId, nvrId, nvrName, channel) => {
+          updateCamera(cameraId, { nvrId, nvrName, channel });
+          toast.success(`Linked to ${nvrName} · Ch ${channel}`);
         }}
       />
 
@@ -2349,7 +2556,6 @@ export default function CamerasPage() {
         }
       />
 
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

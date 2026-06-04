@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -923,45 +924,43 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
 
 /* ── Score cards ─────────────────────────────────────────────────────────── */
 
+import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
+
 function ScoreHeroCard({ result, compact = false }: { result: AnalysisResult; compact?: boolean }) {
   const tone = result.status;
-  const toneMap = {
-    passed:  { border: "border-success/40", bg: "bg-success/[0.06]", num: "text-success" },
-    failed:  { border: "border-sev-critical/40", bg: "bg-sev-critical/[0.06]", num: "text-sev-critical" },
-    warning: { border: "border-warning/40", bg: "bg-warning/[0.06]", num: "text-warning" },
-  }[tone];
-
+  const accent: KpiAccent =
+    tone === "passed" ? "success" :
+    tone === "failed" ? "sev-critical" :
+    "warning";
+  // Status moves into the SUB row (sentence-cased label) so the LABEL row stays uncluttered.
+  const statusLabel = tone === "passed" ? "Passed" : tone === "failed" ? "Failed" : "Warning";
   return (
-    <div className={cn("rounded-xl border", compact ? "p-3" : "p-4", toneMap.border, toneMap.bg)}>
-      <div className={cn("flex items-center justify-between", compact ? "mb-1" : "mb-1.5")}>
-        <span className={cn("font-mono uppercase tracking-[0.18em] text-muted-foreground/60", compact ? "text-[9px]" : "text-[10px]")}>
-          Score
+    <SharedKpiCard
+      compact={compact}
+      accent={accent}
+      label="Score"
+      value={`${result.score}%`}
+      sub={
+        <span className={cn("inline-flex items-center gap-1.5 font-semibold",
+          tone === "passed" ? "text-success" :
+          tone === "failed" ? "text-sev-critical" :
+          "text-warning"
+        )}>
+          <span className={cn("size-1.5 rounded-full",
+            tone === "passed" ? "bg-success" :
+            tone === "failed" ? "bg-sev-critical" :
+            "bg-warning"
+          )} />
+          {statusLabel}
         </span>
-        <StatusPill status={tone} />
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className={cn("font-bold leading-none", toneMap.num, compact ? "text-[18px]" : "text-[26px]")}>
-          {result.score}%
-        </span>
-      </div>
-    </div>
+      }
+    />
   );
 }
 
-function MiniScoreCard({ label, value, tone, compact = false }: { label: string; value: string; tone: "success" | "warning"; compact?: boolean }) {
-  const toneMap = {
-    success: { border: "border-success/30", text: "text-success" },
-    warning: { border: "border-warning/30", text: "text-warning" },
-  }[tone];
-
-  return (
-    <div className={cn("rounded-xl border bg-card", compact ? "p-3" : "p-4", toneMap.border)}>
-      <p className={cn("font-mono uppercase tracking-[0.18em] text-muted-foreground/60", compact ? "mb-0.5 text-[9px]" : "mb-1 text-[10px]")}>
-        {label}
-      </p>
-      <p className={cn("font-bold leading-none", toneMap.text, compact ? "text-[16px]" : "text-[22px]")}>{value}</p>
-    </div>
-  );
+function MiniScoreCard({ label, value, tone, sub, compact = false }: { label: string; value: string; tone: "success" | "warning"; sub?: React.ReactNode; compact?: boolean }) {
+  const accent: KpiAccent = tone === "success" ? "success" : "warning";
+  return <SharedKpiCard compact={compact} accent={accent} label={label} value={value} sub={sub} />;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -1288,7 +1287,7 @@ export default function RunAnalysisPage() {
       score: result.score,
       status: result.status,
       tags: willFail
-        ? ["Failed", "Pipeline Error"]
+        ? ["Failed", "Script Error"]
         : [result.status === "passed" ? "Passed" : result.status === "failed" ? "Failed" : "Warning", "Tested"],
       createdAt: now.toISOString(),
       createdAtDisplay: fmtDisplay(now),
@@ -1307,6 +1306,9 @@ export default function RunAnalysisPage() {
     setCompletedToast(false);
     setCurrentResult(null);
     setIsAnalyzing(true);
+    toast.message("Analysis started", {
+      description: `${newRun.name} · ${selectedModel.name}`,
+    });
   }
 
   function handleRetryRun() {
@@ -1350,10 +1352,16 @@ export default function RunAnalysisPage() {
               setCurrentFailure(pending.newRun.failure ?? null);
               setCurrentResult(null);
               setCompletedToast(false);
+              toast.error("Analysis failed", {
+                description: pending.newRun.failure?.reason ?? "Run aborted mid-flow.",
+              });
             } else {
               setCurrentResult(pending.result);
               setCurrentFailure(null);
               setCompletedToast(true);
+              toast.success("Analysis completed", {
+                description: `${pending.newRun.name} · score ${pending.newRun.score}`,
+              });
             }
             pendingRunRef.current = null;
           }
@@ -1437,7 +1445,11 @@ export default function RunAnalysisPage() {
         <HistoryTab
           pastAnalyses={pastAnalyses}
           onView={(id) => setViewingPastId(id)}
-          onDelete={(id) => setPastAnalyses((p) => p.filter((a) => a.id !== id))}
+          onDelete={(id) => {
+            const target = pastAnalyses.find((a) => a.id === id);
+            setPastAnalyses((p) => p.filter((a) => a.id !== id));
+            toast.success(`Analysis "${target?.name ?? id}" deleted`);
+          }}
           onBackToAnalysis={() => setTab("analysis")}
         />
       )}
@@ -1571,7 +1583,7 @@ function SelectStep({
               <p className="text-[12px]">No models match your search.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
               {filteredModels.map((m) => (
                 <ModelChooserCard
                   key={m.id}
@@ -1927,11 +1939,13 @@ function ResultStep({
           label="Steps Passed"
           value={`${result.stepsPassed}/${result.stepsTotal}`}
           tone="success"
+          sub={`${Math.round((result.stepsPassed / Math.max(1, result.stepsTotal)) * 100)}% complete`}
         />
         <MiniScoreCard
           label="Rules Triggered"
           value={`${result.rulesTriggered}/${result.rulesTotal}`}
           tone="warning"
+          sub={result.rulesTriggered === 0 ? "No violations" : `${result.rulesTriggered} violation${result.rulesTriggered === 1 ? "" : "s"}`}
         />
       </div>
 
@@ -2177,7 +2191,7 @@ const HISTORY_KPI_CONFIGS: {
   },
   {
     key: "pipeline-error",
-    label: "Pipeline Errors",
+    label: "Script Errors",
     sub: "Run failed mid-flow",
     barClass: "bg-warning",
     valueClass: "text-warning",
@@ -2653,7 +2667,7 @@ function HistoryTab({
                         {a.runState === "failed" && (
                           <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-sev-critical">
                             <AlertTriangle className="size-2.5" />
-                            Pipeline Error
+                            Script Error
                           </span>
                         )}
                         {a.verdict === "approved" && (
@@ -2904,12 +2918,14 @@ function HistoryDetailDrawer({
                   value={`${result.stepsPassed}/${result.stepsTotal}`}
                   tone="success"
                   compact
+                  sub={`${Math.round((result.stepsPassed / Math.max(1, result.stepsTotal)) * 100)}% complete`}
                 />
                 <MiniScoreCard
                   label="Rules Triggered"
                   value={`${result.rulesTriggered}/${result.rulesTotal}`}
                   tone="warning"
                   compact
+                  sub={result.rulesTriggered === 0 ? "No violations" : `${result.rulesTriggered} violation${result.rulesTriggered === 1 ? "" : "s"}`}
                 />
               </div>
 

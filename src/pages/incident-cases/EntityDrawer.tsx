@@ -53,26 +53,7 @@ function SeverityChip({ severity }: { severity: Severity }) {
 
 /* ── KPI card ────────────────────────────────────────────────────────────── */
 
-function KpiCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: React.ReactNode;
-  accent?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-3.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      <span className={cn("text-[22px] font-bold leading-none", accent ?? "text-foreground")}>
-        {value}
-      </span>
-    </div>
-  );
-}
+import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
 
 /* ── Timeline entry row ──────────────────────────────────────────────────── */
 
@@ -190,29 +171,41 @@ function EntityKpiRow({
   reIdConfidence: number | null;
   priorIncidents: number;
 }) {
+  const reidAccent: KpiAccent =
+    reIdConfidence == null ? "muted" : reIdConfidence >= 85 ? "success" : "sev-medium";
+  const reidLabel =
+    reIdConfidence == null ? "Not available" :
+    reIdConfidence >= 85 ? "High confidence" :
+    reIdConfidence >= 70 ? "Medium confidence" :
+    "Low confidence";
   return (
     <div className="grid grid-cols-3 gap-2.5">
-      <KpiCard
+      <SharedKpiCard compact
         label="Total Detections"
         value={totalDetections}
-        accent={totalDetections > 0 ? "text-sev-critical" : "text-muted-foreground"}
+        sub={totalDetections === 0 ? "No events recorded" : totalDetections === 1 ? "1 event recorded" : "Recorded events"}
+        accent={totalDetections > 0 ? "sev-critical" : "muted"}
       />
-      <KpiCard
+      <SharedKpiCard compact
         label="RE-ID Confidence"
         value={reIdConfidence != null ? (reIdConfidence / 100).toFixed(3) : "—"}
-        accent={
-          reIdConfidence != null
-            ? reIdConfidence >= 85
-              ? "text-success"
-              : "text-sev-medium"
-            : "text-muted-foreground"
-        }
+        sub={reidLabel}
+        accent={reidAccent}
       />
-      <KpiCard
-        label="Prior Incidents"
-        value={priorIncidents}
-        accent={priorIncidents > 0 ? "text-sev-medium" : "text-muted-foreground"}
-      />
+      {(() => {
+        // If the entity has been seen multiple times, the implicit prior count is N-1.
+        // Honor any higher explicit value passed in.
+        const impliedPrior = Math.max(0, totalDetections - 1);
+        const prior = Math.max(priorIncidents, impliedPrior);
+        return (
+          <SharedKpiCard compact
+            label="Prior Incidents"
+            value={prior}
+            sub={prior === 0 ? "Clean history" : prior === 1 ? "1 prior case" : `${prior} prior cases`}
+            accent={prior > 0 ? "sev-medium" : "muted"}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -285,7 +278,7 @@ function PossibleMatchCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-[13px] font-bold text-foreground">
-              May be <span className="font-mono text-success">{match.candidateId}</span>
+              Potentially <span className="font-mono text-success">{match.candidateId}</span>
             </p>
             <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", scoreBg, scoreColor)}>
               {match.similarity}% match
@@ -297,7 +290,8 @@ function PossibleMatchCard({
               </span>
             )}
             {isRejected && (
-              <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-sev-critical/30 bg-sev-critical/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+                <X className="size-2.5" strokeWidth={3} />
                 Rejected
               </span>
             )}

@@ -13,6 +13,7 @@ import type { AnyEntity } from "@/types/entities";
 import { SeverityBadge, parseEventText } from "./shared";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
+import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
 
 /* ── Thumbnail with bounding boxes ──────────────────────────────────────── */
 
@@ -119,10 +120,6 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
   const threshold = 70;
   const eval_ = MODEL_EVAL[event.modelKey] ?? MODEL_EVAL["vms-4-2-1"];
 
-  function boxColor(score: number) {
-    return score >= 85 ? "text-success" : score >= 70 ? "text-sev-medium" : "text-sev-critical";
-  }
-
   /* Grid sizing: 1 → col-1, 2 → col-2, 3+ → col-3 (mobile col-1) */
   const gridCols =
     entityCards.length >= 3 ? "grid-cols-1 sm:grid-cols-3"
@@ -141,26 +138,28 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
         </span>
       </div>
 
-      {/* Entity score cards */}
+      {/* Entity score cards — uniform compact KPI pattern */}
       {entityCards.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
           No tracked entities for this detection.
         </div>
       ) : (
         <div className={cn("grid gap-3", gridCols)}>
-          {entityCards.map((card) => (
-            <div key={card.variant} className="rounded-lg border border-border bg-card p-3.5">
-              <div className={cn("mb-1 text-[10px] font-bold uppercase tracking-wider", card.accent)}>
-                {card.label}
-              </div>
-              <div className={cn("text-[28px] font-bold leading-none", boxColor(card.score))}>
-                {(card.score / 100).toFixed(3)}
-              </div>
-              {card.id && (
-                <div className="mt-1 font-mono text-[11px] text-muted-foreground">{card.id}</div>
-              )}
-            </div>
-          ))}
+          {entityCards.map((card) => {
+            const scoreAccent =
+              card.score >= 85 ? "success" :
+              card.score >= 70 ? "sev-medium" :
+              "sev-critical";
+            return (
+              <SharedKpiCard key={card.variant}
+                compact
+                label={card.label}
+                value={(card.score / 100).toFixed(3)}
+                sub={card.id ?? undefined}
+                accent={scoreAccent as KpiAccent}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -173,8 +172,8 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
         >
           <div className="flex items-center gap-2">
             <Settings className="size-3.5 text-muted-foreground" />
-            <span className="text-[13px] font-semibold text-foreground">
-              Model evaluation performance
+            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground">
+              MODEL EVALUATION PERFORMANCE
             </span>
           </div>
           <div className="flex items-center gap-2">

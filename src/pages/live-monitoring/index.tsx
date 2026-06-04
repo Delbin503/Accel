@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "sonner";
 import {
   Search,
   VideoOff,
@@ -18,6 +19,11 @@ import {
   PinOff,
   Check,
   MapPin,
+  Plus,
+  Trash2,
+  Pencil,
+  GripVertical,
+  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -26,16 +32,17 @@ import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
-import { useLiveMonitoringStore } from "@/stores/useLiveMonitoringStore";
+import { useLiveMonitoringStore, type CustomLayout, type CustomTile } from "@/stores/useLiveMonitoringStore";
 import type { CameraData } from "@/types/cameras";
 
 /* ── View modes ──────────────────────────────────────────────────────── */
 
-type ViewMode = "hero" | "wall";
+type ViewMode = "hero" | "wall" | "custom";
 
 const VIEW_MODES: { key: ViewMode; label: string; icon: React.ElementType; description: string }[] = [
   { key: "hero",   label: "Hero",   icon: PanelsTopLeft, description: "Featured camera + sidebar of all cams" },
   { key: "wall",   label: "Wall",   icon: LayoutGrid,    description: "Uniform grid for all cameras" },
+  { key: "custom", label: "Custom", icon: Plus,          description: "Drag, drop and resize cameras freely" },
 ];
 
 function detCount(id: string): number {
@@ -252,7 +259,7 @@ function HeroView({
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <CategoryChip label="All" count={cameras.length} active />
-            <CategoryChip label="With detections" count={cameras.filter((c) => detCount(c.id) > 0).length} />
+            <CategoryChip label="Incident Detected" count={cameras.filter((c) => detCount(c.id) > 0).length} />
             <CategoryChip label="Offline" count={offlineCount} muted />
           </div>
         </div>
@@ -366,6 +373,401 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
   );
 }
 
+/* ── Custom view (drag + drop + resize) ──────────────────────────────── */
+
+const GRID_COLS = 12;
+const GRID_ROWS = 8;
+const CELL_SIZE_PX = 56;
+
+function LayoutSwitcher({
+  layouts, activeId, onSelect, onCreate, onRename, onDuplicate, onDelete,
+}: {
+  layouts: CustomLayout[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onCreate: (name: string) => void;
+  onRename: (id: string, name: string) => void;
+  onDuplicate: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [renameId, setRenameId] = React.useState<string | null>(null);
+  const [renameValue, setRenameValue] = React.useState("");
+  const [creating, setCreating] = React.useState(false);
+  const [newName, setNewName] = React.useState("");
+  const active = layouts.find((l) => l.id === activeId);
+
+  function startRename(id: string, current: string) {
+    setRenameId(id);
+    setRenameValue(current);
+  }
+  function commitRename() {
+    if (renameId && renameValue.trim()) onRename(renameId, renameValue.trim());
+    setRenameId(null);
+    setRenameValue("");
+  }
+  function commitCreate() {
+    if (newName.trim()) onCreate(newName.trim());
+    setCreating(false);
+    setNewName("");
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRenameId(null); setCreating(false); setNewName(""); } }}>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          "h-9 inline-flex items-center justify-between gap-2 rounded-md border bg-background px-3 text-[13px] font-semibold transition-colors",
+          open ? "border-primary" : "border-input",
+          "text-foreground"
+        )} style={{ minWidth: "200px" }}>
+          <span className="truncate">{active?.name ?? "Select layout"}</span>
+          <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-1.5">
+        <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saved layouts</p>
+        <div className="max-h-64 space-y-0.5 overflow-y-auto">
+          {layouts.map((l) => {
+            const isActive = l.id === activeId;
+            const isRenaming = renameId === l.id;
+            return (
+              <div key={l.id} className={cn("flex items-center gap-1.5 rounded-md px-1 py-1", isActive && "bg-muted/60")}>
+                {isRenaming ? (
+                  <>
+                    <Input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenameId(null); }}
+                      onBlur={commitRename}
+                      className="h-7 flex-1 text-[12px]"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => { onSelect(l.id); setOpen(false); }}
+                      className="flex flex-1 items-center gap-1.5 truncate rounded px-1.5 py-1 text-left text-[12px] hover:bg-muted/40"
+                    >
+                      <Check className={cn("size-3 flex-shrink-0", isActive ? "text-primary" : "opacity-0")} strokeWidth={3} />
+                      <span className="truncate text-foreground">{l.name}</span>
+                      <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-[9px] text-muted-foreground">{l.tiles.length}</span>
+                    </button>
+                    <button onClick={() => startRename(l.id, l.name)} title="Rename"
+                      className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <Pencil className="size-3" />
+                    </button>
+                    <button onClick={() => onDuplicate(l.id)} title="Duplicate"
+                      className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <LayoutGrid className="size-3" />
+                    </button>
+                    <button onClick={() => { if (layouts.length > 1) onDelete(l.id); }} disabled={layouts.length <= 1} title="Delete"
+                      className="flex size-6 items-center justify-center rounded text-sev-critical hover:bg-sev-critical/10 disabled:opacity-30 disabled:hover:bg-transparent">
+                      <Trash2 className="size-3" />
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-1 border-t border-border pt-1">
+          {creating ? (
+            <div className="flex items-center gap-1.5 px-1 py-1">
+              <Input
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") commitCreate(); if (e.key === "Escape") { setCreating(false); setNewName(""); } }}
+                placeholder="Layout name…"
+                className="h-7 flex-1 text-[12px]"
+              />
+              <button onClick={commitCreate} className="rounded bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90">
+                Add
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setCreating(true)}
+              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold text-primary hover:bg-primary/10">
+              <Plus className="size-3" />
+              New layout
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function CustomView({
+  cameras, allCameras, tiles, onChangeTiles, pinnedIds, onTogglePin,
+  layouts, activeLayoutId, onSelectLayout, onCreateLayout, onRenameLayout, onDuplicateLayout, onDeleteLayout,
+}: {
+  cameras: CameraData[];
+  allCameras: CameraData[];
+  tiles: CustomTile[];
+  onChangeTiles: (next: CustomTile[]) => void;
+  pinnedIds: string[];
+  onTogglePin: (id: string) => void;
+  layouts: CustomLayout[];
+  activeLayoutId: string | null;
+  onSelectLayout: (id: string) => void;
+  onCreateLayout: (name: string) => void;
+  onRenameLayout: (id: string, name: string) => void;
+  onDuplicateLayout: (id: string) => void;
+  onDeleteLayout: (id: string) => void;
+}) {
+  // Local mutator that wraps onChangeTiles in a setState-style API for ergonomics inside this component.
+  const setTiles = React.useCallback((updater: CustomTile[] | ((prev: CustomTile[]) => CustomTile[])) => {
+    const next = typeof updater === "function" ? (updater as (p: CustomTile[]) => CustomTile[])(tiles) : updater;
+    onChangeTiles(next);
+  }, [tiles, onChangeTiles]);
+
+  const [editing, setEditing] = React.useState(tiles.length === 0);
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const dragRef = React.useRef<{ id: string; offsetCol: number; offsetRow: number } | null>(null);
+  const resizeRef = React.useRef<{ id: string; startX: number; startY: number; startCols: number; startRows: number } | null>(null);
+
+  const usedIds = new Set(tiles.map((t) => t.cameraId));
+  const availableCameras = cameras.filter((c) => !usedIds.has(c.id));
+
+  function addTiles(ids: string[]) {
+    setTiles((curr) => {
+      const next = [...curr];
+      let col = 1, row = 1;
+      // simple flow placement
+      for (const id of ids) {
+        // find a 4x3 slot
+        while (true) {
+          const fits = !next.some((t) =>
+            col < t.col + t.cols && col + 4 > t.col &&
+            row < t.row + t.rows && row + 3 > t.row
+          );
+          if (fits && col + 4 - 1 <= GRID_COLS && row + 3 - 1 <= GRID_ROWS) break;
+          col += 1;
+          if (col + 4 - 1 > GRID_COLS) { col = 1; row += 1; }
+          if (row > GRID_ROWS) { col = 1; row = 1; break; }
+        }
+        next.push({ id: `tile-${Math.random().toString(36).slice(2, 7)}`, cameraId: id, col, row, cols: 4, rows: 3 });
+        col += 4;
+        if (col + 4 - 1 > GRID_COLS) { col = 1; row += 3; }
+      }
+      return next;
+    });
+    setPickerOpen(false);
+  }
+
+  function removeTile(id: string) {
+    setTiles((curr) => curr.filter((t) => t.id !== id));
+  }
+
+  function handleGridDragOver(e: React.DragEvent) {
+    if (!dragRef.current) return;
+    e.preventDefault();
+  }
+
+  function handleGridDrop(e: React.DragEvent) {
+    if (!dragRef.current) return;
+    const ctx = dragRef.current;
+    const grid = e.currentTarget as HTMLDivElement;
+    const r = grid.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    const cellW = r.width / GRID_COLS;
+    const cellH = CELL_SIZE_PX;
+    const col = Math.max(1, Math.min(GRID_COLS, Math.round(x / cellW) - ctx.offsetCol + 1));
+    const row = Math.max(1, Math.min(GRID_ROWS, Math.round(y / cellH) - ctx.offsetRow + 1));
+    setTiles((curr) => curr.map((t) =>
+      t.id === ctx.id ? { ...t, col: Math.min(col, GRID_COLS - t.cols + 1), row: Math.min(row, GRID_ROWS - t.rows + 1) } : t
+    ));
+    dragRef.current = null;
+  }
+
+  function handleDragStart(e: React.DragEvent, tile: CustomTile) {
+    if (!editing) return;
+    const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const cellW = r.width / tile.cols;
+    const cellH = r.height / tile.rows;
+    dragRef.current = {
+      id: tile.id,
+      offsetCol: Math.floor((e.clientX - r.left) / cellW),
+      offsetRow: Math.floor((e.clientY - r.top) / cellH),
+    };
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleResizeStart(e: React.MouseEvent, tile: CustomTile) {
+    e.stopPropagation();
+    e.preventDefault();
+    resizeRef.current = { id: tile.id, startX: e.clientX, startY: e.clientY, startCols: tile.cols, startRows: tile.rows };
+    function onMove(ev: MouseEvent) {
+      const ctx = resizeRef.current;
+      if (!ctx) return;
+      const dx = ev.clientX - ctx.startX;
+      const dy = ev.clientY - ctx.startY;
+      const dCols = Math.round(dx / 90);
+      const dRows = Math.round(dy / CELL_SIZE_PX);
+      setTiles((curr) => curr.map((t) => {
+        if (t.id !== ctx.id) return t;
+        const cols = Math.max(2, Math.min(GRID_COLS - t.col + 1, ctx.startCols + dCols));
+        const rows = Math.max(2, Math.min(GRID_ROWS - t.row + 1, ctx.startRows + dRows));
+        return { ...t, cols, rows };
+      }));
+    }
+    function onUp() {
+      resizeRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+        <LayoutSwitcher
+          layouts={layouts}
+          activeId={activeLayoutId}
+          onSelect={onSelectLayout}
+          onCreate={onCreateLayout}
+          onRename={onRenameLayout}
+          onDuplicate={onDuplicateLayout}
+          onDelete={onDeleteLayout}
+        />
+        <span className="rounded-full bg-muted px-1.5 py-px text-[10px] text-muted-foreground">
+          {tiles.length} tile{tiles.length === 1 ? "" : "s"}
+        </span>
+        <div className="ml-auto flex items-center gap-1.5">
+          {editing ? (
+            <>
+              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted">
+                    <Plus className="size-3" />
+                    Add Camera
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="max-h-[280px] w-64 overflow-y-auto p-1.5">
+                  {availableCameras.length === 0 ? (
+                    <p className="px-2 py-3 text-center text-[12px] italic text-muted-foreground">All cameras already in layout.</p>
+                  ) : (
+                    availableCameras.map((c) => (
+                      <button key={c.id} onClick={() => addTiles([c.id])}
+                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                        <span className="font-mono text-[10px] text-primary">{c.id}</span>
+                        <span className="truncate">{c.name}</span>
+                      </button>
+                    ))
+                  )}
+                </PopoverContent>
+              </Popover>
+              <button onClick={() => setEditing(false)}
+                className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90">
+                <Save className="size-3" />
+                Done
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted">
+              <Pencil className="size-3" />
+              Edit Layout
+            </button>
+          )}
+        </div>
+      </div>
+
+      {tiles.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+          <LayoutGrid className="size-10 opacity-20" />
+          <p className="text-sm">No cameras in your custom layout yet.</p>
+          <button onClick={() => availableCameras.length > 0 && addTiles(availableCameras.slice(0, 4).map((c) => c.id))}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90">
+            <Plus className="size-3.5" />
+            Add starter tiles
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border bg-card p-3">
+          <div
+            onDragOver={handleGridDragOver}
+            onDrop={handleGridDrop}
+            className={cn(
+              "relative grid gap-2",
+              editing && "rounded-lg outline-2 outline-dashed -outline-offset-2 outline-primary/20"
+            )}
+            style={{
+              gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
+              gridAutoRows: `${CELL_SIZE_PX}px`,
+              minHeight: `${GRID_ROWS * CELL_SIZE_PX}px`,
+            }}
+          >
+            {/* Background grid hints when editing */}
+            {editing && Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
+              <div key={i} className="rounded border border-dashed border-border/30 bg-background/10"
+                style={{ gridColumn: (i % GRID_COLS) + 1, gridRow: Math.floor(i / GRID_COLS) + 1 }} />
+            ))}
+
+            {tiles.map((tile) => {
+              const c = cameras.find((x) => x.id === tile.cameraId) ?? allCameras.find((x) => x.id === tile.cameraId);
+              if (!c) return null;
+              return (
+                <div
+                  key={tile.id}
+                  draggable={editing}
+                  onDragStart={(e) => handleDragStart(e, tile)}
+                  className="relative flex h-full min-h-0"
+                  style={{
+                    gridColumn: `${tile.col} / span ${tile.cols}`,
+                    gridRow: `${tile.row} / span ${tile.rows}`,
+                  }}
+                >
+                  <div className="flex flex-1 flex-col">
+                    <CameraTile camera={c} hasDetection={detCount(c.id) > 0} detectionCount={detCount(c.id)}
+                      pinned={pinnedIds.includes(c.id)} onTogglePin={() => onTogglePin(c.id)}
+                      inlineBox={detCount(c.id) > 0 ? { x: 0.4, y: 0.4, w: 0.2, h: 0.3, color: detCount(c.id) > 2 ? "warning" : "info" } : undefined} />
+                  </div>
+                  {editing && (
+                    <>
+                      <button
+                        className="absolute left-1.5 top-1.5 z-10 flex size-6 cursor-grab items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-black/90 active:cursor-grabbing"
+                        title="Drag to reposition" onMouseDown={(e) => e.stopPropagation()}>
+                        <GripVertical className="size-3.5" />
+                      </button>
+                      <button onClick={() => removeTile(tile.id)}
+                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-sev-critical/80"
+                        title="Remove">
+                        <Trash2 className="size-3" />
+                      </button>
+                      <span className="absolute left-1/2 bottom-2 z-10 -translate-x-1/2 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] text-white/85 backdrop-blur-sm">
+                        {tile.cols}×{tile.rows}
+                      </span>
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, tile)}
+                        className="absolute bottom-0 right-0 z-10 flex size-5 cursor-nwse-resize items-end justify-end p-0.5"
+                        title="Resize"
+                      >
+                        <div className="size-3 rounded-tl bg-primary" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {editing && (
+            <p className="mt-3 text-center text-[11px] text-muted-foreground/70">
+              Grid is {GRID_COLS}×{GRID_ROWS} · Drag the corner handle to resize · Drop on the grid to reposition
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Multi-site selector ─────────────────────────────────────────────── */
 
@@ -431,13 +833,20 @@ function MultiSiteSelector({ sites, selected, onChange }: {
 export default function LiveMonitoringPage() {
   const allCameras = useCamerasStore((s) => s.cameras);
   const sites = useSitesStore((s) => s.sites);
-  const { pinned, togglePin } = useLiveMonitoringStore();
+  const {
+    pinned, togglePin,
+    customLayouts, activeLayoutId,
+    setActiveLayout, setLayoutTiles, createLayout, renameLayout, deleteLayout, duplicateLayout,
+  } = useLiveMonitoringStore();
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]); // empty = all
   const [search, setSearch] = React.useState("");
   const [viewMode, setViewMode] = React.useState<ViewMode>("hero");
   const [gridSize, setGridSize] = React.useState(4);
   const [page, setPage] = React.useState(1);
   const [selectedCameraId, setSelectedCameraId] = React.useState<string>("");
+
+  const activeLayout = customLayouts.find((l) => l.id === activeLayoutId) ?? customLayouts[0];
+  const activeTiles: CustomTile[] = activeLayout?.tiles ?? [];
 
   const filteredCameras = React.useMemo(() => {
     const list = allCameras.filter((c) => {
@@ -525,9 +934,34 @@ export default function LiveMonitoringPage() {
           pinnedIds={pinned}
           onTogglePin={togglePin}
         />
-      ) : (
+      ) : viewMode === "wall" ? (
         <WallView cameras={filteredCameras} gridSize={gridSize} setGridSize={setGridSize} page={page} setPage={setPage}
           pinnedIds={pinned} onTogglePin={togglePin} />
+      ) : (
+        <CustomView
+          cameras={filteredCameras}
+          allCameras={allCameras}
+          tiles={activeTiles}
+          onChangeTiles={(next) => activeLayout && setLayoutTiles(activeLayout.id, next)}
+          pinnedIds={pinned}
+          onTogglePin={togglePin}
+          layouts={customLayouts}
+          activeLayoutId={activeLayoutId}
+          onSelectLayout={setActiveLayout}
+          onCreateLayout={(name) => { createLayout(name); toast.success(`Layout "${name}" created`); }}
+          onRenameLayout={(id, name) => { renameLayout(id, name); toast.success(`Layout renamed to "${name}"`); }}
+          onDuplicateLayout={(id) => {
+            const src = customLayouts.find((l) => l.id === id);
+            const newName = `${src?.name ?? "Layout"} copy`;
+            duplicateLayout(id, newName);
+            toast.success(`Layout duplicated as "${newName}"`);
+          }}
+          onDeleteLayout={(id) => {
+            const target = customLayouts.find((l) => l.id === id);
+            deleteLayout(id);
+            toast.success(`Layout "${target?.name ?? "Untitled"}" deleted`);
+          }}
+        />
       )}
 
       {/* Site context strip */}

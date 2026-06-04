@@ -2,6 +2,7 @@ import * as React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import {
   LayoutDashboard,
   Video,
@@ -56,6 +57,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { NotificationsDrawer } from "@/components/shared/NotificationsDrawer";
 
 /* ─── Nav data ──────────────────────────────────────────────────────────── */
 
@@ -237,9 +239,10 @@ function NavParent({ item }: { item: NavItem }) {
 
 /* ─── User profile section ──────────────────────────────────────────────── */
 
-function UserProfile() {
+function UserProfile({ onBell }: { onBell: () => void }) {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const unreadCount = useNotificationsStore((s) => s.items.filter((n) => !n.read).length);
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -268,14 +271,22 @@ function UserProfile() {
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
-              {user.notificationCount > 0 && (
-                <div className="relative">
-                  <Bell className="size-4 text-muted-foreground" />
-                  <span className="absolute -right-1 -top-1 flex size-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
-                    {user.notificationCount}
+              {/* Bell — clickable separately to open the notifications drawer */}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onBell(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onBell(); } }}
+                aria-label={`${unreadCount} unread notifications`}
+                className="relative flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Bell className="size-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex min-w-[14px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
-                </div>
-              )}
+                )}
+              </span>
               <ChevronRight className="size-3.5 text-muted-foreground" />
             </div>
           </button>
@@ -348,39 +359,45 @@ function SigmawaveFooter() {
 /* ─── Main sidebar component ────────────────────────────────────────────── */
 
 export function AppSidebar() {
+  const [notifOpen, setNotifOpen] = React.useState(false);
+
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="pb-1 pt-3">
-        <AccelLogo />
-      </SidebarHeader>
+    <>
+      <Sidebar collapsible="icon">
+        <SidebarHeader className="pb-1 pt-3">
+          <AccelLogo />
+        </SidebarHeader>
 
-      <SidebarContent className="gap-0 overflow-x-hidden">
-        {NAV_GROUPS.map((group) => (
-          <SidebarGroup key={group.label} className="py-2">
-            <SidebarGroupLabel className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-              {group.label}
-            </SidebarGroupLabel>
+        <SidebarContent className="gap-0 overflow-x-hidden">
+          {NAV_GROUPS.map((group) => (
+            <SidebarGroup key={group.label} className="py-2">
+              <SidebarGroupLabel className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                {group.label}
+              </SidebarGroupLabel>
 
-            <SidebarMenu>
-              {group.items.map((item) =>
-                item.children ? (
-                  <NavParent key={item.href} item={item} />
-                ) : (
-                  <NavLeaf key={item.href} item={item} />
-                )
-              )}
-            </SidebarMenu>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
+              <SidebarMenu>
+                {group.items.map((item) =>
+                  item.children ? (
+                    <NavParent key={item.href} item={item} />
+                  ) : (
+                    <NavLeaf key={item.href} item={item} />
+                  )
+                )}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))}
+        </SidebarContent>
 
-      <SidebarFooter className="p-0">
-        <UserProfile />
-        <SigmawaveFooter />
-      </SidebarFooter>
+        <SidebarFooter className="p-0">
+          <UserProfile onBell={() => setNotifOpen(true)} />
+          <SigmawaveFooter />
+        </SidebarFooter>
 
-      <SidebarRail />
-    </Sidebar>
+        <SidebarRail />
+      </Sidebar>
+
+      <NotificationsDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+    </>
   );
 }
 

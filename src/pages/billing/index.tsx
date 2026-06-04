@@ -1,6 +1,5 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import {
   CreditCard,
   Download,
@@ -22,8 +21,6 @@ import {
   Check,
   ArrowUp,
   ArrowDown,
-  MapPin,
-  Hash,
   CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -146,81 +143,62 @@ function SubscriptionCard({
   const PlanIcon = PLAN_ICONS[sub.planTier];
   const totalSeats = sub.seats.owner + sub.seats.admin + sub.seats.user;
   return (
-    <div className={cn("overflow-hidden rounded-xl border bg-card", sub.status === "cancelled" ? "opacity-60" : "")}>
-      <div className={cn("border-b px-4 py-3", color.bg, color.border)}>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-2.5">
-            <div className={cn("flex size-9 flex-shrink-0 items-center justify-center rounded-lg border", color.border, "bg-background")}>
-              <PlanIcon className={cn("size-4", color.text)} />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="text-[14px] font-bold text-foreground">{sub.siteName}</p>
-                <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", status.bg, status.text)}>
-                  <status.icon className="size-2.5" />
-                  {status.label}
-                </span>
-              </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                <span className={cn("font-semibold", color.text)}>{plan.name}</span> · {sub.billingCycle === "annual" ? "Annual billing" : "Monthly billing"}
-              </p>
-            </div>
+    <div className={cn("overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/30", sub.status === "cancelled" ? "opacity-60" : "border-border")}>
+      {/* Compact header row — site name + plan + cost on one line */}
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        <div className={cn("flex size-8 flex-shrink-0 items-center justify-center rounded-md border", color.border, color.bg)}>
+          <PlanIcon className={cn("size-3.5", color.text)} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate text-[13px] font-bold text-foreground">{sub.siteName}</p>
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[9px] font-bold uppercase tracking-wider", status.bg, status.text)}>
+              <status.icon className="size-2.5" />
+              {status.label}
+            </span>
           </div>
-          <div className="text-right">
-            <p className={cn("font-mono text-[16px] font-bold leading-none", color.text)}>${sub.monthlyCost.toLocaleString()}</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">/month</p>
-          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <span className={cn("font-semibold", color.text)}>{plan.name}</span> · {sub.billingCycle === "annual" ? "Annual" : "Monthly"} · Renews {sub.renewsDisplay.split(" (")[0]}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className={cn("font-mono text-[14px] font-bold leading-none", color.text)}>${sub.monthlyCost.toLocaleString()}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">/month</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-b border-border bg-background/40 px-4 py-2.5">
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cameras</p>
-          <p className="text-[13px] font-bold text-foreground">
-            {typeof plan.cameraLimit === "number" ? `Up to ${plan.cameraLimit}` : "Unlimited"}
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Users</p>
-          <p className="text-[13px] font-bold text-foreground">
-            {totalSeats}
-            {typeof plan.userLimit === "number" ? <span className="text-muted-foreground"> / {plan.userLimit}</span> : null}
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Renews</p>
-          <p className="text-[13px] font-bold text-foreground">{sub.renewsDisplay.split(" (")[0]}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-2 px-4 py-3">
-        <div className="flex flex-wrap gap-1 text-[10px]">
+      {/* Compact stats + actions row */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-background/30 px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+          <span>{typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} cams` : "Unlim cams"}</span>
+          <span className="opacity-40">·</span>
+          <span><strong className="text-foreground">{totalSeats}</strong>{typeof plan.userLimit === "number" ? ` / ${plan.userLimit}` : ""} users</span>
           {sub.seats.owner > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-success">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-success/15 px-1 py-0.5 text-success">
               <Crown className="size-2.5" /> {sub.seats.owner}
             </span>
           )}
           {sub.seats.admin > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-info/15 px-1.5 py-0.5 text-info">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-info/15 px-1 py-0.5 text-info">
               <ShieldCheck className="size-2.5" /> {sub.seats.admin}
             </span>
           )}
           {sub.seats.user > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-secondary/15 px-1.5 py-0.5 text-secondary">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-warning/15 px-1 py-0.5 text-warning">
               <CircleUser className="size-2.5" /> {sub.seats.user}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="outline" className="text-[11px]" onClick={onManageSeats}>
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onManageSeats}>
             Seats
           </Button>
           {sub.status === "cancelled" ? (
-            <Button size="sm" className="text-[11px]" onClick={onChangePlan}>
+            <Button size="sm" className="h-7 text-[11px]" onClick={onChangePlan}>
               Reactivate
             </Button>
           ) : (
-            <Button size="sm" className="gap-1 text-[11px]" onClick={onChangePlan}>
+            <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onChangePlan}>
               <ArrowUp className="size-3" />
               Change Plan
             </Button>
@@ -895,7 +873,6 @@ function TabSwitcher({ value, onChange, counts }: { value: TabKey; onChange: (k:
 /* ── Page ─────────────────────────────────────────────────────────────── */
 
 export default function BillingPage() {
-  const navigate = useNavigate();
   const subs = useSubscriptionsStore((s) => s.subscriptions);
   const changePlanStore = useSubscriptionsStore((s) => s.changePlan);
   const changeCycleStore = useSubscriptionsStore((s) => s.changeBillingCycle);
@@ -1046,7 +1023,8 @@ export default function BillingPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                <div className="space-y-2">
+                  {/* Only subscribed sites — no empty placeholders */}
                   {subs.map((s) => (
                     <SubscriptionCard
                       key={s.id}
@@ -1056,17 +1034,12 @@ export default function BillingPage() {
                       onManageSeats={() => setSeatsSub(s)}
                     />
                   ))}
-
-                  {sitesWithoutSub.map((s) => (
-                    <button key={s.id} onClick={() => setAddOpen(true)}
-                      className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card p-4 text-center text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
-                        <Plus className="size-4" />
-                      </div>
-                      <p className="text-[13px] font-semibold">{s.name}</p>
-                      <p className="text-[11px]">No subscription · click to add</p>
-                    </button>
-                  ))}
+                  {sitesWithoutSub.length > 0 && (
+                    <p className="pt-1 text-[11px] text-muted-foreground">
+                      {sitesWithoutSub.length} site{sitesWithoutSub.length === 1 ? "" : "s"} not yet subscribed —{" "}
+                      <button onClick={() => setAddOpen(true)} className="text-primary underline hover:text-primary/80">add a subscription</button>
+                    </p>
+                  )}
                 </div>
               )}
             </SectionCard>
@@ -1135,53 +1108,42 @@ export default function BillingPage() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Next Invoice" description="Combined across all active sites.">
-              <div className="rounded-lg border border-border bg-background p-3">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Estimated total</span>
-                  <span className="font-mono text-[22px] font-bold text-success">${totalMonthly.toLocaleString()}</span>
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">Charges {ORG_LICENSE_INFO.nextInvoiceDate}</p>
+            <SectionCard title="Next Invoice" description={`Charges ${ORG_LICENSE_INFO.nextInvoiceDate}.`}>
+              {/* Per-subscription payment cards */}
+              <div className="space-y-2">
+                {activeSubs.map((s) => {
+                  const color = PLAN_COLORS[s.planTier];
+                  const plan = PLANS[s.planTier];
+                  const Icon = PLAN_ICONS[s.planTier];
+                  return (
+                    <div key={s.id} className="rounded-lg border border-border bg-background p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn("flex size-7 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
+                          <Icon className={cn("size-3.5", color.text)} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[12px] font-bold text-foreground">{s.siteName}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {plan.name} · {s.billingCycle === "annual" ? "Annual" : "Monthly"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={cn("font-mono text-[13px] font-bold leading-none", color.text)}>
+                            ${s.monthlyCost.toLocaleString()}
+                          </p>
+                          <p className="mt-0.5 text-[9px] text-muted-foreground">/month</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="mt-3 space-y-1.5">
-                {activeSubs.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between gap-2 rounded border border-border/60 bg-background/50 px-2.5 py-1.5 text-[11px]">
-                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                      <span className={cn("size-1.5 rounded-full", PLAN_COLORS[s.planTier].text.replace("text-", "bg-"))} />
-                      {s.siteName}
-                    </span>
-                    <span className="font-mono font-semibold text-foreground">${s.monthlyCost.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Quick Actions">
-              <div className="space-y-1.5">
-                <button onClick={() => setAddOpen(true)}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-[12px] transition-colors hover:border-primary/40">
-                  <Plus className="size-4 text-secondary" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">Add subscription</p>
-                    <p className="text-[10px] text-muted-foreground">Subscribe a new site</p>
-                  </div>
-                </button>
-                <button onClick={() => navigate("/site/overview")}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-[12px] transition-colors hover:border-primary/40">
-                  <MapPin className="size-4 text-info" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">Manage sites</p>
-                    <p className="text-[10px] text-muted-foreground">{sites.length} site{sites.length === 1 ? "" : "s"} total</p>
-                  </div>
-                </button>
-                <button onClick={() => setTab("invoices")}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-[12px] transition-colors hover:border-primary/40">
-                  <Hash className="size-4 text-primary" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">View invoices</p>
-                    <p className="text-[10px] text-muted-foreground">{MOCK_INVOICES.length} total</p>
-                  </div>
-                </button>
+              {/* Total */}
+              <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Total
+                </span>
+                <span className="font-mono text-[20px] font-bold text-success">${totalMonthly.toLocaleString()}</span>
               </div>
             </SectionCard>
           </div>

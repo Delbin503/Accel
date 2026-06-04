@@ -24,6 +24,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { storageBandFor } from "@/types/nvr";
 import type { CameraData } from "@/types/cameras";
 import type { NvrData } from "@/types/nvr";
@@ -38,7 +39,6 @@ const OFFLINE_THRESHOLD_MIN = 24 * 60; // > 24 hr old = offline
 
 function deriveCameraHealth(c: CameraData): HealthStatus {
   if (c.status === "connection-failed") return "failed";
-  if (c.status === "pending") return "offline";
   if (c.status === "offline") return "offline";
   const ageMin = (NOW - new Date(c.lastSeenAt).getTime()) / 60000;
   if (ageMin > OFFLINE_THRESHOLD_MIN) return "offline";
@@ -190,84 +190,14 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: DeviceRow[]) => number;
 }[] = [
-  {
-    key: "all",
-    label: "Total Devices",
-    sub: "Cameras + NVRs",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
-    getValue: (items) => items.length,
-  },
-  {
-    key: "online",
-    label: "Online",
-    sub: "Streaming + healthy",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
-    getValue: (items) => items.filter((d) => d.health === "online").length,
-  },
-  {
-    key: "offline",
-    label: "Offline",
-    sub: "Last seen > 24h",
-    barClass: "bg-muted-foreground",
-    valueClass: "text-muted-foreground",
-    activeClass: "border-muted-foreground",
-    getValue: (items) => items.filter((d) => d.health === "offline").length,
-  },
-  {
-    key: "failed",
-    label: "Failed",
-    sub: "Connection unreachable",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    activeClass: "border-sev-critical",
-    getValue: (items) => items.filter((d) => d.health === "failed").length,
-  },
+  { key: "all",     label: "Total Devices", sub: "Cameras + NVRs",         accent: "primary",      getValue: (i) => i.length },
+  { key: "online",  label: "Online",        sub: "Streaming + healthy",    accent: "success",      getValue: (i) => i.filter((d) => d.health === "online").length },
+  { key: "offline", label: "Offline",       sub: "Last seen > 24h",        accent: "muted",        getValue: (i) => i.filter((d) => d.health === "offline").length },
+  { key: "failed",  label: "Failed",        sub: "Connection unreachable", accent: "sev-critical", getValue: (i) => i.filter((d) => d.health === "failed").length },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[number];
-  items: DeviceRow[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
 
@@ -544,17 +474,19 @@ export default function DeviceHealthPage() {
       </PageHeader>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <KpiGrid cols={4}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={allDevices}
+            label={cfg.label}
+            value={cfg.getValue(allDevices)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* Filter panel */}
       <FilterPanel

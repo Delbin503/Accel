@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -51,13 +52,14 @@ import {
 } from "@/mocks/users";
 import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 
 /* ── Role badge ──────────────────────────────────────────────────────────── */
 
 const ROLE_STYLES: Record<UserRole, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
-  owner: { bg: "bg-success/15 border-success/30", text: "text-success",          icon: Crown },
-  admin: { bg: "bg-info/15 border-info/30",       text: "text-info",             icon: ShieldCheck },
-  user:  { bg: "bg-muted border-border",          text: "text-muted-foreground", icon: CircleUser },
+  owner: { bg: "bg-success/15 border-success/30", text: "text-success", icon: Crown },
+  admin: { bg: "bg-info/15 border-info/30",       text: "text-info",    icon: ShieldCheck },
+  user:  { bg: "bg-warning/15 border-warning/30", text: "text-warning", icon: CircleUser },
 };
 
 function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boolean }) {
@@ -155,93 +157,15 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: UserData[]) => number;
 }[] = [
-  {
-    key: "all",
-    label: "Total Users",
-    sub: "All registered accounts",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
-    getValue: (items) => items.length,
-  },
-  {
-    key: "owners",
-    label: "Owners",
-    sub: "Full control — billing & ownership",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
-    getValue: (items) => items.filter((u) => u.role === "owner").length,
-  },
-  {
-    key: "admins",
-    label: "Admins",
-    sub: "Can grant any permission",
-    barClass: "bg-info",
-    valueClass: "text-info",
-    activeClass: "border-info",
-    getValue: (items) => items.filter((u) => u.role === "admin").length,
-  },
-  {
-    key: "users",
-    label: "Users",
-    sub: "Site-scoped daily users",
-    barClass: "bg-warning",
-    valueClass: "text-warning",
-    activeClass: "border-warning",
-    getValue: (items) => items.filter((u) => u.role === "user").length,
-  },
-  {
-    key: "suspended",
-    label: "Suspended Users",
-    sub: "Sign-in blocked",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    activeClass: "border-sev-critical",
-    getValue: (items) => items.filter((u) => u.status === "suspended").length,
-  },
+  { key: "all",       label: "Total Users",     sub: "All registered accounts",        accent: "primary",      getValue: (i) => i.length },
+  { key: "owners",    label: "Owners",          sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
+  { key: "admins",    label: "Admins",          sub: "Can grant any permission",       accent: "info",         getValue: (i) => i.filter((u) => u.role === "admin").length },
+  { key: "users",     label: "Users",           sub: "Site-scoped daily users",        accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
+  { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "sev-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[number];
-  items: UserData[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
 
@@ -452,13 +376,16 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   );
 }
 
-function StatCard({ label, value, valueClass }: { label: string; value: React.ReactNode; valueClass?: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">{label}</p>
-      <p className={cn("mt-1 text-[20px] font-bold leading-none text-foreground", valueClass)}>{value}</p>
-    </div>
-  );
+function StatCard({ label, value, valueClass, sub }: { label: string; value: React.ReactNode; valueClass?: string; sub?: React.ReactNode }) {
+  // Derive accent from valueClass so the shared accent bar matches the value tint.
+  const accent: KpiAccent =
+    valueClass?.includes("text-success")      ? "success" :
+    valueClass?.includes("text-info")         ? "info" :
+    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-warning")      ? "warning" :
+    valueClass?.includes("text-purple")       ? "purple" :
+    "primary";
+  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
 
 const ACTIVITY_CHIP_STYLES: Record<string, string> = {
@@ -683,10 +610,11 @@ function UserDrawer({
             <div>
               <SectionTitle>Overview</SectionTitle>
               <div className="grid grid-cols-3 gap-3">
-                <StatCard label="Cases Owned" value={user.cases30d} />
+                <StatCard label="Cases Owned" value={user.cases30d} sub="Last 30 days" />
                 <StatCard
                   label="SLA Met"
                   value={`${user.slaMetPct}%`}
+                  sub="Across owned cases"
                   valueClass={
                     user.slaMetPct >= 90
                       ? "text-success"
@@ -695,7 +623,7 @@ function UserDrawer({
                       : "text-sev-critical"
                   }
                 />
-                <StatCard label="Last 30D Sign-Ins" value={user.signIns30d} />
+                <StatCard label="Sign-ins" value={user.signIns30d} sub="Last 30 days" />
               </div>
             </div>
 
@@ -894,14 +822,35 @@ function UserDrawer({
 
 /* ── Invite Users modal ──────────────────────────────────────────────────── */
 
+// Basic but practical email regex — accepts "name+tag@domain.co" style addresses.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseEmails(raw: string): { all: string[]; valid: string[]; invalid: string[]; duplicates: string[] } {
+  const tokens = raw.split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const valid: string[] = [];
+  const invalid: string[] = [];
+  const duplicates: string[] = [];
+  for (const t of tokens) {
+    const lower = t.toLowerCase();
+    if (seen.has(lower)) { duplicates.push(t); continue; }
+    seen.add(lower);
+    if (EMAIL_RE.test(t)) valid.push(t);
+    else invalid.push(t);
+  }
+  return { all: tokens, valid, invalid, duplicates };
+}
+
 function InviteUsersModal({
   open,
   onClose,
   onInvite,
+  seatUsage,
 }: {
   open: boolean;
   onClose: () => void;
   onInvite: (emails: string, role: UserRole, sites: string[]) => void;
+  seatUsage: Record<UserRole, SeatUsage>;
 }) {
   const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<UserRole>("user");
@@ -911,64 +860,157 @@ function InviteUsersModal({
     if (open) { setEmails(""); setRole("user"); setSites([]); }
   }, [open]);
 
-  const canSubmit = emails.trim().length > 0 && sites.length > 0;
+  const parsed = React.useMemo(() => parseEmails(emails), [emails]);
+  const seatsLeft = seatUsage[role].available;
+  const overSeat = parsed.valid.length > seatsLeft;
+  const noSeats = seatsLeft === 0;
+
+  const canSubmit =
+    parsed.valid.length > 0 &&
+    parsed.invalid.length === 0 &&
+    sites.length > 0 &&
+    !overSeat;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            Invitees receive a one-time email link valid for 7 days.
+          </p>
         </DialogHeader>
         <div className="space-y-4 px-5 py-4">
+          {/* Seat summary strip */}
+          <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
+            {(["owner", "admin", "user"] as UserRole[]).map((r) => {
+              const s = seatUsage[r];
+              const isLow = s.available === 0;
+              const isSelected = role === r;
+              return (
+                <div key={r} className={cn(
+                  "rounded-md border px-2.5 py-2 transition-colors",
+                  isSelected ? "border-primary bg-primary/5" : "border-border bg-card"
+                )}>
+                  <div className="mb-1 flex items-center justify-between gap-1.5">
+                    <RoleBadge role={r} withIcon={false} />
+                    <span className={cn("font-mono text-[10px] font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                      {s.available} left
+                    </span>
+                  </div>
+                  <p className="font-mono text-[11px] text-muted-foreground">
+                    {s.assigned} / {s.total} used
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Email Addresses
-            </p>
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Email Addresses
+              </p>
+              {parsed.valid.length > 0 && (
+                <span className="text-[11px] text-muted-foreground">
+                  <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>{parsed.valid.length}</strong> valid
+                  {parsed.invalid.length > 0 && <> · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid</>}
+                  {parsed.duplicates.length > 0 && <> · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate</>}
+                </span>
+              )}
+            </div>
             <textarea
               value={emails}
               onChange={(e) => setEmails(e.target.value)}
               placeholder="alice@acme.com, bob@acme.com…"
               rows={3}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className={cn(
+                "w-full rounded-lg border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none",
+                parsed.invalid.length > 0 ? "border-sev-critical/40 focus:border-sev-critical" : "border-border focus:border-primary"
+              )}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Separate multiple emails with commas. Invites expire in 7 days.
+              Separate multiple emails with commas, spaces, or new lines.
             </p>
+
+            {/* Validation feedback */}
+            {parsed.invalid.length > 0 && (
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-3 py-2 text-[11px] text-sev-critical">
+                <AlertTriangle className="mt-0.5 size-3.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">{parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:</p>
+                  <p className="font-mono text-[10px] opacity-80">{parsed.invalid.slice(0, 5).join(", ")}{parsed.invalid.length > 5 ? ` +${parsed.invalid.length - 5} more` : ""}</p>
+                </div>
+              </div>
+            )}
+            {parsed.duplicates.length > 0 && (
+              <p className="mt-1.5 text-[11px] text-warning">
+                Removed {parsed.duplicates.length} duplicate{parsed.duplicates.length === 1 ? "" : "s"}.
+              </p>
+            )}
           </div>
 
           <div>
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Role</p>
             <div className="space-y-2">
-              {(["admin", "user"] as const).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={cn(
-                    "flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
-                    role === r ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                  )}
-                >
-                  <div
+              {(["admin", "user"] as const).map((r) => {
+                const s = seatUsage[r];
+                const willExceed = role === r && parsed.valid.length > s.available;
+                return (
+                  <button
+                    key={r}
+                    onClick={() => setRole(r)}
                     className={cn(
-                      "mt-0.5 flex size-4 flex-shrink-0 items-center justify-center rounded-full border",
-                      role === r ? "border-primary" : "border-muted-foreground/40"
+                      "flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
+                      role === r ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                     )}
                   >
-                    {role === r && <span className="size-2 rounded-full bg-primary" />}
-                  </div>
-                  <div className="flex-1">
-                    <RoleBadge role={r} />
-                    <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                      {USER_ROLE_DESCRIPTIONS[r]}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                    <div
+                      className={cn(
+                        "mt-0.5 flex size-4 flex-shrink-0 items-center justify-center rounded-full border",
+                        role === r ? "border-primary" : "border-muted-foreground/40"
+                      )}
+                    >
+                      {role === r && <span className="size-2 rounded-full bg-primary" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <RoleBadge role={r} />
+                        <span className={cn("font-mono text-[10px] font-bold",
+                          s.available === 0 ? "text-sev-critical" :
+                          willExceed ? "text-sev-critical" :
+                          s.available <= 2 ? "text-warning" :
+                          "text-success"
+                        )}>
+                          {s.available} of {s.total} seats available
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                        {USER_ROLE_DESCRIPTIONS[r]}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             <p className="mt-1.5 text-[11px] text-muted-foreground">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
+
+          {/* Seat shortfall warning */}
+          {(noSeats || overSeat) && (
+            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5 text-[12px] text-sev-critical">
+              <AlertTriangle className="mt-0.5 size-3.5 flex-shrink-0" />
+              <div>
+                {noSeats ? (
+                  <p><strong>No {seatUsage[role].label} seats remaining.</strong> Purchase more seats from Billing & License before inviting.</p>
+                ) : (
+                  <p><strong>Not enough seats.</strong> You're inviting {parsed.valid.length} {seatUsage[role].label.toLowerCase()}{parsed.valid.length === 1 ? "" : "s"} but only {seatsLeft} {seatsLeft === 1 ? "seat is" : "seats are"} available. Remove some addresses or purchase more seats.</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site Access</p>
@@ -998,12 +1040,12 @@ function InviteUsersModal({
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
           <Button size="sm" disabled={!canSubmit} onClick={() => onInvite(emails, role, sites)} className="gap-1.5">
             <Mail className="size-3.5" />
-            Send Invites
+            Send {parsed.valid.length > 0 ? `${parsed.valid.length} Invite${parsed.valid.length === 1 ? "" : "s"}` : "Invites"}
           </Button>
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -1034,7 +1076,7 @@ const SEAT_ROLE_STYLES: Record<"all" | UserRole, { bg: string; text: string; bar
   all:   { bg: "bg-muted-foreground/15 border-border",        text: "text-foreground",   barClass: "bg-muted-foreground/40", icon: UsersIcon },
   owner: { bg: "bg-success/15 border-success/30",             text: "text-success",      barClass: "bg-success",             icon: Crown },
   admin: { bg: "bg-info/15 border-info/30",                   text: "text-info",         barClass: "bg-info",                icon: ShieldCheck },
-  user:  { bg: "bg-secondary/15 border-secondary/30",         text: "text-secondary",    barClass: "bg-secondary",           icon: CircleUser },
+  user:  { bg: "bg-warning/15 border-warning/30",             text: "text-warning",      barClass: "bg-warning",             icon: CircleUser },
 };
 
 function SeatPill({
@@ -1959,26 +2001,6 @@ function BulkActionBar({
 
 /* ── Toast ───────────────────────────────────────────────────────────────── */
 
-function Toast({ kind, message, onClose }: { kind: "success" | "error"; message: string; onClose: () => void }) {
-  React.useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className="fixed right-5 top-5 z-[70] flex items-start gap-2.5 rounded-lg border border-border bg-card px-4 py-3 shadow-xl">
-      {kind === "success" ? (
-        <CheckCircle2 className="size-4 flex-shrink-0 text-success" />
-      ) : (
-        <AlertTriangle className="size-4 flex-shrink-0 text-sev-critical" />
-      )}
-      <p className="text-[13px] font-medium text-foreground">{message}</p>
-      <button onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground">
-        <X className="size-3.5" />
-      </button>
-    </div>
-  );
-}
-
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 type SortKey = "newest" | "oldest" | "name-asc" | "last-active";
@@ -2023,7 +2045,12 @@ export default function UserManagementPage() {
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
   const [dialog, setDialog] = React.useState<DialogState>({ kind: null, userIds: [] });
-  const [toast, setToast] = React.useState<{ kind: "success" | "error"; message: string } | null>(null);
+  // Adapter so existing setToast(...) call sites route through sonner without a rewrite.
+  const setToast = React.useCallback((next: { kind: "success" | "error"; message: string } | null) => {
+    if (!next) return;
+    if (next.kind === "success") toast.success(next.message);
+    else                         toast.error(next.message);
+  }, []);
   const pageSize = 10;
 
   const seatUsage = React.useMemo(() => computeSeatUsage(users, seatTotals), [users, seatTotals]);
@@ -2261,17 +2288,19 @@ export default function UserManagementPage() {
       <SeatStrip usage={seatUsage} billingCycle={ORG_LICENSE_INFO.billingCycle} />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <KpiGrid cols={5}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={users}
+            label={cfg.label}
+            value={cfg.getValue(users)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* Filter panel */}
       <FilterPanel
@@ -2497,7 +2526,7 @@ export default function UserManagementPage() {
       />
 
       {/* Modals */}
-      <InviteUsersModal open={dialog.kind === "invite"} onClose={closeDialog} onInvite={handleInvite} />
+      <InviteUsersModal open={dialog.kind === "invite"} onClose={closeDialog} onInvite={handleInvite} seatUsage={seatUsage} />
       <EditUserModal
         open={dialog.kind === "edit"}
         user={dialogUsers[0] ?? null}
@@ -2570,7 +2599,6 @@ export default function UserManagementPage() {
         onManageSite={() => openDialog("manage-site", [...selectedIds])}
       />
 
-      {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }

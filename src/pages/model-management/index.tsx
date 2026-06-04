@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -793,22 +794,22 @@ function AttachedRuleCard({
   onDetach: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-background p-3.5">
-      <div className="mb-1.5 flex items-start justify-between gap-2">
-        <div className="flex flex-col items-start gap-1">
-          <span className="text-[13px] font-bold text-foreground">{rule.name}</span>
+    <div className="rounded-lg border border-border bg-background px-3 py-2.5">
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[12px] font-semibold text-foreground">{rule.name}</span>
           <SeverityBadge severity={rule.severity} />
         </div>
         {editable && (
           <button
             onClick={onDetach}
-            className="flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 hover:bg-sev-critical/10 hover:text-sev-critical"
+            className="flex size-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 hover:bg-sev-critical/10 hover:text-sev-critical"
           >
-            <X className="size-3.5" />
+            <X className="size-3" />
           </button>
         )}
       </div>
-      <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+      <p className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
         {rule.description}
       </p>
       <div className="flex flex-wrap gap-1">
@@ -850,32 +851,30 @@ function RuleLibraryCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        "group rounded-xl border bg-background p-3.5 transition-all",
+        "group rounded-lg border bg-background px-3 py-2.5 transition-all",
         isDragging ? "border-border opacity-40" : "border-border hover:border-primary/25",
         editable && "cursor-grab active:cursor-grabbing"
       )}
     >
-      <div className="mb-1.5 flex items-start justify-between gap-2">
-        <div className="flex flex-col items-start gap-1">
-          <div className="flex items-center gap-1.5">
-            {editable && (
-              <GripVertical className="size-3 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
-            )}
-            <span className="text-[13px] font-bold text-foreground">{rule.name}</span>
-          </div>
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {editable && (
+            <GripVertical className="size-3 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
+          <span className="text-[12px] font-semibold text-foreground">{rule.name}</span>
           <SeverityBadge severity={rule.severity} />
         </div>
         {editable && (
           <button
             onClick={onAttach}
-            className="flex size-6 flex-shrink-0 items-center justify-center rounded border border-primary/30 bg-primary/10 text-primary opacity-0 transition-opacity hover:bg-primary/20 group-hover:opacity-100"
+            className="flex size-5 flex-shrink-0 items-center justify-center rounded border border-primary/30 bg-primary/10 text-primary opacity-0 transition-opacity hover:bg-primary/20 group-hover:opacity-100"
             title="Attach rule"
           >
             <Plus className="size-3" />
           </button>
         )}
       </div>
-      <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+      <p className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
         {rule.description}
       </p>
       <div className="flex flex-wrap gap-1">
@@ -1627,6 +1626,7 @@ export default function ModelManagementPage() {
     setModels((prev) => [newModel, ...prev]);
     setSelectedId(newModel.id);
     setShowCreate(false);
+    toast.success(`Model "${newModel.name}" created`);
   }
 
   function handleSave(id: string, d: EditDraft) {
@@ -1646,11 +1646,14 @@ export default function ModelManagementPage() {
           : m
       )
     );
+    toast.success(`Model "${d.name}" saved`);
   }
 
   function handleDelete(id: string) {
+    const target = models.find((m) => m.id === id);
     setModels((prev) => prev.filter((m) => m.id !== id));
     setSelectedId(null);
+    toast.success(`Model "${target?.name ?? id}" deleted`);
   }
 
   return (

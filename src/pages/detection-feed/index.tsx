@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
 import type { EscalateFormData } from "./EscalateModal";
@@ -516,94 +517,22 @@ function SelectionBar({
   );
 }
 
-/* ─── KPI card ───────────────────────────────────────────────────────────── */
+/* ─── KPI card configs ───────────────────────────────────────────────────── */
 
-const KPI_CONFIGS = [
-  {
-    key: "all" as KpiFilter,
-    label: "Total",
-    barClass: "",
-    valueClass: "text-foreground",
-    getValue: (events: DetectionEvent[]) => events.length,
-    sub: "Across 3 sites",
-  },
-  {
-    key: "critical" as KpiFilter,
-    label: "Critical",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    getValue: (events: DetectionEvent[]) => events.filter((e) => e.severity === "critical").length,
-    sub: "Immediate threat",
-  },
-  {
-    key: "medium" as KpiFilter,
-    label: "Medium",
-    barClass: "bg-sev-medium",
-    valueClass: "text-sev-medium",
-    getValue: (events: DetectionEvent[]) => events.filter((e) => e.severity === "medium").length,
-    sub: "Needs review",
-  },
-  {
-    key: "low" as KpiFilter,
-    label: "Low",
-    barClass: "bg-sev-low",
-    valueClass: "text-sev-low",
-    getValue: (events: DetectionEvent[]) => events.filter((e) => e.severity === "low").length,
-    sub: "Informational",
-  },
-  {
-    key: "pending" as KpiFilter,
-    label: "Pending",
-    barClass: "bg-warning",
-    valueClass: "text-warning",
-    getValue: (events: DetectionEvent[]) => events.filter((e) => e.status === "pending").length,
-    sub: "Awaiting triage",
-  },
-  {
-    key: "escalated" as KpiFilter,
-    label: "Escalated",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    getValue: (events: DetectionEvent[]) => events.filter((e) => e.status === "escalated").length,
-    sub: "In incident case",
-  },
+const KPI_CONFIGS: {
+  key: KpiFilter;
+  label: string;
+  accent: KpiAccent;
+  getValue: (events: DetectionEvent[]) => number;
+  sub: string;
+}[] = [
+  { key: "all",       label: "Total",     accent: "primary",      getValue: (e) => e.length,                                     sub: "Across 3 sites" },
+  { key: "critical",  label: "Critical",  accent: "sev-critical", getValue: (e) => e.filter((x) => x.severity === "critical").length, sub: "Immediate threat" },
+  { key: "medium",    label: "Medium",    accent: "sev-medium",   getValue: (e) => e.filter((x) => x.severity === "medium").length,   sub: "Needs review" },
+  { key: "low",       label: "Low",       accent: "sev-low",      getValue: (e) => e.filter((x) => x.severity === "low").length,      sub: "Informational" },
+  { key: "pending",   label: "Pending",   accent: "warning",      getValue: (e) => e.filter((x) => x.status === "pending").length,    sub: "Awaiting triage" },
+  { key: "escalated", label: "Escalated", accent: "success",      getValue: (e) => e.filter((x) => x.status === "escalated").length,  sub: "In incident case" },
 ];
-
-function KpiCard({
-  config,
-  events,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[0];
-  events: DetectionEvent[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card px-3.5 py-3 text-left transition-all hover:border-primary hover:-translate-y-px",
-        active ? "border-primary bg-primary-muted" : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-1.5 top-1.5 max-w-[55px] text-right text-[8.5px] font-bold uppercase leading-[1.05] tracking-tight text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass || "bg-border/50")} />
-      <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(events)}
-      </div>
-      <div className="mt-1 text-[10.5px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ─── Date presets ───────────────────────────────────────────────────────── */
 
@@ -866,17 +795,19 @@ export default function DetectionFeedPage() {
       </PageHeader>
 
       {/* ── KPI cards ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <KpiGrid cols={6}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            events={allEvents.filter((e) => e.status !== "dismissed")}
+            label={cfg.label}
+            value={cfg.getValue(allEvents.filter((e) => e.status !== "dismissed"))}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* ── Date preset row (outside filter panel) ──────────────────────── */}
       <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">

@@ -32,16 +32,22 @@ export default function SignInPage() {
     // Simulated auth
     setTimeout(() => {
       const initials = email.split("@")[0].slice(0, 2).toUpperCase();
+      // Friendly first-name extraction from the local-part of the email.
+      const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
+      const displayName = local.split(" ").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+      const firstName = displayName.split(" ")[0] || displayName;
       signIn({
         id: "usr-" + Math.random().toString(36).slice(2, 6),
-        name: email.split("@")[0],
+        name: displayName || email,
         initials,
         role: "admin",
         email,
         notificationCount: 0,
         orgName: "My Workspace",
       });
-      toast.success("Signed in", { description: `Welcome back, ${email}` });
+      toast.success(`Welcome back, ${firstName}! 👋`, {
+        description: "Loading your Accel workspace…",
+      });
       navigate(redirectTo, { replace: true });
     }, 250);
   }
@@ -70,14 +76,9 @@ export default function SignInPage() {
           </div>
 
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Password
-              </label>
-              <Link to="/forgot-password" className="text-[11px] text-muted-foreground underline hover:text-primary">
-                Forgot password?
-              </Link>
-            </div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Password
+            </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -92,11 +93,16 @@ export default function SignInPage() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
-              className="size-3.5 accent-primary" />
-            Keep me signed in
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
+                className="size-3.5 accent-primary" />
+              Keep me signed in
+            </label>
+            <Link to="/forgot-password" className="text-[12px] font-semibold text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </div>
 
           {error && (
             <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">

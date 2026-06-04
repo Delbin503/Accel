@@ -1,5 +1,6 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -41,6 +42,7 @@ import {
 } from "@/mocks/deployments";
 import type { ModelData } from "@/types/modelManagement";
 import type { CameraData } from "@/types/cameras";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import type {
   DeploymentData,
   DeploymentStatus,
@@ -429,6 +431,20 @@ function DeployWizard({
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
+  // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
+  // location.state.prefill = { siteId, areaId, cameraId, ... }
+  const location = useLocation();
+  React.useEffect(() => {
+    const prefill = (location.state as { prefill?: { siteId?: string; areaId?: string; cameraId?: string } } | null)?.prefill;
+    if (!prefill) return;
+    if (prefill.siteId)  setSiteId(prefill.siteId);
+    if (prefill.areaId)  setAreaIds([prefill.areaId]);
+    if (prefill.cameraId) setCameraIds([prefill.cameraId]);
+    // Clear the state so a refresh doesn't re-apply
+    window.history.replaceState({}, document.title);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* — Derived data — */
 
   const availableModels = MOCK_MODELS.filter((m) => m.sequenceIds.length > 0 && m.attachedRuleIds.length > 0);
@@ -690,54 +706,16 @@ const HISTORY_KPIS: {
   key: HistoryKpi;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: DeploymentData[]) => number;
 }[] = [
-  { key: "all",            label: "Total",   sub: "All recorded",    barClass: "bg-muted-foreground/30", valueClass: "text-foreground",       activeClass: "border-primary",       getValue: (it) => it.length },
-  { key: "active",         label: "Active",  sub: "Producing events",barClass: "bg-success",             valueClass: "text-success",          activeClass: "border-success",       getValue: (it) => it.filter((d) => d.status === "active").length },
-  { key: "paused",         label: "Paused",  sub: "Auto-paused",     barClass: "bg-warning",         valueClass: "text-warning",      activeClass: "border-warning",   getValue: (it) => it.filter((d) => d.status === "paused").length },
-  { key: "pending-camera", label: "Pending", sub: "Awaiting camera", barClass: "bg-info",                valueClass: "text-info",             activeClass: "border-info",          getValue: (it) => it.filter((d) => d.status === "pending-camera").length },
-  { key: "stopped",        label: "Stopped", sub: "Manually halted", barClass: "bg-muted-foreground",    valueClass: "text-muted-foreground", activeClass: "border-muted-foreground", getValue: (it) => it.filter((d) => d.status === "stopped").length },
-  { key: "failed",         label: "Failed",  sub: "Couldn't start",  barClass: "bg-sev-critical",        valueClass: "text-sev-critical",     activeClass: "border-sev-critical",  getValue: (it) => it.filter((d) => d.status === "failed").length },
+  { key: "all",            label: "Total",   sub: "All recorded",     accent: "primary",      getValue: (it) => it.length },
+  { key: "active",         label: "Active",  sub: "Producing events", accent: "success",      getValue: (it) => it.filter((d) => d.status === "active").length },
+  { key: "paused",         label: "Paused",  sub: "Auto-paused",      accent: "warning",      getValue: (it) => it.filter((d) => d.status === "paused").length },
+  { key: "pending-camera", label: "Pending", sub: "Awaiting camera",  accent: "info",         getValue: (it) => it.filter((d) => d.status === "pending-camera").length },
+  { key: "stopped",        label: "Stopped", sub: "Manually halted",  accent: "muted",        getValue: (it) => it.filter((d) => d.status === "stopped").length },
+  { key: "failed",         label: "Failed",  sub: "Couldn't start",   accent: "sev-critical", getValue: (it) => it.filter((d) => d.status === "failed").length },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof HISTORY_KPIS)[number];
-  items: DeploymentData[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card px-3.5 py-3 text-left transition-all hover:border-primary hover:-translate-y-px",
-        active ? `${config.activeClass} bg-primary-muted` : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-1.5 top-1.5 max-w-[55px] text-right text-[8.5px] font-bold uppercase leading-[1.05] tracking-tight text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[10.5px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 interface DepFilters {
   site: string[];
@@ -1078,17 +1056,19 @@ function HistoryView({
     <div className="flex flex-col gap-4">
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <KpiGrid cols={6}>
         {HISTORY_KPIS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={deployments}
+            label={cfg.label}
+            value={cfg.getValue(deployments)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpi === cfg.key}
             onClick={() => { setKpi((cur) => (cur === cfg.key ? "all" : cfg.key)); setPage(1); }}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       <FilterPanel filters={filters} onChange={(f) => { setFilters(f); setPage(1); }} search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} />
 
@@ -1266,6 +1246,12 @@ export default function ModelDeploymentPage() {
   function handleCommit(newRecords: DeploymentData[]) {
     setDeployments((prev) => [...newRecords, ...prev]);
     setTab("history");
+    toast.success(
+      newRecords.length === 1
+        ? `${newRecords[0].modelName} deployed`
+        : `${newRecords.length} models deployed`,
+      { description: "View status in the History tab." }
+    );
   }
 
   return (
@@ -1278,15 +1264,15 @@ export default function ModelDeploymentPage() {
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-card p-0.5">
+          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
             <button onClick={() => setTab("deploy")}
-              className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
                 tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <Plus className="size-3.5" />
               Deploy
             </button>
             <button onClick={() => setTab("history")}
-              className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
                 tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <FileText className="size-3.5" />
               History ({deployments.length})

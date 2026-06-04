@@ -63,30 +63,19 @@ function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) {
 
 /* ── KPI strip ───────────────────────────────────────────────────────────── */
 
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+
 type KpiFilter = "all" | "today" | "high-events" | "continuous";
 
 const KPI_CONFIGS: {
-  key: KpiFilter; label: string; sub: string;
-  barClass: string; valueClass: string; activeClass: string;
+  key: KpiFilter; label: string; sub: string; accent: KpiAccent;
   getValue: (items: RecordingDisplay[]) => number;
 }[] = [
-  { key: "all",         label: "Total Recordings", sub: "Across all cameras",  barClass: "bg-muted-foreground/30", valueClass: "text-foreground",   activeClass: "border-primary",          getValue: (items) => items.length },
-  { key: "today",       label: "Today",            sub: "Recorded today",      barClass: "bg-success",             valueClass: "text-success",      activeClass: "border-success",          getValue: (items) => items.filter((r) => r.dateLabel === "Today").length },
-  { key: "high-events", label: "With Events",      sub: "≥ 5 detections each", barClass: "bg-warning",             valueClass: "text-warning",      activeClass: "border-warning",          getValue: (items) => items.filter((r) => r.eventCount >= 5).length },
-  { key: "continuous",  label: "Continuous",       sub: "24/7 recording mode", barClass: "bg-info",                valueClass: "text-info",         activeClass: "border-info",             getValue: (items) => items.filter((r) => r.mode === "continuous").length },
+  { key: "all",         label: "Total Recordings", sub: "Across all cameras",  accent: "primary", getValue: (items) => items.length },
+  { key: "today",       label: "Today",            sub: "Recorded today",      accent: "success", getValue: (items) => items.filter((r) => r.dateLabel === "Today").length },
+  { key: "high-events", label: "With Events",      sub: "≥ 5 detections each", accent: "warning", getValue: (items) => items.filter((r) => r.eventCount >= 5).length },
+  { key: "continuous",  label: "Continuous",       sub: "24/7 recording mode", accent: "info",    getValue: (items) => items.filter((r) => r.mode === "continuous").length },
 ];
-
-function KpiCard({ config, items, active, onClick }: { config: (typeof KPI_CONFIGS)[number]; items: RecordingDisplay[]; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={cn("relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60", active ? config.activeClass : "border-border")}>
-      {active && <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">Active Filter</span>}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{config.label}</div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>{config.getValue(items)}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
 
@@ -205,7 +194,7 @@ interface DetectedPeriod {
 function periodsForRecording(rec: RecordingDisplay): DetectedPeriod[] {
   const start = new Date(rec.startsAt).getTime();
   const end = new Date(rec.endsAt).getTime();
-  return MOCK_EVENTS
+  const real = MOCK_EVENTS
     .filter((e) => {
       if (e.camera !== rec.cameraId) return false;
       const t = new Date(`${e.date}T${e.time}`).getTime();
@@ -216,6 +205,38 @@ function periodsForRecording(rec: RecordingDisplay): DetectedPeriod[] {
       const offsetSec = Math.max(0, Math.round((eventTs - start) / 1000));
       return { event: e, offsetSec, durationSec: 8 + (e.severity === "critical" ? 4 : 0) };
     });
+  if (real.length > 0) return real;
+
+  // No mock events fell inside this recording window — emit synthetic samples
+  // so the drawer always demonstrates the linked-incidents UX.
+  const seed = rec.id.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
+  const sampleCount = (seed % 3) + 1;
+  const durationSec = Math.max(60, Math.round((end - start) / 1000));
+  const samples: DetectedPeriod[] = [];
+  for (let i = 0; i < sampleCount; i++) {
+    const src = MOCK_EVENTS[(seed + i * 3) % MOCK_EVENTS.length];
+    if (!src) continue;
+    const offsetSec = Math.round(((i + 1) / (sampleCount + 1)) * durationSec);
+    const eventMs = start + offsetSec * 1000;
+    const d = new Date(eventMs);
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    const ss = String(d.getUTCSeconds()).padStart(2, "0");
+    samples.push({
+      event: {
+        ...src,
+        id: `${src.id}::${rec.id}::${i}`,
+        camera: rec.cameraId,
+        siteDisplay: rec.siteName,
+        areaDisplay: rec.areaName,
+        date: rec.startsAt.slice(0, 10),
+        time: `${hh}:${mm}:${ss}`,
+      },
+      offsetSec,
+      durationSec: 8 + (src.severity === "critical" ? 4 : 0),
+    });
+  }
+  return samples;
 }
 
 function fmtClock(sec: number): string {
@@ -368,6 +389,36 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
                 {ASSIGNEES.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.id})</option>)}
               </select>
+            </div>
+          </div>
+          {/* SLA target — auto-set by severity (mirrors Detection Feed escalate modal) */}
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              SLA Target <span className="text-muted-foreground/60">(auto-set by severity)</span>
+            </p>
+            <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
+              {(() => {
+                const sla =
+                  severity === "critical" ? { ack: "15 min", action: "1 hour",  resolve: "4 hours" } :
+                  severity === "medium"   ? { ack: "1 hour", action: "4 hours", resolve: "1 day"   } :
+                                            { ack: "4 hours",action: "1 day",   resolve: "3 days"  };
+                return (
+                  <>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Acknowledge</p>
+                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.ack}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Initial Action</p>
+                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.action}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Resolution</p>
+                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.resolve}</p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-3">
@@ -741,12 +792,17 @@ export default function RecordingsPage() {
         </PageHeader.Content>
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <KpiGrid cols={4}>
         {KPI_CONFIGS.map((cfg) => (
-          <KpiCard key={cfg.key} config={cfg} items={recordings} active={kpiFilter === cfg.key}
+          <KpiCard key={cfg.key}
+            label={cfg.label}
+            value={cfg.getValue(recordings)}
+            sub={cfg.sub}
+            accent={cfg.accent}
+            active={kpiFilter === cfg.key}
             onClick={() => { setKpiFilter((c) => (c === cfg.key ? "all" : cfg.key)); setPage(1); }} />
         ))}
-      </div>
+      </KpiGrid>
 
       <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
         <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">

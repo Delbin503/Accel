@@ -72,6 +72,8 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [opFrom, setOpFrom] = React.useState("08:00");
+  const [opTo, setOpTo] = React.useState("18:00");
   const [description, setDescription] = React.useState("");
   const [accent, setAccent] = React.useState(accentChoices[0]);
   const [areas, setAreas] = React.useState<AreaShape[]>([]);
@@ -142,6 +144,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
     const site = makeBlankSite(name.trim(), accent);
     site.address = address.trim();
     site.timezone = timezone;
+    site.operatingHours = { from: opFrom, to: opTo };
     site.description = description.trim() || undefined;
     site.areas = areas;
     if (floorPlanUrl) {
@@ -201,6 +204,18 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
                   {TIMEZONES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Clock className="size-3" />
+                  Operating Hours
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input type="time" value={opFrom} onChange={(e) => setOpFrom(e.target.value)} className="h-9 w-36 text-[13px]" />
+                  <span className="text-[12px] text-muted-foreground">to</span>
+                  <Input type="time" value={opTo} onChange={(e) => setOpTo(e.target.value)} className="h-9 w-36 text-[13px]" />
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground/70">Daily window when this site is operational.</p>
               </div>
               <div>
                 <label className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -11,7 +11,6 @@ import {
   SlidersHorizontal,
   Check,
   X,
-  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
-import { SeverityBadge } from "../shared";
+import { SeverityBadge, parseEventText } from "../shared";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
 
@@ -56,94 +57,14 @@ const KPI_CONFIGS: {
   label: string;
   getValue: (items: DismissedEvent[]) => number;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
 }[] = [
-  {
-    key: "all",
-    label: "Total Dismissed",
-    getValue: (items) => items.length,
-    sub: "Last 30 days",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
-  },
-  {
-    key: "known-exemption",
-    label: "Known Exemptions",
-    getValue: (items) => items.filter((d) => d.reason === "known-exemption").length,
-    sub: "Authorized activities",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
-  },
-  {
-    key: "wrong-class",
-    label: "Model Errors",
-    getValue: (items) =>
-      items.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length,
-    sub: "Wrong class or person",
-    barClass: "bg-sev-medium",
-    valueClass: "text-sev-medium",
-    activeClass: "border-sev-medium",
-  },
-  {
-    key: "threshold",
-    label: "Tuning Needed",
-    getValue: (items) => items.filter((d) => d.reason === "threshold").length,
-    sub: "Threshold too sensitive",
-    barClass: "bg-purple",
-    valueClass: "text-purple",
-    activeClass: "border-purple",
-  },
-  {
-    key: "other",
-    label: "Others",
-    getValue: (items) =>
-      items.filter((d) => d.reason === "staged" || d.reason === "other").length,
-    sub: "Staged events & other",
-    barClass: "bg-info",
-    valueClass: "text-info",
-    activeClass: "border-info",
-  },
+  { key: "all",             label: "Total Dismissed", getValue: (i) => i.length,                                                              sub: "Last 30 days",            accent: "primary" },
+  { key: "known-exemption", label: "Known Exemptions",getValue: (i) => i.filter((d) => d.reason === "known-exemption").length,               sub: "Authorized activities",   accent: "success" },
+  { key: "wrong-class",     label: "Model Errors",    getValue: (i) => i.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length, sub: "Wrong class or person", accent: "sev-medium" },
+  { key: "threshold",       label: "Tuning Needed",   getValue: (i) => i.filter((d) => d.reason === "threshold").length,                     sub: "Threshold too sensitive", accent: "purple" },
+  { key: "other",           label: "Others",          getValue: (i) => i.filter((d) => d.reason === "staged" || d.reason === "other").length, sub: "Staged events & other",  accent: "info" },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[number];
-  items: DismissedEvent[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Filter option types ─────────────────────────────────────────────────── */
 
@@ -405,7 +326,7 @@ function ActiveFilterBar({
   );
 }
 
-/* ── Dismissed event row (click to open drawer) ──────────────────────────── */
+/* ── Dismissed event card — mirrors the Detection Feed EventCard layout ── */
 
 function DismissedRow({
   item,
@@ -419,48 +340,87 @@ function DismissedRow({
   return (
     <div
       onClick={() => onOpen(event.id)}
-      className="grid cursor-pointer items-center gap-4 overflow-hidden rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-primary/40 hover:bg-muted/20"
-      style={{
-        gridTemplateColumns: "auto 1fr auto auto auto",
-        borderLeftWidth: "3px",
-        borderLeftColor: `var(--sev-${event.severity})`,
-      }}
+      className={cn(
+        "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 opacity-80 transition-all hover:bg-muted/30 hover:opacity-100",
+        "grid-cols-[140px_1fr] gap-3",
+        "sm:grid-cols-[140px_1fr_auto] sm:gap-4"
+      )}
+      style={{ borderLeftColor: `var(--sev-${event.severity})` }}
     >
-      {/* Severity + ID */}
-      <div className="flex flex-col gap-1">
-        <SeverityBadge severity={event.severity} />
-        <span className="font-mono text-[10px] text-muted-foreground">{event.id}</span>
+      {/* Thumbnail with bounding boxes — same as Detection Feed */}
+      <div className="self-start">
+        <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+          {event.bboxes.map((box, i) => (
+            <React.Fragment key={i}>
+              <div
+                className={cn(
+                  "absolute border-2",
+                  box.variant === "person"  ? "border-info bg-info/10"
+                  : box.variant === "vehicle" ? "border-purple bg-purple/10"
+                  : "border-primary bg-primary/10"
+                )}
+                style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
+              />
+              <span
+                className={cn(
+                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-[9px] font-semibold text-white",
+                  box.variant === "person"  ? "bg-info"
+                  : box.variant === "vehicle" ? "bg-purple"
+                  : "bg-primary"
+                )}
+                style={{ top: box.top, left: box.left }}
+              >
+                {box.label}
+              </span>
+            </React.Fragment>
+          ))}
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-[10px] text-white">
+            {event.time.slice(0, 5)}
+          </span>
+        </div>
       </div>
 
-      {/* Detection info */}
+      {/* Body */}
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+          <SeverityBadge severity={event.severity} />
           <span className="text-[13px] font-semibold text-foreground">{event.typeLabel}</span>
+          {/* DISMISSED badge — replaces the "Escalated" badge from the Detection Feed card */}
+          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-muted-foreground/60" />
+            Dismissed
+          </span>
           <ReasonChip reason={item.reason} />
+          <span
+            title={event.useCaseTitle}
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+          >
+            {event.useCaseId}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:border-purple hover:text-purple">
+            <span className="size-1.5 rounded-full bg-purple" />
+            {event.model}
+          </span>
         </div>
-        <div className="mt-1 flex flex-wrap gap-x-2.5 text-[11px] text-muted-foreground">
-          <span>{event.siteDisplay}</span>
-          <span className="opacity-40">·</span>
-          <span>{event.areaDisplay}</span>
-          <span className="opacity-40">·</span>
-          <span>{event.camera}</span>
-          <span className="opacity-40">·</span>
-          <span className="font-mono">{event.useCaseId}</span>
+        <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+          {parseEventText(event.summary)}
+        </p>
+        <div className="flex flex-wrap items-center gap-3.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="size-2.5" />
+            {event.siteDisplay} · {event.areaDisplay} · {event.camera}
+          </span>
         </div>
       </div>
 
-      {/* Model */}
-      <div className="hidden text-right md:block">
-        <div className="font-mono text-[11px] text-purple">{event.model}</div>
+      {/* Right rail — dismissed by + when (no action buttons) */}
+      <div className="col-span-2 flex items-center justify-end gap-2 border-t border-border/40 pt-2 sm:col-span-1 sm:flex-col sm:items-end sm:self-start sm:border-t-0 sm:pt-0">
+        <div className="text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
+          <p className="mt-0.5 text-[12px] font-medium text-foreground">{item.dismissedBy}</p>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{item.dismissedAtDisplay}</p>
+        </div>
       </div>
-
-      {/* Dismissed by + when */}
-      <div className="text-right">
-        <div className="text-[12px] font-medium text-foreground">{item.dismissedBy}</div>
-        <div className="mt-0.5 text-[10px] text-muted-foreground">{item.dismissedAtDisplay}</div>
-      </div>
-
-      <ChevronRight className="size-4 flex-shrink-0 text-muted-foreground" />
     </div>
   );
 }
@@ -551,17 +511,19 @@ export default function DismissedEventsPage() {
       </PageHeader>
 
       {/* ── KPI cards ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <KpiGrid cols={5}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={baseItems}
+            label={cfg.label}
+            value={cfg.getValue(baseItems)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* ── Filter panel ─────────────────────────────────────────────────── */}
       <FilterPanel

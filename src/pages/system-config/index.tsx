@@ -24,6 +24,9 @@ import {
   LayoutDashboard,
   MapPin,
   CircleAlert,
+  Video,
+  Globe,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,21 +40,27 @@ type Section =
   | "sla"
   | "dashboard"
   | "detection"
+  | "camera-defaults"
+  | "nvr-defaults"
   | "notifications"
   | "retention"
+  | "localization"
   | "integrations"
   | "security";
 
 const SECTIONS: { key: Section; label: string; icon: React.ElementType; description: string }[] = [
-  { key: "general",       label: "General",         icon: Building2,   description: "Organization, defaults, timezone" },
-  { key: "user-access",   label: "User Access",     icon: Users,       description: "Role permissions matrix" },
-  { key: "sla",           label: "SLA & Escalation",icon: Clock,       description: "Response targets per severity" },
-  { key: "dashboard",     label: "Dashboard",       icon: LayoutDashboard, description: "Zone thresholds & default widgets" },
-  { key: "detection",     label: "Detection Engine",icon: Brain,       description: "Confidence thresholds, models" },
-  { key: "notifications", label: "Notifications",   icon: Bell,        description: "Default delivery channels" },
-  { key: "retention",     label: "Data Retention",  icon: HardDrive,   description: "Recording & log retention" },
-  { key: "integrations",  label: "Integrations",    icon: Webhook,     description: "Webhooks, SSO, third-party" },
-  { key: "security",      label: "Security",        icon: ShieldCheck, description: "Auth policy & audit" },
+  { key: "general",          label: "General",          icon: Building2,       description: "Organization, defaults, timezone" },
+  { key: "user-access",      label: "User Access",      icon: Users,           description: "Role permissions matrix" },
+  { key: "sla",              label: "SLA & Escalation", icon: Clock,           description: "Response targets per severity" },
+  { key: "dashboard",        label: "Dashboard",        icon: LayoutDashboard, description: "Zone thresholds & default widgets" },
+  { key: "detection",        label: "Detection Engine", icon: Brain,           description: "Confidence thresholds, models" },
+  { key: "camera-defaults",  label: "Camera Defaults",  icon: Video,           description: "RTSP, codec, frame rate, recording" },
+  { key: "nvr-defaults",     label: "NVR Defaults",     icon: Database,        description: "Channel cleanup, storage warnings" },
+  { key: "notifications",    label: "Notifications",    icon: Bell,            description: "Default delivery channels" },
+  { key: "retention",        label: "Data Retention",   icon: HardDrive,       description: "Recording & log retention" },
+  { key: "localization",     label: "Localization",     icon: Globe,           description: "Date, time and number formats" },
+  { key: "integrations",     label: "Integrations",     icon: Webhook,         description: "Webhooks, SSO, third-party" },
+  { key: "security",         label: "Security",         icon: ShieldCheck,     description: "Auth policy & audit" },
 ];
 
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
@@ -660,6 +669,255 @@ function RetentionSection() {
   );
 }
 
+/* ── Camera defaults ─────────────────────────────────────────────────── */
+
+function CameraDefaultsSection() {
+  const [codec, setCodec] = React.useState<"h264" | "h265">("h264");
+  const [resolution, setResolution] = React.useState("1920x1080");
+  const [frameRate, setFrameRate] = React.useState(15);
+  const [rtspPort, setRtspPort] = React.useState(554);
+  const [defaultSchedule, setDefaultSchedule] = React.useState<"24x7" | "motion" | "scheduled">("motion");
+  const [autoAssignArea, setAutoAssignArea] = React.useState(true);
+  const [autoConnectNvr, setAutoConnectNvr] = React.useState(true);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionCard title="Stream Defaults" description="Applied to every newly added camera.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Codec</label>
+            <select value={codec} onChange={(e) => setCodec(e.target.value as "h264" | "h265")}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              <option value="h264">H.264</option>
+              <option value="h265">H.265 / HEVC</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resolution</label>
+            <select value={resolution} onChange={(e) => setResolution(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              <option>1280x720</option>
+              <option>1920x1080</option>
+              <option>2560x1440</option>
+              <option>3840x2160</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span>Frame Rate</span>
+              <span className="font-mono text-foreground">{frameRate} fps</span>
+            </label>
+            <input type="range" min={5} max={60} step={1} value={frameRate}
+              onChange={(e) => setFrameRate(Number(e.target.value))}
+              className="w-full accent-primary" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">RTSP Port</label>
+            <Input type="number" value={rtspPort} onChange={(e) => setRtspPort(Number(e.target.value) || 554)} className="h-9 text-[13px]" />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Recording Schedule" description="Default trigger pattern for newly added cameras.">
+        <div className="flex gap-2">
+          {(["24x7", "motion", "scheduled"] as const).map((opt) => (
+            <button key={opt} onClick={() => setDefaultSchedule(opt)}
+              className={cn(
+                "flex-1 rounded-md border px-3 py-2 text-left transition-colors",
+                defaultSchedule === opt ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+              )}>
+              <p className="text-[12px] font-semibold capitalize text-foreground">{opt.replace(/-/g, " ")}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                {opt === "24x7"      && "Continuous recording, all hours"}
+                {opt === "motion"    && "Record on motion or detection events only"}
+                {opt === "scheduled" && "Operating-hours window from the site"}
+              </p>
+            </button>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Auto-provisioning">
+        <div className="space-y-2">
+          <PrefRow icon={MapPin} title="Auto-assign to area"
+            description="Match cameras to areas by IP subnet on first connect."
+            control={<Toggle checked={autoAssignArea} onChange={setAutoAssignArea} />} />
+          <PrefRow icon={Database} title="Auto-connect available NVR channel"
+            description="When a free NVR channel exists at the same site, link the camera automatically."
+            control={<Toggle checked={autoConnectNvr} onChange={setAutoConnectNvr} />} />
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
+/* ── NVR defaults ────────────────────────────────────────────────────── */
+
+function NvrDefaultsSection() {
+  const [storageWarn, setStorageWarn] = React.useState(85);
+  const [storageCrit, setStorageCrit] = React.useState(95);
+  const [cleanupMethod, setCleanupMethod] = React.useState<"auto-age" | "manual" | "oldest-first">("auto-age");
+  const [defaultChannelCount, setDefaultChannelCount] = React.useState(16);
+  const [healthCheckInterval, setHealthCheckInterval] = React.useState(60);
+  const [autoCleanupEnabled, setAutoCleanupEnabled] = React.useState(true);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionCard title="Storage Alerts" description="When to flag a NVR for attention.">
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span>Warning threshold</span>
+              <span className="font-mono text-warning">{storageWarn}%</span>
+            </label>
+            <input type="range" min={50} max={99} step={1} value={storageWarn}
+              onChange={(e) => setStorageWarn(Number(e.target.value))}
+              className="w-full accent-warning" />
+          </div>
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span>Critical threshold</span>
+              <span className="font-mono text-sev-critical">{storageCrit}%</span>
+            </label>
+            <input type="range" min={Math.max(storageWarn, 60)} max={100} step={1} value={storageCrit}
+              onChange={(e) => setStorageCrit(Math.max(storageWarn + 1, Number(e.target.value)))}
+              className="w-full accent-primary" />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Cleanup Strategy" description="How a NVR reclaims space.">
+        <div className="space-y-2">
+          <PrefRow icon={RefreshCw} title="Automatic cleanup"
+            description="Schedule cleanup when storage crosses the warning threshold."
+            control={<Toggle checked={autoCleanupEnabled} onChange={setAutoCleanupEnabled} />} />
+          <div className="rounded-lg border border-border bg-background p-3">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Method</label>
+            <select value={cleanupMethod} onChange={(e) => setCleanupMethod(e.target.value as typeof cleanupMethod)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              <option value="auto-age">Auto-age (delete past retention)</option>
+              <option value="oldest-first">Oldest first (free target % of disk)</option>
+              <option value="manual">Manual only (operator-triggered)</option>
+            </select>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Hardware Defaults">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Default channel count</label>
+            <select value={defaultChannelCount} onChange={(e) => setDefaultChannelCount(Number(e.target.value))}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              {[8, 16, 32, 64].map((n) => <option key={n} value={n}>{n} channels</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Health check every</label>
+            <select value={healthCheckInterval} onChange={(e) => setHealthCheckInterval(Number(e.target.value))}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              {[15, 30, 60, 120, 300].map((s) => <option key={s} value={s}>{s} s</option>)}
+            </select>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
+/* ── Localization ────────────────────────────────────────────────────── */
+
+function LocalizationSection() {
+  const [dateFormat, setDateFormat] = React.useState("DD MMM YYYY");
+  const [timeFormat, setTimeFormat] = React.useState<"12h" | "24h">("24h");
+  const [weekStart, setWeekStart] = React.useState<"sun" | "mon">("mon");
+  const [numberFormat, setNumberFormat] = React.useState("1,234.56");
+  const [currency, setCurrency] = React.useState("USD");
+  const [units, setUnits] = React.useState<"metric" | "imperial">("metric");
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionCard title="Date & Time" description="Format used across timestamps and exports.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date format</label>
+            <select value={dateFormat} onChange={(e) => setDateFormat(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              <option>DD MMM YYYY</option>
+              <option>YYYY-MM-DD</option>
+              <option>MM/DD/YYYY</option>
+              <option>DD/MM/YYYY</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Time format</label>
+            <div className="flex gap-1.5">
+              {(["24h", "12h"] as const).map((opt) => (
+                <button key={opt} onClick={() => setTimeFormat(opt)}
+                  className={cn(
+                    "flex-1 rounded-md border px-3 py-2 text-[12px] font-semibold transition-colors",
+                    timeFormat === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                  )}>
+                  {opt === "24h" ? "24-hour (15:30)" : "12-hour (3:30 PM)"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Week starts on</label>
+            <div className="flex gap-1.5">
+              {(["mon", "sun"] as const).map((opt) => (
+                <button key={opt} onClick={() => setWeekStart(opt)}
+                  className={cn(
+                    "flex-1 rounded-md border px-3 py-2 text-[12px] font-semibold transition-colors",
+                    weekStart === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                  )}>
+                  {opt === "mon" ? "Monday" : "Sunday"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Numbers & Units">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Number format</label>
+            <select value={numberFormat} onChange={(e) => setNumberFormat(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              <option>1,234.56</option>
+              <option>1.234,56</option>
+              <option>1 234,56</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Currency</label>
+            <select value={currency} onChange={(e) => setCurrency(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]">
+              {["USD", "SGD", "EUR", "GBP", "JPY", "AUD"].map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Measurement units</label>
+            <div className="flex gap-1.5">
+              {(["metric", "imperial"] as const).map((opt) => (
+                <button key={opt} onClick={() => setUnits(opt)}
+                  className={cn(
+                    "flex-1 rounded-md border px-3 py-2 text-[12px] font-semibold capitalize transition-colors",
+                    units === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                  )}>
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
 /* ── Integrations ────────────────────────────────────────────────────── */
 
 function IntegrationsSection() {
@@ -812,15 +1070,18 @@ export default function SystemConfigPage() {
         </nav>
 
         <div className="min-w-0">
-          {section === "general"       && <GeneralSection />}
-          {section === "user-access"   && <UserAccessSection />}
-          {section === "sla"           && <SlaSection />}
-          {section === "dashboard"     && <DashboardSection />}
-          {section === "detection"     && <DetectionSection />}
-          {section === "notifications" && <NotificationsSection />}
-          {section === "retention"     && <RetentionSection />}
-          {section === "integrations"  && <IntegrationsSection />}
-          {section === "security"      && <SecuritySection />}
+          {section === "general"          && <GeneralSection />}
+          {section === "user-access"      && <UserAccessSection />}
+          {section === "sla"              && <SlaSection />}
+          {section === "dashboard"        && <DashboardSection />}
+          {section === "detection"        && <DetectionSection />}
+          {section === "camera-defaults"  && <CameraDefaultsSection />}
+          {section === "nvr-defaults"     && <NvrDefaultsSection />}
+          {section === "notifications"    && <NotificationsSection />}
+          {section === "retention"        && <RetentionSection />}
+          {section === "localization"     && <LocalizationSection />}
+          {section === "integrations"     && <IntegrationsSection />}
+          {section === "security"         && <SecuritySection />}
         </div>
       </div>
 

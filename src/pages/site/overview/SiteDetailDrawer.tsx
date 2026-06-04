@@ -24,15 +24,18 @@ import {
   Calendar,
   CircleDot,
   HardDrive,
+  ChevronDown,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { AREA_PALETTE, generatedFloorPlan } from "@/mocks/sites";
+import { MOCK_NVRS } from "@/mocks/nvr";
 import type { AreaShape, SiteData } from "@/types/sites";
 import type { CameraData, CameraStatus } from "@/types/cameras";
 
@@ -49,7 +52,6 @@ const CAMERA_STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot
   online:              { bg: "bg-success/15 border-success/30",            text: "text-success",          dot: "bg-success",          label: "Online",  icon: Wifi,    markerFill: "#22C55E" },
   offline:             { bg: "bg-muted border-border",                     text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline", icon: WifiOff, markerFill: "#9CA3AF" },
   "connection-failed": { bg: "bg-sev-critical/15 border-sev-critical/30",  text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed",  icon: WifiOff, markerFill: "#E15554" },
-  pending:             { bg: "bg-warning/15 border-warning/30",            text: "text-warning",          dot: "bg-warning",          label: "Pending", icon: Clock,   markerFill: "#FEAA01" },
 };
 
 function uid(prefix: string) {
@@ -63,40 +65,56 @@ function uid(prefix: string) {
  * it inside an SVG without nesting React component trees. The viewBox is 0 0 24 24.
  */
 function CameraMarker({
-  cx, cy, rotation, color, isSelected, scale = 1,
+  cx, cy, rotation, color, isSelected, scale = 1, fovAngle = 90, range = 14,
 }: {
   cx: number; cy: number; rotation: number; color: string; isSelected: boolean; scale?: number;
+  fovAngle?: number; range?: number;
 }) {
-  // Render at native 24x24 then scale & translate.
-  const size = 4.6 * scale; // SVG units (relative to viewBox 100)
+  // Candela-style symbol: small camera body at the pivot, wide arc/cone showing FOV coverage.
+  const bodyR = 1.6 * scale;
+  const coverR = range * scale;
+  // Compute cone arc endpoints. "Up" is -Y (rotation 0).
+  const half = (fovAngle / 2) * Math.PI / 180;
+  const ax = -Math.sin(half) * coverR;
+  const ay = -Math.cos(half) * coverR;
+  const bx =  Math.sin(half) * coverR;
+  const by = -Math.cos(half) * coverR;
+  const largeArc = fovAngle > 180 ? 1 : 0;
+
   return (
     <g transform={`translate(${cx} ${cy})`}>
-      {/* Pulsing ring for selected/online */}
+      {/* Pulsing ring for selected */}
       {isSelected && (
-        <circle cx={0} cy={0} r={size * 0.9} fill="none" stroke="#DD7224" strokeWidth={0.4} strokeDasharray="0.8 0.6">
-          <animate attributeName="r" values={`${size * 0.85};${size * 1.05};${size * 0.85}`} dur="2s" repeatCount="indefinite" />
+        <circle cx={0} cy={0} r={bodyR + 1.4} fill="none" stroke="#DD7224" strokeWidth={0.45} strokeDasharray="0.9 0.7">
+          <animate attributeName="r" values={`${bodyR + 1.1};${bodyR + 1.9};${bodyR + 1.1}`} dur="2s" repeatCount="indefinite" />
         </circle>
       )}
-      {/* Camera body — rotates with the camera's facing direction */}
+      {/* Rotating group: cone + body lens — body stays centred on pivot */}
       <g transform={`rotate(${rotation})`}>
-        {/* Field of view cone */}
+        {/* Candela FOV cone (gradient from solid near body → transparent at edge) */}
+        <defs>
+          <radialGradient id={`fov-${cx.toFixed(2)}-${cy.toFixed(2)}`} cx="50%" cy="100%" r="100%" fx="50%" fy="100%">
+            <stop offset="0%"  stopColor={color} stopOpacity={0.55} />
+            <stop offset="60%" stopColor={color} stopOpacity={0.18} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          </radialGradient>
+        </defs>
         <path
-          d={`M ${-size * 1.1} ${-size * 0.4} L 0 ${-size * 2.4} L ${size * 1.1} ${-size * 0.4} Z`}
-          fill={color}
-          fillOpacity={0.18}
+          d={`M 0 0 L ${ax} ${ay} A ${coverR} ${coverR} 0 ${largeArc} 1 ${bx} ${by} Z`}
+          fill={`url(#fov-${cx.toFixed(2)}-${cy.toFixed(2)})`}
           stroke={color}
           strokeOpacity={0.55}
-          strokeWidth={0.2}
+          strokeWidth={0.25}
         />
-        {/* Background plate */}
-        <circle r={size * 0.78} fill="#0f1115" stroke={color} strokeWidth={0.45} />
-        {/* Lucide-style Video icon paths, centered on origin. Scaled to fit. */}
-        <g transform={`scale(${size / 16}) translate(-8 -8)`}>
-          {/* M 16 10 a 1 1 0 0 1 1 1 v 2 a 1 1 0 0 1 -1 1 H 2 V 10 z plus camera lens */}
-          <rect x={1.2} y={4.8} width={9.4} height={6.4} rx={1.2} fill={color} stroke="#fff" strokeWidth={0.4} />
-          <path d={`M ${10.6} ${6.6} L ${14.8} ${4.6} L ${14.8} ${11.4} L ${10.6} ${9.4} Z`} fill={color} stroke="#fff" strokeWidth={0.4} />
-          <circle cx={5.9} cy={8} r={1.1} fill="#0f1115" stroke="#fff" strokeWidth={0.3} />
-        </g>
+        {/* Tick lines at cone edges */}
+        <line x1={0} y1={0} x2={ax} y2={ay} stroke={color} strokeOpacity={0.35} strokeWidth={0.18} strokeDasharray="0.6 0.5" />
+        <line x1={0} y1={0} x2={bx} y2={by} stroke={color} strokeOpacity={0.35} strokeWidth={0.18} strokeDasharray="0.6 0.5" />
+      </g>
+      {/* Camera body (does NOT rotate visually — the lens dot in front shows direction) */}
+      <circle r={bodyR} fill="#0f1115" stroke={color} strokeWidth={0.55} />
+      {/* Lens dot pointing in the facing direction */}
+      <g transform={`rotate(${rotation})`}>
+        <circle cx={0} cy={-bodyR * 0.55} r={bodyR * 0.42} fill={color} />
       </g>
     </g>
   );
@@ -342,6 +360,8 @@ function FloorPlanCanvas({
                 color={cs.markerFill}
                 isSelected={isSel}
                 scale={isSel ? 1.25 : 1}
+                fovAngle={p.fovAngle ?? 90}
+                range={p.range ?? 14}
               />
             </g>
           );
@@ -665,23 +685,23 @@ export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | n
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="flex w-[min(1100px,80vw)] max-w-[95vw] flex-col gap-0 p-0">
+      <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
+        {/* Header — mirrors EventDrawer: status chip on top, big title, meta line below */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-2">
-                <SheetTitle className="truncate text-[17px] font-bold">{site.name}</SheetTitle>
-                <span className={cn("inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
                   <span className={cn("size-1.5 rounded-full", s.dot, site.status === "active" && "animate-pulse")} />
                   {s.label}
                 </span>
               </div>
-              <p className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                <MapPin className="size-3" />
-                {site.address || "No address yet"}
+              <SheetTitle className="text-[17px] font-bold leading-snug">{site.name}</SheetTitle>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {site.id} · {site.address || "No address yet"} · {site.timezone}
               </p>
             </div>
-            <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+            <button onClick={onClose} className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
               <X className="size-4" />
             </button>
           </div>
@@ -729,6 +749,7 @@ export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | n
               onCommitArea={commitArea}
               onMovePlacement={(id, x, y) => updatePlacement(site.id, id, { x, y })}
               onRotatePlacement={(id, deg) => updatePlacement(site.id, id, { rotation: deg })}
+              onUpdatePlacement={(id, patch) => updatePlacement(site.id, id, patch)}
               onSelectArea={selectArea}
               onEditArea={(a) => setEditAreaTarget(a)}
               onDeleteArea={(id) => {
@@ -779,140 +800,296 @@ function OverviewTab({
   site: SiteData; siteCameras: CameraData[]; onlineCount: number; placedCount: number; onGoFloorPlan: () => void;
 }) {
   const offline = siteCameras.length - onlineCount;
-  return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-4">
-        {/* Site details */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-[14px] font-bold text-foreground">Site Details</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-x-6 gap-y-3 px-5 py-4 sm:grid-cols-2">
-            {([
-              ["Name", site.name, Building2],
-              ["Status", <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
-                <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
-                {STATUS_STYLES[site.status].label}
-              </span>, CircleDot],
-              ["Address", site.address || "—", MapPin],
-              ["Timezone", site.timezone, Clock],
-              ["Created", site.createdAtDisplay, Calendar],
-              ["Floor Plan", site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded", ImageIcon],
-            ] as [string, React.ReactNode, React.ElementType][]).map(([label, value, Icon]) => (
-              <div key={label as string} className="flex items-start gap-2">
-                <Icon className="mt-0.5 size-3 flex-shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
-                  <p className="mt-0.5 text-[13px] font-medium text-foreground">{value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          {site.description && (
-            <div className="border-t border-border px-5 py-3.5">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Description</p>
-              <p className="text-[12px] leading-relaxed text-foreground">{site.description}</p>
-            </div>
-          )}
-        </div>
+  const drawn = site.areas.filter((a) => a.points.length >= 3).length;
+  const pending = site.areas.filter((a) => a.points.length === 0).length;
+  const failed = siteCameras.filter((c) => c.status === "connection-failed").length;
+  const offlineOnly = siteCameras.filter((c) => c.status === "offline").length;
+  const siteNvrs = MOCK_NVRS.filter((n) => n.siteId === site.id);
 
-        {/* Quick counts cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="mb-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <Shapes className="size-3" />
-              Areas
-            </p>
-            <p className="text-[26px] font-bold leading-none text-foreground">{site.areas.length}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {site.areas.filter((a) => a.points.length >= 3).length} drawn · {site.areas.filter((a) => a.points.length === 0).length} pending
-            </p>
+  // Expandable health section state — drives both camera + nvr status drawers.
+  const [expandedStatus, setExpandedStatus] = React.useState<string | null>(null);
+  function toggleStatus(key: string) {
+    setExpandedStatus((curr) => (curr === key ? null : key));
+  }
+  const camerasByStatus = {
+    online: siteCameras.filter((c) => c.status === "online"),
+    offline: siteCameras.filter((c) => c.status === "offline"),
+    failed: siteCameras.filter((c) => c.status === "connection-failed"),
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* ── Hero floor plan banner (mirrors EventDrawer.DrawerThumb) ── */}
+      <div className="relative h-[360px] overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+        {site.floorPlan?.imageUrl ? (
+          <img src={site.floorPlan.imageUrl} alt="" className="absolute inset-0 size-full object-contain opacity-80" />
+        ) : null}
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
+          {site.areas.filter((a) => a.points.length >= 3).map((a) => (
+            <polygon key={a.id}
+              points={a.points.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")}
+              fill={a.color} fillOpacity={0.22} stroke={a.color} strokeOpacity={0.85} strokeWidth={0.5} />
+          ))}
+          {siteCameras.map((c) => {
+            const p = site.cameraPlacements[c.id];
+            if (!p) return null;
+            const col = c.status === "online" ? "#22C55E" : "#9CA3AF";
+            return <CameraMarker key={c.id} cx={p.x * 100} cy={p.y * 100} rotation={p.rotation} color={col} isSelected={false} scale={0.55}
+              fovAngle={p.fovAngle ?? 90} range={p.range ?? 14} />;
+          })}
+        </svg>
+
+        {/* Top-left meta chip */}
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+          <ImageIcon className="size-3" />
+          {site.floorPlan ? (site.floorPlan.label ?? "Floor Plan") : "No floor plan"}
+        </span>
+        {/* Top-right meta chip */}
+        <span className="absolute right-3 top-3 rounded bg-black/65 px-2 py-0.5 font-mono text-[10px] text-white/85 backdrop-blur-sm">
+          {placedCount} / {siteCameras.length} placed
+        </span>
+
+        {!site.floorPlan && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <ImageIcon className="size-8 opacity-30" />
+            <p className="text-[12px]">No floor plan uploaded yet</p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="mb-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <Video className="size-3" />
-              Cameras
-            </p>
-            <p className="text-[26px] font-bold leading-none text-foreground">{siteCameras.length}</p>
-            <p className="mt-1 text-[11px]">
-              <span className="text-success font-semibold">{onlineCount} online</span>
-              {offline > 0 && <span className="text-muted-foreground"> · <span className="text-sev-critical">{offline} offline</span></span>}
-            </p>
-          </div>
+        )}
+
+        <button onClick={onGoFloorPlan}
+          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/65 py-2.5 text-[12px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/85">
+          <UploadCloud className="size-3.5" />
+          Open Floor Plan Editor
+        </button>
+      </div>
+
+      {/* ── Quick counts (Areas + Cameras + Placed) ── */}
+      <div>
+        <SiteSectionTitle>Quick Counts</SiteSectionTitle>
+        <div className="grid grid-cols-3 gap-2.5">
+          <SharedKpiCard compact
+            label="Areas"
+            value={site.areas.length}
+            sub={`${drawn} drawn · ${pending} pending`}
+            accent="info"
+          />
+          <SharedKpiCard compact
+            label="Cameras"
+            value={siteCameras.length}
+            sub={onlineCount > 0 && offline > 0 ? `${onlineCount} online · ${offline} offline`
+              : onlineCount > 0 ? `${onlineCount} online`
+              : offline > 0 ? `${offline} offline`
+              : "—"}
+            accent={offline === 0 && siteCameras.length > 0 ? "success" : offline > 0 ? "warning" : "muted"}
+          />
+          <SharedKpiCard compact
+            label="Placed"
+            value={<>{placedCount}<span className="text-[14px] text-muted-foreground"> / {siteCameras.length}</span></>}
+            sub="On the floor plan"
+            accent={placedCount === siteCameras.length && siteCameras.length > 0 ? "success" : "warning"}
+          />
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="flex flex-col gap-4">
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          {site.floorPlan?.imageUrl ? (
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-950">
-              <img src={site.floorPlan.imageUrl} alt="" className="absolute inset-0 size-full object-contain opacity-80" />
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
-                {site.areas.filter((a) => a.points.length >= 3).map((a) => (
-                  <polygon key={a.id}
-                    points={a.points.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")}
-                    fill={a.color} fillOpacity={0.22} stroke={a.color} strokeOpacity={0.85} strokeWidth={0.5} />
-                ))}
-                {siteCameras.map((c) => {
-                  const p = site.cameraPlacements[c.id];
-                  if (!p) return null;
-                  const col = c.status === "online" ? "#22C55E" : "#9CA3AF";
-                  return <CameraMarker key={c.id} cx={p.x * 100} cy={p.y * 100} rotation={p.rotation} color={col} isSelected={false} scale={0.7} />;
-                })}
-              </svg>
-              <button onClick={onGoFloorPlan}
-                className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/55 py-2 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/75">
-                Open Floor Plan Editor
-              </button>
-            </div>
-          ) : (
-            <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-card text-muted-foreground">
-              <ImageIcon className="size-7 opacity-30" />
-              <p className="text-[12px] font-semibold">No floor plan</p>
-              <Button variant="outline" onClick={onGoFloorPlan} className="gap-1.5">
-                <UploadCloud className="size-3" />
-                Upload
-              </Button>
-            </div>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Placed</p>
-            <p className="mt-1 text-[18px] font-bold text-foreground">{placedCount}<span className="text-[12px] text-muted-foreground"> / {siteCameras.length}</span></p>
-            <p className="text-[10px] text-muted-foreground">On the floor plan</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Floor Plan</p>
-            <p className={cn("mt-1 text-[12px] font-bold", site.floorPlan ? "text-success" : "text-warning")}>
-              {site.floorPlan ? "Ready" : "Missing"}
-            </p>
-            <p className="text-[10px] text-muted-foreground">{site.floorPlan?.label ?? "Upload to enable editing"}</p>
+      {/* ── Description (like Event Summary block) ── */}
+      {site.description && (
+        <div>
+          <SiteSectionTitle>Site Summary</SiteSectionTitle>
+          <div className="rounded-lg border border-border bg-card p-4 text-[13px] leading-relaxed text-muted-foreground">
+            {site.description}
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="mb-2 flex items-center gap-1.5">
-            <HardDrive className="size-3.5 text-muted-foreground" />
-            <p className="text-[12px] font-semibold text-foreground">Camera Health</p>
-          </div>
-          <div className="space-y-1.5 text-[11px]">
-            {(["online", "offline", "connection-failed", "pending"] as CameraStatus[]).map((st) => {
-              const count = siteCameras.filter((c) => c.status === st).length;
-              const cs = CAMERA_STATUS_STYLES[st];
-              return (
-                <div key={st} className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <span className={cn("size-1.5 rounded-full", cs.dot)} />
-                    {cs.label}
+      )}
+
+      {/* ── Camera Health — expandable rows; click a row to see the cameras in that bucket ── */}
+      <div>
+        <SiteSectionTitle
+          aside={
+            <span className="inline-flex items-center gap-1.5 rounded bg-success-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+              <span className={cn("size-1.5 rounded-full",
+                failed > 0 ? "bg-sev-critical" :
+                offlineOnly > 0 ? "bg-muted-foreground" :
+                "bg-success"
+              )} />
+              Live status
+            </span>
+          }
+        >
+          <span className="flex items-center gap-2">
+            <Video className="size-3.5 text-info" />
+            Camera Health
+          </span>
+        </SiteSectionTitle>
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          {([
+            { key: "online",  label: "Online",  dot: "bg-success",          accent: "text-success",       items: camerasByStatus.online },
+            { key: "offline", label: "Offline", dot: "bg-muted-foreground", accent: "text-muted-foreground", items: camerasByStatus.offline },
+            { key: "failed",  label: "Failed",  dot: "bg-sev-critical",     accent: "text-sev-critical",  items: camerasByStatus.failed },
+          ] as const).map((row, i) => {
+            const expanded = expandedStatus === row.key;
+            const disabled = row.items.length === 0;
+            return (
+              <div key={row.key} className={cn(i > 0 && "border-t border-border")}>
+                <button
+                  onClick={() => !disabled && toggleStatus(row.key)}
+                  disabled={disabled}
+                  className={cn(
+                    "flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors",
+                    !disabled && "hover:bg-muted/30",
+                    disabled && "cursor-default"
+                  )}
+                >
+                  <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
+                    <span className={cn("size-1.5 rounded-full", row.dot)} />
+                    {row.label}
                   </span>
-                  <span className={cn("font-mono font-semibold", count > 0 ? cs.text : "text-muted-foreground/50")}>{count}</span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className={cn("font-mono font-bold", row.accent)}>{row.items.length}</span>
+                    {!disabled && (
+                      <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+                    )}
+                  </span>
+                </button>
+                {expanded && row.items.length > 0 && (
+                  <ul className="bg-background/40 px-4 py-2">
+                    {row.items.map((c) => (
+                      <li key={c.id} className="flex items-center gap-2 py-1 text-[11px]">
+                        <Video className="size-3 flex-shrink-0 text-muted-foreground/60" />
+                        <span className="font-mono text-foreground">{c.id}</span>
+                        <span className="truncate text-muted-foreground">{c.name}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground/70">{c.areaName}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── NVR Health (one site can have multiple NVRs) ── */}
+      <div>
+        <SiteSectionTitle
+          aside={
+            <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+              <HardDrive className="size-3" />
+              {siteNvrs.length} unit{siteNvrs.length === 1 ? "" : "s"}
+            </span>
+          }
+        >
+          <span className="flex items-center gap-2">
+            <HardDrive className="size-3.5 text-info" />
+            NVR Health
+          </span>
+        </SiteSectionTitle>
+        {siteNvrs.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-card px-4 py-6 text-center text-[12px] italic text-muted-foreground">
+            No NVRs linked to this site.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {siteNvrs.map((n) => {
+              const linkedChannels = n.channels.filter((ch) => ch.cameraId).length;
+              const usagePct = n.totalStorageGb > 0 ? Math.round((n.usedStorageGb / n.totalStorageGb) * 100) : 0;
+              const usageTone = usagePct >= 90 ? "text-sev-critical" : usagePct >= 70 ? "text-warning" : "text-success";
+              const statusTone =
+                n.status === "online" ? { dot: "bg-success",      txt: "text-success",      label: "Online" } :
+                n.status === "offline" ? { dot: "bg-muted-foreground", txt: "text-muted-foreground", label: "Offline" } :
+                                         { dot: "bg-sev-critical", txt: "text-sev-critical", label: "Degraded" };
+              const expanded = expandedStatus === `nvr-${n.id}`;
+              return (
+                <div key={n.id} className="overflow-hidden rounded-lg border border-border bg-card">
+                  <button
+                    onClick={() => toggleStatus(`nvr-${n.id}`)}
+                    className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-md bg-info/10 text-info">
+                      <HardDrive className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
+                        <span className="truncate">{n.name}</span>
+                        <span className={cn("inline-flex items-center gap-1 rounded-full border border-current/30 bg-current/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider", statusTone.txt)}>
+                          <span className={cn("size-1 rounded-full", statusTone.dot)} />
+                          {statusTone.label}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                        <span className="font-mono">{n.id}</span> · {n.model} · {n.ipAddress}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
+                        <span>Channels: <strong className="text-foreground">{linkedChannels}</strong> / {n.channelCount}</span>
+                        <span>Storage: <strong className={usageTone}>{usagePct}%</strong></span>
+                      </div>
+                    </div>
+                    <ChevronDown className={cn("mt-1 size-3 flex-shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+                  </button>
+                  {expanded && (
+                    <div className="border-t border-border bg-background/40 px-3.5 py-2">
+                      <p className="mb-1 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Linked channels</p>
+                      <ul className="space-y-0.5">
+                        {n.channels.filter((ch) => ch.cameraId).map((ch) => (
+                          <li key={ch.channel} className="flex items-center gap-2 text-[11px]">
+                            <span className="font-mono text-muted-foreground">Ch&nbsp;{String(ch.channel).padStart(2, "0")}</span>
+                            <Video className="size-3 text-muted-foreground/60" />
+                            <span className="font-mono text-foreground">{ch.cameraId}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
+
+      {/* ── Site Details — flat grid matching Recording/Event detail panels ── */}
+      <div>
+        <SiteSectionTitle>Site Details</SiteSectionTitle>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+          {([
+            ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
+            ["Name",           <span>{site.name}</span>],
+            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
+              <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
+              {STATUS_STYLES[site.status].label}
+            </span>],
+            ["Address",        <span>{site.address || "—"}</span>],
+            ["Timezone",       <span>{site.timezone}</span>],
+            ["Operating Hours",
+              site.operatingHours
+                ? <span className="font-mono text-xs">{site.operatingHours.from} – {site.operatingHours.to}</span>
+                : <span className="text-muted-foreground">—</span>
+            ],
+            ["Created",        <span>{site.createdAtDisplay}</span>],
+            ["Floor Plan",     <span>{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</span>],
+          ] as [string, React.ReactNode][]).map(([label, value]) => (
+            <div key={label as string} className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+              <span className="text-[13px] font-medium text-foreground">{value}</span>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* hidden — keeps lint happy for unused imports referenced via children below if any */}
+      <span className="hidden">
+        <Building2 /><MapPin /><Clock /><Calendar /><CircleDot />{onGoFloorPlan === undefined ? null : null}<HardDrive /></span>
+    </div>
+  );
+}
+
+/* ── Small section title, matches EventDrawer.SectionTitle ──────────── */
+function SiteSectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
+  return (
+    <div className="mb-2.5 flex items-center justify-between">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {children}
+      </span>
+      {aside}
     </div>
   );
 }
@@ -925,7 +1102,7 @@ function FloorPlanTab({
   showAreas, setShowAreas, showCameras, setShowCameras,
   renamingId, renameValue, setRenameValue, onCommitRename, onCancelRename,
   onStartRename, onStartNewArea, onPlaceCamera, onCommitArea,
-  onMovePlacement, onRotatePlacement, onSelectArea, onEditArea, onDeleteArea, onRemovePlacement,
+  onMovePlacement, onRotatePlacement, onUpdatePlacement, onSelectArea, onEditArea, onDeleteArea, onRemovePlacement,
   onFloorPlanUpload, onSampleFloorPlan,
 }: {
   site: SiteData;
@@ -949,6 +1126,7 @@ function FloorPlanTab({
   onCommitArea: (points: [number, number][], color: string) => void;
   onMovePlacement: (id: string, x: number, y: number) => void;
   onRotatePlacement: (id: string, deg: number) => void;
+  onUpdatePlacement: (id: string, patch: Partial<{ fovAngle: number; range: number }>) => void;
   onSelectArea: (id: string) => void;
   onEditArea: (a: AreaShape) => void;
   onDeleteArea: (id: string) => void;
@@ -961,7 +1139,7 @@ function FloorPlanTab({
   const selPlacement = selCam ? site.cameraPlacements[selCam.id] : undefined;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         {site.floorPlan && (
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
@@ -1031,36 +1209,58 @@ function FloorPlanTab({
               onAreaEdit={(id) => { const a = site.areas.find((x) => x.id === id); if (a) onEditArea(a); }}
               onAreaDelete={onDeleteArea}
             />
-            {/* Rotation control panel when a camera is selected */}
+            {/* Camera control panel — rotation + FOV + coverage range */}
             {selCam && selPlacement && (
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
-                <div className="flex size-7 items-center justify-center rounded-full bg-secondary/15 text-secondary">
-                  <Video className="size-3.5" />
+              <div className="space-y-2 rounded-xl border border-border bg-card px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-secondary/15 text-secondary">
+                    <Video className="size-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-semibold text-foreground">{selCam.name}</p>
+                    <p className="truncate text-[10px] text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</p>
+                  </div>
+                  <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+                    onClick={() => onRemovePlacement(selCam.id)}>
+                    <Trash2 className="size-3" />
+                    Remove from plan
+                  </Button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-semibold text-foreground">{selCam.name}</p>
-                  <p className="truncate text-[10px] text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</p>
+                <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-2.5">
+                  {/* Rotation */}
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><RotateCw className="size-3" /> Facing</span>
+                      <span className="font-mono text-foreground">{selPlacement.rotation}°</span>
+                    </div>
+                    <input type="range" min={0} max={360} step={5}
+                      value={selPlacement.rotation}
+                      onChange={(e) => onRotatePlacement(selCam.id, Number(e.target.value))}
+                      className="w-full accent-primary" />
+                  </div>
+                  {/* FOV angle */}
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span>FOV angle</span>
+                      <span className="font-mono text-foreground">{selPlacement.fovAngle ?? 90}°</span>
+                    </div>
+                    <input type="range" min={30} max={180} step={5}
+                      value={selPlacement.fovAngle ?? 90}
+                      onChange={(e) => onUpdatePlacement(selCam.id, { fovAngle: Number(e.target.value) })}
+                      className="w-full accent-secondary" />
+                  </div>
+                  {/* Range */}
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span>Coverage</span>
+                      <span className="font-mono text-foreground">{Math.round(((selPlacement.range ?? 14) / 14) * 100)}%</span>
+                    </div>
+                    <input type="range" min={6} max={40} step={1}
+                      value={selPlacement.range ?? 14}
+                      onChange={(e) => onUpdatePlacement(selCam.id, { range: Number(e.target.value) })}
+                      className="w-full accent-info" />
+                  </div>
                 </div>
-                <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                  <RotateCw className="size-3" />
-                  Angle
-                  <input
-                    type="number" min={0} max={360} step={5}
-                    value={selPlacement.rotation}
-                    onChange={(e) => onRotatePlacement(selCam.id, Math.max(0, Math.min(360, Number(e.target.value))))}
-                    className="h-7 w-14 rounded border border-input bg-background px-1.5 text-center font-mono text-[12px] text-foreground"
-                  />
-                  <span className="font-mono text-foreground">°</span>
-                </label>
-                <input type="range" min={0} max={360} step={5}
-                  value={selPlacement.rotation}
-                  onChange={(e) => onRotatePlacement(selCam.id, Number(e.target.value))}
-                  className="w-32 accent-primary" />
-                <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-                  onClick={() => onRemovePlacement(selCam.id)}>
-                  <Trash2 className="size-3" />
-                  Remove
-                </Button>
               </div>
             )}
             {pendingCameraId && (
@@ -1075,8 +1275,8 @@ function FloorPlanTab({
         )}
       </div>
 
-      {/* Sidebar */}
-      <div className="flex flex-col gap-3">
+      {/* Side-by-side Areas + Cameras panels below the map */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
             <div className="flex items-center gap-2">

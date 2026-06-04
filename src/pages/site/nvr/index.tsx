@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -26,7 +27,6 @@ import {
   CheckCircle2,
   MapPin,
   CircleDot,
-  Clock,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,9 +37,11 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
+import { useCamerasStore } from "@/stores/useCamerasStore";
 import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { storageBandFor } from "@/types/nvr";
 import type { NvrData, NvrStatus, StorageBand, NvrChannel } from "@/types/nvr";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 
@@ -130,94 +132,15 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: NvrData[]) => number;
 }[] = [
-  {
-    key: "all",
-    label: "Total NVRs",
-    sub: "Across all sites",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
-    getValue: (items) => items.length,
-  },
-  {
-    key: "online",
-    label: "Online",
-    sub: "Recording active",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
-    getValue: (items) => items.filter((n) => n.status === "online").length,
-  },
-  {
-    key: "offline",
-    label: "Offline",
-    sub: "No recent contact",
-    barClass: "bg-muted-foreground",
-    valueClass: "text-muted-foreground",
-    activeClass: "border-muted-foreground",
-    getValue: (items) => items.filter((n) => n.status === "offline").length,
-  },
-  {
-    key: "degraded",
-    label: "Degraded",
-    sub: "Partial functionality",
-    barClass: "bg-warning",
-    valueClass: "text-warning",
-    activeClass: "border-warning",
-    getValue: (items) => items.filter((n) => n.status === "degraded").length,
-  },
-  {
-    key: "storage-critical",
-    label: "Storage Critical",
-    sub: "≥ 90% utilised",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    activeClass: "border-sev-critical",
-    getValue: (items) =>
-      items.filter((n) => storageBandFor(n.usedStorageGb, n.totalStorageGb) === "critical").length,
-  },
+  { key: "all",              label: "Total NVRs",       sub: "Across all sites",      accent: "primary",      getValue: (i) => i.length },
+  { key: "online",           label: "Online",           sub: "Recording active",      accent: "success",      getValue: (i) => i.filter((n) => n.status === "online").length },
+  { key: "offline",          label: "Offline",          sub: "No recent contact",     accent: "muted",        getValue: (i) => i.filter((n) => n.status === "offline").length },
+  { key: "degraded",         label: "Degraded",         sub: "Partial functionality", accent: "warning",      getValue: (i) => i.filter((n) => n.status === "degraded").length },
+  { key: "storage-critical", label: "Storage Critical", sub: "≥ 90% utilised",        accent: "sev-critical", getValue: (i) => i.filter((n) => storageBandFor(n.usedStorageGb, n.totalStorageGb) === "critical").length },
 ];
-
-function KpiCard({
-  config,
-  items,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[number];
-  items: NvrData[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
 
 /* ── Multi-select filter dropdown ─────────────────────────────────────────── */
 
@@ -447,19 +370,19 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   );
 }
 
+// Unified compact StatCard — delegates to shared KpiCard so accent bar + sizing match.
 function StatCard({ icon, label, value, valueClass, sub }: {
-  icon: React.ReactNode; label: string; value: React.ReactNode; valueClass?: string; sub?: string;
+  icon?: React.ReactNode; label: string; value: React.ReactNode; valueClass?: string; sub?: string;
 }) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-3">
-      <div className="mb-1 flex items-center gap-1.5">
-        {icon}
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
-      </div>
-      <p className={cn("text-[20px] font-bold leading-none text-foreground", valueClass)}>{value}</p>
-      {sub && <p className="mt-1 text-[11px] text-muted-foreground">{sub}</p>}
-    </div>
-  );
+  void icon;
+  const accent: KpiAccent =
+    valueClass?.includes("text-success")      ? "success" :
+    valueClass?.includes("text-info")         ? "info" :
+    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-warning")      ? "warning" :
+    valueClass?.includes("text-purple")       ? "purple" :
+    "primary";
+  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
 
 function ChannelRecordingStatusPill({ status, hasCamera }: { status?: "live" | "offline"; hasCamera: boolean }) {
@@ -646,10 +569,14 @@ function NvrDrawer({
                 sub={`${nvr.usedStorageGb.toLocaleString()} / ${nvr.totalStorageGb.toLocaleString()} GB`}
               />
               <StatCard
-                icon={<Clock className="size-3 text-muted-foreground" />}
                 label="Last Activity"
-                value={nvr.lastSeenDisplay}
-                sub={`Active since ${nvr.activeAtDisplay}`}
+                value={nvr.status === "online" ? "Live" : nvr.status === "degraded" ? "Degraded" : "Offline"}
+                valueClass={
+                  nvr.status === "online" ? "text-success" :
+                  nvr.status === "degraded" ? "text-warning" :
+                  "text-muted-foreground"
+                }
+                sub={`Last seen ${nvr.lastSeenDisplay}`}
               />
             </div>
 
@@ -1535,25 +1462,75 @@ function LinkCameraModal({
   onClose: () => void;
   onConfirm: (cameraId: string) => void;
 }) {
+  const cameras = useCamerasStore((s) => s.cameras);
   const [picked, setPicked] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState("");
+  const [areaFilter, setAreaFilter] = React.useState<string | "all">("all");
 
-  React.useEffect(() => { if (open) setPicked(null); }, [open, channel]);
+  React.useEffect(() => {
+    if (open) { setPicked(null); setSearch(""); setAreaFilter("all"); }
+  }, [open, channel]);
 
   if (!nvr || channel == null) return null;
 
   // Same-site cameras with no NVR link
-  const candidates = MOCK_CAMERAS.filter((c) => c.siteId === nvr.siteId && !c.nvrId);
+  const candidates = cameras.filter((c) => c.siteId === nvr.siteId && !c.nvrId);
+  const areas = Array.from(new Set(candidates.map((c) => c.areaId))).map((id) => {
+    const cam = candidates.find((c) => c.areaId === id);
+    return { id, label: cam?.areaName ?? id };
+  });
+
+  const q = search.trim().toLowerCase();
+  const filtered = candidates.filter((c) => {
+    if (areaFilter !== "all" && c.areaId !== areaFilter) return false;
+    if (q && !`${c.id} ${c.name} ${c.areaName}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Link Camera to Channel {channel}</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             Only cameras at <strong className="text-foreground">{nvr.siteName}</strong> (same site as this NVR) can be linked.
           </p>
         </DialogHeader>
-        <div className="space-y-2 px-5 py-4">
+        <div className="flex-shrink-0 space-y-2 border-b border-border px-5 py-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by camera name, ID or area…" className="h-9 pl-9 text-[13px]" />
+          </div>
+          {areas.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Area</span>
+              <button
+                onClick={() => setAreaFilter("all")}
+                className={cn(
+                  "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                  areaFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                All ({candidates.length})
+              </button>
+              {areas.map((a) => {
+                const count = candidates.filter((c) => c.areaId === a.id).length;
+                const active = areaFilter === a.id;
+                return (
+                  <button key={a.id} onClick={() => setAreaFilter(a.id)}
+                    className={cn(
+                      "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    )}>
+                    {a.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 space-y-2 overflow-y-auto px-5 py-4">
           {candidates.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
               <Video className="mx-auto size-7 text-muted-foreground/40" />
@@ -1564,8 +1541,10 @@ function LinkCameraModal({
                 Add a camera at {nvr.siteName} first, or unlink an existing one to make it available.
               </p>
             </div>
+          ) : filtered.length === 0 ? (
+            <p className="py-8 text-center text-[12px] italic text-muted-foreground">No cameras match the current filters.</p>
           ) : (
-            candidates.map((c) => {
+            filtered.map((c) => {
               const selected = picked === c.id;
               return (
                 <button
@@ -1595,7 +1574,7 @@ function LinkCameraModal({
             })
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!picked} onClick={() => picked && onConfirm(picked)} className="gap-1.5">
             <Link2 className="size-3.5" />
@@ -2131,27 +2110,12 @@ function DeleteNvrModal({
 
 /* ── Toast ───────────────────────────────────────────────────────────────── */
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  React.useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className="fixed right-5 top-5 z-[70] flex items-start gap-2.5 rounded-lg border border-border bg-card px-4 py-3 shadow-xl">
-      <CheckCircle2 className="size-4 flex-shrink-0 text-success" />
-      <p className="text-[13px] font-medium text-foreground">{message}</p>
-      <button onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground">
-        <X className="size-3.5" />
-      </button>
-    </div>
-  );
-}
-
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default function NvrDevicesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const updateCameraInStore = useCamerasStore((s) => s.updateCamera);
   const [nvrs, setNvrs] = React.useState<NvrData[]>(() => [...MOCK_NVRS]);
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<NvrFilters>(EMPTY_FILTERS);
@@ -2171,7 +2135,6 @@ export default function NvrDevicesPage() {
     | null
   >(null);
   const cleanupTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [toast, setToast] = React.useState<string | null>(null);
   const pageSize = 10;
 
   React.useEffect(() => {
@@ -2268,7 +2231,7 @@ export default function NvrDevicesPage() {
       cleanupTimerRef.current = null;
     }
     setModal(null);
-    setToast("Cleanup cancelled — no recordings were removed");
+    toast.success("Cleanup cancelled — no recordings were removed");
   }
 
   function handleLink(channel: number, cameraId: string) {
@@ -2281,13 +2244,16 @@ export default function NvrDevicesPage() {
       );
       return { ...n, channels, channelsInUse: channels.filter((c) => c.cameraId).length };
     }));
+    // Keep the camera record in sync (it stores its own nvrId / nvrName / channel).
+    updateCameraInStore(cameraId, { nvrId: drawerNvr.id, nvrName: drawerNvr.name, channel });
     setModal(null);
-    setToast(`${cam?.name ?? cameraId} linked to Channel ${channel}`);
+    toast.success(`${cam?.name ?? cameraId} linked to Channel ${channel}`);
   }
 
   function handleUnlink(channel: number) {
     if (!drawerNvr) return;
     const ch = drawerNvr.channels.find((c) => c.channel === channel);
+    const camId = ch?.cameraId ?? null;
     const camName = ch?.cameraName ?? ch?.cameraId;
     setNvrs((curr) => curr.map((n) => {
       if (n.id !== drawerNvr.id) return n;
@@ -2296,8 +2262,9 @@ export default function NvrDevicesPage() {
       );
       return { ...n, channels, channelsInUse: channels.filter((c) => c.cameraId).length };
     }));
+    if (camId) updateCameraInStore(camId, { nvrId: null, nvrName: null, channel: null });
     setModal(null);
-    setToast(`${camName} unlinked from Channel ${channel}`);
+    toast.success(`${camName} unlinked from Channel ${channel}`);
   }
 
   function handleDelete() {
@@ -2306,7 +2273,7 @@ export default function NvrDevicesPage() {
     setNvrs((curr) => curr.filter((n) => n.id !== target.id));
     setModal(null);
     closeDrawer();
-    setToast(`${target.name} deleted`);
+    toast.success(`${target.name} deleted`);
   }
 
   return (
@@ -2327,17 +2294,19 @@ export default function NvrDevicesPage() {
       </PageHeader>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <KpiGrid cols={5}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            items={nvrs}
+            label={cfg.label}
+            value={cfg.getValue(nvrs)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* Filter panel */}
       <FilterPanel
@@ -2574,7 +2543,7 @@ export default function NvrDevicesPage() {
           };
           setNvrs((curr) => [newNvr, ...curr]);
           setModal(null);
-          setToast(`${newNvr.name} added`);
+          toast.success(`${newNvr.name} added`);
         }}
       />
       <EditNvrModal
@@ -2598,7 +2567,7 @@ export default function NvrDevicesPage() {
             cleanupSchedule: fields.cleanupSchedule,
           } : n));
           setModal(null);
-          setToast(`${fields.name} updated`);
+          toast.success(`${fields.name} updated`);
         }}
       />
       <ExportRecordingsModal
@@ -2607,7 +2576,7 @@ export default function NvrDevicesPage() {
         onClose={() => setModal(null)}
         onConfirm={({ channels, recordingCount, totalGb, format }) => {
           setModal(null);
-          setToast(`Exporting ${recordingCount} recordings (${totalGb.toFixed(2)} GB) from ${channels.length} channel${channels.length === 1 ? "" : "s"} as ${format === "zip" ? "ZIP" : format === "mp4-pack" ? "MP4 pack" : "manifest"}…`);
+          toast.success(`Exporting ${recordingCount} recordings (${totalGb.toFixed(2)} GB) from ${channels.length} channel${channels.length === 1 ? "" : "s"} as ${format === "zip" ? "ZIP" : format === "mp4-pack" ? "MP4 pack" : "manifest"}…`);
         }}
       />
       {modal?.kind === "cleanup-done" && (
@@ -2634,7 +2603,7 @@ export default function NvrDevicesPage() {
         channel={modal?.kind === "unlink" ? modal.channel : null}
         onClose={() => setModal(null)}
         onConfirm={() => modal?.kind === "unlink" && handleUnlink(modal.channel)}
-        onExportFirst={() => setToast(`Exporting recordings from Channel ${modal?.kind === "unlink" ? modal.channel : ""}…`)}
+        onExportFirst={() => toast.success(`Exporting recordings from Channel ${modal?.kind === "unlink" ? modal.channel : ""}…`)}
       />
       <DeleteNvrModal
         open={modal?.kind === "delete"}
@@ -2643,7 +2612,6 @@ export default function NvrDevicesPage() {
         onConfirm={handleDelete}
       />
 
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

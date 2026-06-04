@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Layers } from "lucide-react";
+import { Layers, Search, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,73 @@ export interface EscalateFormData {
   severity: Severity;
   assignee: CaseAssignee;
   notes: string;
+}
+
+/* Searchable assignee combobox — typeahead with name + id matching. */
+function AssigneeSearchSelect({ value, onChange }: { value: CaseAssignee; onChange: (next: CaseAssignee) => void }) {
+  const [query, setQuery] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return ASSIGNEES;
+    return ASSIGNEES.filter((a) =>
+      `${a.name} ${a.id}`.toLowerCase().includes(q)
+    );
+  }, [query]);
+
+  const displayLabel = `${value.name} (${value.id})`;
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={open ? query : displayLabel}
+          placeholder="Search assignees by name or ID…"
+          onFocus={() => { setOpen(true); setQuery(""); }}
+          onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); }}
+          className="h-9 pl-9 text-[13px]"
+        />
+      </div>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-3 text-center text-[12px] italic text-muted-foreground">No assignees match "{query}".</p>
+          ) : (
+            filtered.map((a) => {
+              const selected = a.id === value.id;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => { onChange(a); setOpen(false); setQuery(""); }}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-muted/50",
+                    selected && "bg-primary/10"
+                  )}
+                >
+                  <Check className={cn("size-3 flex-shrink-0", selected ? "text-primary" : "opacity-0")} strokeWidth={3} />
+                  <span className="truncate text-foreground">{a.name}</span>
+                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">{a.id}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const SLA_BY_SEVERITY: Record<
@@ -147,20 +214,7 @@ export function EscalateModal({
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Assign To
               </label>
-              <select
-                value={assignee.id}
-                onChange={(e) => {
-                  const found = ASSIGNEES.find((a) => a.id === e.target.value);
-                  if (found) setAssignee(found);
-                }}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground focus:border-primary focus:outline-none"
-              >
-                {ASSIGNEES.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} ({a.id})
-                  </option>
-                ))}
-              </select>
+              <AssigneeSearchSelect value={assignee} onChange={setAssignee} />
             </div>
           </div>
 

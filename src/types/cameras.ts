@@ -1,6 +1,6 @@
 /* Camera + Recording types — mirrors PRD § 4.6 */
 
-export type CameraStatus = "online" | "offline" | "connection-failed" | "pending";
+export type CameraStatus = "online" | "offline" | "connection-failed";
 
 export interface BoundaryZone {
   id: string;

@@ -40,93 +40,22 @@ const EMPTY_FILTERS: CaseFilters = { status: [], severity: [], site: [] };
 
 /* ─── KPI cards ──────────────────────────────────────────────────────────── */
 
-const KPI_CONFIGS = [
-  {
-    key: "all" as KpiFilter,
-    label: "Total Cases",
-    barClass: "",
-    valueClass: "text-foreground",
-    getValue: (cases: IncidentCase[]) => cases.length,
-    sub: "All time across all sites",
-  },
-  {
-    key: "open" as KpiFilter,
-    label: "Open",
-    barClass: "bg-info",
-    valueClass: "text-info",
-    getValue: (cases: IncidentCase[]) => cases.filter((c) => c.status === "open").length,
-    sub: "Awaiting action",
-  },
-  {
-    key: "in-review" as KpiFilter,
-    label: "In Review",
-    barClass: "bg-sev-medium",
-    valueClass: "text-sev-medium",
-    getValue: (cases: IncidentCase[]) => cases.filter((c) => c.status === "in-review").length,
-    sub: "Under investigation",
-  },
-  {
-    key: "action-taken" as KpiFilter,
-    label: "Action Taken",
-    barClass: "bg-purple",
-    valueClass: "text-purple",
-    getValue: (cases: IncidentCase[]) => cases.filter((c) => c.status === "action-taken").length,
-    sub: "Mitigation underway",
-  },
-  {
-    key: "closed" as KpiFilter,
-    label: "Closed",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    getValue: (cases: IncidentCase[]) => cases.filter((c) => c.status === "closed").length,
-    sub: "Resolved cases",
-  },
-  {
-    key: "critical" as KpiFilter,
-    label: "Critical",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    getValue: (cases: IncidentCase[]) =>
-      cases.filter((c) => c.severity === "critical").length,
-    sub: "Immediate threat",
-  },
-];
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 
-function KpiCard({
-  config,
-  cases,
-  active,
-  onClick,
-}: {
-  config: (typeof KPI_CONFIGS)[0];
-  cases: IncidentCase[];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card px-4 py-3.5 text-left transition-all hover:border-primary hover:-translate-y-px",
-        active ? "border-primary bg-primary-muted" : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2.5 top-1.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass || "bg-border/50")} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
-        {config.getValue(cases)}
-      </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
-    </button>
-  );
-}
+const KPI_CONFIGS: {
+  key: KpiFilter;
+  label: string;
+  accent: KpiAccent;
+  getValue: (cases: IncidentCase[]) => number;
+  sub: string;
+}[] = [
+  { key: "all",          label: "Total Cases",  accent: "primary",      getValue: (c) => c.length,                                       sub: "All time across all sites" },
+  { key: "open",         label: "Open",         accent: "info",         getValue: (c) => c.filter((x) => x.status === "open").length,         sub: "Awaiting action" },
+  { key: "in-review",    label: "In Review",    accent: "sev-medium",   getValue: (c) => c.filter((x) => x.status === "in-review").length,    sub: "Under investigation" },
+  { key: "action-taken", label: "Action Taken", accent: "purple",       getValue: (c) => c.filter((x) => x.status === "action-taken").length, sub: "Mitigation underway" },
+  { key: "closed",       label: "Closed",       accent: "success",      getValue: (c) => c.filter((x) => x.status === "closed").length,       sub: "Resolved cases" },
+  { key: "critical",     label: "Critical",     accent: "sev-critical", getValue: (c) => c.filter((x) => x.severity === "critical").length,   sub: "Immediate threat" },
+];
 
 /* ─── Filter dropdown ────────────────────────────────────────────────────── */
 
@@ -547,17 +476,19 @@ export default function IncidentCasesPage() {
       </PageHeader>
 
       {/* ── KPI cards ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <KpiGrid cols={6}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
-            config={cfg}
-            cases={cases}
+            label={cfg.label}
+            value={cfg.getValue(cases)}
+            sub={cfg.sub}
+            accent={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => setKpiFilter((prev) => (prev === cfg.key ? "all" : cfg.key))}
           />
         ))}
-      </div>
+      </KpiGrid>
 
       {/* Date filter row (outside Filters panel) */}
       <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">

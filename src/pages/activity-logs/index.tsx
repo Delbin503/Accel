@@ -10,11 +10,14 @@ import {
   CheckCircle2,
   XCircle,
   Building2,
+  SlidersHorizontal,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES, type ActivityKind, type ActivityLog } from "@/mocks/activityLogs";
 
@@ -48,16 +51,9 @@ function withinRange(log: ActivityLog, range: DateRange, customFrom: string, cus
 
 /* ── Activity type filter ────────────────────────────────────────────── */
 
-type TypeFilter = "all" | ActivityKind;
-
-const TYPE_TABS: { key: TypeFilter; label: string }[] = [
-  { key: "all",    label: "All" },
-  { key: "case",   label: "Cases" },
-  { key: "event",  label: "Events" },
-  { key: "auth",   label: "Authentication" },
-  { key: "config", label: "Configuration" },
-  { key: "license",label: "License" },
-];
+// Activity Type is multi-select — empty array means "all".
+const TYPE_OPTIONS: { value: ActivityKind; label: string }[] = (Object.keys(ACTIVITY_KIND_LABELS) as ActivityKind[])
+  .map((k) => ({ value: k, label: ACTIVITY_KIND_LABELS[k] }));
 
 /* ── Kind badge (compact for table) ──────────────────────────────────── */
 
@@ -86,19 +82,6 @@ const KIND_TABLE_LABEL: Partial<Record<ActivityKind, string>> = {
   "data-access": "Data",
 };
 
-/* ── KPI card ────────────────────────────────────────────────────────── */
-
-function KpiCard({ label, value, sub, bar, txt }: { label: string; value: React.ReactNode; sub: string; bar: string; txt: string }) {
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4">
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", bar)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={cn("text-[26px] font-bold leading-none", txt)}>{value}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>
-    </div>
-  );
-}
-
 /* ── Page ────────────────────────────────────────────────────────────── */
 
 export default function ActivityLogsPage() {
@@ -107,7 +90,7 @@ export default function ActivityLogsPage() {
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
   const [customOpen, setCustomOpen] = React.useState(false);
-  const [typeFilter, setTypeFilter] = React.useState<TypeFilter>("all");
+  const [typeFilter, setTypeFilter] = React.useState<ActivityKind[]>([]);
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
 
   // Stable "now" for the session
@@ -122,7 +105,7 @@ export default function ActivityLogsPage() {
   const filtered = React.useMemo(() => {
     return MOCK_ACTIVITY_LOGS.filter((l) => {
       if (!withinRange(l, dateRange, customFrom, customTo, now)) return false;
-      if (typeFilter !== "all" && l.kind !== typeFilter) return false;
+      if (typeFilter.length > 0 && !typeFilter.includes(l.kind)) return false;
       if (siteFilter.length > 0 && (!l.siteName || !siteFilter.includes(l.siteName))) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -133,13 +116,13 @@ export default function ActivityLogsPage() {
     });
   }, [dateRange, customFrom, customTo, typeFilter, siteFilter, search, now]);
 
-  // Counts for filter pills
+  // Counts for the type dropdown options
   const typeCounts = React.useMemo(() => {
     const within = MOCK_ACTIVITY_LOGS.filter((l) =>
       withinRange(l, dateRange, customFrom, customTo, now) &&
       (siteFilter.length === 0 || (l.siteName && siteFilter.includes(l.siteName)))
     );
-    const map: Record<string, number> = { all: within.length };
+    const map: Record<string, number> = {};
     for (const l of within) map[l.kind] = (map[l.kind] ?? 0) + 1;
     return map;
   }, [dateRange, customFrom, customTo, siteFilter, now]);
@@ -177,95 +160,87 @@ export default function ActivityLogsPage() {
       </PageHeader>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiCard label="Total Events"   value={totalCount} sub="Audit log entries"
-          bar="bg-primary" txt="text-foreground" />
-        <KpiCard label="Today"          value={todayCount} sub="Recorded today"
-          bar="bg-success" txt="text-success" />
-        <KpiCard label="Success"        value={successCount} sub="Successful actions"
-          bar="bg-success" txt="text-success" />
-        <KpiCard label="Failed"         value={failedCount} sub="Require attention"
-          bar="bg-sev-critical" txt="text-sev-critical" />
-      </div>
+      <KpiGrid cols={4}>
+        <KpiCard label="Total Events" value={totalCount} sub="Audit log entries" accent="primary" />
+        <KpiCard label="Today"        value={todayCount} sub="Recorded today"   accent="success" />
+        <KpiCard label="Success"      value={successCount} sub="Successful actions" accent="success" />
+        <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="sev-critical" />
+      </KpiGrid>
 
-      {/* Date range pills + custom range */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {DATE_FILTERS.map((f) => {
-            const active = dateRange === f.key;
-            return (
-              <button key={f.key} onClick={() => setDateRange(f.key)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-[12px] font-semibold transition-colors",
-                  active ? "bg-sev-critical text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}>
-                {f.label}
-              </button>
-            );
-          })}
-          <Popover open={customOpen} onOpenChange={setCustomOpen}>
-            <PopoverTrigger asChild>
-              <button onClick={() => setDateRange("custom")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold transition-colors",
-                  dateRange === "custom" ? "bg-sev-critical text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}>
-                <Calendar className="size-3" />
-                Custom date
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-72 p-3">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Custom range</p>
-              <div className="space-y-2">
-                <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">From</label>
-                  <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-8 text-[12px]" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">To</label>
-                  <Input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="h-8 text-[12px]" />
-                </div>
-                <div className="flex justify-end gap-1.5">
-                  <Button variant="ghost" size="sm" onClick={() => { setCustomFrom(""); setCustomTo(""); setDateRange("30d"); setCustomOpen(false); }}>
-                    Reset
-                  </Button>
-                  <Button size="sm" onClick={() => setCustomOpen(false)}>Apply</Button>
-                </div>
+      {/* Unified date + filters bar (mirrors Detection Feed pattern) */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
+        <span className="mr-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground">
+          <Calendar className="size-3.5" />
+          Date
+        </span>
+        {DATE_FILTERS.map((f) => {
+          const active = dateRange === f.key;
+          return (
+            <button key={f.key} onClick={() => setDateRange(f.key)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
+                active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+              )}>
+              {f.label}
+            </button>
+          );
+        })}
+        <Popover open={customOpen} onOpenChange={setCustomOpen}>
+          <PopoverTrigger asChild>
+            <button onClick={() => setDateRange("custom")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
+                dateRange === "custom" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+              )}>
+              <Calendar className="size-3" />
+              Custom date
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 p-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Custom range</p>
+            <div className="space-y-2">
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">From</label>
+                <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-8 text-[12px]" />
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-        <span className="ml-auto text-[12px] text-muted-foreground">
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">To</label>
+                <Input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="h-8 text-[12px]" />
+              </div>
+              <div className="flex justify-end gap-1.5">
+                <Button variant="ghost" size="sm" onClick={() => { setCustomFrom(""); setCustomTo(""); setDateRange("30d"); setCustomOpen(false); }}>
+                  Reset
+                </Button>
+                <Button size="sm" onClick={() => setCustomOpen(false)}>Apply</Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <span className="ml-auto text-[11px] text-muted-foreground">
           Showing <strong className="text-foreground">{rangeLabel()}</strong> · <strong className="text-foreground">{filtered.length}</strong> event{filtered.length === 1 ? "" : "s"}
         </span>
       </div>
 
-      {/* Activity type tabs + site filter */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Activity Type:</span>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {TYPE_TABS.map((t) => {
-            const active = typeFilter === t.key;
-            const count = typeCounts[t.key] ?? 0;
-            return (
-              <button key={t.key} onClick={() => setTypeFilter(t.key)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                  active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                )}>
-                {t.label} ({count})
-              </button>
-            );
-          })}
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+      {/* Filters row (mirrors Detection Feed / Recordings pattern) */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+        <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
+        <span className="text-[12px] font-semibold text-foreground">Filters</span>
+        <div className="ml-1 flex flex-wrap items-center gap-2">
+          <TypeFilterDropdown options={TYPE_OPTIONS} selected={typeFilter} counts={typeCounts} onChange={setTypeFilter} />
           <SiteFilter sites={allSites} selected={siteFilter} onChange={setSiteFilter} />
+        </div>
+        <div className="ml-auto flex items-center gap-2">
           <div className="relative w-56">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search activity…"
               className="h-8 w-full pl-9 text-[12px]" />
           </div>
+          {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
+            <Button variant="ghost" size="sm" onClick={() => { setTypeFilter([]); setSiteFilter([]); setSearch(""); }}>
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
@@ -274,7 +249,7 @@ export default function ActivityLogsPage() {
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <ScrollText className="size-10 opacity-20" />
           <p className="text-sm">No activity events match the current filters.</p>
-          <Button variant="outline" onClick={() => { setSearch(""); setDateRange("30d"); setTypeFilter("all"); setSiteFilter([]); }}>
+          <Button variant="outline" onClick={() => { setSearch(""); setDateRange("30d"); setTypeFilter([]); setSiteFilter([]); }}>
             Clear filters
           </Button>
         </div>
@@ -377,6 +352,67 @@ function ActivityText({ text }: { text: string }) {
 }
 
 /* ── Site filter multiselect ─────────────────────────────────────────── */
+
+/* ── Activity Type multi-select dropdown ─────────────────────────────── */
+
+function TypeFilterDropdown({ options, selected, counts, onChange }: {
+  options: { value: ActivityKind; label: string }[];
+  selected: ActivityKind[];
+  counts: Record<string, number>;
+  onChange: (v: ActivityKind[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const isAll = selected.length === 0;
+  const display = isAll
+    ? "All types"
+    : selected.length === 1 ? options.find((o) => o.value === selected[0])?.label ?? "1 type"
+    : `${selected.length} types`;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          "h-8 inline-flex items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-[12px] font-semibold transition-colors",
+          open ? "border-primary" : "border-input",
+          isAll ? "text-muted-foreground" : "text-foreground"
+        )} style={{ minWidth: "160px" }}>
+          <span className="inline-flex items-center gap-1.5">
+            <Layers className="size-3" />
+            {display}
+          </span>
+          <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="max-h-[300px] w-56 overflow-y-auto p-1.5">
+        <button onClick={() => onChange([])}
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+          <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
+            isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
+            {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+          </div>
+          All types
+        </button>
+        <div className="my-1 border-t border-border" />
+        {options.map((o) => {
+          const checked = selected.includes(o.value);
+          const count = counts[o.value] ?? 0;
+          return (
+            <button key={o.value} onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+              <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
+                checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
+                {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+              </div>
+              <span className="flex-1">{o.label}</span>
+              <span className="font-mono text-[10px] text-muted-foreground/60">{count}</span>
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/* ── Site multi-select dropdown ──────────────────────────────────────── */
 
 function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: string[]; onChange: (v: string[]) => void }) {
   const [open, setOpen] = React.useState(false);

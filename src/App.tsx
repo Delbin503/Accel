@@ -44,18 +44,20 @@ import SystemInfoPage from "@/pages/system-info";
 // Auth + Onboarding
 import SignInPage from "@/pages/auth/SignIn";
 import SignUpPage from "@/pages/auth/SignUp";
+import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import OnboardingSitePage from "@/pages/auth/OnboardingSite";
 import OnboardingSubscriptionPage from "@/pages/auth/OnboardingSubscription";
 
 function App() {
   return (
     <>
-    <Toaster position="bottom-right" richColors closeButton />
+    <Toaster position="top-right" richColors closeButton expand={false} />
     <Routes>
       {/* Auth pages — only shown when not yet authenticated/onboarded */}
       <Route element={<RedirectIfAuthed />}>
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Route>
 
       {/* Onboarding pages — require auth, enforce step order */}

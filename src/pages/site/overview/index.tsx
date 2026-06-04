@@ -25,6 +25,7 @@ import { SiteDetailDrawer } from "./SiteDetailDrawer";
 import { SITE_ACCENT_COLORS } from "@/mocks/sites";
 import type { SiteData } from "@/types/sites";
 import type { CameraData } from "@/types/cameras";
+import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 
 const STATUS_STYLES = {
   active:   { bg: "bg-success/15 border-success/30",        text: "text-success",          dot: "bg-success",          label: "Active"   },
@@ -143,21 +144,12 @@ export default function SiteOverviewPage() {
         </PageHeader.Actions>
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Total Sites",       value: totalSites,    sub: "All locations",                bar: "bg-primary",   txt: "text-foreground" },
-          { label: "With Floor Plans",  value: sitesWithPlan, sub: `${totalSites - sitesWithPlan} pending upload`, bar: "bg-success",   txt: "text-success" },
-          { label: "Areas Defined",     value: totalAreas,    sub: "Across all sites",             bar: "bg-info",      txt: "text-info" },
-          { label: "Cameras",           value: totalCameras,  sub: `${onlineCameras} online`,      bar: "bg-secondary", txt: "text-secondary" },
-        ].map((k) => (
-          <div key={k.label} className="relative overflow-hidden rounded-xl border border-border bg-card p-4">
-            <div className={cn("absolute inset-x-0 top-0 h-0.5", k.bar)} />
-            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{k.label}</div>
-            <div className={cn("text-[26px] font-bold leading-none", k.txt)}>{k.value}</div>
-            <div className="mt-1 text-[11px] text-muted-foreground">{k.sub}</div>
-          </div>
-        ))}
-      </div>
+      <KpiGrid cols={4}>
+        <KpiCard label="Total Sites"      value={totalSites}    sub="All locations"                              accent="primary" />
+        <KpiCard label="With Floor Plans" value={sitesWithPlan} sub={`${totalSites - sitesWithPlan} pending upload`} accent="success" />
+        <KpiCard label="Areas Defined"    value={totalAreas}    sub="Across all sites"                           accent="info" />
+        <KpiCard label="Cameras"          value={totalCameras}  sub={`${onlineCameras} online`}                  accent="secondary" />
+      </KpiGrid>
 
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
         <div className="relative flex-1">
@@ -186,7 +178,7 @@ export default function SiteOverviewPage() {
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  {["SITE ID", "SITE", "STATUS", "FLOOR PLAN", "AREAS", "CAMERAS", "CREATED", "ACTION"].map((h) => (
+                  {["SITE ID", "SITE", "STATUS", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
                     <th key={h}
                       className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
@@ -247,6 +239,11 @@ export default function SiteOverviewPage() {
                       </td>
                       <td className="px-4 py-3">
                         <CameraHealthCell cameras={siteCams} />
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
+                        {site.operatingHours
+                          ? <>{site.operatingHours.from}<span className="text-muted-foreground/50"> – </span>{site.operatingHours.to}</>
+                          : <span className="text-muted-foreground/50">—</span>}
                       </td>
                       <td className="px-4 py-3 text-[12px] text-muted-foreground">{site.createdAtDisplay}</td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
