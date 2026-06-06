@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  X,
   ChevronRight,
   ChevronLeft,
   Building2,
@@ -157,14 +156,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Add a New Site</h2>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">{STEPS[stepIdx].subtitle}</p>
-          </div>
-          <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
-            <X className="size-4" />
-          </button>
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="pr-8 text-base font-bold text-foreground">Add a New Site</h2>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">{STEPS[stepIdx].subtitle}</p>
         </div>
 
         <div className="flex items-center gap-3 border-b border-border bg-background/40 px-5 py-3">

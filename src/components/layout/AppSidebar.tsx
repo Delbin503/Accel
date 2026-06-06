@@ -126,10 +126,9 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/site",
         icon: MapPin,
         children: [
-          { label: "Overview", href: "/site/overview", icon: MapPin },
+          { label: "Site Management", href: "/site/overview", icon: MapPin },
           { label: "Cameras", href: "/site/cameras", icon: Video },
           { label: "NVR Devices", href: "/site/nvr", icon: HardDrive },
-          { label: "Zones", href: "/site/zones", icon: MapPin },
         ],
       },
       { label: "Model Management", href: "/models", icon: Brain },

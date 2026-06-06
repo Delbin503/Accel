@@ -1019,18 +1019,19 @@ function CameraDrawer({
           {camera ? (
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
+                <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                  <StatusPill status={camera.status} />
+                </div>
                 <div className="mb-1 flex items-center gap-2">
                   <SheetTitle className="truncate text-[17px] font-bold">{camera.name}</SheetTitle>
                   <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
                     {camera.id}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                  <StatusPill status={camera.status} />
-                  <span>·</span>
+                <p className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
                   <MapPin className="size-3" />
                   {camera.siteName} · {camera.areaName}
-                </div>
+                </p>
               </div>
               <button
                 onClick={onClose}

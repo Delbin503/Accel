@@ -190,24 +190,22 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
       >
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2.5">
-              <SeverityBadge severity={event.severity} />
-              <div className="min-w-0">
-                <SheetTitle className="truncate text-[17px] font-bold">
-                  {event.typeLabel}
-                </SheetTitle>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <p className="text-[12px] text-muted-foreground">
-                    {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
-                  </p>
-                  <ReasonChip reason={item.reason} />
-                </div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                <SeverityBadge severity={event.severity} />
+                <ReasonChip reason={item.reason} />
               </div>
+              <SheetTitle className="truncate text-[17px] font-bold leading-snug">
+                {event.typeLabel}
+              </SheetTitle>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
+              </p>
             </div>
             <button
               onClick={onClose}
-              className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />
             </button>

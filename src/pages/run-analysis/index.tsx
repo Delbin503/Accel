@@ -998,13 +998,21 @@ function buildSyntheticResult(modelSteps: number, modelRules: number): AnalysisR
 
 /* ── Analyzing progress stages ───────────────────────────────────────────── */
 
-const ANALYZING_STAGES: { label: string; pct: number }[] = [
-  { label: "Uploading footage to processing pipeline…",    pct: 15 },
-  { label: "Initializing model inference engine…",         pct: 35 },
-  { label: "Scanning frames & extracting detections…",     pct: 60 },
-  { label: "Generating VLM reasoning narrative…",          pct: 85 },
-  { label: "Finalising scores & compiling report…",        pct: 100 },
+const ANALYZING_STAGES: { label: string; pct: number; etaSec: number }[] = [
+  { label: "Uploading footage to processing pipeline…", pct: 15,  etaSec: 32 },
+  { label: "Initializing model inference engine…",      pct: 35,  etaSec: 24 },
+  { label: "Scanning frames & extracting detections…",  pct: 60,  etaSec: 16 },
+  { label: "Generating VLM reasoning narrative…",       pct: 85,  etaSec: 8  },
+  { label: "Finalising scores & compiling report…",     pct: 100, etaSec: 3  },
 ];
+
+function formatEta(sec: number): string {
+  if (sec <= 5) return "almost done";
+  if (sec < 60) return `~${sec}s remaining`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `~${m}m ${s.toString().padStart(2, "0")}s remaining`;
+}
 
 function AnalysisLoadingScreen({
   stage,
@@ -1067,6 +1075,19 @@ function AnalysisLoadingScreen({
               />
             ))}
           </div>
+
+          {/* Estimated time remaining */}
+          <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
+            <Clock className="size-3 text-muted-foreground" />
+            <span className="font-mono text-[11px] text-muted-foreground">
+              <strong className="text-foreground">{formatEta(current.etaSec)}</strong>
+            </span>
+          </div>
+
+          <Button variant="outline" size="sm" onClick={onCancel} className="gap-1.5">
+            <X className="size-3.5" />
+            Cancel analysis
+          </Button>
 
           <p className="text-center text-[10.5px] text-muted-foreground/60">
             This typically takes a few seconds. You can cancel at any time.

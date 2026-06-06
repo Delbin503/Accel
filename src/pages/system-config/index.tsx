@@ -43,7 +43,6 @@ type Section =
   | "camera-defaults"
   | "nvr-defaults"
   | "notifications"
-  | "retention"
   | "localization"
   | "integrations"
   | "security";
@@ -57,7 +56,6 @@ const SECTIONS: { key: Section; label: string; icon: React.ElementType; descript
   { key: "camera-defaults",  label: "Camera Defaults",  icon: Video,           description: "RTSP, codec, frame rate, recording" },
   { key: "nvr-defaults",     label: "NVR Defaults",     icon: Database,        description: "Channel cleanup, storage warnings" },
   { key: "notifications",    label: "Notifications",    icon: Bell,            description: "Default delivery channels" },
-  { key: "retention",        label: "Data Retention",   icon: HardDrive,       description: "Recording & log retention" },
   { key: "localization",     label: "Localization",     icon: Globe,           description: "Date, time and number formats" },
   { key: "integrations",     label: "Integrations",     icon: Webhook,         description: "Webhooks, SSO, third-party" },
   { key: "security",         label: "Security",         icon: ShieldCheck,     description: "Auth policy & audit" },
@@ -202,11 +200,33 @@ const DEFAULT_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
   },
 };
 
+/**
+ * Permissions that are NEVER available to a given role — the toggle is
+ * locked off and rendered as an em-dash so admins can't grant features
+ * that role tier doesn't ship with.
+ */
+const LOCKED_PERMISSIONS: Record<UserRole, Set<string>> = {
+  owner: new Set(),
+  admin: new Set(["manage-billing", "manage-config"]),
+  user: new Set([
+    "manage-cameras",
+    "manage-sites",
+    "manage-rules",
+    "manage-models",
+    "manage-cases",
+    "manage-users",
+    "manage-billing",
+    "manage-config",
+    "view-audit-logs",
+  ]),
+};
+
 function UserAccessSection() {
   const [matrix, setMatrix] = React.useState(DEFAULT_PERMISSIONS);
 
   function toggle(role: UserRole, key: string) {
     if (role === "owner") return;
+    if (LOCKED_PERMISSIONS[role].has(key)) return;
     setMatrix((m) => ({ ...m, [role]: { ...m[role], [key]: !m[role][key] } }));
   }
 
@@ -245,7 +265,20 @@ function UserAccessSection() {
                     <p className="text-[11px] text-muted-foreground">{p.description}</p>
                   </td>
                   {(["owner", "admin", "user"] as UserRole[]).map((r) => {
-                    const checked = matrix[r][p.key] ?? false;
+                    const locked = LOCKED_PERMISSIONS[r].has(p.key);
+                    const checked = !locked && (matrix[r][p.key] ?? false);
+                    if (locked) {
+                      return (
+                        <td key={r} className="px-3 py-3 text-center">
+                          <span
+                            title={`Not available for ${r}`}
+                            className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-[10px] text-muted-foreground/50"
+                          >
+                            —
+                          </span>
+                        </td>
+                      );
+                    }
                     return (
                       <td key={r} className="px-3 py-3 text-center">
                         <button onClick={() => toggle(r, p.key)} disabled={r === "owner"}
@@ -284,6 +317,20 @@ function SlaSection() {
   const [escalateOnMiss, setEscalateOnMiss] = React.useState(true);
   const [businessHoursOnly, setBusinessHoursOnly] = React.useState(false);
   const escalationChain: ("admin" | "owner")[] = ["admin", "owner"];
+
+  /* New SLA stage targets — Acknowledge / Initial Action / Resolution */
+  type Unit = "min" | "hr";
+  interface Stage { value: number; unit: Unit }
+  const [stages, setStages] = React.useState<Record<"acknowledge" | "initial" | "resolution", Stage>>({
+    acknowledge: { value: 5,  unit: "min" },
+    initial:     { value: 30, unit: "min" },
+    resolution:  { value: 4,  unit: "hr"  },
+  });
+  const STAGE_DEFS: { key: "acknowledge" | "initial" | "resolution"; label: string; description: string }[] = [
+    { key: "acknowledge", label: "Acknowledge",    description: "Time to first acknowledgement by an operator." },
+    { key: "initial",     label: "Initial Action", description: "Time to take the first substantive action (assign, dispatch, investigate)." },
+    { key: "resolution",  label: "Resolution",     description: "Time until the incident is fully resolved or escalated to closure." },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -333,6 +380,60 @@ function SlaSection() {
         </div>
       </SectionCard>
 
+      <SectionCard title="SLA Stage Targets" description="Maximum time allowed at each stage of the incident lifecycle.">
+        <div className="space-y-2">
+          {STAGE_DEFS.map((s) => {
+            const stage = stages[s.key];
+            return (
+              <div key={s.key} className={cn("flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-3", !slaEnabled && "opacity-50")}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold text-foreground">{s.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{s.description}</p>
+                </div>
+                <Input
+                  type="number"
+                  min={1}
+                  max={stage.unit === "min" ? 1440 : 168}
+                  step={1}
+                  value={stage.value}
+                  disabled={!slaEnabled}
+                  onChange={(e) =>
+                    setStages((curr) => ({
+                      ...curr,
+                      [s.key]: { ...curr[s.key], value: Math.max(1, Number(e.target.value) || 1) },
+                    }))
+                  }
+                  className="h-8 w-20 text-center font-mono text-[13px]"
+                />
+                <div className="flex items-center rounded-md border border-border bg-card p-0.5">
+                  {(["min", "hr"] as Unit[]).map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      disabled={!slaEnabled}
+                      onClick={() =>
+                        setStages((curr) => ({
+                          ...curr,
+                          [s.key]: { ...curr[s.key], unit: u },
+                        }))
+                      }
+                      className={cn(
+                        "rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                        stage.unit === u
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {u === "min" ? "Mins" : "Hours"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
       <SectionCard title="Escalation" description="What happens when an SLA is missed.">
         <div className="space-y-2">
           <PrefRow icon={TriangleAlert} title="Auto-escalate on SLA miss"
@@ -365,9 +466,6 @@ function SlaSection() {
 /* ── Dashboard ───────────────────────────────────────────────────────── */
 
 function DashboardSection() {
-  const [criticalThreshold, setCriticalThreshold] = React.useState(5);
-  const [warningThreshold, setWarningThreshold] = React.useState(2);
-  const [zoneRefresh, setZoneRefresh] = React.useState(30);
   const [showSystemStatus, setShowSystemStatus] = React.useState(true);
   const [showTopModels, setShowTopModels] = React.useState(true);
   const [showRecentActivity, setShowRecentActivity] = React.useState(true);
@@ -376,74 +474,6 @@ function DashboardSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <SectionCard title="Zone Area Thresholds" description="Severity tiers used by the Dashboard → Zone Areas widget. When an area's incident count crosses these thresholds it changes status.">
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-sev-critical" />
-                Critical threshold
-              </span>
-              <span className="font-mono text-foreground">≥ {criticalThreshold} incidents</span>
-            </label>
-            <input type="range" min={1} max={50} step={1} value={criticalThreshold}
-              onChange={(e) => setCriticalThreshold(Math.max(warningThreshold + 1, Number(e.target.value)))}
-              className="w-full accent-sev-critical" />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Areas with this many active incidents (or more) are flagged Critical (red).
-            </p>
-          </div>
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-warning" />
-                Warning threshold
-              </span>
-              <span className="font-mono text-foreground">≥ {warningThreshold} incidents</span>
-            </label>
-            <input type="range" min={1} max={Math.max(1, criticalThreshold - 1)} step={1} value={warningThreshold}
-              onChange={(e) => setWarningThreshold(Number(e.target.value))}
-              className="w-full accent-warning" />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Areas with this many incidents are flagged Warning (amber). Below this they are Normal (green).
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background px-3 py-2.5 sm:grid-cols-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Critical</p>
-              <p className="font-mono text-[13px] font-bold text-sev-critical">≥ {criticalThreshold}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Warning</p>
-              <p className="font-mono text-[13px] font-bold text-warning">≥ {warningThreshold}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Normal</p>
-              <p className="font-mono text-[13px] font-bold text-success">0 – {Math.max(0, warningThreshold - 1)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Offline</p>
-              <p className="font-mono text-[13px] font-bold text-muted-foreground">No live camera</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Zone area refresh interval
-            </label>
-            <div className="flex items-center gap-2">
-              <Input type="number" min={5} max={600} step={5} value={zoneRefresh}
-                onChange={(e) => setZoneRefresh(Math.max(5, Math.min(600, Number(e.target.value))))}
-                className="h-9 w-32 text-center font-mono text-[13px]" />
-              <span className="text-[12px] font-semibold text-muted-foreground">seconds</span>
-            </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              How often the Dashboard re-counts zone area incidents.
-            </p>
-          </div>
-        </div>
-      </SectionCard>
 
       <SectionCard title="Default Widgets" description="Show or hide sections on the Dashboard.">
         <div className="space-y-2">
@@ -620,55 +650,6 @@ function NotificationsSection() {
   );
 }
 
-/* ── Retention ───────────────────────────────────────────────────────── */
-
-function RetentionSection() {
-  const [recordingDays, setRecordingDays] = React.useState(90);
-  const [auditDays, setAuditDays] = React.useState(365);
-  const [coldArchive, setColdArchive] = React.useState(true);
-  const [autoDelete, setAutoDelete] = React.useState(true);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <SectionCard title="Data Retention" description="How long the system keeps recordings and logs.">
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Recordings Retention</span>
-              <span className="font-mono text-foreground">{recordingDays} days</span>
-            </label>
-            <input type="range" min={7} max={365} step={1} value={recordingDays}
-              onChange={(e) => setRecordingDays(Number(e.target.value))}
-              className="w-full accent-primary" />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Camera recordings older than this are archived or deleted.
-            </p>
-          </div>
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Audit Logs Retention</span>
-              <span className="font-mono text-foreground">{auditDays} days</span>
-            </label>
-            <input type="range" min={30} max={730} step={1} value={auditDays}
-              onChange={(e) => setAuditDays(Number(e.target.value))}
-              className="w-full accent-primary" />
-          </div>
-        </div>
-      </SectionCard>
-      <SectionCard title="Archive & Cleanup">
-        <div className="space-y-2">
-          <PrefRow icon={HardDrive} title="Archive to cold storage"
-            description="Old recordings move to glacier-tier storage instead of being deleted."
-            control={<Toggle checked={coldArchive} onChange={setColdArchive} />} />
-          <PrefRow icon={AlertTriangle} title="Auto-delete after retention"
-            description="When archive is off, permanently delete recordings past the retention window."
-            control={<Toggle checked={autoDelete} onChange={setAutoDelete} />} />
-        </div>
-      </SectionCard>
-    </div>
-  );
-}
-
 /* ── Camera defaults ─────────────────────────────────────────────────── */
 
 function CameraDefaultsSection() {
@@ -799,6 +780,17 @@ function NvrDefaultsSection() {
               <option value="oldest-first">Oldest first (free target % of disk)</option>
               <option value="manual">Manual only (operator-triggered)</option>
             </select>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              {cleanupMethod === "auto-age" && (
+                <><strong className="text-foreground">Auto-age:</strong> any footage older than the configured retention window is deleted on a daily schedule. Predictable storage usage, no manual review.</>
+              )}
+              {cleanupMethod === "oldest-first" && (
+                <><strong className="text-foreground">Oldest first:</strong> when storage crosses the warning threshold, the oldest recordings are removed first until disk usage drops to a safe target. Best for bursty workloads.</>
+              )}
+              {cleanupMethod === "manual" && (
+                <><strong className="text-foreground">Manual only:</strong> nothing is deleted automatically. An operator must trigger cleanup from the NVR detail drawer. Use when retention is governed by an external policy.</>
+              )}
+            </p>
           </div>
         </div>
       </SectionCard>
@@ -869,10 +861,15 @@ function LocalizationSection() {
               {(["mon", "sun"] as const).map((opt) => (
                 <button key={opt} onClick={() => setWeekStart(opt)}
                   className={cn(
-                    "flex-1 rounded-md border px-3 py-2 text-[12px] font-semibold transition-colors",
+                    "relative flex-1 rounded-md border px-3 py-2 text-[12px] font-semibold transition-colors",
                     weekStart === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "mon" ? "Monday" : "Sunday"}
+                  {opt === "mon" && (
+                    <span className="ml-1.5 inline-flex items-center rounded-full border border-success/40 bg-success/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-success">
+                      Default
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1078,7 +1075,6 @@ export default function SystemConfigPage() {
           {section === "camera-defaults"  && <CameraDefaultsSection />}
           {section === "nvr-defaults"     && <NvrDefaultsSection />}
           {section === "notifications"    && <NotificationsSection />}
-          {section === "retention"        && <RetentionSection />}
           {section === "localization"     && <LocalizationSection />}
           {section === "integrations"     && <IntegrationsSection />}
           {section === "security"         && <SecuritySection />}

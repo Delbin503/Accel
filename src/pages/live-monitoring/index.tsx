@@ -375,8 +375,12 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
 
 /* ── Custom view (drag + drop + resize) ──────────────────────────────── */
 
-const GRID_COLS = 12;
-const GRID_ROWS = 8;
+const DEFAULT_GRID_COLS = 12;
+const DEFAULT_GRID_ROWS = 8;
+const MIN_GRID_COLS = 2;
+const MAX_GRID_COLS = 24;
+const MIN_GRID_ROWS = 2;
+const MAX_GRID_ROWS = 16;
 const CELL_SIZE_PX = 56;
 
 function LayoutSwitcher({
@@ -500,9 +504,98 @@ function LayoutSwitcher({
   );
 }
 
+/* ── Grid size stepper used inside the Custom view toolbar ──────────── */
+function GridSizeControl({
+  cols,
+  rows,
+  onChange,
+}: {
+  cols: number;
+  rows: number;
+  onChange: (cols: number, rows: number) => void;
+}) {
+  function bumpCols(delta: number) {
+    onChange(Math.max(MIN_GRID_COLS, Math.min(MAX_GRID_COLS, cols + delta)), rows);
+  }
+  function bumpRows(delta: number) {
+    onChange(cols, Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, rows + delta)));
+  }
+  return (
+    <div className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px]">
+      <span className="font-semibold uppercase tracking-wider text-muted-foreground">Grid</span>
+      {/* Columns */}
+      <div className="inline-flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => bumpCols(-1)}
+          disabled={cols <= MIN_GRID_COLS}
+          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label="Fewer columns"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min={MIN_GRID_COLS}
+          max={MAX_GRID_COLS}
+          value={cols}
+          onChange={(e) => {
+            const v = Math.max(MIN_GRID_COLS, Math.min(MAX_GRID_COLS, Number(e.target.value) || MIN_GRID_COLS));
+            onChange(v, rows);
+          }}
+          className="h-5 w-8 rounded border border-input bg-background text-center font-mono text-[11px] text-foreground outline-none focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={() => bumpCols(1)}
+          disabled={cols >= MAX_GRID_COLS}
+          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label="More columns"
+        >
+          +
+        </button>
+      </div>
+      <span className="text-muted-foreground/60">×</span>
+      {/* Rows */}
+      <div className="inline-flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => bumpRows(-1)}
+          disabled={rows <= MIN_GRID_ROWS}
+          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label="Fewer rows"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min={MIN_GRID_ROWS}
+          max={MAX_GRID_ROWS}
+          value={rows}
+          onChange={(e) => {
+            const v = Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, Number(e.target.value) || MIN_GRID_ROWS));
+            onChange(cols, v);
+          }}
+          className="h-5 w-8 rounded border border-input bg-background text-center font-mono text-[11px] text-foreground outline-none focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={() => bumpRows(1)}
+          disabled={rows >= MAX_GRID_ROWS}
+          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label="More rows"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CustomView({
   cameras, allCameras, tiles, onChangeTiles, pinnedIds, onTogglePin,
   layouts, activeLayoutId, onSelectLayout, onCreateLayout, onRenameLayout, onDuplicateLayout, onDeleteLayout,
+  cols, rows, onChangeGrid,
 }: {
   cameras: CameraData[];
   allCameras: CameraData[];
@@ -517,7 +610,12 @@ function CustomView({
   onRenameLayout: (id: string, name: string) => void;
   onDuplicateLayout: (id: string) => void;
   onDeleteLayout: (id: string) => void;
+  cols: number;
+  rows: number;
+  onChangeGrid: (cols: number, rows: number) => void;
 }) {
+  const GRID_COLS = cols;
+  const GRID_ROWS = rows;
   // Local mutator that wraps onChangeTiles in a setState-style API for ergonomics inside this component.
   const setTiles = React.useCallback((updater: CustomTile[] | ((prev: CustomTile[]) => CustomTile[])) => {
     const next = typeof updater === "function" ? (updater as (p: CustomTile[]) => CustomTile[])(tiles) : updater;
@@ -640,6 +738,18 @@ function CustomView({
         <span className="rounded-full bg-muted px-1.5 py-px text-[10px] text-muted-foreground">
           {tiles.length} tile{tiles.length === 1 ? "" : "s"}
         </span>
+        {editing && (
+          <GridSizeControl
+            cols={GRID_COLS}
+            rows={GRID_ROWS}
+            onChange={onChangeGrid}
+          />
+        )}
+        {!editing && (
+          <span className="rounded-full border border-border bg-background px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+            {GRID_COLS}×{GRID_ROWS}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-1.5">
           {editing ? (
             <>
@@ -836,7 +946,7 @@ export default function LiveMonitoringPage() {
   const {
     pinned, togglePin,
     customLayouts, activeLayoutId,
-    setActiveLayout, setLayoutTiles, createLayout, renameLayout, deleteLayout, duplicateLayout,
+    setActiveLayout, setLayoutTiles, setLayoutGrid, createLayout, renameLayout, deleteLayout, duplicateLayout,
   } = useLiveMonitoringStore();
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]); // empty = all
   const [search, setSearch] = React.useState("");
@@ -942,6 +1052,9 @@ export default function LiveMonitoringPage() {
           cameras={filteredCameras}
           allCameras={allCameras}
           tiles={activeTiles}
+          cols={activeLayout?.cols ?? DEFAULT_GRID_COLS}
+          rows={activeLayout?.rows ?? DEFAULT_GRID_ROWS}
+          onChangeGrid={(c, r) => activeLayout && setLayoutGrid(activeLayout.id, c, r)}
           onChangeTiles={(next) => activeLayout && setLayoutTiles(activeLayout.id, next)}
           pinnedIds={pinned}
           onTogglePin={togglePin}

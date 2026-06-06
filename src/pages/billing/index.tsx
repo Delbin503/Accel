@@ -994,10 +994,9 @@ export default function BillingPage() {
           <div className="flex flex-col gap-4">
             {/* Workspace summary */}
             <SectionCard title="Workspace summary" description="Aggregated across all active site subscriptions.">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <KpiTile label="Active Subs" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} txt="text-foreground" />
                 <KpiTile label="Sites Covered" value={`${activeSubs.length}`} sub={`of ${sites.length} sites`} txt="text-foreground" />
-                <KpiTile label="Monthly Spend" value={`$${totalMonthly.toLocaleString()}`} sub="Recurring" txt="text-success" />
                 <KpiTile label="Total Seats" value={totalSeats} sub={`${totalUsers} users`} txt="text-info" />
               </div>
             </SectionCard>
@@ -1044,51 +1043,6 @@ export default function BillingPage() {
               )}
             </SectionCard>
 
-            {/* Compare plans */}
-            <SectionCard
-              title="Compare Plans"
-              description="Choose the right tier for each site."
-              action={
-                <a href="https://accel.ai/pricing" target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[12px] text-muted-foreground underline hover:text-primary">
-                  Full pricing <ArrowUpRight className="size-3" />
-                </a>
-              }
-            >
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {TIER_ORDER.map((tier) => {
-                  const p = PLANS[tier];
-                  const color = PLAN_COLORS[tier];
-                  const Icon = PLAN_ICONS[tier];
-                  return (
-                    <div key={tier} className={cn("relative overflow-hidden rounded-xl border bg-background p-4", color.border, p.highlight && "ring-1 ring-secondary")}>
-                      {p.highlight && (
-                        <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-                          <Sparkles className="size-2.5" /> Most popular
-                        </span>
-                      )}
-                      <div className={cn("mb-2 flex size-9 items-center justify-center rounded-lg border", color.bg, color.border)}>
-                        <Icon className={cn("size-4", color.text)} />
-                      </div>
-                      <p className="text-[14px] font-bold text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{p.tagline}</p>
-                      <div className="my-3 flex items-baseline gap-1">
-                        <span className={cn("font-mono text-[22px] font-bold leading-none", color.text)}>${p.pricePerMonth}</span>
-                        <span className="text-[10px] text-muted-foreground">/site /mo</span>
-                      </div>
-                      <ul className="space-y-1.5 text-[11px]">
-                        {p.features.slice(0, 5).map((f) => (
-                          <li key={f} className="flex items-start gap-1.5">
-                            <Check className={cn("mt-0.5 size-3 flex-shrink-0", color.text)} />
-                            <span className="text-muted-foreground">{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            </SectionCard>
           </div>
 
           {/* Right column */}

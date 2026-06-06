@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from "recharts";
 import {
   FolderOpen,
@@ -103,20 +104,6 @@ function SevRow({ kind, value, total }: { kind: SevKind; value: number; total: n
   );
 }
 
-const ZONE_STATUS_STYLES = {
-  critical: { bg: "bg-sev-critical/15", border: "border-sev-critical/40", text: "text-sev-critical", label: "Critical", dot: "bg-sev-critical" },
-  warning:  { bg: "bg-warning/15",      border: "border-warning/40",      text: "text-warning",      label: "Warning",  dot: "bg-warning" },
-  normal:   { bg: "bg-success/15",      border: "border-success/40",      text: "text-success",      label: "Normal",   dot: "bg-success" },
-  offline:  { bg: "bg-muted",           border: "border-border",          text: "text-muted-foreground", label: "Offline", dot: "bg-muted-foreground/60" },
-};
-
-function zoneStatus(count: number, offline: boolean): keyof typeof ZONE_STATUS_STYLES {
-  if (offline) return "offline";
-  if (count >= ZONE_SEVERITY_THRESHOLDS.critical) return "critical";
-  if (count >= ZONE_SEVERITY_THRESHOLDS.warning) return "warning";
-  return "normal";
-}
-
 /* ── Per-site colors — Sembawang locked to warning yellow per request ─ */
 const SITE_COLOR_MAP: Record<string, string> = {
   "Sembawang Naval": "var(--warning)",
@@ -126,33 +113,6 @@ const SITE_COLOR_MAP: Record<string, string> = {
 const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--sev-critical)", "var(--primary)"];
 function siteColor(siteName: string, idx: number) {
   return SITE_COLOR_MAP[siteName] ?? SITE_FALLBACK_COLORS[idx % SITE_FALLBACK_COLORS.length];
-}
-
-/* ── System Health row tile ─────────────────────────────────────────── */
-
-function SysRow({
-  icon: Icon, label, value, pct, tone,
-}: {
-  icon: React.ElementType; label: string; value: string; pct: number; tone: "ok" | "warn" | "crit";
-}) {
-  const t =
-    tone === "crit" ? { bar: "bg-sev-critical", txt: "text-sev-critical" } :
-    tone === "warn" ? { bar: "bg-warning",      txt: "text-warning" } :
-                      { bar: "bg-success",      txt: "text-success" };
-  return (
-    <div className="rounded-md border border-border bg-background px-2.5 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-          <Icon className="size-3" />
-          {label}
-        </span>
-        <span className={cn("font-mono text-[13px] font-bold leading-none", t.txt)}>{value}</span>
-      </div>
-      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full transition-all", t.bar)} style={{ width: `${Math.min(100, pct)}%` }} />
-      </div>
-    </div>
-  );
 }
 
 /* ── Site multi-select dropdown ──────────────────────────────────────── */
@@ -223,40 +183,6 @@ function SiteMultiSelect({
         </div>
       </PopoverContent>
     </Popover>
-  );
-}
-
-/* ── System Health donut ─────────────────────────────────────────────── */
-
-function SystemHealthDonut({ healthPct }: { healthPct: number }) {
-  const tone = healthPct >= 80 ? "var(--success)" : healthPct >= 50 ? "var(--warning)" : "var(--sev-critical)";
-  const data = [
-    { name: "Healthy", value: healthPct },
-    { name: "Issues",  value: Math.max(0, 100 - healthPct) },
-  ];
-  return (
-    <div className="relative mx-auto h-[150px] w-[150px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            innerRadius="70%"
-            outerRadius="95%"
-            startAngle={90}
-            endAngle={-270}
-            stroke="none"
-          >
-            <Cell fill={tone} />
-            <Cell fill="var(--muted)" />
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="font-mono text-[26px] font-bold leading-none" style={{ color: tone }}>{healthPct}%</p>
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Healthy</p>
-      </div>
-    </div>
   );
 }
 
@@ -416,12 +342,6 @@ export default function DashboardPage() {
     return zoneAreas.filter((z) => zoneSiteFilter.includes(z.siteKey));
   }, [zoneAreas, zoneSiteFilter]);
 
-  const zoneSummary = React.useMemo(() => {
-    const out = { critical: 0, warning: 0, normal: 0, offline: 0 };
-    for (const z of filteredZoneAreas) out[zoneStatus(z.total, z.cameraOffline)] += 1;
-    return out;
-  }, [filteredZoneAreas]);
-
   const camerasBySite = sites.map((s) => ({
     name: s.name,
     online: cameras.filter((c) => c.siteId === s.id && c.status === "online").length,
@@ -449,15 +369,67 @@ export default function DashboardPage() {
     { label: "Network",  value: "18%", pct: 18, tone: "ok",   icon: Network },
     { label: "Uptime",   value: "42d", pct: 92, tone: "ok",   icon: Power },
   ];
-  const healthPct = Math.round(
-    (healthMetrics.filter((m) => m.tone === "ok").length / healthMetrics.length) * 100
-  );
+  /* ── System status pill — also fires an alert toast when unhealthy ──── */
+  const worstHealth = healthMetrics.find((m) => m.tone === "crit")
+    ?? healthMetrics.find((m) => m.tone === "warn");
+  const systemStatus: "healthy" | "degraded" | "critical" =
+    worstHealth?.tone === "crit" ? "critical" :
+    worstHealth?.tone === "warn" ? "degraded" :
+    "healthy";
+
+  React.useEffect(() => {
+    if (systemStatus === "healthy" || !worstHealth) return;
+    const id = toast.warning(
+      <div className="flex flex-col gap-0.5">
+        <p className="text-[13px] font-bold">
+          Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
+        </p>
+        <p className="text-[12px] text-muted-foreground">
+          {worstHealth.label} usage is at <strong className="text-foreground">{worstHealth.value}</strong>. Contact your administrator immediately.
+        </p>
+      </div>,
+      {
+        duration: Infinity,
+        action: {
+          label: "Acknowledge",
+          onClick: () => toast.dismiss(id),
+        },
+      }
+    );
+    return () => { toast.dismiss(id); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemStatus, worstHealth?.label, worstHealth?.value]);
+
+  const statusStyles =
+    systemStatus === "critical" ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" :
+    systemStatus === "degraded" ? "border-warning/40 bg-warning/10 text-warning" :
+                                  "border-success/40 bg-success/10 text-success";
+  const statusLabel =
+    systemStatus === "critical" ? "Critical" :
+    systemStatus === "degraded" ? "Degraded" :
+                                  "Healthy";
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
-          <PageHeader.Title>Dashboard</PageHeader.Title>
+          <div className="flex flex-wrap items-center gap-2">
+            <PageHeader.Title>Dashboard</PageHeader.Title>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                statusStyles
+              )}
+            >
+              <span className={cn(
+                "size-1.5 rounded-full",
+                systemStatus === "critical" ? "bg-sev-critical" :
+                systemStatus === "degraded" ? "bg-warning animate-pulse" :
+                                              "bg-success animate-pulse"
+              )} />
+              System {statusLabel}
+            </span>
+          </div>
           <PageHeader.Description>
             Workspace-wide overview — pulled live from cameras, detections, incidents, deployments and storage.
           </PageHeader.Description>
@@ -514,9 +486,9 @@ export default function DashboardPage() {
         />
       </KpiGrid>
 
-      {/* Detections trend + System Health (side-by-side) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Detections trend — full width now that System Health lives in the header */}
+      <div>
+        <div>
           <Section
             title="Detections by Site — Severity Breakdown"
             action={
@@ -632,22 +604,6 @@ export default function DashboardPage() {
           </Section>
         </div>
 
-        <Section
-          title="System Health"
-          action={
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-success">
-              <span className="size-1.5 animate-pulse rounded-full bg-success" />
-              Live
-            </span>
-          }
-        >
-          <SystemHealthDonut healthPct={healthPct} />
-          <div className="mt-3 space-y-1.5">
-            {healthMetrics.map((m) => (
-              <SysRow key={m.label} icon={m.icon} label={m.label} value={m.value} pct={m.pct} tone={m.tone} />
-            ))}
-          </div>
-        </Section>
       </div>
 
       {/* Zone Areas — compact cards with click popover */}
@@ -655,17 +611,8 @@ export default function DashboardPage() {
         title="Zone Areas"
         action={
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-sev-critical" /> {zoneSummary.critical}
-            </span>
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-warning" /> {zoneSummary.warning}
-            </span>
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-success" /> {zoneSummary.normal}
-            </span>
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-muted-foreground/60" /> {zoneSummary.offline}
+            <span className="text-muted-foreground">
+              <strong className="text-foreground">{filteredZoneAreas.length}</strong> area{filteredZoneAreas.length === 1 ? "" : "s"}
             </span>
             <SiteMultiSelect options={siteFilterOptions} selected={zoneSiteFilter} onChange={setZoneSiteFilter} />
           </div>
@@ -678,45 +625,33 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {filteredZoneAreas.map((z) => {
-              const status = zoneStatus(z.total, z.cameraOffline);
-              const s = ZONE_STATUS_STYLES[status];
               return (
                 <Popover key={`${z.site}-${z.area}`}>
                   <PopoverTrigger asChild>
                     <button
-                      className={cn(
-                        "group flex flex-col gap-1 rounded-lg border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40",
-                        s.border
-                      )}
+                      className="group flex flex-col gap-1 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40"
                     >
                       <div className="flex items-center gap-1.5">
-                        <MapPin className={cn("size-3 flex-shrink-0", s.text)} />
+                        <MapPin className="size-3 flex-shrink-0 text-muted-foreground" />
                         <p className="truncate text-[11px] font-semibold text-foreground">{z.area}</p>
                       </div>
                       <p className="truncate text-[10px] text-muted-foreground">{z.site}</p>
                       <div className="mt-0.5 flex items-center justify-between gap-1.5">
                         <span className="inline-flex items-baseline gap-1 font-mono">
-                          <span className="text-[15px] font-bold leading-none text-foreground">{z.total}</span>
-                          <span className="text-[9px] text-muted-foreground">inc</span>
+                          <span className="text-[17px] font-bold leading-none text-foreground">{z.total}</span>
+                          <span className="text-[10px] text-muted-foreground">incident{z.total === 1 ? "" : "s"}</span>
                         </span>
                         <span className="inline-flex items-center gap-0.5 text-[9px] text-muted-foreground">
                           <Video className="size-2.5" />
                           {z.cameras}
                         </span>
                       </div>
-                      <span className={cn(
-                        "mt-0.5 inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-px text-[8px] font-bold uppercase tracking-wider",
-                        s.bg, s.border, s.text
-                      )}>
-                        <span className={cn("size-1 rounded-full", s.dot)} />
-                        {s.label}
-                      </span>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-72 p-0">
                     <div className="border-b border-border px-3 py-2.5">
                       <p className="inline-flex items-center gap-1.5 text-[12px] font-bold text-foreground">
-                        <MapPin className={cn("size-3", s.text)} />
+                        <MapPin className="size-3 text-muted-foreground" />
                         {z.area}
                       </p>
                       <p className="mt-0.5 text-[10px] text-muted-foreground">{z.site}</p>

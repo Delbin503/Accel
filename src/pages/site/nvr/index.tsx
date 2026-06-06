@@ -486,11 +486,8 @@ function NvrDrawer({
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-2">
-                <SheetTitle className="truncate text-[17px] font-bold">{nvr.name}</SheetTitle>
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                  {nvr.id}
-                </span>
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                <StatusPill status={nvr.status} />
                 {nvr.status === "offline" && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sev-critical">
                     <AlertTriangle className="size-3" />
@@ -498,14 +495,18 @@ function NvrDrawer({
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                <StatusPill status={nvr.status} />
-                <span>·</span>
+              <div className="mb-1 flex items-center gap-2">
+                <SheetTitle className="truncate text-[17px] font-bold">{nvr.name}</SheetTitle>
+                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                  {nvr.id}
+                </span>
+              </div>
+              <p className="inline-flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground">
                 <MapPin className="size-3" />
                 {nvr.siteName} · {nvr.areaName}
-                <span>·</span>
+                <span className="text-muted-foreground/40">·</span>
                 <span className="font-mono">{nvr.model}</span>
-              </div>
+              </p>
             </div>
             <button
               onClick={onClose}

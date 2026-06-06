@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell, X, AlertTriangle, FolderOpen, Server, Users as UsersIcon, CreditCard, CheckCheck, Calendar, ArrowUpRight,
+  Bell, AlertTriangle, FolderOpen, Server, Users as UsersIcon, CreditCard, CheckCheck, Calendar, ArrowUpRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { useNotificationsStore, type NotificationItem, type NotificationKind } f
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
   incident: { bg: "bg-sev-critical/15", text: "text-sev-critical", icon: AlertTriangle, label: "Incident" },
-  case:     { bg: "bg-secondary/15",    text: "text-secondary",    icon: FolderOpen,    label: "Case" },
+  case:     { bg: "bg-primary/15",      text: "text-primary",      icon: FolderOpen,    label: "Case" },
   system:   { bg: "bg-info/15",         text: "text-info",         icon: Server,        label: "System" },
   user:     { bg: "bg-success/15",      text: "text-success",      icon: UsersIcon,     label: "Team" },
   billing:  { bg: "bg-warning/15",      text: "text-warning",      icon: CreditCard,    label: "Billing" },
@@ -123,28 +123,18 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
         className="flex w-[min(440px,92vw)] max-w-[95vw] flex-col gap-0 p-0"
       >
         <SheetHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <SheetTitle className="inline-flex items-center gap-2 text-base font-bold">
-                <Bell className="size-4 text-primary" />
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center rounded-full bg-sev-critical px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </SheetTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
-                {filtered.length} of {items.length} shown
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
+          <SheetTitle className="inline-flex items-center gap-2 pr-8 text-base font-bold">
+            <Bell className="size-4 text-primary" />
+            Notifications
+            {unreadCount > 0 && (
+              <span className="inline-flex items-center justify-center rounded-full bg-sev-critical px-1.5 py-0.5 text-[10px] font-bold text-white">
+                {unreadCount}
+              </span>
+            )}
+          </SheetTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            {filtered.length} of {items.length} shown
+          </p>
         </SheetHeader>
 
         {/* Filter bar */}

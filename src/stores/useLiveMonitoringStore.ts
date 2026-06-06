@@ -16,6 +16,9 @@ export type CustomLayout = {
   id: string;
   name: string;
   tiles: CustomTile[];
+  /** User-configurable grid dimensions. Defaults backfilled to 12×8. */
+  cols?: number;
+  rows?: number;
 };
 
 interface LiveMonitoringState {
@@ -33,6 +36,7 @@ interface LiveMonitoringState {
   deleteLayout: (id: string) => void;
   setActiveLayout: (id: string | null) => void;
   setLayoutTiles: (id: string, tiles: CustomTile[]) => void;
+  setLayoutGrid:  (id: string, cols: number, rows: number) => void;
   duplicateLayout: (id: string, newName: string) => string;
 }
 
@@ -88,6 +92,21 @@ export const useLiveMonitoringStore = create<LiveMonitoringState>()(
       setLayoutTiles: (id, tiles) =>
         set((s) => ({
           customLayouts: s.customLayouts.map((l) => (l.id === id ? { ...l, tiles } : l)),
+        })),
+      setLayoutGrid: (id, cols, rows) =>
+        set((s) => ({
+          customLayouts: s.customLayouts.map((l) => {
+            if (l.id !== id) return l;
+            // Clamp existing tiles so they fit the new grid bounds.
+            const tiles = l.tiles.map((t) => ({
+              ...t,
+              col:  Math.min(t.col,  cols - t.cols + 1),
+              row:  Math.min(t.row,  rows - t.rows + 1),
+              cols: Math.min(t.cols, cols),
+              rows: Math.min(t.rows, rows),
+            }));
+            return { ...l, cols, rows, tiles };
+          }),
         })),
       duplicateLayout: (id, newName) => {
         const source = get().customLayouts.find((l) => l.id === id);

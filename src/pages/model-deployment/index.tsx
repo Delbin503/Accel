@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
-  ChevronUp,
-  ChevronLeft,
   ChevronRight,
-  SlidersHorizontal,
   Check,
   X,
   Plus,
@@ -19,8 +16,6 @@ import {
   AlertTriangle,
   Calendar,
   Trash2,
-  MoreVertical,
-  Pencil,
   Pause,
   Square,
   Shield,
@@ -33,7 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
-import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
+import { MOCK_CAMERAS } from "@/mocks/cameras";
 import {
   MOCK_DEPLOYMENTS,
   getSiteSummaries,
@@ -68,6 +63,47 @@ const DEP_STATUS: Record<DeploymentStatus, { bg: string; text: string; dot: stri
   stopped:          { bg: "bg-muted border-border",                  text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Stopped" },
   failed:           { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical", label: "Failed" },
 };
+
+/* ── Model health (derived from underlying deployments) ─────────────────── */
+
+type ModelHealth = "healthy" | "degraded" | "offline" | "overloaded";
+
+const MODEL_HEALTH_STYLES: Record<ModelHealth, { bg: string; text: string; dot: string; label: string; border: string }> = {
+  healthy:    { bg: "bg-success/15",      text: "text-success",      dot: "bg-success",      border: "border-success/40",      label: "Healthy" },
+  degraded:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      border: "border-warning/40",      label: "Degraded" },
+  offline:    { bg: "bg-muted",           text: "text-muted-foreground", dot: "bg-muted-foreground", border: "border-border",   label: "Offline" },
+  overloaded: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", border: "border-sev-critical/40", label: "Overloaded" },
+};
+
+function ModelHealthPill({ health }: { health: ModelHealth }) {
+  const s = MODEL_HEALTH_STYLES[health];
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        s.bg, s.border, s.text
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", s.dot)} />
+      {s.label}
+    </span>
+  );
+}
+
+function computeModelHealth(deps: DeploymentData[]): ModelHealth {
+  if (deps.length === 0) return "offline";
+  const active = deps.filter((d) => d.status === "active").length;
+  const failed = deps.filter((d) => d.status === "failed").length;
+  const totalEvents = deps.reduce((s, d) => s + d.eventCount, 0);
+  // Overloaded — high per-active-camera event load
+  if (active > 0 && totalEvents / active > 80) return "overloaded";
+  // Offline — nothing running, or majority failed
+  if (active === 0 || failed >= Math.ceil(deps.length / 2)) return "offline";
+  // Healthy — everything active
+  if (active === deps.length) return "healthy";
+  // Mixed
+  return "degraded";
+}
 
 function StatusPill({ status }: { status: DeploymentStatus }) {
   const s = DEP_STATUS[status];
@@ -700,317 +736,17 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 /* ─── History view ───────────────────────────────────────────────────────── */
 
-type HistoryKpi = "all" | "active" | "paused" | "pending-camera" | "stopped" | "failed";
 
-const HISTORY_KPIS: {
-  key: HistoryKpi;
-  label: string;
-  sub: string;
-  accent: KpiAccent;
-  getValue: (items: DeploymentData[]) => number;
-}[] = [
-  { key: "all",            label: "Total",   sub: "All recorded",     accent: "primary",      getValue: (it) => it.length },
-  { key: "active",         label: "Active",  sub: "Producing events", accent: "success",      getValue: (it) => it.filter((d) => d.status === "active").length },
-  { key: "paused",         label: "Paused",  sub: "Auto-paused",      accent: "warning",      getValue: (it) => it.filter((d) => d.status === "paused").length },
-  { key: "pending-camera", label: "Pending", sub: "Awaiting camera",  accent: "info",         getValue: (it) => it.filter((d) => d.status === "pending-camera").length },
-  { key: "stopped",        label: "Stopped", sub: "Manually halted",  accent: "muted",        getValue: (it) => it.filter((d) => d.status === "stopped").length },
-  { key: "failed",         label: "Failed",  sub: "Couldn't start",   accent: "sev-critical", getValue: (it) => it.filter((d) => d.status === "failed").length },
-];
-
-interface DepFilters {
-  site: string[];
-  area: string[];
-  status: string[];
-  model: string[];
-}
-const EMPTY_DEP_FILTERS: DepFilters = { site: [], area: [], status: [], model: [] };
-
-function FilterDropdown({
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  label: string;
-  options: { value: string; label: string }[];
-  selected: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const hasValue = selected.length > 0;
-  const displayLabel = hasValue
-    ? selected.length === 1
-      ? (options.find((o) => o.value === selected[0])?.label ?? label)
-      : `${selected.length} selected`
-    : label;
-  function toggle(value: string) {
-    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
-  }
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
-            open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          <span className="truncate font-medium">{displayLabel}</span>
-          <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-1.5">
-        {options.map((opt) => {
-          const checked = selected.includes(opt.value);
-          return (
-            <button
-              key={opt.value}
-              onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <span className={cn(
-                "flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                checked ? "border-primary bg-primary" : "border-muted-foreground/40"
-              )}>
-                {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-              </span>
-              {opt.label}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-const STATUS_OPTS = [
-  { value: "active", label: "Active" },
-  { value: "paused", label: "Paused" },
-  { value: "pending-camera", label: "Pending" },
-  { value: "stopped", label: "Stopped" },
-  { value: "failed", label: "Failed" },
-];
-
-function FilterPanel({
-  filters,
-  onChange,
-  search,
-  onSearchChange,
-}: {
-  filters: DepFilters;
-  onChange: (f: DepFilters) => void;
-  search: string;
-  onSearchChange: (v: string) => void;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const count = Object.values(filters).reduce((a, b) => a + b.length, 0) + (search ? 1 : 0);
-  function setGroup(g: keyof DepFilters, v: string[]) {
-    onChange({ ...filters, [g]: v });
-  }
-  const modelOpts = MOCK_MODELS.map((m) => ({ value: m.id, label: m.name }));
-  return (
-    <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
-      >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
-          {count > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
-              {count} active
-            </span>
-          ) : (
-            <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All areas", "All models", "All statuses"].map((l) => (
-                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                  {l}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {count > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_DEP_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
-          {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-        </div>
-      </button>
-      {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by ID, model, camera, or operator…"
-              className="h-9 pl-9 text-[13px]"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { key: "site"   as const, label: "Site",   opts: CAMERA_SITES },
-              { key: "area"   as const, label: "Area",   opts: CAMERA_AREAS },
-              { key: "model"  as const, label: "Model",  opts: modelOpts },
-              { key: "status" as const, label: "Status", opts: STATUS_OPTS },
-            ].map(({ key, label, opts }) => (
-              <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-                <FilterDropdown
-                  label={`All ${label.toLowerCase()}s`}
-                  options={opts}
-                  selected={filters[key]}
-                  onChange={(v) => setGroup(key, v)}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DeploymentDrawer({
-  deployment,
-  onClose,
-  onOpenCamera,
-}: {
-  deployment: DeploymentData;
-  onClose: () => void;
-  onOpenCamera: (id: string) => void;
-}) {
-  const camera = MOCK_CAMERAS.find((c) => c.id === deployment.cameraId);
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50" onClick={onClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-[560px] max-w-[92vw] flex-col overflow-hidden border-l border-border bg-card shadow-2xl"
-      >
-        <div className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
-          <div>
-            <div className="mb-1 flex items-center gap-2">
-              <p className="truncate text-[15px] font-bold text-foreground">{deployment.modelName}</p>
-              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                {deployment.id}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-              <StatusPill status={deployment.status} />
-              <span>·</span>
-              <span>Deployed by {deployment.deployedBy}</span>
-              <span>·</span>
-              <span>{deployment.deployedAtDisplay}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {deployment.status === "active" && (
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Pause className="size-3.5" />
-                Pause
-              </Button>
-            )}
-            {(deployment.status === "active" || deployment.status === "paused" || deployment.status === "pending-camera") && (
-              <Button variant="outline" size="sm" className="gap-1.5 text-sev-critical hover:border-sev-critical/40 hover:bg-sev-critical/10 hover:text-sev-critical">
-                <Square className="size-3.5" />
-                Stop
-              </Button>
-            )}
-            <button
-              onClick={onClose}
-              className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 space-y-5 overflow-y-auto p-5">
-
-          {deployment.status === "failed" && deployment.failureReason && (
-            <div className="flex items-start gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.06] px-4 py-3">
-              <AlertTriangle className="size-5 flex-shrink-0 text-sev-critical" />
-              <div>
-                <p className="text-[13px] font-semibold text-foreground">Deployment failed to start</p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">{deployment.failureReason}</p>
-              </div>
-            </div>
-          )}
-
-          {deployment.status === "pending-camera" && (
-            <div className="flex items-start gap-3 rounded-xl border border-info/30 bg-info/[0.06] px-4 py-3">
-              <AlertTriangle className="size-5 flex-shrink-0 text-info" />
-              <div>
-                <p className="text-[13px] font-semibold text-foreground">Awaiting camera reconnect</p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Camera was offline at deploy time. Deployment will auto-resume on reconnect.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Camera summary */}
-          <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Target Camera
-            </p>
-            <button
-              onClick={() => onOpenCamera(deployment.cameraId)}
-              className="group flex w-full items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/30"
-            >
-              <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
-                <Video className="size-4 text-info" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-semibold text-foreground">{deployment.cameraName}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {deployment.cameraId} · {deployment.areaName} · {deployment.siteName}
-                </p>
-              </div>
-              <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary" />
-            </button>
-            {camera && !camera.nvrId && (
-              <div className="mt-2 flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/[0.06] px-2 py-1 text-[10.5px] text-warning">
-                <AlertTriangle className="size-3" />
-                Camera has no NVR linked — events lack replayable footage.
-              </div>
-            )}
-          </div>
-
-          {/* Run metadata */}
-          <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Deployment Metadata
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <Kv label="Deployed By" value={deployment.deployedBy} />
-              <Kv label="Deployed At" value={deployment.deployedAtDisplay} />
-              <Kv label="Validation Run" value={deployment.lastValidationRunId ?? "—"} mono />
-              <Kv label="Events Produced" value={String(deployment.eventCount)} />
-              {deployment.stoppedAtDisplay && <Kv label="Stopped At" value={deployment.stoppedAtDisplay} />}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Kv({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2">
-      <p className="mb-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">{label}</p>
-      <p className={cn("text-[12px] font-semibold text-foreground", mono && "font-mono")}>{value}</p>
-    </div>
-  );
+interface ModelAggregate {
+  modelId: string;
+  modelName: string;
+  totalCameras: number;
+  active: number;
+  paused: number;
+  failed: number;
+  totalEvents: number;
+  health: ModelHealth;
+  deployments: DeploymentData[];
 }
 
 function HistoryView({
@@ -1020,98 +756,329 @@ function HistoryView({
 }) {
   const navigate = useNavigate();
   const [search, setSearch] = React.useState("");
-  const [filters, setFilters] = React.useState<DepFilters>(EMPTY_DEP_FILTERS);
-  const [kpi, setKpi] = React.useState<HistoryKpi>("all");
-  const [sortAsc, setSortAsc] = React.useState(false);
-  const [page, setPage] = React.useState(1);
-  const [drawerId, setDrawerId] = React.useState<string | null>(null);
-  const pageSize = 10;
+  const [healthFilter, setHealthFilter] = React.useState<ModelHealth | "all">("all");
+  const [drawerModelId, setDrawerModelId] = React.useState<string | null>(null);
 
-  const filtered = React.useMemo(() => {
-    let list = deployments.filter((d) => {
-      if (kpi !== "all" && d.status !== kpi) return false;
-      if (filters.site.length > 0 && !filters.site.includes(d.siteId)) return false;
-      if (filters.area.length > 0 && !filters.area.includes(d.areaId)) return false;
-      if (filters.model.length > 0 && !filters.model.includes(d.modelId)) return false;
-      if (filters.status.length > 0 && !filters.status.includes(d.status)) return false;
+  /* Aggregate deployments by modelId */
+  const models = React.useMemo<ModelAggregate[]>(() => {
+    const map = new Map<string, ModelAggregate>();
+    for (const d of deployments) {
+      let bucket = map.get(d.modelId);
+      if (!bucket) {
+        bucket = {
+          modelId: d.modelId,
+          modelName: d.modelName,
+          totalCameras: 0,
+          active: 0,
+          paused: 0,
+          failed: 0,
+          totalEvents: 0,
+          health: "offline",
+          deployments: [],
+        };
+        map.set(d.modelId, bucket);
+      }
+      bucket.totalCameras++;
+      bucket.totalEvents += d.eventCount;
+      if (d.status === "active") bucket.active++;
+      else if (d.status === "paused") bucket.paused++;
+      else if (d.status === "failed") bucket.failed++;
+      bucket.deployments.push(d);
+    }
+    for (const b of map.values()) b.health = computeModelHealth(b.deployments);
+    return Array.from(map.values());
+  }, [deployments]);
+
+  const filteredModels = React.useMemo(() => {
+    return models.filter((m) => {
+      if (healthFilter !== "all" && m.health !== healthFilter) return false;
       if (search) {
         const q = search.toLowerCase();
-        const hay = [d.id, d.modelName, d.cameraName, d.cameraId, d.deployedBy, d.siteName, d.areaName].join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
+        if (!m.modelName.toLowerCase().includes(q) && !m.modelId.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-    list = [...list].sort((a, b) =>
-      sortAsc ? a.deployedAt.localeCompare(b.deployedAt) : b.deployedAt.localeCompare(a.deployedAt)
-    );
-    return list;
-  }, [deployments, kpi, filters, search, sortAsc]);
+  }, [models, healthFilter, search]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const drawerDep = drawerId ? deployments.find((d) => d.id === drawerId) ?? null : null;
-  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpi !== "all");
+  const healthCounts = React.useMemo(() => {
+    const init: Record<ModelHealth, number> = { healthy: 0, degraded: 0, offline: 0, overloaded: 0 };
+    for (const m of models) init[m.health]++;
+    return init;
+  }, [models]);
+
+  const drawerModel = drawerModelId ? models.find((m) => m.modelId === drawerModelId) ?? null : null;
 
   return (
     <div className="flex flex-col gap-4">
 
-      {/* KPI cards */}
-      <KpiGrid cols={6}>
-        {HISTORY_KPIS.map((cfg) => (
-          <KpiCard
-            key={cfg.key}
-            label={cfg.label}
-            value={cfg.getValue(deployments)}
-            sub={cfg.sub}
-            accent={cfg.accent}
-            active={kpi === cfg.key}
-            onClick={() => { setKpi((cur) => (cur === cfg.key ? "all" : cfg.key)); setPage(1); }}
-          />
-        ))}
+      {/* Health filter strip */}
+      <KpiGrid cols={5}>
+        <KpiCard
+          label="All Models"
+          value={models.length}
+          sub="Across all sites"
+          accent="primary"
+          active={healthFilter === "all"}
+          onClick={() => setHealthFilter("all")}
+        />
+        {(["healthy", "degraded", "offline", "overloaded"] as ModelHealth[]).map((h) => {
+          const accent: KpiAccent =
+            h === "healthy"    ? "success" :
+            h === "degraded"   ? "warning" :
+            h === "offline"    ? "muted"   :
+                                 "sev-critical";
+          return (
+            <KpiCard
+              key={h}
+              label={MODEL_HEALTH_STYLES[h].label}
+              value={healthCounts[h]}
+              sub={
+                h === "healthy"    ? "All cameras running" :
+                h === "degraded"   ? "Some cameras paused"  :
+                h === "offline"    ? "No active cameras"    :
+                                     "Excessive event load"
+              }
+              accent={accent}
+              active={healthFilter === h}
+              onClick={() => setHealthFilter((cur) => (cur === h ? "all" : h))}
+            />
+          );
+        })}
       </KpiGrid>
 
-      <FilterPanel filters={filters} onChange={(f) => { setFilters(f); setPage(1); }} search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} />
-
-      {/* Count + sort */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-muted-foreground">
-          <strong className="text-foreground">{filtered.length}</strong>{" "}
-          {filtered.length === 1 ? "deployment" : "deployments"} match current filters
-          {hasFilters && (
-            <button
-              onClick={() => { setSearch(""); setFilters(EMPTY_DEP_FILTERS); setKpi("all"); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
-            >
-              Clear filters
-            </button>
-          )}
+      {/* Search */}
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
+        <Search className="size-3.5 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search models by name or ID…"
+          className="w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+        />
+        <p className="flex-shrink-0 text-[11px] text-muted-foreground">
+          <strong className="text-foreground">{filteredModels.length}</strong> of {models.length} models
         </p>
-        <div className="relative flex-shrink-0">
-          <select
-            value={sortAsc ? "oldest" : "newest"}
-            onChange={(e) => setSortAsc(e.target.value === "oldest")}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[12px] text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        </div>
       </div>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
+      {/* Model grid */}
+      {filteredModels.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Rocket className="size-10 opacity-20" />
-          <p className="text-sm">No deployments match the current filters.</p>
+          <p className="text-sm">No models match the current filters.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredModels.map((m) => {
+            const s = MODEL_HEALTH_STYLES[m.health];
+            return (
+              <button
+                key={m.modelId}
+                onClick={() => setDrawerModelId(m.modelId)}
+                className={cn(
+                  "group flex flex-col gap-3 rounded-xl border bg-card px-4 py-3.5 text-left transition-colors hover:border-primary/40",
+                  m.health === "overloaded" ? "border-sev-critical/30" :
+                  m.health === "degraded"   ? "border-warning/30"      :
+                  m.health === "offline"    ? "border-border"          :
+                                              "border-success/30"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-bold text-foreground group-hover:text-primary">
+                      {m.modelName}
+                    </p>
+                    <p className="font-mono text-[10px] text-muted-foreground">{m.modelId}</p>
+                  </div>
+                  <ModelHealthPill health={m.health} />
+                </div>
+
+                <div className="flex items-baseline gap-1.5">
+                  <span className={cn("font-mono text-[26px] font-bold leading-none", s.text)}>
+                    {m.totalCameras}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    camera{m.totalCameras === 1 ? "" : "s"} deployed
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                  <Stat label="Active"  value={m.active}  tone="success" />
+                  <Stat label="Paused"  value={m.paused}  tone="warning" />
+                  <Stat label="Failed"  value={m.failed}  tone="sev-critical" />
+                </div>
+
+                <div className="flex items-center justify-between border-t border-border/60 pt-2 text-[10px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <Eye className="size-3" />
+                    {m.totalEvents.toLocaleString()} events
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    Open details
+                    <ChevronRight className="size-3" />
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {drawerModel && (
+        <ModelDeploymentsDrawer
+          model={drawerModel}
+          onClose={() => setDrawerModelId(null)}
+          onOpenCamera={(id) => navigate("/site/cameras", { state: { openCameraId: id } })}
+        />
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: "success" | "warning" | "sev-critical" }) {
+  const txt =
+    tone === "success"      ? "text-success" :
+    tone === "warning"      ? "text-warning" :
+                              "text-sev-critical";
+  return (
+    <div className="rounded-md border border-border/60 bg-background px-2 py-1.5">
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
+      <p className={cn("mt-0.5 font-mono text-[13px] font-bold leading-none", txt)}>{value}</p>
+    </div>
+  );
+}
+
+/* ── Model deployments drawer — cameras using a given model ─────────────── */
+
+function ModelDeploymentsDrawer({
+  model,
+  onClose,
+  onOpenCamera,
+}: {
+  model: ModelAggregate;
+  onClose: () => void;
+  onOpenCamera: (cameraId: string) => void;
+}) {
+  const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
+  const [areaFilter, setAreaFilter] = React.useState<string[]>([]);
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+
+  /* Reset selection when filters change */
+  const rows = React.useMemo(() => {
+    return model.deployments.filter((d) => {
+      if (siteFilter.length > 0 && !siteFilter.includes(d.siteId)) return false;
+      if (areaFilter.length > 0 && !areaFilter.includes(d.areaId)) return false;
+      return true;
+    });
+  }, [model.deployments, siteFilter, areaFilter]);
+
+  const siteOptions = React.useMemo(() => {
+    const seen = new Set<string>();
+    return model.deployments
+      .filter((d) => (seen.has(d.siteId) ? false : seen.add(d.siteId)))
+      .map((d) => ({ value: d.siteId, label: d.siteName }));
+  }, [model.deployments]);
+
+  const areaOptions = React.useMemo(() => {
+    const seen = new Set<string>();
+    return model.deployments
+      .filter((d) => (seen.has(d.areaId) ? false : seen.add(d.areaId)))
+      .map((d) => ({ value: d.areaId, label: `${d.areaName} · ${d.siteName}` }));
+  }, [model.deployments]);
+
+  function toggleRow(id: string) {
+    setSelected((s) => {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelected((s) => {
+      if (s.size === rows.length) return new Set();
+      return new Set(rows.map((r) => r.id));
+    });
+  }
+
+  function runAction(label: string) {
+    toast.success(`${label} · ${selected.size} camera${selected.size === 1 ? "" : "s"}`, {
+      description: `Action queued for ${selected.size} deployment${selected.size === 1 ? "" : "s"} of ${model.modelName}.`,
+    });
+    setSelected(new Set());
+  }
+
+  const selectedCount = selected.size;
+  const allChecked = rows.length > 0 && selectedCount === rows.length;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Drawer */}
+      <aside className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-2xl">
+        {/* Header */}
+        <div className="border-b border-border bg-card px-5 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5">
+                <ModelHealthPill health={model.health} />
+              </div>
+              <h2 className="text-[17px] font-bold leading-snug text-foreground">{model.modelName}</h2>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                <span className="font-mono">{model.modelId}</span>
+                {" · "}
+                <strong className="text-foreground">{model.totalCameras}</strong> camera{model.totalCameras === 1 ? "" : "s"}
+                {" · "}
+                <strong className="text-foreground">{model.totalEvents.toLocaleString()}</strong> events
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Filter row */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card/40 px-5 py-3">
+          <DrawerFilter label="Site"  options={siteOptions} selected={siteFilter} onChange={setSiteFilter} icon={MapPin} />
+          <DrawerFilter label="Area"  options={areaOptions} selected={areaFilter} onChange={setAreaFilter} icon={Crosshair} />
+          {(siteFilter.length > 0 || areaFilter.length > 0) && (
+            <button
+              onClick={() => { setSiteFilter([]); setAreaFilter([]); }}
+              className="text-[11px] text-muted-foreground underline hover:text-foreground"
+            >
+              Clear
+            </button>
+          )}
+          <p className="ml-auto text-[11px] text-muted-foreground">
+            Showing <strong className="text-foreground">{rows.length}</strong> of {model.totalCameras}
+          </p>
+        </div>
+
+        {/* Camera table */}
+        <div className="flex-1 overflow-auto">
+          {rows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
+              <Video className="size-8 opacity-30" />
+              <p className="text-[13px]">No cameras match the current filters.</p>
+            </div>
+          ) : (
             <table className="w-full">
-              <thead className="bg-muted/30">
+              <thead className="sticky top-0 bg-muted/30 backdrop-blur">
                 <tr className="border-b border-border text-left">
-                  {["ID", "MODEL", "CAMERA", "LOCATION", "STATUS", "DEPLOYED", "EVENTS", ""].map((h) => (
+                  <th className="w-10 px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={allChecked}
+                      onChange={toggleAll}
+                      className="size-3.5 accent-primary"
+                    />
+                  </th>
+                  {["CAMERA", "LOCATION", "STATUS", "EVENTS", "DEPLOYED"].map((h) => (
                     <th key={h} className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
                     </th>
@@ -1119,121 +1086,158 @@ function HistoryView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {pageItems.map((d) => (
-                  <tr
-                    key={d.id}
-                    onClick={() => navigate("/site/cameras", { state: { openCameraId: d.cameraId } })}
-                    className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
-                  >
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
-                        {d.id}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary">
-                        {d.modelName}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-foreground">
-                      <div className="flex flex-col gap-0.5">
-                        <span>{d.cameraName}</span>
-                        <span className="font-mono text-[11px] text-muted-foreground">{d.cameraId}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{d.areaName}</span>
-                        <span className="text-[11px]">{d.siteName}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3"><StatusPill status={d.status} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      <div className="flex flex-col gap-0.5">
+                {rows.map((d) => {
+                  const isSel = selected.has(d.id);
+                  return (
+                    <tr
+                      key={d.id}
+                      onClick={() => toggleRow(d.id)}
+                      className={cn(
+                        "cursor-pointer text-[13px] transition-colors",
+                        isSel ? "bg-primary/[0.05]" : "hover:bg-muted/20"
+                      )}
+                    >
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSel}
+                          onChange={() => toggleRow(d.id)}
+                          className="size-3.5 accent-primary"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onOpenCamera(d.cameraId); }}
+                            className="text-left font-semibold text-foreground hover:text-primary"
+                          >
+                            {d.cameraName}
+                          </button>
+                          <span className="font-mono text-[10px] text-muted-foreground">{d.cameraId}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-foreground">{d.areaName}</span>
+                          <span className="text-[10px]">{d.siteName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3"><StatusPill status={d.status} /></td>
+                      <td className="px-4 py-3 font-mono text-foreground">{d.eventCount.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="size-3" />
                           {d.deployedAtDisplay}
                         </span>
-                        <span className="text-[11px]">by {d.deployedBy}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{d.eventCount.toLocaleString()}</td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
-                            <MoreVertical className="size-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-44 p-1" align="end">
-                          <button
-                            onClick={() => setDrawerId(d.id)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
-                          >
-                            <Rocket className="size-3.5 text-muted-foreground" />
-                            View details
-                          </button>
-                          <button
-                            onClick={() => navigate(`/site/cameras?camera=${d.cameraId}`)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
-                          >
-                            <Video className="size-3.5 text-muted-foreground" />
-                            Open camera
-                          </button>
-                          <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted">
-                            <Pencil className="size-3.5 text-muted-foreground" />
-                            Edit
-                          </button>
-                          <div className="my-1 border-t border-border" />
-                          <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-sev-critical hover:bg-sev-critical/10">
-                            <Trash2 className="size-3.5" />
-                            Stop &amp; remove
-                          </button>
-                        </PopoverContent>
-                      </Popover>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
-              {filtered.length === 0
-                ? "0 of 0"
-                : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
+          )}
+        </div>
+
+        {/* Bottom action bar — only when selection is non-empty */}
+        {selectedCount > 0 && (
+          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-lg">
+            <p className="text-[12px] text-foreground">
+              <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
+              <button onClick={() => setSelected(new Set())} className="ml-2 text-muted-foreground underline hover:text-foreground">
+                Clear
+              </button>
             </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
-              >
-                <ChevronLeft className="size-3.5" />
-              </button>
-              <span className="px-2 text-[12px] text-foreground">
-                {page} <span className="text-muted-foreground/60">of {pageCount}</span>
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                disabled={page === pageCount}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
-              >
-                <ChevronRight className="size-3.5" />
-              </button>
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => runAction("Restarted")} className="gap-1.5">
+                <Rocket className="size-3" />
+                Restart
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runAction("Paused")} className="gap-1.5">
+                <Pause className="size-3" />
+                Pause
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runAction("Stopped")} className="gap-1.5">
+                <Square className="size-3" />
+                Stop
+              </Button>
+              <Button size="sm" onClick={() => runAction("Removed model from")} className="gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90">
+                <Trash2 className="size-3" />
+                Remove
+              </Button>
             </div>
           </div>
-        </div>
-      )}
-
-      {drawerDep && (
-        <DeploymentDrawer
-          deployment={drawerDep}
-          onClose={() => setDrawerId(null)}
-          onOpenCamera={(id) => { setDrawerId(null); navigate(`/site/cameras?camera=${id}`); }}
-        />
-      )}
+        )}
+      </aside>
     </div>
+  );
+}
+
+function DrawerFilter({
+  label,
+  icon: Icon,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  icon: React.ElementType;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const display =
+    selected.length === 0           ? `All ${label.toLowerCase()}s` :
+    selected.length === 1           ? options.find((o) => o.value === selected[0])?.label ?? "1 selected" :
+                                      `${selected.length} ${label.toLowerCase()}s`;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "inline-flex h-8 items-center justify-between gap-2 rounded-md border bg-background pl-2.5 pr-2 text-[12px] font-semibold transition-colors",
+            open ? "border-primary" : "border-input",
+            selected.length === 0 ? "text-muted-foreground" : "text-foreground"
+          )}
+          style={{ minWidth: "160px" }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Icon className="size-3" />
+            {display}
+          </span>
+          <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="max-h-[260px] w-60 overflow-y-auto p-1.5">
+        <button
+          onClick={() => onChange([])}
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border",
+            selected.length === 0 ? "border-primary bg-primary" : "border-muted-foreground/40")}>
+            {selected.length === 0 && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+          </div>
+          All {label.toLowerCase()}s
+        </button>
+        <div className="my-1 border-t border-border" />
+        {options.map((o) => {
+          const checked = selected.includes(o.value);
+          return (
+            <button
+              key={o.value}
+              onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border",
+                checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
+                {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+              </div>
+              <span className="truncate">{o.label}</span>
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -1264,18 +1268,18 @@ export default function ModelDeploymentPage() {
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
+          <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
             <button onClick={() => setTab("deploy")}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-[12px] font-semibold transition-colors",
                 tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <Plus className="size-3.5" />
               Deploy
             </button>
             <button onClick={() => setTab("history")}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-[12px] font-semibold transition-colors",
                 tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <FileText className="size-3.5" />
-              History ({deployments.length})
+              Models
             </button>
           </div>
         </PageHeader.Actions>
