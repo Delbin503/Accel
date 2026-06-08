@@ -735,7 +735,7 @@ export default function SignUpPage() {
                     </span>
                   </p>
                   <ul className="space-y-1 text-[11px] text-muted-foreground">
-                    {p.features.slice(0, 4).map((f) => (
+                    {p.features.map((f) => (
                       <li key={f} className="flex items-start gap-1.5">
                         <Check
                           className="mt-0.5 size-3 flex-shrink-0 text-success"
@@ -744,11 +744,6 @@ export default function SignUpPage() {
                         <span>{f}</span>
                       </li>
                     ))}
-                    {p.features.length > 4 && (
-                      <li className="ml-4 text-[10px] italic text-muted-foreground/70">
-                        +{p.features.length - 4} more features
-                      </li>
-                    )}
                   </ul>
                 </button>
               );
@@ -1776,10 +1771,7 @@ function InviteUsersModal({
             className="gap-1.5"
           >
             <Mail className="size-3.5" />
-            Send{" "}
-            {parsed.valid.length > 0
-              ? `${parsed.valid.length} Invite${parsed.valid.length === 1 ? "" : "s"}`
-              : "Invites"}
+            Send Invite
           </Button>
           <Button
             variant="ghost"

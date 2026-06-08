@@ -413,27 +413,27 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
-          <div className="flex flex-wrap items-center gap-2">
-            <PageHeader.Title>Dashboard</PageHeader.Title>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                statusStyles
-              )}
-            >
-              <span className={cn(
-                "size-1.5 rounded-full",
-                systemStatus === "critical" ? "bg-sev-critical" :
-                systemStatus === "degraded" ? "bg-warning animate-pulse" :
-                                              "bg-success animate-pulse"
-              )} />
-              System {statusLabel}
-            </span>
-          </div>
+          <PageHeader.Title>Dashboard</PageHeader.Title>
           <PageHeader.Description>
             Workspace-wide overview — pulled live from cameras, detections, incidents, deployments and storage.
           </PageHeader.Description>
         </PageHeader.Content>
+        <PageHeader.Actions>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold",
+              statusStyles
+            )}
+          >
+            <span className={cn(
+              "size-1.5 rounded-full",
+              systemStatus === "critical" ? "bg-sev-critical" :
+              systemStatus === "degraded" ? "bg-warning animate-pulse" :
+                                            "bg-success animate-pulse"
+            )} />
+            System {statusLabel}
+          </span>
+        </PageHeader.Actions>
       </PageHeader>
 
       {/* Date filter row */}

@@ -1,48 +1,60 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  CreditCard,
-  Download,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Crown,
-  ShieldCheck,
-  CircleUser,
-  Plus,
-  ArrowUpRight,
-  ChevronDown,
-  X,
-  FileText,
-  Building2,
-  Sparkles,
-  Zap,
-  Rocket,
-  Check,
-  ArrowUp,
-  ArrowDown,
-  CalendarClock,
+  CreditCard, Download, CheckCircle2, AlertCircle, Clock, Crown, ShieldCheck, CircleUser,
+  Plus, ArrowUpRight, ChevronDown, X, FileText, Building2, Sparkles, Zap, Rocket, Check,
+  ArrowUp, ArrowDown, CalendarClock, Bell, AlertTriangle, Trash2, Star, Filter, RefreshCw,
+  Mail, Globe, RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
-  PLANS,
-  MOCK_INVOICES,
-  ORG_LICENSE_INFO,
-  SEAT_PRICING,
-  type Invoice,
-  type PlanTier,
-  type SiteSubscription,
+  PLANS, MOCK_INVOICES, ORG_LICENSE_INFO, SEAT_PRICING,
+  type Invoice, type PlanTier, type SiteSubscription,
 } from "@/mocks/licenses";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import type { UserRole } from "@/types/users";
 
-/* ── Helpers ──────────────────────────────────────────────────────────── */
+/* ── Date helpers ─────────────────────────────────────────────────────────── */
+
+const BILLING_TODAY = "2026-06-08";
+
+function daysBetween(from: string, to: string): number {
+  return Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000);
+}
+
+/* ── Mock camera usage per subscription (hardcoded for demo) ─────────────── */
+
+const USAGE_DATA: Record<string, { usedCameras: number; usedSeats: number }> = {
+  "SUB-2026-001": { usedCameras: 18, usedSeats: 14 },
+  "SUB-2026-002": { usedCameras: 22, usedSeats: 9 },
+  "SUB-2026-003": { usedCameras: 24, usedSeats: 7 },
+  "SUB-2026-004": { usedCameras: 5, usedSeats: 3 },
+};
+
+/* ── Saved card type ──────────────────────────────────────────────────────── */
+
+interface SavedCard {
+  id: string;
+  brand: "Visa" | "Mastercard" | "Amex";
+  last4: string;
+  expiryMonth: string;
+  expiryYear: string;
+  isDefault: boolean;
+}
+
+const INITIAL_CARDS: SavedCard[] = [
+  { id: "card-1", brand: "Visa", last4: "4242", expiryMonth: "12", expiryYear: "2028", isDefault: true },
+  { id: "card-2", brand: "Mastercard", last4: "5555", expiryMonth: "08", expiryYear: "2027", isDefault: false },
+];
+
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
 
 const ROLE_ICONS: Record<UserRole, { icon: React.ElementType; bg: string; text: string }> = {
   owner: { icon: Crown,       bg: "bg-success/15 border-success/30",      text: "text-success"   },
@@ -57,46 +69,31 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
 };
 
 const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string; chip: string }> = {
-  starter: {
-    bg: "bg-info/10",
-    border: "border-info/40",
-    text: "text-info",
-    chip: "bg-info/15 text-info",
-  },
-  professional: {
-    bg: "bg-secondary/10",
-    border: "border-secondary/40",
-    text: "text-secondary",
-    chip: "bg-secondary/15 text-secondary",
-  },
-  enterprise: {
-    bg: "bg-success/10",
-    border: "border-success/40",
-    text: "text-success",
-    chip: "bg-success/15 text-success",
-  },
+  starter:      { bg: "bg-info/10",       border: "border-info/40",       text: "text-info",       chip: "bg-info/15 text-info"           },
+  professional: { bg: "bg-secondary/10",  border: "border-secondary/40",  text: "text-secondary",  chip: "bg-secondary/15 text-secondary"  },
+  enterprise:   { bg: "bg-success/10",    border: "border-success/40",    text: "text-success",    chip: "bg-success/15 text-success"      },
 };
 
 const STATUS_STYLES = {
-  active:    { bg: "bg-success/15",      text: "text-success",      icon: CheckCircle2, label: "Active"   },
-  trial:     { bg: "bg-info/15",         text: "text-info",         icon: Sparkles,     label: "Trial"    },
-  "past-due":{ bg: "bg-warning/15",      text: "text-warning",      icon: Clock,        label: "Past Due" },
-  cancelled: { bg: "bg-muted",           text: "text-muted-foreground", icon: X,        label: "Cancelled" },
+  active:        { bg: "bg-success/15",          text: "text-success",          icon: CheckCircle2, label: "Active"         },
+  trial:         { bg: "bg-info/15",             text: "text-info",             icon: Sparkles,     label: "Trial"          },
+  "past-due":    { bg: "bg-warning/15",          text: "text-warning",          icon: Clock,        label: "Past Due"       },
+  cancelled:     { bg: "bg-muted",               text: "text-muted-foreground", icon: X,            label: "Cancelled"      },
+  cancelling:    { bg: "bg-warning/15",          text: "text-warning",          icon: CalendarClock,label: "Cancelling"     },
+  payment_failed:{ bg: "bg-sev-critical/15",     text: "text-sev-critical",     icon: AlertCircle,  label: "Payment Failed" },
 };
 
 const INVOICE_STATUS = {
-  paid:    { bg: "bg-success/15 border-success/30",            text: "text-success",      icon: CheckCircle2, label: "Paid"    },
-  pending: { bg: "bg-warning/15 border-warning/30",            text: "text-warning",      icon: Clock,        label: "Pending" },
-  failed:  { bg: "bg-sev-critical/15 border-sev-critical/30",  text: "text-sev-critical", icon: AlertCircle,  label: "Failed"  },
+  paid:    { bg: "bg-success/15 border-success/30",           text: "text-success",      icon: CheckCircle2, label: "Paid"    },
+  pending: { bg: "bg-warning/15 border-warning/30",           text: "text-warning",      icon: Clock,        label: "Pending" },
+  failed:  { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", icon: AlertCircle,  label: "Failed"  },
 };
 
 const TIER_ORDER: PlanTier[] = ["starter", "professional", "enterprise"];
 
-function tierRank(t: PlanTier): number {
-  return TIER_ORDER.indexOf(t);
-}
+function tierRank(t: PlanTier): number { return TIER_ORDER.indexOf(t); }
 
-/* ── Section card ─────────────────────────────────────────────────────── */
+/* ── Section card ─────────────────────────────────────────────────────────── */
 
 function SectionCard({ title, description, action, children }: {
   title: string; description?: string; action?: React.ReactNode; children: React.ReactNode;
@@ -115,7 +112,7 @@ function SectionCard({ title, description, action, children }: {
   );
 }
 
-/* ── KPI summary tile ─────────────────────────────────────────────────── */
+/* ── KPI summary tile ─────────────────────────────────────────────────────── */
 
 function KpiTile({ label, value, sub, txt }: { label: string; value: React.ReactNode; sub: string; txt: string }) {
   return (
@@ -127,11 +124,116 @@ function KpiTile({ label, value, sub, txt }: { label: string; value: React.React
   );
 }
 
-/* ── Site Subscription Card ───────────────────────────────────────────── */
+/* ── Usage progress bar ───────────────────────────────────────────────────── */
 
-function SubscriptionCard({
-  sub, onChangePlan, onCancel, onManageSeats,
-}: {
+function UsageBar({ used, total, label }: { used: number; total: number | "unlimited"; label: string }) {
+  if (total === "unlimited") {
+    return (
+      <div>
+        <div className="mb-1 flex items-center justify-between text-[10px]">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-mono text-muted-foreground">{used} / ∞</span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/4 rounded-full bg-muted-foreground/40" />
+        </div>
+      </div>
+    );
+  }
+  const pct = total > 0 ? (used / total) * 100 : 0;
+  const isOverage = pct >= 100;
+  const isWarning = pct >= 80 && !isOverage;
+  const barClass = isOverage ? "bg-sev-critical" : isWarning ? "bg-warning" : "bg-success";
+  const textClass = isOverage ? "text-sev-critical" : isWarning ? "text-warning" : "text-foreground";
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-[10px]">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn("font-mono font-bold", textClass)}>
+          {used} / {total}
+          {isOverage && <span className="ml-1 text-[9px] text-sev-critical">(+{used - total} over)</span>}
+        </span>
+      </div>
+      <div className="h-1 overflow-hidden rounded-full bg-muted">
+        <div className={cn("h-full rounded-full transition-all", barClass)} style={{ width: `${Math.min(108, pct)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Cancellation grace banner ────────────────────────────────────────────── */
+
+function CancellationGraceBanner({ sub, onUndo }: { sub: SiteSubscription; onUndo: () => void }) {
+  const days = daysBetween(BILLING_TODAY, sub.cancellingAt ?? sub.renewsAt);
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/[0.06] px-4 py-3">
+      <CalendarClock className="mt-0.5 size-4 flex-shrink-0 text-warning" />
+      <div className="min-w-0 flex-1 text-[13px]">
+        <span className="font-semibold text-foreground">
+          Your {PLANS[sub.planTier].name} subscription for {sub.siteName} ends in{" "}
+          <span className="text-warning">{days} day{days !== 1 ? "s" : ""}</span>
+        </span>
+        <span className="ml-1 text-muted-foreground">— access becomes read-only after {sub.renewsDisplay.split(" (")[0]}.</span>
+      </div>
+      <Button size="sm" variant="outline" onClick={onUndo} className="flex-shrink-0 gap-1.5 border-warning/40 text-warning hover:bg-warning/10">
+        <RotateCcw className="size-3.5" />
+        Undo cancellation
+      </Button>
+    </div>
+  );
+}
+
+/* ── Failed payment banner ────────────────────────────────────────────────── */
+
+function FailedPaymentBanner({ sub, graceDays, onRetry }: { sub: SiteSubscription; graceDays: number; onRetry: () => void }) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-sev-critical/40 bg-sev-critical/[0.06] px-4 py-3">
+      <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+      <div className="min-w-0 flex-1 text-[13px]">
+        <span className="font-semibold text-sev-critical">Payment failed</span>
+        <span className="ml-1 text-foreground">for {sub.siteName} —</span>
+        <span className="ml-1 text-muted-foreground">you have {graceDays} day{graceDays !== 1 ? "s" : ""} to update your card before access is restricted.</span>
+      </div>
+      <Button size="sm" variant="outline" onClick={onRetry} className="flex-shrink-0 gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10">
+        <RefreshCw className="size-3.5" />
+        Retry payment
+      </Button>
+    </div>
+  );
+}
+
+/* ── Renewal reminder banner ──────────────────────────────────────────────── */
+
+function RenewalReminderBanner({ sub, days, onDismiss, onUpdatePayment }: {
+  sub: SiteSubscription; days: number; onDismiss: () => void; onUpdatePayment: () => void;
+}) {
+  const plan = PLANS[sub.planTier];
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-info/40 bg-info/[0.06] px-4 py-3">
+      <Bell className="mt-0.5 size-4 flex-shrink-0 text-info" />
+      <div className="min-w-0 flex-1 text-[13px]">
+        <span className="font-semibold text-foreground">{plan.name}</span>
+        <span className="ml-1 text-muted-foreground">for</span>
+        <span className="ml-1 font-semibold text-foreground">{sub.siteName}</span>
+        <span className="ml-1 text-muted-foreground">renews on</span>
+        <span className="ml-1 font-semibold text-foreground">{sub.renewsDisplay.split(" (")[0]}</span>
+        <span className="ml-1 text-muted-foreground">for</span>
+        <span className="ml-1 font-semibold text-info">${sub.monthlyCost.toLocaleString()}</span>
+        {" — "}
+        <button onClick={onUpdatePayment} className="font-semibold text-primary underline hover:text-primary/80">
+          Update payment method
+        </button>
+      </div>
+      <button onClick={onDismiss} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+        <X className="size-3.5" />
+      </button>
+    </div>
+  );
+}
+
+/* ── Site Subscription Card ───────────────────────────────────────────────── */
+
+function SubscriptionCard({ sub, onChangePlan, onCancel, onManageSeats }: {
   sub: SiteSubscription;
   onChangePlan: () => void;
   onCancel: () => void;
@@ -139,12 +241,19 @@ function SubscriptionCard({
 }) {
   const plan = PLANS[sub.planTier];
   const color = PLAN_COLORS[sub.planTier];
-  const status = STATUS_STYLES[sub.status];
+  const status = STATUS_STYLES[sub.status] ?? STATUS_STYLES.active;
   const PlanIcon = PLAN_ICONS[sub.planTier];
   const totalSeats = sub.seats.owner + sub.seats.admin + sub.seats.user;
+  const usage = USAGE_DATA[sub.id];
+  const isCancelled = sub.status === "cancelled";
+  const isCancelling = sub.status === "cancelling";
+
   return (
-    <div className={cn("overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/30", sub.status === "cancelled" ? "opacity-60" : "border-border")}>
-      {/* Compact header row — site name + plan + cost on one line */}
+    <div className={cn(
+      "overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/30",
+      isCancelled ? "opacity-60 border-border" : isCancelling ? "border-warning/40" : "border-border"
+    )}>
+      {/* Header row */}
       <div className="flex items-center gap-2.5 px-3 py-2.5">
         <div className={cn("flex size-8 flex-shrink-0 items-center justify-center rounded-md border", color.border, color.bg)}>
           <PlanIcon className={cn("size-3.5", color.text)} />
@@ -158,7 +267,9 @@ function SubscriptionCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            <span className={cn("font-semibold", color.text)}>{plan.name}</span> · {sub.billingCycle === "annual" ? "Annual" : "Monthly"} · Renews {sub.renewsDisplay.split(" (")[0]}
+            <span className={cn("font-semibold", color.text)}>{plan.name}</span>
+            {" · "}{sub.billingCycle === "annual" ? "Annual" : "Monthly"}
+            {" · "}Renews {sub.renewsDisplay.split(" (")[0]}
           </p>
         </div>
         <div className="text-right">
@@ -167,10 +278,18 @@ function SubscriptionCard({
         </div>
       </div>
 
-      {/* Compact stats + actions row */}
+      {/* Usage bars */}
+      {usage && !isCancelled && (
+        <div className="grid grid-cols-2 gap-3 border-t border-border/60 bg-background/20 px-3 py-2.5">
+          <UsageBar used={usage.usedSeats} total={totalSeats} label="Seats" />
+          <UsageBar used={usage.usedCameras} total={plan.cameraLimit} label="Cameras" />
+        </div>
+      )}
+
+      {/* Actions row */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-background/30 px-3 py-2">
         <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-          <span>{typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} cams` : "Unlim cams"}</span>
+          <span>{typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} cam limit` : "Unlim cams"}</span>
           <span className="opacity-40">·</span>
           <span><strong className="text-foreground">{totalSeats}</strong>{typeof plan.userLimit === "number" ? ` / ${plan.userLimit}` : ""} users</span>
           {sub.seats.owner > 0 && (
@@ -190,10 +309,12 @@ function SubscriptionCard({
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onManageSeats}>
-            Seats
-          </Button>
-          {sub.status === "cancelled" ? (
+          {!isCancelled && (
+            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onManageSeats}>
+              Seats
+            </Button>
+          )}
+          {isCancelled ? (
             <Button size="sm" className="h-7 text-[11px]" onClick={onChangePlan}>
               Reactivate
             </Button>
@@ -203,7 +324,7 @@ function SubscriptionCard({
               Change Plan
             </Button>
           )}
-          {sub.status !== "cancelled" && (
+          {!isCancelled && !isCancelling && (
             <button onClick={onCancel}
               className="ml-1 rounded p-1 text-muted-foreground hover:bg-muted hover:text-sev-critical"
               title="Cancel subscription">
@@ -216,7 +337,7 @@ function SubscriptionCard({
   );
 }
 
-/* ── Change Plan modal ────────────────────────────────────────────────── */
+/* ── Change Plan modal ────────────────────────────────────────────────────── */
 
 function ChangePlanModal({ open, current, onClose, onConfirm }: {
   open: boolean;
@@ -244,9 +365,13 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
 
   const oldPlan = PLANS[current.planTier];
   const newPlan = PLANS[picked];
-  const oldCost = oldPlan.pricePerMonth;
-  const newCost = newPlan.pricePerMonth;
+  const oldCost = cycle === "annual" ? Math.round(oldPlan.pricePerYear / 12) : oldPlan.pricePerMonth;
+  const newCost = cycle === "annual" ? Math.round(newPlan.pricePerYear / 12) : newPlan.pricePerMonth;
   const delta = newCost - oldCost;
+  const remainingDays = 14; // mock proration period
+  const credit = direction === "upgrade" ? Math.round((oldCost / 30) * remainingDays) : 0;
+  const charge = direction === "upgrade" ? Math.round((newCost / 30) * remainingDays) : 0;
+  const netDue = charge - credit;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -257,8 +382,8 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
           </DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             {step === "pick"
-              ? <>Choose a new plan for <strong className="text-foreground">{current.siteName}</strong>. The change applies on your next invoice.</>
-              : <>Review the changes before applying them to <strong className="text-foreground">{current.siteName}</strong>.</>
+              ? <>{`Choose a new plan for `}<strong className="text-foreground">{current.siteName}</strong>.</>
+              : <>{`Review the changes before applying them to `}<strong className="text-foreground">{current.siteName}</strong>.</>
             }
           </p>
         </DialogHeader>
@@ -266,24 +391,18 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
         <div className="flex-1 overflow-y-auto p-5">
           {step === "pick" ? (
             <>
-              {/* Billing cycle toggle */}
               <div className="mb-4 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-[12px]">
                 <button onClick={() => setCycle("monthly")}
-                  className={cn(
-                    "flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                    cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}>
+                  className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
+                    cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                   Monthly
                 </button>
                 <button onClick={() => setCycle("annual")}
-                  className={cn(
-                    "flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                    cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}>
+                  className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
+                    cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                   Annual <span className="text-[10px] opacity-80">(save ~17%)</span>
                 </button>
               </div>
-
               <div className="space-y-2">
                 {TIER_ORDER.map((tier) => {
                   const p = PLANS[tier];
@@ -317,17 +436,14 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                           )}
                         </div>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">{p.tagline}</p>
-                        <div className="mt-1.5 flex flex-wrap gap-2 text-[10px]">
-                          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
-                            {typeof p.cameraLimit === "number" ? `${p.cameraLimit} cameras` : "Unlimited cameras"}
-                          </span>
-                          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
-                            {typeof p.userLimit === "number" ? `${p.userLimit} users` : "Unlimited users"}
-                          </span>
-                          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
-                            {p.retentionDays}d retention
-                          </span>
-                        </div>
+                        <ul className="mt-2 space-y-1">
+                          {p.features.slice(0, 4).map((f) => (
+                            <li key={f} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
+                              <Check className={cn("mt-0.5 size-2.5 flex-shrink-0", color.text)} strokeWidth={3} />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                       <div className="text-right">
                         <p className={cn("font-mono text-[16px] font-bold leading-none", color.text)}>${monthly}</p>
@@ -342,8 +458,8 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
               </div>
             </>
           ) : (
-            /* Confirm step */
             <div className="space-y-4">
+              {/* Plan change direction */}
               <div className="rounded-lg border border-border bg-background p-4">
                 <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Plan change</p>
                 <div className="flex items-center gap-3">
@@ -368,17 +484,40 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                     <p className="font-mono text-[11px] text-muted-foreground">${newCost}/mo</p>
                   </div>
                 </div>
-                {delta !== 0 && (
-                  <p className="mt-3 text-[12px] text-foreground">
-                    <strong>{delta > 0 ? `+$${delta}` : `-$${Math.abs(delta)}`}/mo</strong>{" "}
-                    {direction === "upgrade"
-                      ? "added to your next invoice. Pro-rated for the current period."
-                      : "credited against your next invoice."
-                    }
-                  </p>
-                )}
               </div>
 
+              {/* Proration breakdown */}
+              {direction === "upgrade" && (
+                <div className="rounded-lg border border-success/30 bg-success/[0.04] p-4">
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Proration — due today</p>
+                  <div className="space-y-1.5 text-[12px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Credit for {remainingDays} remaining days on {oldPlan.name}</span>
+                      <span className="font-mono text-success">−${credit}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">{newPlan.name} charge for {remainingDays} days</span>
+                      <span className="font-mono text-foreground">+${charge}</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-2 text-[13px] font-bold">
+                      <span className="text-foreground">Total due now</span>
+                      <span className={cn("font-mono", netDue > 0 ? "text-foreground" : "text-success")}>${Math.max(0, netDue)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {direction === "downgrade" && (
+                <div className="rounded-lg border border-warning/30 bg-warning/[0.04] p-4">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Scheduled downgrade</p>
+                  <p className="text-[12px] text-muted-foreground">
+                    Your current <strong className="text-foreground">{oldPlan.name}</strong> plan stays active until{" "}
+                    <strong className="text-foreground">{current.renewsDisplay.split(" (")[0]}</strong>. The downgrade to{" "}
+                    <strong className="text-foreground">{newPlan.name}</strong> takes effect at the start of the next billing cycle — no refund is issued.
+                  </p>
+                </div>
+              )}
+
+              {/* Features */}
               <div className="rounded-lg border border-border bg-background p-4">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What changes</p>
                 <ul className="space-y-1.5 text-[12px]">
@@ -402,8 +541,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                 onClick={() => setStep("confirm")}
                 className="gap-1.5"
               >
-                Review change
-                <ArrowUpRight className="size-3.5" />
+                Review change <ArrowUpRight className="size-3.5" />
               </Button>
               <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
             </>
@@ -423,7 +561,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
   );
 }
 
-/* ── Add Subscription modal (for sites without one) ───────────────────── */
+/* ── Add Subscription modal ───────────────────────────────────────────────── */
 
 function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
   open: boolean;
@@ -436,11 +574,7 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
 
   React.useEffect(() => {
-    if (open) {
-      setSiteId(sites[0]?.id ?? "");
-      setPlanTier("professional");
-      setCycle("annual");
-    }
+    if (open) { setSiteId(sites[0]?.id ?? ""); setPlanTier("professional"); setCycle("annual"); }
   }, [open, sites]);
 
   return (
@@ -448,12 +582,9 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add Subscription</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Each site requires its own subscription. Pick a site and choose a plan.
-          </p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">Each site requires its own subscription. Pick a site and choose a plan.</p>
         </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto p-5">
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
             {sites.length === 0 ? (
@@ -479,7 +610,6 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
               </div>
             )}
           </div>
-
           <div className="flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-[12px]">
             <button onClick={() => setCycle("monthly")}
               className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
@@ -492,7 +622,6 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
               Annual <span className="text-[10px] opacity-80">(save ~17%)</span>
             </button>
           </div>
-
           <div className="space-y-2">
             {TIER_ORDER.map((tier) => {
               const p = PLANS[tier];
@@ -522,15 +651,9 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
             })}
           </div>
         </div>
-
         <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5">
-          <Button
-            disabled={!siteId}
-            onClick={() => onConfirm(siteId, planTier, cycle)}
-            className="gap-1.5"
-          >
-            <Plus className="size-3.5" />
-            Activate Subscription
+          <Button disabled={!siteId} onClick={() => onConfirm(siteId, planTier, cycle)} className="gap-1.5">
+            <Plus className="size-3.5" /> Activate Subscription
           </Button>
           <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
@@ -539,13 +662,10 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
   );
 }
 
-/* ── Cancel confirmation modal ────────────────────────────────────────── */
+/* ── Cancel confirmation modal ────────────────────────────────────────────── */
 
 function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
-  open: boolean;
-  sub: SiteSubscription | null;
-  onClose: () => void;
-  onConfirm: () => void;
+  open: boolean; sub: SiteSubscription | null; onClose: () => void; onConfirm: () => void;
 }) {
   if (!sub) return null;
   return (
@@ -554,26 +674,24 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-sev-critical">Cancel Subscription</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            The subscription for <strong className="text-foreground">{sub.siteName}</strong> will be cancelled at the end of the billing period ({sub.renewsDisplay}).
+            The subscription for <strong className="text-foreground">{sub.siteName}</strong> will remain active until the end of the billing period ({sub.renewsDisplay.split(" (")[0]}), then become read-only.
           </p>
         </DialogHeader>
         <div className="space-y-3 p-5">
           <div className="rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-[12px] text-foreground">
-            <p className="font-semibold">What happens when this is cancelled:</p>
+            <p className="font-semibold">What happens when cancelled:</p>
             <ul className="mt-1.5 space-y-1 text-muted-foreground">
-              <li>• Site dashboard becomes read-only after {sub.renewsDisplay}</li>
+              <li>• Site dashboard becomes read-only after {sub.renewsDisplay.split(" (")[0]}</li>
               <li>• Recordings retained per current retention until expiry</li>
               <li>• All users assigned to this site lose access</li>
-              <li>• You can reactivate within 90 days without losing data</li>
+              <li>• You can undo this cancellation at any time before the end date</li>
             </ul>
           </div>
         </div>
         <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Keep Subscription</Button>
-          <Button onClick={onConfirm}
-            className="ml-auto gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90">
-            <X className="size-3.5" />
-            Cancel Subscription
+          <Button onClick={onConfirm} className="ml-auto gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90">
+            <X className="size-3.5" /> Schedule Cancellation
           </Button>
         </div>
       </DialogContent>
@@ -581,12 +699,10 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
   );
 }
 
-/* ── Manage Seats modal (per subscription) ─────────────────────────────── */
+/* ── Manage Seats modal ───────────────────────────────────────────────────── */
 
 function ManageSeatsModal({ open, sub, onClose, onSave }: {
-  open: boolean;
-  sub: SiteSubscription | null;
-  onClose: () => void;
+  open: boolean; sub: SiteSubscription | null; onClose: () => void;
   onSave: (seats: { owner: number; admin: number; user: number }) => void;
 }) {
   const [seats, setSeats] = React.useState({ owner: 0, admin: 0, user: 0 });
@@ -601,12 +717,10 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
     Math.max(0, seats.owner - sub.seats.owner) * SEAT_PRICING.owner.pricePerMonth +
     Math.max(0, seats.admin - sub.seats.admin) * SEAT_PRICING.admin.pricePerMonth +
     Math.max(0, seats.user - sub.seats.user) * SEAT_PRICING.user.pricePerMonth;
-
   const removed =
     Math.max(0, sub.seats.owner - seats.owner) * SEAT_PRICING.owner.pricePerMonth +
     Math.max(0, sub.seats.admin - seats.admin) * SEAT_PRICING.admin.pricePerMonth +
     Math.max(0, sub.seats.user - seats.user) * SEAT_PRICING.user.pricePerMonth;
-
   const delta = additional - removed;
 
   return (
@@ -634,14 +748,10 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setSeats((s) => ({ ...s, [role]: Math.max(0, s[role] - 1) }))}
-                    className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">
-                    −
-                  </button>
+                    className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">−</button>
                   <p className="w-8 text-center font-mono text-[16px] font-bold text-foreground">{seats[role]}</p>
                   <button onClick={() => setSeats((s) => ({ ...s, [role]: s[role] + 1 }))}
-                    className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">
-                    +
-                  </button>
+                    className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">+</button>
                 </div>
               </div>
             );
@@ -657,8 +767,7 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5">
           <Button onClick={() => onSave(seats)} className="gap-1.5">
-            <Check className="size-3.5" />
-            Apply Changes
+            <Check className="size-3.5" /> Apply Changes
           </Button>
           <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
@@ -667,9 +776,61 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
   );
 }
 
-/* ── Update payment method modal ──────────────────────────────────────── */
+/* ── Payment card display ─────────────────────────────────────────────────── */
 
-function UpdatePaymentModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (last4: string, expiry: string) => void }) {
+function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
+  card: SavedCard;
+  onSetDefault: () => void;
+  onRemove: () => void;
+  canRemove: boolean;
+}) {
+  const brandColors: Record<string, string> = {
+    Visa: "text-info",
+    Mastercard: "text-sev-critical",
+    Amex: "text-success",
+  };
+  return (
+    <div className={cn(
+      "flex items-center gap-3 rounded-lg border bg-background p-3 transition-colors",
+      card.isDefault ? "border-primary/40 bg-primary/[0.02]" : "border-border"
+    )}>
+      <div className="flex size-9 items-center justify-center rounded-lg bg-secondary/15">
+        <CreditCard className={cn("size-4", brandColors[card.brand] ?? "text-secondary")} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-bold text-foreground">{card.brand} ···· {card.last4}</p>
+          {card.isDefault && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-primary">
+              <Star className="size-2.5" /> Default
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
+      </div>
+      <div className="flex items-center gap-1.5">
+        {!card.isDefault && (
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onSetDefault}>
+            Set default
+          </Button>
+        )}
+        {canRemove && (
+          <button onClick={onRemove}
+            className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10">
+            <Trash2 className="size-3" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Add Card modal (reused from payment flow) ────────────────────────────── */
+
+function AddCardModal({ open, onClose, onSave }: {
+  open: boolean; onClose: () => void;
+  onSave: (last4: string, expiry: string, brand: "Visa" | "Mastercard" | "Amex") => void;
+}) {
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
   const [expiry, setExpiry] = React.useState("");
@@ -690,14 +851,19 @@ function UpdatePaymentModal({ open, onClose, onSave }: { open: boolean; onClose:
     const d = v.replace(/\D/g, "").slice(0, 4);
     return d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
   }
+  function detectBrand(num: string): "Visa" | "Mastercard" | "Amex" {
+    if (num.startsWith("4")) return "Visa";
+    if (num.startsWith("5")) return "Mastercard";
+    return "Amex";
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Update Payment Method</DialogTitle>
+          <DialogTitle className="text-base font-bold">Add Payment Method</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Card details are encrypted and processed by our payment provider — never stored here.
+            Card details are encrypted — never stored here.
           </p>
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
@@ -721,9 +887,8 @@ function UpdatePaymentModal({ open, onClose, onSave }: { open: boolean; onClose:
           </div>
         </div>
         <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
-          <Button disabled={!canSubmit} onClick={() => onSave(last4, expiry)} className="gap-1.5">
-            <CreditCard className="size-3.5" />
-            Save Payment Method
+          <Button disabled={!canSubmit} onClick={() => onSave(last4, expiry, detectBrand(cleaned))} className="gap-1.5">
+            <CreditCard className="size-3.5" /> Add Card
           </Button>
           <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
@@ -732,9 +897,11 @@ function UpdatePaymentModal({ open, onClose, onSave }: { open: boolean; onClose:
   );
 }
 
-/* ── Invoice detail drawer ────────────────────────────────────────────── */
+/* ── Invoice detail drawer ────────────────────────────────────────────────── */
 
-function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; onClose: () => void }) {
+function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
+  invoice: Invoice | null; onRetryPayment: () => void; onClose: () => void;
+}) {
   if (!invoice) return null;
   const s = INVOICE_STATUS[invoice.status];
   const Icon = s.icon;
@@ -755,8 +922,7 @@ function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; on
               <div className="flex items-center gap-2">
                 <h3 className="text-[15px] font-bold text-foreground">{invoice.periodDisplay} invoice</h3>
                 <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
-                  <Icon className="size-3" />
-                  {s.label}
+                  <Icon className="size-3" /> {s.label}
                 </span>
               </div>
               <p className="mt-0.5 text-[11px] text-muted-foreground">Issued {invoice.issuedDisplay}</p>
@@ -768,6 +934,19 @@ function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; on
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          {invoice.status === "failed" && (
+            <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3">
+              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+              <div className="min-w-0 flex-1 text-[12px]">
+                <p className="font-semibold text-sev-critical">Payment failed</p>
+                <p className="mt-0.5 text-muted-foreground">The charge for this invoice could not be processed. Please update your payment method and retry.</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={onRetryPayment} className="flex-shrink-0 gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10">
+                <RefreshCw className="size-3.5" /> Retry
+              </Button>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Invoice number</p>
@@ -793,8 +972,7 @@ function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; on
               <div className="flex flex-wrap gap-1.5">
                 {invoice.siteNames.map((n) => (
                   <span key={n} className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
-                    <Building2 className="size-2.5 text-muted-foreground" />
-                    {n}
+                    <Building2 className="size-2.5 text-muted-foreground" /> {n}
                   </span>
                 ))}
               </div>
@@ -824,8 +1002,7 @@ function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; on
 
         <div className="border-t border-border px-5 py-3.5">
           <Button className="w-full gap-1.5">
-            <Download className="size-3.5" />
-            Download PDF
+            <Download className="size-3.5" /> Download PDF
           </Button>
         </div>
       </div>
@@ -833,7 +1010,222 @@ function InvoiceDetailDrawer({ invoice, onClose }: { invoice: Invoice | null; on
   );
 }
 
-/* ── Tabs ─────────────────────────────────────────────────────────────── */
+/* ── Billing Details section ──────────────────────────────────────────────── */
+
+interface BillingDetails {
+  email: string;
+  company: string;
+  taxId: string;
+  address: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+}
+
+function BillingDetailsSection() {
+  const [editing, setEditing] = React.useState(false);
+  const [details, setDetails] = React.useState<BillingDetails>({
+    email: "billing@acmecorp.com",
+    company: "Acme Corp Pte Ltd",
+    taxId: "",
+    address: "",
+    city: "Singapore",
+    state: "",
+    postcode: "",
+    country: "Singapore",
+  });
+  const [draft, setDraft] = React.useState<BillingDetails>(details);
+
+  function patch(k: keyof BillingDetails, v: string) {
+    setDraft((d) => ({ ...d, [k]: v }));
+  }
+
+  function save() {
+    setDetails(draft);
+    setEditing(false);
+    toast.success("Billing details saved", { description: "Future invoices will use these details." });
+  }
+
+  return (
+    <SectionCard
+      title="Billing Details"
+      description="Applied to all future invoice PDFs across this account."
+      action={
+        !editing ? (
+          <Button size="sm" variant="outline" onClick={() => { setDraft(details); setEditing(true); }}>
+            Edit
+          </Button>
+        ) : null
+      }
+    >
+      {!editing ? (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+          {[
+            ["Billing Email", details.email],
+            ["Company / Organisation", details.company || "—"],
+            ["Tax ID / VAT", details.taxId || "—"],
+            ["Country", details.country],
+            ["Address", details.address || "—"],
+            ["City", details.city || "—"],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</dt>
+              <dd className="mt-0.5 text-[13px] text-foreground">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Billing Email *
+              </label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-[13px]" placeholder="billing@company.com" />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Company / Organisation</label>
+              <div className="relative">
+                <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-[13px]" placeholder="Acme Corp Pte Ltd" />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number</label>
+              <Input value={draft.taxId} onChange={(e) => patch("taxId", e.target.value)} className="h-9 text-[13px]" placeholder="e.g. GST-201234567A" />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Street Address</label>
+              <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-[13px]" placeholder="8 Marina Boulevard" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">City</label>
+              <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-[13px]" placeholder="Singapore" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">State / Province</label>
+              <Input value={draft.state} onChange={(e) => patch("state", e.target.value)} className="h-9 text-[13px]" placeholder="Optional" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Postcode</label>
+              <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-[13px]" placeholder="018984" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
+              <div className="relative">
+                <Globe className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <select value={draft.country} onChange={(e) => patch("country", e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-[13px]">
+                  {["Singapore", "Malaysia", "Thailand", "United States", "United Kingdom", "Australia", "Japan"].map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 border-t border-border pt-3">
+            <Button size="sm" onClick={save} className="gap-1.5">
+              <Check className="size-3.5" /> Save Details
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+/* ── Invoice filter bar ───────────────────────────────────────────────────── */
+
+type InvoiceStatusFilter = "all" | "paid" | "failed" | "pending";
+
+const ALL_SITES = Array.from(
+  new Set(MOCK_INVOICES.flatMap((inv) => inv.siteNames ?? []))
+).sort();
+
+function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChange }: {
+  statusFilter: InvoiceStatusFilter;
+  onStatusChange: (s: InvoiceStatusFilter) => void;
+  siteFilter: string;
+  onSiteChange: (s: string) => void;
+}) {
+  const [siteOpen, setSiteOpen] = React.useState(false);
+  const hasFilters = statusFilter !== "all" || siteFilter !== "";
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Filter className="size-3.5" /> Filter
+      </span>
+
+      {/* Status pills */}
+      {(["all", "paid", "failed", "pending"] as InvoiceStatusFilter[]).map((s) => (
+        <button key={s} onClick={() => onStatusChange(s)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors capitalize",
+            statusFilter === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+          )}>
+          {s === "all" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
+        </button>
+      ))}
+
+      {/* Site dropdown */}
+      <Popover open={siteOpen} onOpenChange={setSiteOpen}>
+        <PopoverTrigger asChild>
+          <button className={cn(
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
+            siteFilter ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+          )}>
+            {siteFilter || "All sites"}
+            <ChevronDown className="size-3" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-52 p-1.5">
+          <button onClick={() => { onSiteChange(""); setSiteOpen(false); }}
+            className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] hover:bg-muted/50", !siteFilter && "bg-primary/10 text-primary")}>
+            All sites
+          </button>
+          {ALL_SITES.map((site) => (
+            <button key={site} onClick={() => { onSiteChange(site); setSiteOpen(false); }}
+              className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] text-foreground hover:bg-muted/50", siteFilter === site && "bg-primary/10 text-primary")}>
+              {site}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+
+      {/* Clear all */}
+      {hasFilters && (
+        <button onClick={() => { onStatusChange("all"); onSiteChange(""); }}
+          className="ml-1 text-[11px] font-semibold text-muted-foreground underline hover:text-primary">
+          Clear all
+        </button>
+      )}
+
+      {/* Active chips */}
+      {hasFilters && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {statusFilter !== "all" && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              {statusFilter}
+              <button onClick={() => onStatusChange("all")}><X className="size-2.5" /></button>
+            </span>
+          )}
+          {siteFilter && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              {siteFilter}
+              <button onClick={() => onSiteChange("")}><X className="size-2.5" /></button>
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
 
 type TabKey = "overview" | "invoices";
 
@@ -847,14 +1239,11 @@ function TabSwitcher({ value, onChange, counts }: { value: TabKey; onChange: (k:
       {tabs.map((t) => {
         const active = value === t.key;
         return (
-          <button
-            key={t.key}
-            onClick={() => onChange(t.key)}
+          <button key={t.key} onClick={() => onChange(t.key)}
             className={cn(
               "relative inline-flex items-center gap-2 px-3 py-2.5 text-[13px] font-semibold transition-colors",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
+            )}>
             {t.label}
             {t.count !== undefined && (
               <span className={cn("inline-flex items-center justify-center rounded-full px-1.5 py-px text-[10px] font-bold",
@@ -870,61 +1259,92 @@ function TabSwitcher({ value, onChange, counts }: { value: TabKey; onChange: (k:
   );
 }
 
-/* ── Page ─────────────────────────────────────────────────────────────── */
+/* ── Page ─────────────────────────────────────────────────────────────────── */
 
 export default function BillingPage() {
   const subs = useSubscriptionsStore((s) => s.subscriptions);
   const changePlanStore = useSubscriptionsStore((s) => s.changePlan);
   const changeCycleStore = useSubscriptionsStore((s) => s.changeBillingCycle);
   const cancelStore = useSubscriptionsStore((s) => s.cancel);
+  const undoCancelStore = useSubscriptionsStore((s) => s.undoCancel);
   const reactivateStore = useSubscriptionsStore((s) => s.reactivate);
   const updateSeatsStore = useSubscriptionsStore((s) => s.updateSeats);
   const addStore = useSubscriptionsStore((s) => s.add);
   const sites = useSitesStore((s) => s.sites);
 
   const [tab, setTab] = React.useState<TabKey>("overview");
-  const [paymentMethod, setPaymentMethod] = React.useState(ORG_LICENSE_INFO.paymentMethod);
-  const [paymentExpiry, setPaymentExpiry] = React.useState("12/2028");
-  const [paymentOpen, setPaymentOpen] = React.useState(false);
 
+  /* ── Multi-card wallet state ──────────────────────────────────────────── */
+  const [cards, setCards] = React.useState<SavedCard[]>(INITIAL_CARDS);
+  const [addCardOpen, setAddCardOpen] = React.useState(false);
+
+  /* ── Renewal reminder dismissals ──────────────────────────────────────── */
+  const [dismissedRenewals, setDismissedRenewals] = React.useState<string[]>([]);
+
+  /* ── Modal state ──────────────────────────────────────────────────────── */
   const [changePlanSub, setChangePlanSub] = React.useState<SiteSubscription | null>(null);
   const [cancelSub, setCancelSub] = React.useState<SiteSubscription | null>(null);
   const [seatsSub, setSeatsSub] = React.useState<SiteSubscription | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
   const [activeInvoice, setActiveInvoice] = React.useState<Invoice | null>(null);
 
-  /* ── Aggregates ─────────────────────────────────────────────────── */
+  /* ── Invoice filters ──────────────────────────────────────────────────── */
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = React.useState<InvoiceStatusFilter>("all");
+  const [invoiceSiteFilter, setInvoiceSiteFilter] = React.useState("");
+
+  /* ── Aggregates ───────────────────────────────────────────────────────── */
   const activeSubs = subs.filter((s) => s.status !== "cancelled");
   const totalMonthly = activeSubs.reduce((s, x) => s + x.monthlyCost, 0);
   const totalSeats = activeSubs.reduce((s, x) => s + x.seats.owner + x.seats.admin + x.seats.user, 0);
   const totalUsers = MOCK_USERS.length;
+  const totalCameras = Object.values(USAGE_DATA).reduce((s, d) => s + d.usedCameras, 0);
   const sitesWithoutSub = sites.filter((s) => !subs.some((x) => x.siteId === s.id && x.status !== "cancelled"));
 
-  /* ── Handlers ───────────────────────────────────────────────────── */
+  /* ── Renewal reminders (within 14 days) ──────────────────────────────── */
+  const renewingSoon = activeSubs.filter((s) => {
+    if (dismissedRenewals.includes(s.id)) return false;
+    const days = daysBetween(BILLING_TODAY, s.renewsAt);
+    return days >= 0 && days <= 14;
+  });
+
+  /* ── Cancelling subs ──────────────────────────────────────────────────── */
+  const cancellingSubs = subs.filter((s) => s.status === "cancelling");
+
+  /* ── Payment failed subs ──────────────────────────────────────────────── */
+  const failedSubs = subs.filter((s) => s.status === "payment_failed");
+
+  /* ── Filtered invoices ────────────────────────────────────────────────── */
+  const filteredInvoices = React.useMemo(() => {
+    return MOCK_INVOICES.filter((inv) => {
+      if (invoiceStatusFilter !== "all" && inv.status !== invoiceStatusFilter) return false;
+      if (invoiceSiteFilter && !inv.siteNames?.includes(invoiceSiteFilter)) return false;
+      return true;
+    });
+  }, [invoiceStatusFilter, invoiceSiteFilter]);
+
+  /* ── Handlers ─────────────────────────────────────────────────────────── */
   function confirmChangePlan(planTier: PlanTier, cycle: "monthly" | "annual") {
     if (!changePlanSub) return;
     const direction =
       tierRank(planTier) > tierRank(changePlanSub.planTier) ? "upgrade" :
       tierRank(planTier) < tierRank(changePlanSub.planTier) ? "downgrade" : "kept";
     changePlanStore(changePlanSub.id, planTier);
-    if (cycle !== changePlanSub.billingCycle) {
-      changeCycleStore(changePlanSub.id, cycle);
-    }
+    if (cycle !== changePlanSub.billingCycle) changeCycleStore(changePlanSub.id, cycle);
     const newPlan = PLANS[planTier];
     setChangePlanSub(null);
     toast.success(
       direction === "upgrade" ? `Upgraded to ${newPlan.name}` :
-      direction === "downgrade" ? `Downgraded to ${newPlan.name}` :
+      direction === "downgrade" ? `Downgraded to ${newPlan.name} (effective at cycle end)` :
       `Updated to ${newPlan.name}`,
-      { description: `${changePlanSub.siteName} → ${newPlan.name} (${cycle === "annual" ? "annual" : "monthly"}). Pro-rated on next invoice.` }
+      { description: `${changePlanSub.siteName} → ${newPlan.name} (${cycle === "annual" ? "annual" : "monthly"}).` }
     );
   }
 
   function confirmCancel() {
     if (!cancelSub) return;
     cancelStore(cancelSub.id);
-    toast.message("Subscription cancelled", {
-      description: `${cancelSub.siteName} will become read-only after ${cancelSub.renewsDisplay}.`,
+    toast.message("Cancellation scheduled", {
+      description: `${cancelSub.siteName} will become read-only after ${cancelSub.renewsDisplay.split(" (")[0]}.`,
     });
     setCancelSub(null);
   }
@@ -941,23 +1361,14 @@ export default function BillingPage() {
     const startedDisplay = "01 Jun 2026";
     const renewsDisplay = renew.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
     addStore({
-      id,
-      siteId,
-      siteName: site.name,
-      planTier,
-      status: "active",
-      billingCycle: cycle,
+      id, siteId, siteName: site.name, planTier, status: "active", billingCycle: cycle,
       seats: { owner: 0, admin: 1, user: 2 },
-      startedAt: "2026-06-01",
-      startedDisplay,
-      renewsAt: renew.toISOString().slice(0, 10),
-      renewsDisplay,
+      startedAt: "2026-06-01", startedDisplay,
+      renewsAt: renew.toISOString().slice(0, 10), renewsDisplay,
       monthlyCost: plan.pricePerMonth + (0 * 50 + 1 * 25 + 2 * 10),
     });
     setAddOpen(false);
-    toast.success(`Subscribed ${site.name} to ${plan.name}`, {
-      description: `Effective immediately. Renews ${renewsDisplay}.`,
-    });
+    toast.success(`Subscribed ${site.name} to ${plan.name}`, { description: `Effective immediately. Renews ${renewsDisplay}.` });
   }
 
   function saveSeats(seats: { owner: number; admin: number; user: number }) {
@@ -969,11 +1380,27 @@ export default function BillingPage() {
     });
   }
 
-  function savePaymentMethod(last4: string, expiry: string) {
-    setPaymentMethod(`Visa ending ${last4}`);
-    setPaymentExpiry(`${expiry.split("/")[0]}/20${expiry.split("/")[1]}`);
-    setPaymentOpen(false);
-    toast.success("Payment method updated", { description: `Future invoices will be charged to Visa ending ${last4}.` });
+  function addCard(last4: string, expiry: string, brand: "Visa" | "Mastercard" | "Amex") {
+    const [month, year] = expiry.split("/");
+    setCards((c) => [...c, { id: `card-${Date.now()}`, brand, last4, expiryMonth: month, expiryYear: `20${year}`, isDefault: false }]);
+    setAddCardOpen(false);
+    toast.success(`${brand} ending ${last4} added to wallet`);
+  }
+
+  function setDefaultCard(id: string) {
+    setCards((c) => c.map((card) => ({ ...card, isDefault: card.id === id })));
+    toast.success("Default payment method updated");
+  }
+
+  function removeCard(id: string) {
+    if (cards.length <= 1) return;
+    setCards((c) => c.filter((card) => card.id !== id));
+    toast.message("Card removed");
+  }
+
+  function handleRetryPayment() {
+    toast.message("Retry payment", { description: "Select a card from your wallet to re-attempt the charge." });
+    setActiveInvoice(null);
   }
 
   return (
@@ -982,33 +1409,54 @@ export default function BillingPage() {
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>
           <PageHeader.Description>
-            One subscription per site. Manage plans, seats, payment method, and invoices.
+            One subscription per site. Manage plans, seats, payment methods, and invoices.
           </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
+
+      {/* ── Banners ─────────────────────────────────────────────────────── */}
+      {(renewingSoon.length > 0 || cancellingSubs.length > 0 || failedSubs.length > 0) && (
+        <div className="flex flex-col gap-2">
+          {failedSubs.map((s) => (
+            <FailedPaymentBanner key={s.id} sub={s} graceDays={7} onRetry={() => toast.message("Select a card to retry")} />
+          ))}
+          {cancellingSubs.map((s) => (
+            <CancellationGraceBanner key={s.id} sub={s} onUndo={() => {
+              undoCancelStore(s.id);
+              toast.success(`Cancellation reversed for ${s.siteName}`);
+            }} />
+          ))}
+          {renewingSoon.map((s) => (
+            <RenewalReminderBanner key={s.id} sub={s} days={daysBetween(BILLING_TODAY, s.renewsAt)}
+              onDismiss={() => setDismissedRenewals((d) => [...d, s.id])}
+              onUpdatePayment={() => setAddCardOpen(true)}
+            />
+          ))}
+        </div>
+      )}
 
       <TabSwitcher value={tab} onChange={setTab} counts={{ invoices: MOCK_INVOICES.length }} />
 
       {tab === "overview" && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
           <div className="flex flex-col gap-4">
-            {/* Workspace summary */}
+            {/* Multi-site spend summary */}
             <SectionCard title="Workspace summary" description="Aggregated across all active site subscriptions.">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <KpiTile label="Active Subs" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} txt="text-foreground" />
-                <KpiTile label="Sites Covered" value={`${activeSubs.length}`} sub={`of ${sites.length} sites`} txt="text-foreground" />
-                <KpiTile label="Total Seats" value={totalSeats} sub={`${totalUsers} users`} txt="text-info" />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <KpiTile label="Active Sites" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} txt="text-foreground" />
+                <KpiTile label="Monthly Spend" value={`$${totalMonthly.toLocaleString()}`} sub="Recurring" txt="text-success" />
+                <KpiTile label="Total Seats" value={totalSeats} sub={`${totalUsers} users active`} txt="text-info" />
+                <KpiTile label="Total Cameras" value={totalCameras} sub="Across all sites" txt="text-secondary" />
               </div>
             </SectionCard>
 
-            {/* Subscriptions per site */}
+            {/* Subscriptions */}
             <SectionCard
               title="Site Subscriptions"
               description="Each site has its own plan and renewal."
               action={
                 <Button onClick={() => setAddOpen(true)} className="gap-1.5">
-                  <Plus className="size-3.5" />
-                  Add Subscription
+                  <Plus className="size-3.5" /> Add Subscription
                 </Button>
               }
             >
@@ -1017,19 +1465,17 @@ export default function BillingPage() {
                   <Building2 className="size-8 opacity-30" />
                   <p className="text-[13px]">No active subscriptions.</p>
                   <Button onClick={() => setAddOpen(true)} className="gap-1.5">
-                    <Plus className="size-3.5" />
-                    Subscribe a site
+                    <Plus className="size-3.5" /> Subscribe a site
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {/* Only subscribed sites — no empty placeholders */}
                   {subs.map((s) => (
                     <SubscriptionCard
                       key={s.id}
                       sub={s}
                       onChangePlan={() => (s.status === "cancelled" ? reactivateStore(s.id) : setChangePlanSub(s))}
-                      onCancel={() => setCancelSub(s)}
+                      onCancel={() => (s.status === "cancelling" ? (undoCancelStore(s.id), toast.success(`Cancellation reversed`)) : setCancelSub(s))}
                       onManageSeats={() => setSeatsSub(s)}
                     />
                   ))}
@@ -1043,27 +1489,76 @@ export default function BillingPage() {
               )}
             </SectionCard>
 
+            {/* Compare plans */}
+            <SectionCard title="Compare Plans" description="Choose the right tier for each site."
+              action={
+                <a href="https://accel.ai/pricing" target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[12px] text-muted-foreground underline hover:text-primary">
+                  Full pricing <ArrowUpRight className="size-3" />
+                </a>
+              }
+            >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {TIER_ORDER.map((tier) => {
+                  const p = PLANS[tier];
+                  const color = PLAN_COLORS[tier];
+                  const Icon = PLAN_ICONS[tier];
+                  return (
+                    <div key={tier} className={cn("relative overflow-hidden rounded-xl border bg-background p-4", color.border, p.highlight && "ring-1 ring-secondary")}>
+                      {p.highlight && (
+                        <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                          <Sparkles className="size-2.5" /> Most popular
+                        </span>
+                      )}
+                      <div className={cn("mb-2 flex size-9 items-center justify-center rounded-lg border", color.bg, color.border)}>
+                        <Icon className={cn("size-4", color.text)} />
+                      </div>
+                      <p className="text-[14px] font-bold text-foreground">{p.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{p.tagline}</p>
+                      <div className="my-3 flex items-baseline gap-1">
+                        <span className={cn("font-mono text-[22px] font-bold leading-none", color.text)}>${p.pricePerMonth}</span>
+                        <span className="text-[10px] text-muted-foreground">/site /mo</span>
+                      </div>
+                      <ul className="space-y-1.5 text-[11px]">
+                        {p.features.map((f) => (
+                          <li key={f} className="flex items-start gap-1.5">
+                            <Check className={cn("mt-0.5 size-3 flex-shrink-0", color.text)} />
+                            <span className="text-muted-foreground">{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
           </div>
 
           {/* Right column */}
           <div className="flex flex-col gap-4">
-            <SectionCard title="Payment Method" description="Used for all charges on this account.">
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-background p-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-secondary/15 text-secondary">
-                  <CreditCard className="size-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-foreground">{paymentMethod}</p>
-                  <p className="text-[11px] text-muted-foreground">Expires {paymentExpiry} · Default for invoicing</p>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)}>
-                  Update
+            {/* Payment Methods wallet */}
+            <SectionCard title="Payment Methods" description="Used for all charges on this account."
+              action={
+                <Button size="sm" variant="outline" onClick={() => setAddCardOpen(true)} className="gap-1.5">
+                  <Plus className="size-3.5" /> Add card
                 </Button>
+              }
+            >
+              <div className="space-y-2">
+                {cards.map((card) => (
+                  <PaymentCardRow
+                    key={card.id}
+                    card={card}
+                    onSetDefault={() => setDefaultCard(card.id)}
+                    onRemove={() => removeCard(card.id)}
+                    canRemove={cards.length > 1}
+                  />
+                ))}
               </div>
             </SectionCard>
 
+            {/* Next Invoice */}
             <SectionCard title="Next Invoice" description={`Charges ${ORG_LICENSE_INFO.nextInvoiceDate}.`}>
-              {/* Per-subscription payment cards */}
               <div className="space-y-2">
                 {activeSubs.map((s) => {
                   const color = PLAN_COLORS[s.planTier];
@@ -1077,14 +1572,10 @@ export default function BillingPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[12px] font-bold text-foreground">{s.siteName}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {plan.name} · {s.billingCycle === "annual" ? "Annual" : "Monthly"}
-                          </p>
+                          <p className="text-[10px] text-muted-foreground">{plan.name} · {s.billingCycle === "annual" ? "Annual" : "Monthly"}</p>
                         </div>
                         <div className="text-right">
-                          <p className={cn("font-mono text-[13px] font-bold leading-none", color.text)}>
-                            ${s.monthlyCost.toLocaleString()}
-                          </p>
+                          <p className={cn("font-mono text-[13px] font-bold leading-none", color.text)}>${s.monthlyCost.toLocaleString()}</p>
                           <p className="mt-0.5 text-[9px] text-muted-foreground">/month</p>
                         </div>
                       </div>
@@ -1092,40 +1583,55 @@ export default function BillingPage() {
                   );
                 })}
               </div>
-              {/* Total */}
               <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Total
-                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
                 <span className="font-mono text-[20px] font-bold text-success">${totalMonthly.toLocaleString()}</span>
               </div>
             </SectionCard>
+
+            {/* Billing Details */}
+            <BillingDetailsSection />
           </div>
         </div>
       )}
 
       {tab === "invoices" && (
         <SectionCard title="Invoices" description="Past invoices across all sites and subscriptions.">
+          <InvoiceFilterBar
+            statusFilter={invoiceStatusFilter}
+            onStatusChange={setInvoiceStatusFilter}
+            siteFilter={invoiceSiteFilter}
+            onSiteChange={setInvoiceSiteFilter}
+          />
           <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className="grid grid-cols-[140px_120px_1fr_120px_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="grid grid-cols-[140px_120px_1fr_130px_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               <p>Issued</p>
               <p>Invoice</p>
               <p>Sites</p>
               <p>Status</p>
               <p className="text-right">Amount</p>
             </div>
-            {MOCK_INVOICES.map((inv) => {
+            {filteredInvoices.length === 0 ? (
+              <p className="px-4 py-8 text-center text-[12px] italic text-muted-foreground">No invoices match the current filters.</p>
+            ) : filteredInvoices.map((inv) => {
               const s = INVOICE_STATUS[inv.status];
               return (
                 <button key={inv.id} onClick={() => setActiveInvoice(inv)}
-                  className="grid w-full grid-cols-[140px_120px_1fr_120px_auto] items-center gap-3 border-b border-border/60 px-4 py-3 text-left text-[12px] last:border-b-0 hover:bg-muted/20">
+                  className="grid w-full grid-cols-[140px_120px_1fr_130px_auto] items-center gap-3 border-b border-border/60 px-4 py-3 text-left text-[12px] last:border-b-0 hover:bg-muted/20">
                   <p className="text-foreground">{inv.issuedDisplay}</p>
                   <p className="font-mono text-primary">{inv.id}</p>
                   <p className="truncate text-muted-foreground">{inv.siteNames?.join(" · ") ?? "—"}</p>
-                  <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
-                    <s.icon className="size-2.5" />
-                    {s.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+                      <s.icon className="size-2.5" /> {s.label}
+                    </span>
+                    {inv.status === "failed" && (
+                      <button onClick={(e) => { e.stopPropagation(); handleRetryPayment(); }}
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-sev-critical hover:bg-sev-critical/10">
+                        <RefreshCw className="size-2.5" /> Retry
+                      </button>
+                    )}
+                  </div>
                   <p className="text-right font-mono font-bold text-foreground">${inv.amount.toLocaleString()}</p>
                 </button>
               );
@@ -1135,35 +1641,12 @@ export default function BillingPage() {
       )}
 
       {/* Modals */}
-      <ChangePlanModal
-        open={changePlanSub !== null}
-        current={changePlanSub}
-        onClose={() => setChangePlanSub(null)}
-        onConfirm={confirmChangePlan}
-      />
-      <CancelSubscriptionModal
-        open={cancelSub !== null}
-        sub={cancelSub}
-        onClose={() => setCancelSub(null)}
-        onConfirm={confirmCancel}
-      />
-      <ManageSeatsModal
-        open={seatsSub !== null}
-        sub={seatsSub}
-        onClose={() => setSeatsSub(null)}
-        onSave={saveSeats}
-      />
-      <AddSubscriptionModal
-        open={addOpen}
-        sites={sitesWithoutSub.map((s) => ({ id: s.id, name: s.name }))}
-        onClose={() => setAddOpen(false)}
-        onConfirm={confirmAddSubscription}
-      />
-      <UpdatePaymentModal open={paymentOpen} onClose={() => setPaymentOpen(false)} onSave={savePaymentMethod} />
-      <InvoiceDetailDrawer invoice={activeInvoice} onClose={() => setActiveInvoice(null)} />
-
-      {/* unused silencer */}
-      <span className="hidden"><ChevronDown /><CalendarClock /></span>
+      <ChangePlanModal open={changePlanSub !== null} current={changePlanSub} onClose={() => setChangePlanSub(null)} onConfirm={confirmChangePlan} />
+      <CancelSubscriptionModal open={cancelSub !== null} sub={cancelSub} onClose={() => setCancelSub(null)} onConfirm={confirmCancel} />
+      <ManageSeatsModal open={seatsSub !== null} sub={seatsSub} onClose={() => setSeatsSub(null)} onSave={saveSeats} />
+      <AddSubscriptionModal open={addOpen} sites={sitesWithoutSub.map((s) => ({ id: s.id, name: s.name }))} onClose={() => setAddOpen(false)} onConfirm={confirmAddSubscription} />
+      <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
+      <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
     </div>
   );
 }

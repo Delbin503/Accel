@@ -7,6 +7,7 @@ interface SubscriptionsState {
   add: (sub: SiteSubscription) => void;
   changePlan: (id: string, planTier: PlanTier) => void;
   cancel: (id: string) => void;
+  undoCancel: (id: string) => void;
   reactivate: (id: string) => void;
   changeBillingCycle: (id: string, cycle: "monthly" | "annual") => void;
   updateSeats: (id: string, seats: { owner: number; admin: number; user: number }) => void;
@@ -37,13 +38,19 @@ export const useSubscriptionsStore = create<SubscriptionsState>()(
       cancel: (id) =>
         set((s) => ({
           subscriptions: s.subscriptions.map((x) =>
-            x.id === id ? { ...x, status: "cancelled" } : x
+            x.id === id ? { ...x, status: "cancelling", cancellingAt: x.renewsAt } : x
+          ),
+        })),
+      undoCancel: (id) =>
+        set((s) => ({
+          subscriptions: s.subscriptions.map((x) =>
+            x.id === id ? { ...x, status: "active", cancellingAt: undefined } : x
           ),
         })),
       reactivate: (id) =>
         set((s) => ({
           subscriptions: s.subscriptions.map((x) =>
-            x.id === id ? { ...x, status: "active" } : x
+            x.id === id ? { ...x, status: "active", cancellingAt: undefined } : x
           ),
         })),
       changeBillingCycle: (id, cycle) =>

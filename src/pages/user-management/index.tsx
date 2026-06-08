@@ -1075,7 +1075,7 @@ function InviteUsersModal({
         <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3">
           <Button size="sm" disabled={!canSubmit} onClick={() => onInvite(emails, role, sites)} className="gap-1.5">
             <Mail className="size-3.5" />
-            Send {parsed.valid.length > 0 ? `${parsed.valid.length} Invite${parsed.valid.length === 1 ? "" : "s"}` : "Invites"}
+            Send Invite
           </Button>
           <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>

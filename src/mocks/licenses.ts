@@ -103,7 +103,7 @@ export const PLANS: Record<PlanTier, Plan> = {
 
 /* ── Site subscriptions ─────────────────────────────────────────────────── */
 
-export type SubscriptionStatus = "active" | "trial" | "past-due" | "cancelled";
+export type SubscriptionStatus = "active" | "trial" | "past-due" | "cancelled" | "cancelling" | "payment_failed";
 
 export interface SiteSubscription {
   id: string;
@@ -118,6 +118,7 @@ export interface SiteSubscription {
   renewsAt: string;            // ISO
   renewsDisplay: string;
   monthlyCost: number;         // computed total
+  cancellingAt?: string;       // ISO - set when status = "cancelling"
 }
 
 export const MOCK_SUBSCRIPTIONS: SiteSubscription[] = [
@@ -257,6 +258,7 @@ export interface Invoice {
 }
 
 export const MOCK_INVOICES: Invoice[] = [
+  { id: "INV-2026-006", issuedDisplay: "01 Jun 2026", amount: 2280, status: "failed",  periodDisplay: "Jun 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta"] },
   { id: "INV-2026-005", issuedDisplay: "01 May 2026", amount: 2230, status: "paid",    periodDisplay: "May 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta"] },
   { id: "INV-2026-004", issuedDisplay: "01 Apr 2026", amount: 2080, status: "paid",    periodDisplay: "Apr 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
   { id: "INV-2026-003", issuedDisplay: "01 Mar 2026", amount: 1980, status: "paid",    periodDisplay: "Mar 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
