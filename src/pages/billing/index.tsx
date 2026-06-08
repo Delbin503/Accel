@@ -533,9 +533,10 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
           )}
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
           {step === "pick" ? (
             <>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
               <Button
                 disabled={picked === current.planTier && cycle === current.billingCycle}
                 onClick={() => setStep("confirm")}
@@ -543,16 +544,15 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
               >
                 Review change <ArrowUpRight className="size-3.5" />
               </Button>
-              <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
             </>
           ) : (
             <>
+              <Button variant="ghost" className="mr-auto" onClick={() => setStep("pick")}>Back</Button>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
               <Button onClick={() => onConfirm(picked, cycle)} className="gap-1.5">
                 <Check className="size-3.5" />
                 Confirm Change
               </Button>
-              <Button variant="ghost" onClick={() => setStep("pick")}>Back</Button>
-              <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
             </>
           )}
         </div>
@@ -651,11 +651,11 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
             })}
           </div>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!siteId} onClick={() => onConfirm(siteId, planTier, cycle)} className="gap-1.5">
             <Plus className="size-3.5" /> Activate Subscription
           </Button>
-          <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -672,7 +672,7 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-sev-critical">Cancel Subscription</DialogTitle>
+          <DialogTitle className="text-base font-bold text-destructive">Cancel Subscription</DialogTitle>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             The subscription for <strong className="text-foreground">{sub.siteName}</strong> will remain active until the end of the billing period ({sub.renewsDisplay.split(" (")[0]}), then become read-only.
           </p>
@@ -688,9 +688,9 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
             </ul>
           </div>
         </div>
-        <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Keep Subscription</Button>
-          <Button onClick={onConfirm} className="ml-auto gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90">
+          <Button variant="destructive" onClick={onConfirm} className="gap-1.5">
             <X className="size-3.5" /> Schedule Cancellation
           </Button>
         </div>
@@ -765,11 +765,11 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
             </div>
           </div>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={() => onSave(seats)} className="gap-1.5">
             <Check className="size-3.5" /> Apply Changes
           </Button>
-          <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -886,11 +886,11 @@ function AddCardModal({ open, onClose, onSave }: {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!canSubmit} onClick={() => onSave(last4, expiry, detectBrand(cleaned))} className="gap-1.5">
             <CreditCard className="size-3.5" /> Add Card
           </Button>
-          <Button variant="ghost" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>

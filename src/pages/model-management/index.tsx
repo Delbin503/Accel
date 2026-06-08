@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -466,28 +467,20 @@ function CreateModelModal({
   const [desc, setDesc] = React.useState("");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <p className="text-[15px] font-bold text-foreground">Create Model</p>
-            <p className="text-[12px] text-muted-foreground">Set basic information to get started.</p>
-          </div>
-          <button
-            onClick={onCancel}
-            className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Create Model</DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">Set basic information to get started.</p>
+        </DialogHeader>
 
-        <div className="space-y-4 px-5 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Model Information
           </p>
           <div>
             <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
-              Model Name <span className="text-sev-critical">*</span>
+              Model Name <span className="text-destructive">*</span>
             </label>
             <Input
               value={name}
@@ -498,7 +491,7 @@ function CreateModelModal({
           </div>
           <div>
             <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
-              Model Description <span className="text-sev-critical">*</span>
+              Model Description <span className="text-destructive">*</span>
             </label>
             <textarea
               value={desc}
@@ -510,8 +503,8 @@ function CreateModelModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button
@@ -522,8 +515,8 @@ function CreateModelModal({
             Confirm
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -543,27 +536,19 @@ function AddStepModal({
   const valid = actionLabel.trim() && label.trim() && fileName.trim();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <p className="text-[15px] font-bold text-foreground">Add New Step</p>
-            <p className="text-[12px] text-muted-foreground">
-              Define what the AI should verify at this step.
-            </p>
-          </div>
-          <button
-            onClick={onCancel}
-            className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Add New Step</DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            Define what the AI should verify at this step.
+          </p>
+        </DialogHeader>
 
-        <div className="space-y-4 px-5 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
             <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
-              Action Label <span className="text-sev-critical">*</span>
+              Action Label <span className="text-destructive">*</span>
             </label>
             <Input
               value={actionLabel}
@@ -575,7 +560,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
-              Label <span className="text-sev-critical">*</span>
+              Label <span className="text-destructive">*</span>
             </label>
             <Input
               value={label}
@@ -587,7 +572,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
-              File <span className="text-sev-critical">*</span>
+              File <span className="text-destructive">*</span>
             </label>
             <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-5 transition-colors hover:border-primary/40">
               <UploadCloud className="size-7 text-muted-foreground" />
@@ -612,8 +597,8 @@ function AddStepModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button
@@ -626,8 +611,8 @@ function AddStepModal({
             Confirm
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -643,22 +628,22 @@ function DeleteModelModal({
   onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-[440px] max-w-[92vw] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="border-b border-border px-5 py-4">
-          <div className="flex items-center gap-2.5 text-[15px] font-bold text-foreground">
-            <Trash2 className="size-4 text-sev-critical" />
+    <Dialog open onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="w-[440px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
+            <Trash2 className="size-4" />
             Delete Model
-          </div>
-          <p className="mt-1 text-[12px] text-muted-foreground">This action cannot be undone.</p>
-        </div>
+          </DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+        </DialogHeader>
         <div className="px-5 py-4 text-[13px] text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{name}</span>? Any deployments that
           reference this model will need to be updated.
         </div>
-        <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button variant="destructive" size="sm" onClick={onConfirm} className="gap-1.5">
@@ -666,8 +651,8 @@ function DeleteModelModal({
             Delete Model
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -1448,22 +1449,22 @@ function DeleteModal({
   onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="border-b border-border px-5 py-4">
-          <div className="flex items-center gap-2.5 text-[15px] font-bold text-foreground">
-            <Trash2 className="size-4 text-sev-critical" />
+    <Dialog open onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="w-[440px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
+            <Trash2 className="size-4" />
             Delete Rule
-          </div>
-          <p className="mt-1 text-[12px] text-muted-foreground">This action cannot be undone.</p>
-        </div>
+          </DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+        </DialogHeader>
         <div className="px-5 py-4 text-[13px] text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{ruleName}</span>? Any models that
           reference this rule will need to be updated.
         </div>
-        <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button variant="destructive" size="sm" onClick={onConfirm} className="gap-1.5">
@@ -1471,8 +1472,8 @@ function DeleteModal({
             Delete Rule
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

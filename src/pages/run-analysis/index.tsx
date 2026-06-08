@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
@@ -2745,42 +2746,42 @@ function HistoryTab({
     </div>
 
     {/* Delete confirmation modal */}
-    {deleteTarget && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-        <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-          <div className="border-b border-border px-5 py-4">
-            <div className="flex items-center gap-2.5 text-[15px] font-bold text-foreground">
-              <Trash2 className="size-4 text-sev-critical" />
-              Delete Analysis
-            </div>
-            <p className="mt-1 text-[12px] text-muted-foreground">This action cannot be undone.</p>
-          </div>
+    <Dialog open={!!deleteTarget} onOpenChange={(v) => !v && setPendingDeleteId(null)}>
+      <DialogContent className="w-[440px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
+            <Trash2 className="size-4" />
+            Delete Analysis
+          </DialogTitle>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+        </DialogHeader>
+        {deleteTarget && (
           <div className="px-5 py-4 text-[13px] text-muted-foreground">
             Are you sure you want to delete{" "}
             <span className="font-semibold text-foreground">{deleteTarget.id}</span>{" "}
             <span className="font-semibold text-foreground">— {deleteTarget.name}</span>? Any
             references to this run from validation history will be removed.
           </div>
-          <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-            <Button variant="outline" size="sm" onClick={() => setPendingDeleteId(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => {
-                onDelete(deleteTarget.id);
-                setPendingDeleteId(null);
-              }}
-            >
-              <Trash2 className="size-3.5" />
-              Delete Analysis
-            </Button>
-          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={() => setPendingDeleteId(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              if (deleteTarget) onDelete(deleteTarget.id);
+              setPendingDeleteId(null);
+            }}
+          >
+            <Trash2 className="size-3.5" />
+            Delete Analysis
+          </Button>
         </div>
-      </div>
-    )}
+      </DialogContent>
+    </Dialog>
   </div>
   );
 }

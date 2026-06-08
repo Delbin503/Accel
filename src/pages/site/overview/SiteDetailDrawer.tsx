@@ -535,7 +535,7 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-sev-critical">Delete {site.name}?</DialogTitle>
+          <DialogTitle className="text-base font-bold text-destructive">Delete {site.name}?</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
           <p className="text-[12px] text-muted-foreground">

@@ -1072,12 +1072,12 @@ function InviteUsersModal({
           )}
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!canSubmit} onClick={() => onInvite(emails, role, sites)} className="gap-1.5">
             <Mail className="size-3.5" />
             Send Invite
           </Button>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -1816,10 +1816,11 @@ function SuspendUserModal({
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
+            variant="destructive"
             size="sm"
             disabled={!customValid}
             onClick={handleConfirm}
-            className="gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90"
+            className="gap-1.5"
           >
             <ShieldOff className="size-3.5" />
             Suspend

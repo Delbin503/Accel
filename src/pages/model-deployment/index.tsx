@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -676,18 +677,18 @@ function DeployWizard({
       />
 
       {/* Confirm modal */}
-      {confirmOpen && selectedModel && selectedSite && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-            <div className="border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2.5 text-[15px] font-bold text-foreground">
-                <Rocket className="size-4 text-primary" />
-                Confirm Deployment
-              </div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Creating {selectedCameras.length} deployment record{selectedCameras.length === 1 ? "" : "s"}.
-              </p>
-            </div>
+      <Dialog open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
+        <DialogContent className="w-[560px] max-w-[95vw] p-0">
+          <DialogHeader className="border-b border-border px-5 py-4">
+            <DialogTitle className="flex items-center gap-2.5 text-base font-bold">
+              <Rocket className="size-4 text-primary" />
+              Confirm Deployment
+            </DialogTitle>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              Creating {selectedCameras.length} deployment record{selectedCameras.length === 1 ? "" : "s"}.
+            </p>
+          </DialogHeader>
+          {selectedModel && selectedSite && (
             <div className="space-y-3 px-5 py-4">
               <KvRow label="Model" value={selectedModel.name} />
               <KvRow label="Site" value={selectedSite.siteName} />
@@ -700,18 +701,18 @@ function DeployWizard({
                 </div>
               )}
             </div>
-            <div className="flex justify-end gap-2 border-t border-border bg-background px-5 py-3.5">
-              <Button variant="outline" size="sm" onClick={() => setConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={commitDeploy} className="gap-1.5">
-                <Rocket className="size-3.5" />
-                Deploy {selectedCameras.length} Camera{selectedCameras.length === 1 ? "" : "s"}
-              </Button>
-            </div>
+          )}
+          <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={commitDeploy} className="gap-1.5">
+              <Rocket className="size-3.5" />
+              Deploy {selectedCameras.length} Camera{selectedCameras.length === 1 ? "" : "s"}
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1160,7 +1161,7 @@ function ModelDeploymentsDrawer({
                 <Square className="size-3" />
                 Stop
               </Button>
-              <Button size="sm" onClick={() => runAction("Removed model from")} className="gap-1.5 bg-sev-critical text-white hover:bg-sev-critical/90">
+              <Button size="sm" variant="destructive" onClick={() => runAction("Removed model from")} className="gap-1.5">
                 <Trash2 className="size-3" />
                 Remove
               </Button>
