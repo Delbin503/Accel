@@ -115,7 +115,7 @@ function StatusBadge({ status }: { status: "operational" | "degraded" | "outage"
     outage:      { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", label: "Outage"      },
   }[status];
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", cfg.bg, cfg.text)}>
+    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", cfg.bg, cfg.text)}>
       <span className={cn("size-1.5 rounded-full",
         status === "operational" ? "animate-pulse bg-success" : status === "degraded" ? "bg-warning" : "bg-sev-critical")} />
       {cfg.label}
@@ -133,7 +133,7 @@ function SectionCard({ title, icon: Icon, children, action }: {
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
             <Icon className="size-3.5 text-primary" />
           </div>
-          <h2 className="text-[14px] font-bold text-foreground">{title}</h2>
+          <h2 className="text-md font-bold text-foreground">{title}</h2>
         </div>
         {action}
       </div>
@@ -172,7 +172,7 @@ export default function SystemInfoPage() {
       </PageHeader>
 
       <SectionCard title="Service Status" icon={Activity}>
-        <p className="mb-3 inline-flex items-center gap-1.5 text-[12px]">
+        <p className="mb-3 inline-flex items-center gap-1.5 text-sm">
           <CheckCircle2 className="size-3.5 text-success" />
           <span className="font-semibold text-success">All systems operational</span>
           <span className="text-muted-foreground">· Updated just now</span>
@@ -181,8 +181,8 @@ export default function SystemInfoPage() {
           {SYSTEM_STATUS.map((s) => (
             <div key={s.label} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-semibold text-foreground">{s.label}</p>
-                <p className="text-[11px] text-muted-foreground">Uptime · {s.uptime} over 30 days</p>
+                <p className="text-base font-semibold text-foreground">{s.label}</p>
+                <p className="text-xs text-muted-foreground">Uptime · {s.uptime} over 30 days</p>
               </div>
               <StatusBadge status={s.status} />
             </div>
@@ -196,9 +196,9 @@ export default function SystemInfoPage() {
             <dl className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-2.5">
               {group.items.map((item) => (
                 <React.Fragment key={item.label}>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</dt>
-                  <dd className="flex items-center gap-1.5 text-[12px] text-foreground">
-                    <span className={cn(item.mono && "font-mono text-[11px]")}>{item.value}</span>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</dt>
+                  <dd className="flex items-center gap-1.5 text-sm text-foreground">
+                    <span className={cn(item.mono && "font-mono text-xs")}>{item.value}</span>
                     {item.copy && (
                       <button onClick={() => copy(item.value)}
                         className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">

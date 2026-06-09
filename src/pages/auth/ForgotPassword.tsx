@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
               else if (step === "code") setStep("email");
               else if (step === "reset") setStep("code");
             }}
-            className="mb-5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground"
+            className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
             Back
@@ -128,16 +128,16 @@ export default function ForgotPasswordPage() {
 
         {step === "email" && (
           <>
-            <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Forgot password?
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Enter the email associated with your Accel account. We'll send a
               6-digit verification code.
             </p>
             <form onSubmit={submitEmail} className="mt-6 space-y-3">
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Email
                 </label>
                 <div className="relative">
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="h-10 pl-9 text-[13px]"
+                    className="h-10 pl-9 text-base"
                   />
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
               <Button
                 type="submit"
                 disabled={sending}
-                className="h-10 w-full gap-2 text-[13px]"
+                className="h-10 w-full gap-2 text-base"
               >
                 {sending ? (
                   <>
@@ -170,7 +170,7 @@ export default function ForgotPasswordPage() {
                 )}
               </Button>
             </form>
-            <p className="mt-6 text-center text-[12px] text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Remembered it?{" "}
               <Link
                 to="/signin"
@@ -184,10 +184,10 @@ export default function ForgotPasswordPage() {
 
         {step === "code" && (
           <>
-            <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Check your email
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               We sent a 6-digit code to{" "}
               <strong className="text-foreground">{email}</strong>. Enter it
               below to verify.
@@ -209,7 +209,7 @@ export default function ForgotPasswordPage() {
                     inputMode="numeric"
                     maxLength={1}
                     className={cn(
-                      "h-12 w-12 rounded-md border border-input bg-background text-center font-mono text-[20px] font-bold text-foreground outline-none transition-colors",
+                      "h-12 w-12 rounded-md border border-input bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors",
                       "focus:border-primary focus:ring-2 focus:ring-primary/30"
                     )}
                   />
@@ -218,7 +218,7 @@ export default function ForgotPasswordPage() {
               {error && <ErrorBox message={error} />}
               <Button
                 type="submit"
-                className="h-10 w-full gap-2 text-[13px]"
+                className="h-10 w-full gap-2 text-base"
               >
                 Verify Code
               </Button>
@@ -229,7 +229,7 @@ export default function ForgotPasswordPage() {
                     description: `A new code was sent to ${email}.`,
                   })
                 }
-                className="block w-full text-center text-[12px] text-muted-foreground hover:text-primary"
+                className="block w-full text-center text-sm text-muted-foreground hover:text-primary"
               >
                 Didn't get it?{" "}
                 <span className="font-semibold underline">Resend code</span>
@@ -240,10 +240,10 @@ export default function ForgotPasswordPage() {
 
         {step === "reset" && (
           <>
-            <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Create new password
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Choose a strong password — at least 8 characters.
             </p>
             <form onSubmit={submitReset} className="mt-6 space-y-3">
@@ -269,7 +269,7 @@ export default function ForgotPasswordPage() {
               {error && <ErrorBox message={error} />}
               <Button
                 type="submit"
-                className="h-10 w-full gap-2 text-[13px]"
+                className="h-10 w-full gap-2 text-base"
               >
                 <Lock className="size-3.5" /> Update password
               </Button>
@@ -282,10 +282,10 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full border-2 border-success/50 bg-success/10">
               <CheckCircle2 className="size-7 text-success" />
             </div>
-            <h1 className="text-[22px] font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Password updated
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Redirecting you to sign in…
             </p>
           </div>
@@ -312,7 +312,7 @@ function PasswordField({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       <div className="relative">
@@ -323,7 +323,7 @@ function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-10 px-9 text-[13px]"
+          className="h-10 px-9 text-base"
         />
         <button
           type="button"
@@ -340,7 +340,7 @@ function PasswordField({
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+    <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
       <AlertCircle className="size-3.5 flex-shrink-0" />
       {message}
     </div>

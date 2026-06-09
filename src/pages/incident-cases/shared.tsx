@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import type { CaseStatus } from "@/types/incidents";
+import { StatusBadge, type StatusBadgeProps } from "@/components/shared/StatusBadge";
 
 export const STATUS_CONFIG: Record<CaseStatus, { label: string; badge: string; dot: string }> = {
   open: {
@@ -24,17 +24,13 @@ export const STATUS_CONFIG: Record<CaseStatus, { label: string; badge: string; d
   },
 };
 
+const STATUS_TONE: Record<CaseStatus, StatusBadgeProps["tone"]> = {
+  open: "info",
+  "in-review": "warning",
+  "action-taken": "purple",
+  closed: "success",
+};
+
 export function CaseStatusBadge({ status }: { status: CaseStatus }) {
-  const s = STATUS_CONFIG[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-        s.badge
-      )}
-    >
-      <span className={cn("size-1.5 flex-shrink-0 rounded-full", s.dot)} />
-      {s.label}
-    </span>
-  );
+  return <StatusBadge tone={STATUS_TONE[status]}>{STATUS_CONFIG[status].label}</StatusBadge>;
 }

@@ -37,7 +37,7 @@ function RoleBadge({ role }: { role: UserRole }) {
   const s = ROLE_STYLES[role];
   const Icon = s.icon;
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
       <Icon className="size-3" />
       {USER_ROLE_LABELS[role]}
     </span>
@@ -48,8 +48,8 @@ function SectionCard({ title, description, children }: { title: string; descript
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="border-b border-border px-5 py-4">
-        <h2 className="text-[14px] font-bold text-foreground">{title}</h2>
-        {description && <p className="mt-0.5 text-[12px] text-muted-foreground">{description}</p>}
+        <h2 className="text-md font-bold text-foreground">{title}</h2>
+        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
       <div className="px-5 py-4">{children}</div>
     </div>
@@ -87,26 +87,26 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
         </DialogHeader>
         <div className="space-y-4 px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Current Password</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Password</label>
             <div className="relative">
-              <Input type={showCurrent ? "text" : "password"} value={current} onChange={(e) => setCurrent(e.target.value)} className="h-9 pr-9 text-[13px]" />
+              <Input type={showCurrent ? "text" : "password"} value={current} onChange={(e) => setCurrent(e.target.value)} className="h-9 pr-9 text-base" />
               <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showCurrent ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
             <div className="relative">
-              <Input type={showNext ? "text" : "password"} value={next} onChange={(e) => setNext(e.target.value)} className="h-9 pr-9 text-[13px]" />
+              <Input type={showNext ? "text" : "password"} value={next} onChange={(e) => setNext(e.target.value)} className="h-9 pr-9 text-base" />
               <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showNext ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
-            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-[13px]" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
+            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-base" />
           </div>
           <div className="space-y-1 rounded-lg border border-border bg-background px-3 py-2.5">
             {([
@@ -116,7 +116,7 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
               ["At least one symbol", hasSymbol],
               ["Passwords match", matches],
             ] as [string, boolean][]).map(([label, ok]) => (
-              <div key={label} className="flex items-center gap-1.5 text-[11px]">
+              <div key={label} className="flex items-center gap-1.5 text-xs">
                 <Check className={cn("size-3", ok ? "text-success" : "text-muted-foreground/40")} />
                 <span className={ok ? "text-foreground" : "text-muted-foreground"}>{label}</span>
               </div>
@@ -143,7 +143,7 @@ function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () =>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Enable Two-Factor Authentication</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Scan the QR code with your authenticator app, then enter the 6-digit code.
           </p>
         </DialogHeader>
@@ -158,13 +158,13 @@ function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () =>
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background px-3 py-2 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Or enter this key</p>
-            <p className="mt-0.5 font-mono text-[12px] text-foreground">JBSWY3DPEHPK3PXPEHPK3PXPEHPK3PXP</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Or enter this key</p>
+            <p className="mt-0.5 font-mono text-sm text-foreground">JBSWY3DPEHPK3PXPEHPK3PXPEHPK3PXP</p>
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">6-digit verification code</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">6-digit verification code</label>
             <Input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" maxLength={6}
-              className="h-10 text-center font-mono text-[18px] tracking-[0.5em]" />
+              className="h-10 text-center font-mono text-xl tracking-[0.5em]" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -238,11 +238,11 @@ export default function ProfilePage() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[18px] font-bold text-foreground">{fullName}</h2>
+            <h2 className="text-xl font-bold text-foreground">{fullName}</h2>
             <RoleBadge role={role} />
           </div>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">{email}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">{email}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             User ID <span className="font-mono text-foreground">{seedUser.id}</span> · Joined {seedUser.createdAtDisplay}
           </p>
         </div>
@@ -251,40 +251,40 @@ export default function ProfilePage() {
       <SectionCard title="Personal Info" description="Your name and contact details.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
               Full Name
             </label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-9 text-[13px]" />
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-9 text-base" />
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
               Display Name
             </label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-9 text-[13px]" />
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-9 text-base" />
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Mail className="size-3" />
               Email Address
             </label>
-            <Input value={email} disabled className="h-9 text-[13px]" />
-            <p className="mt-1 text-[11px] text-muted-foreground">Email cannot be changed. Contact your admin.</p>
+            <Input value={email} disabled className="h-9 text-base" />
+            <p className="mt-1 text-xs text-muted-foreground">Email cannot be changed. Contact your admin.</p>
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Phone className="size-3" />
               Phone
             </label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+65 9123 4567" className="h-9 font-mono text-[13px]" />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+65 9123 4567" className="h-9 font-mono text-base" />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Building2 className="size-3" />
               Department
             </label>
-            <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Security Operations" className="h-9 text-[13px]" />
+            <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Security Operations" className="h-9 text-base" />
           </div>
         </div>
       </SectionCard>
@@ -295,24 +295,24 @@ export default function ProfilePage() {
             <Shield className="mt-0.5 size-4 text-muted-foreground" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-[13px] font-semibold text-foreground">Current Role</p>
+                <p className="text-base font-semibold text-foreground">Current Role</p>
                 <RoleBadge role={role} />
               </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Your role is managed by your organization owner — contact them to request changes.
               </p>
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Site Access ({seedUser.sitePermissions.length})
             </p>
             {seedUser.sitePermissions.length === 0 ? (
-              <p className="text-[12px] italic text-muted-foreground">No site access granted.</p>
+              <p className="text-sm italic text-muted-foreground">No site access granted.</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {seedUser.sitePermissions.map((p) => (
-                  <span key={p.siteId} className="inline-flex items-center gap-1 rounded-md border border-info/30 bg-info/10 px-2 py-0.5 text-[11px] font-semibold text-info">
+                  <span key={p.siteId} className="inline-flex items-center gap-1 rounded-md border border-info/30 bg-info/10 px-2 py-0.5 text-xs font-semibold text-info">
                     {p.siteName}
                   </span>
                 ))}
@@ -327,8 +327,8 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
             <KeyRound className="size-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold text-foreground">Password</p>
-              <p className="text-[11px] text-muted-foreground">Last changed {seedUser.passwordChangedDisplay}</p>
+              <p className="text-base font-semibold text-foreground">Password</p>
+              <p className="text-xs text-muted-foreground">Last changed {seedUser.passwordChangedDisplay}</p>
             </div>
             <Button variant="outline" onClick={() => setPwdOpen(true)}>Change Password</Button>
           </div>
@@ -336,14 +336,14 @@ export default function ProfilePage() {
             <Smartphone className="size-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-[13px] font-semibold text-foreground">Two-Factor Authentication</p>
+                <p className="text-base font-semibold text-foreground">Two-Factor Authentication</p>
                 {twoFactor ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success">Enabled</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-success">Enabled</span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">Not Enabled</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-warning">Not Enabled</span>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {twoFactor ? "TOTP via Authenticator app" : "Add a layer of protection by requiring a code from your authenticator app."}
               </p>
             </div>

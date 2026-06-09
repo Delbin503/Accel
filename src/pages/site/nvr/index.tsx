@@ -57,7 +57,7 @@ function StatusPill({ status }: { status: NvrStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -83,8 +83,8 @@ function StorageBar({ used, total }: { used: number; total: number }) {
   return (
     <div className="min-w-[140px]">
       <div className="mb-1 flex items-baseline justify-between gap-2">
-        <span className={cn("text-[12px] font-semibold", styles.text)}>{pct}%</span>
-        <span className="font-mono text-[10px] text-muted-foreground">
+        <span className={cn("text-sm font-semibold", styles.text)}>{pct}%</span>
+        <span className="font-mono text-2xs text-muted-foreground">
           {used.toLocaleString()} / {total.toLocaleString()} GB
         </span>
       </div>
@@ -116,10 +116,10 @@ function StorageDonut({ usedPct, band, size = 140 }: { usedPct: number; band: St
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className={cn("text-[24px] font-bold leading-none", BAND_STYLES[band].text)}>
+        <p className={cn("text-3xl font-bold leading-none", BAND_STYLES[band].text)}>
           {usedPct}%
         </p>
-        <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">Used</p>
+        <p className="mt-0.5 text-2xs uppercase tracking-widest text-muted-foreground">Used</p>
       </div>
     </div>
   );
@@ -172,7 +172,7 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -188,7 +188,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -247,15 +247,15 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All sites", "All areas", "All storage"].map((l) => (
-                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                   {l}
                 </span>
               ))}
@@ -266,7 +266,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -283,7 +283,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, name, model, or IP…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -293,7 +293,7 @@ function FilterPanel({
               { key: "storage" as const, label: "Storage", opts: STORAGE_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -357,7 +357,7 @@ function buildChannelRows(nvr: NvrData): ChannelRow[] {
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -383,21 +383,21 @@ function StatCard({ icon, label, value, valueClass, sub }: {
 function ChannelRecordingStatusPill({ status, hasCamera }: { status?: "live" | "offline"; hasCamera: boolean }) {
   if (!hasCamera) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground/70">
         Empty
       </span>
     );
   }
   if (status === "live") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
+      <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
         <CircleDot className="size-2.5" />
         Recording
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning">
+    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
       <AlertTriangle className="size-2.5" />
       Not Recording
     </span>
@@ -437,7 +437,7 @@ function NvrDrawer({
         <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
           <SheetHeader className="border-b border-border bg-card px-5 py-4">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-[15px] text-muted-foreground">NVR not found</SheetTitle>
+              <SheetTitle className="text-md text-muted-foreground">NVR not found</SheetTitle>
               <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="size-4" />
               </button>
@@ -484,19 +484,19 @@ function NvrDrawer({
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <StatusPill status={nvr.status} />
                 {nvr.status === "offline" && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
                     <AlertTriangle className="size-3" />
                     NVR is offline
                   </span>
                 )}
               </div>
               <div className="mb-1 flex items-center gap-2">
-                <SheetTitle className="min-w-0 text-[17px] font-bold"><TruncatedText text={nvr.name} /></SheetTitle>
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                <SheetTitle className="min-w-0 text-lg font-bold"><TruncatedText text={nvr.name} /></SheetTitle>
+                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
                   {nvr.id}
                 </span>
               </div>
-              <p className="inline-flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground">
+              <p className="inline-flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="size-3" />
                 {nvr.siteName} · {nvr.areaName}
                 <span className="text-muted-foreground/40">·</span>
@@ -521,14 +521,14 @@ function NvrDrawer({
                 key={key}
                 onClick={() => setTab(key)}
                 className={cn(
-                  "relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-semibold transition-colors",
+                  "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                   tab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="size-3.5" />
                 {label}
                 {badge != null && (
-                  <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                  <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
                     {badge}
                   </span>
                 )}
@@ -597,10 +597,10 @@ function NvrDrawer({
                   ] as [string, React.ReactNode][]
                 ).map(([label, value]) => (
                   <div key={label as string} className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       {label}
                     </span>
-                    <span className="text-[13px] font-medium text-foreground">{value}</span>
+                    <span className="text-base font-medium text-foreground">{value}</span>
                   </div>
                 ))}
               </div>
@@ -614,12 +614,12 @@ function NvrDrawer({
                   <StorageDonut usedPct={usedPct} band={band} size={140} />
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-[15px] font-bold text-foreground">
+                      <p className="text-md font-bold text-foreground">
                         {nvr.usedStorageGb.toLocaleString()} GB used
                       </p>
                       <span
                         className={cn(
-                          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          "rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
                           BAND_STYLES[band].text,
                           band === "healthy" ? "border-success/30 bg-success/10" :
                           band === "warning" ? "border-warning/30 bg-warning/10" :
@@ -629,10 +629,10 @@ function NvrDrawer({
                         {BAND_STYLES[band].label}
                       </span>
                     </div>
-                    <p className="text-[12px] text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       of {nvr.totalStorageGb.toLocaleString()} GB total
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Retention <span className="font-semibold text-foreground">{nvr.retentionDays} days</span>{" "}
                       · Cleanup <span className="font-semibold text-foreground capitalize">{nvr.cleanupSchedule.replace(/-/g, " ")}</span>
                     </p>
@@ -641,20 +641,20 @@ function NvrDrawer({
 
                 <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total</p>
-                    <p className="mt-0.5 text-[14px] font-bold text-foreground">
+                    <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Total</p>
+                    <p className="mt-0.5 text-md font-bold text-foreground">
                       {nvr.totalStorageGb.toLocaleString()} GB
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Available</p>
-                    <p className="mt-0.5 text-[14px] font-bold text-foreground">
-                      {availableGb.toLocaleString()} GB <span className="text-[11px] font-normal text-muted-foreground">({availablePct}%)</span>
+                    <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Available</p>
+                    <p className="mt-0.5 text-md font-bold text-foreground">
+                      {availableGb.toLocaleString()} GB <span className="text-xs font-normal text-muted-foreground">({availablePct}%)</span>
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Est. Time Remaining</p>
-                    <p className={cn("mt-0.5 text-[14px] font-bold",
+                    <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Est. Time Remaining</p>
+                    <p className={cn("mt-0.5 text-md font-bold",
                       estDaysRemaining < 7 ? "text-sev-critical" : estDaysRemaining < 30 ? "text-warning" : "text-success"
                     )}>
                       {estDaysRemaining} days
@@ -663,7 +663,7 @@ function NvrDrawer({
                 </div>
 
                 {band === "critical" && (
-                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5 text-[11px] text-muted-foreground">
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5 text-xs text-muted-foreground">
                     <AlertTriangle className="size-3.5 flex-shrink-0 text-sev-critical" />
                     Auto-cleanup is deleting recordings older than the retention window. Events older than that lose replayable footage.
                   </div>
@@ -690,7 +690,7 @@ function NvrDrawer({
                 Recording Statistics by Channel ({linkedChannels.length})
               </SectionTitle>
               {nvr.status === "offline" && (
-                <div className="mb-2 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2 text-[11px]">
+                <div className="mb-2 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2 text-xs">
                   <AlertTriangle className="size-3.5 flex-shrink-0 text-sev-critical" />
                   <p className="text-muted-foreground">
                     <strong className="text-sev-critical">Recording Disabled:</strong> This NVR is currently offline and recording is paused until it reconnects.
@@ -704,7 +704,7 @@ function NvrDrawer({
                       {["CH", "CAMERA", "RECORDING", "LOCATION", "STORAGE USED", "RECORDINGS"].map((h) => (
                         <th
                           key={h}
-                          className="px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                          className="px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                         >
                           {h}
                         </th>
@@ -714,26 +714,26 @@ function NvrDrawer({
                   <tbody className="divide-y divide-border/60">
                     {linkedChannels.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-3 py-8 text-center text-[12px] text-muted-foreground">
+                        <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                           No cameras linked to this NVR yet.
                         </td>
                       </tr>
                     ) : (
                       linkedChannels.map((ch) => (
-                        <tr key={ch.channel} className="group text-[13px] transition-colors hover:bg-muted/20">
-                          <td className="px-3 py-2.5 font-mono text-[12px] text-muted-foreground">
+                        <tr key={ch.channel} className="group text-base transition-colors hover:bg-muted/20">
+                          <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
                             Ch {String(ch.channel).padStart(2, "0")}
                           </td>
                           <td className="px-3 py-2.5">
                             <button
                               onClick={() => ch.cameraId && onOpenCamera(ch.cameraId)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-[11px] text-info hover:bg-info/15"
+                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
                             >
                               <Video className="size-3" />
                               <span className="font-mono">{ch.cameraId}</span>
                             </button>
                             {ch.cameraName && (
-                              <p className="mt-1 text-[11px] text-muted-foreground">{ch.cameraName}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{ch.cameraName}</p>
                             )}
                           </td>
                           <td className="px-3 py-2.5">
@@ -746,14 +746,14 @@ function NvrDrawer({
                                   <MapPin className="size-2.5" />
                                   {ch.cameraArea}
                                 </span>
-                                <span className="text-[11px]">{ch.cameraSite}</span>
+                                <span className="text-xs">{ch.cameraSite}</span>
                               </div>
                             ) : (
                               "—"
                             )}
                           </td>
                           <td className="px-3 py-2.5">
-                            <span className="font-mono text-[12px] font-semibold text-foreground">
+                            <span className="font-mono text-sm font-semibold text-foreground">
                               {ch.storageGb.toFixed(2)} GB
                             </span>
                           </td>
@@ -778,10 +778,10 @@ function NvrDrawer({
                   value={channelSearch}
                   onChange={(e) => setChannelSearch(e.target.value)}
                   placeholder="Search by channel, camera ID, or area…"
-                  className="h-9 w-full pl-9 text-[13px]"
+                  className="h-9 w-full pl-9 text-base"
                 />
               </div>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 <strong className="text-foreground">{filteredChannels.length}</strong> / {nvr.channelCount} channels
               </p>
             </div>
@@ -793,7 +793,7 @@ function NvrDrawer({
                     {["CH", "CAMERA", "RECORDING", "LOCATION", "IP", "LINKED ON", "ACTION"].map((h) => (
                       <th
                         key={h}
-                        className="px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                        className="px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                       >
                         {h}
                       </th>
@@ -804,26 +804,26 @@ function NvrDrawer({
                   {filteredChannels.map((ch) => {
                     const cam = ch.cameraId ? MOCK_CAMERAS.find((c) => c.id === ch.cameraId) : null;
                     return (
-                      <tr key={ch.channel} className="text-[13px] transition-colors hover:bg-muted/20">
-                        <td className="px-3 py-2.5 font-mono text-[12px] text-muted-foreground">
+                      <tr key={ch.channel} className="text-base transition-colors hover:bg-muted/20">
+                        <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
                           Ch {String(ch.channel).padStart(2, "0")}
                         </td>
                         <td className="px-3 py-2.5">
                           {ch.cameraId ? (
                             <button
                               onClick={() => onOpenCamera(ch.cameraId!)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-[11px] text-info hover:bg-info/15"
+                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
                             >
                               <Video className="size-3" />
                               <span className="font-mono">{ch.cameraId}</span>
                             </button>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-success/30 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-success/30 bg-success/10 px-2 py-1 text-xs font-semibold text-success">
                               Available
                             </span>
                           )}
                           {ch.cameraName && (
-                            <p className="mt-1 text-[11px] text-muted-foreground">{ch.cameraName}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{ch.cameraName}</p>
                           )}
                         </td>
                         <td className="px-3 py-2.5">
@@ -836,23 +836,23 @@ function NvrDrawer({
                                 <MapPin className="size-2.5" />
                                 {ch.cameraArea}
                               </span>
-                              <span className="text-[11px]">{ch.cameraSite}</span>
+                              <span className="text-xs">{ch.cameraSite}</span>
                             </div>
                           ) : (
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-2.5 font-mono text-[12px] text-muted-foreground">
+                        <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
                           {cam?.ipAddress ?? "—"}
                         </td>
                         <td className="px-3 py-2.5 text-muted-foreground">
                           {ch.linkedAtDisplay ? (
-                            <div className="inline-flex items-center gap-1 text-[12px]">
+                            <div className="inline-flex items-center gap-1 text-sm">
                               <Calendar className="size-3 opacity-60" />
                               {ch.linkedAtDisplay}
                             </div>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground/50">—</span>
+                            <span className="text-xs text-muted-foreground/50">—</span>
                           )}
                         </td>
                         <td className="px-3 py-2.5">
@@ -973,7 +973,7 @@ function ExportRecordingsModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Export Recordings</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Download recordings from selected channels on <strong className="text-foreground">{nvr.name}</strong>.
           </p>
         </DialogHeader>
@@ -981,15 +981,15 @@ function ExportRecordingsModal({
           {/* Channels */}
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Channels to Export
               </p>
-              <button onClick={toggleAll} className="text-[11px] text-primary hover:underline">
+              <button onClick={toggleAll} className="text-xs text-primary hover:underline">
                 {allSelected ? "Unselect all" : "Select all"}
               </button>
             </div>
             {rows.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                 No channels with recordings.
               </div>
             ) : (
@@ -1014,17 +1014,17 @@ function ExportRecordingsModal({
                       <div className="min-w-0 flex-1">
                         <TruncatedText
                           title={`${ch.cameraName} (Channel ${ch.channel})`}
-                          className="text-[13px] font-semibold text-foreground"
+                          className="text-base font-semibold text-foreground"
                         >
-                          {ch.cameraName} <span className="font-mono text-[11px] text-muted-foreground">(Channel {ch.channel})</span>
+                          {ch.cameraName} <span className="font-mono text-xs text-muted-foreground">(Channel {ch.channel})</span>
                         </TruncatedText>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {ch.cameraSite} · {ch.cameraArea}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-mono text-[12px] font-semibold text-foreground">{ch.storageGb.toFixed(2)} GB</p>
-                        <p className="text-[10px] text-muted-foreground">{ch.recordings} files</p>
+                        <p className="font-mono text-sm font-semibold text-foreground">{ch.storageGb.toFixed(2)} GB</p>
+                        <p className="text-2xs text-muted-foreground">{ch.recordings} files</p>
                       </div>
                     </button>
                   );
@@ -1032,7 +1032,7 @@ function ExportRecordingsModal({
               </div>
             )}
             {someSelected && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {channels.length} of {rows.length} channels selected
               </p>
             )}
@@ -1040,7 +1040,7 @@ function ExportRecordingsModal({
 
           {/* Date range */}
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Date Range
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -1049,7 +1049,7 @@ function ExportRecordingsModal({
                   key={r.value}
                   onClick={() => setRange(r.value)}
                   className={cn(
-                    "rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
+                    "rounded-md border px-2.5 py-1 text-sm font-semibold transition-colors",
                     range === r.value
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
@@ -1063,7 +1063,7 @@ function ExportRecordingsModal({
 
           {/* Format */}
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Export Format
             </p>
             <div className="space-y-2">
@@ -1083,8 +1083,8 @@ function ExportRecordingsModal({
                     {format === f.value && <span className="size-2 rounded-full bg-primary" />}
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-semibold text-foreground">{f.label}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{f.desc}</p>
+                    <p className="text-base font-semibold text-foreground">{f.label}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{f.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1094,7 +1094,7 @@ function ExportRecordingsModal({
           {/* Summary */}
           {canSubmit && (
             <div className="rounded-lg border border-info/30 bg-info/[0.06] px-3.5 py-2.5">
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Exporting <strong className="text-foreground">{recordingCount}</strong> recordings
                 ({totalGb.toFixed(2)} GB) from <strong className="text-foreground">{channels.length}</strong> channel{channels.length === 1 ? "" : "s"} —
                 <strong className="text-foreground"> {EXPORT_RANGES.find((r) => r.value === range)?.label}</strong> ·
@@ -1156,14 +1156,14 @@ function CleanupStorageModal({
         <div className="space-y-4 px-5 py-4">
           {/* Current capacity */}
           <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Storage Capacity
             </p>
             <div className="mb-2 flex items-baseline justify-between gap-2">
-              <span className="font-mono text-[12px] text-muted-foreground">
+              <span className="font-mono text-sm text-muted-foreground">
                 <strong className="text-foreground">{nvr.usedStorageGb.toLocaleString()} GB</strong> of {nvr.totalStorageGb.toLocaleString()} GB used
               </span>
-              <span className={cn("text-[12px] font-semibold", BAND_STYLES[storageBandFor(nvr.usedStorageGb, nvr.totalStorageGb)].text)}>
+              <span className={cn("text-sm font-semibold", BAND_STYLES[storageBandFor(nvr.usedStorageGb, nvr.totalStorageGb)].text)}>
                 {usedPct}%
               </span>
             </div>
@@ -1177,7 +1177,7 @@ function CleanupStorageModal({
 
           {/* Method picker */}
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Clean up Method
             </p>
             <div className="space-y-2">
@@ -1200,8 +1200,8 @@ function CleanupStorageModal({
                     {method === opt.value && <span className="size-2 rounded-full bg-primary" />}
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-semibold text-foreground">{opt.title}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{opt.desc}</p>
+                    <p className="text-base font-semibold text-foreground">{opt.title}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1210,7 +1210,7 @@ function CleanupStorageModal({
 
           {method === "age" && (
             <div>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Remove recordings older than
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1219,7 +1219,7 @@ function CleanupStorageModal({
                     key={d}
                     onClick={() => setAgeDays(d)}
                     className={cn(
-                      "rounded-md border px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                      "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
                       ageDays === d
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
@@ -1234,11 +1234,11 @@ function CleanupStorageModal({
 
           {method === "channel" && (
             <div>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Select Channel*
               </p>
               {linkedChannels.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                   No channels with recordings.
                 </div>
               ) : (
@@ -1265,15 +1265,15 @@ function CleanupStorageModal({
                         <div className="min-w-0 flex-1">
                           <TruncatedText
                             title={`${ch.cameraName} (Channel ${ch.channel})`}
-                            className="text-[13px] font-semibold text-foreground"
+                            className="text-base font-semibold text-foreground"
                           >
-                            {ch.cameraName} <span className="font-mono text-[11px] text-muted-foreground">(Channel {ch.channel})</span>
+                            {ch.cameraName} <span className="font-mono text-xs text-muted-foreground">(Channel {ch.channel})</span>
                           </TruncatedText>
-                          <p className="text-[11px] text-muted-foreground">{ch.cameraSite} · {ch.cameraArea}</p>
+                          <p className="text-xs text-muted-foreground">{ch.cameraSite} · {ch.cameraArea}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-mono text-[12px] font-semibold text-foreground">{ch.storageGb.toFixed(2)} GB</p>
-                          <p className="text-[10px] text-muted-foreground">{ch.recordings} Recordings</p>
+                          <p className="font-mono text-sm font-semibold text-foreground">{ch.storageGb.toFixed(2)} GB</p>
+                          <p className="text-2xs text-muted-foreground">{ch.recordings} Recordings</p>
                         </div>
                       </button>
                     );
@@ -1332,7 +1332,7 @@ function CleanupRunningModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Cleaning Up Storage…</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {methodLabel} · {processed} of {totalToProcess} files processed
           </p>
         </DialogHeader>
@@ -1352,13 +1352,13 @@ function CleanupRunningModal({
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-[20px] font-bold text-foreground">{progress}%</p>
+                <p className="text-2xl font-bold text-foreground">{progress}%</p>
               </div>
             </div>
           </div>
 
           <div>
-            <div className="mb-1 flex items-baseline justify-between text-[11px]">
+            <div className="mb-1 flex items-baseline justify-between text-xs">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-mono font-semibold text-foreground">{progress}%</span>
             </div>
@@ -1367,7 +1367,7 @@ function CleanupRunningModal({
             </div>
           </div>
 
-          <p className="text-center text-[11px] text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground">
             Don't close this window. Cleanup will continue until complete.
           </p>
         </div>
@@ -1412,8 +1412,8 @@ function CleanupCompletedModal({
               <CheckCircle2 className="size-6 text-success" />
             </div>
             <div>
-              <p className="text-[15px] font-bold text-foreground">Clean Up Completed!</p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <p className="text-md font-bold text-foreground">Clean Up Completed!</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {processed.processed} of {processed.outOf} files processed
               </p>
             </div>
@@ -1422,8 +1422,8 @@ function CleanupCompletedModal({
         <div className="space-y-3 px-5 py-4">
           <div>
             <div className="mb-1 flex items-baseline justify-between gap-2">
-              <span className="text-[12px] font-semibold text-muted-foreground">Storage Usage</span>
-              <span className="text-[12px] font-bold text-success">{pct}%</span>
+              <span className="text-sm font-semibold text-muted-foreground">Storage Usage</span>
+              <span className="text-sm font-bold text-success">{pct}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-success transition-all" style={{ width: `${pct}%` }} />
@@ -1431,15 +1431,15 @@ function CleanupCompletedModal({
           </div>
 
           <div className="space-y-2 rounded-lg border border-border bg-background p-3.5">
-            <div className="flex items-center justify-between text-[13px]">
+            <div className="flex items-center justify-between text-base">
               <span className="text-muted-foreground">Previous Usage:</span>
               <span className="font-mono font-semibold text-foreground">{previous.toLocaleString()} GB</span>
             </div>
-            <div className="flex items-center justify-between text-[13px]">
+            <div className="flex items-center justify-between text-base">
               <span className="text-muted-foreground">Space Freed:</span>
               <span className="font-mono font-semibold text-sev-critical">- {freed.toLocaleString()} GB</span>
             </div>
-            <div className="flex items-center justify-between border-t border-border pt-2 text-[13px]">
+            <div className="flex items-center justify-between border-t border-border pt-2 text-base">
               <span className="text-muted-foreground">Current Storage:</span>
               <span className="font-mono font-semibold text-success">{current.toLocaleString()} GB ({pct}%)</span>
             </div>
@@ -1494,7 +1494,7 @@ function LinkCameraModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Link Camera to Channel {channel}</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Only cameras at <strong className="text-foreground">{nvr.siteName}</strong> (same site as this NVR) can be linked.
           </p>
         </DialogHeader>
@@ -1502,15 +1502,15 @@ function LinkCameraModal({
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by camera name, ID or area…" className="h-9 pl-9 text-[13px]" />
+              placeholder="Search by camera name, ID or area…" className="h-9 pl-9 text-base" />
           </div>
           {areas.length > 1 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Area</span>
+              <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Area</span>
               <button
                 onClick={() => setAreaFilter("all")}
                 className={cn(
-                  "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                  "rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
                   areaFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                 )}
               >
@@ -1522,7 +1522,7 @@ function LinkCameraModal({
                 return (
                   <button key={a.id} onClick={() => setAreaFilter(a.id)}
                     className={cn(
-                      "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                      "rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                     )}>
                     {a.label} ({count})
@@ -1536,15 +1536,15 @@ function LinkCameraModal({
           {candidates.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
               <Video className="mx-auto size-7 text-muted-foreground/40" />
-              <p className="mt-2 text-[13px] text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 No unlinked cameras at this site.
               </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Add a camera at {nvr.siteName} first, or unlink an existing one to make it available.
               </p>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-[12px] italic text-muted-foreground">No cameras match the current filters.</p>
+            <p className="py-8 text-center text-sm italic text-muted-foreground">No cameras match the current filters.</p>
           ) : (
             filtered.map((c) => {
               const selected = picked === c.id;
@@ -1567,8 +1567,8 @@ function LinkCameraModal({
                     <Video className="size-4 text-info" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <TruncatedText text={c.name} className="text-[13px] font-semibold text-foreground" />
-                    <p className="font-mono text-[11px] text-muted-foreground">{c.id} · {c.areaName}</p>
+                    <TruncatedText text={c.name} className="text-base font-semibold text-foreground" />
+                    <p className="font-mono text-xs text-muted-foreground">{c.id} · {c.areaName}</p>
                   </div>
                   <StatusPill status={c.status === "online" ? "online" : c.status === "offline" ? "offline" : "degraded"} />
                 </button>
@@ -1615,7 +1615,7 @@ function UnlinkConfirmModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-destructive">Unlink Camera</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Confirm before disconnecting this channel.
           </p>
         </DialogHeader>
@@ -1625,8 +1625,8 @@ function UnlinkConfirmModal({
               <Video className="size-4 text-info" />
             </div>
             <div className="min-w-0 flex-1">
-              <TruncatedText text={cam?.name ?? ch.cameraName ?? "—"} className="text-[13px] font-semibold text-foreground" />
-              <p className="font-mono text-[11px] text-muted-foreground">
+              <TruncatedText text={cam?.name ?? ch.cameraName ?? "—"} className="text-base font-semibold text-foreground" />
+              <p className="font-mono text-xs text-muted-foreground">
                 {ch.cameraId} · Channel {channel} · {cam?.areaName ?? ""}
               </p>
             </div>
@@ -1635,7 +1635,7 @@ function UnlinkConfirmModal({
           <div className="rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-              <div className="text-[12px] leading-relaxed text-muted-foreground">
+              <div className="text-sm leading-relaxed text-muted-foreground">
                 Unlinking will stop new recordings from this camera. Existing recordings —
                 <strong className="text-foreground"> {recCount} files, {storageGb.toFixed(2)} GB</strong>
                 — will remain on the NVR until their retention window expires.
@@ -1660,8 +1660,8 @@ function UnlinkConfirmModal({
               {exportFirst && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-foreground">Export recordings before unlinking</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">Export recordings before unlinking</p>
+              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
                 Download all {recCount} recordings ({storageGb.toFixed(2)} GB) as a ZIP archive before disconnecting.
               </p>
             </div>
@@ -1763,35 +1763,35 @@ function AddNvrModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add NVR</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Register a new Network Video Recorder. NVR ID is generated automatically.
           </p>
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {/* Auto-generated ID preview */}
           <div className="rounded-lg border border-border bg-background p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               NVR ID (auto-generated)
             </p>
-            <p className="mt-1 font-mono text-[14px] font-bold text-primary">{fields.id}</p>
+            <p className="mt-1 font-mono text-md font-bold text-primary">{fields.id}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
               <input
                 value={fields.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="e.g. FedEx Changi · NVR-A"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div className="col-span-2">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Model</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Model</label>
               <select
                 value={fields.model}
                 onChange={(e) => set("model", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select an NVR model</option>
                 <option value="Hikvision DS-9664NI-I8">Hikvision DS-9664NI-I8 (64-ch)</option>
@@ -1802,52 +1802,52 @@ function AddNvrModal({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <select
                 value={fields.siteId}
                 onChange={(e) => set("siteId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select a site</option>
                 {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <select
                 value={fields.areaId}
                 onChange={(e) => set("areaId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select an area</option>
                 {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
               <input
                 value={fields.ipAddress}
                 onChange={(e) => set("ipAddress", e.target.value)}
                 placeholder="10.10.0.10"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
               <input
                 type="number"
                 value={fields.httpPort}
                 onChange={(e) => set("httpPort", e.target.value)}
                 placeholder="80"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
               <select
                 value={fields.channelCount}
                 onChange={(e) => set("channelCount", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select channels</option>
                 {[4, 8, 16, 32, 64].map((c) => (
@@ -1856,31 +1856,31 @@ function AddNvrModal({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
               <input
                 type="number"
                 value={fields.totalStorageGb}
                 onChange={(e) => set("totalStorageGb", e.target.value)}
                 placeholder="8000"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
               <input
                 type="number"
                 value={fields.retentionDays}
                 onChange={(e) => set("retentionDays", e.target.value)}
                 placeholder="30"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
               <select
                 value={fields.cleanupSchedule}
                 onChange={(e) => set("cleanupSchedule", e.target.value as NvrData["cleanupSchedule"])}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select cleanup mode</option>
                 <option value="auto-age">Auto · Age based</option>
@@ -1890,7 +1890,7 @@ function AddNvrModal({
             </div>
           </div>
 
-          <div className="rounded-lg border border-info/30 bg-info/[0.06] px-3 py-2.5 text-[12px] text-muted-foreground">
+          <div className="rounded-lg border border-info/30 bg-info/[0.06] px-3 py-2.5 text-sm text-muted-foreground">
             New NVRs start with all channels free. Link cameras to channels after creation from the
             <strong className="text-foreground"> Channel Management</strong> tab.
           </div>
@@ -1960,28 +1960,28 @@ function EditNvrModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Edit NVR</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Update fields for {nvr.id}. Model and channel count cannot be changed after registration.
           </p>
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {/* Read-only header */}
           <div className="rounded-lg border border-border bg-background p-3">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">NVR ID</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">NVR ID</p>
                 <p className="mt-0.5 font-mono text-primary">{nvr.id}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Model</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Model</p>
                 <p className="mt-0.5 font-mono text-foreground">{nvr.model}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Channels</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Channels</p>
                 <p className="mt-0.5 font-semibold text-foreground">{nvr.channelsInUse} / {nvr.channelCount} in use</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Storage</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Total Storage</p>
                 <p className="mt-0.5 font-mono text-foreground">{nvr.totalStorageGb.toLocaleString()} GB</p>
               </div>
             </div>
@@ -1989,81 +1989,81 @@ function EditNvrModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
               <input
                 value={fields.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="e.g. FedEx Changi · NVR-A"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <select
                 value={fields.siteId}
                 onChange={(e) => set("siteId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select a site</option>
                 {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <select
                 value={fields.areaId}
                 onChange={(e) => set("areaId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select an area</option>
                 {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
               <input
                 value={fields.ipAddress}
                 onChange={(e) => set("ipAddress", e.target.value)}
                 placeholder="10.10.0.10"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
               <input
                 type="number"
                 value={fields.httpPort}
                 onChange={(e) => set("httpPort", e.target.value)}
                 placeholder="80"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
               <input
                 type="number"
                 value={fields.totalStorageGb}
                 onChange={(e) => set("totalStorageGb", e.target.value)}
                 placeholder="8000"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
               <input
                 type="number"
                 value={fields.retentionDays}
                 onChange={(e) => set("retentionDays", e.target.value)}
                 placeholder="30"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div className="col-span-2">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
               <select
                 value={fields.cleanupSchedule}
                 onChange={(e) => set("cleanupSchedule", e.target.value as NvrFormFields["cleanupSchedule"])}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select cleanup mode</option>
                 <option value="auto-age">Auto · Age based</option>
@@ -2101,20 +2101,20 @@ function DeleteNvrModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-destructive">Delete NVR</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
         <div className="px-5 py-4">
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
               <div>
-                <p className="text-[13px] font-semibold text-foreground">You are about to remove:</p>
-                <p className="mt-1 font-mono text-[12px] text-muted-foreground">{nvr.id}</p>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">{nvr.name} ({nvr.model})</p>
+                <p className="text-base font-semibold text-foreground">You are about to remove:</p>
+                <p className="mt-1 font-mono text-sm text-muted-foreground">{nvr.id}</p>
+                <p className="mt-0.5 text-base text-muted-foreground">{nvr.name} ({nvr.model})</p>
               </div>
             </div>
           </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             All <strong className="text-foreground">{nvr.channelsInUse}</strong> linked cameras will lose recording storage immediately.
             Stored recordings ({nvr.usedStorageGb.toLocaleString()} GB) cannot be recovered.
           </p>
@@ -2340,7 +2340,7 @@ export default function NvrDevicesPage() {
       />
 
       {/* Count */}
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "NVR" : "NVRs"} match current filters
         {hasFilters && (
@@ -2375,7 +2375,7 @@ export default function NvrDevicesPage() {
                   {["ID", "NAME · MODEL", "STATUS", "CHANNELS", "STORAGE", "LOCATION", "LAST ACTIVE", "ACTION"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
                     </th>
@@ -2387,10 +2387,10 @@ export default function NvrDevicesPage() {
                   <tr
                     key={n.id}
                     onClick={() => openDrawer(n.id)}
-                    className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                         {n.id}
                       </span>
                     </td>
@@ -2399,7 +2399,7 @@ export default function NvrDevicesPage() {
                         <span className="font-semibold text-foreground transition-colors group-hover:text-primary">
                           {n.name}
                         </span>
-                        <span className="font-mono text-[11px] text-muted-foreground">{n.model}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{n.model}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3"><StatusPill status={n.status} /></td>
@@ -2414,7 +2414,7 @@ export default function NvrDevicesPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{n.areaName}</span>
-                        <span className="text-[11px]">{n.siteName}</span>
+                        <span className="text-xs">{n.siteName}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
@@ -2433,26 +2433,26 @@ export default function NvrDevicesPage() {
                         <PopoverContent className="w-44 p-1" align="end">
                           <button
                             onClick={() => openDrawer(n.id)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <HardDrive className="size-3.5 text-muted-foreground" />
                             View details
                           </button>
                           <button
                             onClick={() => { openDrawer(n.id); setTimeout(() => setModal({ kind: "cleanup" }), 100); }}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <Sparkles className="size-3.5 text-muted-foreground" />
                             Cleanup now
                           </button>
-                          <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted">
+                          <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                             <Pencil className="size-3.5 text-muted-foreground" />
                             Edit NVR
                           </button>
                           <div className="my-1 border-t border-border" />
                           <button
                             onClick={() => { openDrawer(n.id); setTimeout(() => setModal({ kind: "delete" }), 100); }}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-sev-critical hover:bg-sev-critical/10"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete
@@ -2468,7 +2468,7 @@ export default function NvrDevicesPage() {
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
@@ -2481,7 +2481,7 @@ export default function NvrDevicesPage() {
               >
                 <ChevronLeft className="size-3.5" />
               </button>
-              <span className="px-2 text-[12px] text-foreground">
+              <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
               <button

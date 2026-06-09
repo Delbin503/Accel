@@ -88,16 +88,16 @@ export default function OnPremSignInPage() {
     <AuthLayout>
       <div>
         <DeploymentModeSwitcher />
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Sign in to your appliance
         </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Use the username assigned to you by your site administrator.
         </p>
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Username
             </label>
             <div className="relative">
@@ -108,13 +108,13 @@ export default function OnPremSignInPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="e.g. kc.loke"
-                className="h-10 pl-9 font-mono text-[13px]"
+                className="h-10 pl-9 font-mono text-base"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Password
             </label>
             <div className="relative">
@@ -126,7 +126,7 @@ export default function OnPremSignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-10 px-9 text-[13px]"
+                className="h-10 px-9 text-base"
               />
               <button
                 type="button"
@@ -145,7 +145,7 @@ export default function OnPremSignInPage() {
 
           {showTwoFactor ? (
             <div>
-              <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="size-3" />
                   2FA Code
@@ -156,7 +156,7 @@ export default function OnPremSignInPage() {
                     setShowTwoFactor(false);
                     setTwoFactorCode("");
                   }}
-                  className="text-[10px] font-semibold text-muted-foreground/70 hover:text-foreground"
+                  className="text-2xs font-semibold text-muted-foreground/70 hover:text-foreground"
                 >
                   Skip
                 </button>
@@ -171,14 +171,14 @@ export default function OnPremSignInPage() {
                   )
                 }
                 placeholder="6-digit code from your authenticator"
-                className="h-10 text-center font-mono text-[15px] tracking-[0.35em]"
+                className="h-10 text-center font-mono text-md tracking-[0.35em]"
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowTwoFactor(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-card/30 px-3 py-2 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-secondary/40 hover:text-foreground"
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-card/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-secondary/40 hover:text-foreground"
             >
               <ShieldCheck className="size-3.5" />
               Enter 2FA code
@@ -186,7 +186,7 @@ export default function OnPremSignInPage() {
           )}
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={remember}
@@ -203,7 +203,7 @@ export default function OnPremSignInPage() {
                     "Use the printed 16-character recovery code from initial setup, or contact your administrator.",
                 })
               }
-              className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
             >
               <KeyRound className="size-3" />
               Use recovery code
@@ -211,7 +211,7 @@ export default function OnPremSignInPage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
               <AlertCircle className="size-3.5 flex-shrink-0" />
               {error}
             </div>
@@ -219,7 +219,7 @@ export default function OnPremSignInPage() {
 
           <Button
             type="submit"
-            className="h-10 w-full gap-2 text-[13px]"
+            className="h-10 w-full gap-2 text-base"
             disabled={loading}
           >
             {loading ? (
@@ -234,7 +234,7 @@ export default function OnPremSignInPage() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+        <div className="my-5 flex items-center gap-3 text-2xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
           <span className="h-px flex-1 bg-border" />
           first-run setup
           <span className="h-px flex-1 bg-border" />
@@ -247,17 +247,17 @@ export default function OnPremSignInPage() {
           )}
         >
           <div>
-            <p className="text-[13px] font-bold text-foreground">
+            <p className="text-base font-bold text-foreground">
               Set up this appliance
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Activate license, configure the site, create the Super Admin.
             </p>
           </div>
-          <span className="text-[18px] text-secondary">→</span>
+          <span className="text-xl text-secondary">→</span>
         </Link>
 
-        <p className="mt-6 text-center font-mono text-[10px] text-muted-foreground/60">
+        <p className="mt-6 text-center font-mono text-2xs text-muted-foreground/60">
           Build 4.7.2-onprem · Air-gapped · No telemetry
         </p>
       </div>

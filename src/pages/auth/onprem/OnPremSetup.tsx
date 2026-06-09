@@ -171,14 +171,14 @@ function WizardShell({
             <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
               <Play className="size-3 fill-white text-white" />
             </div>
-            <p className="text-[14px] font-bold tracking-tight">Accel</p>
-            <span className="ml-1 hidden rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-secondary sm:inline">
+            <p className="text-md font-bold tracking-tight">Accel</p>
+            <span className="ml-1 hidden rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary sm:inline">
               On-Premise
             </span>
           </Link>
           <button
             onClick={onCancel}
-            className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-[12px] font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+            className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
           >
             Save & exit
           </button>
@@ -377,10 +377,10 @@ export default function OnPremSetupPage() {
                 value={licenseKey}
                 onChange={(e) => setLicenseKey(e.target.value)}
                 placeholder="ACCL-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-                className="h-10 pl-9 font-mono text-[12px] tracking-wider"
+                className="h-10 pl-9 font-mono text-sm tracking-wider"
               />
             </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               32 characters from your renewal email or sealed envelope.
             </p>
           </div>
@@ -389,7 +389,7 @@ export default function OnPremSetupPage() {
             <Label>Or upload license file</Label>
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-5 text-[12px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
             >
               <Upload className="size-4" />
               Drop <strong className="text-foreground">.lic</strong> file here or click to browse
@@ -397,13 +397,13 @@ export default function OnPremSetupPage() {
           </div>
 
           <div className="rounded-md border border-border/60 bg-card/40 p-3.5">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-1.5 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Cpu className="size-3" /> This appliance's hardware fingerprint
             </div>
-            <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            <p className="font-mono text-xs leading-relaxed text-muted-foreground">
               {HARDWARE_FINGERPRINT}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground/70">
               Auto-detected. Your license key must match this fingerprint.
             </p>
           </div>
@@ -418,7 +418,7 @@ export default function OnPremSetupPage() {
           </InfoBanner>
 
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-[13px]">
+          <Button type="submit" className="h-10 w-full gap-2 text-base">
             Activate & Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
@@ -443,7 +443,7 @@ export default function OnPremSetupPage() {
                 value={siteName}
                 onChange={(e) => setSiteName(e.target.value)}
                 placeholder="e.g. Sembawang Naval Base"
-                className="h-10 pl-9 text-[13px]"
+                className="h-10 pl-9 text-base"
               />
             </Field>
             <Field label="Site code" icon={Shapes}>
@@ -451,7 +451,7 @@ export default function OnPremSetupPage() {
                 value={siteCode}
                 onChange={(e) => setSiteCode(e.target.value.toUpperCase())}
                 placeholder="SBW-NAV-001"
-                className="h-10 pl-9 font-mono text-[13px]"
+                className="h-10 pl-9 font-mono text-base"
               />
             </Field>
           </div>
@@ -462,7 +462,7 @@ export default function OnPremSetupPage() {
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px]"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
               >
                 {COUNTRIES.map((c) => (
                   <option key={c}>{c}</option>
@@ -474,7 +474,7 @@ export default function OnPremSetupPage() {
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px]"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz}>{tz}</option>
@@ -503,14 +503,14 @@ export default function OnPremSetupPage() {
                   >
                     <div
                       className={cn(
-                        "flex items-center gap-1.5 text-[12px] font-bold",
+                        "flex items-center gap-1.5 text-sm font-bold",
                         selected ? "text-secondary" : "text-foreground"
                       )}
                     >
                       <Icon className="size-3.5" />
                       {m.label}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-2xs text-muted-foreground">
                       {m.description}
                     </span>
                   </button>
@@ -526,7 +526,7 @@ export default function OnPremSetupPage() {
                 type="time"
                 value={opFrom}
                 onChange={(e) => setOpFrom(e.target.value)}
-                className="h-10 text-[13px]"
+                className="h-10 text-base"
               />
             </div>
             <div>
@@ -535,18 +535,18 @@ export default function OnPremSetupPage() {
                 type="time"
                 value={opTo}
                 onChange={(e) => setOpTo(e.target.value)}
-                className="h-10 text-[13px]"
+                className="h-10 text-base"
               />
             </div>
           </div>
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Detections outside these hours are treated as{" "}
             <strong className="text-foreground">after-hours events</strong> by default. Per
             use-case overrides can be configured later.
           </p>
 
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-[13px]">
+          <Button type="submit" className="h-10 w-full gap-2 text-base">
             Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
@@ -569,7 +569,7 @@ export default function OnPremSetupPage() {
             <Input
               value={bootstrapUsername}
               disabled
-              className="h-10 pl-9 font-mono text-[13px]"
+              className="h-10 pl-9 font-mono text-base"
             />
           </Field>
 
@@ -579,7 +579,7 @@ export default function OnPremSetupPage() {
               value={bootstrapPw}
               onChange={(e) => setBootstrapPw(e.target.value)}
               placeholder="Paste the temp password from the sealed envelope"
-              className="h-10 px-9 text-[13px]"
+              className="h-10 px-9 text-base"
             />
             <EyeToggle
               on={showBootstrap}
@@ -594,7 +594,7 @@ export default function OnPremSetupPage() {
                 value={newPw}
                 onChange={(e) => setNewPw(e.target.value)}
                 placeholder="At least 14 characters"
-                className="h-10 px-9 text-[13px]"
+                className="h-10 px-9 text-base"
               />
               <EyeToggle on={showNew} onClick={() => setShowNew((v) => !v)} />
             </Field>
@@ -607,7 +607,7 @@ export default function OnPremSetupPage() {
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
               placeholder="Re-enter new password"
-              className="h-10 px-9 text-[13px]"
+              className="h-10 px-9 text-base"
             />
             <EyeToggle
               on={showConfirm}
@@ -626,17 +626,17 @@ export default function OnPremSetupPage() {
           </InfoBanner>
 
           <div className="rounded-md border border-secondary/30 bg-secondary/[0.06] p-4">
-            <div className="mb-1 flex items-center gap-1.5 text-[12px] font-bold text-secondary">
+            <div className="mb-1 flex items-center gap-1.5 text-sm font-bold text-secondary">
               <HardDrive className="size-3.5" /> Recovery code
             </div>
-            <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
               If you forget your password, this 16-character code can be used
               once to reset it.{" "}
               <strong className="text-foreground">
                 Print this and store it offline.
               </strong>
             </p>
-            <div className="rounded-md border border-dashed border-secondary/40 bg-background/40 py-3.5 text-center font-mono text-[18px] font-bold tracking-[0.18em] text-secondary">
+            <div className="rounded-md border border-dashed border-secondary/40 bg-background/40 py-3.5 text-center font-mono text-xl font-bold tracking-[0.18em] text-secondary">
               {recoveryCode}
             </div>
             <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
@@ -669,7 +669,7 @@ export default function OnPremSetupPage() {
           </div>
 
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-[13px]">
+          <Button type="submit" className="h-10 w-full gap-2 text-base">
             Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
@@ -689,7 +689,7 @@ export default function OnPremSetupPage() {
 
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-bold text-foreground">
+          <p className="text-base font-bold text-foreground">
             Operators added so far{" "}
             <span className="font-mono text-muted-foreground">
               ({operators.length})
@@ -704,10 +704,10 @@ export default function OnPremSetupPage() {
         {operators.length === 0 ? (
           <div className="rounded-md border border-dashed border-border/70 bg-card/30 p-8 text-center backdrop-blur-sm">
             <User className="mx-auto mb-2 size-6 text-muted-foreground/60" />
-            <p className="text-[13px] font-semibold text-foreground">
+            <p className="text-base font-semibold text-foreground">
               No operators yet
             </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               You can add operators now or after finishing setup from{" "}
               <strong className="text-foreground">Settings → Users</strong>.
             </p>
@@ -717,26 +717,26 @@ export default function OnPremSetupPage() {
             <table className="w-full text-left">
               <thead className="bg-muted/20">
                 <tr className="border-b border-border/60">
-                  <th className="px-3 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Name</th>
-                  <th className="px-3 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Username</th>
-                  <th className="px-3 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Role</th>
-                  <th className="px-3 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">First-login</th>
+                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Name</th>
+                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Username</th>
+                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Role</th>
+                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">First-login</th>
                   <th className="px-3 py-2" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 {operators.map((op) => (
                   <tr key={op.id}>
-                    <td className="px-3 py-2.5 text-[13px] font-semibold text-foreground">
+                    <td className="px-3 py-2.5 text-base font-semibold text-foreground">
                       {op.fullName}
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-[12px] text-muted-foreground">
+                    <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
                       {op.username}
                     </td>
                     <td className="px-3 py-2.5">
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          "inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
                           OPERATOR_ROLE_STYLES[op.role]
                         )}
                       >
@@ -745,12 +745,12 @@ export default function OnPremSetupPage() {
                     </td>
                     <td className="px-3 py-2.5">
                       {op.firstLogin === "setup-code" ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-secondary/15 px-2 py-0.5 text-[10px] font-semibold text-secondary">
+                        <span className="inline-flex items-center gap-1 rounded bg-secondary/15 px-2 py-0.5 text-2xs font-semibold text-secondary">
                           <KeyRound className="size-3" />
                           {op.setupCode}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-[10px] font-semibold text-info">
+                        <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
                           <Lock className="size-3" />
                           Temp password
                         </span>
@@ -880,7 +880,7 @@ function OperatorModal({
           <DialogTitle className="text-base font-bold">
             {existing ? "Edit operator" : "Add operator"}
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             On-prem operators sign in with their username + first-login
             credential. They'll be prompted to enrol 2FA on first sign-in.
           </p>
@@ -893,7 +893,7 @@ function OperatorModal({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. KC Loke"
-              className="h-9 text-[13px]"
+              className="h-9 text-base"
             />
           </div>
           <div>
@@ -904,7 +904,7 @@ function OperatorModal({
                 setUsername(e.target.value.toLowerCase().replace(/\s+/g, "."))
               }
               placeholder="e.g. kc.loke"
-              className="h-9 font-mono text-[13px]"
+              className="h-9 font-mono text-base"
             />
           </div>
           <div>
@@ -916,7 +916,7 @@ function OperatorModal({
                   type="button"
                   onClick={() => setRole(r)}
                   className={cn(
-                    "rounded-md border px-2.5 py-1.5 text-[12px] font-semibold transition-colors",
+                    "rounded-md border px-2.5 py-1.5 text-sm font-semibold transition-colors",
                     role === r
                       ? "border-secondary bg-secondary/10 text-secondary"
                       : "border-border text-muted-foreground hover:border-secondary/40"
@@ -952,7 +952,7 @@ function OperatorModal({
             <div>
               <Label>Setup code</Label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-md border border-secondary/30 bg-secondary/[0.06] px-3 py-2 text-center font-mono text-[15px] font-bold tracking-[0.15em] text-secondary">
+                <div className="flex-1 rounded-md border border-secondary/30 bg-secondary/[0.06] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-secondary">
                   {setupCode}
                 </div>
                 <button
@@ -974,7 +974,7 @@ function OperatorModal({
                 value={tempPw}
                 onChange={(e) => setTempPw(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-9 text-[13px]"
+                className="h-9 text-base"
               />
             </div>
           )}
@@ -1028,11 +1028,11 @@ function FirstLoginCard({
         {selected && <span className="size-1.5 rounded-full bg-secondary" />}
       </div>
       <div className="flex-1">
-        <p className="flex items-center gap-1.5 text-[12px] font-semibold text-foreground">
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           {icon}
           {title}
         </p>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
           {description}
         </p>
       </div>
@@ -1051,11 +1051,11 @@ function Heading({
 }) {
   return (
     <div>
-      <h1 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">
+      <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground">
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
           {subtitle}
         </p>
       )}
@@ -1074,7 +1074,7 @@ function BackLink({
     <button
       type="button"
       onClick={onClick}
-      className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-3.5" />
       {label}
@@ -1090,7 +1090,7 @@ function Label({
   icon?: React.ElementType;
 }) {
   return (
-    <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
       {Icon && <Icon className="size-3" />}
       {children}
     </label>
@@ -1140,7 +1140,7 @@ function ErrorBox({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical",
+        "flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical",
         className
       )}
     >
@@ -1176,7 +1176,7 @@ function InfoBanner({
       )}
     >
       <span className="mt-0.5">{icon}</span>
-      <div className="text-[12px] leading-relaxed text-muted-foreground">
+      <div className="text-sm leading-relaxed text-muted-foreground">
         <strong className={tone === "info" ? "text-info" : "text-warning"}>
           {title}.
         </strong>{" "}
@@ -1199,7 +1199,7 @@ function RecoveryActionBtn({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
     >
       {icon}
       {label}

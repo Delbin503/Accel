@@ -53,6 +53,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
@@ -96,7 +97,7 @@ function StatusPill({ status }: { status: RunStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -120,7 +121,7 @@ function RuleSeverityBadge({ severity }: { severity: RuleSeverity }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -140,7 +141,7 @@ function TagChip({ label, tone = "default" }: { label: string; tone?: "default" 
     tested:  "border-info/30 bg-info/10 text-info",
   };
   return (
-    <span className={cn("rounded border px-1.5 py-px text-[10px] font-medium", map[tone])}>
+    <span className={cn("rounded border px-1.5 py-px text-2xs font-medium", map[tone])}>
       {label}
     </span>
   );
@@ -180,7 +181,7 @@ function MoreTagsPopover({
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary transition-colors hover:bg-primary/20"
+          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary transition-colors hover:bg-primary/20"
         >
           {label}
         </span>
@@ -193,7 +194,7 @@ function MoreTagsPopover({
         align="start"
         className="z-[100] w-56 p-3"
       >
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           All Tags · {allTags.length}
         </p>
         <div className="flex flex-wrap gap-1">
@@ -220,15 +221,15 @@ function SectionHeader({
   return (
     <div className="mb-3">
       <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {label}
         </span>
         {count !== undefined && (
-          <span className="font-mono text-[10px] text-muted-foreground">{count}</span>
+          <span className="font-mono text-2xs text-muted-foreground">{count}</span>
         )}
       </div>
       {description && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/70">{description}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground/70">{description}</p>
       )}
     </div>
   );
@@ -272,7 +273,7 @@ function Stepper({ current }: { current: FlowStep }) {
               </div>
               <span
                 className={cn(
-                  "text-[11px] font-semibold",
+                  "text-xs font-semibold",
                   isActive ? "text-foreground" : isDone ? "text-foreground/80" : "text-muted-foreground/60"
                 )}
               >
@@ -299,10 +300,10 @@ function Stepper({ current }: { current: FlowStep }) {
 function ModelSummaryRow({ model }: { model: ModelData }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+      <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
         {model.sequenceIds.length} Steps
       </span>
-      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
         {model.attachedRuleIds.length} Rules
       </span>
     </div>
@@ -342,22 +343,21 @@ function ModelChooserCard({
             <Icon className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
-            <p
+            <TruncatedText
+              text={model.name}
               className={cn(
-                "truncate text-[13px] font-bold",
+                "text-base font-bold",
                 selected ? "text-primary" : "text-foreground"
               )}
-            >
-              {model.name}
-            </p>
-            <span className="mt-0.5 inline-block rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+            />
+            <span className="mt-0.5 inline-block rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
               {model.id}
             </span>
           </div>
         </div>
         <ModelSummaryRow model={model} />
       </div>
-      <p className="mb-2 line-clamp-1 text-[12px] text-muted-foreground">{model.description}</p>
+      <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-sm text-muted-foreground" />
       {model.tags.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1">
           {model.tags.slice(0, 4).map((t) => (
@@ -371,7 +371,7 @@ function ModelChooserCard({
           )}
         </div>
       ) : (
-        <span className="text-[11px] italic text-muted-foreground/40">No tag</span>
+        <span className="text-xs italic text-muted-foreground/40">No tag</span>
       )}
     </button>
   );
@@ -404,12 +404,12 @@ function ModelConfigurePanel({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-[15px] font-bold text-foreground">{model.name}</h2>
-              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground">
+              <h2 className="text-md font-bold text-foreground">{model.name}</h2>
+              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
                 {model.id}
               </span>
             </div>
-            <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">{model.description}</p>
+            <TruncatedText text={model.description} className="mt-1 line-clamp-1 text-xs text-muted-foreground" />
             <div className="mt-1.5">
               <ModelSummaryRow model={model} />
             </div>
@@ -431,7 +431,7 @@ function ModelConfigurePanel({
             description="each step runs a dedicated CV model sequentially"
           />
           {sequence.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-6 text-center text-[12px] text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               No sequence defined for this model
             </div>
           ) : (
@@ -442,14 +442,12 @@ function ModelConfigurePanel({
                   className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5"
                 >
                   <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30" />
-                  <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[10px] font-bold text-primary">
+                  <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
                     {idx + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-semibold text-foreground">
-                      {step.actionLabel}
-                    </p>
-                    <p className="font-mono text-[11px] text-muted-foreground">{step.label}</p>
+                    <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
+                    <p className="font-mono text-xs text-muted-foreground">{step.label}</p>
                   </div>
                 </div>
               ))}
@@ -465,7 +463,7 @@ function ModelConfigurePanel({
             description="rules that trigger on this model"
           />
           {rules.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-6 text-center text-[12px] text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               No rules attached to this model
             </div>
           ) : (
@@ -477,19 +475,17 @@ function ModelConfigurePanel({
                 >
                   <div className="mb-1.5 flex items-start justify-between gap-2">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-[13px] font-bold text-foreground">{rule.name}</span>
+                      <span className="text-base font-bold text-foreground">{rule.name}</span>
                       <RuleSeverityBadge severity={rule.severity} />
                     </div>
                   </div>
-                  <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                    {rule.description}
-                  </p>
+                  <TruncatedText text={rule.description} className="mb-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
                   <div className="flex flex-wrap gap-1">
                     {rule.tags.slice(0, 3).map((t) => (
                       <TagChip key={t} label={t} />
                     ))}
                     {rule.tags.length > 3 && (
-                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
                         +{rule.tags.length - 3}
                       </span>
                     )}
@@ -532,12 +528,12 @@ function VLMRow({
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-semibold text-foreground">{vlm.name}</p>
-        <p className="font-mono text-[10px] text-muted-foreground">{vlm.params}</p>
+        <p className="text-sm font-semibold text-foreground">{vlm.name}</p>
+        <p className="font-mono text-2xs text-muted-foreground">{vlm.params}</p>
       </div>
       <span
         className={cn(
-          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+          "rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
           speedTone
         )}
       >
@@ -606,13 +602,13 @@ function VideoUploader({
           <div className="absolute left-3 top-3">
             <button
               onClick={onClear}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-sev-critical/40 bg-sev-critical/15 px-2.5 py-1 text-[11px] font-semibold text-sev-critical transition-colors hover:bg-sev-critical/25"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sev-critical/40 bg-sev-critical/15 px-2.5 py-1 text-xs font-semibold text-sev-critical transition-colors hover:bg-sev-critical/25"
             >
               <Trash2 className="size-3" />
               Delete
             </button>
           </div>
-          <div className="absolute right-3 top-3 rounded border border-border bg-card/80 px-2 py-0.5 text-[10px] text-muted-foreground backdrop-blur-sm">
+          <div className="absolute right-3 top-3 rounded border border-border bg-card/80 px-2 py-0.5 text-2xs text-muted-foreground backdrop-blur-sm">
             {file.name} · {file.size}
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -624,14 +620,14 @@ function VideoUploader({
         {/* fake controls */}
         <div className="border-t border-border bg-card px-3 py-2.5">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="font-mono text-[11px]">00:00</span>
+            <span className="font-mono text-xs">00:00</span>
             <div className="relative flex-1">
               <div className="h-1 w-full rounded-full bg-muted">
                 <div className="h-full w-[35%] rounded-full bg-primary" />
               </div>
               <span className="absolute left-[35%] top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
             </div>
-            <span className="font-mono text-[11px]">32:31</span>
+            <span className="font-mono text-xs">32:31</span>
           </div>
           <div className="mt-1.5 flex items-center justify-center gap-3 text-muted-foreground">
             <button className="hover:text-foreground"><SkipBack className="size-4" /></button>
@@ -639,8 +635,8 @@ function VideoUploader({
               <Pause className="size-3.5" />
             </button>
             <button className="hover:text-foreground"><SkipForward className="size-4" /></button>
-            <span className="ml-2 text-[11px]"><Volume2 className="size-3.5" /></span>
-            <span className="ml-auto text-[11px]"><Maximize2 className="size-3.5" /></span>
+            <span className="ml-2 text-xs"><Volume2 className="size-3.5" /></span>
+            <span className="ml-auto text-xs"><Maximize2 className="size-3.5" /></span>
           </div>
         </div>
       </div>
@@ -655,10 +651,10 @@ function VideoUploader({
       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40"
     >
       <UploadCloud className="size-9 text-muted-foreground/50" />
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         <span className="font-semibold text-primary">Upload a file</span> or drag and drop
       </p>
-      <p className="text-[11px] text-muted-foreground/60">
+      <p className="text-xs text-muted-foreground/60">
         Supported: MP4, MOV, AVI · Max 100 MB
       </p>
       <input
@@ -695,12 +691,12 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="truncate text-[13px] font-bold text-foreground">{model.name}</p>
-              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+              <TruncatedText text={model.name} className="text-base font-bold text-foreground" />
+              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
                 {model.id}
               </span>
             </div>
-            <p className="line-clamp-1 text-[11px] text-muted-foreground">{model.description}</p>
+            <TruncatedText text={model.description} className="line-clamp-1 text-xs text-muted-foreground" />
           </div>
         </div>
         <ChevronDown
@@ -724,18 +720,16 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                     key={step.id}
                     className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-1.5"
                   >
-                    <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[9px] font-bold text-primary">
+                    <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-3xs font-bold text-primary">
                       {idx + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] font-semibold text-foreground">
-                        {step.actionLabel}
-                      </p>
-                      <p className="font-mono text-[9px] text-muted-foreground">{step.label}</p>
+                      <TruncatedText text={step.actionLabel} className="text-xs font-semibold text-foreground" />
+                      <p className="font-mono text-3xs text-muted-foreground">{step.label}</p>
                     </div>
                     <span
                       className={cn(
-                        "rounded border px-1.5 py-px font-mono text-[9px] font-bold uppercase",
+                        "rounded border px-1.5 py-px font-mono text-3xs font-bold uppercase",
                         step.fileType === "onnx"
                           ? "border-primary/30 bg-primary/10 text-primary"
                           : "border-info/30 bg-info/10 text-info"
@@ -761,19 +755,17 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                   >
                     <div className="mb-1 flex items-start justify-between gap-2">
                       <div className="flex flex-col items-start gap-1">
-                        <span className="text-[12px] font-bold text-foreground">{rule.name}</span>
+                        <span className="text-sm font-bold text-foreground">{rule.name}</span>
                         <RuleSeverityBadge severity={rule.severity} />
                       </div>
                     </div>
-                    <p className="mb-1.5 line-clamp-2 text-[10.5px] leading-relaxed text-muted-foreground">
-                      {rule.description}
-                    </p>
+                    <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-2xs leading-relaxed text-muted-foreground" />
                     <div className="flex flex-wrap gap-1">
                       {rule.tags.slice(0, 3).map((t) => (
                         <TagChip key={t} label={t} />
                       ))}
                       {rule.tags.length > 3 && (
-                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
                           +{rule.tags.length - 3}
                         </span>
                       )}
@@ -815,17 +807,17 @@ function LogRow({ entry, isLast }: { entry: ActivityLogEntry; isLast: boolean })
 
       {/* Content */}
       <div className={cn("min-w-0 pb-5", isLast && "pb-0")}>
-        <p className="mb-0.5 font-mono text-[11px] text-muted-foreground">{entry.timestamp}</p>
+        <p className="mb-0.5 font-mono text-xs text-muted-foreground">{entry.timestamp}</p>
         <p
           className={cn(
-            "text-[13px] font-semibold leading-snug",
+            "text-base font-semibold leading-snug",
             isFailed ? "text-sev-critical" : "text-foreground"
           )}
         >
           {entry.title}
         </p>
         {entry.detail && (
-          <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">{entry.detail}</p>
+          <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{entry.detail}</p>
         )}
       </div>
     </div>
@@ -845,16 +837,16 @@ function StepResultRow({ step, idx }: { step: StepResult; idx: number }) {
           : "border-sev-critical/40 bg-sev-critical/[0.08]"
       )}
     >
-      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[10px] font-bold text-primary">
+      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
         {idx + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-semibold text-foreground">{step.label}</p>
-        <p className="font-mono text-[10px] text-muted-foreground">{step.modelLabel}</p>
+        <TruncatedText text={step.label} className="text-sm font-semibold text-foreground" />
+        <p className="font-mono text-2xs text-muted-foreground">{step.modelLabel}</p>
       </div>
       <span
         className={cn(
-          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+          "rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
           passed
             ? "border-success/30 bg-success/15 text-success"
             : "border-sev-critical/30 bg-sev-critical/15 text-sev-critical"
@@ -872,12 +864,12 @@ function FinalResultRow({ entry }: { entry: FinalResultEntry }) {
   const passed = entry.status === "passed";
   return (
     <div className="flex items-center gap-3 px-3 py-1.5">
-      <span className="w-10 flex-shrink-0 font-mono text-[10px] text-muted-foreground/60">
+      <span className="w-10 flex-shrink-0 font-mono text-2xs text-muted-foreground/60">
         {entry.timestamp}
       </span>
       <span
         className={cn(
-          "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+          "rounded-full border px-2 py-0.5 text-3xs font-bold uppercase tracking-wider",
           passed
             ? "border-success/30 bg-success/15 text-success"
             : "border-sev-critical/30 bg-sev-critical/15 text-sev-critical"
@@ -885,7 +877,7 @@ function FinalResultRow({ entry }: { entry: FinalResultEntry }) {
       >
         {passed ? "Passed" : "Failed"}
       </span>
-      <p className="truncate text-[11.5px] text-foreground">{entry.title}</p>
+      <TruncatedText text={entry.title} className="text-xs text-foreground" />
     </div>
   );
 }
@@ -903,19 +895,19 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
     <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
       <span
         className={cn(
-          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+          "rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
           tone
         )}
       >
         {rule.confidence}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-semibold text-foreground">{rule.ruleName}</p>
-        <p className="text-[10px] text-muted-foreground">{rule.detectionType}</p>
+        <TruncatedText text={rule.ruleName} className="text-sm font-semibold text-foreground" />
+        <p className="text-2xs text-muted-foreground">{rule.detectionType}</p>
       </div>
       <div className="flex flex-shrink-0 items-baseline gap-1 rounded-md border border-border bg-muted/40 px-2 py-1">
-        <span className="text-[14px] font-bold leading-none text-foreground">{rule.count}</span>
-        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/70">
+        <span className="text-md font-bold leading-none text-foreground">{rule.count}</span>
+        <span className="text-3xs font-mono uppercase tracking-wider text-muted-foreground/70">
           {rule.count === 1 ? "trigger" : "triggers"}
         </span>
       </div>
@@ -1029,8 +1021,8 @@ function AnalysisLoadingScreen({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-foreground">Run Analysis</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <p className="text-base text-muted-foreground">
             The model is processing your footage. This may take a few seconds.
           </p>
         </div>
@@ -1046,8 +1038,8 @@ function AnalysisLoadingScreen({
         <div className="mx-auto flex max-w-md flex-col items-center gap-5">
           <div className="size-12 animate-spin rounded-full border-2 border-primary/25 border-t-primary" />
           <div className="text-center">
-            <p className="text-[15px] font-bold text-foreground">Analysing your footage</p>
-            <p className="mt-1 text-[12px] text-muted-foreground">{current.label}</p>
+            <p className="text-md font-bold text-foreground">Analysing your footage</p>
+            <p className="mt-1 text-sm text-muted-foreground">{current.label}</p>
           </div>
 
           <div className="w-full">
@@ -1057,7 +1049,7 @@ function AnalysisLoadingScreen({
                 style={{ width: `${current.pct}%` }}
               />
             </div>
-            <div className="mt-2 flex justify-between font-mono text-[10px] text-muted-foreground">
+            <div className="mt-2 flex justify-between font-mono text-2xs text-muted-foreground">
               <span>{current.pct}%</span>
               <span>
                 Stage {idx + 1} of {ANALYZING_STAGES.length}
@@ -1080,7 +1072,7 @@ function AnalysisLoadingScreen({
           {/* Estimated time remaining */}
           <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
             <Clock className="size-3 text-muted-foreground" />
-            <span className="font-mono text-[11px] text-muted-foreground">
+            <span className="font-mono text-xs text-muted-foreground">
               <strong className="text-foreground">{formatEta(current.etaSec)}</strong>
             </span>
           </div>
@@ -1090,7 +1082,7 @@ function AnalysisLoadingScreen({
             Cancel analysis
           </Button>
 
-          <p className="text-center text-[10.5px] text-muted-foreground/60">
+          <p className="text-center text-2xs text-muted-foreground/60">
             This typically takes a few seconds. You can cancel at any time.
           </p>
         </div>
@@ -1118,8 +1110,8 @@ function AnalysisFailedScreen({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-foreground">Run Analysis</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <p className="text-base text-muted-foreground">
             The pipeline could not complete. Review the failure and retry or edit setup.
           </p>
         </div>
@@ -1152,30 +1144,30 @@ function AnalysisFailedScreen({
           </div>
 
           <div>
-            <p className="text-[16px] font-bold text-foreground">Analysis run failed</p>
-            <p className="mt-1 text-[12px] text-muted-foreground">
+            <p className="text-lg font-bold text-foreground">Analysis run failed</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               The pipeline did not complete. No results have been generated.
             </p>
           </div>
 
           <div className="w-full rounded-lg border border-sev-critical/25 bg-card px-4 py-3 text-left">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Failure
               </span>
-              <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+              <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
                 {failure.code}
               </span>
             </div>
-            <p className="text-[13px] font-semibold text-foreground">{failure.reason}</p>
+            <p className="text-base font-semibold text-foreground">{failure.reason}</p>
             {failure.detail && (
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {failure.detail}
               </p>
             )}
           </div>
 
-          <p className="text-[10.5px] text-muted-foreground/60">
+          <p className="text-2xs text-muted-foreground/60">
             This failed run has still been logged in your history for traceability.
           </p>
         </div>
@@ -1524,8 +1516,8 @@ function SelectStep({
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-foreground">Run Analysis</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <p className="text-base text-muted-foreground">
             Test models against uploaded footage with VLM-powered reasoning before deployment.
           </p>
         </div>
@@ -1542,12 +1534,12 @@ function SelectStep({
         <div className="flex-shrink-0 border-b border-border px-5 py-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-[15px] font-bold text-foreground">Choose an AI Model</h2>
-              <p className="text-[12px] text-muted-foreground">
+              <h2 className="text-md font-bold text-foreground">Choose an AI Model</h2>
+              <p className="text-sm text-muted-foreground">
                 Select the model you want to run on your footage
               </p>
             </div>
-            <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
               {totalModels} Models
             </span>
           </div>
@@ -1559,18 +1551,19 @@ function SelectStep({
                 value={modelSearch}
                 onChange={(e) => setModelSearch(e.target.value)}
                 placeholder="Search model"
-                className="h-9 pl-9 text-[13px]"
+                className="h-9 pl-9 text-base"
               />
             </div>
             <Popover>
               <PopoverTrigger asChild>
                 <button className={cn(
-                  "h-9 inline-flex items-center justify-between gap-2 rounded-lg border bg-background px-3 text-[13px] transition-colors hover:border-primary",
+                  "h-9 inline-flex items-center justify-between gap-2 rounded-lg border bg-background px-3 text-base transition-colors hover:border-primary",
                   tagFilter.length > 0 ? "border-primary text-foreground" : "border-border text-muted-foreground"
                 )}>
-                  <span className="truncate">
-                    {tagFilter.length === 0 ? "All tags" : tagFilter.length === 1 ? tagFilter[0] : `${tagFilter.length} tags`}
-                  </span>
+                  <TruncatedText
+                    text={tagFilter.length === 0 ? "All tags" : tagFilter.length === 1 ? tagFilter[0] : `${tagFilter.length} tags`}
+                    className="truncate"
+                  />
                   <ChevronDown className="size-3.5 flex-shrink-0 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
@@ -1579,7 +1572,7 @@ function SelectStep({
                   const checked = tagFilter.includes(tag);
                   return (
                     <button key={tag} onClick={() => setTagFilter(checked ? tagFilter.filter((x) => x !== tag) : [...tagFilter, tag])}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
                       <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                         checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                         {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -1590,7 +1583,7 @@ function SelectStep({
                 })}
                 {tagFilter.length > 0 && (
                   <button onClick={() => setTagFilter([])}
-                    className="mt-1 w-full rounded px-2 py-1.5 text-center text-[11px] text-muted-foreground underline hover:text-primary">
+                    className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
                     Clear all
                   </button>
                 )}
@@ -1603,7 +1596,7 @@ function SelectStep({
           {filteredModels.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Search className="size-8 opacity-20" />
-              <p className="text-[12px]">No models match your search.</p>
+              <p className="text-sm">No models match your search.</p>
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
@@ -1633,7 +1626,7 @@ function SelectStep({
             <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
               <Plus className="size-6" />
             </div>
-            <p className="text-[13px]">Select a model to configure</p>
+            <p className="text-base">Select a model to configure</p>
           </div>
         )}
       </div>
@@ -1675,8 +1668,8 @@ function UploadStep({
       {/* Top actions */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-foreground">Run Analysis</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <p className="text-base text-muted-foreground">
             Upload your footage and select a VLM to run the model against the clip.
           </p>
         </div>
@@ -1703,22 +1696,22 @@ function UploadStep({
         {/* ── Left: analysis info + uploader ── */}
         <div className="space-y-4">
           <div>
-            <p className="mb-3 text-[15px] font-bold text-foreground">Analysis Information</p>
+            <p className="mb-3 text-md font-bold text-foreground">Analysis Information</p>
 
             <div className="mb-4">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Analysis Name <span className="text-sev-critical">*</span>
               </label>
               <Input
                 value={analysisName}
                 onChange={(e) => setAnalysisName(e.target.value)}
                 placeholder="Enter analysis name (e.g. Model A Analysis)"
-                className="h-10 text-[13px]"
+                className="h-10 text-base"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Video Footage <span className="text-sev-critical">*</span>
               </label>
               <VideoUploader
@@ -1733,23 +1726,23 @@ function UploadStep({
         {/* ── Right: selected model + VLM picker ── */}
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Selected Model
             </p>
             <SelectedModelCard model={selectedModel} allRules={MOCK_RULES} />
           </div>
 
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Select VLM Model <span className="text-sev-critical">*</span>
             </p>
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <div className="border-b border-border bg-muted/20 px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="size-3.5 text-primary" />
-                  <p className="text-[13px] font-bold text-foreground">SOP VLM for Reasoning</p>
+                  <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
                 </div>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   AI will describe &amp; reason about the footage
                 </p>
               </div>
@@ -1799,14 +1792,14 @@ function VerdictBadge({
       <div className="leading-tight">
         <p
           className={cn(
-            "text-[12px] font-bold",
+            "text-sm font-bold",
             isApproved ? "text-success" : "text-sev-critical"
           )}
         >
           {isApproved ? "Approved for Deployment" : "Rejected — Needs Improvement"}
         </p>
         {verdictAtDisplay && (
-          <p className="text-[10px] text-muted-foreground">{verdictAtDisplay}</p>
+          <p className="text-2xs text-muted-foreground">{verdictAtDisplay}</p>
         )}
       </div>
     </div>
@@ -1843,10 +1836,10 @@ function RunMetadataBar({
       {items.map((it, i) => (
         <React.Fragment key={it.label}>
           <div className="flex items-baseline gap-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">
               {it.label}
             </span>
-            <span className="text-[12px] font-semibold text-foreground">{it.value}</span>
+            <span className="text-sm font-semibold text-foreground">{it.value}</span>
           </div>
           {i < items.length - 1 && <span className="text-muted-foreground/30">·</span>}
         </React.Fragment>
@@ -1887,8 +1880,8 @@ function ResultStep({
       {/* Top bar */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-foreground">Analysis Result</h2>
-          <p className="text-[13px] text-muted-foreground">{currentRun?.name ?? modelName}</p>
+          <h2 className="text-xl font-bold text-foreground">Analysis Result</h2>
+          <p className="text-base text-muted-foreground">{currentRun?.name ?? modelName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <Button variant="outline" size="sm" onClick={onGoBack} className="gap-1.5">
@@ -1931,8 +1924,8 @@ function ResultStep({
         <div className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/[0.06] px-4 py-3">
           <CheckCircle2 className="size-5 flex-shrink-0 text-success" />
           <div className="flex-1">
-            <p className="text-[13px] font-semibold text-foreground">Analysis completed successfully</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-base font-semibold text-foreground">Analysis completed successfully</p>
+            <p className="text-xs text-muted-foreground">
               Your footage has been fully processed and results are ready to review.
             </p>
           </div>
@@ -1995,14 +1988,14 @@ function ResultStep({
             </div>
             <div className="border-t border-border bg-card px-3 py-2.5">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="font-mono text-[11px]">00:51</span>
+                <span className="font-mono text-xs">00:51</span>
                 <div className="relative flex-1">
                   <div className="h-1 w-full rounded-full bg-muted">
                     <div className="h-full w-[15%] rounded-full bg-primary" />
                   </div>
                   <span className="absolute left-[15%] top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
                 </div>
-                <span className="font-mono text-[11px]">32:31</span>
+                <span className="font-mono text-xs">32:31</span>
               </div>
               <div className="mt-1.5 flex items-center justify-center gap-3 text-muted-foreground">
                 <button className="hover:text-foreground"><SkipBack className="size-4" /></button>
@@ -2010,8 +2003,8 @@ function ResultStep({
                   <Play className="size-3.5" />
                 </button>
                 <button className="hover:text-foreground"><SkipForward className="size-4" /></button>
-                <span className="ml-2 text-[11px]"><Volume2 className="size-3.5" /></span>
-                <span className="ml-auto text-[11px]"><Maximize2 className="size-3.5" /></span>
+                <span className="ml-2 text-xs"><Volume2 className="size-3.5" /></span>
+                <span className="ml-auto text-xs"><Maximize2 className="size-3.5" /></span>
               </div>
             </div>
           </div>
@@ -2051,12 +2044,12 @@ function ResultStep({
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
-                <p className="text-[13px] font-bold text-foreground">Activity Log</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-base font-bold text-foreground">Activity Log</p>
+                <p className="text-xs text-muted-foreground">
                   {result.activityLog.length} events
                 </p>
               </div>
-              <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/55">
+              <span className="font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
                 {result.stepsTotal} Steps
               </span>
             </div>
@@ -2070,8 +2063,8 @@ function ResultStep({
           {/* Final Results */}
           <div className="rounded-xl border border-border bg-card">
             <div className="border-b border-border px-4 py-3">
-              <p className="text-[13px] font-bold text-foreground">Final Results</p>
-              <p className="text-[11px] text-muted-foreground">verdict per step / rule</p>
+              <p className="text-base font-bold text-foreground">Final Results</p>
+              <p className="text-xs text-muted-foreground">verdict per step / rule</p>
             </div>
             <div className="divide-y divide-border/40">
               {result.finalResults.map((e) => (
@@ -2114,12 +2107,12 @@ function VLMReasoningPanel({
       >
         <div className="flex items-center gap-2">
           <Sparkles className="size-3.5 text-purple" />
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             VLM Reasoning
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded border border-purple/40 bg-purple-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple">
+          <span className="rounded border border-purple/40 bg-purple-soft px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-purple">
             AI-Generated · {clipSeconds}s Clip
           </span>
           <ChevronUp
@@ -2133,7 +2126,7 @@ function VLMReasoningPanel({
       {open && (
         <div className="border-t border-purple/20 px-4 py-3">
           <div className="rounded-lg border border-purple/20 bg-purple-soft p-4">
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
+            <p className="text-base leading-relaxed text-muted-foreground">
               {reasoning}
             </p>
           </div>
@@ -2243,18 +2236,18 @@ function HistoryKpiCard({
       )}
     >
       {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
+        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-primary">
           Active Filter
         </span>
       )}
       <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {config.label}
       </div>
-      <div className={cn("text-[26px] font-bold leading-none", config.valueClass)}>
+      <div className={cn("text-3xl font-bold leading-none", config.valueClass)}>
         {config.getValue(items)}
       </div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{config.sub}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{config.sub}</div>
     </button>
   );
 }
@@ -2367,8 +2360,8 @@ function HistoryTab({
     {/* Title row with right action */}
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h2 className="text-[18px] font-bold text-foreground">Analysis History</h2>
-        <p className="text-[13px] text-muted-foreground">
+        <h2 className="text-xl font-bold text-foreground">Analysis History</h2>
+        <p className="text-base text-muted-foreground">
           Browse, search, and review past analyses across all models.
         </p>
       </div>
@@ -2377,7 +2370,7 @@ function HistoryTab({
           variant="ghost"
           size="sm"
           onClick={onBackToAnalysis}
-          className="gap-1.5 text-[13px]"
+          className="gap-1.5 text-base"
         >
           <ArrowLeft className="size-3.5" />
           Back to Run Analysis
@@ -2437,9 +2430,9 @@ function HistoryTab({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeFilterCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeFilterCount} active
             </span>
           ) : (
@@ -2447,7 +2440,7 @@ function HistoryTab({
               {["All statuses", "All verdicts", "All models", "All VLMs"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -2459,7 +2452,7 @@ function HistoryTab({
           {activeFilterCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); clearFilters(); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -2481,21 +2474,21 @@ function HistoryTab({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by ID, analysis name, model, or VLM…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
 
           {/* 4 dropdowns */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
-              <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </div>
               <div className="relative">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="all">All statuses</option>
                   <option value="passed">Passed</option>
@@ -2507,14 +2500,14 @@ function HistoryTab({
             </div>
 
             <div>
-              <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Verdict
               </div>
               <div className="relative">
                 <select
                   value={verdictFilter}
                   onChange={(e) => setVerdictFilter(e.target.value as typeof verdictFilter)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="all">All verdicts</option>
                   <option value="approved">Approved</option>
@@ -2526,14 +2519,14 @@ function HistoryTab({
             </div>
 
             <div>
-              <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Model
               </div>
               <div className="relative">
                 <select
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="all">All models</option>
                   {allModelNames.map((m) => (
@@ -2545,14 +2538,14 @@ function HistoryTab({
             </div>
 
             <div>
-              <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 VLM
               </div>
               <div className="relative">
                 <select
                   value={vlmFilter}
                   onChange={(e) => setVlmFilter(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="all">All VLMs</option>
                   {allVlmNames.map((v) => (
@@ -2569,7 +2562,7 @@ function HistoryTab({
 
     {/* Count + sort */}
     <div className="flex items-center justify-between gap-3">
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "analysis" : "analyses"} match current filters
         {hasActiveFilters && (
@@ -2585,7 +2578,7 @@ function HistoryTab({
         <select
           value={sortAsc ? "oldest" : "newest"}
           onChange={(e) => setSortAsc(e.target.value === "oldest")}
-          className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[12px] text-foreground focus:border-primary focus:outline-none"
+          className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -2605,7 +2598,7 @@ function HistoryTab({
               {["RULE ID", "ANALYSIS NAME", "STATUS", "SELECTED MODEL", "SCORE", "CREATED ON", "ACTION"].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                  className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                 >
                   {h}
                 </th>
@@ -2615,7 +2608,7 @@ function HistoryTab({
           <tbody className="divide-y divide-border/60">
             {pageItems.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-[12px] text-muted-foreground">
+                <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
                   No past analyses found.
                 </td>
               </tr>
@@ -2624,10 +2617,10 @@ function HistoryTab({
                 <tr
                   key={a.id}
                   onClick={() => onView(a.id)}
-                  className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+                  className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                       {a.id}
                     </span>
                   </td>
@@ -2638,19 +2631,19 @@ function HistoryTab({
                       </span>
                       <div className="flex flex-wrap items-center gap-1">
                         {a.runState === "failed" && (
-                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-sev-critical">
+                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-sev-critical">
                             <AlertTriangle className="size-2.5" />
                             Script Error
                           </span>
                         )}
                         {a.verdict === "approved" && (
-                          <span className="inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-success">
+                          <span className="inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-success">
                             <CheckCircle2 className="size-2.5" />
                             Approved
                           </span>
                         )}
                         {a.verdict === "rejected" && (
-                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-sev-critical">
+                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-sev-critical">
                             <XCircle className="size-2.5" />
                             Rejected
                           </span>
@@ -2664,7 +2657,7 @@ function HistoryTab({
                   <td className="px-4 py-3 text-foreground">
                     <div className="flex flex-col gap-0.5">
                       <span>{a.modelName}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground">
+                      <span className="font-mono text-2xs text-muted-foreground">
                         VLM · {a.vlmName}
                       </span>
                     </div>
@@ -2686,19 +2679,19 @@ function HistoryTab({
                       <PopoverContent className="w-44 p-1" align="end">
                         <button
                           onClick={() => onView(a.id)}
-                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                         >
                           <FileText className="size-3.5 text-muted-foreground" />
                           View details
                         </button>
-                        <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted">
+                        <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                           <Download className="size-3.5 text-muted-foreground" />
                           Export report
                         </button>
                         <div className="my-1 border-t border-border" />
                         <button
                           onClick={() => setPendingDeleteId(a.id)}
-                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-sev-critical hover:bg-sev-critical/10"
+                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
                         >
                           <Trash2 className="size-3.5" />
                           Delete
@@ -2715,7 +2708,7 @@ function HistoryTab({
 
       {/* Pagination */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Entries per page <span className="ml-2 font-semibold text-foreground">10</span>
           <span className="ml-4">
             {filtered.length === 0
@@ -2731,7 +2724,7 @@ function HistoryTab({
           >
             <ChevronLeft className="size-3.5" />
           </button>
-          <span className="px-2 text-[12px] text-foreground">
+          <span className="px-2 text-sm text-foreground">
             {page} <span className="text-muted-foreground/60">of {pageCount}</span>
           </span>
           <button
@@ -2753,10 +2746,10 @@ function HistoryTab({
             <Trash2 className="size-4" />
             Delete Analysis
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
         {deleteTarget && (
-          <div className="px-5 py-4 text-[13px] text-muted-foreground">
+          <div className="px-5 py-4 text-base text-muted-foreground">
             Are you sure you want to delete{" "}
             <span className="font-semibold text-foreground">{deleteTarget.id}</span>{" "}
             <span className="font-semibold text-foreground">— {deleteTarget.name}</span>? Any
@@ -2808,8 +2801,8 @@ function HistoryDetailDrawer({
         {/* Header */}
         <div className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div>
-            <p className="text-[15px] font-bold text-foreground">{analysis.name}</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-md font-bold text-foreground">{analysis.name}</p>
+            <p className="text-xs text-muted-foreground">
               {analysis.modelName} · {analysis.createdAtDisplay}
             </p>
           </div>
@@ -2834,7 +2827,7 @@ function HistoryDetailDrawer({
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "mr-6 border-b-2 py-3 text-[13px] font-semibold transition-colors",
+                "mr-6 border-b-2 py-3 text-base font-semibold transition-colors",
                 tab === t
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -2855,14 +2848,14 @@ function HistoryDetailDrawer({
                   <XCircle className="size-5 flex-shrink-0 text-sev-critical" />
                   <div className="flex-1">
                     <div className="mb-0.5 flex items-center justify-between">
-                      <p className="text-[13px] font-semibold text-sev-critical">Pipeline failure</p>
-                      <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+                      <p className="text-base font-semibold text-sev-critical">Pipeline failure</p>
+                      <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
                         {analysis.failure.code}
                       </span>
                     </div>
-                    <p className="text-[12px] font-semibold text-foreground">{analysis.failure.reason}</p>
+                    <p className="text-sm font-semibold text-foreground">{analysis.failure.reason}</p>
                     {analysis.failure.detail && (
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                         {analysis.failure.detail}
                       </p>
                     )}
@@ -2920,13 +2913,13 @@ function HistoryDetailDrawer({
                 </div>
                 <div className="border-t border-border bg-card px-3 py-2.5">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="font-mono text-[11px]">00:51</span>
+                    <span className="font-mono text-xs">00:51</span>
                     <div className="relative flex-1">
                       <div className="h-1 w-full rounded-full bg-muted">
                         <div className="h-full w-[15%] rounded-full bg-primary" />
                       </div>
                     </div>
-                    <span className="font-mono text-[11px]">32:31</span>
+                    <span className="font-mono text-xs">32:31</span>
                   </div>
                 </div>
               </div>
@@ -2971,8 +2964,8 @@ function HistoryDetailDrawer({
             <div className="space-y-4">
               <div className="rounded-xl border border-border bg-card">
                 <div className="border-b border-border px-4 py-3">
-                  <p className="text-[13px] font-bold text-foreground">Analysis Logs</p>
-                  <p className="text-[11px] text-muted-foreground">{result.activityLog.length} events</p>
+                  <p className="text-base font-bold text-foreground">Analysis Logs</p>
+                  <p className="text-xs text-muted-foreground">{result.activityLog.length} events</p>
                 </div>
                 <div className="px-4 py-4">
                   {result.activityLog.map((e, i) => (
@@ -2983,7 +2976,7 @@ function HistoryDetailDrawer({
 
               <div className="rounded-xl border border-border bg-card">
                 <div className="border-b border-border px-4 py-3">
-                  <p className="text-[13px] font-bold text-foreground">Final Results</p>
+                  <p className="text-base font-bold text-foreground">Final Results</p>
                 </div>
                 <div className="divide-y divide-border/40">
                   {result.finalResults.map((e) => (

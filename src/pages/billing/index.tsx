@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
@@ -31,11 +32,11 @@ function daysBetween(from: string, to: string): number {
 
 /* ── Mock camera usage per subscription (hardcoded for demo) ─────────────── */
 
-const USAGE_DATA: Record<string, { usedCameras: number; usedSeats: number }> = {
-  "SUB-2026-001": { usedCameras: 18, usedSeats: 14 },
-  "SUB-2026-002": { usedCameras: 22, usedSeats: 9 },
-  "SUB-2026-003": { usedCameras: 24, usedSeats: 7 },
-  "SUB-2026-004": { usedCameras: 5, usedSeats: 3 },
+const USAGE_DATA: Record<string, { usedCameras: number; usedSeats: number; usedNvrs: number }> = {
+  "SUB-2026-001": { usedCameras: 18, usedSeats: 14, usedNvrs: 4 },
+  "SUB-2026-002": { usedCameras: 22, usedSeats: 9,  usedNvrs: 2 },
+  "SUB-2026-003": { usedCameras: 24, usedSeats: 7,  usedNvrs: 3 },
+  "SUB-2026-004": { usedCameras: 5,  usedSeats: 3,  usedNvrs: 1 },
 };
 
 /* ── Saved card type ──────────────────────────────────────────────────────── */
@@ -102,8 +103,8 @@ function SectionCard({ title, description, action, children }: {
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
-          <h2 className="text-[14px] font-bold text-foreground">{title}</h2>
-          {description && <p className="mt-0.5 text-[12px] text-muted-foreground">{description}</p>}
+          <h2 className="text-md font-bold text-foreground">{title}</h2>
+          {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
       </div>
@@ -117,9 +118,9 @@ function SectionCard({ title, description, action, children }: {
 function KpiTile({ label, value, sub, txt }: { label: string; value: React.ReactNode; sub: string; txt: string }) {
   return (
     <div className="rounded-lg border border-border bg-background p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 text-[22px] font-bold leading-none", txt)}>{value}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground">{sub}</p>
+      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={cn("mt-1 text-2xl font-bold leading-none", txt)}>{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
     </div>
   );
 }
@@ -130,7 +131,7 @@ function UsageBar({ used, total, label }: { used: number; total: number | "unlim
   if (total === "unlimited") {
     return (
       <div>
-        <div className="mb-1 flex items-center justify-between text-[10px]">
+        <div className="mb-1 flex items-center justify-between text-2xs">
           <span className="text-muted-foreground">{label}</span>
           <span className="font-mono text-muted-foreground">{used} / ∞</span>
         </div>
@@ -147,11 +148,11 @@ function UsageBar({ used, total, label }: { used: number; total: number | "unlim
   const textClass = isOverage ? "text-sev-critical" : isWarning ? "text-warning" : "text-foreground";
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-[10px]">
+      <div className="mb-1 flex items-center justify-between text-2xs">
         <span className="text-muted-foreground">{label}</span>
         <span className={cn("font-mono font-bold", textClass)}>
           {used} / {total}
-          {isOverage && <span className="ml-1 text-[9px] text-sev-critical">(+{used - total} over)</span>}
+          {isOverage && <span className="ml-1 text-3xs text-sev-critical">(+{used - total} over)</span>}
         </span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-muted">
@@ -168,7 +169,7 @@ function CancellationGraceBanner({ sub, onUndo }: { sub: SiteSubscription; onUnd
   return (
     <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/[0.06] px-4 py-3">
       <CalendarClock className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-      <div className="min-w-0 flex-1 text-[13px]">
+      <div className="min-w-0 flex-1 text-base">
         <span className="font-semibold text-foreground">
           Your {PLANS[sub.planTier].name} subscription for {sub.siteName} ends in{" "}
           <span className="text-warning">{days} day{days !== 1 ? "s" : ""}</span>
@@ -189,7 +190,7 @@ function FailedPaymentBanner({ sub, graceDays, onRetry }: { sub: SiteSubscriptio
   return (
     <div className="flex items-start gap-3 rounded-xl border border-sev-critical/40 bg-sev-critical/[0.06] px-4 py-3">
       <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
-      <div className="min-w-0 flex-1 text-[13px]">
+      <div className="min-w-0 flex-1 text-base">
         <span className="font-semibold text-sev-critical">Payment failed</span>
         <span className="ml-1 text-foreground">for {sub.siteName} —</span>
         <span className="ml-1 text-muted-foreground">you have {graceDays} day{graceDays !== 1 ? "s" : ""} to update your card before access is restricted.</span>
@@ -204,14 +205,14 @@ function FailedPaymentBanner({ sub, graceDays, onRetry }: { sub: SiteSubscriptio
 
 /* ── Renewal reminder banner ──────────────────────────────────────────────── */
 
-function RenewalReminderBanner({ sub, days, onDismiss, onUpdatePayment }: {
-  sub: SiteSubscription; days: number; onDismiss: () => void; onUpdatePayment: () => void;
+function RenewalReminderBanner({ sub, onDismiss, onUpdatePayment }: {
+  sub: SiteSubscription; onDismiss: () => void; onUpdatePayment: () => void;
 }) {
   const plan = PLANS[sub.planTier];
   return (
     <div className="flex items-start gap-3 rounded-xl border border-info/40 bg-info/[0.06] px-4 py-3">
       <Bell className="mt-0.5 size-4 flex-shrink-0 text-info" />
-      <div className="min-w-0 flex-1 text-[13px]">
+      <div className="min-w-0 flex-1 text-base">
         <span className="font-semibold text-foreground">{plan.name}</span>
         <span className="ml-1 text-muted-foreground">for</span>
         <span className="ml-1 font-semibold text-foreground">{sub.siteName}</span>
@@ -233,10 +234,9 @@ function RenewalReminderBanner({ sub, days, onDismiss, onUpdatePayment }: {
 
 /* ── Site Subscription Card ───────────────────────────────────────────────── */
 
-function SubscriptionCard({ sub, onChangePlan, onCancel, onManageSeats }: {
+function SubscriptionCard({ sub, onChangePlan, onManageSeats }: {
   sub: SiteSubscription;
   onChangePlan: () => void;
-  onCancel: () => void;
   onManageSeats: () => void;
 }) {
   const plan = PLANS[sub.planTier];
@@ -260,36 +260,39 @@ function SubscriptionCard({ sub, onChangePlan, onCancel, onManageSeats }: {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="truncate text-[13px] font-bold text-foreground">{sub.siteName}</p>
-            <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[9px] font-bold uppercase tracking-wider", status.bg, status.text)}>
+            <TruncatedText text={sub.siteName} className="text-base font-bold text-foreground" />
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px text-3xs font-bold uppercase tracking-wider", status.bg, status.text)}>
               <status.icon className="size-2.5" />
               {status.label}
             </span>
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             <span className={cn("font-semibold", color.text)}>{plan.name}</span>
             {" · "}{sub.billingCycle === "annual" ? "Annual" : "Monthly"}
             {" · "}Renews {sub.renewsDisplay.split(" (")[0]}
           </p>
         </div>
         <div className="text-right">
-          <p className={cn("font-mono text-[14px] font-bold leading-none", color.text)}>${sub.monthlyCost.toLocaleString()}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">/month</p>
+          <p className={cn("font-mono text-md font-bold leading-none", color.text)}>${sub.monthlyCost.toLocaleString()}</p>
+          <p className="mt-0.5 text-2xs text-muted-foreground">/month</p>
         </div>
       </div>
 
-      {/* Usage bars */}
+      {/* Usage bars — uniform across every card: seats, cameras, NVRs */}
       {usage && !isCancelled && (
-        <div className="grid grid-cols-2 gap-3 border-t border-border/60 bg-background/20 px-3 py-2.5">
+        <div className="grid grid-cols-3 gap-3 border-t border-border/60 bg-background/20 px-3 py-2.5">
           <UsageBar used={usage.usedSeats} total={totalSeats} label="Seats" />
           <UsageBar used={usage.usedCameras} total={plan.cameraLimit} label="Cameras" />
+          <UsageBar used={usage.usedNvrs} total={plan.nvrLimit} label="NVRs" />
         </div>
       )}
 
       {/* Actions row */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-background/30 px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-2xs text-muted-foreground">
           <span>{typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} cam limit` : "Unlim cams"}</span>
+          <span className="opacity-40">·</span>
+          <span>{typeof plan.nvrLimit === "number" ? `${plan.nvrLimit} NVR limit` : "Unlim NVRs"}</span>
           <span className="opacity-40">·</span>
           <span><strong className="text-foreground">{totalSeats}</strong>{typeof plan.userLimit === "number" ? ` / ${plan.userLimit}` : ""} users</span>
           {sub.seats.owner > 0 && (
@@ -310,26 +313,19 @@ function SubscriptionCard({ sub, onChangePlan, onCancel, onManageSeats }: {
         </div>
         <div className="flex items-center gap-1.5">
           {!isCancelled && (
-            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onManageSeats}>
-              Seats
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onManageSeats}>
+              Add Seats
             </Button>
           )}
           {isCancelled ? (
-            <Button size="sm" className="h-7 text-[11px]" onClick={onChangePlan}>
+            <Button size="sm" className="h-7 text-xs" onClick={onChangePlan}>
               Reactivate
             </Button>
           ) : (
-            <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onChangePlan}>
+            <Button size="sm" className="h-7 gap-1 text-xs" onClick={onChangePlan}>
               <ArrowUp className="size-3" />
               Change Plan
             </Button>
-          )}
-          {!isCancelled && !isCancelling && (
-            <button onClick={onCancel}
-              className="ml-1 rounded p-1 text-muted-foreground hover:bg-muted hover:text-sev-critical"
-              title="Cancel subscription">
-              <X className="size-3.5" />
-            </button>
           )}
         </div>
       </div>
@@ -339,11 +335,12 @@ function SubscriptionCard({ sub, onChangePlan, onCancel, onManageSeats }: {
 
 /* ── Change Plan modal ────────────────────────────────────────────────────── */
 
-function ChangePlanModal({ open, current, onClose, onConfirm }: {
+function ChangePlanModal({ open, current, onClose, onConfirm, onCancelPlan }: {
   open: boolean;
   current: SiteSubscription | null;
   onClose: () => void;
   onConfirm: (planTier: PlanTier, cycle: "monthly" | "annual") => void;
+  onCancelPlan: () => void;
 }) {
   const [picked, setPicked] = React.useState<PlanTier>("professional");
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
@@ -367,7 +364,6 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
   const newPlan = PLANS[picked];
   const oldCost = cycle === "annual" ? Math.round(oldPlan.pricePerYear / 12) : oldPlan.pricePerMonth;
   const newCost = cycle === "annual" ? Math.round(newPlan.pricePerYear / 12) : newPlan.pricePerMonth;
-  const delta = newCost - oldCost;
   const remainingDays = 14; // mock proration period
   const credit = direction === "upgrade" ? Math.round((oldCost / 30) * remainingDays) : 0;
   const charge = direction === "upgrade" ? Math.round((newCost / 30) * remainingDays) : 0;
@@ -380,7 +376,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
           <DialogTitle className="text-base font-bold">
             {step === "pick" ? "Change Plan" : "Confirm Plan Change"}
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {step === "pick"
               ? <>{`Choose a new plan for `}<strong className="text-foreground">{current.siteName}</strong>.</>
               : <>{`Review the changes before applying them to `}<strong className="text-foreground">{current.siteName}</strong>.</>
@@ -391,7 +387,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
         <div className="flex-1 overflow-y-auto p-5">
           {step === "pick" ? (
             <>
-              <div className="mb-4 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-[12px]">
+              <div className="mb-4 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
                 <button onClick={() => setCycle("monthly")}
                   className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                     cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -400,7 +396,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                 <button onClick={() => setCycle("annual")}
                   className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                     cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
-                  Annual <span className="text-[10px] opacity-80">(save ~17%)</span>
+                  Annual <span className="text-2xs opacity-80">(save ~17%)</span>
                 </button>
               </div>
               <div className="space-y-2">
@@ -418,7 +414,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                         isPicked ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                       )}>
                       {p.highlight && (
-                        <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                        <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">
                           <Sparkles className="size-2.5" /> Most popular
                         </span>
                       )}
@@ -430,15 +426,17 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <p className="text-[14px] font-bold text-foreground">{p.name}</p>
+                          <p className="text-md font-bold text-foreground">{p.name}</p>
                           {isCurrent && (
-                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Current</span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary">
+                              <Check className="size-2.5" strokeWidth={3} /> Current plan
+                            </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">{p.tagline}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{p.tagline}</p>
                         <ul className="mt-2 space-y-1">
                           {p.features.slice(0, 4).map((f) => (
-                            <li key={f} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
+                            <li key={f} className="flex items-start gap-1.5 text-2xs text-muted-foreground">
                               <Check className={cn("mt-0.5 size-2.5 flex-shrink-0", color.text)} strokeWidth={3} />
                               {f}
                             </li>
@@ -446,10 +444,10 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                         </ul>
                       </div>
                       <div className="text-right">
-                        <p className={cn("font-mono text-[16px] font-bold leading-none", color.text)}>${monthly}</p>
-                        <p className="mt-0.5 text-[9px] text-muted-foreground">/mo /site</p>
+                        <p className={cn("font-mono text-lg font-bold leading-none", color.text)}>${monthly}</p>
+                        <p className="mt-0.5 text-3xs text-muted-foreground">/mo /site</p>
                         {cycle === "annual" && (
-                          <p className="mt-0.5 text-[9px] text-success">${p.pricePerYear.toLocaleString()}/yr</p>
+                          <p className="mt-0.5 text-3xs text-success">${p.pricePerYear.toLocaleString()}/yr</p>
                         )}
                       </div>
                     </button>
@@ -461,12 +459,12 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
             <div className="space-y-4">
               {/* Plan change direction */}
               <div className="rounded-lg border border-border bg-background p-4">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Plan change</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan change</p>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 rounded-md border border-border bg-card p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Current</p>
-                    <p className="mt-1 text-[16px] font-bold text-foreground">{oldPlan.name}</p>
-                    <p className="font-mono text-[11px] text-muted-foreground">${oldCost}/mo</p>
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Current</p>
+                    <p className="mt-1 text-lg font-bold text-foreground">{oldPlan.name}</p>
+                    <p className="font-mono text-xs text-muted-foreground">${oldCost}/mo</p>
                   </div>
                   <div className={cn(
                     "flex size-9 flex-shrink-0 items-center justify-center rounded-full",
@@ -479,9 +477,9 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                      <Check className="size-4" />}
                   </div>
                   <div className={cn("flex-1 rounded-md border-2 p-3", PLAN_COLORS[picked].border, PLAN_COLORS[picked].bg)}>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">New</p>
-                    <p className={cn("mt-1 text-[16px] font-bold", PLAN_COLORS[picked].text)}>{newPlan.name}</p>
-                    <p className="font-mono text-[11px] text-muted-foreground">${newCost}/mo</p>
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">New</p>
+                    <p className={cn("mt-1 text-lg font-bold", PLAN_COLORS[picked].text)}>{newPlan.name}</p>
+                    <p className="font-mono text-xs text-muted-foreground">${newCost}/mo</p>
                   </div>
                 </div>
               </div>
@@ -489,8 +487,8 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
               {/* Proration breakdown */}
               {direction === "upgrade" && (
                 <div className="rounded-lg border border-success/30 bg-success/[0.04] p-4">
-                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Proration — due today</p>
-                  <div className="space-y-1.5 text-[12px]">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Proration — due today</p>
+                  <div className="space-y-1.5 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Credit for {remainingDays} remaining days on {oldPlan.name}</span>
                       <span className="font-mono text-success">−${credit}</span>
@@ -499,7 +497,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
                       <span className="text-muted-foreground">{newPlan.name} charge for {remainingDays} days</span>
                       <span className="font-mono text-foreground">+${charge}</span>
                     </div>
-                    <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-2 text-[13px] font-bold">
+                    <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-2 text-base font-bold">
                       <span className="text-foreground">Total due now</span>
                       <span className={cn("font-mono", netDue > 0 ? "text-foreground" : "text-success")}>${Math.max(0, netDue)}</span>
                     </div>
@@ -508,8 +506,8 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
               )}
               {direction === "downgrade" && (
                 <div className="rounded-lg border border-warning/30 bg-warning/[0.04] p-4">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Scheduled downgrade</p>
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scheduled downgrade</p>
+                  <p className="text-sm text-muted-foreground">
                     Your current <strong className="text-foreground">{oldPlan.name}</strong> plan stays active until{" "}
                     <strong className="text-foreground">{current.renewsDisplay.split(" (")[0]}</strong>. The downgrade to{" "}
                     <strong className="text-foreground">{newPlan.name}</strong> takes effect at the start of the next billing cycle — no refund is issued.
@@ -519,8 +517,8 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
 
               {/* Features */}
               <div className="rounded-lg border border-border bg-background p-4">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What changes</p>
-                <ul className="space-y-1.5 text-[12px]">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">What changes</p>
+                <ul className="space-y-1.5 text-sm">
                   {newPlan.features.slice(0, 6).map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check className={cn("mt-0.5 size-3 flex-shrink-0", PLAN_COLORS[picked].text)} />
@@ -536,7 +534,16 @@ function ChangePlanModal({ open, current, onClose, onConfirm }: {
         <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
           {step === "pick" ? (
             <>
-              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              {current.status !== "cancelled" && current.status !== "cancelling" && (
+                <Button
+                  variant="ghost"
+                  onClick={onCancelPlan}
+                  className="mr-auto gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="size-3.5" /> Cancel Plan
+                </Button>
+              )}
+              <Button variant="ghost" onClick={onClose}>Close</Button>
               <Button
                 disabled={picked === current.planTier && cycle === current.billingCycle}
                 onClick={() => setStep("confirm")}
@@ -582,13 +589,13 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add Subscription</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">Each site requires its own subscription. Pick a site and choose a plan.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Each site requires its own subscription. Pick a site and choose a plan.</p>
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
             {sites.length === 0 ? (
-              <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-3 text-[12px] text-muted-foreground">
+              <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
                 All sites already have a subscription.
               </div>
             ) : (
@@ -596,7 +603,7 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
                 {sites.map((s) => (
                   <button key={s.id} onClick={() => setSiteId(s.id)}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-left text-[13px] transition-colors",
+                      "flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-left text-base transition-colors",
                       siteId === s.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                     )}>
                     <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
@@ -610,7 +617,7 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-[12px]">
+          <div className="flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
             <button onClick={() => setCycle("monthly")}
               className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                 cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -619,7 +626,7 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
             <button onClick={() => setCycle("annual")}
               className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                 cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
-              Annual <span className="text-[10px] opacity-80">(save ~17%)</span>
+              Annual <span className="text-2xs opacity-80">(save ~17%)</span>
             </button>
           </div>
           <div className="space-y-2">
@@ -639,12 +646,12 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
                     <Icon className={cn("size-4", color.text)} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-foreground">{p.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{p.tagline}</p>
+                    <p className="text-base font-bold text-foreground">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
                   </div>
                   <div className="text-right">
-                    <p className={cn("font-mono text-[14px] font-bold leading-none", color.text)}>${monthly}</p>
-                    <p className="text-[9px] text-muted-foreground">/mo</p>
+                    <p className={cn("font-mono text-md font-bold leading-none", color.text)}>${monthly}</p>
+                    <p className="text-3xs text-muted-foreground">/mo</p>
                   </div>
                 </button>
               );
@@ -673,12 +680,12 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-destructive">Cancel Subscription</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             The subscription for <strong className="text-foreground">{sub.siteName}</strong> will remain active until the end of the billing period ({sub.renewsDisplay.split(" (")[0]}), then become read-only.
           </p>
         </DialogHeader>
         <div className="space-y-3 p-5">
-          <div className="rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-[12px] text-foreground">
+          <div className="rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm text-foreground">
             <p className="font-semibold">What happens when cancelled:</p>
             <ul className="mt-1.5 space-y-1 text-muted-foreground">
               <li>• Site dashboard becomes read-only after {sub.renewsDisplay.split(" (")[0]}</li>
@@ -728,7 +735,7 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Manage Seats</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Adjust seat counts for <strong className="text-foreground">{sub.siteName}</strong>. Changes apply on your next invoice.
           </p>
         </DialogHeader>
@@ -743,20 +750,20 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
                   <Icon className={cn("size-4", cfg.text)} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-foreground">{tier.label}</p>
-                  <p className="text-[11px] text-muted-foreground">${tier.pricePerMonth}/seat · /month</p>
+                  <p className="text-base font-bold text-foreground">{tier.label}</p>
+                  <p className="text-xs text-muted-foreground">${tier.pricePerMonth}/seat · /month</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setSeats((s) => ({ ...s, [role]: Math.max(0, s[role] - 1) }))}
                     className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">−</button>
-                  <p className="w-8 text-center font-mono text-[16px] font-bold text-foreground">{seats[role]}</p>
+                  <p className="w-8 text-center font-mono text-lg font-bold text-foreground">{seats[role]}</p>
                   <button onClick={() => setSeats((s) => ({ ...s, [role]: s[role] + 1 }))}
                     className="flex size-7 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted">+</button>
                 </div>
               </div>
             );
           })}
-          <div className="rounded-md border border-border bg-muted/40 p-3 text-[12px]">
+          <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Monthly change</span>
               <span className={cn("font-mono font-bold", delta > 0 ? "text-success" : delta < 0 ? "text-warning" : "text-foreground")}>
@@ -799,18 +806,18 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-bold text-foreground">{card.brand} ···· {card.last4}</p>
+          <p className="text-base font-bold text-foreground">{card.brand} ···· {card.last4}</p>
           {card.isDefault && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">
               <Star className="size-2.5" /> Default
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
+        <p className="text-xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
       </div>
       <div className="flex items-center gap-1.5">
         {!card.isDefault && (
-          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onSetDefault}>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onSetDefault}>
             Set default
           </Button>
         )}
@@ -862,27 +869,27 @@ function AddCardModal({ open, onClose, onSave }: {
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add Payment Method</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Card details are encrypted — never stored here.
           </p>
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
-            <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" className="h-9 text-[13px]" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
+            <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" className="h-9 text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
-            <Input value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-[13px]" inputMode="numeric" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
+            <Input value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-base" inputMode="numeric" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
-              <Input value={expiry} onChange={(e) => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" className="h-9 font-mono text-[13px]" inputMode="numeric" />
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
+              <Input value={expiry} onChange={(e) => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" className="h-9 font-mono text-base" inputMode="numeric" />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
-              <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="h-9 font-mono text-[13px]" inputMode="numeric" />
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
+              <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="h-9 font-mono text-base" inputMode="numeric" />
             </div>
           </div>
         </div>
@@ -890,6 +897,84 @@ function AddCardModal({ open, onClose, onSave }: {
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!canSubmit} onClick={() => onSave(last4, expiry, detectBrand(cleaned))} className="gap-1.5">
             <CreditCard className="size-3.5" /> Add Card
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Retry payment modal ──────────────────────────────────────────────────── */
+
+function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm }: {
+  open: boolean;
+  invoice: Invoice | null;
+  cards: SavedCard[];
+  onClose: () => void;
+  onAddCard: () => void;
+  onConfirm: (cardId: string) => void;
+}) {
+  const [selected, setSelected] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (open) setSelected(cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "");
+  }, [open, cards]);
+
+  if (!invoice) return null;
+  const total = invoice.amount + Math.round(invoice.amount * 0.07);
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Retry Payment</DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.
+          </p>
+        </DialogHeader>
+        <div className="flex-1 space-y-3 overflow-y-auto p-5">
+          <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+            <p className="text-muted-foreground">
+              The previous charge of <strong className="text-foreground">${total.toLocaleString()}</strong> failed.
+              Select a card below — or update your card details — and we'll try again.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment card</p>
+            {cards.map((card) => (
+              <button key={card.id} onClick={() => setSelected(card.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
+                  selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                )}>
+                <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
+                  selected === card.id ? "border-primary" : "border-muted-foreground/40")}>
+                  {selected === card.id && <span className="size-2 rounded-full bg-primary" />}
+                </div>
+                <CreditCard className={cn("size-4 flex-shrink-0", brandColors[card.brand] ?? "text-secondary")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold text-foreground">{card.brand} ···· {card.last4}</p>
+                  <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
+                </div>
+                {card.isDefault && (
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={onAddCard}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+            <Plus className="size-3.5" /> Use a different card / update details
+          </button>
+        </div>
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
+            <RefreshCw className="size-3.5" /> Retry ${total.toLocaleString()}
           </Button>
         </div>
       </DialogContent>
@@ -920,12 +1005,12 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-[15px] font-bold text-foreground">{invoice.periodDisplay} invoice</h3>
-                <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+                <h3 className="text-md font-bold text-foreground">{invoice.periodDisplay} invoice</h3>
+                <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
                   <Icon className="size-3" /> {s.label}
                 </span>
               </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Issued {invoice.issuedDisplay}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Issued {invoice.issuedDisplay}</p>
             </div>
           </div>
           <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -937,7 +1022,7 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
           {invoice.status === "failed" && (
             <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
-              <div className="min-w-0 flex-1 text-[12px]">
+              <div className="min-w-0 flex-1 text-sm">
                 <p className="font-semibold text-sev-critical">Payment failed</p>
                 <p className="mt-0.5 text-muted-foreground">The charge for this invoice could not be processed. Please update your payment method and retry.</p>
               </div>
@@ -949,29 +1034,29 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Invoice number</p>
-              <p className="mt-0.5 font-mono text-[12px] text-primary">{invoice.id}</p>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Invoice number</p>
+              <p className="mt-0.5 font-mono text-sm text-primary">{invoice.id}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Issued</p>
-              <p className="mt-0.5 text-[12px] text-foreground">{invoice.issuedDisplay}</p>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Issued</p>
+              <p className="mt-0.5 text-sm text-foreground">{invoice.issuedDisplay}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
-              <p className={cn("mt-0.5 text-[12px] font-semibold", s.text)}>{s.label}</p>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
+              <p className={cn("mt-0.5 text-sm font-semibold", s.text)}>{s.label}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Payment method</p>
-              <p className="mt-0.5 text-[12px] text-foreground">{ORG_LICENSE_INFO.paymentMethod}</p>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Payment method</p>
+              <p className="mt-0.5 text-sm text-foreground">{ORG_LICENSE_INFO.paymentMethod}</p>
             </div>
           </div>
 
           {invoice.siteNames && invoice.siteNames.length > 0 && (
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Sites billed</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sites billed</p>
               <div className="flex flex-wrap gap-1.5">
                 {invoice.siteNames.map((n) => (
-                  <span key={n} className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
+                  <span key={n} className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-foreground">
                     <Building2 className="size-2.5 text-muted-foreground" /> {n}
                   </span>
                 ))}
@@ -980,18 +1065,18 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
           )}
 
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Totals</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Totals</p>
             <div className="space-y-1.5 rounded-lg border border-border bg-background px-3.5 py-3">
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-mono text-foreground">${subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Taxes (7%)</span>
                 <span className="font-mono text-foreground">${taxes.toLocaleString()}</span>
               </div>
               <div className="mt-1 border-t border-border/60 pt-2">
-                <div className="flex items-center justify-between text-[14px] font-bold text-foreground">
+                <div className="flex items-center justify-between text-md font-bold text-foreground">
                   <span>Total</span>
                   <span className="font-mono">${total.toLocaleString()}</span>
                 </div>
@@ -1001,9 +1086,15 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
         </div>
 
         <div className="border-t border-border px-5 py-3.5">
-          <Button className="w-full gap-1.5">
-            <Download className="size-3.5" /> Download PDF
-          </Button>
+          {invoice.status === "failed" ? (
+            <Button onClick={onRetryPayment} className="w-full gap-1.5">
+              <RefreshCw className="size-3.5" /> Retry Payment
+            </Button>
+          ) : (
+            <Button className="w-full gap-1.5">
+              <Download className="size-3.5" /> Download PDF
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -1070,8 +1161,8 @@ function BillingDetailsSection() {
             ["City", details.city || "—"],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</dt>
-              <dd className="mt-0.5 text-[13px] text-foreground">{value}</dd>
+              <dt className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</dt>
+              <dd className="mt-0.5 text-base text-foreground">{value}</dd>
             </div>
           ))}
         </dl>
@@ -1079,47 +1170,47 @@ function BillingDetailsSection() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Billing Email *
               </label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-[13px]" placeholder="billing@company.com" />
+                <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-base" placeholder="billing@company.com" />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Company / Organisation</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company / Organisation</label>
               <div className="relative">
                 <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-[13px]" placeholder="Acme Corp Pte Ltd" />
+                <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-base" placeholder="Acme Corp Pte Ltd" />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number</label>
-              <Input value={draft.taxId} onChange={(e) => patch("taxId", e.target.value)} className="h-9 text-[13px]" placeholder="e.g. GST-201234567A" />
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number</label>
+              <Input value={draft.taxId} onChange={(e) => patch("taxId", e.target.value)} className="h-9 text-base" placeholder="e.g. GST-201234567A" />
             </div>
             <div className="col-span-2">
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Street Address</label>
-              <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-[13px]" placeholder="8 Marina Boulevard" />
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Street Address</label>
+              <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-base" placeholder="8 Marina Boulevard" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">City</label>
-              <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-[13px]" placeholder="Singapore" />
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">City</label>
+              <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-base" placeholder="Singapore" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">State / Province</label>
-              <Input value={draft.state} onChange={(e) => patch("state", e.target.value)} className="h-9 text-[13px]" placeholder="Optional" />
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">State / Province</label>
+              <Input value={draft.state} onChange={(e) => patch("state", e.target.value)} className="h-9 text-base" placeholder="Optional" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Postcode</label>
-              <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-[13px]" placeholder="018984" />
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Postcode</label>
+              <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-base" placeholder="018984" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
               <div className="relative">
                 <Globe className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <select value={draft.country} onChange={(e) => patch("country", e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-[13px]">
+                  className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base">
                   {["Singapore", "Malaysia", "Thailand", "United States", "United Kingdom", "Australia", "Japan"].map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
@@ -1156,7 +1247,7 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Filter className="size-3.5" /> Filter
       </span>
 
@@ -1164,7 +1255,7 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
       {(["all", "paid", "failed", "pending"] as InvoiceStatusFilter[]).map((s) => (
         <button key={s} onClick={() => onStatusChange(s)}
           className={cn(
-            "rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors capitalize",
+            "rounded-full border px-3 py-1 text-xs font-semibold transition-colors capitalize",
             statusFilter === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
           )}>
           {s === "all" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -1175,7 +1266,7 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
       <Popover open={siteOpen} onOpenChange={setSiteOpen}>
         <PopoverTrigger asChild>
           <button className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
             siteFilter ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
           )}>
             {siteFilter || "All sites"}
@@ -1184,12 +1275,12 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
         </PopoverTrigger>
         <PopoverContent align="start" className="w-52 p-1.5">
           <button onClick={() => { onSiteChange(""); setSiteOpen(false); }}
-            className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] hover:bg-muted/50", !siteFilter && "bg-primary/10 text-primary")}>
+            className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted/50", !siteFilter && "bg-primary/10 text-primary")}>
             All sites
           </button>
           {ALL_SITES.map((site) => (
             <button key={site} onClick={() => { onSiteChange(site); setSiteOpen(false); }}
-              className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] text-foreground hover:bg-muted/50", siteFilter === site && "bg-primary/10 text-primary")}>
+              className={cn("flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-foreground hover:bg-muted/50", siteFilter === site && "bg-primary/10 text-primary")}>
               {site}
             </button>
           ))}
@@ -1199,7 +1290,7 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
       {/* Clear all */}
       {hasFilters && (
         <button onClick={() => { onStatusChange("all"); onSiteChange(""); }}
-          className="ml-1 text-[11px] font-semibold text-muted-foreground underline hover:text-primary">
+          className="ml-1 text-xs font-semibold text-muted-foreground underline hover:text-primary">
           Clear all
         </button>
       )}
@@ -1208,13 +1299,13 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-1.5">
           {statusFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
               {statusFilter}
               <button onClick={() => onStatusChange("all")}><X className="size-2.5" /></button>
             </span>
           )}
           {siteFilter && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
               {siteFilter}
               <button onClick={() => onSiteChange("")}><X className="size-2.5" /></button>
             </span>
@@ -1241,12 +1332,12 @@ function TabSwitcher({ value, onChange, counts }: { value: TabKey; onChange: (k:
         return (
           <button key={t.key} onClick={() => onChange(t.key)}
             className={cn(
-              "relative inline-flex items-center gap-2 px-3 py-2.5 text-[13px] font-semibold transition-colors",
+              "relative inline-flex items-center gap-2 px-3 py-2.5 text-base font-semibold transition-colors",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}>
             {t.label}
             {t.count !== undefined && (
-              <span className={cn("inline-flex items-center justify-center rounded-full px-1.5 py-px text-[10px] font-bold",
+              <span className={cn("inline-flex items-center justify-center rounded-full px-1.5 py-px text-2xs font-bold",
                 active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
                 {t.count}
               </span>
@@ -1287,6 +1378,7 @@ export default function BillingPage() {
   const [seatsSub, setSeatsSub] = React.useState<SiteSubscription | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
   const [activeInvoice, setActiveInvoice] = React.useState<Invoice | null>(null);
+  const [retryInvoice, setRetryInvoice] = React.useState<Invoice | null>(null);
 
   /* ── Invoice filters ──────────────────────────────────────────────────── */
   const [invoiceStatusFilter, setInvoiceStatusFilter] = React.useState<InvoiceStatusFilter>("all");
@@ -1298,6 +1390,7 @@ export default function BillingPage() {
   const totalSeats = activeSubs.reduce((s, x) => s + x.seats.owner + x.seats.admin + x.seats.user, 0);
   const totalUsers = MOCK_USERS.length;
   const totalCameras = Object.values(USAGE_DATA).reduce((s, d) => s + d.usedCameras, 0);
+  const totalNvrs = activeSubs.reduce((s, x) => s + (USAGE_DATA[x.id]?.usedNvrs ?? 0), 0);
   const sitesWithoutSub = sites.filter((s) => !subs.some((x) => x.siteId === s.id && x.status !== "cancelled"));
 
   /* ── Renewal reminders (within 14 days) ──────────────────────────────── */
@@ -1399,12 +1492,43 @@ export default function BillingPage() {
   }
 
   function handleRetryPayment() {
-    toast.message("Retry payment", { description: "Select a card from your wallet to re-attempt the charge." });
+    setRetryInvoice(activeInvoice);
     setActiveInvoice(null);
+  }
+
+  function confirmRetryPayment(cardId: string) {
+    const card = cards.find((c) => c.id === cardId);
+    setRetryInvoice(null);
+    toast.success("Payment retried", {
+      description: card
+        ? `Re-attempting the charge on ${card.brand} ···· ${card.last4}. We'll email a receipt once it clears.`
+        : undefined,
+    });
   }
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ── Banners (above the header so payment issues surface first) ───── */}
+      {(renewingSoon.length > 0 || cancellingSubs.length > 0 || failedSubs.length > 0) && (
+        <div className="flex flex-col gap-2">
+          {failedSubs.map((s) => (
+            <FailedPaymentBanner key={s.id} sub={s} graceDays={7} onRetry={() => setRetryInvoice(MOCK_INVOICES.find((i) => i.status === "failed") ?? null)} />
+          ))}
+          {cancellingSubs.map((s) => (
+            <CancellationGraceBanner key={s.id} sub={s} onUndo={() => {
+              undoCancelStore(s.id);
+              toast.success(`Cancellation reversed for ${s.siteName}`);
+            }} />
+          ))}
+          {renewingSoon.map((s) => (
+            <RenewalReminderBanner key={s.id} sub={s}
+              onDismiss={() => setDismissedRenewals((d) => [...d, s.id])}
+              onUpdatePayment={() => setAddCardOpen(true)}
+            />
+          ))}
+        </div>
+      )}
+
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>
@@ -1414,39 +1538,18 @@ export default function BillingPage() {
         </PageHeader.Content>
       </PageHeader>
 
-      {/* ── Banners ─────────────────────────────────────────────────────── */}
-      {(renewingSoon.length > 0 || cancellingSubs.length > 0 || failedSubs.length > 0) && (
-        <div className="flex flex-col gap-2">
-          {failedSubs.map((s) => (
-            <FailedPaymentBanner key={s.id} sub={s} graceDays={7} onRetry={() => toast.message("Select a card to retry")} />
-          ))}
-          {cancellingSubs.map((s) => (
-            <CancellationGraceBanner key={s.id} sub={s} onUndo={() => {
-              undoCancelStore(s.id);
-              toast.success(`Cancellation reversed for ${s.siteName}`);
-            }} />
-          ))}
-          {renewingSoon.map((s) => (
-            <RenewalReminderBanner key={s.id} sub={s} days={daysBetween(BILLING_TODAY, s.renewsAt)}
-              onDismiss={() => setDismissedRenewals((d) => [...d, s.id])}
-              onUpdatePayment={() => setAddCardOpen(true)}
-            />
-          ))}
-        </div>
-      )}
-
       <TabSwitcher value={tab} onChange={setTab} counts={{ invoices: MOCK_INVOICES.length }} />
 
       {tab === "overview" && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px]">
           <div className="flex flex-col gap-4">
             {/* Multi-site spend summary */}
             <SectionCard title="Workspace summary" description="Aggregated across all active site subscriptions.">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <KpiTile label="Active Sites" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} txt="text-foreground" />
-                <KpiTile label="Monthly Spend" value={`$${totalMonthly.toLocaleString()}`} sub="Recurring" txt="text-success" />
                 <KpiTile label="Total Seats" value={totalSeats} sub={`${totalUsers} users active`} txt="text-info" />
-                <KpiTile label="Total Cameras" value={totalCameras} sub="Across all sites" txt="text-secondary" />
+                <KpiTile label="Total Cameras" value={totalCameras} sub="Across all sites" txt="text-warning" />
+                <KpiTile label="Total NVRs" value={totalNvrs} sub="Across all sites" txt="text-secondary" />
               </div>
             </SectionCard>
 
@@ -1463,7 +1566,7 @@ export default function BillingPage() {
               {subs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
                   <Building2 className="size-8 opacity-30" />
-                  <p className="text-[13px]">No active subscriptions.</p>
+                  <p className="text-base">No active subscriptions.</p>
                   <Button onClick={() => setAddOpen(true)} className="gap-1.5">
                     <Plus className="size-3.5" /> Subscribe a site
                   </Button>
@@ -1475,12 +1578,11 @@ export default function BillingPage() {
                       key={s.id}
                       sub={s}
                       onChangePlan={() => (s.status === "cancelled" ? reactivateStore(s.id) : setChangePlanSub(s))}
-                      onCancel={() => (s.status === "cancelling" ? (undoCancelStore(s.id), toast.success(`Cancellation reversed`)) : setCancelSub(s))}
                       onManageSeats={() => setSeatsSub(s)}
                     />
                   ))}
                   {sitesWithoutSub.length > 0 && (
-                    <p className="pt-1 text-[11px] text-muted-foreground">
+                    <p className="pt-1 text-xs text-muted-foreground">
                       {sitesWithoutSub.length} site{sitesWithoutSub.length === 1 ? "" : "s"} not yet subscribed —{" "}
                       <button onClick={() => setAddOpen(true)} className="text-primary underline hover:text-primary/80">add a subscription</button>
                     </p>
@@ -1489,49 +1591,6 @@ export default function BillingPage() {
               )}
             </SectionCard>
 
-            {/* Compare plans */}
-            <SectionCard title="Compare Plans" description="Choose the right tier for each site."
-              action={
-                <a href="https://accel.ai/pricing" target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[12px] text-muted-foreground underline hover:text-primary">
-                  Full pricing <ArrowUpRight className="size-3" />
-                </a>
-              }
-            >
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {TIER_ORDER.map((tier) => {
-                  const p = PLANS[tier];
-                  const color = PLAN_COLORS[tier];
-                  const Icon = PLAN_ICONS[tier];
-                  return (
-                    <div key={tier} className={cn("relative overflow-hidden rounded-xl border bg-background p-4", color.border, p.highlight && "ring-1 ring-secondary")}>
-                      {p.highlight && (
-                        <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-                          <Sparkles className="size-2.5" /> Most popular
-                        </span>
-                      )}
-                      <div className={cn("mb-2 flex size-9 items-center justify-center rounded-lg border", color.bg, color.border)}>
-                        <Icon className={cn("size-4", color.text)} />
-                      </div>
-                      <p className="text-[14px] font-bold text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{p.tagline}</p>
-                      <div className="my-3 flex items-baseline gap-1">
-                        <span className={cn("font-mono text-[22px] font-bold leading-none", color.text)}>${p.pricePerMonth}</span>
-                        <span className="text-[10px] text-muted-foreground">/site /mo</span>
-                      </div>
-                      <ul className="space-y-1.5 text-[11px]">
-                        {p.features.map((f) => (
-                          <li key={f} className="flex items-start gap-1.5">
-                            <Check className={cn("mt-0.5 size-3 flex-shrink-0", color.text)} />
-                            <span className="text-muted-foreground">{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            </SectionCard>
           </div>
 
           {/* Right column */}
@@ -1571,12 +1630,12 @@ export default function BillingPage() {
                           <Icon className={cn("size-3.5", color.text)} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-bold text-foreground">{s.siteName}</p>
-                          <p className="text-[10px] text-muted-foreground">{plan.name} · {s.billingCycle === "annual" ? "Annual" : "Monthly"}</p>
+                          <TruncatedText text={s.siteName} className="text-sm font-bold text-foreground" />
+                          <p className="text-2xs text-muted-foreground">{plan.name} · {s.billingCycle === "annual" ? "Annual" : "Monthly"}</p>
                         </div>
                         <div className="text-right">
-                          <p className={cn("font-mono text-[13px] font-bold leading-none", color.text)}>${s.monthlyCost.toLocaleString()}</p>
-                          <p className="mt-0.5 text-[9px] text-muted-foreground">/month</p>
+                          <p className={cn("font-mono text-base font-bold leading-none", color.text)}>${s.monthlyCost.toLocaleString()}</p>
+                          <p className="mt-0.5 text-3xs text-muted-foreground">/month</p>
                         </div>
                       </div>
                     </div>
@@ -1584,8 +1643,8 @@ export default function BillingPage() {
                 })}
               </div>
               <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
-                <span className="font-mono text-[20px] font-bold text-success">${totalMonthly.toLocaleString()}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
+                <span className="font-mono text-2xl font-bold text-success">${totalMonthly.toLocaleString()}</span>
               </div>
             </SectionCard>
 
@@ -1604,7 +1663,7 @@ export default function BillingPage() {
             onSiteChange={setInvoiceSiteFilter}
           />
           <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className="grid grid-cols-[140px_120px_1fr_130px_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="grid grid-cols-[140px_120px_1fr_130px_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               <p>Issued</p>
               <p>Invoice</p>
               <p>Sites</p>
@@ -1612,22 +1671,22 @@ export default function BillingPage() {
               <p className="text-right">Amount</p>
             </div>
             {filteredInvoices.length === 0 ? (
-              <p className="px-4 py-8 text-center text-[12px] italic text-muted-foreground">No invoices match the current filters.</p>
+              <p className="px-4 py-8 text-center text-sm italic text-muted-foreground">No invoices match the current filters.</p>
             ) : filteredInvoices.map((inv) => {
               const s = INVOICE_STATUS[inv.status];
               return (
                 <button key={inv.id} onClick={() => setActiveInvoice(inv)}
-                  className="grid w-full grid-cols-[140px_120px_1fr_130px_auto] items-center gap-3 border-b border-border/60 px-4 py-3 text-left text-[12px] last:border-b-0 hover:bg-muted/20">
+                  className="grid w-full grid-cols-[140px_120px_1fr_130px_auto] items-center gap-3 border-b border-border/60 px-4 py-3 text-left text-sm last:border-b-0 hover:bg-muted/20">
                   <p className="text-foreground">{inv.issuedDisplay}</p>
                   <p className="font-mono text-primary">{inv.id}</p>
-                  <p className="truncate text-muted-foreground">{inv.siteNames?.join(" · ") ?? "—"}</p>
+                  <TruncatedText text={inv.siteNames?.join(" · ") ?? "—"} className="text-muted-foreground" />
                   <div className="flex items-center gap-2">
-                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
                       <s.icon className="size-2.5" /> {s.label}
                     </span>
                     {inv.status === "failed" && (
-                      <button onClick={(e) => { e.stopPropagation(); handleRetryPayment(); }}
-                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-sev-critical hover:bg-sev-critical/10">
+                      <button onClick={(e) => { e.stopPropagation(); setRetryInvoice(inv); }}
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-sev-critical hover:bg-sev-critical/10">
                         <RefreshCw className="size-2.5" /> Retry
                       </button>
                     )}
@@ -1641,12 +1700,26 @@ export default function BillingPage() {
       )}
 
       {/* Modals */}
-      <ChangePlanModal open={changePlanSub !== null} current={changePlanSub} onClose={() => setChangePlanSub(null)} onConfirm={confirmChangePlan} />
+      <ChangePlanModal
+        open={changePlanSub !== null}
+        current={changePlanSub}
+        onClose={() => setChangePlanSub(null)}
+        onConfirm={confirmChangePlan}
+        onCancelPlan={() => { setCancelSub(changePlanSub); setChangePlanSub(null); }}
+      />
       <CancelSubscriptionModal open={cancelSub !== null} sub={cancelSub} onClose={() => setCancelSub(null)} onConfirm={confirmCancel} />
       <ManageSeatsModal open={seatsSub !== null} sub={seatsSub} onClose={() => setSeatsSub(null)} onSave={saveSeats} />
       <AddSubscriptionModal open={addOpen} sites={sitesWithoutSub.map((s) => ({ id: s.id, name: s.name }))} onClose={() => setAddOpen(false)} onConfirm={confirmAddSubscription} />
       <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
       <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
+      <RetryPaymentModal
+        open={retryInvoice !== null}
+        invoice={retryInvoice}
+        cards={cards}
+        onClose={() => setRetryInvoice(null)}
+        onAddCard={() => setAddCardOpen(true)}
+        onConfirm={confirmRetryPayment}
+      />
     </div>
   );
 }

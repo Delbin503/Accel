@@ -23,6 +23,7 @@ import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -39,7 +40,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        "inline-flex items-center rounded px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider",
         REASON_STYLES[reason].chip
       )}
     >
@@ -133,12 +134,12 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
@@ -151,7 +152,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -199,15 +200,15 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All reasons", "All sites", "All areas", "All models"].map((l) => (
-                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                   {l}
                 </span>
               ))}
@@ -218,7 +219,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_DISMISSED_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -239,7 +240,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, operator, notes, camera..."
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           {/* 4 dropdowns */}
@@ -251,7 +252,7 @@ function FilterPanel({
               { key: "model"  as const, label: "Model",       opts: DISMISSED_FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -304,7 +305,7 @@ function ActiveFilterBar({
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-muted px-3 py-2">
       {search && (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
           "{search}"
           <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
             <X className="size-2.5" />
@@ -312,14 +313,14 @@ function ActiveFilterBar({
         </span>
       )}
       {allActive.map(({ group, value, label }) => (
-        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
           {label}
           <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
             <X className="size-2.5" />
           </button>
         </span>
       ))}
-      <button onClick={onClearAll} className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary">
+      <button onClick={onClearAll} className="ml-auto text-xs text-muted-foreground underline hover:text-primary">
         Clear all
       </button>
     </div>
@@ -363,7 +364,7 @@ function DismissedRow({
               />
               <span
                 className={cn(
-                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-[9px] font-semibold text-white",
+                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
                   box.variant === "person"  ? "bg-info"
                   : box.variant === "vehicle" ? "bg-purple"
                   : "bg-primary"
@@ -374,7 +375,7 @@ function DismissedRow({
               </span>
             </React.Fragment>
           ))}
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-[10px] text-white">
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
             {event.time.slice(0, 5)}
           </span>
         </div>
@@ -384,28 +385,28 @@ function DismissedRow({
       <div className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
-          <span className="text-[13px] font-semibold text-foreground">{event.typeLabel}</span>
+          <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           {/* DISMISSED badge — replaces the "Escalated" badge from the Detection Feed card */}
-          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
             <span className="size-1.5 rounded-full bg-muted-foreground/60" />
             Dismissed
           </span>
           <ReasonChip reason={item.reason} />
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:border-purple hover:text-purple">
+          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-purple hover:text-purple">
             <span className="size-1.5 rounded-full bg-purple" />
             {event.model}
           </span>
         </div>
-        <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mb-2 text-base leading-relaxed text-muted-foreground">
           {parseEventText(event.summary)}
         </p>
-        <div className="flex flex-wrap items-center gap-3.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {event.siteDisplay} · {event.areaDisplay} · {event.camera}
@@ -416,9 +417,9 @@ function DismissedRow({
       {/* Right rail — dismissed by + when (no action buttons) */}
       <div className="col-span-2 flex items-center justify-end gap-2 border-t border-border/40 pt-2 sm:col-span-1 sm:flex-col sm:items-end sm:self-start sm:border-t-0 sm:pt-0">
         <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
-          <p className="mt-0.5 text-[12px] font-medium text-foreground">{item.dismissedBy}</p>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{item.dismissedAtDisplay}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{item.dismissedBy}</p>
+          <p className="mt-0.5 font-mono text-2xs text-muted-foreground">{item.dismissedAtDisplay}</p>
         </div>
       </div>
     </div>
@@ -501,7 +502,7 @@ export default function DismissedEventsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-[13px]"
+            className="gap-1.5 text-base"
             onClick={() => navigate("/detection-feed")}
           >
             <ArrowLeft className="size-3.5" />
@@ -545,12 +546,12 @@ export default function DismissedEventsPage() {
       {/* ── Results bar ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             <strong className="text-foreground">{visible.length}</strong> events
             {hasFilters && <span className="ml-1 text-muted-foreground/70">match current filters</span>}
           </p>
           {restoredIds.size > 0 && (
-            <span className="flex items-center gap-1.5 text-[12px] text-success">
+            <span className="flex items-center gap-1.5 text-sm text-success">
               <RotateCcw className="size-3" />
               {restoredIds.size} restored
               <button onClick={() => setRestoredIds(new Set())} className="text-success/60 hover:text-success">
@@ -563,7 +564,7 @@ export default function DismissedEventsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[12px] text-foreground focus:border-primary focus:outline-none"
+            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
@@ -579,7 +580,7 @@ export default function DismissedEventsPage() {
           <p className="text-sm font-medium">No dismissed events match your filters</p>
           {hasFilters && (
             <button
-              className="text-[12px] text-primary hover:underline"
+              className="text-sm text-primary hover:underline"
               onClick={() => { setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
             >
               Clear all filters

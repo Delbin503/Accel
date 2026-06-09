@@ -62,7 +62,7 @@ const TYPE_OPTIONS: { value: ActivityKind; label: string }[] = (Object.keys(ACTI
 function KindBadge({ kind }: { kind: ActivityKind }) {
   const s = ACTIVITY_KIND_STYLES[kind];
   return (
-    <span className={cn("inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+    <span className={cn("inline-flex items-center rounded px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
       {KIND_TABLE_LABEL[kind] ?? ACTIVITY_KIND_LABELS[kind]}
     </span>
   );
@@ -196,9 +196,9 @@ export default function ActivityLogsPage() {
         >
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-            <span className="text-[13px] font-semibold text-foreground">Filters</span>
+            <span className="text-base font-semibold text-foreground">Filters</span>
             {typeFilter.length + siteFilter.length + (search ? 1 : 0) > 0 ? (
-              <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+              <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
                 {typeFilter.length + siteFilter.length + (search ? 1 : 0)} active
               </span>
             ) : (
@@ -206,7 +206,7 @@ export default function ActivityLogsPage() {
                 {["All types", "All sites"].map((l) => (
                   <span
                     key={l}
-                    className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                    className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                   >
                     {l}
                   </span>
@@ -218,7 +218,7 @@ export default function ActivityLogsPage() {
             {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
               <button
                 onClick={(e) => { e.stopPropagation(); setTypeFilter([]); setSiteFilter([]); setSearch(""); }}
-                className="text-[12px] text-muted-foreground underline hover:text-primary"
+                className="text-sm text-muted-foreground underline hover:text-primary"
               >
                 Clear all
               </button>
@@ -239,16 +239,16 @@ export default function ActivityLogsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search activity…"
-                className="h-9 w-full pl-9 text-[13px]"
+                className="h-9 w-full pl-9 text-base"
               />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Type</div>
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</div>
                 <TypeFilterDropdown options={TYPE_OPTIONS} selected={typeFilter} counts={typeCounts} onChange={setTypeFilter} />
               </div>
               <div>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</div>
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</div>
                 <SiteFilter sites={allSites} selected={siteFilter} onChange={setSiteFilter} />
               </div>
             </div>
@@ -269,37 +269,37 @@ export default function ActivityLogsPage() {
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           {/* Table header */}
           <div className="grid grid-cols-[140px_90px_90px_1fr_180px] gap-3 border-b border-border bg-muted/30 px-4 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Date / Time</p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Description</p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Site / Source</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Date / Time</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Description</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Site / Source</p>
           </div>
           {/* Rows */}
           <div>
             {filtered.map((l) => (
               <div key={l.id}
                 className="grid grid-cols-[140px_90px_90px_1fr_180px] gap-3 border-b border-border/60 px-4 py-3 last:border-b-0 hover:bg-muted/20">
-                <div className="font-mono text-[11px] text-muted-foreground">{l.whenDisplay}</div>
+                <div className="font-mono text-xs text-muted-foreground">{l.whenDisplay}</div>
                 <div><KindBadge kind={l.kind} /></div>
                 <div>
                   {l.status === "success" ? (
-                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
+                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
                       <CheckCircle2 className="size-2.5" />
                       Success
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
                       <XCircle className="size-2.5" />
                       Failed
                     </span>
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[12px] leading-snug text-foreground">
+                  <p className="text-sm leading-snug text-foreground">
                     <ActivityText text={l.text} />
                   </p>
-                  <p className="mt-0.5 inline-flex items-center gap-2 text-[10px] text-muted-foreground/80">
+                  <p className="mt-0.5 inline-flex items-center gap-2 text-2xs text-muted-foreground/80">
                     <span className="font-semibold">{l.actor.name}</span>
                     <span className="text-muted-foreground/40">·</span>
                     <span>{l.module}</span>
@@ -311,7 +311,7 @@ export default function ActivityLogsPage() {
                     )}
                   </p>
                 </div>
-                <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                   {l.siteName === "System" ? (
                     <span className="inline-flex items-center gap-1">
                       <span className="size-1.5 rounded-full bg-muted-foreground/60" />
@@ -353,7 +353,7 @@ function ActivityText({ text }: { text: string }) {
     const start = m.index ?? 0;
     if (start > last) parts.push(text.slice(last, start));
     parts.push(
-      <span key={`${start}-${m[0]}`} className="rounded bg-secondary/10 px-1 py-px font-mono text-[10px] font-semibold text-secondary">
+      <span key={`${start}-${m[0]}`} className="rounded bg-secondary/10 px-1 py-px font-mono text-2xs font-semibold text-secondary">
         {m[0]}
       </span>
     );
@@ -383,7 +383,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
           isAll ? "text-muted-foreground" : "text-primary"
         )}>
@@ -396,7 +396,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[300px] w-56 overflow-y-auto p-1.5">
         <button onClick={() => onChange([])}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -409,13 +409,13 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
           const count = counts[o.value] ?? 0;
           return (
             <button key={o.value} onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               <span className="flex-1">{o.label}</span>
-              <span className="font-mono text-[10px] text-muted-foreground/60">{count}</span>
+              <span className="font-mono text-2xs text-muted-foreground/60">{count}</span>
             </button>
           );
         })}
@@ -437,7 +437,7 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
           isAll ? "text-muted-foreground" : "text-primary"
         )}>
@@ -450,7 +450,7 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
       </PopoverTrigger>
       <PopoverContent align="end" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
         <button onClick={() => onChange([])}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -462,7 +462,7 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
           const checked = selected.includes(s);
           return (
             <button key={s} onClick={() => onChange(checked ? selected.filter((x) => x !== s) : [...selected, s])}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}

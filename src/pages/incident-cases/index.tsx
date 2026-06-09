@@ -21,6 +21,7 @@ import { SeverityBadge } from "@/pages/detection-feed/shared";
 import { CaseStatusBadge, STATUS_CONFIG } from "@/pages/incident-cases/shared";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { CaseDrawer } from "@/pages/incident-cases/CaseDrawer";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import type { IncidentCase, CaseStatus } from "@/types/incidents";
 import type { Severity } from "@/types/detection";
 
@@ -90,12 +91,12 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown
             className={cn(
               "size-3.5 flex-shrink-0 text-muted-foreground transition-transform",
@@ -111,7 +112,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -187,9 +188,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -197,7 +198,7 @@ function FilterPanel({
               {["All severities", "All sites"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -213,7 +214,7 @@ function FilterPanel({
                 onChange(EMPTY_FILTERS);
                 onSearchChange("");
               }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -234,7 +235,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by case ID, title or assignee..."
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -245,7 +246,7 @@ function FilterPanel({
               ] as const
             ).map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -295,7 +296,7 @@ function ActiveFilterBar({
       {allActive.map(({ group, value, label }) => (
         <span
           key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary"
         >
           {label}
           <button
@@ -308,7 +309,7 @@ function ActiveFilterBar({
       ))}
       <button
         onClick={onClearAll}
-        className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
+        className="ml-auto text-xs text-muted-foreground underline hover:text-primary"
       >
         Clear all
       </button>
@@ -323,26 +324,27 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
     <tr
       onClick={onClick}
       style={{ boxShadow: `inset 3px 0 0 var(--sev-${c.severity})` }}
-      className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+      className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
     >
       <td className="px-4 py-3">
-        <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
           {c.id}
         </span>
       </td>
 
       <td className="max-w-[260px] px-4 py-3">
-        <div className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-          {c.title}
-        </div>
-        <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+        <TruncatedText
+          text={c.title}
+          className="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary"
+        />
+        <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-2.5 flex-shrink-0" />
           {c.siteDisplay}
         </div>
       </td>
 
       <td className="px-4 py-3 text-center">
-        <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">
+        <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
           {c.incidentIds.length}
         </span>
       </td>
@@ -357,18 +359,18 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
 
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+          <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary">
             {c.assignedTo.name.charAt(0)}
           </div>
           <div>
-            <div className="text-[13px] font-medium text-foreground">{c.assignedTo.name}</div>
-            <div className="font-mono text-[11px] text-muted-foreground">{c.assignedTo.id}</div>
+            <div className="text-base font-medium text-foreground">{c.assignedTo.name}</div>
+            <div className="font-mono text-xs text-muted-foreground">{c.assignedTo.id}</div>
           </div>
         </div>
       </td>
 
       <td className="whitespace-nowrap px-4 py-3">
-        <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Calendar className="size-3 flex-shrink-0" />
           {c.createdAtDisplay}
         </div>
@@ -528,14 +530,14 @@ export default function IncidentCasesPage() {
 
       {/* ── Table header bar ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong> case
           {filtered.length !== 1 ? "s" : ""} match current filters
         </p>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground focus:border-primary focus:outline-none"
+          className="rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
         >
           <option value="newest">Newest first</option>
           <option value="severity">Severity (high → low)</option>
@@ -579,7 +581,7 @@ export default function IncidentCasesPage() {
                     <th
                       key={i}
                       className={cn(
-                        "px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60",
+                        "px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
                         center && "text-center"
                       )}
                     >

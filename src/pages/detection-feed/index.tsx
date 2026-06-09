@@ -71,7 +71,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-0.5 py-px text-[9px] font-semibold text-white",
+              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-purple"
               : "bg-primary"
@@ -82,7 +82,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
           </span>
         </React.Fragment>
       ))}
-      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-[10px] text-white">
+      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
         {event.time.slice(0, 5)}
       </span>
     </div>
@@ -131,28 +131,28 @@ function EventCard({
       <div className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
-          <span className="text-[13px] font-semibold text-foreground">{event.typeLabel}</span>
+          <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           {event.status === "escalated" && (
-            <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success">
+            <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-success">
               <span className="size-1.5 rounded-full bg-success" />
               Escalated
             </span>
           )}
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:border-purple hover:text-purple">
+          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-purple hover:text-purple">
             <span className="size-1.5 rounded-full bg-purple" />
             {event.model}
           </span>
         </div>
-        <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mb-2 text-base leading-relaxed text-muted-foreground">
           {parseEventText(event.summary)}
         </p>
-        <div className="flex flex-wrap items-center gap-3.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {event.siteDisplay} · {event.areaDisplay} · {event.camera}
@@ -221,7 +221,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -242,7 +242,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -302,7 +302,7 @@ function ActiveFilterBar({
       {allActive.map(({ group, value, label }) => (
         <span
           key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary"
         >
           {label}
           <button
@@ -315,7 +315,7 @@ function ActiveFilterBar({
       ))}
       <button
         onClick={onClearAll}
-        className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
+        className="ml-auto text-xs text-muted-foreground underline hover:text-primary"
       >
         Clear all
       </button>
@@ -370,9 +370,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -380,14 +380,14 @@ function FilterPanel({
               {["All sites", "All models"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
               ))}
             </div>
           )}
-          <span className="ml-auto hidden text-[11px] text-muted-foreground sm:block">
+          <span className="ml-auto hidden text-xs text-muted-foreground sm:block">
             Showing <strong className="text-foreground">{presetSummary}</strong>
           </span>
         </div>
@@ -402,7 +402,7 @@ function FilterPanel({
                 onDateFromChange("");
                 onDateToChange("");
               }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -424,7 +424,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, asset, person, camera..."
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           {/* Dropdowns — severity & type come from KPI cards, date from the range bar */}
@@ -434,7 +434,7 @@ function FilterPanel({
               { key: "model" as const, label: "Detection Model", opts: FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -475,7 +475,7 @@ function SelectionBar({
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
-        <span className="text-[13px] font-semibold text-foreground">
+        <span className="text-base font-semibold text-foreground">
           {count} event{count > 1 ? "s" : ""} selected
         </span>
       </div>
@@ -484,7 +484,7 @@ function SelectionBar({
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-[12px] text-muted-foreground"
+          className="gap-1.5 text-sm text-muted-foreground"
           onClick={onClear}
         >
           <X className="size-3.5" />
@@ -494,7 +494,7 @@ function SelectionBar({
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-[12px]"
+          className="gap-1.5 text-sm"
           onClick={onDismissAll}
         >
           <Trash2 className="size-3.5" />
@@ -503,13 +503,13 @@ function SelectionBar({
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 text-[12px]"
+          className="gap-1.5 text-sm"
           onClick={onLinkAll}
         >
           <Link2 className="size-3.5" />
           Link Case
         </Button>
-        <Button size="sm" className="gap-1.5 text-[12px]" onClick={onEscalateAll}>
+        <Button size="sm" className="gap-1.5 text-sm" onClick={onEscalateAll}>
           Escalate Case
         </Button>
       </div>
@@ -771,7 +771,7 @@ export default function DetectionFeedPage() {
           <PageHeader.Title>
             <span className="flex items-center gap-2.5">
               Detection Feed
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success-soft px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-success">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success-soft px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-success">
                 <span className="size-1.5 animate-pulse rounded-full bg-success" />
                 Live
               </span>
@@ -785,7 +785,7 @@ export default function DetectionFeedPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-[13px]"
+            className="gap-1.5 text-base"
             onClick={() => navigate("/detection-feed/dismissed")}
           >
             <Trash2 className="size-3.5" />
@@ -849,11 +849,11 @@ export default function DetectionFeedPage() {
 
       {/* ── Feed header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
         </p>
-        <select className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground focus:border-primary focus:outline-none">
+        <select className="rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none">
           <option>Newest first</option>
           <option>Severity (high → low)</option>
           <option>Confidence (high → low)</option>
@@ -882,10 +882,10 @@ export default function DetectionFeedPage() {
         grouped.map((group) => (
           <div key={group.key} className="space-y-2.5">
             <div className="flex items-center gap-2.5 border-b border-border pb-2">
-              <span className="text-[13px] font-bold text-foreground">
+              <span className="text-base font-bold text-foreground">
                 {group.label} · {group.date}
               </span>
-              <span className="text-[12px] text-muted-foreground">{group.events.length} events</span>
+              <span className="text-sm text-muted-foreground">{group.events.length} events</span>
             </div>
             {group.events.map((event) => (
               <EventCard

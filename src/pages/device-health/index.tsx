@@ -125,7 +125,7 @@ function HealthPill({ status }: { status: HealthStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -149,7 +149,7 @@ function TypePill({ type }: { type: DeviceType }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -172,9 +172,9 @@ function DiskBar({ pct, band, display }: { pct: number; band: DeviceRow["diskBan
   const style = band ? DISK_BAND_STYLES[band] : DISK_BAND_STYLES.healthy;
   return (
     <div className="min-w-[140px] max-w-[200px]">
-      <div className="mb-1 flex items-center justify-between text-[10px]">
+      <div className="mb-1 flex items-center justify-between text-2xs">
         <span className={cn("font-semibold", style.text)}>{pct}%</span>
-        <span className="font-mono text-[10px] text-muted-foreground">{display}</span>
+        <span className="font-mono text-2xs text-muted-foreground">{display}</span>
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
         <div className={cn("h-full rounded-full transition-all", style.bar)} style={{ width: `${pct}%` }} />
@@ -232,7 +232,7 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -248,7 +248,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -309,9 +309,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -319,7 +319,7 @@ function FilterPanel({
               {["All sites", "All areas", "All types"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -331,7 +331,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -352,7 +352,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, name, or IP…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -362,7 +362,7 @@ function FilterPanel({
               { key: "type"   as const, label: "Type",   opts: TYPE_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -461,8 +461,8 @@ export default function DeviceHealthPage() {
           <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 md:flex">
             <HeartPulse className={cn("size-4", scoreClass)} />
             <div className="flex items-baseline gap-1.5">
-              <span className={cn("text-[16px] font-bold leading-none", scoreClass)}>{healthScore}%</span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Health Score</span>
+              <span className={cn("text-lg font-bold leading-none", scoreClass)}>{healthScore}%</span>
+              <span className="text-2xs uppercase tracking-wider text-muted-foreground">Health Score</span>
             </div>
           </div>
         </PageHeader.Actions>
@@ -493,7 +493,7 @@ export default function DeviceHealthPage() {
 
       {/* Count + sort */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "device" : "devices"} match current filters
           {hasFilters && (
@@ -518,7 +518,7 @@ export default function DeviceHealthPage() {
                 key={o.key}
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-muted",
+                  "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
                   sort === o.key ? "text-primary" : "text-foreground"
                 )}
               >
@@ -552,7 +552,7 @@ export default function DeviceHealthPage() {
                   {["DEVICE ID", "NAME", "TYPE", "HEALTH", "LOCATION", "IP", "DISK USAGE", "LAST SYNC"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
                     </th>
@@ -564,10 +564,10 @@ export default function DeviceHealthPage() {
                   <tr
                     key={d.id}
                     onClick={() => openDevice(d)}
-                    className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                         {d.id}
                       </span>
                     </td>
@@ -581,18 +581,18 @@ export default function DeviceHealthPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{d.areaName}</span>
-                        <span className="inline-flex items-center gap-1 text-[11px]">
+                        <span className="inline-flex items-center gap-1 text-xs">
                           <MapPin className="size-2.5" />
                           {d.siteName}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground">{d.ip}</td>
+                    <td className="px-4 py-3 font-mono text-sm text-muted-foreground">{d.ip}</td>
                     <td className="px-4 py-3">
                       {d.type === "nvr" && d.diskPct != null && d.diskBand && d.diskDisplay ? (
                         <DiskBar pct={d.diskPct} band={d.diskBand} display={d.diskDisplay} />
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60">
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/60">
                           <Database className="size-3 opacity-50" />
                           n/a
                         </span>
@@ -601,7 +601,7 @@ export default function DeviceHealthPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 text-[12px]",
+                          "inline-flex items-center gap-1 text-sm",
                           d.health === "online" ? "text-success" :
                           d.health === "failed" ? "text-sev-critical" :
                           "text-muted-foreground"
@@ -625,7 +625,7 @@ export default function DeviceHealthPage() {
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
@@ -638,7 +638,7 @@ export default function DeviceHealthPage() {
               >
                 <ChevronLeft className="size-3.5" />
               </button>
-              <span className="px-2 text-[12px] text-foreground">
+              <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
               <button

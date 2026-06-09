@@ -388,7 +388,7 @@ function FloorPlanCanvas({
         )}
       </svg>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm">
+      <div className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-2xs font-semibold text-white/90 backdrop-blur-sm">
         {tool === "draw-area" && <><Shapes className="size-3" /> Click to add points · Double-click to close shape</>}
         {tool === "select"    && <><MousePointer2 className="size-3" /> Click an area for Edit/Delete · Drag cameras · Rotate via the orange handle</>}
       </div>
@@ -413,8 +413,8 @@ function FloorPlanEmpty({ onUpload, onUseSample }: { onUpload: (url: string, nam
       <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
         <UploadCloud className="size-6 text-primary" />
       </div>
-      <h3 className="text-[15px] font-bold text-foreground">Upload a Floor Plan</h3>
-      <p className="max-w-md text-center text-[12px] text-muted-foreground">
+      <h3 className="text-md font-bold text-foreground">Upload a Floor Plan</h3>
+      <p className="max-w-md text-center text-sm text-muted-foreground">
         Upload a plan to draw area polygons and place cameras directly on it.
       </p>
       <div className="mt-2 flex items-center gap-2">
@@ -448,11 +448,11 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-[13px]" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-base" />
           </div>
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
             <div className="flex flex-wrap gap-1.5">
               {AREA_PALETTE.map((c) => (
                 <button key={c} onClick={() => setColor(c)}
@@ -500,27 +500,27 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
             <Input value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Astra HQ" className="h-9 text-[13px]" />
+              placeholder="e.g. Astra HQ" className="h-9 text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
             <Input value={address} onChange={(e) => setAddress(e.target.value)}
-              placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-[13px]" />
+              placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
             <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
               {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
               placeholder="A short description of this site…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none" />
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -548,15 +548,15 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
           <DialogTitle className="text-base font-bold text-destructive">Delete {site.name}?</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             This will permanently remove the site, its <strong className="text-foreground">{site.areas.length}</strong> area{site.areas.length === 1 ? "" : "s"} and floor plan.
             Cameras assigned to this site will remain in the Cameras module but will be unassigned.
           </p>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Type <span className="font-mono normal-case text-foreground">{site.name}</span> to confirm
             </label>
-            <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-[13px]" />
+            <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-base" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -712,13 +712,13 @@ export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | n
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
                   <span className={cn("size-1.5 rounded-full", s.dot, site.status === "active" && "animate-pulse")} />
                   {s.label}
                 </span>
               </div>
-              <SheetTitle className="text-[17px] font-bold leading-snug">{site.name}</SheetTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <SheetTitle className="text-lg font-bold leading-snug">{site.name}</SheetTitle>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {site.id} · {site.address || "No address yet"} · {site.timezone}
               </p>
             </div>
@@ -729,7 +729,7 @@ export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | n
           <div className="mt-3 flex items-center gap-1 border-t border-border">
             {tabs.map((t) => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={cn("relative inline-flex items-center gap-2 px-3 py-2.5 text-[13px] font-semibold transition-colors",
+                className={cn("relative inline-flex items-center gap-2 px-3 py-2.5 text-base font-semibold transition-colors",
                   tab === t.key ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
                 {t.label}
                 {tab === t.key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
@@ -861,24 +861,24 @@ function OverviewTab({
         </svg>
 
         {/* Top-left meta chip */}
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
           <ImageIcon className="size-3" />
           {site.floorPlan ? (site.floorPlan.label ?? "Floor Plan") : "No floor plan"}
         </span>
         {/* Top-right meta chip */}
-        <span className="absolute right-3 top-3 rounded bg-black/65 px-2 py-0.5 font-mono text-[10px] text-white/85 backdrop-blur-sm">
+        <span className="absolute right-3 top-3 rounded bg-black/65 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
           {placedCount} / {siteCameras.length} placed
         </span>
 
         {!site.floorPlan && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageIcon className="size-8 opacity-30" />
-            <p className="text-[12px]">No floor plan uploaded yet</p>
+            <p className="text-sm">No floor plan uploaded yet</p>
           </div>
         )}
 
         <button onClick={onGoFloorPlan}
-          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/65 py-2.5 text-[12px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/85">
+          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/65 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/85">
           <UploadCloud className="size-3.5" />
           Open Floor Plan Editor
         </button>
@@ -905,7 +905,7 @@ function OverviewTab({
           />
           <SharedKpiCard compact
             label="Placed"
-            value={<>{placedCount}<span className="text-[14px] text-muted-foreground"> / {siteCameras.length}</span></>}
+            value={<>{placedCount}<span className="text-md text-muted-foreground"> / {siteCameras.length}</span></>}
             sub="On the floor plan"
             accent={placedCount === siteCameras.length && siteCameras.length > 0 ? "success" : "warning"}
           />
@@ -916,7 +916,7 @@ function OverviewTab({
       {site.description && (
         <div>
           <SiteSectionTitle>Site Summary</SiteSectionTitle>
-          <div className="rounded-lg border border-border bg-card p-4 text-[13px] leading-relaxed text-muted-foreground">
+          <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
             {site.description}
           </div>
         </div>
@@ -926,7 +926,7 @@ function OverviewTab({
       <div>
         <SiteSectionTitle
           aside={
-            <span className="inline-flex items-center gap-1.5 rounded bg-success-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+            <span className="inline-flex items-center gap-1.5 rounded bg-success-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
               <span className={cn("size-1.5 rounded-full",
                 failed > 0 ? "bg-sev-critical" :
                 offlineOnly > 0 ? "bg-muted-foreground" :
@@ -960,7 +960,7 @@ function OverviewTab({
                     disabled && "cursor-default"
                   )}
                 >
-                  <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                     <span className={cn("size-1.5 rounded-full", row.dot)} />
                     {row.label}
                   </span>
@@ -974,11 +974,11 @@ function OverviewTab({
                 {expanded && row.items.length > 0 && (
                   <ul className="bg-background/40 px-4 py-2">
                     {row.items.map((c) => (
-                      <li key={c.id} className="flex items-center gap-2 py-1 text-[11px]">
+                      <li key={c.id} className="flex items-center gap-2 py-1 text-xs">
                         <Video className="size-3 flex-shrink-0 text-muted-foreground/60" />
                         <span className="font-mono text-foreground">{c.id}</span>
                         <TruncatedText text={c.name} className="text-muted-foreground" />
-                        <span className="ml-auto text-[10px] text-muted-foreground/70">{c.areaName}</span>
+                        <span className="ml-auto text-2xs text-muted-foreground/70">{c.areaName}</span>
                       </li>
                     ))}
                   </ul>
@@ -993,7 +993,7 @@ function OverviewTab({
       <div>
         <SiteSectionTitle
           aside={
-            <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+            <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-info">
               <HardDrive className="size-3" />
               {siteNvrs.length} unit{siteNvrs.length === 1 ? "" : "s"}
             </span>
@@ -1005,7 +1005,7 @@ function OverviewTab({
           </span>
         </SiteSectionTitle>
         {siteNvrs.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-card px-4 py-6 text-center text-[12px] italic text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border bg-card px-4 py-6 text-center text-sm italic text-muted-foreground">
             No NVRs linked to this site.
           </div>
         ) : (
@@ -1029,20 +1029,20 @@ function OverviewTab({
                       <HardDrive className="size-3.5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <TruncatedText text={n.name} />
-                        <span className={cn("inline-flex items-center gap-1 rounded-full border border-current/30 bg-current/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider", statusTone.txt)}>
+                        <span className={cn("inline-flex items-center gap-1 rounded-full border border-current/30 bg-current/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider", statusTone.txt)}>
                           <span className={cn("size-1 rounded-full", statusTone.dot)} />
                           {statusTone.label}
                         </span>
                       </p>
                       <TruncatedText
                         title={`${n.id} · ${n.model} · ${n.ipAddress}`}
-                        className="mt-0.5 text-[10px] text-muted-foreground"
+                        className="mt-0.5 text-2xs text-muted-foreground"
                       >
                         <span className="font-mono">{n.id}</span> · {n.model} · {n.ipAddress}
                       </TruncatedText>
-                      <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <div className="mt-1.5 flex items-center gap-3 text-2xs text-muted-foreground">
                         <span>Channels: <strong className="text-foreground">{linkedChannels}</strong> / {n.channelCount}</span>
                         <span>Storage: <strong className={usageTone}>{usagePct}%</strong></span>
                       </div>
@@ -1051,10 +1051,10 @@ function OverviewTab({
                   </button>
                   {expanded && (
                     <div className="border-t border-border bg-background/40 px-3.5 py-2">
-                      <p className="mb-1 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Linked channels</p>
+                      <p className="mb-1 text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Linked channels</p>
                       <ul className="space-y-0.5">
                         {n.channels.filter((ch) => ch.cameraId).map((ch) => (
-                          <li key={ch.channel} className="flex items-center gap-2 text-[11px]">
+                          <li key={ch.channel} className="flex items-center gap-2 text-xs">
                             <span className="font-mono text-muted-foreground">Ch&nbsp;{String(ch.channel).padStart(2, "0")}</span>
                             <Video className="size-3 text-muted-foreground/60" />
                             <span className="font-mono text-foreground">{ch.cameraId}</span>
@@ -1077,7 +1077,7 @@ function OverviewTab({
           {([
             ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
             ["Name",           <span>{site.name}</span>],
-            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
+            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
               <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
               {STATUS_STYLES[site.status].label}
             </span>],
@@ -1092,8 +1092,8 @@ function OverviewTab({
             ["Floor Plan",     <span>{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</span>],
           ] as [string, React.ReactNode][]).map(([label, value]) => (
             <div key={label as string} className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-              <span className="text-[13px] font-medium text-foreground">{value}</span>
+              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+              <span className="text-base font-medium text-foreground">{value}</span>
             </div>
           ))}
         </div>
@@ -1110,7 +1110,7 @@ function OverviewTab({
 function SiteSectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -1176,7 +1176,7 @@ function FloorPlanTab({
                 const active = tool === t.key;
                 return (
                   <button key={t.key} onClick={() => { setTool(t.key); if (t.key === "draw-area") setDrafting({ points: [], color: AREA_PALETTE[site.areas.length % AREA_PALETTE.length] }); }}
-                    className={cn("inline-flex items-center gap-1.5 rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                    className={cn("inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold transition-colors",
                       active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                     <Icon className="size-3.5" />
                     {t.label}
@@ -1186,20 +1186,20 @@ function FloorPlanTab({
             </div>
             <div className="mx-1 h-5 w-px bg-border" />
             <button onClick={() => setShowAreas(!showAreas)}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
                 showAreas ? "text-foreground" : "text-muted-foreground/60")}>
               {showAreas ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
               Areas
             </button>
             <button onClick={() => setShowCameras(!showCameras)}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
                 showCameras ? "text-foreground" : "text-muted-foreground/60")}>
               {showCameras ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
               Cameras
             </button>
             {tool === "draw-area" && drafting && drafting.points.length > 0 && (
               <div className="ml-auto flex items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground">{drafting.points.length} point{drafting.points.length === 1 ? "" : "s"}</span>
+                <span className="text-xs text-muted-foreground">{drafting.points.length} point{drafting.points.length === 1 ? "" : "s"}</span>
                 <Button variant="outline" onClick={() => setDrafting({ points: drafting.points.slice(0, -1), color: drafting.color })}>Undo</Button>
                 <Button onClick={() => { if (drafting.points.length >= 3) onCommitArea(drafting.points, drafting.color); }}
                   disabled={drafting.points.length < 3} className="gap-1.5">
@@ -1241,8 +1241,8 @@ function FloorPlanTab({
                     <Video className="size-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <TruncatedText text={selCam.name} className="text-[12px] font-semibold text-foreground" />
-                    <TruncatedText title={`${selCam.id} · ${CAMERA_STATUS_STYLES[selCam.status].label}`} className="text-[10px] text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</TruncatedText>
+                    <TruncatedText text={selCam.name} className="text-sm font-semibold text-foreground" />
+                    <TruncatedText title={`${selCam.id} · ${CAMERA_STATUS_STYLES[selCam.status].label}`} className="text-2xs text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</TruncatedText>
                   </div>
                   <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
                     onClick={() => onRemovePlacement(selCam.id)}>
@@ -1253,7 +1253,7 @@ function FloorPlanTab({
                 <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-2.5">
                   {/* Rotation */}
                   <div>
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><RotateCw className="size-3" /> Facing</span>
                       <span className="font-mono text-foreground">{selPlacement.rotation}°</span>
                     </div>
@@ -1264,7 +1264,7 @@ function FloorPlanTab({
                   </div>
                   {/* FOV angle */}
                   <div>
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span>FOV angle</span>
                       <span className="font-mono text-foreground">{selPlacement.fovAngle ?? 90}°</span>
                     </div>
@@ -1275,7 +1275,7 @@ function FloorPlanTab({
                   </div>
                   {/* Range */}
                   <div>
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span>Coverage</span>
                       <span className="font-mono text-foreground">{Math.round(((selPlacement.range ?? 14) / 14) * 100)}%</span>
                     </div>
@@ -1288,7 +1288,7 @@ function FloorPlanTab({
               </div>
             )}
             {pendingCameraId && (
-              <div className="rounded-md border border-info/30 bg-info/[0.06] px-3 py-2 text-[11px] text-muted-foreground">
+              <div className="rounded-md border border-info/30 bg-info/[0.06] px-3 py-2 text-xs text-muted-foreground">
                 Placing camera at the centre of the plan… drag it to the right spot, then rotate using the orange handle.
                 <button onClick={() => setPendingCameraId(null)} className="ml-2 underline">Cancel</button>
               </div>
@@ -1305,8 +1305,8 @@ function FloorPlanTab({
           <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
             <div className="flex items-center gap-2">
               <Shapes className="size-3.5 text-primary" />
-              <p className="text-[12px] font-bold text-foreground">Areas</p>
-              <span className="rounded-full bg-muted px-1.5 py-px text-[10px] font-bold text-muted-foreground">{site.areas.length}</span>
+              <p className="text-sm font-bold text-foreground">Areas</p>
+              <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-bold text-muted-foreground">{site.areas.length}</span>
             </div>
             <Button onClick={onStartNewArea} className="gap-1.5">
               <Plus className="size-3.5" />
@@ -1315,7 +1315,7 @@ function FloorPlanTab({
           </div>
           <div className="max-h-[260px] overflow-y-auto">
             {site.areas.length === 0 ? (
-              <p className="px-4 py-6 text-center text-[12px] italic text-muted-foreground">No areas yet.</p>
+              <p className="px-4 py-6 text-center text-sm italic text-muted-foreground">No areas yet.</p>
             ) : (
               site.areas.map((a) => {
                 const isSel = selected?.type === "area" && selected.id === a.id;
@@ -1337,12 +1337,12 @@ function FloorPlanTab({
                             if (e.key === "Escape") onCancelRename();
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="h-7 flex-1 rounded border border-primary bg-background px-2 text-[12px] focus:outline-none"
+                          className="h-7 flex-1 rounded border border-primary bg-background px-2 text-sm focus:outline-none"
                         />
                       ) : (
-                        <TruncatedText text={a.name} className="text-[12px] font-semibold text-foreground" />
+                        <TruncatedText text={a.name} className="text-sm font-semibold text-foreground" />
                       )}
-                      <span className="ml-auto inline-flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className="ml-auto inline-flex items-center gap-2 text-2xs text-muted-foreground">
                         {a.points.length === 0
                           ? <span className="inline-flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 font-semibold text-warning">Not drawn</span>
                           : <><CircleDot className="size-2.5 text-success" /> {camCount} cam{camCount === 1 ? "" : "s"}</>}
@@ -1376,13 +1376,13 @@ function FloorPlanTab({
           <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
             <div className="flex items-center gap-2">
               <Video className="size-3.5 text-primary" />
-              <p className="text-[12px] font-bold text-foreground">Cameras on Plan</p>
-              <span className="rounded-full bg-muted px-1.5 py-px text-[10px] font-bold text-muted-foreground">{placedCameras.length}</span>
+              <p className="text-sm font-bold text-foreground">Cameras on Plan</p>
+              <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-bold text-muted-foreground">{placedCameras.length}</span>
             </div>
           </div>
           <div className="max-h-[180px] overflow-y-auto">
             {placedCameras.length === 0 ? (
-              <p className="px-4 py-4 text-center text-[12px] italic text-muted-foreground">
+              <p className="px-4 py-4 text-center text-sm italic text-muted-foreground">
                 {site.floorPlan ? "No cameras placed yet." : "Upload a floor plan first."}
               </p>
             ) : (
@@ -1399,10 +1399,10 @@ function FloorPlanTab({
                         <Video className={cn("size-3", cs.text)} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <TruncatedText text={c.name} className="text-[12px] font-semibold text-foreground" />
+                        <TruncatedText text={c.name} className="text-sm font-semibold text-foreground" />
                         <TruncatedText
                           title={`${area ? area.name : "Unassigned"} · ${c.id}`}
-                          className="text-[10px] text-muted-foreground"
+                          className="text-2xs text-muted-foreground"
                         >
                           {area ? area.name : "Unassigned"} · <span className="font-mono">{c.id}</span>
                         </TruncatedText>
@@ -1420,8 +1420,8 @@ function FloorPlanTab({
             <div className="flex items-center justify-between gap-2 border-b border-warning/20 px-3.5 py-2.5">
               <div className="flex items-center gap-2">
                 <Video className="size-3.5 text-warning" />
-                <p className="text-[12px] font-bold text-foreground">Unplaced</p>
-                <span className="rounded-full bg-warning/15 px-1.5 py-px text-[10px] font-bold text-warning">{unplacedCameras.length}</span>
+                <p className="text-sm font-bold text-foreground">Unplaced</p>
+                <span className="rounded-full bg-warning/15 px-1.5 py-px text-2xs font-bold text-warning">{unplacedCameras.length}</span>
               </div>
             </div>
             <div className="max-h-[160px] overflow-y-auto">
@@ -1431,8 +1431,8 @@ function FloorPlanTab({
                   <div key={c.id} className="flex items-center gap-2.5 border-b border-warning/10 px-3.5 py-2 last:border-b-0">
                     <span className={cn("size-1.5 flex-shrink-0 rounded-full", cs.dot)} />
                     <div className="min-w-0 flex-1">
-                      <TruncatedText text={c.name} className="text-[12px] font-semibold text-foreground" />
-                      <TruncatedText title={`${c.id} · ${cs.label}`} className="text-[10px] text-muted-foreground"><span className="font-mono">{c.id}</span> · {cs.label}</TruncatedText>
+                      <TruncatedText text={c.name} className="text-sm font-semibold text-foreground" />
+                      <TruncatedText title={`${c.id} · ${cs.label}`} className="text-2xs text-muted-foreground"><span className="font-mono">{c.id}</span> · {cs.label}</TruncatedText>
                     </div>
                     <Button onClick={() => onPlaceCamera(c.id)} disabled={!site.floorPlan} className="gap-1.5">
                       <Plus className="size-3" />

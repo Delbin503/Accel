@@ -69,7 +69,7 @@ function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boole
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -93,7 +93,7 @@ function StatusPill({ status }: { status: UserStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -125,7 +125,7 @@ function Avatar({ user, size = 36 }: { user: UserData; size?: number }) {
     .toUpperCase();
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-muted font-mono text-[12px] font-semibold text-muted-foreground"
+      className="flex items-center justify-center rounded-full bg-muted font-mono text-sm font-semibold text-muted-foreground"
       style={{ width: size, height: size }}
     >
       {initials || "?"}
@@ -200,7 +200,7 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -218,7 +218,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -273,9 +273,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -283,7 +283,7 @@ function FilterPanel({
               {["All statuses", "All sites"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -295,7 +295,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -316,7 +316,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by name, email, or user ID…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -325,7 +325,7 @@ function FilterPanel({
               { key: "site"   as const, label: "Site",   opts: USER_SITES },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -347,17 +347,17 @@ function FilterPanel({
 
 function SitesCell({ user }: { user: UserData }) {
   if (user.sitePermissions.length === 0) {
-    return <span className="text-[12px] text-muted-foreground">—</span>;
+    return <span className="text-sm text-muted-foreground">—</span>;
   }
   if (user.sitePermissions.length === USER_SITES.length) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md border border-info/20 bg-info/5 px-2 py-0.5 text-[11px] font-semibold text-info">
+      <span className="inline-flex items-center gap-1 rounded-md border border-info/20 bg-info/5 px-2 py-0.5 text-xs font-semibold text-info">
         All Sites ({user.sitePermissions.length})
       </span>
     );
   }
   return (
-    <span className="text-[12px] text-foreground">
+    <span className="text-sm text-foreground">
       {user.sitePermissions.map((p) => p.siteName).join(", ")}
     </span>
   );
@@ -368,7 +368,7 @@ function SitesCell({ user }: { user: UserData }) {
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -426,7 +426,7 @@ function UpdateUserMenu({
       <button
         onClick={() => { setOpen(false); handler(); }}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] transition-colors",
+          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-base transition-colors",
           kind === "warn" && "text-warning hover:bg-warning/10",
           kind === "success" && "text-success hover:bg-success/10",
           kind === "default" && "text-foreground hover:bg-muted"
@@ -441,20 +441,20 @@ function UpdateUserMenu({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button size="sm" className="gap-1.5 text-[12px]">
+        <Button size="sm" className="gap-1.5 text-sm">
           Update
           <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-52 p-1.5">
-        <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           Manage
         </div>
         {item(<Pencil className="size-3.5" />, "Edit User", onEdit)}
         {item(<Shield className="size-3.5" />, "Change Role", onChangeRole)}
         {item(<MapPin className="size-3.5" />, "Manage Site", onManageSite)}
         <div className="my-1.5 border-t border-border" />
-        <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           Access
         </div>
         {isSuspended
@@ -476,8 +476,8 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
             <Ban className="size-4 text-sev-critical" />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-sev-critical">Account Suspended</p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="text-base font-bold text-sev-critical">Account Suspended</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Sign-in is blocked. Active sessions are revoked on next refresh.
             </p>
           </div>
@@ -494,26 +494,26 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-sev-critical/15 pt-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Suspended From</p>
-          <p className="mt-0.5 text-[12px] font-medium text-foreground">{suspension.startedAtDisplay}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended From</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.startedAtDisplay}</p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Ends</p>
-          <p className="mt-0.5 text-[12px] font-semibold text-sev-critical">{suspension.endsAtDisplay}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Ends</p>
+          <p className="mt-0.5 text-sm font-semibold text-sev-critical">{suspension.endsAtDisplay}</p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Suspended By</p>
-          <p className="mt-0.5 text-[12px] font-medium text-foreground">{suspension.suspendedBy}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended By</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.suspendedBy}</p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Duration</p>
-          <p className="mt-0.5 text-[12px] font-medium text-foreground">{SUSPEND_DURATION_LABEL[suspension.preset]}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Duration</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{SUSPEND_DURATION_LABEL[suspension.preset]}</p>
         </div>
       </div>
       {suspension.note && (
         <div className="mt-3 rounded-lg border border-sev-critical/15 bg-card px-3 py-2.5">
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
-          <p className="text-[12px] leading-relaxed text-foreground">{suspension.note}</p>
+          <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
+          <p className="text-sm leading-relaxed text-foreground">{suspension.note}</p>
         </div>
       )}
     </div>
@@ -566,15 +566,15 @@ function UserDrawer({
                   <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                     <RoleBadge role={user.role} />
                     {user.isCurrentUser && (
-                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
                         You
                       </span>
                     )}
                   </div>
-                  <SheetTitle className="min-w-0 text-[17px] font-bold">
+                  <SheetTitle className="min-w-0 text-lg font-bold">
                     <TruncatedText text={user.fullName} />
                   </SheetTitle>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {user.email}
                     {user.lastSignInRelative && ` · Last sign-in: ${user.lastSignInRelative}`}
                   </p>
@@ -589,7 +589,7 @@ function UserDrawer({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-[15px] text-muted-foreground">User not found</SheetTitle>
+              <SheetTitle className="text-md text-muted-foreground">User not found</SheetTitle>
               <button
                 onClick={onClose}
                 className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -648,10 +648,10 @@ function UserDrawer({
                   ] as [string, React.ReactNode][]
                 ).map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       {label}
                     </span>
-                    <span className="text-[13px] font-medium text-foreground">{value}</span>
+                    <span className="text-base font-medium text-foreground">{value}</span>
                   </div>
                 ))}
               </div>
@@ -661,12 +661,12 @@ function UserDrawer({
             <div>
               <SectionTitle>Site Permissions ({user.sitePermissions.length})</SectionTitle>
               {user.sitePermissions.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                   No site access granted.
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <p className="mb-2 text-[11px] text-muted-foreground">
+                  <p className="mb-2 text-xs text-muted-foreground">
                     User can access the following sites. Revoke a site to remove access immediately
                     (next sign-in or active session refresh).
                   </p>
@@ -679,12 +679,12 @@ function UserDrawer({
                         <MapPin className="size-4 text-info" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <TruncatedText text={p.siteName} className="text-[13px] font-semibold text-foreground" />
-                        <p className="text-[10px] text-muted-foreground">
+                        <TruncatedText text={p.siteName} className="text-base font-semibold text-foreground" />
+                        <p className="text-2xs text-muted-foreground">
                           {p.cameraCount} cameras · Granted {p.grantedAtDisplay} by {p.grantedBy}
                         </p>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
                         <CheckCircle2 className="size-3" />
                         Granted
                       </span>
@@ -700,11 +700,11 @@ function UserDrawer({
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
                   <RoleBadge role={user.role} />
-                  <p className="flex-1 text-[12px] leading-relaxed text-muted-foreground">
+                  <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
                     {USER_ROLE_DESCRIPTIONS[user.role]}
                   </p>
                 </div>
-                <p className="mt-3 border-t border-border pt-3 text-[11px] text-muted-foreground">
+                <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
                   Role-based permissions are configured by the Owner in{" "}
                   <span className="font-semibold text-foreground">System Configuration → Role Permissions</span>.
                 </p>
@@ -718,8 +718,8 @@ function UserDrawer({
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
                   <KeyRound className="size-4 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-semibold text-foreground">Password</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-sm font-semibold text-foreground">Password</p>
+                    <p className="text-xs text-muted-foreground">
                       Last changed {user.passwordChangedDisplay}
                     </p>
                   </div>
@@ -731,18 +731,18 @@ function UserDrawer({
                   <Smartphone className="size-4 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-[12px] font-semibold text-foreground">Two-Factor Authentication</p>
+                      <p className="text-sm font-semibold text-foreground">Two-Factor Authentication</p>
                       {user.twoFactorEnabled ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-success">
                           Opt-in · Enabled
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-warning">
                           Not Enabled
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {user.twoFactorEnabled ? "TOTP via Authenticator app" : "User has not enrolled in 2FA"}
                     </p>
                   </div>
@@ -757,7 +757,7 @@ function UserDrawer({
             <div>
               <SectionTitle>User Activities</SectionTitle>
               {user.activities.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-[12px] text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                   No activity yet.
                 </div>
               ) : (
@@ -770,18 +770,18 @@ function UserDrawer({
                         idx > 0 && "border-t border-border/60"
                       )}
                     >
-                      <p className="w-[120px] flex-shrink-0 font-mono text-[10px] leading-tight text-muted-foreground">
+                      <p className="w-[120px] flex-shrink-0 font-mono text-2xs leading-tight text-muted-foreground">
                         {a.whenDisplay}
                       </p>
                       <span
                         className={cn(
-                          "inline-flex flex-shrink-0 items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                          "inline-flex flex-shrink-0 items-center rounded px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider",
                           ACTIVITY_CHIP_STYLES[a.kind] ?? "bg-muted text-muted-foreground"
                         )}
                       >
                         {USER_ACTIVITY_LABELS[a.kind]}
                       </span>
-                      <p className="flex-1 text-[12px] leading-snug text-foreground">{a.text}</p>
+                      <p className="flex-1 text-sm leading-snug text-foreground">{a.text}</p>
                     </div>
                   ))}
                 </div>
@@ -884,7 +884,7 @@ function InviteUsersModal({
       <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Invitees receive a one-time email link valid for 7 days.
           </p>
         </DialogHeader>
@@ -904,11 +904,11 @@ function InviteUsersModal({
                 )}>
                   <div className="mb-0.5 flex items-center justify-between gap-1">
                     <RoleBadge role={r} withIcon={false} />
-                    <span className={cn("font-mono text-[9px] font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                    <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
                       {s.available} left
                     </span>
                   </div>
-                  <p className="font-mono text-[10px] text-muted-foreground">
+                  <p className="font-mono text-2xs text-muted-foreground">
                     {s.assigned} / {s.total} used
                   </p>
                 </div>
@@ -918,7 +918,7 @@ function InviteUsersModal({
 
           {/* Site Access — moved ABOVE the email field, rendered as a dropdown */}
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site Access
             </label>
             <Popover>
@@ -926,7 +926,7 @@ function InviteUsersModal({
                 <button
                   type="button"
                   className={cn(
-                    "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-[13px] transition-colors",
+                    "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-base transition-colors",
                     sites.length === 0
                       ? "border-input text-muted-foreground"
                       : "border-primary/50 text-foreground"
@@ -942,7 +942,7 @@ function InviteUsersModal({
               <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
                 <button
                   onClick={() => setSites(sites.length === USER_SITES.length ? [] : USER_SITES.map((s) => s.value))}
-                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-primary hover:bg-primary/10"
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary hover:bg-primary/10"
                 >
                   <span>{sites.length === USER_SITES.length ? "Clear all" : "Select all"}</span>
                   <span className="font-mono text-muted-foreground">{sites.length}/{USER_SITES.length}</span>
@@ -956,7 +956,7 @@ function InviteUsersModal({
                         onClick={() =>
                           setSites((curr) => (curr.includes(s.value) ? curr.filter((v) => v !== s.value) : [...curr, s.value]))
                         }
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] hover:bg-muted/60"
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
                       >
                         <span className={cn(
                           "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
@@ -976,11 +976,11 @@ function InviteUsersModal({
           {/* Emails */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Email Addresses
               </label>
               {parsed.valid.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>{parsed.valid.length}</strong> valid
                   {parsed.invalid.length > 0 && <> · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid</>}
                   {parsed.duplicates.length > 0 && <> · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate</>}
@@ -993,19 +993,19 @@ function InviteUsersModal({
               placeholder="alice@acme.com, bob@acme.com…"
               rows={2}
               className={cn(
-                "w-full rounded-md border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none",
+                "w-full rounded-md border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none",
                 parsed.invalid.length > 0 ? "border-sev-critical/40 focus:border-sev-critical" : "border-input focus:border-primary"
               )}
             />
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-[11px] text-sev-critical">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
                 <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:</p>
-                  <p className="font-mono text-[10px] opacity-80">{parsed.invalid.slice(0, 5).join(", ")}{parsed.invalid.length > 5 ? ` +${parsed.invalid.length - 5} more` : ""}</p>
+                  <p className="font-mono text-2xs opacity-80">{parsed.invalid.slice(0, 5).join(", ")}{parsed.invalid.length > 5 ? ` +${parsed.invalid.length - 5} more` : ""}</p>
                 </div>
               </div>
             )}
@@ -1013,7 +1013,7 @@ function InviteUsersModal({
 
           {/* Role */}
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Role</label>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Role</label>
             <div className="space-y-1.5">
               {(["admin", "user"] as const).map((r) => {
                 const s = seatUsage[r];
@@ -1036,7 +1036,7 @@ function InviteUsersModal({
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <RoleBadge role={r} />
-                        <span className={cn("font-mono text-[10px] font-bold",
+                        <span className={cn("font-mono text-2xs font-bold",
                           s.available === 0 ? "text-sev-critical" :
                           willExceed ? "text-sev-critical" :
                           s.available <= 2 ? "text-warning" :
@@ -1045,7 +1045,7 @@ function InviteUsersModal({
                           {s.available}/{s.total} seats
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+                      <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">
                         {USER_ROLE_DESCRIPTIONS[r]}
                       </p>
                     </div>
@@ -1053,13 +1053,13 @@ function InviteUsersModal({
                 );
               })}
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground/70">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
 
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-[11px] text-sev-critical">
+            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
               <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (
@@ -1126,12 +1126,12 @@ function SeatPill({
         <button className={cn("group flex w-full flex-col gap-1 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:border-primary/40")}>
           <div className="flex items-center gap-1.5">
             <Icon className={cn("size-3", cfg.text)} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/60">{pct}%</span>
+            <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+            <span className="ml-auto text-2xs text-muted-foreground/60">{pct}%</span>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className={cn("text-[16px] font-bold leading-none", cfg.text)}>{assigned}</span>
-            <span className="text-[11px] text-muted-foreground">/ {total} seats</span>
+            <span className={cn("text-lg font-bold leading-none", cfg.text)}>{assigned}</span>
+            <span className="text-xs text-muted-foreground">/ {total} seats</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
             <div className={cn("h-full rounded-full", cfg.barClass)} style={{ width: `${pct}%` }} />
@@ -1144,26 +1144,26 @@ function SeatPill({
             <Icon className={cn("size-3.5", cfg.text)} />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-bold text-foreground">Total {label}</p>
-            {price !== undefined && <p className="text-[10px] text-muted-foreground">${price}/mo · {billingCycle}</p>}
+            <p className="text-base font-bold text-foreground">Total {label}</p>
+            {price !== undefined && <p className="text-2xs text-muted-foreground">${price}/mo · {billingCycle}</p>}
           </div>
         </div>
         <div className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
-          <div className="flex items-center justify-between text-[12px]">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Total</span>
             <span className="font-mono font-semibold text-foreground">{total}</span>
           </div>
-          <div className="flex items-center justify-between text-[12px]">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Assigned</span>
             <span className={cn("font-mono font-semibold", cfg.text)}>{assigned}</span>
           </div>
-          <div className="flex items-center justify-between text-[12px]">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Available</span>
             <span className={cn("font-mono font-semibold", available === 0 ? "text-sev-critical" : "text-success")}>{available}</span>
           </div>
         </div>
         {kind !== "all" && available === 0 && (
-          <p className="mt-2 flex items-start gap-1 text-[11px] text-warning">
+          <p className="mt-2 flex items-start gap-1 text-xs text-warning">
             <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
             No available seats — purchasing required to add a user.
           </p>
@@ -1181,11 +1181,11 @@ function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, SeatUsage>
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <CreditCard className="size-3.5 text-primary" />
           Seat Usage
         </div>
-        <span className="text-[10px] text-muted-foreground/70">Hover or click each tier to see breakdown</span>
+        <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <SeatPill kind="all"   label="Total Seats" total={totalAll} assigned={assignedAll} available={availableAll} billingCycle={billingCycle} />
@@ -1255,7 +1255,7 @@ function ChangeRoleModal({
               : isBulk ? `Change Role (${users.length})` : "Change Role"}
           </DialogTitle>
           {showPurchase && (
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               No available {currentTier.label.toLowerCase()} seats — purchase to continue.
             </p>
           )}
@@ -1264,20 +1264,20 @@ function ChangeRoleModal({
         {!showPurchase ? (
           <div className="space-y-3 px-5 py-4">
             {isBulk ? (
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Applying to <strong className="text-foreground">{users.length}</strong> selected users.
               </p>
             ) : (
               <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
                 <Avatar user={users[0]} size={32} />
                 <div className="min-w-0">
-                  <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
-                  <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
+                  <TruncatedText text={users[0].fullName} className="text-base font-semibold text-foreground" />
+                  <TruncatedText text={users[0].email} className="text-xs text-muted-foreground" />
                 </div>
                 <RoleBadge role={users[0].role} />
               </div>
             )}
-            <p className="text-[12px] text-muted-foreground">Choose a role</p>
+            <p className="text-sm text-muted-foreground">Choose a role</p>
             {USER_ROLE_OPTIONS.map((opt) => {
               const tier = MOCK_SEATS[opt.value];
               const u = seatUsage[opt.value];
@@ -1304,14 +1304,14 @@ function ChangeRoleModal({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <RoleBadge role={opt.value} />
-                      <span className="inline-flex items-center gap-1 font-mono text-[12px] font-bold text-foreground">
-                        ${tier.pricePerMonth}<span className="text-[10px] font-normal text-muted-foreground">/mo</span>
+                      <span className="inline-flex items-center gap-1 font-mono text-sm font-bold text-foreground">
+                        ${tier.pricePerMonth}<span className="text-2xs font-normal text-muted-foreground">/mo</span>
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
                       {USER_ROLE_DESCRIPTIONS[opt.value]}
                     </p>
-                    <div className="mt-1.5 flex items-center gap-2 text-[10px]">
+                    <div className="mt-1.5 flex items-center gap-2 text-2xs">
                       <span className="text-muted-foreground">
                         <strong className={cn(u.available === 0 ? "text-sev-critical" : "text-success")}>
                           {u.available}
@@ -1332,7 +1332,7 @@ function ChangeRoleModal({
             {seatShortfall > 0 && (
               <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
                 <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-                <p className="text-[12px] leading-snug text-muted-foreground">
+                <p className="text-sm leading-snug text-muted-foreground">
                   Applying this change requires <strong className="text-foreground">{seatShortfall}</strong> additional{" "}
                   {currentTier.label.toLowerCase()} seat{seatShortfall === 1 ? "" : "s"} at{" "}
                   <strong className="text-foreground">${currentTier.pricePerMonth}/mo each</strong>. You will be prompted to purchase.
@@ -1345,29 +1345,29 @@ function ChangeRoleModal({
             <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
               <div>
-                <p className="text-[13px] font-semibold text-foreground">No {currentTier.label.toLowerCase()} seats available</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                <p className="text-base font-semibold text-foreground">No {currentTier.label.toLowerCase()} seats available</p>
+                <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
                   You currently have <strong className="text-foreground">{seatUsage[role].assigned} of {seatUsage[role].total}</strong> {currentTier.label.toLowerCase()} seats assigned.
                   Purchase <strong className="text-foreground">{seatShortfall}</strong> additional seat{seatShortfall === 1 ? "" : "s"} to apply this change.
                 </p>
               </div>
             </div>
             <div className="space-y-1.5 rounded-lg border border-border bg-background px-3.5 py-3">
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{seatShortfall} × {currentTier.label} seat</span>
                 <span className="font-mono text-foreground">${currentTier.pricePerMonth} × {seatShortfall}</span>
               </div>
               <div className="border-t border-border/60" />
-              <div className="flex items-center justify-between text-[13px] font-bold text-foreground">
+              <div className="flex items-center justify-between text-base font-bold text-foreground">
                 <span>Charged on next invoice</span>
                 <span className="font-mono">+ ${purchaseTotal}/mo</span>
               </div>
-              <div className="mt-1.5 flex items-start gap-1.5 rounded-md border border-info/30 bg-info/5 px-2 py-1.5 text-[11px] text-muted-foreground">
+              <div className="mt-1.5 flex items-start gap-1.5 rounded-md border border-info/30 bg-info/5 px-2 py-1.5 text-xs text-muted-foreground">
                 <Calendar className="mt-0.5 size-3 flex-shrink-0 text-info" />
                 Next invoice <strong className="text-foreground">{ORG_LICENSE_INFO.nextInvoiceDate}</strong> ({ORG_LICENSE_INFO.paymentMethod})
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Manage all seats in <strong className="text-foreground">Billing & License</strong>.
             </p>
           </div>
@@ -1443,7 +1443,7 @@ function ManageSiteModal({
           {isBulk ? (
             <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-              <p className="text-[12px] leading-snug text-muted-foreground">
+              <p className="text-sm leading-snug text-muted-foreground">
                 This will <strong className="text-foreground">replace</strong> site access for{" "}
                 <strong className="text-foreground">{users.length}</strong> selected users with the selection below.
               </p>
@@ -1452,23 +1452,23 @@ function ManageSiteModal({
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
-                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
+                <TruncatedText text={users[0].fullName} className="text-base font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-xs text-muted-foreground" />
               </div>
             </div>
           )}
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site Access ({sites.length}/{USER_SITES.length} selected)
             </p>
             <div className="flex items-center gap-1.5">
               <button onClick={() => setSites(USER_SITES.map((s) => s.value))}
-                className="text-[11px] text-muted-foreground underline hover:text-primary">
+                className="text-xs text-muted-foreground underline hover:text-primary">
                 Select all
               </button>
               <span className="text-muted-foreground/40">·</span>
               <button onClick={() => setSites([])}
-                className="text-[11px] text-muted-foreground underline hover:text-primary">
+                className="text-xs text-muted-foreground underline hover:text-primary">
                 Clear
               </button>
             </div>
@@ -1476,12 +1476,12 @@ function ManageSiteModal({
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={siteSearch} onChange={(e) => setSiteSearch(e.target.value)}
-              placeholder="Search sites…" className="h-9 pl-9 text-[13px]" />
+              placeholder="Search sites…" className="h-9 pl-9 text-base" />
           </div>
         </div>
         <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-5 pb-3">
           {visibleSites.length === 0 ? (
-            <p className="px-3 py-6 text-center text-[12px] italic text-muted-foreground">No sites match "{siteSearch}".</p>
+            <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No sites match "{siteSearch}".</p>
           ) : (
             visibleSites.map((s) => {
               const checked = sites.includes(s.value);
@@ -1502,7 +1502,7 @@ function ManageSiteModal({
                   <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
                     <MapPin className="size-4 text-info" />
                   </div>
-                  <span className="text-[13px] font-medium text-foreground">{s.label}</span>
+                  <span className="text-base font-medium text-foreground">{s.label}</span>
                 </button>
               );
             })
@@ -1565,8 +1565,8 @@ function EditUserModal({
           <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
             <Avatar user={user} size={32} />
             <div className="min-w-0 flex-1">
-              <TruncatedText text={user.email} className="text-[13px] font-semibold text-foreground" />
-              <p className="font-mono text-[11px] text-muted-foreground">{user.id}</p>
+              <TruncatedText text={user.email} className="text-base font-semibold text-foreground" />
+              <p className="font-mono text-xs text-muted-foreground">{user.id}</p>
             </div>
             <RoleBadge role={user.role} />
           </div>
@@ -1578,7 +1578,7 @@ function EditUserModal({
             { label: "Department",   value: department,  set: setDepartment,  mono: false, placeholder: "e.g. Operations, Security, IT" },
           ].map(({ label, value, set, mono, placeholder }) => (
             <div key={label}>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {label}
               </label>
               <input
@@ -1586,13 +1586,13 @@ function EditUserModal({
                 onChange={(e) => set(e.target.value)}
                 placeholder={placeholder}
                 className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
                   mono && "font-mono"
                 )}
               />
             </div>
           ))}
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Email and User ID cannot be changed after creation.
           </p>
         </div>
@@ -1720,7 +1720,7 @@ function SuspendUserModal({
           <DialogTitle className="text-base font-bold">
             {isBulk ? `Suspend User (${users.length})` : "Suspend User"}
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Sign-in will be blocked for the selected duration. Audit history is preserved.
           </p>
         </DialogHeader>
@@ -1728,7 +1728,7 @@ function SuspendUserModal({
           {isBulk ? (
             <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-              <p className="text-[12px] leading-snug text-muted-foreground">
+              <p className="text-sm leading-snug text-muted-foreground">
                 Applying to <strong className="text-foreground">{users.length}</strong> selected users.
               </p>
             </div>
@@ -1736,14 +1736,14 @@ function SuspendUserModal({
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
-                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
+                <TruncatedText text={users[0].fullName} className="text-base font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-xs text-muted-foreground" />
               </div>
             </div>
           )}
 
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Duration
             </p>
             <div className="grid grid-cols-5 gap-2">
@@ -1752,7 +1752,7 @@ function SuspendUserModal({
                   key={p}
                   onClick={() => setPreset(p)}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-[11px] font-semibold transition-colors",
+                    "flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-xs font-semibold transition-colors",
                     preset === p
                       ? "border-primary bg-primary/5 text-primary"
                       : "border-border bg-background text-muted-foreground hover:border-primary/40"
@@ -1768,18 +1768,18 @@ function SuspendUserModal({
           {preset === "custom" && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Start Date
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   End Date
                 </label>
                 <input
@@ -1787,14 +1787,14 @@ function SuspendUserModal({
                   value={endDate}
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Note (optional)
             </label>
             <textarea
@@ -1802,12 +1802,12 @@ function SuspendUserModal({
               onChange={(e) => setNote(e.target.value)}
               placeholder="Reason for suspension — visible to admins and in the audit log."
               rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
 
           <div className="rounded-lg border border-sev-critical/25 bg-sev-critical/[0.05] px-3 py-2.5">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               <Ban className="mr-1 inline-block size-3 text-sev-critical align-text-bottom" />
               Suspending blocks sign-in immediately. Active sessions revoke on next refresh.
             </p>
@@ -1856,20 +1856,20 @@ function ReinstateModal({
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
           {isBulk ? (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Reinstating <strong className="text-foreground">{users.length}</strong> selected users.
             </p>
           ) : (
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
-                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
+                <TruncatedText text={users[0].fullName} className="text-base font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-xs text-muted-foreground" />
               </div>
             </div>
           )}
           <div className="rounded-lg border border-success/25 bg-success/[0.06] px-3 py-2.5">
-            <p className="text-[12px] leading-snug text-muted-foreground">
+            <p className="text-sm leading-snug text-muted-foreground">
               <RotateCcw className="mr-1 inline-block size-3 text-success align-text-bottom" />
               Access will be restored on next sign-in. Existing role and site permissions are unchanged.
             </p>
@@ -1910,30 +1910,30 @@ function DeleteUserModal({
           <DialogTitle className="text-base font-bold text-destructive">
             {isBulk ? `Delete Users (${users.length})` : "Delete User"}
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
         <div className="px-5 py-5">
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-foreground">
+                <p className="text-base font-semibold text-foreground">
                   You are about to permanently remove:
                 </p>
                 {isBulk ? (
-                  <p className="mt-1 text-[12px] text-muted-foreground">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {users.length} selected users will lose access immediately.
                   </p>
                 ) : (
                   <>
-                    <p className="mt-1 font-mono text-[12px] text-muted-foreground">{users[0].id}</p>
-                    <p className="mt-0.5 text-[13px] text-muted-foreground">{users[0].fullName} · {users[0].email}</p>
+                    <p className="mt-1 font-mono text-sm text-muted-foreground">{users[0].id}</p>
+                    <p className="mt-0.5 text-base text-muted-foreground">{users[0].fullName} · {users[0].email}</p>
                   </>
                 )}
               </div>
             </div>
           </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             Audit history remains preserved for compliance. You will need to re-invite the user to restore access.
           </p>
         </div>
@@ -1975,7 +1975,7 @@ function ResetConfirmModal({
         <div className="px-5 py-4">
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-            <div className="text-[12px] leading-snug text-muted-foreground">{description}</div>
+            <div className="text-sm leading-snug text-muted-foreground">{description}</div>
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -2009,25 +2009,25 @@ function BulkActionBar({
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
-        <span className="text-[13px] font-semibold text-foreground">
+        <span className="text-base font-semibold text-foreground">
           {count} user{count > 1 ? "s" : ""} selected
         </span>
       </div>
       <div className="ml-auto flex flex-wrap items-center gap-1.5">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-[12px] text-muted-foreground" onClick={onClear}>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-sm text-muted-foreground" onClick={onClear}>
           <X className="size-3.5" />
           Clear selection
         </Button>
         <div className="mx-1 h-4 w-px bg-border" />
-        <Button variant="outline" size="sm" className="gap-1.5 text-[12px]" onClick={onChangeRole}>
+        <Button variant="outline" size="sm" className="gap-1.5 text-sm" onClick={onChangeRole}>
           <Shield className="size-3.5" />
           Change Role
         </Button>
-        <Button variant="outline" size="sm" className="gap-1.5 text-[12px]" onClick={onManageSite}>
+        <Button variant="outline" size="sm" className="gap-1.5 text-sm" onClick={onManageSite}>
           <MapPin className="size-3.5" />
           Manage Site
         </Button>
-        <Button size="sm" className="gap-1.5 text-[12px]" onClick={onSuspend}>
+        <Button size="sm" className="gap-1.5 text-sm" onClick={onSuspend}>
           <ShieldOff className="size-3.5" />
           Suspend User
         </Button>
@@ -2349,7 +2349,7 @@ export default function UserManagementPage() {
 
       {/* Count + sort */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "user" : "users"} match current filters
           {hasFilters && (
@@ -2374,7 +2374,7 @@ export default function UserManagementPage() {
                 key={o.key}
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-muted",
+                  "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
                   sort === o.key ? "text-primary" : "text-foreground"
                 )}
               >
@@ -2415,7 +2415,7 @@ export default function UserManagementPage() {
                   {["USER ID", "USER", "ROLE", "STATUS", "SITES", "LAST ACTIVE", "ACTION"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
                     </th>
@@ -2430,7 +2430,7 @@ export default function UserManagementPage() {
                       key={u.id}
                       onClick={() => setDrawerId(u.id)}
                       className={cn(
-                        "group cursor-pointer text-[13px] transition-colors hover:bg-muted/20",
+                        "group cursor-pointer text-base transition-colors hover:bg-muted/20",
                         isSel && "bg-primary/[0.04]"
                       )}
                     >
@@ -2438,7 +2438,7 @@ export default function UserManagementPage() {
                         <Checkbox checked={isSel} onChange={() => toggleRow(u.id)} />
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                           {u.id}
                         </span>
                       </td>
@@ -2452,17 +2452,17 @@ export default function UserManagementPage() {
                             >
                               {u.fullName}
                               {u.isCurrentUser && (
-                                <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">(You)</span>
+                                <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
                               )}
                             </TruncatedText>
-                            <TruncatedText text={u.email} className="text-[11px] text-muted-foreground" />
+                            <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
                       <td className="px-4 py-3"><StatusPill status={u.status} /></td>
                       <td className="px-4 py-3"><SitesCell user={u} /></td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{u.lastActiveDisplay}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{u.lastActiveDisplay}</td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -2473,21 +2473,21 @@ export default function UserManagementPage() {
                           <PopoverContent className="w-44 p-1" align="end">
                             <button
                               onClick={() => setDrawerId(u.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <CircleUser className="size-3.5 text-muted-foreground" />
                               View details
                             </button>
                             <button
                               onClick={() => openDialog("change-role", [u.id])}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <Shield className="size-3.5 text-muted-foreground" />
                               Change Role
                             </button>
                             <button
                               onClick={() => openDialog("manage-site", [u.id])}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <MapPin className="size-3.5 text-muted-foreground" />
                               Manage Site
@@ -2496,7 +2496,7 @@ export default function UserManagementPage() {
                             {u.status === "suspended" ? (
                               <button
                                 onClick={() => openDialog("reinstate", [u.id])}
-                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-success hover:bg-success/10"
+                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
                               >
                                 <RotateCcw className="size-3.5" />
                                 Reinstate
@@ -2504,7 +2504,7 @@ export default function UserManagementPage() {
                             ) : (
                               <button
                                 onClick={() => openDialog("suspend", [u.id])}
-                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-warning hover:bg-warning/10"
+                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-warning hover:bg-warning/10"
                               >
                                 <ShieldOff className="size-3.5" />
                                 Suspend User
@@ -2522,7 +2522,7 @@ export default function UserManagementPage() {
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
@@ -2535,7 +2535,7 @@ export default function UserManagementPage() {
               >
                 <ChevronLeft className="size-3.5" />
               </button>
-              <span className="px-2 text-[12px] text-foreground">
+              <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
               <button

@@ -59,8 +59,8 @@ export default function OnboardingSubscriptionPage() {
       <AuthLayout>
         <div className="rounded-xl border border-warning/30 bg-warning/[0.05] p-6 text-center">
           <AlertCircle className="mx-auto mb-3 size-6 text-warning" />
-          <h1 className="text-[18px] font-bold text-foreground">No site found</h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <h1 className="text-xl font-bold text-foreground">No site found</h1>
+          <p className="mt-1 text-base text-muted-foreground">
             You need to create a site before choosing a subscription.
           </p>
           <Button className="mt-4 gap-1.5" onClick={() => navigate("/onboarding/site")}>
@@ -127,16 +127,16 @@ export default function OnboardingSubscriptionPage() {
     <AuthLayout
       brandSlot={
         <>
-          <h2 className="text-[28px] font-bold leading-tight text-foreground">
+          <h2 className="text-4xl font-bold leading-tight text-foreground">
             One subscription per site.
           </h2>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Plans are billed per-site so you only pay for what you actually monitor.
             You can mix tiers across sites — for example, a flagship site on Enterprise
             and a satellite office on Starter.
           </p>
           <div className="rounded-xl border border-border bg-card/40 p-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Subscribing
             </p>
             <div className="flex items-center gap-2.5">
@@ -144,12 +144,12 @@ export default function OnboardingSubscriptionPage() {
                 <Building2 className="size-4" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-foreground">{targetSite.name}</p>
-                <p className="text-[11px] text-muted-foreground">{targetSite.address}</p>
+                <p className="text-base font-bold text-foreground">{targetSite.name}</p>
+                <p className="text-xs text-muted-foreground">{targetSite.address}</p>
               </div>
             </div>
           </div>
-          <ul className="space-y-2 text-[12px] text-muted-foreground">
+          <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2"><Check className="mt-0.5 size-3 flex-shrink-0 text-success" /> 30-day money-back guarantee</li>
             <li className="flex items-start gap-2"><Check className="mt-0.5 size-3 flex-shrink-0 text-success" /> Cancel anytime — read-only access during grace period</li>
             <li className="flex items-start gap-2"><Check className="mt-0.5 size-3 flex-shrink-0 text-success" /> Add more sites whenever you're ready</li>
@@ -160,10 +160,10 @@ export default function OnboardingSubscriptionPage() {
       <div>
         <OnboardingProgress current="subscription" />
 
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           {step === "pick" ? "Choose a plan" : "Confirm payment"}
         </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {step === "pick"
             ? <>Subscribe <strong className="text-foreground">{targetSite.name}</strong> to unlock the dashboard.</>
             : <>Activate <strong className="text-foreground">{plan.name}</strong> ({cycle}) for {targetSite.name}.</>
@@ -172,7 +172,7 @@ export default function OnboardingSubscriptionPage() {
 
         {step === "pick" ? (
           <>
-            <div className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-[12px]">
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
               <button onClick={() => setCycle("monthly")}
                 className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                   cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -181,7 +181,7 @@ export default function OnboardingSubscriptionPage() {
               <button onClick={() => setCycle("annual")}
                 className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                   cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
-                Annual <span className="text-[10px] opacity-80">(save ~17%)</span>
+                Annual <span className="text-2xs opacity-80">(save ~17%)</span>
               </button>
             </div>
 
@@ -199,7 +199,7 @@ export default function OnboardingSubscriptionPage() {
                       isPicked ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                     )}>
                     {p.highlight && (
-                      <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                      <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">
                         <Sparkles className="size-2.5" /> Most popular
                       </span>
                     )}
@@ -211,9 +211,9 @@ export default function OnboardingSubscriptionPage() {
                       <Icon className={cn("size-4", color.text)} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{p.tagline}</p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5 text-[10px]">
+                      <p className="text-base font-bold text-foreground">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.tagline}</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5 text-2xs">
                         <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
                           {typeof p.cameraLimit === "number" ? `${p.cameraLimit} cams` : "Unlim cams"}
                         </span>
@@ -226,8 +226,8 @@ export default function OnboardingSubscriptionPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={cn("font-mono text-[16px] font-bold leading-none", color.text)}>${monthly}</p>
-                      <p className="text-[9px] text-muted-foreground">/mo</p>
+                      <p className={cn("font-mono text-lg font-bold leading-none", color.text)}>${monthly}</p>
+                      <p className="text-3xs text-muted-foreground">/mo</p>
                     </div>
                   </button>
                 );
@@ -250,63 +250,63 @@ export default function OnboardingSubscriptionPage() {
             <div className="mt-5 space-y-3">
               <div className="rounded-lg border border-border bg-background p-3.5">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
                   <button onClick={() => setStep("pick")}
-                    className="text-[11px] text-muted-foreground underline hover:text-primary">
+                    className="text-xs text-muted-foreground underline hover:text-primary">
                     Change plan
                   </button>
                 </div>
-                <div className="flex items-center justify-between text-[12px]">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{plan.name} · {cycle === "annual" ? "Annual" : "Monthly"}</span>
                   <span className="font-mono font-semibold text-foreground">
                     ${monthlyDisplay}/mo
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[12px]">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">For {targetSite.name}</span>
                   <span className="font-mono text-muted-foreground">{targetSite.address.slice(0, 24)}…</span>
                 </div>
                 <div className="my-2 border-t border-border" />
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-bold text-foreground">Billed {cycle === "annual" ? "today (annual)" : "monthly"}</span>
-                  <span className="font-mono text-[18px] font-bold text-success">${billed.toLocaleString()}</span>
+                  <span className="text-sm font-bold text-foreground">Billed {cycle === "annual" ? "today (annual)" : "monthly"}</span>
+                  <span className="font-mono text-xl font-bold text-success">${billed.toLocaleString()}</span>
                 </div>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Name on card</label>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on card</label>
                 <Input value={cardName} onChange={(e) => setCardName(e.target.value)}
-                  placeholder="Full name as shown on card" className="h-10 text-[13px]" />
+                  placeholder="Full name as shown on card" className="h-10 text-base" />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Card number</label>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card number</label>
                 <div className="relative">
                   <CreditCard className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))}
-                    placeholder="1234 5678 9012 3456" className="h-10 pl-9 font-mono text-[13px]" inputMode="numeric" />
+                    placeholder="1234 5678 9012 3456" className="h-10 pl-9 font-mono text-base" inputMode="numeric" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
                   <Input value={expiry} onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                    placeholder="MM/YY" className="h-10 font-mono text-[13px]" inputMode="numeric" />
+                    placeholder="MM/YY" className="h-10 font-mono text-base" inputMode="numeric" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
                   <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    placeholder="123" className="h-10 font-mono text-[13px]" inputMode="numeric" />
+                    placeholder="123" className="h-10 font-mono text-base" inputMode="numeric" />
                 </div>
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+                <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
                   <AlertCircle className="size-3.5 flex-shrink-0" />
                   {error}
                 </div>
               )}
 
-              <div className="flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-[11px] text-info">
+              <div className="flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-xs text-info">
                 <Lock className="size-3 flex-shrink-0" />
                 Payment is encrypted end-to-end. You can cancel anytime within 30 days for a full refund.
               </div>
@@ -324,7 +324,7 @@ export default function OnboardingSubscriptionPage() {
           </>
         )}
 
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Step 2 of 2 · The dashboard unlocks once payment is confirmed.
         </p>
       </div>

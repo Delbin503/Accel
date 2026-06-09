@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /**
  * Shared KPI card — single canonical pattern used across every module.
@@ -8,8 +9,8 @@ import { cn } from "@/lib/utils";
  *   ┌────────────────────────────────┐
  *   │ ▔ accent bar (top, h-0.5)      │ ← top accent (use `accent` color token)
  *   │ [icon] LABEL          [Active] │ ← label row + optional "Active Filter" chip
- *   │ 123 / 456                      │ ← big value (text-[26px] bold)
- *   │ Sub copy below                 │ ← sub text (text-[11px] muted)
+ *   │ 123 / 456                      │ ← big value (text-3xl bold)
+ *   │ Sub copy below                 │ ← sub text (text-xs muted)
  *   └────────────────────────────────┘
  *
  * Renders as a `<button>` when `onClick` is set, otherwise a `<div>`.
@@ -111,7 +112,7 @@ export function KpiCard({
 
       {/* Active filter chip */}
       {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
+        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-primary">
           Active Filter
         </span>
       )}
@@ -119,18 +120,18 @@ export function KpiCard({
       {/* Label (no icon — uniform across modules) */}
       <div className={cn(
         "mb-1.5 font-semibold uppercase tracking-wider text-muted-foreground",
-        compact ? "text-[10px]" : "text-[11px]"
+        compact ? "text-2xs" : "text-xs"
       )}>
-        <span className="truncate">{label}</span>
+        <TruncatedText>{label}</TruncatedText>
       </div>
 
       {/* Value — smaller, with proper line-height so descenders (g, y, p) aren't clipped */}
-      <div className={cn("truncate font-bold leading-tight", ACCENT_TEXT[accent], compact ? "text-[18px]" : "text-[22px]")}>
-        {value}
+      <div className={cn("font-bold leading-tight", ACCENT_TEXT[accent], compact ? "text-xl" : "text-2xl")}>
+        <TruncatedText>{value}</TruncatedText>
       </div>
 
       {/* Sub — guaranteed to stay visible inside the fixed height */}
-      {sub && <div className="mt-auto truncate pt-2 text-[11px] leading-tight text-muted-foreground">{sub}</div>}
+      {sub && <TruncatedText className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</TruncatedText>}
     </Tag>
   );
 }

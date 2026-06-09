@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FolderOpen, Check, MapPin, User, ArrowUpRight } from "lucide-react";
+import { FolderOpen, Check, MapPin, User, ArrowUpRight, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
@@ -59,7 +60,7 @@ function CaseOption({
       <div className="min-w-0 flex-1">
         {/* Header */}
         <div className="mb-1 flex flex-wrap items-center gap-1.5">
-          <span className="font-mono text-[11px] font-semibold text-muted-foreground">
+          <span className="font-mono text-xs font-semibold text-muted-foreground">
             {c.id}
           </span>
           <SeverityBadge severity={c.severity} />
@@ -67,10 +68,10 @@ function CaseOption({
         </div>
 
         {/* Title */}
-        <div className="text-[13px] font-semibold leading-snug text-foreground">{c.title}</div>
+        <div className="text-base font-semibold leading-snug text-foreground">{c.title}</div>
 
         {/* Meta */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {c.siteDisplay}
@@ -100,9 +101,13 @@ export function LinkCaseModal({
 }: LinkCaseModalProps) {
   const cases = useIncidentCasesStore((s) => s.cases);
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
+  const [query, setQuery] = React.useState("");
 
   React.useEffect(() => {
-    if (open) setSelectedCaseId(null);
+    if (open) {
+      setSelectedCaseId(null);
+      setQuery("");
+    }
   }, [open]);
 
   /* Only show Open and In-Review cases from the same site */
@@ -112,12 +117,24 @@ export function LinkCaseModal({
       (c.status === "open" || c.status === "in-review")
   );
 
+  /* Apply the in-modal search across id / title / owner */
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return eligible;
+    return eligible.filter(
+      (c) =>
+        c.id.toLowerCase().includes(q) ||
+        c.title.toLowerCase().includes(q) ||
+        c.assignedTo.name.toLowerCase().includes(q)
+    );
+  }, [eligible, query]);
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Link to Incident Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {eventIds.length > 1
               ? `Linking ${eventIds.length} selected events`
               : "Linking 1 event"}{" "}
@@ -126,18 +143,39 @@ export function LinkCaseModal({
           </p>
         </DialogHeader>
 
-        <div className="p-5">
+        {/* Search — only when there are cases to search */}
+        {eligible.length > 0 && (
+          <div className="flex-shrink-0 px-5 pt-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by case ID, title, or owner…"
+                className="h-9 pl-9 text-base"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Case list — scrolls internally once it exceeds ~4 cards */}
+        <div className="px-5 py-4">
           {eligible.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
               <FolderOpen className="size-10 opacity-20" />
-              <p className="text-[13px]">No open cases for {eventSiteDisplay}.</p>
-              <p className="text-[12px] text-muted-foreground/70">
+              <p className="text-base">No open cases for {eventSiteDisplay}.</p>
+              <p className="text-sm text-muted-foreground/70">
                 Use &ldquo;Escalate Case&rdquo; to create a new case instead.
               </p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-10 text-muted-foreground">
+              <Search className="size-7 opacity-20" />
+              <p className="text-base">No cases match &ldquo;{query}&rdquo;.</p>
+            </div>
           ) : (
-            <div className="space-y-2">
-              {eligible.map((c) => (
+            <div className="max-h-[400px] space-y-2 overflow-y-auto">
+              {filtered.map((c) => (
                 <CaseOption
                   key={c.id}
                   c={c}
@@ -149,14 +187,14 @@ export function LinkCaseModal({
           )}
 
           {eligible.length > 0 && (
-            <p className="mt-3 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
               <ArrowUpRight className="size-3" />
               Cases from other sites are hidden — incidents must share the same site.
             </p>
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>

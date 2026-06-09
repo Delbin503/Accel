@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
@@ -81,7 +82,7 @@ function ModelHealthPill({ health }: { health: ModelHealth }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg, s.border, s.text
       )}
     >
@@ -111,7 +112,7 @@ function StatusPill({ status }: { status: DeploymentStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg, s.text
       )}
     >
@@ -125,7 +126,7 @@ function OnlineDot({ online }: { online: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-3xs font-bold uppercase tracking-wider",
         online ? "border-success/30 bg-success/10 text-success" : "border-border bg-muted text-muted-foreground"
       )}
     >
@@ -161,27 +162,27 @@ function WizardColumn({
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
+          <h3 className="text-md font-bold text-foreground">{title}</h3>
           <span
             className={cn(
-              "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[11px] font-bold tabular-nums",
+              "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-bold tabular-nums",
               isSelected ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
             )}
           >
             {count}
             {countTotal !== undefined && (
-              <span className="ml-0.5 text-[9px] font-semibold opacity-70">/{countTotal}</span>
+              <span className="ml-0.5 text-3xs font-semibold opacity-70">/{countTotal}</span>
             )}
           </span>
         </div>
-        <p className="text-[12px] text-muted-foreground">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="h-9 pl-9 text-[13px]"
+            className="h-9 pl-9 text-base"
           />
         </div>
       </div>
@@ -220,17 +221,15 @@ function ModelCard({
           <Icon className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className={cn("truncate text-[13px] font-bold", selected ? "text-primary" : "text-foreground")}>
-            {model.name}
-          </p>
-          <p className="line-clamp-2 text-[11px] text-muted-foreground">{model.description}</p>
+          <TruncatedText text={model.name} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
+          <TruncatedText text={model.description} className="line-clamp-2 text-xs text-muted-foreground" />
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
           {model.sequenceIds.length} Steps
         </span>
-        <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+        <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
           {model.attachedRuleIds.length} Rules
         </span>
       </div>
@@ -257,10 +256,8 @@ function SiteCard({
     >
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className={cn("truncate text-[13px] font-bold", selected ? "text-primary" : "text-foreground")}>
-            {site.siteName}
-          </p>
-          <p className="font-mono text-[10px] text-muted-foreground">{site.siteId}</p>
+          <TruncatedText text={site.siteName} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
+          <p className="font-mono text-2xs text-muted-foreground">{site.siteId}</p>
         </div>
         <OnlineDot online={site.status === "online"} />
       </div>
@@ -293,9 +290,7 @@ function AreaCard({
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <CheckboxBox checked={selected} />
-          <p className={cn("truncate text-[13px] font-bold", selected ? "text-primary" : "text-foreground")}>
-            {area.areaName}
-          </p>
+          <TruncatedText text={area.areaName} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
         </div>
         <OnlineDot online={area.status === "online"} />
       </div>
@@ -329,16 +324,14 @@ function CameraCard({
         <div className="flex min-w-0 items-center gap-2.5">
           <CheckboxBox checked={selected} />
           <div className="min-w-0">
-            <p className={cn("truncate text-[12.5px] font-semibold", selected ? "text-primary" : "text-foreground")}>
-              {camera.name}
-            </p>
-            <p className="font-mono text-[10px] text-muted-foreground">{camera.id} · {camera.areaName}</p>
+            <TruncatedText text={camera.name} className={cn("text-sm font-semibold", selected ? "text-primary" : "text-foreground")} />
+            <p className="font-mono text-2xs text-muted-foreground">{camera.id} · {camera.areaName}</p>
           </div>
         </div>
         <OnlineDot online={online} />
       </div>
       {!camera.nvrId && (
-        <div className="mt-2 flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/[0.06] px-2 py-1 text-[10px] text-warning">
+        <div className="mt-2 flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/[0.06] px-2 py-1 text-2xs text-warning">
           <AlertTriangle className="size-3" />
           No NVR — events will have no footage
         </div>
@@ -357,8 +350,8 @@ function CountMini({ label, value, tone }: { label: string; value: number; tone:
   };
   return (
     <div className="flex flex-col">
-      <span className={cn("text-[15px] font-bold leading-none", tones[tone])}>{value}</span>
-      <span className="mt-0.5 text-[10px] text-muted-foreground">{label}</span>
+      <span className={cn("text-md font-bold leading-none", tones[tone])}>{value}</span>
+      <span className="mt-0.5 text-2xs text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -431,19 +424,17 @@ function SummaryField({
   return (
     <div className="min-w-0">
       <div className="mb-0.5 flex items-center gap-1.5">
-        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">{label}</span>
+        <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
         {count !== undefined && (
           <span className={cn(
-            "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold tabular-nums",
+            "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-bold tabular-nums",
             count > 0 ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
           )}>
             {count}
           </span>
         )}
       </div>
-      <p className={cn("truncate text-[13px] font-semibold", value ? "text-foreground" : "text-muted-foreground/60")}>
-        {value ?? placeholder}
-      </p>
+      <TruncatedText text={value ?? placeholder} className={cn("text-base font-semibold", value ? "text-foreground" : "text-muted-foreground/60")} />
     </div>
   );
 }
@@ -684,7 +675,7 @@ function DeployWizard({
               <Rocket className="size-4 text-primary" />
               Confirm Deployment
             </DialogTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               Creating {selectedCameras.length} deployment record{selectedCameras.length === 1 ? "" : "s"}.
             </p>
           </DialogHeader>
@@ -695,7 +686,7 @@ function DeployWizard({
               <KvRow label="Areas" value={`${selectedAreas.length} (${selectedAreas.map((a) => a.areaName).join(", ")})`} />
               <KvRow label="Cameras" value={`${selectedCameras.length} selected`} />
               {selectedCameras.some((c) => c.status !== "online") && (
-                <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-[11px] text-muted-foreground">
+                <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-muted-foreground">
                   <AlertTriangle className="size-3.5 flex-shrink-0 text-warning" />
                   Some cameras are offline. Those deployments will queue as "Pending" and auto-resume on reconnect.
                 </div>
@@ -720,8 +711,8 @@ function DeployWizard({
 function KvRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-border/40 pb-2 last:border-0 last:pb-0">
-      <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">{label}</span>
-      <span className="text-[12.5px] font-semibold text-foreground">{value}</span>
+      <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
+      <span className="text-sm font-semibold text-foreground">{value}</span>
     </div>
   );
 }
@@ -730,7 +721,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 text-center text-muted-foreground">
       {icon}
-      <p className="text-[12px]">{text}</p>
+      <p className="text-sm">{text}</p>
     </div>
   );
 }
@@ -854,9 +845,9 @@ function HistoryView({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search models by name or ID…"
-          className="w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+          className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
-        <p className="flex-shrink-0 text-[11px] text-muted-foreground">
+        <p className="flex-shrink-0 text-xs text-muted-foreground">
           <strong className="text-foreground">{filteredModels.length}</strong> of {models.length} models
         </p>
       </div>
@@ -885,30 +876,28 @@ function HistoryView({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-bold text-foreground group-hover:text-primary">
-                      {m.modelName}
-                    </p>
-                    <p className="font-mono text-[10px] text-muted-foreground">{m.modelId}</p>
+                    <TruncatedText text={m.modelName} className="text-md font-bold text-foreground group-hover:text-primary" />
+                    <p className="font-mono text-2xs text-muted-foreground">{m.modelId}</p>
                   </div>
                   <ModelHealthPill health={m.health} />
                 </div>
 
                 <div className="flex items-baseline gap-1.5">
-                  <span className={cn("font-mono text-[26px] font-bold leading-none", s.text)}>
+                  <span className={cn("font-mono text-3xl font-bold leading-none", s.text)}>
                     {m.totalCameras}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     camera{m.totalCameras === 1 ? "" : "s"} deployed
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                <div className="grid grid-cols-3 gap-1.5 text-2xs">
                   <Stat label="Active"  value={m.active}  tone="success" />
                   <Stat label="Paused"  value={m.paused}  tone="warning" />
                   <Stat label="Failed"  value={m.failed}  tone="sev-critical" />
                 </div>
 
-                <div className="flex items-center justify-between border-t border-border/60 pt-2 text-[10px] text-muted-foreground">
+                <div className="flex items-center justify-between border-t border-border/60 pt-2 text-2xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <Eye className="size-3" />
                     {m.totalEvents.toLocaleString()} events
@@ -942,8 +931,8 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: "suc
                               "text-sev-critical";
   return (
     <div className="rounded-md border border-border/60 bg-background px-2 py-1.5">
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
-      <p className={cn("mt-0.5 font-mono text-[13px] font-bold leading-none", txt)}>{value}</p>
+      <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
+      <p className={cn("mt-0.5 font-mono text-base font-bold leading-none", txt)}>{value}</p>
     </div>
   );
 }
@@ -1025,8 +1014,8 @@ function ModelDeploymentsDrawer({
               <div className="mb-1.5">
                 <ModelHealthPill health={model.health} />
               </div>
-              <h2 className="text-[17px] font-bold leading-snug text-foreground">{model.modelName}</h2>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <h2 className="text-lg font-bold leading-snug text-foreground">{model.modelName}</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 <span className="font-mono">{model.modelId}</span>
                 {" · "}
                 <strong className="text-foreground">{model.totalCameras}</strong> camera{model.totalCameras === 1 ? "" : "s"}
@@ -1050,12 +1039,12 @@ function ModelDeploymentsDrawer({
           {(siteFilter.length > 0 || areaFilter.length > 0) && (
             <button
               onClick={() => { setSiteFilter([]); setAreaFilter([]); }}
-              className="text-[11px] text-muted-foreground underline hover:text-foreground"
+              className="text-xs text-muted-foreground underline hover:text-foreground"
             >
               Clear
             </button>
           )}
-          <p className="ml-auto text-[11px] text-muted-foreground">
+          <p className="ml-auto text-xs text-muted-foreground">
             Showing <strong className="text-foreground">{rows.length}</strong> of {model.totalCameras}
           </p>
         </div>
@@ -1065,7 +1054,7 @@ function ModelDeploymentsDrawer({
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Video className="size-8 opacity-30" />
-              <p className="text-[13px]">No cameras match the current filters.</p>
+              <p className="text-base">No cameras match the current filters.</p>
             </div>
           ) : (
             <table className="w-full">
@@ -1080,7 +1069,7 @@ function ModelDeploymentsDrawer({
                     />
                   </th>
                   {["CAMERA", "LOCATION", "STATUS", "EVENTS", "DEPLOYED"].map((h) => (
-                    <th key={h} className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">
+                    <th key={h} className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
                     </th>
                   ))}
@@ -1094,7 +1083,7 @@ function ModelDeploymentsDrawer({
                       key={d.id}
                       onClick={() => toggleRow(d.id)}
                       className={cn(
-                        "cursor-pointer text-[13px] transition-colors",
+                        "cursor-pointer text-base transition-colors",
                         isSel ? "bg-primary/[0.05]" : "hover:bg-muted/20"
                       )}
                     >
@@ -1114,18 +1103,18 @@ function ModelDeploymentsDrawer({
                           >
                             {d.cameraName}
                           </button>
-                          <span className="font-mono text-[10px] text-muted-foreground">{d.cameraId}</span>
+                          <span className="font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-foreground">{d.areaName}</span>
-                          <span className="text-[10px]">{d.siteName}</span>
+                          <span className="text-2xs">{d.siteName}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3"><StatusPill status={d.status} /></td>
                       <td className="px-4 py-3 font-mono text-foreground">{d.eventCount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-[11px] text-muted-foreground">
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="size-3" />
                           {d.deployedAtDisplay}
@@ -1142,7 +1131,7 @@ function ModelDeploymentsDrawer({
         {/* Bottom action bar — only when selection is non-empty */}
         {selectedCount > 0 && (
           <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-lg">
-            <p className="text-[12px] text-foreground">
+            <p className="text-sm text-foreground">
               <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
               <button onClick={() => setSelected(new Set())} className="ml-2 text-muted-foreground underline hover:text-foreground">
                 Clear
@@ -1196,7 +1185,7 @@ function DrawerFilter({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "inline-flex h-8 items-center justify-between gap-2 rounded-md border bg-background pl-2.5 pr-2 text-[12px] font-semibold transition-colors",
+            "inline-flex h-8 items-center justify-between gap-2 rounded-md border bg-background pl-2.5 pr-2 text-sm font-semibold transition-colors",
             open ? "border-primary" : "border-input",
             selected.length === 0 ? "text-muted-foreground" : "text-foreground"
           )}
@@ -1212,7 +1201,7 @@ function DrawerFilter({
       <PopoverContent align="start" className="max-h-[260px] w-60 overflow-y-auto p-1.5">
         <button
           onClick={() => onChange([])}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border",
             selected.length === 0 ? "border-primary bg-primary" : "border-muted-foreground/40")}>
@@ -1227,13 +1216,13 @@ function DrawerFilter({
             <button
               key={o.value}
               onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
-              <span className="truncate">{o.label}</span>
+              <TruncatedText text={o.label} className="truncate" />
             </button>
           );
         })}
@@ -1271,13 +1260,13 @@ export default function ModelDeploymentPage() {
         <PageHeader.Actions>
           <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
             <button onClick={() => setTab("deploy")}
-              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-[12px] font-semibold transition-colors",
+              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
                 tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <Plus className="size-3.5" />
               Deploy
             </button>
             <button onClick={() => setTab("history")}
-              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-[12px] font-semibold transition-colors",
+              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
                 tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <FileText className="size-3.5" />
               Models

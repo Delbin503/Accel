@@ -89,7 +89,7 @@ function RoleBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -148,14 +148,14 @@ function WizardShell({
           <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
             <Play className="size-3 fill-white text-white" />
           </div>
-          <p className="text-[14px] font-bold tracking-tight">Accel</p>
+          <p className="text-md font-bold tracking-tight">Accel</p>
         </Link>
         <div className="flex-1 px-4">
           <AuthStepBar current={currentStep} />
         </div>
         <button
           onClick={onCancel}
-          className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-[12px] font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+          className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
         >
           Cancel
         </button>
@@ -492,7 +492,7 @@ export default function SignUpPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. Delbin Arkar"
-              className="h-10 pl-9 text-[13px]"
+              className="h-10 pl-9 text-base"
               autoComplete="name"
             />
           </Field>
@@ -502,7 +502,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="h-10 pl-9 text-[13px]"
+              className="h-10 pl-9 text-base"
               autoComplete="email"
             />
           </Field>
@@ -513,7 +513,7 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 px-9 text-[13px]"
+                className="h-10 px-9 text-base"
                 autoComplete="new-password"
               />
               <EyeToggle on={showPw} onClick={() => setShowPw((v) => !v)} />
@@ -526,7 +526,7 @@ export default function SignUpPage() {
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
               placeholder="Re-type your password"
-              className="h-10 px-9 text-[13px]"
+              className="h-10 px-9 text-base"
               autoComplete="new-password"
             />
             <EyeToggle
@@ -534,7 +534,7 @@ export default function SignUpPage() {
               onClick={() => setShowConfirmPw((v) => !v)}
             />
           </Field>
-          <label className="flex items-start gap-2 text-[12px] text-muted-foreground">
+          <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <input
               type="checkbox"
               checked={agreedTos}
@@ -564,7 +564,7 @@ export default function SignUpPage() {
               password !== confirmPw ||
               !agreedTos
             }
-            className="h-10 w-full gap-2 text-[13px]"
+            className="h-10 w-full gap-2 text-base"
           >
             {otpSending ? (
               <>
@@ -577,7 +577,7 @@ export default function SignUpPage() {
             )}
           </Button>
         </form>
-        <p className="mt-6 text-center text-[12px] text-muted-foreground">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
             to="/signin"
@@ -621,14 +621,14 @@ export default function SignUpPage() {
                 inputMode="numeric"
                 maxLength={1}
                 className={cn(
-                  "h-12 w-11 rounded-md border border-input bg-background text-center font-mono text-[20px] font-bold text-foreground outline-none transition-colors",
+                  "h-12 w-11 rounded-md border border-input bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors",
                   "focus:border-primary focus:ring-2 focus:ring-primary/30"
                 )}
               />
             ))}
           </div>
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-[13px]">
+          <Button type="submit" className="h-10 w-full gap-2 text-base">
             Verify & Continue <ArrowRight className="size-3.5" />
           </Button>
           <button
@@ -638,7 +638,7 @@ export default function SignUpPage() {
                 description: `A new code was sent to ${email}.`,
               })
             }
-            className="block w-full text-center text-[12px] text-muted-foreground hover:text-primary"
+            className="block w-full text-center text-sm text-muted-foreground hover:text-primary"
           >
             Didn't get it?{" "}
             <span className="font-semibold underline">Resend code</span>
@@ -660,7 +660,7 @@ export default function SignUpPage() {
         <div className="mt-5 flex items-center gap-2">
           <span
             className={cn(
-              "text-[12px] font-semibold",
+              "text-sm font-semibold",
               cycle === "monthly" ? "text-foreground" : "text-muted-foreground"
             )}
           >
@@ -684,14 +684,14 @@ export default function SignUpPage() {
           </button>
           <span
             className={cn(
-              "text-[12px] font-semibold",
+              "text-sm font-semibold",
               cycle === "annual" ? "text-foreground" : "text-muted-foreground"
             )}
           >
             Annually
           </span>
           {cycle === "annual" && (
-            <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">
+            <span className="rounded-full bg-success/15 px-2 py-0.5 text-2xs font-bold text-success">
               Save up to 17%
             </span>
           )}
@@ -719,7 +719,7 @@ export default function SignUpPage() {
                   )}
                 >
                   {p.highlight && (
-                    <span className="absolute right-3 top-3 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-secondary-foreground">
+                    <span className="absolute right-3 top-3 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary-foreground">
                       Most Popular
                     </span>
                   )}
@@ -728,23 +728,23 @@ export default function SignUpPage() {
                       <Icon className="size-3.5 text-secondary" />
                     </div>
                     <div>
-                      <p className="text-[13px] font-bold text-foreground">
+                      <p className="text-base font-bold text-foreground">
                         {p.name}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-2xs text-muted-foreground">
                         {p.tagline}
                       </p>
                     </div>
                   </div>
                   <p className="font-mono">
-                    <span className="text-[22px] font-bold text-foreground">
+                    <span className="text-2xl font-bold text-foreground">
                       ${monthly}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       / month
                     </span>
                   </p>
-                  <ul className="space-y-1 text-[11px] text-muted-foreground">
+                  <ul className="space-y-1 text-xs text-muted-foreground">
                     {p.features.map((f) => (
                       <li key={f} className="flex items-start gap-1.5">
                         <Check
@@ -761,7 +761,7 @@ export default function SignUpPage() {
           )}
         </div>
         <div className="mt-6 flex justify-end">
-          <Button onClick={selectPlan} className="h-10 gap-2 px-8 text-[13px]">
+          <Button onClick={selectPlan} className="h-10 gap-2 px-8 text-base">
             Select this Plan <ArrowRight className="size-3.5" />
           </Button>
         </div>
@@ -787,7 +787,7 @@ export default function SignUpPage() {
           className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]"
         >
           <div className="rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Card Information
             </p>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -796,7 +796,7 @@ export default function SignUpPage() {
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                   placeholder="Enter card holder name"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                 />
               </CompactField>
               <CompactField label="Card Number *">
@@ -804,7 +804,7 @@ export default function SignUpPage() {
                   value={cardNumber}
                   onChange={(e) => setCardNumber(fmtCard(e.target.value))}
                   placeholder="4111 1111 1111 1111"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                   inputMode="numeric"
                 />
               </CompactField>
@@ -813,7 +813,7 @@ export default function SignUpPage() {
                   value={expiry}
                   onChange={(e) => setExpiry(fmtExpiry(e.target.value))}
                   placeholder="MM/YY"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                   inputMode="numeric"
                 />
               </CompactField>
@@ -824,12 +824,12 @@ export default function SignUpPage() {
                     setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))
                   }
                   placeholder="123"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                   inputMode="numeric"
                 />
               </CompactField>
             </div>
-            <label className="mt-2 flex items-center gap-2 text-[12px] text-muted-foreground">
+            <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={saveCard}
@@ -839,7 +839,7 @@ export default function SignUpPage() {
               Save for future purchases
             </label>
             <hr className="my-3 border-border/60" />
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Billing Information
             </p>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -848,7 +848,7 @@ export default function SignUpPage() {
                   value={billingAddress}
                   onChange={(e) => setBillingAddress(e.target.value)}
                   placeholder="Enter address"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                 />
               </CompactField>
               <CompactField label="Apt, Unit, Suite, etc">
@@ -856,14 +856,14 @@ export default function SignUpPage() {
                   value={billingApt}
                   onChange={(e) => setBillingApt(e.target.value)}
                   placeholder="Enter"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                 />
               </CompactField>
               <CompactField label="Country *">
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base"
                 >
                   {[
                     "Singapore",
@@ -882,7 +882,7 @@ export default function SignUpPage() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Select city"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                 />
               </CompactField>
               <CompactField label="Postal Code *">
@@ -890,18 +890,18 @@ export default function SignUpPage() {
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
                   placeholder="Enter postal code"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-base"
                 />
               </CompactField>
             </div>
           </div>
 
           <div className="self-start rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <p className="mb-3 text-[13px] font-bold text-foreground">
+            <p className="mb-3 text-base font-bold text-foreground">
               Your {plan.name} Plan
             </p>
             <div className="mb-3 space-y-1.5">
-              <label className="flex items-center gap-2 text-[12px]">
+              <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name="cycle"
@@ -910,11 +910,11 @@ export default function SignUpPage() {
                   className="accent-primary"
                 />
                 Annual
-                <span className="ml-auto rounded-full bg-success/15 px-1.5 py-0.5 text-[9px] font-bold text-success">
+                <span className="ml-auto rounded-full bg-success/15 px-1.5 py-0.5 text-3xs font-bold text-success">
                   Save 17%
                 </span>
               </label>
-              <label className="flex items-center gap-2 text-[12px]">
+              <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name="cycle"
@@ -925,7 +925,7 @@ export default function SignUpPage() {
                 Monthly
               </label>
             </div>
-            <div className="space-y-1.5 border-t border-border/60 pt-2.5 text-[12px]">
+            <div className="space-y-1.5 border-t border-border/60 pt-2.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
               <Line label={`Plan (${plan.name})`} value={`$${monthlyPerSite}/mo`} />
               {additionalSeats > 0 && (
@@ -935,7 +935,7 @@ export default function SignUpPage() {
                 />
               )}
             </div>
-            <div className="mt-2.5 flex justify-between border-t border-border/60 pt-2.5 text-[13px] font-semibold">
+            <div className="mt-2.5 flex justify-between border-t border-border/60 pt-2.5 text-base font-semibold">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-mono text-foreground">
                 $
@@ -944,7 +944,7 @@ export default function SignUpPage() {
                 ).toLocaleString()}
               </span>
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 text-2xs text-muted-foreground">
               Total (incl. taxes) in next step.
             </p>
           </div>
@@ -956,7 +956,7 @@ export default function SignUpPage() {
           )}
 
           <div className="flex items-center justify-end gap-2 lg:col-span-2">
-            <Button type="submit" className="h-10 gap-1.5 text-[13px]">
+            <Button type="submit" className="h-10 gap-1.5 text-base">
               Next: Review & Pay <ArrowRight className="size-3.5" />
             </Button>
           </div>
@@ -982,15 +982,15 @@ export default function SignUpPage() {
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
           <div className="rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-[13px] font-bold text-foreground">Details</p>
+              <p className="text-base font-bold text-foreground">Details</p>
               <button
                 onClick={() => setPlanSubStep("payment")}
-                className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
               >
                 <Pencil className="size-3" /> Edit Details
               </button>
             </div>
-            <dl className="grid grid-cols-2 gap-3 text-[13px]">
+            <dl className="grid grid-cols-2 gap-3 text-base">
               <ReviewRow
                 label="Organization"
                 value={fullName ? `${fullName}'s Workspace` : "My Workspace"}
@@ -1017,10 +1017,10 @@ export default function SignUpPage() {
           </div>
 
           <div className="self-start rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <p className="mb-3 text-[13px] font-bold text-foreground">
+            <p className="mb-3 text-base font-bold text-foreground">
               Overview
             </p>
-            <div className="space-y-1.5 text-[12px]">
+            <div className="space-y-1.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
               <Line label={`${plan.name} plan`} value={`$${monthlyPerSite}`} />
               {additionalSeats > 0 && (
@@ -1036,7 +1036,7 @@ export default function SignUpPage() {
                 </span>
               </div>
               <Line label="Tax (0%)" value="$0.00" />
-              <div className="flex justify-between border-t border-border/60 pt-1.5 text-[13px] font-bold">
+              <div className="flex justify-between border-t border-border/60 pt-1.5 text-base font-bold">
                 <span className="text-foreground">Total due today</span>
                 <span className="font-mono text-foreground">
                   ${totalDue.toLocaleString()}
@@ -1044,7 +1044,7 @@ export default function SignUpPage() {
               </div>
             </div>
             <div className="mt-3 space-y-1.5">
-              <label className="flex items-start gap-2 text-[11px] text-muted-foreground">
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={autoRenew}
@@ -1056,7 +1056,7 @@ export default function SignUpPage() {
                   based on your selected billing cycle.
                 </span>
               </label>
-              <label className="flex items-start gap-2 text-[11px] text-muted-foreground">
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={agreedCheckoutTos}
@@ -1079,7 +1079,7 @@ export default function SignUpPage() {
             )}
             <Button
               onClick={confirmCheckout}
-              className="mt-4 h-10 w-full gap-1.5 text-[13px]"
+              className="mt-4 h-10 w-full gap-1.5 text-base"
             >
               <CreditCard className="size-3.5" />
               Confirm Checkout
@@ -1105,7 +1105,7 @@ export default function SignUpPage() {
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               placeholder="e.g. Astra HQ"
-              className="h-10 pl-9 text-[13px]"
+              className="h-10 pl-9 text-base"
             />
           </Field>
           <Field label="Site address" icon={MapPin}>
@@ -1113,18 +1113,18 @@ export default function SignUpPage() {
               value={siteAddress}
               onChange={(e) => setSiteAddress(e.target.value)}
               placeholder="8 Marina Boulevard, Singapore 018984"
-              className="h-10 pl-9 text-[13px]"
+              className="h-10 pl-9 text-base"
             />
           </Field>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Timezone
               </label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px]"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>
@@ -1134,7 +1134,7 @@ export default function SignUpPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <Clock className="size-3" /> Operating Hours
               </label>
               <div className="flex items-center gap-1.5">
@@ -1142,14 +1142,14 @@ export default function SignUpPage() {
                   type="time"
                   value={opFrom}
                   onChange={(e) => setOpFrom(e.target.value)}
-                  className="h-10 flex-1 text-[13px]"
+                  className="h-10 flex-1 text-base"
                 />
-                <span className="text-[11px] text-muted-foreground">to</span>
+                <span className="text-xs text-muted-foreground">to</span>
                 <Input
                   type="time"
                   value={opTo}
                   onChange={(e) => setOpTo(e.target.value)}
-                  className="h-10 flex-1 text-[13px]"
+                  className="h-10 flex-1 text-base"
                 />
               </div>
             </div>
@@ -1159,11 +1159,11 @@ export default function SignUpPage() {
               value={primaryArea}
               onChange={(e) => setPrimaryArea(e.target.value)}
               placeholder="e.g. Lobby, Armoury, Loading Bay…"
-              className="h-10 pl-9 text-[13px]"
+              className="h-10 pl-9 text-base"
             />
           </Field>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Description (optional)
             </label>
             <textarea
@@ -1171,11 +1171,11 @@ export default function SignUpPage() {
               onChange={(e) => setSiteDescription(e.target.value)}
               rows={2}
               placeholder="A short description of this site…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px]"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base"
             />
           </div>
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-1.5 text-[13px]">
+          <Button type="submit" className="h-10 w-full gap-1.5 text-base">
             Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
@@ -1196,7 +1196,7 @@ export default function SignUpPage() {
         />
 
         <div className="mt-6 flex items-center justify-between">
-          <p className="text-[13px] font-bold text-foreground">Members</p>
+          <p className="text-base font-bold text-foreground">Members</p>
           <div className="flex items-center gap-2">
             <SeatChip role="owner" count={1} />
             <SeatChip role="admin" count={adminCount} />
@@ -1212,16 +1212,16 @@ export default function SignUpPage() {
           <table className="w-full">
             <thead className="bg-muted/20 text-left">
               <tr className="border-b border-border/60">
-                <th className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
                   Name
                 </th>
-                <th className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
                   Seat
                 </th>
-                <th className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
                   Includes
                 </th>
-                <th className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
                   Action
                 </th>
               </tr>
@@ -1230,7 +1230,7 @@ export default function SignUpPage() {
               <tr>
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex size-7 items-center justify-center rounded-full bg-primary/15 font-mono text-[10px] font-bold text-primary">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
                       {fullName
                         .split(" ")
                         .map((p) => p[0]?.toUpperCase())
@@ -1238,13 +1238,13 @@ export default function SignUpPage() {
                         .join("") || "U"}
                     </div>
                     <div>
-                      <p className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
+                      <p className="inline-flex items-center gap-1.5 text-base font-semibold text-foreground">
                         {fullName || "You"}
-                        <span className="rounded bg-muted px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <span className="rounded bg-muted px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-muted-foreground">
                           Owner
                         </span>
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {email}
                       </p>
                     </div>
@@ -1253,7 +1253,7 @@ export default function SignUpPage() {
                 <td className="px-4 py-2.5">
                   <RoleBadge role="owner" />
                 </td>
-                <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
+                <td className="px-4 py-2.5 text-sm text-muted-foreground">
                   {USER_ROLE_DESCRIPTIONS.owner}
                 </td>
                 <td className="px-4 py-2.5" />
@@ -1267,10 +1267,10 @@ export default function SignUpPage() {
                         <Mail className="size-3 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-[13px] font-semibold text-warning">
+                        <p className="text-base font-semibold text-warning">
                           Pending
                         </p>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {inv.email}
                         </p>
                       </div>
@@ -1279,7 +1279,7 @@ export default function SignUpPage() {
                   <td className="px-4 py-2.5">
                     <RoleBadge role={inv.role} />
                   </td>
-                  <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
+                  <td className="px-4 py-2.5 text-sm text-muted-foreground">
                     {USER_ROLE_DESCRIPTIONS[inv.role]}
                   </td>
                   <td className="px-4 py-2.5">
@@ -1298,7 +1298,7 @@ export default function SignUpPage() {
               ))}
             </tbody>
           </table>
-          <div className="border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-[12px] text-muted-foreground">
+          <div className="border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
             Current Total:{" "}
             <strong className="text-foreground">{1 + invites.length}</strong>{" "}
             assigned seat{invites.length === 0 ? "" : "s"}
@@ -1340,11 +1340,11 @@ function Heading({
 }) {
   return (
     <div>
-      <h1 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">
+      <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground">
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
           {subtitle}
         </p>
       )}
@@ -1367,7 +1367,7 @@ function BackLink({
     <button
       type="button"
       onClick={onClick}
-      className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-3.5" />
       {label}
@@ -1386,7 +1386,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       <div className="relative">
@@ -1406,7 +1406,7 @@ function CompactField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] text-muted-foreground">
+      <label className="mb-1 block text-2xs text-muted-foreground">
         {label}
       </label>
       {children}
@@ -1429,7 +1429,7 @@ function EyeToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+    <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
       <AlertCircle className="size-3.5 flex-shrink-0" />
       {message}
     </div>
@@ -1445,10 +1445,10 @@ function ReviewRow({
 }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <dt className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 text-[13px] text-foreground">{value}</dd>
+      <dd className="mt-0.5 text-base text-foreground">{value}</dd>
     </div>
   );
 }
@@ -1482,7 +1482,7 @@ function SeatChip({ role, count }: { role: UserRole; count: number }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-semibold",
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold",
         s.bg,
         s.text
       )}
@@ -1552,7 +1552,7 @@ function InviteUsersModal({
       <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Invitees receive a one-time email link valid for 7 days.
           </p>
         </DialogHeader>
@@ -1578,14 +1578,14 @@ function InviteUsersModal({
                     <RoleBadge role={r} withIcon={false} />
                     <span
                       className={cn(
-                        "font-mono text-[9px] font-bold",
+                        "font-mono text-3xs font-bold",
                         isLow ? "text-sev-critical" : "text-success"
                       )}
                     >
                       {s.available} left
                     </span>
                   </div>
-                  <p className="font-mono text-[10px] text-muted-foreground">
+                  <p className="font-mono text-2xs text-muted-foreground">
                     {s.assigned} / {s.total} used
                   </p>
                 </div>
@@ -1595,20 +1595,20 @@ function InviteUsersModal({
 
           {/* Site Access — locked to the newly-created site */}
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site Access
             </label>
             <div
-              className="flex h-9 w-full cursor-not-allowed items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-[13px]"
+              className="flex h-9 w-full cursor-not-allowed items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-base"
               aria-disabled="true"
             >
               <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
               <TruncatedText text={siteName || "Your new site"} className="min-w-0 flex-1 text-foreground" />
-              <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground/70">
+              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
                 <LockIcon className="size-3" /> Locked to current site
               </span>
             </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Additional sites can be added later from the Sites page.
             </p>
           </div>
@@ -1616,11 +1616,11 @@ function InviteUsersModal({
           {/* Emails */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Email Addresses
               </label>
               {parsed.valid.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   <strong
                     className={cn(
                       overSeat ? "text-sev-critical" : "text-success"
@@ -1658,24 +1658,24 @@ function InviteUsersModal({
               placeholder="alice@acme.com, bob@acme.com…"
               rows={2}
               className={cn(
-                "w-full rounded-md border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none",
+                "w-full rounded-md border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none",
                 parsed.invalid.length > 0
                   ? "border-sev-critical/40 focus:border-sev-critical"
                   : "border-input focus:border-primary"
               )}
             />
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-[11px] text-sev-critical">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
                 <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">
                     {parsed.invalid.length} invalid email
                     {parsed.invalid.length === 1 ? "" : "s"}:
                   </p>
-                  <p className="font-mono text-[10px] opacity-80">
+                  <p className="font-mono text-2xs opacity-80">
                     {parsed.invalid.slice(0, 5).join(", ")}
                     {parsed.invalid.length > 5
                       ? ` +${parsed.invalid.length - 5} more`
@@ -1688,7 +1688,7 @@ function InviteUsersModal({
 
           {/* Role */}
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Role
             </label>
             <div className="space-y-1.5">
@@ -1723,7 +1723,7 @@ function InviteUsersModal({
                         <RoleBadge role={r} />
                         <span
                           className={cn(
-                            "font-mono text-[10px] font-bold",
+                            "font-mono text-2xs font-bold",
                             s.available === 0
                               ? "text-sev-critical"
                               : willExceed
@@ -1736,7 +1736,7 @@ function InviteUsersModal({
                           {s.available}/{s.total} seats
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+                      <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">
                         {USER_ROLE_DESCRIPTIONS[r]}
                       </p>
                     </div>
@@ -1744,13 +1744,13 @@ function InviteUsersModal({
                 );
               })}
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground/70">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
 
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-[11px] text-sev-critical">
+            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
               <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (

@@ -39,6 +39,13 @@ src/
 
 ## Component Conventions
 
+> **Design system & Storybook.** Run `npm run storybook` to browse the full
+> library. Before building anything, check what already exists:
+> - **`components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible).
+> - **`components/shared/`** — app composites: `StatusBadge` (all status/severity/health pills), `SectionCard`, `EmptyState`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `ConfirmDialog`, `DataTable`, `KpiCard`.
+> - **`components/charts/`** — `AreaChart`, `BarChart`, `LineChart`, `DonutChart`.
+> - **`lib/formatters.ts`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.
+
 ### 1. Prefer shadcn components from `components/ui/`
 
 Always reach for a shadcn primitive first. Check `components/ui/` before building anything new.
@@ -158,6 +165,36 @@ Do not install component libraries that duplicate shadcn functionality (Chakra U
 // Bad
 <div style={{ display: "flex", alignItems: "center", gap: "12px" }} />
 ```
+
+### Type scale — never arbitrary `text-[Npx]`
+
+The dense dashboard type scale lives in `src/index.css` (`@theme`). Always use a
+token; arbitrary pixel sizes are blocked by ESLint (`no-restricted-syntax`).
+
+| Token | Size | Use |
+|-------|------|-----|
+| `text-3xs` | 9px | Micro labels |
+| `text-2xs` | 10px | Uppercase eyebrow labels, table meta |
+| `text-xs` | 11px | Table data, captions |
+| `text-sm` | 12px | Compact body, list rows |
+| `text-base` | 13px | **Body default** |
+| `text-md` | 14px | Emphasised body, field labels |
+| `text-lg` | 16px | Section headers |
+| `text-xl` | 18px | Card values |
+| `text-2xl` | 22px | KPI values |
+| `text-3xl` | 24px | Page titles |
+| `text-4xl` | 28px | Hero numbers |
+
+```tsx
+<p className="text-base text-foreground">Body</p>   // Good
+<p className="text-[13px]">Body</p>                  // Bad — ESLint error
+```
+
+### Other token scales
+
+- **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-dropdown/sticky/overlay/drawer/modal/toast/tooltip`). Never `z-[100]`.
+- **Motion** — durations `--duration-fast` / `--duration-normal` / `--duration-slow` (e.g. `duration-[var(--duration-normal)]`) + `ease-standard` / `ease-emphasized`.
+- **Icon sizes** — `size-3` (badges), `size-4` (buttons/inputs/rows), `size-5` (section/empty-state), `size-6+` (hero only).
 
 ### Semantic color tokens — never raw Tailwind palette colors
 
