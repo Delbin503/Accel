@@ -358,11 +358,18 @@ function PossibleMatchCard({
 function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; matches: PossibleIdentityMatch[] }) {
   const [verdicts, setVerdicts] = React.useState<Record<string, MatchVerdict>>({});
   const [showInfo, setShowInfo] = React.useState(false);
+  // The merge confirmation banner auto-dismisses after 10s (the merge itself persists).
+  const [mergeBannerVisible, setMergeBannerVisible] = React.useState(false);
+  const bannerTimer = React.useRef<number | null>(null);
+  React.useEffect(() => () => { if (bannerTimer.current) clearTimeout(bannerTimer.current); }, []);
 
   if (matches.length === 0) return null;
 
   function approve(m: PossibleIdentityMatch) {
     setVerdicts((v) => ({ ...v, [m.candidateId]: "approved" }));
+    setMergeBannerVisible(true);
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    bannerTimer.current = window.setTimeout(() => setMergeBannerVisible(false), 10000);
     toast.success(`Merged into ${m.candidateId}`, {
       description: `${entity.id} → ${m.candidateId} (${m.candidateLabel}). The recognition model and historical profile have been updated.`,
     });
@@ -397,8 +404,8 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
         </button>
       </div>
 
-      {/* Persistent merge confirmation banner */}
-      {approvedMatch && (
+      {/* Merge confirmation banner — auto-dismisses after 10s */}
+      {approvedMatch && mergeBannerVisible && (
         <div className="mb-3 flex items-start gap-2.5 rounded-lg border border-success/40 bg-success/[0.08] px-3.5 py-2.5">
           <div className="mt-px flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-success">
             <GitMerge className="size-3 text-white" strokeWidth={3} />
