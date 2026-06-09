@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS, MODEL_TAGS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
@@ -411,14 +412,13 @@ function ModelCard({
             <IconComp className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
-            <p
+            <TruncatedText
+              text={model.name}
               className={cn(
-                "truncate text-[13px] font-bold",
+                "text-[13px] font-bold",
                 selected ? "text-primary" : "text-foreground"
               )}
-            >
-              {model.name}
-            </p>
+            />
             <p className="font-mono text-[11px] text-muted-foreground">{model.id}</p>
           </div>
         </div>
@@ -432,7 +432,7 @@ function ModelCard({
         </div>
       </div>
 
-      <p className="mb-2 line-clamp-1 text-[12px] text-muted-foreground">{model.description}</p>
+      <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-[12px] text-muted-foreground" />
 
       {model.tags.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1">
@@ -688,7 +688,7 @@ function PoolStepCard({
         <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-semibold text-foreground">{step.actionLabel}</p>
+        <TruncatedText text={step.actionLabel} className="text-[12px] font-semibold text-foreground" />
         <p className="font-mono text-[11px] text-muted-foreground">{step.label}</p>
       </div>
       <FileTypeBadge type={step.fileType} />
@@ -750,7 +750,7 @@ function SequenceItem({
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-semibold text-foreground">{step.actionLabel}</p>
+        <TruncatedText text={step.actionLabel} className="text-[12px] font-semibold text-foreground" />
         <p className="font-mono text-[11px] text-muted-foreground">{step.fileName}</p>
       </div>
       <FileTypeBadge type={step.fileType} />
@@ -794,9 +794,7 @@ function AttachedRuleCard({
           </button>
         )}
       </div>
-      <p className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-        {rule.description}
-      </p>
+      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground" />
       <div className="flex flex-wrap gap-1">
         {rule.tags.slice(0, 3).map((t) => (
           <TagChip key={t} label={t} />
@@ -859,9 +857,7 @@ function RuleLibraryCard({
           </button>
         )}
       </div>
-      <p className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-        {rule.description}
-      </p>
+      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground" />
       <div className="flex flex-wrap gap-1">
         {rule.tags.slice(0, 3).map((t) => (
           <TagChip key={t} label={t} />
@@ -1359,7 +1355,7 @@ function ModelDetailPanel({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate("/rules?new=true")}
+                  onClick={() => navigate(`/rules?new=true&model=${model.id}`)}
                   className="gap-1.5"
                 >
                   <Plus className="size-3" />
@@ -1574,6 +1570,17 @@ export default function ModelManagementPage() {
   const [tagFilter, setTagFilter] = React.useState<string[]>([]);
   const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
   const [showCreate, setShowCreate] = React.useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Re-open the model editor when returning from "+Add Rule" (/models?model=<id>).
+  React.useEffect(() => {
+    const m = searchParams.get("model");
+    if (m) {
+      setSelectedId(m);
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = React.useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -1691,9 +1698,10 @@ export default function ModelManagementPage() {
                 tagFilterOpen ? "border-primary" : "border-border",
                 tagFilter.length > 0 ? "text-foreground" : "text-muted-foreground"
               )}>
-                <span className="truncate">
-                  {tagFilter.length === 0 ? "All tags" : tagFilter.length === 1 ? tagFilter[0] : `${tagFilter.length} tags selected`}
-                </span>
+                <TruncatedText
+                  text={tagFilter.length === 0 ? "All tags" : tagFilter.length === 1 ? tagFilter[0] : `${tagFilter.length} tags selected`}
+                  className="truncate"
+                />
                 <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", tagFilterOpen && "rotate-180")} />
               </button>
             </PopoverTrigger>

@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import {
   MOCK_RULES,
   ALL_TAGS,
@@ -261,7 +262,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="truncate font-medium" />
           <ChevronDown
             className={cn(
               "size-3.5 flex-shrink-0 text-muted-foreground transition-transform",
@@ -1358,14 +1359,18 @@ function RuleBuilder({
 
             <div className="min-h-[320px] rounded-xl border border-border bg-card p-5">
               {s.rows.length === 0 ? (
-                <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-3 text-muted-foreground">
-                  <div className="flex size-11 items-center justify-center rounded-full border border-border">
+                <button
+                  type="button"
+                  onClick={addCondition}
+                  className="group flex h-full min-h-[260px] w-full flex-col items-center justify-center gap-3 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <div className="flex size-11 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary">
                     <Plus className="size-5" />
                   </div>
                   <p className="text-[13px]">
-                    Click on Add Condition to start building your rule
+                    Click to add your first condition
                   </p>
-                </div>
+                </button>
               ) : (
                 <div className="space-y-3">
                   {s.rows.map((row, idx) => (
@@ -1516,8 +1521,9 @@ export default function RulesLibraryPage() {
   }, [rules]);
 
   // If we landed here with ?new=true (from Model Management +Add Rule), clean the URL
-  // and remember to bounce back after save.
+  // and remember which model to bounce back to after save.
   const cameFromModel = React.useRef(searchParams.get("new") === "true");
+  const returnModelId = React.useRef(searchParams.get("model"));
   React.useEffect(() => {
     if (searchParams.get("new") === "true") {
       setSearchParams({}, { replace: true });
@@ -1582,13 +1588,14 @@ export default function RulesLibraryPage() {
       // when we navigate back to it.
       MOCK_RULES.unshift(newRule);
     }
-    // If we arrived here from Model Management's +Add Rule button, bounce back so
-    // the new rule lands directly in the Rule Library panel of the model editor.
+    // If we arrived here from Model Management's +Add Rule button, bounce back to the
+    // model editor we came from so the new rule lands directly in its Rule Library panel.
     if (cameFromModel.current && builderMode === "create") {
       cameFromModel.current = false;
-      // Replace history so the browser back button doesn't bounce the user into the
-      // rules library; land on the bare /models page (no model selected).
-      navigate("/models", { replace: true });
+      const target = returnModelId.current
+        ? `/models?model=${returnModelId.current}`
+        : "/models";
+      navigate(target, { replace: true });
       return;
     }
     setView("list");
@@ -1754,13 +1761,13 @@ export default function RulesLibraryPage() {
               <div key={tpl.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-foreground">{tpl.name}</p>
+                    <TruncatedText text={tpl.name} className="text-[13px] font-bold text-foreground" />
                     <p className="mt-0.5 text-[11px] text-muted-foreground">Saved {tpl.savedAtDisplay}</p>
                   </div>
                   <SeverityBadge severity={tpl.severity} />
                 </div>
                 {tpl.description && (
-                  <p className="line-clamp-2 text-[12px] text-muted-foreground">{tpl.description}</p>
+                  <TruncatedText text={tpl.description} className="line-clamp-2 text-[12px] text-muted-foreground" />
                 )}
                 {tpl.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -1960,9 +1967,7 @@ export default function RulesLibraryPage() {
 
                     {/* Description */}
                     <td className="px-4 py-3">
-                      <span className="line-clamp-2 text-[13px] text-muted-foreground">
-                        {rule.description}
-                      </span>
+                      <TruncatedText text={rule.description} className="line-clamp-2 text-[13px] text-muted-foreground" />
                     </td>
 
                     {/* Tags */}

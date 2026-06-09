@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -207,6 +208,15 @@ function FloorPlanCanvas({
     if (tool === "draw-area") {
       const points = drafting?.points ?? [];
       const color = drafting?.color ?? AREA_PALETTE[site.areas.length % AREA_PALETTE.length];
+      // Auto-close: clicking near the first point (with ≥3 points) completes the polygon.
+      if (points.length >= 3) {
+        const [fx, fy] = points[0];
+        if (Math.hypot(x - fx, y - fy) < 0.03) {
+          onCommitArea(points, color);
+          onSetDrafting(null);
+          return;
+        }
+      }
       onSetDrafting({ points: [...points, [x, y]], color });
     } else {
       onSelect(null);
@@ -544,14 +554,14 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
           </p>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Type <span className="font-mono text-foreground">{site.name}</span> to confirm
+              Type <span className="font-mono normal-case text-foreground">{site.name}</span> to confirm
             </label>
             <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-[13px]" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={confirm !== site.name}
+          <Button disabled={confirm.trim() !== site.name}
             onClick={onConfirm}
             className="gap-1.5 border-sev-critical/40 bg-sev-critical/15 text-sev-critical hover:bg-sev-critical/25">
             <Trash2 className="size-3.5" />
@@ -967,7 +977,7 @@ function OverviewTab({
                       <li key={c.id} className="flex items-center gap-2 py-1 text-[11px]">
                         <Video className="size-3 flex-shrink-0 text-muted-foreground/60" />
                         <span className="font-mono text-foreground">{c.id}</span>
-                        <span className="truncate text-muted-foreground">{c.name}</span>
+                        <TruncatedText text={c.name} className="text-muted-foreground" />
                         <span className="ml-auto text-[10px] text-muted-foreground/70">{c.areaName}</span>
                       </li>
                     ))}
@@ -1020,15 +1030,18 @@ function OverviewTab({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
-                        <span className="truncate">{n.name}</span>
+                        <TruncatedText text={n.name} />
                         <span className={cn("inline-flex items-center gap-1 rounded-full border border-current/30 bg-current/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider", statusTone.txt)}>
                           <span className={cn("size-1 rounded-full", statusTone.dot)} />
                           {statusTone.label}
                         </span>
                       </p>
-                      <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                      <TruncatedText
+                        title={`${n.id} · ${n.model} · ${n.ipAddress}`}
+                        className="mt-0.5 text-[10px] text-muted-foreground"
+                      >
                         <span className="font-mono">{n.id}</span> · {n.model} · {n.ipAddress}
-                      </p>
+                      </TruncatedText>
                       <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
                         <span>Channels: <strong className="text-foreground">{linkedChannels}</strong> / {n.channelCount}</span>
                         <span>Storage: <strong className={usageTone}>{usagePct}%</strong></span>
@@ -1228,8 +1241,8 @@ function FloorPlanTab({
                     <Video className="size-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-semibold text-foreground">{selCam.name}</p>
-                    <p className="truncate text-[10px] text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</p>
+                    <TruncatedText text={selCam.name} className="text-[12px] font-semibold text-foreground" />
+                    <TruncatedText title={`${selCam.id} · ${CAMERA_STATUS_STYLES[selCam.status].label}`} className="text-[10px] text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</TruncatedText>
                   </div>
                   <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
                     onClick={() => onRemovePlacement(selCam.id)}>
@@ -1327,7 +1340,7 @@ function FloorPlanTab({
                           className="h-7 flex-1 rounded border border-primary bg-background px-2 text-[12px] focus:outline-none"
                         />
                       ) : (
-                        <span className="truncate text-[12px] font-semibold text-foreground">{a.name}</span>
+                        <TruncatedText text={a.name} className="text-[12px] font-semibold text-foreground" />
                       )}
                       <span className="ml-auto inline-flex items-center gap-2 text-[10px] text-muted-foreground">
                         {a.points.length === 0
@@ -1386,10 +1399,13 @@ function FloorPlanTab({
                         <Video className={cn("size-3", cs.text)} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12px] font-semibold text-foreground">{c.name}</p>
-                        <p className="truncate text-[10px] text-muted-foreground">
+                        <TruncatedText text={c.name} className="text-[12px] font-semibold text-foreground" />
+                        <TruncatedText
+                          title={`${area ? area.name : "Unassigned"} · ${c.id}`}
+                          className="text-[10px] text-muted-foreground"
+                        >
                           {area ? area.name : "Unassigned"} · <span className="font-mono">{c.id}</span>
-                        </p>
+                        </TruncatedText>
                       </div>
                     </button>
                   </div>
@@ -1415,8 +1431,8 @@ function FloorPlanTab({
                   <div key={c.id} className="flex items-center gap-2.5 border-b border-warning/10 px-3.5 py-2 last:border-b-0">
                     <span className={cn("size-1.5 flex-shrink-0 rounded-full", cs.dot)} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12px] font-semibold text-foreground">{c.name}</p>
-                      <p className="truncate text-[10px] text-muted-foreground"><span className="font-mono">{c.id}</span> · {cs.label}</p>
+                      <TruncatedText text={c.name} className="text-[12px] font-semibold text-foreground" />
+                      <TruncatedText title={`${c.id} · ${cs.label}`} className="text-[10px] text-muted-foreground"><span className="font-mono">{c.id}</span> · {cs.label}</TruncatedText>
                     </div>
                     <Button onClick={() => onPlaceCamera(c.id)} disabled={!site.floorPlan} className="gap-1.5">
                       <Plus className="size-3" />

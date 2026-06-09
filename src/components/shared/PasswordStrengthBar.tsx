@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Returns 0–4 based on length and character class diversity. */
@@ -10,6 +11,11 @@ export function scorePassword(pw: string): number {
   if (/\d/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   return Math.min(4, score);
+}
+
+/** A password is considered strong enough to proceed once it reaches "Good" (score ≥ 3). */
+export function isStrongPassword(pw: string): boolean {
+  return scorePassword(pw) >= 3;
 }
 
 const LABELS = ["Too short", "Weak", "Fair", "Good", "Strong"] as const;
@@ -45,7 +51,7 @@ export function PasswordStrengthBar({
       </div>
       <p
         className={cn(
-          "text-[10px] font-semibold uppercase tracking-wider",
+          "flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider",
           score >= 4
             ? "text-success"
             : score >= 3
@@ -55,6 +61,7 @@ export function PasswordStrengthBar({
                 : "text-muted-foreground"
         )}
       >
+        {score >= 3 && <Check className="size-3 text-success" strokeWidth={3} />}
         {LABELS[score]}
       </p>
     </div>

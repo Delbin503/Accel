@@ -49,7 +49,8 @@ import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { AuthStepBar, type AuthStepKey } from "@/components/shared/AuthStepBar";
-import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
+import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ── Wizard steps ───────────────────────────────────────────────────── */
 type WizardStep = "account" | "plan" | "site" | "team";
@@ -263,6 +264,8 @@ export default function SignUpPage() {
     if (!email.includes("@")) return setError("Enter a valid email address.");
     if (password.length < 8)
       return setError("Password must be at least 8 characters.");
+    if (!isStrongPassword(password))
+      return setError("Choose a stronger password (mix upper/lowercase, numbers, or symbols).");
     if (password !== confirmPw) return setError("Passwords don't match.");
     if (!agreedTos)
       return setError("You must accept the Terms to continue.");
@@ -553,7 +556,14 @@ export default function SignUpPage() {
           {error && <ErrorBox message={error} />}
           <Button
             type="submit"
-            disabled={otpSending}
+            disabled={
+              otpSending ||
+              fullName.trim().length < 2 ||
+              !email.includes("@") ||
+              !isStrongPassword(password) ||
+              password !== confirmPw ||
+              !agreedTos
+            }
             className="h-10 w-full gap-2 text-[13px]"
           >
             {otpSending ? (
@@ -1592,10 +1602,8 @@ function InviteUsersModal({
               className="flex h-9 w-full cursor-not-allowed items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-[13px]"
               aria-disabled="true"
             >
-              <MapPin className="size-3.5 text-muted-foreground" />
-              <span className="truncate text-foreground">
-                {siteName || "Your new site"}
-              </span>
+              <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
+              <TruncatedText text={siteName || "Your new site"} className="min-w-0 flex-1 text-foreground" />
               <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground/70">
                 <LockIcon className="size-3" /> Locked to current site
               </span>

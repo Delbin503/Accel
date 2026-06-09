@@ -1353,8 +1353,8 @@ function CameraDrawer({
               <SectionTitle
                 aside={
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setZonesEditing((v) => !v)}>
-                    {zonesEditing ? <Check className="size-3.5" /> : <Pencil className="size-3.5" />}
-                    {zonesEditing ? "Done" : "Edit Zones"}
+                    {zonesEditing ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+                    {zonesEditing ? "Done" : "Add Zone"}
                   </Button>
                 }
               >
@@ -1785,6 +1785,10 @@ function CameraFormModal({
     (fields.recordingMode === "continuous" ||
       (fields.scheduleDays.length > 0 && fields.scheduleStart < fields.scheduleEnd));
 
+  // In edit mode, keep Save disabled until the user actually changes something.
+  const isDirty =
+    mode === "add" || (initial != null && JSON.stringify(fields) !== JSON.stringify(initial));
+
   const nvrOptions = siteNvrs.length === 0
     ? [{ value: "", label: "— No NVR at this site —" }]
     : [{ value: "", label: "— None (unlinked) —" }, ...siteNvrs.map((n) => ({ value: n.id, label: `${n.name} (${n.id})` }))];
@@ -2021,7 +2025,7 @@ function CameraFormModal({
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={!canSubmit} onClick={() => onSubmit(fields)} className="gap-1.5">
+          <Button size="sm" disabled={!canSubmit || !isDirty} onClick={() => onSubmit(fields)} className="gap-1.5">
             {mode === "add" ? <Plus className="size-3.5" /> : <Check className="size-3.5" />}
             {mode === "add" ? "Add Camera" : "Save Changes"}
           </Button>

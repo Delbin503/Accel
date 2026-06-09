@@ -93,7 +93,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   }, [open, accentChoices]);
 
   const stepIdx = STEPS.findIndex((s) => s.key === step);
-  const canNextFromDetails = name.trim().length > 0;
+  const canNextFromDetails = name.trim().length > 0 && address.trim().length > 0;
   const canNextFromAreas   = areas.length >= 1;
 
   function addArea() {
@@ -185,7 +185,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <MapPin className="size-3" />
-                  Address
+                  Address <span className="text-sev-critical">*</span>
                 </label>
                 <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-[13px]" />
               </div>
@@ -249,7 +249,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <Shapes className="size-3" />
-                  Add Area
+                  Add Area <span className="text-sev-critical">*</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -440,7 +440,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
           <div className="flex items-center gap-2">
             {step !== "review" ? (
               <>
-                {step === "floor-plan" && (
+                {step === "floor-plan" && !floorPlanUrl && (
                   <Button variant="outline" onClick={next}>Skip for now</Button>
                 )}
                 <Button onClick={next}
