@@ -44,6 +44,7 @@ import { MOCK_DEPLOYMENTS } from "@/mocks/deployments";
 import { getRecordingsForCamera, type RecordingDisplay } from "@/mocks/recordings";
 import type { CameraData, CameraStatus, BoundaryZone } from "@/types/cameras";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import type { DeploymentData } from "@/types/deployments";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -125,7 +126,7 @@ function FilterDropdown({
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
@@ -167,11 +168,6 @@ interface CameraFilters {
 }
 const EMPTY_FILTERS: CameraFilters = { site: [], area: [], status: [], nvr: [] };
 
-const STATUS_OPTS: FilterOption[] = [
-  { value: "online",            label: "Online" },
-  { value: "offline",           label: "Offline" },
-  { value: "connection-failed", label: "Failed" },
-];
 
 function FilterPanel({
   filters,
@@ -209,7 +205,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All areas", "All statuses", "All NVRs"].map((l) => (
+              {["All sites", "All areas", "All NVRs"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -248,11 +244,10 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-[13px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { key: "site"   as const, label: "Site",   opts: CAMERA_SITES },
               { key: "area"   as const, label: "Area",   opts: CAMERA_AREAS },
-              { key: "status" as const, label: "Status", opts: STATUS_OPTS },
               { key: "nvr"    as const, label: "NVR",    opts: NVR_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
@@ -397,7 +392,7 @@ function RecordingCard({ r, isSelected, onToggle, onOpen }: {
         </div>
         <div className="p-3.5">
           <div className="mb-1 flex items-start justify-between gap-2">
-            <p className="truncate text-[13px] font-bold text-foreground transition-colors group-hover:text-primary">Recording · {r.dateLabel}</p>
+            <TruncatedText text={`Recording · ${r.dateLabel}`} className="text-[13px] font-bold text-foreground transition-colors group-hover:text-primary" />
             <p className="flex-shrink-0 font-mono text-[10px] text-muted-foreground">{r.id}</p>
           </div>
           <p className="mb-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -886,12 +881,10 @@ function LinkNvrModal({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
-                          <span className="truncate">{r.nvrName}</span>
+                          <TruncatedText text={r.nvrName} />
                           <span className="font-mono text-[10px] text-muted-foreground">Ch {String(r.channel).padStart(2, "0")}</span>
                         </p>
-                        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                          {r.nvrModel} · {r.nvrIp}
-                        </p>
+                        <TruncatedText text={`${r.nvrModel} · ${r.nvrIp}`} className="mt-0.5 text-[10px] text-muted-foreground" />
                       </div>
                       {inUse ? (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">In use · {r.cameraId}</span>
@@ -1023,7 +1016,7 @@ function CameraDrawer({
                   <StatusPill status={camera.status} />
                 </div>
                 <div className="mb-1 flex items-center gap-2">
-                  <SheetTitle className="truncate text-[17px] font-bold">{camera.name}</SheetTitle>
+                  <SheetTitle className="min-w-0 text-[17px] font-bold"><TruncatedText text={camera.name} /></SheetTitle>
                   <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
                     {camera.id}
                   </span>
@@ -1231,9 +1224,10 @@ function CameraDrawer({
                       <HardDrive className="size-4 text-info" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary">
-                        {camera.nvrName}
-                      </p>
+                      <TruncatedText
+                        text={camera.nvrName}
+                        className="text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary"
+                      />
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
                         {nvr.model} · {camera.nvrId} · Channel {camera.channel} · IP {nvr.ipAddress}
                       </p>
@@ -1305,9 +1299,10 @@ function CameraDrawer({
                             <Cpu className="size-4 text-purple" />
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-[13px] font-bold text-foreground">
-                              {d.modelName}
-                            </p>
+                            <TruncatedText
+                              text={d.modelName}
+                              className="text-[13px] font-bold text-foreground"
+                            />
                             <p className="font-mono text-[11px] text-muted-foreground">{d.id}</p>
                           </div>
                         </div>

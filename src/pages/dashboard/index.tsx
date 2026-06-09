@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from "recharts";
@@ -18,12 +17,15 @@ import {
   Network,
   Power,
   Video,
+  TriangleAlert,
+  X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -46,7 +48,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <p className="text-[13px] font-bold text-foreground">{title}</p>
+        <TruncatedText text={title} className="min-w-0 flex-1 text-[13px] font-bold text-foreground" />
         {action}
       </div>
       <div className="p-4">{children}</div>
@@ -176,7 +178,7 @@ function SiteMultiSelect({
                 >
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
                 </span>
-                <span className="truncate text-foreground">{o.name}</span>
+                <TruncatedText text={o.name} className="min-w-0 flex-1 text-foreground" />
               </button>
             );
           })}
@@ -369,7 +371,7 @@ export default function DashboardPage() {
     { label: "Network",  value: "18%", pct: 18, tone: "ok",   icon: Network },
     { label: "Uptime",   value: "42d", pct: 92, tone: "ok",   icon: Power },
   ];
-  /* ── System status pill — also fires an alert toast when unhealthy ──── */
+  /* ── System status pill + inline alert banner when unhealthy ─────────── */
   const worstHealth = healthMetrics.find((m) => m.tone === "crit")
     ?? healthMetrics.find((m) => m.tone === "warn");
   const systemStatus: "healthy" | "degraded" | "critical" =
@@ -377,28 +379,8 @@ export default function DashboardPage() {
     worstHealth?.tone === "warn" ? "degraded" :
     "healthy";
 
-  React.useEffect(() => {
-    if (systemStatus === "healthy" || !worstHealth) return;
-    const id = toast.warning(
-      <div className="flex flex-col gap-0.5">
-        <p className="text-[13px] font-bold">
-          Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
-        </p>
-        <p className="text-[12px] text-muted-foreground">
-          {worstHealth.label} usage is at <strong className="text-foreground">{worstHealth.value}</strong>. Contact your administrator immediately.
-        </p>
-      </div>,
-      {
-        duration: Infinity,
-        action: {
-          label: "Acknowledge",
-          onClick: () => toast.dismiss(id),
-        },
-      }
-    );
-    return () => { toast.dismiss(id); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [systemStatus, worstHealth?.label, worstHealth?.value]);
+  const [alertAcknowledged, setAlertAcknowledged] = React.useState(false);
+  const showAlertBanner = systemStatus !== "healthy" && !!worstHealth && !alertAcknowledged;
 
   const statusStyles =
     systemStatus === "critical" ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" :
@@ -411,6 +393,46 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {showAlertBanner && worstHealth && (
+        <div
+          className={cn(
+            "flex items-start gap-3 rounded-xl border px-4 py-3",
+            systemStatus === "critical"
+              ? "border-sev-critical/40 bg-sev-critical/[0.06]"
+              : "border-warning/40 bg-warning/[0.06]"
+          )}
+        >
+          <TriangleAlert
+            className={cn(
+              "mt-0.5 size-4 flex-shrink-0",
+              systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+            )}
+          />
+          <div className="min-w-0 flex-1 text-[13px]">
+            <span
+              className={cn(
+                "font-semibold",
+                systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+              )}
+            >
+              Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
+            </span>
+            <span className="ml-1 text-muted-foreground">
+              {worstHealth.label} usage is at{" "}
+              <strong className="text-foreground">{worstHealth.value}</strong>. Contact your
+              administrator immediately.
+            </span>
+          </div>
+          <button
+            onClick={() => setAlertAcknowledged(true)}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss alert"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
+
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Dashboard</PageHeader.Title>
@@ -541,9 +563,10 @@ export default function DashboardPage() {
                                 className="size-2.5 flex-shrink-0 rounded-full"
                                 style={{ background: color }}
                               />
-                              <p className="min-w-0 flex-1 truncate text-[11px] font-semibold text-foreground">
-                                {s.site}
-                              </p>
+                              <TruncatedText
+                                text={s.site}
+                                className="min-w-0 flex-1 text-[11px] font-semibold text-foreground"
+                              />
                             </div>
                             {/* Row 2: big number */}
                             <p className="inline-flex items-baseline gap-1 font-mono">
@@ -633,9 +656,9 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-center gap-1.5">
                         <MapPin className="size-3 flex-shrink-0 text-muted-foreground" />
-                        <p className="truncate text-[11px] font-semibold text-foreground">{z.area}</p>
+                        <TruncatedText text={z.area} className="min-w-0 flex-1 text-[11px] font-semibold text-foreground" />
                       </div>
-                      <p className="truncate text-[10px] text-muted-foreground">{z.site}</p>
+                      <TruncatedText text={z.site} className="text-[10px] text-muted-foreground" />
                       <div className="mt-0.5 flex items-center justify-between gap-1.5">
                         <span className="inline-flex items-baseline gap-1 font-mono">
                           <span className="text-[17px] font-bold leading-none text-foreground">{z.total}</span>
@@ -669,7 +692,7 @@ export default function DashboardPage() {
                       ) : z.cameraStats.map((cs) => (
                         <div key={cs.camera} className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60">
                           <Video className="size-3 flex-shrink-0 text-muted-foreground" />
-                          <p className="min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">{cs.camera}</p>
+                          <TruncatedText text={cs.camera} className="min-w-0 flex-1 text-[12px] font-semibold text-foreground" />
                           <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
                             {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{cs.critical}</span>}
                             {cs.medium   > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{cs.medium}</span>}
@@ -713,8 +736,8 @@ export default function DashboardPage() {
                     {sv.label}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-foreground">{e.typeLabel}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">{e.summary}</p>
+                    <TruncatedText text={e.typeLabel} className="text-[13px] font-semibold text-foreground" />
+                    <TruncatedText text={e.summary} className="text-[11px] text-muted-foreground" />
                   </div>
                   <span className="font-mono text-[10px] text-muted-foreground">{e.time}</span>
                 </div>
@@ -738,10 +761,11 @@ export default function DashboardPage() {
                     <FolderOpen className="size-3.5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-foreground">{c.title}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {c.id} · {c.siteDisplay} · {c.assignedTo.name}
-                    </p>
+                    <TruncatedText text={c.title} className="text-[13px] font-semibold text-foreground" />
+                    <TruncatedText
+                      text={`${c.id} · ${c.siteDisplay} · ${c.assignedTo.name}`}
+                      className="text-[11px] text-muted-foreground"
+                    />
                   </div>
                   <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                     {sv.label}
@@ -811,12 +835,8 @@ export default function DashboardPage() {
                     className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 hover:bg-muted/20"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-[10px] text-muted-foreground">
-                        {a.whenRelative}
-                      </p>
-                      <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">
-                        {a.module}
-                      </p>
+                      <TruncatedText text={a.whenRelative} className="font-mono text-[10px] text-muted-foreground" />
+                      <TruncatedText text={a.module} className="mt-0.5 text-[10px] text-muted-foreground/60" />
                     </div>
                     <div>
                       <span

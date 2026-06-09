@@ -42,6 +42,7 @@ import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { storageBandFor } from "@/types/nvr";
 import type { NvrData, NvrStatus, StorageBand, NvrChannel } from "@/types/nvr";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 
@@ -176,7 +177,7 @@ function FilterDropdown({
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
@@ -216,11 +217,6 @@ interface NvrFilters {
 }
 const EMPTY_FILTERS: NvrFilters = { site: [], area: [], status: [], storage: [] };
 
-const STATUS_OPTS: FilterOption[] = [
-  { value: "online",   label: "Online" },
-  { value: "offline",  label: "Offline" },
-  { value: "degraded", label: "Degraded" },
-];
 const STORAGE_OPTS: FilterOption[] = [
   { value: "healthy",  label: "Healthy (<75%)" },
   { value: "warning",  label: "Warning (75–90%)" },
@@ -258,7 +254,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All areas", "All statuses", "All storage"].map((l) => (
+              {["All sites", "All areas", "All storage"].map((l) => (
                 <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
                   {l}
                 </span>
@@ -290,11 +286,10 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-[13px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { key: "site"    as const, label: "Site",    opts: CAMERA_SITES },
               { key: "area"    as const, label: "Area",    opts: CAMERA_AREAS },
-              { key: "status"  as const, label: "Status",  opts: STATUS_OPTS },
               { key: "storage" as const, label: "Storage", opts: STORAGE_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
@@ -496,7 +491,7 @@ function NvrDrawer({
                 )}
               </div>
               <div className="mb-1 flex items-center gap-2">
-                <SheetTitle className="truncate text-[17px] font-bold">{nvr.name}</SheetTitle>
+                <SheetTitle className="min-w-0 text-[17px] font-bold"><TruncatedText text={nvr.name} /></SheetTitle>
                 <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
                   {nvr.id}
                 </span>
@@ -1017,9 +1012,12 @@ function ExportRecordingsModal({
                         {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-semibold text-foreground">
+                        <TruncatedText
+                          title={`${ch.cameraName} (Channel ${ch.channel})`}
+                          className="text-[13px] font-semibold text-foreground"
+                        >
                           {ch.cameraName} <span className="font-mono text-[11px] text-muted-foreground">(Channel {ch.channel})</span>
-                        </p>
+                        </TruncatedText>
                         <p className="text-[11px] text-muted-foreground">
                           {ch.cameraSite} · {ch.cameraArea}
                         </p>
@@ -1265,9 +1263,12 @@ function CleanupStorageModal({
                           {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-semibold text-foreground">
+                          <TruncatedText
+                            title={`${ch.cameraName} (Channel ${ch.channel})`}
+                            className="text-[13px] font-semibold text-foreground"
+                          >
                             {ch.cameraName} <span className="font-mono text-[11px] text-muted-foreground">(Channel {ch.channel})</span>
-                          </p>
+                          </TruncatedText>
                           <p className="text-[11px] text-muted-foreground">{ch.cameraSite} · {ch.cameraArea}</p>
                         </div>
                         <div className="text-right">
@@ -1566,7 +1567,7 @@ function LinkCameraModal({
                     <Video className="size-4 text-info" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-foreground">{c.name}</p>
+                    <TruncatedText text={c.name} className="text-[13px] font-semibold text-foreground" />
                     <p className="font-mono text-[11px] text-muted-foreground">{c.id} · {c.areaName}</p>
                   </div>
                   <StatusPill status={c.status === "online" ? "online" : c.status === "offline" ? "offline" : "degraded"} />
@@ -1624,7 +1625,7 @@ function UnlinkConfirmModal({
               <Video className="size-4 text-info" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold text-foreground">{cam?.name ?? ch.cameraName}</p>
+              <TruncatedText text={cam?.name ?? ch.cameraName ?? "—"} className="text-[13px] font-semibold text-foreground" />
               <p className="font-mono text-[11px] text-muted-foreground">
                 {ch.cameraId} · Channel {channel} · {cam?.areaName ?? ""}
               </p>

@@ -29,6 +29,7 @@ import { EscalateModal } from "./EscalateModal";
 import { DismissModal } from "./DismissModal";
 import { LinkCaseModal } from "./LinkCaseModal";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -225,7 +226,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown
             className={cn(
               "size-3.5 flex-shrink-0 text-muted-foreground transition-transform",
@@ -376,7 +377,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All severities", "All types", "All sites", "All models", "All time"].map((l) => (
+              {["All sites", "All models"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -426,10 +427,9 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-[13px]"
             />
           </div>
-          {/* 3 dropdowns (severity comes from KPI cards) */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {/* Dropdowns — severity & type come from KPI cards, date from the range bar */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
-              { key: "type" as const, label: "Detection Type", opts: FILTER_OPTIONS.type },
               { key: "site" as const, label: "Site", opts: FILTER_OPTIONS.site },
               { key: "model" as const, label: "Detection Model", opts: FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (

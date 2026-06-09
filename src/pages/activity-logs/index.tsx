@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Search,
   ChevronDown,
+  ChevronUp,
   Check,
   X,
   Download,
@@ -18,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES, type ActivityKind, type ActivityLog } from "@/mocks/activityLogs";
 
@@ -91,6 +93,7 @@ export default function ActivityLogsPage() {
   const [customTo, setCustomTo] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<ActivityKind[]>([]);
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
 
   // Stable "now" for the session
   const now = React.useMemo(() => new Date("2026-06-01T15:00:00"), []);
@@ -185,27 +188,72 @@ export default function ActivityLogsPage() {
         }
       />
 
-      {/* Filters row (mirrors Detection Feed / Recordings pattern) */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-        <span className="text-[12px] font-semibold text-foreground">Filters</span>
-        <div className="ml-1 flex flex-wrap items-center gap-2">
-          <TypeFilterDropdown options={TYPE_OPTIONS} selected={typeFilter} counts={typeCounts} onChange={setTypeFilter} />
-          <SiteFilter sites={allSites} selected={siteFilter} onChange={setSiteFilter} />
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="relative w-56">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search activity…"
-              className="h-8 w-full pl-9 text-[12px]" />
+      {/* Filters — collapsible panel (matches all other modules) */}
+      <div className="rounded-xl border border-border bg-card">
+        <button
+          onClick={() => setFiltersOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
+            <span className="text-[13px] font-semibold text-foreground">Filters</span>
+            {typeFilter.length + siteFilter.length + (search ? 1 : 0) > 0 ? (
+              <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+                {typeFilter.length + siteFilter.length + (search ? 1 : 0)} active
+              </span>
+            ) : (
+              <div className="hidden flex-wrap gap-1.5 sm:flex">
+                {["All types", "All sites"].map((l) => (
+                  <span
+                    key={l}
+                    className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  >
+                    {l}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
-            <Button variant="ghost" size="sm" onClick={() => { setTypeFilter([]); setSiteFilter([]); setSearch(""); }}>
-              Clear
-            </Button>
-          )}
-        </div>
+          <div className="flex items-center gap-3">
+            {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setTypeFilter([]); setSiteFilter([]); setSearch(""); }}
+                className="text-[12px] text-muted-foreground underline hover:text-primary"
+              >
+                Clear all
+              </button>
+            )}
+            {filtersOpen ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </div>
+        </button>
+
+        {filtersOpen && (
+          <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search activity…"
+                className="h-9 w-full pl-9 text-[13px]"
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Type</div>
+                <TypeFilterDropdown options={TYPE_OPTIONS} selected={typeFilter} counts={typeCounts} onChange={setTypeFilter} />
+              </div>
+              <div>
+                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Site</div>
+                <SiteFilter sites={allSites} selected={siteFilter} onChange={setSiteFilter} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -335,15 +383,15 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "h-8 inline-flex items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-[12px] font-semibold transition-colors",
-          open ? "border-primary" : "border-input",
-          isAll ? "text-muted-foreground" : "text-foreground"
-        )} style={{ minWidth: "160px" }}>
-          <span className="inline-flex items-center gap-1.5">
-            <Layers className="size-3" />
-            {display}
+          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+          open ? "border-primary" : "border-border",
+          isAll ? "text-muted-foreground" : "text-primary"
+        )}>
+          <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">
+            <Layers className="size-3.5 flex-shrink-0" />
+            <TruncatedText text={display} className="min-w-0" />
           </span>
-          <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+          <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[300px] w-56 overflow-y-auto p-1.5">
@@ -389,15 +437,15 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "h-8 inline-flex items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-[12px] font-semibold transition-colors",
-          open ? "border-primary" : "border-input",
-          isAll ? "text-muted-foreground" : "text-foreground"
-        )} style={{ minWidth: "140px" }}>
-          <span className="inline-flex items-center gap-1.5">
-            <Building2 className="size-3" />
-            {display}
+          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+          open ? "border-primary" : "border-border",
+          isAll ? "text-muted-foreground" : "text-primary"
+        )}>
+          <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">
+            <Building2 className="size-3.5 flex-shrink-0" />
+            <TruncatedText text={display} className="min-w-0" />
           </span>
-          <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+          <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="max-h-[280px] w-56 overflow-y-auto p-1.5">

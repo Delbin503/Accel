@@ -12,6 +12,10 @@ import {
   ArrowUpRight,
   Shapes,
   Video,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +30,7 @@ import { SITE_ACCENT_COLORS } from "@/mocks/sites";
 import type { SiteData } from "@/types/sites";
 import type { CameraData } from "@/types/cameras";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 const STATUS_STYLES = {
   active:   { bg: "bg-success/15 border-success/30",        text: "text-success",          dot: "bg-success",          label: "Active"   },
@@ -79,6 +84,189 @@ function CameraHealthCell({ cameras }: { cameras: CameraData[] }) {
   );
 }
 
+/* ── Filters ─────────────────────────────────────────────────────────────── */
+
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface SiteFilters {
+  status: string[];
+  floorPlan: string[];
+}
+const EMPTY_FILTERS: SiteFilters = { status: [], floorPlan: [] };
+
+const SITE_STATUS_OPTS: FilterOption[] = [
+  { value: "active", label: "Active" },
+  { value: "setup", label: "Setup" },
+  { value: "inactive", label: "Inactive" },
+];
+const FLOOR_PLAN_OPTS: FilterOption[] = [
+  { value: "ready", label: "Ready" },
+  { value: "missing", label: "Missing" },
+];
+
+function FilterDropdown({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: readonly FilterOption[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const hasValue = selected.length > 0;
+  const displayLabel = hasValue
+    ? selected.length === 1
+      ? (options.find((o) => o.value === selected[0])?.label ?? label)
+      : `${selected.length} selected`
+    : label;
+
+  function toggle(value: string) {
+    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            open ? "border-primary" : "border-border",
+            hasValue ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          <TruncatedText text={displayLabel} className="font-medium" />
+          <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-52 p-1.5">
+        {options.map((opt) => {
+          const checked = selected.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <div
+                className={cn(
+                  "flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
+                  checked ? "border-primary bg-primary" : "border-muted-foreground/40"
+                )}
+              >
+                {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+              </div>
+              {opt.label}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FilterPanel({
+  filters,
+  onChange,
+  search,
+  onSearchChange,
+}: {
+  filters: SiteFilters;
+  onChange: (f: SiteFilters) => void;
+  search: string;
+  onSearchChange: (v: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
+  const activeCount = filterCount + (search ? 1 : 0);
+
+  function setGroup(group: keyof SiteFilters, values: string[]) {
+    onChange({ ...filters, [group]: values });
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
+          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          {activeCount > 0 ? (
+            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+              {activeCount} active
+            </span>
+          ) : (
+            <div className="hidden flex-wrap gap-1.5 sm:flex">
+              {["All statuses", "All floor plans"].map((l) => (
+                <span
+                  key={l}
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                >
+                  {l}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {activeCount > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
+              className="text-[12px] text-muted-foreground underline hover:text-primary"
+            >
+              Clear all
+            </button>
+          )}
+          {open ? (
+            <ChevronUp className="size-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="size-4 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+
+      {open && (
+        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search sites by name, address or description…"
+              className="h-9 w-full pl-9 text-[13px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: "status" as const, label: "Status", opts: SITE_STATUS_OPTS },
+              { key: "floorPlan" as const, label: "Floor Plan", opts: FLOOR_PLAN_OPTS },
+            ].map(({ key, label, opts }) => (
+              <div key={key}>
+                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {label}
+                </div>
+                <FilterDropdown
+                  label={key === "floorPlan" ? "All floor plans" : `All ${label.toLowerCase()}es`}
+                  options={opts}
+                  selected={filters[key]}
+                  onChange={(v) => setGroup(key, v)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SiteOverviewPage() {
   const navigate = useNavigate();
   const params = useParams<{ siteId?: string }>();
@@ -86,6 +274,7 @@ export default function SiteOverviewPage() {
   const { sites, addSite } = useSitesStore();
   const cameras = useCamerasStore((s) => s.cameras);
   const [search, setSearch] = React.useState("");
+  const [filters, setFilters] = React.useState<SiteFilters>(EMPTY_FILTERS);
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [drawerSiteId, setDrawerSiteId] = React.useState<string | null>(null);
 
@@ -96,10 +285,18 @@ export default function SiteOverviewPage() {
   }, [params.siteId, location.pathname]);
 
   const filtered = sites.filter((s) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return [s.name, s.address, s.description].join(" ").toLowerCase().includes(q);
+    if (filters.status.length > 0 && !filters.status.includes(s.status)) return false;
+    if (filters.floorPlan.length > 0) {
+      const band = s.floorPlan ? "ready" : "missing";
+      if (!filters.floorPlan.includes(band)) return false;
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      if (![s.name, s.address, s.description].join(" ").toLowerCase().includes(q)) return false;
+    }
+    return true;
   });
+  const hasFilters = !!(search || filters.status.length > 0 || filters.floorPlan.length > 0);
 
   const totalSites    = sites.length;
   const totalAreas    = sites.reduce((s, x) => s + x.areas.length, 0);
@@ -151,17 +348,25 @@ export default function SiteOverviewPage() {
         <KpiCard label="Cameras"          value={totalCameras}  sub={`${onlineCameras} online`}                  accent="secondary" />
       </KpiGrid>
 
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search sites by name, address or description…"
-            className="h-9 w-full border-0 bg-transparent pl-9 text-[13px] focus-visible:ring-0" />
-        </div>
-        <span className="text-[11px] text-muted-foreground">
-          {filtered.length} of {sites.length}
-        </span>
-      </div>
+      <FilterPanel
+        filters={filters}
+        onChange={setFilters}
+        search={search}
+        onSearchChange={setSearch}
+      />
+
+      <p className="text-[13px] text-muted-foreground">
+        <strong className="text-foreground">{filtered.length}</strong>{" "}
+        {filtered.length === 1 ? "site" : "sites"} match current filters
+        {hasFilters && (
+          <button
+            onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
+            className="ml-2 text-muted-foreground underline hover:text-primary"
+          >
+            Clear filters
+          </button>
+        )}
+      </p>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
@@ -203,13 +408,17 @@ export default function SiteOverviewPage() {
                         <div className="flex items-center gap-2.5">
                           <SiteMiniThumb site={site} />
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-foreground transition-colors group-hover:text-primary">
-                              {site.name}
-                            </p>
-                            <p className="truncate text-[11px] text-muted-foreground">
+                            <TruncatedText
+                              text={site.name}
+                              className="font-semibold text-foreground transition-colors group-hover:text-primary"
+                            />
+                            <TruncatedText
+                              title={site.address || "No address yet"}
+                              className="text-[11px] text-muted-foreground"
+                            >
                               <MapPin className="mr-0.5 inline size-2.5" />
                               {site.address || "No address yet"}
-                            </p>
+                            </TruncatedText>
                           </div>
                         </div>
                       </td>

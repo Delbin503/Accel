@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { storageBandFor } from "@/types/nvr";
 import type { CameraData } from "@/types/cameras";
 import type { NvrData } from "@/types/nvr";
@@ -236,7 +237,7 @@ function FilterDropdown({
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
@@ -280,11 +281,6 @@ const TYPE_OPTS: FilterOption[] = [
   { value: "camera", label: "Camera" },
   { value: "nvr",    label: "NVR" },
 ];
-const STATUS_OPTS: FilterOption[] = [
-  { value: "online",  label: "Online" },
-  { value: "offline", label: "Offline" },
-  { value: "failed",  label: "Failed" },
-];
 
 function FilterPanel({
   filters,
@@ -320,7 +316,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All areas", "All types", "All statuses"].map((l) => (
+              {["All sites", "All areas", "All types"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -359,12 +355,11 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-[13px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { key: "site"   as const, label: "Site",   opts: CAMERA_SITES },
               { key: "area"   as const, label: "Area",   opts: CAMERA_AREAS },
               { key: "type"   as const, label: "Type",   opts: TYPE_OPTS },
-              { key: "status" as const, label: "Status", opts: STATUS_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
                 <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

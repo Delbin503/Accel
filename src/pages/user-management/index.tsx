@@ -53,6 +53,7 @@ import {
 import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ── Role badge ──────────────────────────────────────────────────────────── */
 
@@ -204,7 +205,7 @@ function FilterDropdown({
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <span className="truncate font-medium">{displayLabel}</span>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
@@ -279,7 +280,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All roles", "All statuses", "All sites"].map((l) => (
+              {["All statuses", "All sites"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -318,9 +319,8 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-[13px]"
             />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
-              { key: "role"   as const, label: "Role",   opts: USER_ROLE_OPTIONS as readonly FilterOption[] },
               { key: "status" as const, label: "Status", opts: USER_STATUS_OPTIONS as readonly FilterOption[] },
               { key: "site"   as const, label: "Site",   opts: USER_SITES },
             ].map(({ key, label, opts }) => (
@@ -571,8 +571,8 @@ function UserDrawer({
                       </span>
                     )}
                   </div>
-                  <SheetTitle className="truncate text-[17px] font-bold">
-                    {user.fullName}
+                  <SheetTitle className="min-w-0 text-[17px] font-bold">
+                    <TruncatedText text={user.fullName} />
                   </SheetTitle>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
                     {user.email}
@@ -679,7 +679,7 @@ function UserDrawer({
                         <MapPin className="size-4 text-info" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-semibold text-foreground">{p.siteName}</p>
+                        <TruncatedText text={p.siteName} className="text-[13px] font-semibold text-foreground" />
                         <p className="text-[10px] text-muted-foreground">
                           {p.cameraCount} cameras · Granted {p.grantedAtDisplay} by {p.grantedBy}
                         </p>
@@ -706,7 +706,7 @@ function UserDrawer({
                 </div>
                 <p className="mt-3 border-t border-border pt-3 text-[11px] text-muted-foreground">
                   Role-based permissions are configured by the Owner in{" "}
-                  <span className="font-semibold text-foreground">System Config → Role Permissions</span>.
+                  <span className="font-semibold text-foreground">System Configuration → Role Permissions</span>.
                 </p>
               </div>
             </div>
@@ -964,7 +964,7 @@ function InviteUsersModal({
                         )}>
                           {checked && <Check className="size-2.5" strokeWidth={3} />}
                         </span>
-                        <span className="truncate text-foreground">{s.label}</span>
+                        <TruncatedText text={s.label} className="text-foreground" />
                       </button>
                     );
                   })}
@@ -1271,8 +1271,8 @@ function ChangeRoleModal({
               <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
                 <Avatar user={users[0]} size={32} />
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-semibold text-foreground">{users[0].fullName}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{users[0].email}</p>
+                  <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
+                  <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
                 </div>
                 <RoleBadge role={users[0].role} />
               </div>
@@ -1452,8 +1452,8 @@ function ManageSiteModal({
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-foreground">{users[0].fullName}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{users[0].email}</p>
+                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
               </div>
             </div>
           )}
@@ -1565,7 +1565,7 @@ function EditUserModal({
           <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
             <Avatar user={user} size={32} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold text-foreground">{user.email}</p>
+              <TruncatedText text={user.email} className="text-[13px] font-semibold text-foreground" />
               <p className="font-mono text-[11px] text-muted-foreground">{user.id}</p>
             </div>
             <RoleBadge role={user.role} />
@@ -1736,8 +1736,8 @@ function SuspendUserModal({
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-foreground">{users[0].fullName}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{users[0].email}</p>
+                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
               </div>
             </div>
           )}
@@ -1863,8 +1863,8 @@ function ReinstateModal({
             <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
               <Avatar user={users[0]} size={32} />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-foreground">{users[0].fullName}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{users[0].email}</p>
+                <TruncatedText text={users[0].fullName} className="text-[13px] font-semibold text-foreground" />
+                <TruncatedText text={users[0].email} className="text-[11px] text-muted-foreground" />
               </div>
             </div>
           )}
@@ -2446,13 +2446,16 @@ export default function UserManagementPage() {
                         <div className="flex items-center gap-2.5">
                           <Avatar user={u} size={32} />
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-foreground transition-colors group-hover:text-primary">
+                            <TruncatedText
+                              title={u.isCurrentUser ? `${u.fullName} (You)` : u.fullName}
+                              className="font-semibold text-foreground transition-colors group-hover:text-primary"
+                            >
                               {u.fullName}
                               {u.isCurrentUser && (
                                 <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">(You)</span>
                               )}
-                            </p>
-                            <p className="truncate text-[11px] text-muted-foreground">{u.email}</p>
+                            </TruncatedText>
+                            <TruncatedText text={u.email} className="text-[11px] text-muted-foreground" />
                           </div>
                         </div>
                       </td>
