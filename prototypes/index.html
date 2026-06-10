@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prototypes</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #111;
+        color: #eee;
+        padding: 48px;
+        margin: 0;
+      }
+      h1 { color: #fff; font-size: 1.5rem; margin-bottom: 8px; }
+      p.sub { color: #888; font-size: 0.875rem; margin-bottom: 32px; }
+      ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+      li a {
+        display: inline-block;
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 14px 20px;
+        color: #DD7224;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: border-color 0.15s;
+      }
+      li a:hover { border-color: #DD7224; }
+      .empty { color: #555; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Prototypes</h1>
+    <p class="sub">Each prototype is isolated from the main app. Select one to open it.</p>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
