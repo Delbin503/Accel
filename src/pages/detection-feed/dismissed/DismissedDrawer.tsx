@@ -45,7 +45,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
 function DrawerThumb({ item }: { item: DismissedEvent }) {
   const { event } = item;
   return (
-    <div className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+    <div className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-camera-feed">
       {event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div

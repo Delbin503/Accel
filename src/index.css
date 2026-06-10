@@ -287,6 +287,17 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Surface utilities
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Camera / CCTV feed placeholder surface — warm-dark gradient behind live
+   tiles, recording thumbnails and detection snapshots. Replaces ad-hoc
+   raw-hex gradients so every camera surface is identical. */
+@utility bg-camera-feed {
+  background-image: linear-gradient(135deg, hsl(24 50% 11%) 0%, hsl(0 0% 10%) 100%);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Auth background animations — vision-AI vibe drifting blobs + scanline
    ───────────────────────────────────────────────────────────────────────── */
 @keyframes auth-blob-drift-1 {

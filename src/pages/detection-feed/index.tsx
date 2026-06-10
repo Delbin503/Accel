@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -27,6 +26,8 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { FilterDropdown } from "@/components/shared/FilterDropdown";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
 import type { EscalateFormData } from "./EscalateModal";
@@ -36,7 +37,6 @@ import { EscalateModal } from "./EscalateModal";
 import { DismissModal } from "./DismissModal";
 import { LinkCaseModal } from "./LinkCaseModal";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
-import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -56,7 +56,7 @@ const EMPTY_FILTERS: Filters = { severity: [], type: [], site: [], model: [] };
 
 function EventThumb({ event, selected }: { event: DetectionEvent; selected: boolean }) {
   return (
-    <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+    <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
       <div
         className={cn(
           "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border border-white/80",
@@ -199,83 +199,6 @@ function EventCard({
   );
 }
 
-/* ─── Multi-select filter dropdown ──────────────────────────────────────── */
-
-interface FilterDropdownProps {
-  label: string;
-  options: readonly { value: string; label: string; color?: string }[];
-  selected: string[];
-  onChange: (values: string[]) => void;
-}
-
-function FilterDropdown({ label, options, selected, onChange }: FilterDropdownProps) {
-  const [open, setOpen] = React.useState(false);
-  const hasValue = selected.length > 0;
-  const displayLabel = hasValue
-    ? selected.length === 1
-      ? (options.find((o) => o.value === selected[0])?.label ?? label)
-      : `${selected.length} selected`
-    : label;
-
-  function toggle(value: string) {
-    onChange(
-      selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]
-    );
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
-            open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          <TruncatedText text={displayLabel} className="font-medium" />
-          <ChevronDown
-            className={cn(
-              "size-3.5 flex-shrink-0 text-muted-foreground transition-transform",
-              open && "rotate-180"
-            )}
-          />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-1.5">
-        {options.map((opt) => {
-          const checked = selected.includes(opt.value);
-          return (
-            <button
-              key={opt.value}
-              onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <div
-                className={cn(
-                  "flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                  checked ? "border-primary bg-primary" : "border-muted-foreground/40"
-                )}
-              >
-                {checked && (
-                  <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />
-                )}
-              </div>
-              {opt.color && (
-                <span
-                  className="size-1.5 flex-shrink-0 rounded-full"
-                  style={{ background: opt.color }}
-                />
-              )}
-              {opt.label}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 /* ─── Active filter pill bar ─────────────────────────────────────────────── */
 
 function ActiveFilterBar({
@@ -314,7 +237,7 @@ function ActiveFilterBar({
           {label}
           <button
             onClick={() => onRemoveFilter(group, value)}
-            className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white"
+            className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             <X className="size-2.5" />
           </button>
@@ -875,21 +798,24 @@ export default function DetectionFeedPage() {
 
       {/* ── Event groups ────────────────────────────────────────────────── */}
       {grouped.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
-          <Search className="size-10 opacity-20" />
-          <p className="text-sm">No events match the current filters.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setFilters(EMPTY_FILTERS);
-              setKpiFilter("all");
-              setSearch("");
-            }}
-          >
-            Clear filters
-          </Button>
-        </div>
+        <EmptyState
+          className="rounded-xl border border-dashed border-border py-20"
+          icon={Search}
+          title="No events match the current filters"
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setKpiFilter("all");
+                setSearch("");
+              }}
+            >
+              Clear filters
+            </Button>
+          }
+        />
       ) : (
         grouped.map((group) => (
           <div key={group.key} className="space-y-2.5">

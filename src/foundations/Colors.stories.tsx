@@ -66,6 +66,16 @@ export const Palette: Story = {
         <Swatch token="bg-purple" bg="bg-purple" />
       </Group>
 
+      <section className="space-y-3">
+        <h3 className="text-md font-bold text-foreground">Feed Surfaces</h3>
+        <div className="flex flex-col gap-1.5">
+          <div className="bg-camera-feed flex h-20 w-full items-center justify-center rounded-lg text-2xs uppercase tracking-wider text-white/40">
+            Camera / detection snapshot surface
+          </div>
+          <code className="font-mono text-2xs text-muted-foreground">bg-camera-feed</code>
+        </div>
+      </section>
+
       <Group title="Chart Palette">
         <Swatch token="--chart-1" bg="bg-chart-1" />
         <Swatch token="--chart-2" bg="bg-chart-2" />

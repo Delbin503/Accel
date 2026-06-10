@@ -9,12 +9,10 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
-  Check,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -24,7 +22,8 @@ import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { FilterDropdown } from "@/components/shared/FilterDropdown";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -106,71 +105,6 @@ interface DismissedFilters {
 const EMPTY_DISMISSED_FILTERS: DismissedFilters = { reason: [], site: [], area: [], model: [] };
 
 /* ── Multi-select dropdown (same pattern as Detection Feed) ──────────────── */
-
-function FilterDropdown({
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  label: string;
-  options: readonly FilterOption[];
-  selected: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const hasValue = selected.length > 0;
-  const displayLabel = hasValue
-    ? selected.length === 1
-      ? (options.find((o) => o.value === selected[0])?.label ?? label)
-      : `${selected.length} selected`
-    : label;
-
-  function toggle(value: string) {
-    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
-            open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          <TruncatedText text={displayLabel} className="font-medium" />
-          <ChevronDown
-            className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
-          />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-1.5">
-        {options.map((opt) => {
-          const checked = selected.includes(opt.value);
-          return (
-            <button
-              key={opt.value}
-              onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <div
-                className={cn(
-                  "flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                  checked ? "border-primary bg-primary" : "border-muted-foreground/40"
-                )}
-              >
-                {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-              </div>
-              {opt.label}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 /* ── Collapsible filter panel ────────────────────────────────────────────── */
 
@@ -308,7 +242,7 @@ function ActiveFilterBar({
       {search && (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
           "{search}"
-          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
+          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
             <X className="size-2.5" />
           </button>
         </span>
@@ -316,7 +250,7 @@ function ActiveFilterBar({
       {allActive.map(({ group, value, label }) => (
         <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
           {label}
-          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
+          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
             <X className="size-2.5" />
           </button>
         </span>
@@ -351,7 +285,7 @@ function DismissedRow({
     >
       {/* Thumbnail with bounding boxes — same as Detection Feed */}
       <div className="self-start">
-        <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+        <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
           {event.bboxes.map((box, i) => (
             <React.Fragment key={i}>
               <div
@@ -576,18 +510,22 @@ export default function DismissedEventsPage() {
 
       {/* ── Event list ───────────────────────────────────────────────────── */}
       {visible.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-20 text-center text-muted-foreground">
-          <ShieldOff className="size-8 opacity-30" />
-          <p className="text-sm font-medium">No dismissed events match your filters</p>
-          {hasFilters && (
-            <button
-              className="text-sm text-primary hover:underline"
-              onClick={() => { setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
-            >
-              Clear all filters
-            </button>
-          )}
-        </div>
+        <EmptyState
+          className="rounded-xl border border-dashed border-border py-20"
+          icon={ShieldOff}
+          title="No dismissed events match your filters"
+          action={
+            hasFilters ? (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => { setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
+              >
+                Clear all filters
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-2">
           {visible.map((item) => (
