@@ -12,7 +12,7 @@ npm run prototype        # vite on http://localhost:5174
 ```
 
 Top-right **Dev · State** control flips the view through every state (Populated / Loading /
-Empty / Error / Cap reached). Use the **Detection Feed / Dismissed Events** toggle to switch views.
+Empty / Error). Use the **Detection Feed / Dismissed Events** toggle to switch views.
 
 ## The decision (why this pattern)
 
@@ -28,7 +28,7 @@ scroll (scroll-jank vs. live prepend, runaway loading). Resolved design:
 | 3 | Older events | **Manual "Load older entries" button** (not auto-on-scroll) |
 | 4 | New live events | **"N new events" pill** — operator pulls them in (never auto-prepend mid-triage) |
 | 5 | Virtualization | None for v1 — manual load + hard cap keeps the DOM flat |
-| 6 | Sizes & cap | **Initial 30 · +30 per click · cap 150**; at the cap, stop-and-nudge to filters |
+| 6 | Sizes | **Initial 20 · +20 per "Load older" click · no cap** (loads until caught-up) |
 | 7 | Selection safety | Selection persists across loads; **bottom roll-off pauses while anything is ticked** so a bulk action can never hit an off-screen row |
 | 8 | States | Skeleton (initial) · button spinner (load older) · empty · error+retry · caught-up / cap hint |
 
@@ -78,5 +78,6 @@ page. **Do NOT carry over:**
   `forced === "loading" | "empty" | "error"` override branches (replace with real data-layer
   states), the cloned `FEED_DATA` augmentation, and the simulated live `setInterval`.
 
-Everything else (Load-older button, the 150 cap + caught-up/cap footer, the "N new events" pill,
+Everything else (Load-older button +20/page, caught-up footer, the "N new events" pill, the
+Areas filter, the back-to-top button,
 bulk multi-select, the **bulk Restore + confirmation modal**) ports directly.

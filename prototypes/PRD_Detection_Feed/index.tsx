@@ -2,6 +2,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { ArrowUp } from "lucide-react";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -14,19 +15,44 @@ import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
 
-/* PROTOTYPE-ONLY: floating state tester — bottom-right, low opacity, reveals on hover.
-   Excluded when promoting to src. */
+/* PROTOTYPE-ONLY: floating state tester — bottom-right (left of the back-to-top
+   button), low opacity, reveals on hover. Excluded when promoting to src. */
 function FloatingTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
   return (
-    <div className="fixed bottom-4 right-4 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+    <div className="fixed bottom-6 right-24 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
       <StateTester value={value} onChange={onChange} />
     </div>
+  );
+}
+
+/* Back-to-top — icon-only circular button, bottom-right; appears after scrolling. */
+function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | null> }) {
+  const [show, setShow] = React.useState(false);
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setShow(el.scrollTop > 300);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [scrollRef]);
+
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Back to top"
+      title="Back to top"
+      className="fixed bottom-6 right-6 z-[90] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-colors hover:border-primary hover:text-primary"
+    >
+      <ArrowUp className="size-5" />
+    </button>
   );
 }
 
 function App() {
   const [forced, setForced] = React.useState<ForcedState>("normal");
   const resolve = () => setForced("normal");
+  const mainRef = React.useRef<HTMLElement>(null);
 
   return (
     <ThemeProvider defaultTheme="dark">
@@ -42,7 +68,7 @@ function App() {
                 <div className="flex-1" />
                 <ThemeToggle />
               </header>
-              <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
+              <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
                   <Route path="/detection-feed" element={<RealDetectionFeed forced={forced} onResolveForced={resolve} />} />
                   <Route path="/detection-feed/dismissed" element={<RealDismissed forced={forced} onResolveForced={resolve} />} />
@@ -51,6 +77,7 @@ function App() {
               </main>
             </div>
           </div>
+          <BackToTop scrollRef={mainRef} />
           <FloatingTester value={forced} onChange={setForced} />
           <Toaster position="top-center" theme="dark" richColors />
         </SidebarProvider>

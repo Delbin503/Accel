@@ -20,6 +20,7 @@ import {
   Bookmark,
   Clock,
   LayoutTemplate,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,6 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import {
   MOCK_RULES,
   ALL_TAGS,
-  DETECTION_TYPES,
   ZONES_LIST,
   CONDITIONS_LIST,
   ACTIONS_LIST,
@@ -48,7 +48,15 @@ import {
   UNITS_LIST,
   TEMPLATES,
 } from "@/mocks/rulesLibrary";
+import { MOCK_MODELS } from "@/mocks/modelManagement";
 import type { RuleData, ConditionRow, RowType, RuleSeverity } from "@/types/rules";
+
+/* Detection models available as WHEN suggestions — selectable by name, with
+ * their model ID shown alongside. Free-typed classes/variables are also allowed. */
+const MODEL_OPTIONS: string[] = MOCK_MODELS.map((m) => m.name);
+const MODEL_ID_BY_NAME: Record<string, string> = Object.fromEntries(
+  MOCK_MODELS.map((m) => [m.name, m.id])
+);
 
 /* ── Utility ─────────────────────────────────────────────────────────────── */
 
@@ -643,11 +651,17 @@ function FieldSearch({
   placeholder,
   options,
   onChange,
+  hints,
+  icon: Icon = Search,
 }: {
   value: string;
   placeholder: string;
   options: string[];
   onChange: (v: string) => void;
+  /** Optional right-aligned hint per option (e.g. a model ID shown beside the name). */
+  hints?: Record<string, string>;
+  /** Leading icon — defaults to a search magnifier. */
+  icon?: React.ElementType;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -668,7 +682,7 @@ function FieldSearch({
         className="flex cursor-text items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary hover:border-muted-foreground/40"
         onClick={() => { setOpen(true); inputRef.current?.focus(); }}
       >
-        <Search className="size-3.5 flex-shrink-0 text-muted-foreground" />
+        <Icon className="size-3.5 flex-shrink-0 text-muted-foreground" />
         <input
           ref={inputRef}
           value={value}
@@ -693,11 +707,16 @@ function FieldSearch({
               key={opt}
               onClick={() => { onChange(opt); setOpen(false); }}
               className={cn(
-                "w-full px-3 py-2 text-left text-base transition-colors hover:bg-muted",
+                "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-base transition-colors hover:bg-muted",
                 opt === value ? "font-semibold text-foreground" : "text-muted-foreground"
               )}
             >
-              {opt}
+              <span className="truncate">{opt}</span>
+              {hints?.[opt] && (
+                <span className="flex-shrink-0 rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
+                  {hints[opt]}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -709,7 +728,7 @@ function FieldSearch({
 /* ── Single condition row ────────────────────────────────────────────────── */
 
 const FIELD_OPTIONS: Record<RowType, string[]> = {
-  WHEN:   DETECTION_TYPES,
+  WHEN:   MODEL_OPTIONS,
   IN:     ZONES_LIST,
   AND:    CONDITIONS_LIST,
   OR:     CONDITIONS_LIST,
@@ -719,7 +738,7 @@ const FIELD_OPTIONS: Record<RowType, string[]> = {
 };
 
 const FIELD_PLACEHOLDER: Record<RowType, string> = {
-  WHEN:   "Placeholder",
+  WHEN:   "Select a model or type a class / variable…",
   IN:     "Select zone",
   AND:    "Pick condition",
   OR:     "Pick condition",
@@ -798,6 +817,8 @@ function ConditionRowItem({
           value={row.field}
           placeholder={FIELD_PLACEHOLDER[row.type]}
           options={FIELD_OPTIONS[row.type]}
+          hints={row.type === "WHEN" ? MODEL_ID_BY_NAME : undefined}
+          icon={row.type === "WHEN" ? Tag : undefined}
           onChange={(v) => {
             // When switching to Custom Hours, seed default times
             const isCustom = v === "Custom Hours" && row.type === "During";
@@ -827,6 +848,13 @@ function ConditionRowItem({
             className="bg-transparent text-sm text-foreground outline-none"
           />
         </div>
+      )}
+
+      {/* Model ID badge — shown when a known detection model is selected */}
+      {row.type === "WHEN" && MODEL_ID_BY_NAME[row.field] && (
+        <span className="flex-shrink-0 rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
+          {MODEL_ID_BY_NAME[row.field]}
+        </span>
       )}
 
       {/* Suffix for WHEN */}

@@ -42,10 +42,18 @@ interface Filters {
   severity: string[];
   type: string[];
   site: string[];
+  area: string[];
   model: string[];
 }
 
-const EMPTY_FILTERS: Filters = { severity: [], type: [], site: [], model: [] };
+const EMPTY_FILTERS: Filters = { severity: [], type: [], site: [], area: [], model: [] };
+
+/* Area options derived from the event data (FILTER_OPTIONS has no area list). */
+const AREA_OPTIONS = Array.from(
+  new Map(MOCK_EVENTS.map((e) => [e.area, e.areaDisplay] as const)).entries()
+)
+  .map(([value, label]) => ({ value, label }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 /* PROTOTYPE-ONLY: the real mock has ~14 events, too few to exercise Load-older / the
    150 cap. Clone the real events (keeps full card fidelity) onto the existing date
@@ -305,6 +313,7 @@ function ActiveFilterBar({
     severity: FILTER_OPTIONS.severity as readonly { value: string; label: string }[],
     type: FILTER_OPTIONS.type as readonly { value: string; label: string }[],
     site: FILTER_OPTIONS.site as readonly { value: string; label: string }[],
+    area: AREA_OPTIONS as readonly { value: string; label: string }[],
     model: FILTER_OPTIONS.model as readonly { value: string; label: string }[],
   };
 
@@ -398,7 +407,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All models"].map((l) => (
+              {["All sites", "All areas", "All models"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -449,9 +458,10 @@ function FilterPanel({
             />
           </div>
           {/* Dropdowns — severity & type come from KPI cards, date from the range bar */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { key: "site" as const, label: "Site", opts: FILTER_OPTIONS.site },
+              { key: "area" as const, label: "Area", opts: AREA_OPTIONS },
               { key: "model" as const, label: "Detection Model", opts: FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (
               <div key={key}>
@@ -576,10 +586,10 @@ export default function DetectionFeedPage({
   const { createCase, linkEvents: storeLinkEvents } = useIncidentCasesStore();
 
   // PROTOTYPE-ONLY listing state (Load-older / cap / live pill). Drop when promoting.
-  const [loadedCount, setLoadedCount] = React.useState(30);
+  const [loadedCount, setLoadedCount] = React.useState(20);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [liveCount, setLiveCount] = React.useState(0);
-  const CAP = 150;
+  const PAGE = 20;
 
   const [datePreset, setDatePreset] = React.useState<DatePreset>("all");
   const [dateFrom, setDateFrom] = React.useState("");
@@ -635,6 +645,7 @@ export default function DetectionFeedPage({
       ev = ev.filter((e) => filters.severity.includes(e.severity));
     if (filters.type.length > 0) ev = ev.filter((e) => filters.type.includes(e.type));
     if (filters.site.length > 0) ev = ev.filter((e) => filters.site.includes(e.site));
+    if (filters.area.length > 0) ev = ev.filter((e) => filters.area.includes(e.area));
     if (filters.model.length > 0) ev = ev.filter((e) => filters.model.includes(e.modelKey));
 
     if (search.trim()) {
@@ -655,21 +666,17 @@ export default function DetectionFeedPage({
 
   const isSelecting = selectedIds.size > 0;
 
-  // PROTOTYPE-ONLY: cap rendered events to loadedCount (Load-older + 150 cap).
+  // PROTOTYPE-ONLY: show loadedCount events; Load-older adds another PAGE (no cap).
   const loadedEvents = React.useMemo(
     () => visibleEvents.slice(0, loadedCount),
     [visibleEvents, loadedCount]
   );
-  const footerMode: "more" | "capped" | "caught-up" =
-    loadedCount >= CAP && visibleEvents.length > loadedCount
-      ? "capped"
-      : loadedCount >= visibleEvents.length
-        ? "caught-up"
-        : "more";
+  const footerMode: "more" | "caught-up" =
+    loadedCount >= visibleEvents.length ? "caught-up" : "more";
 
   // Reset the window whenever the filter scope changes.
   React.useEffect(() => {
-    setLoadedCount(30);
+    setLoadedCount(PAGE);
   }, [datePreset, kpiFilter, filters, search]);
 
   // Live simulation — drives the "N new events" pill (real state only).
@@ -683,7 +690,7 @@ export default function DetectionFeedPage({
     if (loadingOlder || footerMode !== "more") return;
     setLoadingOlder(true);
     window.setTimeout(() => {
-      setLoadedCount((c) => Math.min(CAP, c + 30, visibleEvents.length));
+      setLoadedCount((c) => Math.min(c + PAGE, visibleEvents.length));
       setLoadingOlder(false);
     }, 500);
   }
@@ -989,7 +996,7 @@ export default function DetectionFeedPage({
             </div>
           ))}
           <ListFooter
-            mode={forced === "capped" ? "capped" : footerMode}
+            mode={footerMode}
             loading={loadingOlder}
             onLoadOlder={loadOlder}
           />

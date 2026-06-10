@@ -1,11 +1,8 @@
 import { FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ForcedState } from "./shared";
+import type { ForcedState } from "./states";
 
-/* ──────────────────────────────────────────────────────────────────────────
-   PROTOTYPE-ONLY. This control forces the view into each state for testing.
-   It must NOT be promoted to src/ — see README "Promoting to src".
-   ────────────────────────────────────────────────────────────────────────── */
+/* PROTOTYPE-ONLY. Forces the view into each state for testing. Do NOT promote to src. */
 
 const OPTIONS: { key: ForcedState; label: string }[] = [
   { key: "normal", label: "Populated" },

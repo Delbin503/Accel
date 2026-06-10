@@ -2,7 +2,7 @@ import { AlertCircle, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Dev-only forced states for the State Tester (prototype-only). */
-export type ForcedState = "normal" | "loading" | "empty" | "error" | "capped";
+export type ForcedState = "normal" | "loading" | "empty" | "error";
 
 export function SkeletonList() {
   return (
@@ -37,7 +37,7 @@ export function ListFooter({
   loading,
   onLoadOlder,
 }: {
-  mode: "more" | "capped" | "caught-up";
+  mode: "more" | "caught-up";
   loading: boolean;
   onLoadOlder: () => void;
 }) {
@@ -48,13 +48,6 @@ export function ListFooter({
           {loading ? "Loading…" : "Load older entries"}
         </Button>
       </div>
-    );
-  }
-  if (mode === "capped") {
-    return (
-      <p className="py-3 text-center text-[12px] text-muted-foreground">
-        Showing the most recent 150 events. Narrow the date range or filters to see older ones.
-      </p>
     );
   }
   return (
