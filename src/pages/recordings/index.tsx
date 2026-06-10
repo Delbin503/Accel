@@ -30,8 +30,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -55,7 +58,7 @@ const MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; 
 function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) {
   const s = MODE_STYLES[mode];
   return (
-    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
       {s.label}
     </span>
   );
@@ -93,8 +96,8 @@ function FilterDropdown({ label, options, selected, onChange }: { label: string;
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn("flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary", open ? "border-primary" : "border-border", hasValue ? "text-primary" : "text-muted-foreground")}>
-          <span className="truncate font-medium">{displayLabel}</span>
+        <button className={cn("flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary", open ? "border-primary" : "border-border", hasValue ? "text-primary" : "text-muted-foreground")}>
+          <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
@@ -102,7 +105,7 @@ function FilterDropdown({ label, options, selected, onChange }: { label: string;
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button key={opt.value} onClick={() => toggle(opt.value)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+            <button key={opt.value} onClick={() => toggle(opt.value)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors", checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
@@ -138,20 +141,20 @@ function FilterPanel({ filters, onChange, search, onSearchChange }: { filters: R
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">{activeCount} active</span>
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All sites", "All areas", "All cameras", "All modes"].map((l) => (
-                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">{l}</span>
+                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">{l}</span>
               ))}
             </div>
           )}
         </div>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
-            <button onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }} className="text-[12px] text-muted-foreground underline hover:text-primary">
+            <button onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }} className="text-sm text-muted-foreground underline hover:text-primary">
               Clear all
             </button>
           )}
@@ -162,7 +165,7 @@ function FilterPanel({ filters, onChange, search, onSearchChange }: { filters: R
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => onSearchChange(e.target.value)} placeholder="Search by recording ID, camera, or area…" className="h-9 w-full pl-9 text-[13px]" />
+            <Input value={search} onChange={(e) => onSearchChange(e.target.value)} placeholder="Search by recording ID, camera, or area…" className="h-9 w-full pl-9 text-base" />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -172,7 +175,7 @@ function FilterPanel({ filters, onChange, search, onSearchChange }: { filters: R
               { key: "mode"   as const, label: "Mode",   opts: MODE_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
                 <FilterDropdown label={`All ${label.toLowerCase()}s`} options={opts} selected={filters[key]} onChange={(v) => setGroup(key, v)} />
               </div>
             ))}
@@ -263,20 +266,20 @@ function FauxPlayer({ rec, periods, currentSec, onSeek, isPlaying, onPlayToggle 
             {isPlaying ? <Pause className="size-6 text-white" /> : <Play className="size-6 text-white" />}
           </div>
         </button>
-        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
           <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-sev-critical" : "bg-muted-foreground")} />
           {isPlaying ? "Playing" : "Paused"}
         </div>
-        <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white/80 backdrop-blur-sm">
+        <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/80 backdrop-blur-sm">
           {rec.cameraName} · {rec.areaName}
         </div>
-        <div className="absolute bottom-3 right-3 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white/80 backdrop-blur-sm">
+        <div className="absolute bottom-3 right-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/80 backdrop-blur-sm">
           {fmtClock(currentSec)} / {rec.durationDisplay}
         </div>
       </div>
 
       <div className="border-t border-border bg-background/40 p-3">
-        <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+        <div className="mb-1.5 flex items-center justify-between text-2xs text-muted-foreground">
           <span className="font-mono">{rec.startsAtDisplay}</span>
           <span className="inline-flex items-center gap-1.5">
             <CircleDot className="size-3 text-success" />
@@ -355,23 +358,23 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Create Incident Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             From recording <span className="font-mono text-foreground">{recording.id}</span> ·{" "}
             <strong className="text-foreground">{selectedEvents.length}</strong> incident{selectedEvents.length === 1 ? "" : "s"} will be linked
           </p>
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Case Title</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 text-[13px]" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Case Title</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 text-base" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Severity</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Severity</label>
               <div className="flex gap-1.5">
                 {(["low", "medium", "critical"] as Severity[]).map((sv) => (
                   <button key={sv} onClick={() => setSeverity(sv)} className={cn(
-                    "flex-1 rounded-md border px-2 py-1.5 text-[11px] font-bold uppercase transition-colors",
+                    "flex-1 rounded-md border px-2 py-1.5 text-xs font-bold uppercase transition-colors",
                     severity === sv
                       ? sv === "critical" ? "border-sev-critical/60 bg-sev-critical/10 text-sev-critical"
                         : sv === "medium" ? "border-warning/60 bg-warning/10 text-warning"
@@ -384,16 +387,20 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Assign To</label>
-              <select value={assignee.id} onChange={(e) => { const a = ASSIGNEES.find((x) => x.id === e.target.value); if (a) setAssignee(a); }}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
-                {ASSIGNEES.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.id})</option>)}
-              </select>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assign To</label>
+              <Select value={assignee.id} onValueChange={(v) => { const a = ASSIGNEES.find((x) => x.id === v); if (a) setAssignee(a); }}>
+                <SelectTrigger className="h-9 w-full text-base">
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSIGNEES.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.id})</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {/* SLA target — auto-set by severity (mirrors Detection Feed escalate modal) */}
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               SLA Target <span className="text-muted-foreground/60">(auto-set by severity)</span>
             </p>
             <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
@@ -405,16 +412,16 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
                 return (
                   <>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Acknowledge</p>
-                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.ack}</p>
+                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Acknowledge</p>
+                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.ack}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Initial Action</p>
-                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.action}</p>
+                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Initial Action</p>
+                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.action}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Resolution</p>
-                      <p className="mt-1 font-mono text-[13px] font-bold text-foreground">{sla.resolve}</p>
+                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Resolution</p>
+                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.resolve}</p>
                     </div>
                   </>
                 );
@@ -422,28 +429,28 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-3">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Linked Incidents ({selectedEvents.length})
             </p>
             {selectedEvents.length === 0 ? (
-              <p className="text-[12px] italic text-muted-foreground">Select at least one detected incident from the timeline.</p>
+              <p className="text-sm italic text-muted-foreground">Select at least one detected incident from the timeline.</p>
             ) : (
               <ul className="space-y-1">
                 {selectedEvents.map((e) => (
-                  <li key={e.id} className="flex items-center gap-2 text-[12px]">
+                  <li key={e.id} className="flex items-center gap-2 text-sm">
                     <SeverityBadge severity={e.severity} />
-                    <span className="font-mono text-[11px] text-muted-foreground">{e.id}</span>
-                    <span className="truncate text-foreground">{e.typeLabel}</span>
-                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">{e.time}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{e.id}</span>
+                    <TruncatedText text={e.typeLabel} className="text-foreground" />
+                    <span className="ml-auto font-mono text-xs text-muted-foreground">{e.time}</span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
+              className="w-full text-base" />
           </div>
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -511,12 +518,12 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
                 <RecordingModeChip mode={recording.mode} />
               </div>
               <div className="mb-1 flex flex-wrap items-center gap-2">
-                <SheetTitle className="truncate text-[17px] font-bold">
-                  Recording · {recording.dateLabel}
+                <SheetTitle className="min-w-0 text-lg font-bold">
+                  <TruncatedText text={`Recording · ${recording.dateLabel}`} />
                 </SheetTitle>
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">{recording.id}</span>
+                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{recording.id}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <Video className="size-3" />
                 {recording.cameraName} ({recording.cameraId})
                 <span className="text-muted-foreground/40">·</span>
@@ -539,7 +546,7 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
           <FauxPlayer rec={recording} periods={periods} currentSec={currentSec} onSeek={(s) => setCurrentSec(s)} isPlaying={isPlaying} onPlayToggle={() => setIsPlaying((v) => !v)} />
 
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recording Info</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording Info</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
               {([
                 ["Recording ID", <span className="font-mono text-xs text-primary">{recording.id}</span>],
@@ -556,8 +563,8 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
                 ["Ends At",      <span className="font-mono text-xs">{recording.endsAtDisplay}</span>],
               ] as [string, React.ReactNode][]).map(([label, value]) => (
                 <div key={label as string} className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-                  <span className="text-[13px] font-medium text-foreground">{value}</span>
+                  <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+                  <span className="text-base font-medium text-foreground">{value}</span>
                 </div>
               ))}
             </div>
@@ -565,17 +572,17 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
 
           <div>
             <div className="mb-2.5 flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Detected Incidents ({periods.length})
               </span>
               {periods.length > 0 && (
-                <button onClick={selectedEventIds.size === periods.length ? clearSel : selectAll} className="text-[11px] text-primary hover:underline">
+                <button onClick={selectedEventIds.size === periods.length ? clearSel : selectAll} className="text-xs text-primary hover:underline">
                   {selectedEventIds.size === periods.length ? "Unselect all" : "Select all"}
                 </button>
               )}
             </div>
             {periods.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-[12px] text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
                 <CircleDot className="mx-auto mb-2 size-6 opacity-30" />
                 No incidents detected during this recording window.
               </div>
@@ -593,17 +600,19 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
                         <div className="min-w-0 flex-1">
                           <div className="mb-1 flex flex-wrap items-center gap-1.5">
                             <SeverityBadge severity={p.event.severity} />
-                            <span className="text-[13px] font-semibold text-foreground">{p.event.typeLabel}</span>
-                            <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">{p.event.useCaseId}</span>
+                            <span className="text-base font-semibold text-foreground">{p.event.typeLabel}</span>
+                            <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{p.event.useCaseId}</span>
                             {p.event.caseId && (
-                              <span className="rounded border border-success/30 bg-success/10 px-1.5 py-px text-[10px] font-semibold text-success">In case</span>
+                              <span className="rounded border border-success/30 bg-success/10 px-1.5 py-px text-2xs font-semibold text-success">In case</span>
                             )}
                           </div>
-                          <p className="mb-2 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{parseEventText(p.event.summary)}</p>
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                          <p className="mb-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                            {parseEventText(p.event.summary)}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1"><Clock className="size-2.5" />{p.event.time}</span>
                             <span className="inline-flex items-center gap-1 font-mono"><CircleDot className="size-2.5 text-sev-critical" />@ {fmtClock(p.offsetSec)}</span>
-                            <button onClick={() => setCurrentSec(p.offsetSec)} className="text-[11px] text-primary hover:underline">Jump to mark</button>
+                            <button onClick={() => setCurrentSec(p.offsetSec)} className="text-xs text-primary hover:underline">Jump to mark</button>
                           </div>
                         </div>
                         <Button variant="outline" className="gap-1.5" onClick={() => onOpenEvent(p.event)}>
@@ -624,7 +633,7 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
             <Link2 className="size-3.5" />
             Create Case
           </Button>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             <strong className="text-foreground">{selectedEventIds.size}</strong> of {periods.length} selected
           </p>
           <Button variant="outline" className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
@@ -824,7 +833,7 @@ export default function RecordingsPage() {
       <FilterPanel filters={filters} onChange={(f) => { setFilters(f); setPage(1); }} search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           recording{filtered.length === 1 ? "" : "s"} match current filters
           {hasFilters && (
@@ -845,7 +854,7 @@ export default function RecordingsPage() {
             <PopoverContent align="end" className="w-48 p-1">
               {SORT_OPTIONS.map((o) => (
                 <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
-                  className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-muted", sort === o.key ? "text-primary" : "text-foreground")}>
+                  className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted", sort === o.key ? "text-primary" : "text-foreground")}>
                   {o.label}
                   {sort === o.key && <Check className="size-3.5" />}
                 </button>
@@ -886,34 +895,37 @@ export default function RecordingsPage() {
                       <Play className="size-4 text-white" />
                     </div>
                   </div>
-                  <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
+                  <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
                   <div className="absolute left-9 top-2.5"><RecordingModeChip mode={r.mode} /></div>
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-[10px] text-white/90">
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
                     <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
                     <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
                   </div>
                 </div>
                 <div className="p-3.5">
                   <div className="mb-1 flex items-start justify-between gap-2">
-                    <p className="truncate text-[13px] font-bold text-foreground transition-colors group-hover:text-primary">{r.cameraName}</p>
-                    <p className="flex-shrink-0 font-mono text-[10px] text-muted-foreground">{r.id}</p>
+                    <TruncatedText
+                      text={r.cameraName}
+                      className="text-base font-bold text-foreground transition-colors group-hover:text-primary"
+                    />
+                    <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
                   </div>
-                  <p className="mb-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <p className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="size-2.5" />
                     {r.areaName} · {r.siteName}
                   </p>
                   <div className="flex items-center justify-between border-t border-border/60 pt-2">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-2xs font-semibold text-success">
                       <CircleDot className="size-2.5" />
                       {r.eventCount} events
                     </span>
                     {periodCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-sev-critical">
+                      <span className="inline-flex items-center gap-1 text-2xs text-sev-critical">
                         <AlertTriangle className="size-2.5" />
                         {periodCount} detected
                       </span>
                     )}
-                    <span className="font-mono text-[10px] text-muted-foreground">{r.dateLabel}</span>
+                    <span className="font-mono text-2xs text-muted-foreground">{r.dateLabel}</span>
                   </div>
                 </div>
                 </button>
@@ -925,7 +937,7 @@ export default function RecordingsPage() {
 
       {filtered.length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {`${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
           </p>
           <div className="flex items-center gap-1">
@@ -933,7 +945,7 @@ export default function RecordingsPage() {
               className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
               <ChevronLeft className="size-3.5" />
             </button>
-            <span className="px-2 text-[12px] text-foreground">
+            <span className="px-2 text-sm text-foreground">
               {page} <span className="text-muted-foreground/60">of {pageCount}</span>
             </span>
             <button onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={page === pageCount}
@@ -963,12 +975,12 @@ export default function RecordingsPage() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
-            <span className="text-[13px] font-semibold text-foreground">
+            <span className="text-base font-semibold text-foreground">
               {selectedIds.size} recording{selectedIds.size > 1 ? "s" : ""} selected
             </span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <Button variant="ghost" className="gap-1.5 text-[12px] text-muted-foreground"
+            <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground"
               onClick={() => setSelectedIds(new Set())}>
               <X className="size-3.5" />
               Clear selection

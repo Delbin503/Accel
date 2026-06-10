@@ -84,7 +84,7 @@ function ProfileRoleBadge({ role }: { role: UserRole }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.classes
       )}
     >
@@ -148,7 +148,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "User Management", href: "/users", icon: Users },
       { label: "Device Health", href: "/device-health", icon: HeartPulse },
-      { label: "System Config", href: "/config", icon: Settings },
+      { label: "System Configuration", href: "/config", icon: Settings },
       { label: "Activity Logs", href: "/activity-logs", icon: ScrollText },
     ],
   },
@@ -313,12 +313,12 @@ function UserProfile({ onBell }: { onBell: () => void }) {
           <DropdownMenuContent side="top" align="start" className="w-64 p-0">
           <div className="border-b border-border px-3 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                 {user.initials}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-bold text-foreground">{user.name}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{user.email}</p>
+                <p className="truncate text-base font-bold text-foreground">{user.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                 <div className="mt-1">
                   <ProfileRoleBadge role={user.role} />
                 </div>
@@ -326,26 +326,26 @@ function UserProfile({ onBell }: { onBell: () => void }) {
             </div>
           </div>
           <div className="p-1">
-            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-[13px]" onClick={() => go("/profile")}>
+            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base" onClick={() => go("/profile")}>
               <User className="size-4 text-muted-foreground" />
               My Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-[13px]" onClick={() => go("/settings")}>
+            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base" onClick={() => go("/settings")}>
               <Settings className="size-4 text-muted-foreground" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-[13px]" onClick={() => go("/billing")}>
+            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base" onClick={() => go("/billing")}>
               <CreditCard className="size-4 text-muted-foreground" />
               Billing & License
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-[13px]" onClick={() => go("/system-info")}>
+            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base" onClick={() => go("/system-info")}>
               <Info className="size-4 text-muted-foreground" />
               System Info
             </DropdownMenuItem>
           </div>
           <DropdownMenuSeparator className="my-0" />
           <div className="p-1">
-            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-[13px] text-sev-critical focus:text-sev-critical"
+            <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base text-sev-critical focus:text-sev-critical"
               onClick={handleSignOut}>
               <LogOut className="size-4" />
               Sign Out
@@ -367,7 +367,7 @@ function UserProfile({ onBell }: { onBell: () => void }) {
         >
           <Bell className="size-4" />
           {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-destructive-foreground">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -385,7 +385,7 @@ function SigmawaveFooter() {
 
   return (
     <div className="px-4 pb-3 pt-1 text-center">
-      <p className="text-[10px] leading-relaxed text-muted-foreground/60">
+      <p className="text-2xs leading-relaxed text-muted-foreground/60">
         Powered By © Sigmawave
         <br />
         Version 1.01
@@ -409,7 +409,7 @@ export function AppSidebar() {
         <SidebarContent className="gap-0 overflow-x-hidden">
           {NAV_GROUPS.map((group) => (
             <SidebarGroup key={group.label} className="py-2">
-              <SidebarGroupLabel className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <SidebarGroupLabel className="mb-1 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                 {group.label}
               </SidebarGroupLabel>
 

@@ -13,6 +13,7 @@ export interface Plan {
   pricePerMonth: number;          // per site
   pricePerYear: number;           // per site, with annual discount
   cameraLimit: number | "unlimited";
+  nvrLimit: number | "unlimited";
   userLimit: number | "unlimited";
   retentionDays: number;          // recording retention
   highlight?: boolean;            // marketing highlight
@@ -28,6 +29,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     pricePerMonth: 149,
     pricePerYear: 1_490, // ~17% off
     cameraLimit: 5,
+    nvrLimit: 1,
     userLimit: 10,
     retentionDays: 30,
     features: [
@@ -53,6 +55,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     pricePerMonth: 399,
     pricePerYear: 3_990,
     cameraLimit: 25,
+    nvrLimit: 3,
     userLimit: 50,
     retentionDays: 90,
     highlight: true,
@@ -81,6 +84,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     pricePerMonth: 999,
     pricePerYear: 9_990,
     cameraLimit: "unlimited",
+    nvrLimit: "unlimited",
     userLimit: "unlimited",
     retentionDays: 365,
     features: [

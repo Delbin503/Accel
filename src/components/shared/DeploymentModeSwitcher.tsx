@@ -60,13 +60,13 @@ function Segment({
       )}
       aria-current={active ? "page" : undefined}
     >
-      <span className="flex items-center gap-1.5 text-[12px] font-bold">
+      <span className="flex items-center gap-1.5 text-sm font-bold">
         {icon}
         {label}
       </span>
       <span
         className={cn(
-          "text-[9px] font-semibold uppercase tracking-wider",
+          "text-3xs font-semibold uppercase tracking-wider",
           active ? "text-primary-foreground/85" : "text-muted-foreground/70"
         )}
       >

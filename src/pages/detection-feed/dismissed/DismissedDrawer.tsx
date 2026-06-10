@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { SeverityBadge, parseEventText } from "../shared";
 import { FP_REASON_LABELS } from "@/mocks/detectionFeed";
@@ -30,7 +31,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        "inline-flex items-center rounded px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider",
         REASON_CHIP[reason]
       )}
     >
@@ -44,7 +45,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
 function DrawerThumb({ item }: { item: DismissedEvent }) {
   const { event } = item;
   return (
-    <div className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+    <div className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-camera-feed">
       {event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
@@ -58,7 +59,7 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-1 py-px text-[9px] font-semibold text-white opacity-60",
+              "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-white opacity-60",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-purple"
               : "bg-primary"
@@ -72,7 +73,7 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
       {/* Dismissed overlay */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
         <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-3 py-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
             Dismissed
           </span>
           <ReasonChip reason={item.reason} />
@@ -81,7 +82,7 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
       <button className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-primary/80 hover:text-white">
         <Play className="size-4 fill-white/60" />
       </button>
-      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[10px] text-white">
+      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-2xs text-white">
         {event.time}
       </span>
     </div>
@@ -99,7 +100,7 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -112,7 +113,7 @@ function SectionTitle({
 function DetailGrid({ item }: { item: DismissedEvent }) {
   const { event } = item;
   const rows: Array<[string, React.ReactNode]> = [
-    ["Use Case ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
+    ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
     ["Detection Type", event.typeLabel],
     ...(event.assetId
       ? [["Asset ID", <span className="font-mono text-xs text-primary">{event.assetId}</span>] as [string, React.ReactNode]]
@@ -130,10 +131,10 @@ function DetailGrid({ item }: { item: DismissedEvent }) {
     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
       {rows.map(([label, value]) => (
         <div key={label as string} className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
           </span>
-          <span className="text-[13px] font-medium text-foreground">{value}</span>
+          <span className="text-base font-medium text-foreground">{value}</span>
         </div>
       ))}
     </div>
@@ -148,17 +149,12 @@ function ModelCard({ item }: { item: DismissedEvent }) {
     <div className="rounded-lg border border-purple-soft bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
       <div className="mb-2 flex items-center gap-2">
         <Settings className="size-4 text-purple" />
-        <span className="font-mono text-[13px] font-bold text-purple">{event.model}</span>
+        <span className="font-mono text-base font-bold text-purple">{event.model}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-[11px] text-muted-foreground">
-        <div><span className="font-semibold text-muted-foreground/70">Use case: </span>{event.useCaseId}</div>
+      <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
+        <div><span className="font-semibold text-muted-foreground/70">Model ID: </span>{event.useCaseId}</div>
         <div><span className="font-semibold text-muted-foreground/70">Trained: </span>{event.modelTrainedDate}</div>
-        <div><span className="font-semibold text-muted-foreground/70">Training data: </span>{event.modelTrainingSamples} samples</div>
         <div><span className="font-semibold text-muted-foreground/70">Last eval mAP: </span>{event.modelMaP}</div>
-      </div>
-      <div className="mt-2.5 border-t border-purple/15 pt-2.5 text-[11px] text-muted-foreground">
-        <span className="font-semibold text-purple">⬢ Synthetic data: </span>
-        {event.syntheticPct}% of training set generated via Terra (Sigmawave AI).
       </div>
     </div>
   );
@@ -196,10 +192,10 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
                 <SeverityBadge severity={event.severity} />
                 <ReasonChip reason={item.reason} />
               </div>
-              <SheetTitle className="truncate text-[17px] font-bold leading-snug">
-                {event.typeLabel}
+              <SheetTitle className="text-lg font-bold leading-snug">
+                <TruncatedText text={event.typeLabel} />
               </SheetTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
               </p>
             </div>
@@ -225,7 +221,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
                   Operator Notes
                 </span>
               </SectionTitle>
-              <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-4 text-[13px] leading-relaxed text-foreground">
+              <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-4 text-base leading-relaxed text-foreground">
                 {item.notes}
               </div>
             </div>
@@ -234,7 +230,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
           {/* Original Detection Summary */}
           <div>
             <SectionTitle>Original Detection Summary</SectionTitle>
-            <div className="rounded-lg border border-border bg-card p-4 text-[13px] leading-relaxed text-muted-foreground">
+            <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
               {parseEventText(event.summary)}
             </div>
           </div>
@@ -244,7 +240,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
             <div>
               <SectionTitle
                 aside={
-                  <span className="rounded bg-purple-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-purple">
+                  <span className="rounded bg-purple-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-purple">
                     AI-generated · 8s clip
                   </span>
                 }
@@ -254,7 +250,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
                   VLM Reasoning
                 </span>
               </SectionTitle>
-              <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-[13px] leading-relaxed text-muted-foreground">
+              <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
                 {parseEventText(event.vlmReasoning)}
               </div>
             </div>
@@ -282,7 +278,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
             <div>
               <SectionTitle
                 aside={
-                  <span className="rounded-full bg-muted px-2 py-px text-[11px] font-semibold text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
                     {eventEntities.length}
                   </span>
                 }

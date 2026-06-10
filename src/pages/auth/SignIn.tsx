@@ -58,16 +58,16 @@ export default function SignInPage() {
     <AuthLayout>
       <div>
         <DeploymentModeSwitcher />
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Welcome
         </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Sign in to your Accel workspace to continue.
         </p>
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Email
             </label>
             <div className="relative">
@@ -79,13 +79,13 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="h-10 pl-9 text-[13px]"
+                className="h-10 pl-9 text-base"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Password
             </label>
             <div className="relative">
@@ -97,7 +97,7 @@ export default function SignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-10 px-9 text-[13px]"
+                className="h-10 px-9 text-base"
               />
               <button
                 type="button"
@@ -115,7 +115,7 @@ export default function SignInPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={remember}
@@ -126,14 +126,14 @@ export default function SignInPage() {
             </label>
             <Link
               to="/forgot-password"
-              className="text-[12px] font-semibold text-primary hover:underline"
+              className="text-sm font-semibold text-primary hover:underline"
             >
               Forgot password?
             </Link>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
               <AlertCircle className="size-3.5 flex-shrink-0" />
               {error}
             </div>
@@ -141,7 +141,7 @@ export default function SignInPage() {
 
           <Button
             type="submit"
-            className="h-10 w-full gap-2 text-[13px]"
+            className="h-10 w-full gap-2 text-base"
             disabled={loading}
           >
             {loading ? (
@@ -156,7 +156,7 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-[12px] text-muted-foreground">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link
             to="/signup"

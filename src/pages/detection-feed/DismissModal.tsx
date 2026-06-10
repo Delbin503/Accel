@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { DetectionEvent } from "@/types/detection";
 
@@ -55,13 +56,11 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
   const isBulk = (bulkCount ?? 0) > 1;
   const [selectedReason, setSelectedReason] = React.useState("wrong-class");
   const [notes, setNotes] = React.useState("");
-  const [createRule, setCreateRule] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
       setSelectedReason("wrong-class");
       setNotes("");
-      setCreateRule(false);
     }
   }, [open]);
 
@@ -70,7 +69,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Dismiss as False Positive</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
           </p>
         </DialogHeader>
@@ -81,10 +80,10 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
             <div className="flex items-start gap-2.5 rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3">
               <Layers className="mt-0.5 size-4 flex-shrink-0 text-sev-medium" />
               <div>
-                <p className="text-[12px] font-semibold text-sev-medium">
+                <p className="text-sm font-semibold text-sev-medium">
                   Dismissing {bulkCount} selected events
                 </p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   The same reason and notes will be applied to all selected events.
                 </p>
               </div>
@@ -94,7 +93,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
           {/* Feedback info banner */}
           <div className="flex gap-2.5 rounded-lg border border-purple/20 bg-purple-soft p-3">
             <Info className="mt-0.5 size-4 flex-shrink-0 text-purple" />
-            <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Your feedback retrains the detection model. The more specific you are, the faster{" "}
               <strong className="text-purple">
                 {event ? event.model.replace(/\.\d+$/, ".3") : "accel-vms v4.3"}
@@ -105,7 +104,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
 
           {/* FP reason grid */}
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Why is this a false positive?
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -114,7 +113,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
                   key={r.id}
                   onClick={() => setSelectedReason(r.id)}
                   className={cn(
-                    "flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-left text-[12px] text-muted-foreground transition-colors",
+                    "flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors",
                     selectedReason === r.id
                       ? "border-primary bg-primary-muted text-primary"
                       : "border-border bg-muted hover:border-primary"
@@ -135,7 +134,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
                   </span>
                   <div>
                     <div className="font-semibold leading-tight">{r.label}</div>
-                    <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+                    <div className="mt-0.5 text-2xs text-muted-foreground/70">
                       {r.description}
                     </div>
                   </div>
@@ -146,37 +145,16 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
 
           {/* Notes */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes (optional)
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add details — helps the model team understand the context..."
-              className="min-h-[60px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="min-h-[60px] w-full resize-y"
             />
           </div>
-
-          {/* Suppression rule checkbox */}
-          <label className="flex cursor-pointer items-start gap-2.5 text-[13px]">
-            <input
-              type="checkbox"
-              checked={createRule}
-              onChange={(e) => setCreateRule(e.target.checked)}
-              className="mt-0.5 accent-[hsl(var(--primary))]"
-            />
-            <span className="text-muted-foreground">
-              Create suppression rule — auto-dismiss similar events from{" "}
-              {event ? (
-                <strong className="text-foreground">
-                  {event.camera} · {event.useCaseId}
-                </strong>
-              ) : (
-                "these cameras"
-              )}{" "}
-              matching this pattern
-            </span>
-          </label>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">

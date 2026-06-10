@@ -16,6 +16,67 @@
   --font-mono:    "JetBrains Mono", monospace;
   --font-heading: var(--font-sans);
 
+  /* ── Type scale ──────────────────────────────────────────────────────────
+     Dense dashboard scale. Generates text-3xs … text-4xl utilities, each
+     paired with a line-height. `text-base` (13px) is the body default.
+     Migration map from legacy arbitrary values:
+       9px→text-3xs  10px→text-2xs  11px→text-xs  12px→text-sm  13px→text-base
+       14/15px→text-md  16/17px→text-lg  18px→text-xl  20/22px→text-2xl
+       24/26px→text-3xl  28px→text-4xl
+     Resize the whole product by editing these 10 values — nothing else. */
+  --text-3xs:               0.5625rem;  /*  9px */
+  --text-3xs--line-height:  0.75rem;    /* 12px */
+  --text-2xs:               0.625rem;   /* 10px */
+  --text-2xs--line-height:  0.875rem;   /* 14px */
+  --text-xs:                0.6875rem;  /* 11px */
+  --text-xs--line-height:   1rem;       /* 16px */
+  --text-sm:                0.75rem;    /* 12px */
+  --text-sm--line-height:   1rem;       /* 16px */
+  --text-base:              0.8125rem;  /* 13px — body default */
+  --text-base--line-height: 1.125rem;   /* 18px */
+  --text-md:                0.875rem;   /* 14px */
+  --text-md--line-height:   1.25rem;    /* 20px */
+  --text-lg:                1rem;       /* 16px */
+  --text-lg--line-height:   1.375rem;   /* 22px */
+  --text-xl:                1.125rem;   /* 18px */
+  --text-xl--line-height:   1.625rem;   /* 26px */
+  --text-2xl:               1.375rem;   /* 22px */
+  --text-2xl--line-height:  1.75rem;    /* 28px */
+  --text-3xl:               1.5rem;     /* 24px */
+  --text-3xl--line-height:  2rem;       /* 32px */
+  --text-4xl:               1.75rem;    /* 28px */
+  --text-4xl--line-height:  2.25rem;    /* 36px */
+
+  /* ── Easing tokens — generates ease-standard / ease-emphasized ──────────── */
+  --ease-standard:    cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized:  cubic-bezier(0.3, 0, 0, 1);
+
+  /* ── Motion durations (use via duration-[var(--duration-fast)]) ─────────── */
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   320ms;
+
+  /* ── Z-index scale (use via z-[var(--z-modal)]) ─────────────────────────── */
+  --z-base:     1;
+  --z-dropdown: 10;
+  --z-sticky:   20;
+  --z-overlay:  30;
+  --z-drawer:   40;
+  --z-modal:    50;
+  --z-toast:    60;
+  --z-tooltip:  70;
+
+  /* ── Icon-size convention (documentation — apply with size-* utilities) ───
+       size-3  (12px) → inline badge / chip icons
+       size-4  (16px) → button icons, input adornments, list-row icons
+       size-5  (20px) → section-header icons, empty-state icons
+       size-6+ (24px+) → hero / feature icons only
+     ── Spacing rhythm convention ────────────────────────────────────────────
+       card padding      → p-4
+       section gaps       → gap-3
+       inline / icon gaps → gap-1.5
+       page section stack → space-y-4 */
+
   /* Semantic colors */
   --color-background:          var(--background);
   --color-foreground:          var(--foreground);
@@ -223,6 +284,17 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Surface utilities
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Camera / CCTV feed placeholder surface — warm-dark gradient behind live
+   tiles, recording thumbnails and detection snapshots. Replaces ad-hoc
+   raw-hex gradients so every camera surface is identical. */
+@utility bg-camera-feed {
+  background-image: linear-gradient(135deg, hsl(24 50% 11%) 0%, hsl(0 0% 10%) 100%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

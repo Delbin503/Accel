@@ -48,7 +48,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <TruncatedText text={title} className="min-w-0 flex-1 text-[13px] font-bold text-foreground" />
+        <TruncatedText text={title} className="min-w-0 flex-1 text-base font-bold text-foreground" />
         {action}
       </div>
       <div className="p-4">{children}</div>
@@ -72,7 +72,7 @@ function SevPill({ kind, value }: { kind: SevKind; value: number }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold",
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-bold",
         s.bg, s.text, "border-current/30"
       )}
     >
@@ -87,7 +87,7 @@ function SevRow({ kind, value, total }: { kind: SevKind; value: number; total: n
   const s = SEV_STYLES[kind];
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2 text-[11px]">
+    <div className="flex items-center gap-2 text-xs">
       <span className={cn("inline-flex items-center gap-1 font-bold", s.text)}>
         <span className={cn("size-1.5 rounded-full", s.dot)} />
         {s.label}
@@ -140,7 +140,7 @@ function SiteMultiSelect({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
               ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
               : "border-primary bg-primary/10 text-primary"
@@ -153,10 +153,10 @@ function SiteMultiSelect({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2">
         <div className="mb-2 flex items-center justify-between px-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
+          <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
           <button
             onClick={() => onChange([])}
-            className="text-[10px] font-semibold uppercase tracking-wider text-primary hover:underline"
+            className="text-2xs font-semibold uppercase tracking-wider text-primary hover:underline"
           >
             All
           </button>
@@ -168,7 +168,7 @@ function SiteMultiSelect({
               <button
                 key={o.id}
                 onClick={() => onChange(checked ? selected.filter((s) => s !== o.id) : [...selected, o.id])}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] hover:bg-muted/60"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
               >
                 <span
                   className={cn(
@@ -408,7 +408,7 @@ export default function DashboardPage() {
               systemStatus === "critical" ? "text-sev-critical" : "text-warning"
             )}
           />
-          <div className="min-w-0 flex-1 text-[13px]">
+          <div className="min-w-0 flex-1 text-base">
             <span
               className={cn(
                 "font-semibold",
@@ -443,7 +443,7 @@ export default function DashboardPage() {
         <PageHeader.Actions>
           <span
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
               statusStyles
             )}
           >
@@ -487,7 +487,7 @@ export default function DashboardPage() {
         />
         <KpiCard
           label="Cameras"
-          value={<>{camOnline}<span className="text-[14px] text-muted-foreground"> / {camTotal}</span></>}
+          value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
           sub={`${camTotal - camOnline} offline`}
           accent="success"
           onClick={() => navigate("/site/cameras")}
@@ -514,13 +514,13 @@ export default function DashboardPage() {
           <Section
             title="Detections by Site — Severity Breakdown"
             action={
-              <Button variant="ghost" className="gap-1 text-[12px]" onClick={() => navigate("/detection-feed")}>
+              <Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>
                 View feed <ArrowUpRight className="size-3" />
               </Button>
             }
           >
             {detectionsBySite.length === 0 ? (
-              <p className="px-3 py-8 text-center text-[12px] italic text-muted-foreground">No detections recorded in this range.</p>
+              <p className="px-3 py-8 text-center text-sm italic text-muted-foreground">No detections recorded in this range.</p>
             ) : (
               <>
                 <div className="h-[240px]">
@@ -565,20 +565,20 @@ export default function DashboardPage() {
                               />
                               <TruncatedText
                                 text={s.site}
-                                className="min-w-0 flex-1 text-[11px] font-semibold text-foreground"
+                                className="min-w-0 flex-1 text-xs font-semibold text-foreground"
                               />
                             </div>
                             {/* Row 2: big number */}
                             <p className="inline-flex items-baseline gap-1 font-mono">
-                              <span className="text-[22px] font-bold leading-none text-foreground">
+                              <span className="text-2xl font-bold leading-none text-foreground">
                                 {s.total}
                               </span>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-2xs text-muted-foreground">
                                 detections
                               </span>
                             </p>
                             {/* Row 3: severity breakdown chips */}
-                            <div className="flex items-center gap-1.5 text-[10px]">
+                            <div className="flex items-center gap-1.5 text-2xs">
                               <SevPill kind="critical" value={s.critical} />
                               <SevPill kind="medium"   value={s.medium} />
                               <SevPill kind="low"      value={s.low} />
@@ -587,19 +587,19 @@ export default function DashboardPage() {
                         </PopoverTrigger>
                         <PopoverContent align="start" className="w-64 p-0">
                           <div className="border-b border-border px-3 py-2.5">
-                            <p className="inline-flex items-center gap-1.5 text-[12px] font-bold text-foreground">
+                            <p className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground">
                               <span
                                 className="size-2.5 flex-shrink-0 rounded-full"
                                 style={{ background: color }}
                               />
                               {s.site}
                             </p>
-                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                            <p className="mt-0.5 text-2xs text-muted-foreground">
                               <strong className="font-mono text-foreground">{s.total}</strong> detections in this range
                             </p>
                           </div>
                           <div className="px-3 py-3">
-                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                               Severity breakdown
                             </p>
                             <div className="space-y-1.5">
@@ -611,7 +611,7 @@ export default function DashboardPage() {
                           <div className="border-t border-border bg-muted/20 px-3 py-2.5">
                             <button
                               onClick={() => navigate("/detection-feed")}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                             >
                               View feed for this site
                               <ArrowUpRight className="size-3" />
@@ -633,7 +633,7 @@ export default function DashboardPage() {
       <Section
         title="Zone Areas"
         action={
-          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="text-muted-foreground">
               <strong className="text-foreground">{filteredZoneAreas.length}</strong> area{filteredZoneAreas.length === 1 ? "" : "s"}
             </span>
@@ -642,7 +642,7 @@ export default function DashboardPage() {
         }
       >
         {filteredZoneAreas.length === 0 ? (
-          <p className="px-3 py-6 text-center text-[12px] italic text-muted-foreground">
+          <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">
             {zoneSiteFilter.length > 0 ? "No zones match the selected sites." : "No detections recorded in this range."}
           </p>
         ) : (
@@ -656,15 +656,15 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-center gap-1.5">
                         <MapPin className="size-3 flex-shrink-0 text-muted-foreground" />
-                        <TruncatedText text={z.area} className="min-w-0 flex-1 text-[11px] font-semibold text-foreground" />
+                        <TruncatedText text={z.area} className="min-w-0 flex-1 text-xs font-semibold text-foreground" />
                       </div>
-                      <TruncatedText text={z.site} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={z.site} className="text-2xs text-muted-foreground" />
                       <div className="mt-0.5 flex items-center justify-between gap-1.5">
                         <span className="inline-flex items-baseline gap-1 font-mono">
-                          <span className="text-[17px] font-bold leading-none text-foreground">{z.total}</span>
-                          <span className="text-[10px] text-muted-foreground">incident{z.total === 1 ? "" : "s"}</span>
+                          <span className="text-lg font-bold leading-none text-foreground">{z.total}</span>
+                          <span className="text-2xs text-muted-foreground">incident{z.total === 1 ? "" : "s"}</span>
                         </span>
-                        <span className="inline-flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-0.5 text-3xs text-muted-foreground">
                           <Video className="size-2.5" />
                           {z.cameras}
                         </span>
@@ -673,12 +673,12 @@ export default function DashboardPage() {
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-72 p-0">
                     <div className="border-b border-border px-3 py-2.5">
-                      <p className="inline-flex items-center gap-1.5 text-[12px] font-bold text-foreground">
+                      <p className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground">
                         <MapPin className="size-3 text-muted-foreground" />
                         {z.area}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-muted-foreground">{z.site}</p>
-                      <div className="mt-1.5 flex items-center gap-3 text-[10px]">
+                      <p className="mt-0.5 text-2xs text-muted-foreground">{z.site}</p>
+                      <div className="mt-1.5 flex items-center gap-3 text-2xs">
                         <span className="font-mono"><strong className="text-foreground">{z.total}</strong> incidents</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{z.counts.critical}</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{z.counts.medium}</span>
@@ -686,14 +686,14 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="max-h-64 overflow-y-auto p-1.5">
-                      <p className="px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cameras</p>
+                      <p className="px-2 py-1 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">Cameras</p>
                       {z.cameraStats.length === 0 ? (
-                        <p className="px-2 py-3 text-center text-[11px] italic text-muted-foreground">No camera-attributed events.</p>
+                        <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">No camera-attributed events.</p>
                       ) : z.cameraStats.map((cs) => (
                         <div key={cs.camera} className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60">
                           <Video className="size-3 flex-shrink-0 text-muted-foreground" />
-                          <TruncatedText text={cs.camera} className="min-w-0 flex-1 text-[12px] font-semibold text-foreground" />
-                          <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <TruncatedText text={cs.camera} className="min-w-0 flex-1 text-sm font-semibold text-foreground" />
+                          <span className="inline-flex items-center gap-1.5 text-2xs text-muted-foreground">
                             {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{cs.critical}</span>}
                             {cs.medium   > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{cs.medium}</span>}
                             {cs.low      > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{cs.low}</span>}
@@ -705,7 +705,7 @@ export default function DashboardPage() {
                     <div className="border-t border-border px-3 py-2">
                       <button
                         onClick={() => navigate("/detection-feed")}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
                       </button>
@@ -721,25 +721,25 @@ export default function DashboardPage() {
       {/* Recent events + Cases */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Recent Detections"
-          action={<Button variant="ghost" className="gap-1 text-[12px]" onClick={() => navigate("/detection-feed")}>
+          action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>
             View all <ArrowUpRight className="size-3" />
           </Button>}>
           <div className="space-y-2">
             {recentEvents.length === 0 ? (
-              <p className="px-3 py-6 text-center text-[12px] italic text-muted-foreground">No detections in this range.</p>
+              <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No detections in this range.</p>
             ) : recentEvents.map((e) => {
               const sv = SEV_STYLES[e.severity];
               return (
                 <div key={e.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2"
                   style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${e.severity})` }}>
-                  <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", sv.bg, sv.text)}>
+                  <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                     {sv.label}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <TruncatedText text={e.typeLabel} className="text-[13px] font-semibold text-foreground" />
-                    <TruncatedText text={e.summary} className="text-[11px] text-muted-foreground" />
+                    <TruncatedText text={e.typeLabel} className="text-base font-semibold text-foreground" />
+                    <TruncatedText text={e.summary} className="text-xs text-muted-foreground" />
                   </div>
-                  <span className="font-mono text-[10px] text-muted-foreground">{e.time}</span>
+                  <span className="font-mono text-2xs text-muted-foreground">{e.time}</span>
                 </div>
               );
             })}
@@ -747,12 +747,12 @@ export default function DashboardPage() {
         </Section>
 
         <Section title="Incident Cases"
-          action={<Button variant="ghost" className="gap-1 text-[12px]" onClick={() => navigate("/incidents")}>
+          action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/incidents")}>
             View all <ArrowUpRight className="size-3" />
           </Button>}>
           <div className="space-y-2">
             {recentCases.length === 0 ? (
-              <p className="px-3 py-6 text-center text-[12px] italic text-muted-foreground">No cases in this range.</p>
+              <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No cases in this range.</p>
             ) : recentCases.map((c) => {
               const sv = SEV_STYLES[c.severity];
               return (
@@ -761,13 +761,13 @@ export default function DashboardPage() {
                     <FolderOpen className="size-3.5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <TruncatedText text={c.title} className="text-[13px] font-semibold text-foreground" />
+                    <TruncatedText text={c.title} className="text-base font-semibold text-foreground" />
                     <TruncatedText
                       text={`${c.id} · ${c.siteDisplay} · ${c.assignedTo.name}`}
-                      className="text-[11px] text-muted-foreground"
+                      className="text-xs text-muted-foreground"
                     />
                   </div>
-                  <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", sv.bg, sv.text)}>
+                  <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                     {sv.label}
                   </span>
                 </div>
@@ -780,7 +780,7 @@ export default function DashboardPage() {
       {/* Cameras by Sites + Activity Log */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Cameras by Site"
-          action={<Button variant="ghost" className="gap-1 text-[12px]" onClick={() => navigate("/site/overview")}>
+          action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/site/overview")}>
             Sites <ArrowUpRight className="size-3" />
           </Button>}>
           <div className="h-[260px]">
@@ -798,7 +798,7 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-2 flex items-center justify-center gap-4 text-[11px]">
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
               <span className="size-2 rounded-sm bg-success" />
               Online
@@ -813,7 +813,7 @@ export default function DashboardPage() {
         <Section
           title="Recent Activity Log"
           action={
-            <Button variant="ghost" className="gap-1 text-[12px]" onClick={() => navigate("/activity-logs")}>
+            <Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/activity-logs")}>
               <ScrollText className="size-3" />
               View full log <ArrowUpRight className="size-3" />
             </Button>
@@ -822,9 +822,9 @@ export default function DashboardPage() {
           {/* Height matches the Cameras by Site chart (h-[260px] + ~24px legend = ~300px) */}
           <div className="-mx-4 -my-4">
             <div className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border bg-muted/30 px-4 py-2">
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">When</p>
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Activity</p>
+              <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">When</p>
+              <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
+              <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Activity</p>
             </div>
             <div className="h-[268px] overflow-y-auto">
               {recentActivity.map((a) => {
@@ -835,13 +835,13 @@ export default function DashboardPage() {
                     className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 hover:bg-muted/20"
                   >
                     <div className="min-w-0">
-                      <TruncatedText text={a.whenRelative} className="font-mono text-[10px] text-muted-foreground" />
-                      <TruncatedText text={a.module} className="mt-0.5 text-[10px] text-muted-foreground/60" />
+                      <TruncatedText text={a.whenRelative} className="font-mono text-2xs text-muted-foreground" />
+                      <TruncatedText text={a.module} className="mt-0.5 text-2xs text-muted-foreground/60" />
                     </div>
                     <div>
                       <span
                         className={cn(
-                          "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                          "inline-flex items-center rounded px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider",
                           ks.bg,
                           ks.text
                         )}
@@ -850,7 +850,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <p className="line-clamp-2 text-[12px] leading-snug text-foreground">
+                      <p className="line-clamp-2 text-sm leading-snug text-foreground">
                         <span className="font-semibold">{a.actor.name}</span>{" "}
                         <span className="text-muted-foreground">{a.text}</span>
                       </p>

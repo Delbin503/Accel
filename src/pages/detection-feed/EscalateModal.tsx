@@ -8,10 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
 import { ASSIGNEES } from "@/mocks/incidentCases";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 export interface EscalateFormData {
   title: string;
@@ -54,13 +56,13 @@ function AssigneeSearchSelect({ value, onChange }: { value: CaseAssignee; onChan
           placeholder="Search assignees by name or ID…"
           onFocus={() => { setOpen(true); setQuery(""); }}
           onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); }}
-          className="h-9 pl-9 text-[13px]"
+          className="h-9 pl-9 text-base"
         />
       </div>
       {open && (
         <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
           {filtered.length === 0 ? (
-            <p className="px-3 py-3 text-center text-[12px] italic text-muted-foreground">No assignees match "{query}".</p>
+            <p className="px-3 py-3 text-center text-sm italic text-muted-foreground">No assignees match "{query}".</p>
           ) : (
             filtered.map((a) => {
               const selected = a.id === value.id;
@@ -70,13 +72,13 @@ function AssigneeSearchSelect({ value, onChange }: { value: CaseAssignee; onChan
                   type="button"
                   onClick={() => { onChange(a); setOpen(false); setQuery(""); }}
                   className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-muted/50",
+                    "flex w-full items-center gap-2 px-3 py-2 text-left text-base hover:bg-muted/50",
                     selected && "bg-primary/10"
                   )}
                 >
                   <Check className={cn("size-3 flex-shrink-0", selected ? "text-primary" : "opacity-0")} strokeWidth={3} />
-                  <span className="truncate text-foreground">{a.name}</span>
-                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">{a.id}</span>
+                  <TruncatedText text={a.name} className="text-foreground" />
+                  <span className="ml-auto font-mono text-2xs text-muted-foreground">{a.id}</span>
                 </button>
               );
             })
@@ -149,7 +151,7 @@ export function EscalateModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Escalate to Incident Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {event
               ? `From event ${event.id}`
               : isBulk
@@ -164,10 +166,10 @@ export function EscalateModal({
             <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary-muted p-3">
               <Layers className="mt-0.5 size-4 flex-shrink-0 text-primary" />
               <div>
-                <p className="text-[12px] font-semibold text-primary">
+                <p className="text-sm font-semibold text-primary">
                   Escalating {bulkCount} selected events
                 </p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   All events will be linked to this new incident case.
                 </p>
               </div>
@@ -176,13 +178,13 @@ export function EscalateModal({
 
           {/* Case title */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-[13px]"
+              className="text-base"
               placeholder="Describe the incident..."
             />
           </div>
@@ -190,7 +192,7 @@ export function EscalateModal({
           {/* Severity + Assignee */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Severity
               </label>
               <div className="flex gap-1.5">
@@ -199,7 +201,7 @@ export function EscalateModal({
                     key={sev}
                     onClick={() => setPickedSev(sev)}
                     className={cn(
-                      "flex-1 rounded border px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground transition-colors",
+                      "flex-1 rounded border px-2 py-2 text-2xs font-bold uppercase tracking-wider text-muted-foreground transition-colors",
                       pickedSev === sev
                         ? SEV_OPTION_STYLES[sev]
                         : "border-border bg-muted hover:border-primary"
@@ -211,7 +213,7 @@ export function EscalateModal({
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Assign To
               </label>
               <AssigneeSearchSelect value={assignee} onChange={setAssignee} />
@@ -220,7 +222,7 @@ export function EscalateModal({
 
           {/* SLA */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               SLA Target (auto-set by severity)
             </label>
             <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-card p-3">
@@ -232,7 +234,7 @@ export function EscalateModal({
                 ] as [string, string][]
               ).map(([l, v]) => (
                 <div key={l}>
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="mb-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {l}
                   </div>
                   <div className="font-mono text-sm font-bold text-foreground">{v}</div>
@@ -243,14 +245,14 @@ export function EscalateModal({
 
           {/* Notes */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Initial Notes
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add context for the investigator..."
-              className="min-h-[70px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="min-h-[70px] w-full resize-y text-base"
             />
           </div>
         </div>

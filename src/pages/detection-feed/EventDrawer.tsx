@@ -19,7 +19,7 @@ import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/Kp
 
 function DrawerThumb({ event }: { event: DetectionEvent }) {
   return (
-    <div className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+    <div className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-camera-feed">
       {event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
@@ -33,7 +33,7 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-1 py-0.5 text-[9px] font-semibold text-white",
+              "absolute -translate-y-full rounded-sm px-1 py-0.5 text-3xs font-semibold text-white",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-purple"
               : "bg-primary"
@@ -47,7 +47,7 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
       <button className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/90 text-white transition-colors hover:bg-primary">
         <Play className="size-5 fill-white" />
       </button>
-      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[10px] text-white">
+      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-2xs text-white">
         {event.time}
       </span>
     </div>
@@ -130,17 +130,17 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
     <div className="space-y-3">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Detection Confidence
         </span>
-        <span className="font-mono text-[10px] text-muted-foreground">
+        <span className="font-mono text-2xs text-muted-foreground">
           trigger threshold ≥ {threshold / 100}
         </span>
       </div>
 
       {/* Entity score cards — uniform compact KPI pattern */}
       {entityCards.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
           No tracked entities for this detection.
         </div>
       ) : (
@@ -172,12 +172,12 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
         >
           <div className="flex items-center gap-2">
             <Settings className="size-3.5 text-muted-foreground" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground">
+            <span className="text-xs font-bold uppercase tracking-widest text-foreground">
               MODEL EVALUATION PERFORMANCE
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               last eval · {eval_.evalDate} · for audit
             </span>
             {evalExpanded ? (
@@ -190,7 +190,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
 
         {evalExpanded && (
           <div className="border-t border-border px-4 pb-4 pt-3">
-            <p className="mb-3 text-[11px] text-muted-foreground">
+            <p className="mb-3 text-xs text-muted-foreground">
               Aggregate metrics across{" "}
               <strong className="font-semibold text-foreground">
                 {eval_.testFrames.toLocaleString()} test frames
@@ -214,10 +214,10 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
                 { label: "mAP@0.5", value: eval_.map50 },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-muted/20 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {label}
                   </div>
-                  <div className="mt-0.5 text-[18px] font-bold text-foreground">
+                  <div className="mt-0.5 text-xl font-bold text-foreground">
                     {value.toFixed(3)}
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
 
             {/* Data split */}
             <div>
-              <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <span>Data Split</span>
                 <span className="font-mono normal-case tracking-normal">
                   {eval_.trainPct} / {eval_.valPct} / {eval_.testPct}
@@ -239,7 +239,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
                 <div className="bg-success" style={{ width: `${eval_.testPct}%` }} />
               </div>
               {/* Legend */}
-              <div className="mt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
+              <div className="mt-2 flex items-center gap-4 text-2xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <span className="size-2 rounded-full bg-primary" />
                   Train ({eval_.trainPct}%)
@@ -268,11 +268,11 @@ function ModelCard({ event }: { event: DetectionEvent }) {
     <div className="rounded-lg border border-purple-soft bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
       <div className="mb-2 flex items-center gap-2">
         <Settings className="size-4 text-purple" />
-        <span className="font-mono text-[13px] font-bold text-purple">{event.model}</span>
+        <span className="font-mono text-base font-bold text-purple">{event.model}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-[11px] text-muted-foreground">
+      <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
         <div>
-          <span className="font-semibold text-muted-foreground/70">Use case: </span>
+          <span className="font-semibold text-muted-foreground/70">Model ID: </span>
           {event.useCaseId}
         </div>
         <div>
@@ -280,18 +280,9 @@ function ModelCard({ event }: { event: DetectionEvent }) {
           {event.modelTrainedDate}
         </div>
         <div>
-          <span className="font-semibold text-muted-foreground/70">Training data: </span>
-          {event.modelTrainingSamples} samples
-        </div>
-        <div>
           <span className="font-semibold text-muted-foreground/70">Last eval mAP: </span>
           {event.modelMaP}
         </div>
-      </div>
-      <div className="mt-2.5 border-t border-purple/15 pt-2.5 text-[11px] text-muted-foreground">
-        <span className="font-semibold text-purple">⬢ Synthetic data: </span>
-        {event.syntheticPct}% of training set generated via Terra (Sigmawave AI) — covering edge
-        cases that real CCTV cannot capture safely.
       </div>
     </div>
   );
@@ -308,7 +299,7 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -320,7 +311,7 @@ function SectionTitle({
 
 function DetailGrid({ event }: { event: DetectionEvent }) {
   const rows: Array<[string, React.ReactNode]> = [
-    ["Use Case ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
+    ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
     ["Detection Type", event.typeLabel],
     ...(event.assetId
       ? [["Asset ID", <span className="font-mono text-xs text-primary">{event.assetId}</span>] as [string, React.ReactNode]]
@@ -337,10 +328,10 @@ function DetailGrid({ event }: { event: DetectionEvent }) {
     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
       {rows.map(([label, value]) => (
         <div key={label as string} className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
           </span>
-          <span className="text-[13px] font-medium text-foreground">{value}</span>
+          <span className="text-base font-medium text-foreground">{value}</span>
         </div>
       ))}
     </div>
@@ -351,7 +342,7 @@ function DetailGrid({ event }: { event: DetectionEvent }) {
 
 function VlmBlock({ text }: { text: string }) {
   return (
-    <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-[13px] leading-relaxed text-muted-foreground">
+    <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
       {parseEventText(text)}
     </div>
   );
@@ -384,20 +375,20 @@ export function EventEntityCard({
   const style = EVENT_ENTITY_STYLE[kind] ?? EVENT_ENTITY_STYLE.asset;
 
   function renderSubtitle() {
-    if (!entity) return <p className="mb-1 text-[12px] italic text-muted-foreground">No profile on record</p>;
+    if (!entity) return <p className="mb-1 text-sm italic text-muted-foreground">No profile on record</p>;
     if (entity.kind === "person")
-      return <p className="mb-1 text-[13px] text-muted-foreground">{entity.name}</p>;
+      return <p className="mb-1 text-base text-muted-foreground">{entity.name}</p>;
     if (entity.kind === "vehicle") {
       const v = entity;
       return (
-        <p className="mb-1 text-[13px] text-muted-foreground">
+        <p className="mb-1 text-base text-muted-foreground">
           {[v.vehicleType, v.color].filter(Boolean).join(" · ")}
-          {v.plate && <span className="ml-1 font-mono text-[12px] text-foreground">{v.plate}</span>}
+          {v.plate && <span className="ml-1 font-mono text-sm text-foreground">{v.plate}</span>}
         </p>
       );
     }
     return (
-      <p className="mb-1 text-[13px] text-muted-foreground">
+      <p className="mb-1 text-base text-muted-foreground">
         {entity.type}
         <span className="mx-1 opacity-40">·</span>
         {entity.category}
@@ -409,7 +400,7 @@ export function EventEntityCard({
     if (!entity) return null;
     if (entity.kind === "person") {
       return (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="font-semibold text-muted-foreground/70">RE-ID:</span>
             {(entity.reIdConfidence / 100).toFixed(3)}
@@ -424,7 +415,7 @@ export function EventEntityCard({
     if (entity.kind === "vehicle") {
       if (!entity.registeredTo) return null;
       return (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="font-semibold text-muted-foreground/70">Registered:</span>
             {entity.registeredTo}
@@ -444,13 +435,13 @@ export function EventEntityCard({
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              "inline-flex items-center rounded border px-1.5 py-px text-[10px] font-bold uppercase tracking-wider",
+              "inline-flex items-center rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
               style.chipClass
             )}
           >
             {style.label}
           </span>
-          <span className="font-mono text-[12px] font-semibold text-foreground">{entityId}</span>
+          <span className="font-mono text-sm font-semibold text-foreground">{entityId}</span>
         </div>
         {renderSubtitle()}
         {renderStats()}
@@ -458,7 +449,7 @@ export function EventEntityCard({
       {entity && onViewInfo && (
         <button
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-[12px] font-medium text-primary hover:underline"
+          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary hover:underline"
         >
           View Info →
         </button>
@@ -512,10 +503,10 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <SeverityBadge severity={event.severity} />
               </div>
-              <SheetTitle className="text-[17px] font-bold leading-snug">
+              <SheetTitle className="text-lg font-bold leading-snug">
                 {event.typeLabel}
               </SheetTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
               </p>
             </div>
@@ -535,7 +526,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           {/* Event Summary */}
           <div>
             <SectionTitle>Event Summary</SectionTitle>
-            <div className="rounded-lg border border-border bg-card p-4 text-[13px] leading-relaxed text-muted-foreground">
+            <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
               {parseEventText(event.summary)}
             </div>
           </div>
@@ -544,7 +535,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <div>
             <SectionTitle
               aside={
-                <span className="rounded bg-purple-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-purple">
+                <span className="rounded bg-purple-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-purple">
                   AI-generated · 8s clip
                 </span>
               }
@@ -561,7 +552,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <div>
             <SectionTitle
               aside={
-                <button className="text-[10px] text-purple hover:underline">View model →</button>
+                <button className="text-2xs text-purple hover:underline">View model →</button>
               }
             >
               Detected By
@@ -585,7 +576,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
             <div>
               <SectionTitle
                 aside={
-                  <span className="rounded-full bg-muted px-2 py-px text-[11px] font-semibold text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
                     {eventEntities.length}
                   </span>
                 }

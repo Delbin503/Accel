@@ -35,6 +35,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -60,7 +61,7 @@ function StatusPill({ status }: { status: CameraStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -121,7 +122,7 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -139,7 +140,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -198,9 +199,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -208,7 +209,7 @@ function FilterPanel({
               {["All sites", "All areas", "All NVRs"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -220,7 +221,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -241,7 +242,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, name, IP, or NVR…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -251,7 +252,7 @@ function FilterPanel({
               { key: "nvr"    as const, label: "NVR",    opts: NVR_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -274,7 +275,7 @@ function FilterPanel({
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -325,7 +326,7 @@ function DeployStatusPill({ status }: { status: DeploymentData["status"] }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -349,7 +350,7 @@ function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -383,28 +384,28 @@ function RecordingCard({ r, isSelected, onToggle, onOpen }: {
               <Play className="size-4 text-white" />
             </div>
           </div>
-          <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
+          <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
           <div className="absolute left-9 top-2.5"><RecordingModeChip mode={r.mode} /></div>
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-[10px] text-white/90">
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
             <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
             <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
           </div>
         </div>
         <div className="p-3.5">
           <div className="mb-1 flex items-start justify-between gap-2">
-            <TruncatedText text={`Recording · ${r.dateLabel}`} className="text-[13px] font-bold text-foreground transition-colors group-hover:text-primary" />
-            <p className="flex-shrink-0 font-mono text-[10px] text-muted-foreground">{r.id}</p>
+            <TruncatedText text={`Recording · ${r.dateLabel}`} className="text-base font-bold text-foreground transition-colors group-hover:text-primary" />
+            <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
           </div>
-          <p className="mb-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+          <p className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="size-2.5" />
             {r.areaName}
           </p>
           <div className="flex items-center justify-between border-t border-border/60 pt-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-2xs font-semibold text-success">
               <CircleDot className="size-2.5" />
               {r.eventCount} events
             </span>
-            <span className="font-mono text-[10px] text-muted-foreground">{r.durationDisplay}</span>
+            <span className="font-mono text-2xs text-muted-foreground">{r.durationDisplay}</span>
           </div>
         </div>
       </button>
@@ -550,7 +551,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
       <DialogContent className="flex max-h-[85vh] w-[840px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Edit Detection Zones</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             View, draw and edit boundary zones on <strong className="text-foreground">{cameraName}</strong>.
             Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.
           </p>
@@ -565,15 +566,15 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
           >
             <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px)" }} />
-            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-sev-critical/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
+            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-sev-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
               LIVE
             </span>
-            <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white/85 backdrop-blur-sm">{cameraName}</span>
+            <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">{cameraName}</span>
 
             {/* Empty-state hint */}
             {existingZones.length === 0 && !draft && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="rounded-lg border border-dashed border-white/30 bg-black/40 px-4 py-2 text-center text-[11px] text-white/70 backdrop-blur-sm">
+                <div className="rounded-lg border border-dashed border-white/30 bg-black/40 px-4 py-2 text-center text-xs text-white/70 backdrop-blur-sm">
                   Click and drag anywhere on the canvas to draw a new zone
                 </div>
               </div>
@@ -612,7 +613,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                   }}
                 >
                   <span className={cn(
-                    "absolute -top-5 left-0 rounded px-1.5 py-px font-mono text-[10px] font-bold",
+                    "absolute -top-5 left-0 rounded px-1.5 py-px font-mono text-2xs font-bold",
                     isEditing ? "bg-warning text-neutral-900" : "bg-info text-white"
                   )}>
                     {i + 1}. {z.label}{isEditing && " · editing"}
@@ -638,7 +639,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                   width: `${draft.w * 100}%`, height: `${draft.h * 100}%`,
                 }}
               >
-                <span className="absolute -top-5 left-0 rounded bg-primary px-1.5 py-px text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -top-5 left-0 rounded bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
                   {label || "New zone"}
                 </span>
                 <div onMouseDown={(e) => resizeBox(e, draft, (nw, nh) => setDraft((d) => d && ({ ...d, w: nw, h: nh })))}
@@ -654,14 +655,14 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
             {draft && (
               <div className="grid grid-cols-1 gap-3 rounded-lg border border-primary/40 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
                 <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-primary">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-primary">
                     <Plus className="-mt-0.5 mr-1 inline size-3" /> Name your new zone
                   </label>
                   <Input value={label} onChange={(e) => setLabel(e.target.value)}
                     autoFocus placeholder="e.g. Entrance, Counter, Loading Dock…"
                     onKeyDown={(e) => { if (e.key === "Enter" && label.trim() && draft.w >= 0.05) commit(); }}
-                    className="h-9 text-[13px]" />
-                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    className="h-9 text-base" />
+                  <p className="mt-1 text-2xs text-muted-foreground">
                     Box: [{draft.x.toFixed(2)}, {draft.y.toFixed(2)}, {(draft.x + draft.w).toFixed(2)}, {(draft.y + draft.h).toFixed(2)}]
                   </p>
                 </div>
@@ -679,11 +680,11 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
             {editingZone && (
               <div className="rounded-lg border border-warning/40 bg-warning/[0.06] p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-warning">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-warning">
                     <Pencil className="-mt-0.5 mr-1 inline size-3" />
                     Renaming zone {existingZones.findIndex((z) => z.id === editingZone.id) + 1}
                   </label>
-                  <span className="font-mono text-[10px] text-muted-foreground">
+                  <span className="font-mono text-2xs text-muted-foreground">
                     [{editingZone.box.map((n) => n.toFixed(2)).join(", ")}]
                   </span>
                 </div>
@@ -697,7 +698,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                       }
                       if (e.key === "Escape") setEditingZoneId(null);
                     }}
-                    className="h-9 flex-1 text-[13px]" />
+                    className="h-9 flex-1 text-base" />
                   <Button size="sm" className="gap-1.5"
                     disabled={!editingLabel.trim() || editingLabel === editingZone.label}
                     onClick={() => { onUpdateZone(editingZone.id, editingLabel.trim()); setEditingZoneId(null); }}>
@@ -706,7 +707,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditingZoneId(null)}>Cancel</Button>
                 </div>
-                <p className="mt-2 text-[10px] text-muted-foreground">
+                <p className="mt-2 text-2xs text-muted-foreground">
                   You can also drag the highlighted zone on the canvas to reposition · drag its corner handle to resize.
                 </p>
               </div>
@@ -714,7 +715,7 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
 
             {/* Default hint when nothing is being drawn or edited */}
             {!draft && !editingZone && (
-              <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3 text-center text-[11px] text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3 text-center text-xs text-muted-foreground">
                 Drag on the canvas above to create a new zone · click any existing zone (or its row below) to rename it.
               </div>
             )}
@@ -722,11 +723,11 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
 
           {/* Existing zones list — click on row OR canvas to edit */}
           <div className="mt-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Current zones ({existingZones.length})
             </p>
             {existingZones.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-[12px] italic text-muted-foreground">
+              <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm italic text-muted-foreground">
                 No zones drawn yet. Draw one on the canvas above.
               </p>
             ) : (
@@ -739,10 +740,10 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
                         "flex items-center gap-2 rounded-lg border bg-background px-3 py-2 transition-colors",
                         isEditing ? "border-warning bg-warning/[0.04]" : "border-border"
                       )}>
-                      <span className={cn("font-mono text-[10px] font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
-                      <span className="rounded bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">{z.id}</span>
-                      <span className="flex-1 text-[13px] font-semibold text-foreground">{z.label}</span>
-                      <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:inline">
+                      <span className={cn("font-mono text-2xs font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
+                      <span className="rounded bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{z.id}</span>
+                      <span className="flex-1 text-base font-semibold text-foreground">{z.label}</span>
+                      <span className="hidden font-mono text-2xs text-muted-foreground/70 sm:inline">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
                       {/* Explicit Edit + Delete buttons (always visible) */}
@@ -841,7 +842,7 @@ function LinkNvrModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Link NVR Channel</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Choose a channel for <span className="font-mono text-foreground">{camera.id}</span> · {camera.name}
           </p>
         </DialogHeader>
@@ -849,16 +850,16 @@ function LinkNvrModal({
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by NVR name, model, IP or channel…" className="h-9 pl-9 text-[13px]" />
+              placeholder="Search by NVR name, model, IP or channel…" className="h-9 pl-9 text-base" />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-3">
           {siteNvrs.length === 0 ? (
-            <p className="py-8 text-center text-[12px] italic text-muted-foreground">
+            <p className="py-8 text-center text-sm italic text-muted-foreground">
               No NVRs registered for this site yet.
             </p>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-[12px] italic text-muted-foreground">No channels match "{search}".</p>
+            <p className="py-8 text-center text-sm italic text-muted-foreground">No channels match "{search}".</p>
           ) : (
             <ul className="space-y-1">
               {filtered.map((r) => {
@@ -880,16 +881,16 @@ function LinkNvrModal({
                         <HardDrive className="size-3.5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
+                        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                           <TruncatedText text={r.nvrName} />
-                          <span className="font-mono text-[10px] text-muted-foreground">Ch {String(r.channel).padStart(2, "0")}</span>
+                          <span className="font-mono text-2xs text-muted-foreground">Ch {String(r.channel).padStart(2, "0")}</span>
                         </p>
-                        <TruncatedText text={`${r.nvrModel} · ${r.nvrIp}`} className="mt-0.5 text-[10px] text-muted-foreground" />
+                        <TruncatedText text={`${r.nvrModel} · ${r.nvrIp}`} className="mt-0.5 text-2xs text-muted-foreground" />
                       </div>
                       {inUse ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">In use · {r.cameraId}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">In use · {r.cameraId}</span>
                       ) : (
-                        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Available</span>
+                        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">Available</span>
                       )}
                     </button>
                   </li>
@@ -1016,12 +1017,12 @@ function CameraDrawer({
                   <StatusPill status={camera.status} />
                 </div>
                 <div className="mb-1 flex items-center gap-2">
-                  <SheetTitle className="min-w-0 text-[17px] font-bold"><TruncatedText text={camera.name} /></SheetTitle>
-                  <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                  <SheetTitle className="min-w-0 text-lg font-bold"><TruncatedText text={camera.name} /></SheetTitle>
+                  <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
                     {camera.id}
                   </span>
                 </div>
-                <p className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                   <MapPin className="size-3" />
                   {camera.siteName} · {camera.areaName}
                 </p>
@@ -1035,7 +1036,7 @@ function CameraDrawer({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-[15px] text-muted-foreground">Camera not found</SheetTitle>
+              <SheetTitle className="text-md text-muted-foreground">Camera not found</SheetTitle>
               <button
                 onClick={onClose}
                 className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1056,7 +1057,7 @@ function CameraDrawer({
                   key={key}
                   onClick={() => setTab(key)}
                   className={cn(
-                    "relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-semibold transition-colors",
+                    "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                     tab === key
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
@@ -1065,7 +1066,7 @@ function CameraDrawer({
                   <Icon className="size-3.5" />
                   {label}
                   {badge != null && badge > 0 && (
-                    <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                    <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
                       {badge}
                     </span>
                   )}
@@ -1100,14 +1101,14 @@ function CameraDrawer({
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <WifiOff className="size-7 opacity-60" />
-                    <p className="text-[11px]">Feed unavailable</p>
+                    <p className="text-xs">Feed unavailable</p>
                   </div>
                 )}
-                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
                   <span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />
                   Live
                 </div>
-                <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white/80 backdrop-blur-sm">
+                <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/80 backdrop-blur-sm">
                   {camera.siteName} / {camera.areaName}
                 </div>
               </div>
@@ -1178,10 +1179,10 @@ function CameraDrawer({
                   ] as [string, React.ReactNode][]
                 ).map(([label, value]) => (
                   <div key={label as string} className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       {label}
                     </span>
-                    <span className="text-[13px] font-medium text-foreground">{value}</span>
+                    <span className="text-base font-medium text-foreground">{value}</span>
                   </div>
                 ))}
               </div>
@@ -1198,14 +1199,14 @@ function CameraDrawer({
                     ["Frame Rate",    `${camera.stream.frameRate} fps`],
                     ["Bitrate",       <span className="font-mono text-xs">{camera.recording.bitrateKbps} kbps</span>],
                     ["Schedule",      <span className="capitalize">{camera.recording.schedule.replace(/-/g, " ")}</span>],
-                    ["RTSP URL",      <span className="break-all font-mono text-[11px] text-foreground">{camera.rtspUrl}</span>],
+                    ["RTSP URL",      <span className="break-all font-mono text-xs text-foreground">{camera.rtspUrl}</span>],
                   ] as [string, React.ReactNode][]
                 ).map(([label, value]) => (
                   <div key={label as string} className={cn("flex flex-col gap-0.5", label === "RTSP URL" && "col-span-2")}>
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       {label}
                     </span>
-                    <span className="text-[13px] font-medium text-foreground">{value}</span>
+                    <span className="text-base font-medium text-foreground">{value}</span>
                   </div>
                 ))}
               </div>
@@ -1226,12 +1227,12 @@ function CameraDrawer({
                     <div className="min-w-0 flex-1">
                       <TruncatedText
                         text={camera.nvrName}
-                        className="text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary"
+                        className="text-base font-semibold text-foreground transition-colors group-hover:text-primary"
                       />
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {nvr.model} · {camera.nvrId} · Channel {camera.channel} · IP {nvr.ipAddress}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         Used: <span className="font-semibold text-foreground">{nvr.usedStorageGb.toFixed(1)}</span> / {nvr.totalStorageGb.toFixed(1)} TB
                       </p>
                     </div>
@@ -1239,7 +1240,7 @@ function CameraDrawer({
                   <button
                     onClick={() => onUnlinkNvr(camera.id)}
                     title="Unlink NVR"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-sev-critical/30 px-2.5 py-1 text-[11px] font-semibold text-sev-critical transition-colors hover:bg-sev-critical/10"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-sev-critical/30 px-2.5 py-1 text-xs font-semibold text-sev-critical transition-colors hover:bg-sev-critical/10"
                   >
                     <Unlink className="size-3" />
                     Unlink
@@ -1249,8 +1250,8 @@ function CameraDrawer({
                 <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
                   <AlertTriangle className="size-4 flex-shrink-0 text-warning" />
                   <div className="flex-1">
-                    <p className="text-[12px] font-semibold text-foreground">Not linked to any NVR</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-sm font-semibold text-foreground">Not linked to any NVR</p>
+                    <p className="text-xs text-muted-foreground">
                       Detection events from this camera will have no replayable footage.
                     </p>
                   </div>
@@ -1277,7 +1278,7 @@ function CameraDrawer({
               {deployments.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
                   <Cpu className="mx-auto size-7 text-muted-foreground/40" />
-                  <p className="mt-2 text-[12px] text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     No models deployed to this camera yet.
                   </p>
                   <Button variant="ghost" size="sm" className="mt-2 gap-1.5" onClick={onDeployNewModel}>
@@ -1301,21 +1302,21 @@ function CameraDrawer({
                           <div className="min-w-0">
                             <TruncatedText
                               text={d.modelName}
-                              className="text-[13px] font-bold text-foreground"
+                              className="text-base font-bold text-foreground"
                             />
-                            <p className="font-mono text-[11px] text-muted-foreground">{d.id}</p>
+                            <p className="font-mono text-xs text-muted-foreground">{d.id}</p>
                           </div>
                         </div>
                         <div className="flex flex-shrink-0 items-center gap-1.5">
                           <DeployStatusPill status={d.status} />
-                          <span className="rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-[10px] font-semibold text-info">
+                          <span className="rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">
                             {d.eventCount} events
                           </span>
                         </div>
                       </div>
 
                       {/* Meta row: deployed date + actor + last validation */}
-                      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="size-2.5" />
                           <strong className="text-foreground">Deployed</strong> {d.deployedAtDisplay}
@@ -1361,7 +1362,7 @@ function CameraDrawer({
                 Boundary Zones ({camera.boundaryZones.length})
               </SectionTitle>
               {camera.boundaryZones.length === 0 && !zonesEditing ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                   No zones drawn yet.
                 </div>
               ) : (
@@ -1371,9 +1372,9 @@ function CameraDrawer({
                       key={z.id}
                       className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2"
                     >
-                      <span className="font-mono text-[10px] text-muted-foreground">{z.id}</span>
-                      <span className="text-[12px] font-medium text-foreground">{z.label}</span>
-                      <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                      <span className="font-mono text-2xs text-muted-foreground">{z.id}</span>
+                      <span className="text-sm font-medium text-foreground">{z.label}</span>
+                      <span className="ml-auto font-mono text-2xs text-muted-foreground">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
                       {zonesEditing && (
@@ -1389,7 +1390,7 @@ function CameraDrawer({
               )}
               {zonesEditing && (
                 <div className="mt-2 flex items-center justify-end gap-2 rounded-lg border border-primary/30 bg-primary/[0.04] px-3 py-2">
-                  <p className="mr-auto text-[11px] text-muted-foreground">
+                  <p className="mr-auto text-xs text-muted-foreground">
                     Draw the zone directly on the live camera view.
                   </p>
                   <Button onClick={() => setZoneDrawOpen(true)} className="gap-1.5">
@@ -1412,7 +1413,7 @@ function CameraDrawer({
                   value={recordingSearch}
                   onChange={(e) => setRecordingSearch(e.target.value)}
                   placeholder="Search by recording ID or area…"
-                  className="h-9 w-full pl-9 text-[13px]"
+                  className="h-9 w-full pl-9 text-base"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1421,7 +1422,7 @@ function CameraDrawer({
                     key={f.key}
                     onClick={() => setRecordingDate(f.key)}
                     className={cn(
-                      "rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-colors",
+                      "rounded-md border px-2.5 py-1 text-sm font-semibold transition-colors",
                       recordingDate === f.key
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
@@ -1435,7 +1436,7 @@ function CameraDrawer({
               {recordingDate === "custom" && (
                 <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-3">
                   <div>
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <label className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       From
                     </label>
                     <input
@@ -1443,11 +1444,11 @@ function CameraDrawer({
                       value={customFrom}
                       onChange={(e) => setCustomFrom(e.target.value)}
                       max={customTo || undefined}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <label className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       To
                     </label>
                     <input
@@ -1455,14 +1456,14 @@ function CameraDrawer({
                       value={customTo}
                       onChange={(e) => setCustomTo(e.target.value)}
                       min={customFrom || undefined}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               <strong className="text-foreground">{filteredRecordings.length}</strong>{" "}
               recording{filteredRecordings.length === 1 ? "" : "s"}
               {camera.nvrId && (
@@ -1477,8 +1478,8 @@ function CameraDrawer({
             {!camera.nvrId ? (
               <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
                 <FileVideo className="size-9 opacity-30" />
-                <p className="text-[13px] font-medium">No NVR linked</p>
-                <p className="max-w-xs text-center text-[11px]">
+                <p className="text-base font-medium">No NVR linked</p>
+                <p className="max-w-xs text-center text-xs">
                   Link an NVR to start recording footage from this camera.
                 </p>
                 <Button variant="outline" size="sm" className="mt-2 gap-1.5" onClick={() => onLinkNvrRequest(camera.id)}>
@@ -1489,7 +1490,7 @@ function CameraDrawer({
             ) : filteredRecordings.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
                 <FileVideo className="size-9 opacity-30" />
-                <p className="text-[13px]">No recordings match this filter.</p>
+                <p className="text-base">No recordings match this filter.</p>
               </div>
             ) : (
               <>
@@ -1520,12 +1521,12 @@ function CameraDrawer({
               <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Check className="size-3.5" strokeWidth={3} />
               </div>
-              <span className="text-[13px] font-semibold text-foreground">
+              <span className="text-base font-semibold text-foreground">
                 {selectedRecordingIds.size} recording{selectedRecordingIds.size > 1 ? "s" : ""} selected
               </span>
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-1.5">
-              <Button variant="ghost" className="gap-1.5 text-[12px] text-muted-foreground"
+              <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground"
                 onClick={() => setSelectedRecordingIds(new Set())}>
                 <X className="size-3.5" />
                 Clear selection
@@ -1666,11 +1667,11 @@ function fromCamera(c: CameraData): CameraFormFields {
 function FormField({ label, children, span = 1, hint }: { label: string; children: React.ReactNode; span?: 1 | 2; hint?: string }) {
   return (
     <div className={cn(span === 2 && "col-span-2")}>
-      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -1683,28 +1684,36 @@ function TextInput({ value, onChange, mono, placeholder, type = "text", disabled
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
       className={cn(
-        "h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+        "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
         mono && "font-mono",
         disabled && "cursor-not-allowed opacity-60"
       )}
     />
   );
 }
+// shadcn Select cannot use value="". Map "" to a sentinel internally so the
+// external API (value/onChange/options accepting "" entries) stays unchanged.
+const FORM_SELECT_EMPTY = "__empty__";
+
 function FormSelect({ value, onChange, options, disabled }: { value: string; onChange: (v: string) => void; options: readonly { value: string; label: string }[]; disabled?: boolean }) {
+  const placeholder = options.find((o) => o.value === "")?.label;
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+    <Select
+      value={value === "" ? FORM_SELECT_EMPTY : value}
+      onValueChange={(v) => onChange(v === FORM_SELECT_EMPTY ? "" : v)}
       disabled={disabled}
-      className={cn(
-        "h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none",
-        disabled && "cursor-not-allowed opacity-60"
-      )}
     >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
+      <SelectTrigger className="h-9 w-full text-base">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value === "" ? FORM_SELECT_EMPTY : o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -1804,7 +1813,7 @@ function CameraFormModal({
           <DialogTitle className="text-base font-bold">
             {mode === "add" ? "Add Camera" : "Edit Camera"}
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {mode === "add"
               ? "Register a new camera. Camera ID is generated automatically."
               : `Update fields for ${initial?.id}. Camera ID cannot be changed.`}
@@ -1904,7 +1913,7 @@ function CameraFormModal({
 
           {/* NVR linkage */}
           <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               NVR Linkage
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -1945,7 +1954,7 @@ function CameraFormModal({
 
           {/* Recording schedule */}
           <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Recording Schedule
             </p>
 
@@ -1962,14 +1971,14 @@ function CameraFormModal({
             </FormField>
 
             {fields.recordingMode === "continuous" ? (
-              <div className="mt-3 flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-[12px] text-info">
+              <div className="mt-3 flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-sm text-info">
                 <Clock className="size-3.5 flex-shrink-0" />
                 Recording continuously — all 7 days, 00:00 to 23:59.
               </div>
             ) : (
               <>
                 <div className="mb-3 mt-3">
-                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <p className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                     Days
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -1981,7 +1990,7 @@ function CameraFormModal({
                           type="button"
                           onClick={() => toggleDay(idx)}
                           className={cn(
-                            "h-9 min-w-[44px] rounded-md border px-2.5 text-[12px] font-semibold transition-colors",
+                            "h-9 min-w-[44px] rounded-md border px-2.5 text-sm font-semibold transition-colors",
                             selected
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
@@ -1993,7 +2002,7 @@ function CameraFormModal({
                     })}
                   </div>
                   {fields.scheduleDays.length === 0 && (
-                    <p className="mt-1 text-[11px] text-sev-critical">Select at least one day.</p>
+                    <p className="mt-1 text-xs text-sev-critical">Select at least one day.</p>
                   )}
                 </div>
 
@@ -2003,7 +2012,7 @@ function CameraFormModal({
                       type="time"
                       value={fields.scheduleStart}
                       onChange={(e) => set("scheduleStart", e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                     />
                   </FormField>
                   <FormField label="End Time">
@@ -2012,12 +2021,12 @@ function CameraFormModal({
                       value={fields.scheduleEnd}
                       min={fields.scheduleStart}
                       onChange={(e) => set("scheduleEnd", e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none"
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                     />
                   </FormField>
                 </div>
                 {fields.scheduleStart >= fields.scheduleEnd && (
-                  <p className="mt-1 text-[11px] text-sev-critical">End time must be after start time.</p>
+                  <p className="mt-1 text-xs text-sev-critical">End time must be after start time.</p>
                 )}
               </>
             )}
@@ -2065,7 +2074,7 @@ function ConfirmModal({
         <div className="px-5 py-4">
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-            <div className="text-[12px] leading-snug text-muted-foreground">{description}</div>
+            <div className="text-sm leading-snug text-muted-foreground">{description}</div>
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -2269,7 +2278,7 @@ export default function CamerasPage() {
       />
 
       {/* Count */}
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "camera" : "cameras"} match current filters
         {hasFilters && (
@@ -2304,7 +2313,7 @@ export default function CamerasPage() {
                   {["ID", "NAME", "STATUS", "IP", "LOCATION", "NVR · CH", "EVENTS 24H", "ACTIVE", "ACTION"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
                     </th>
@@ -2316,10 +2325,10 @@ export default function CamerasPage() {
                   <tr
                     key={c.id}
                     onClick={() => setDrawerId(c.id)}
-                    className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                         {c.id}
                       </span>
                     </td>
@@ -2329,27 +2338,27 @@ export default function CamerasPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3"><StatusPill status={c.status} /></td>
-                    <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
+                    <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
                       {c.ipAddress}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{c.areaName}</span>
-                        <span className="text-[11px]">{c.siteName}</span>
+                        <span className="text-xs">{c.siteName}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {c.nvrId && c.channel ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); navigate(`/site/nvr?nvr=${c.nvrId}`); }}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-[11px] text-info hover:bg-info/15"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
                         >
                           <HardDrive className="size-3" />
                           <span className="font-mono">{c.nvrId}</span>
                           <span className="text-muted-foreground">· Ch {c.channel}</span>
                         </button>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-warning/20 bg-warning/5 px-2 py-1 text-[11px] text-warning">
+                        <span className="inline-flex items-center gap-1 rounded-md border border-warning/20 bg-warning/5 px-2 py-1 text-xs text-warning">
                           <AlertTriangle className="size-3" />
                           Unlinked
                         </span>
@@ -2372,14 +2381,14 @@ export default function CamerasPage() {
                         <PopoverContent className="w-44 p-1" align="end">
                           <button
                             onClick={() => setDrawerId(c.id)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <Video className="size-3.5 text-muted-foreground" />
                             View details
                           </button>
                           <button
                             onClick={() => setModal({ kind: "edit", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <Pencil className="size-3.5 text-muted-foreground" />
                             Edit camera
@@ -2387,7 +2396,7 @@ export default function CamerasPage() {
                           {c.nvrId && (
                             <button
                               onClick={() => navigate(`/site/nvr?nvr=${c.nvrId}`)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <HardDrive className="size-3.5 text-muted-foreground" />
                               Open NVR
@@ -2396,7 +2405,7 @@ export default function CamerasPage() {
                           <div className="my-1 border-t border-border" />
                           <button
                             onClick={() => setModal({ kind: "delete", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-sev-critical hover:bg-sev-critical/10"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete
@@ -2412,7 +2421,7 @@ export default function CamerasPage() {
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
@@ -2425,7 +2434,7 @@ export default function CamerasPage() {
               >
                 <ChevronLeft className="size-3.5" />
               </button>
-              <span className="px-2 text-[12px] text-foreground">
+              <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
               <button

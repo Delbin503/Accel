@@ -31,7 +31,7 @@ export function AuthLayout({
         <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
           <Play className="size-3 fill-white text-white" />
         </div>
-        <p className="text-[14px] font-bold tracking-tight text-foreground">
+        <p className="text-md font-bold tracking-tight text-foreground">
           Accel
         </p>
       </Link>
@@ -39,7 +39,7 @@ export function AuthLayout({
       {cancelHref && (
         <Link
           to={cancelHref}
-          className="absolute right-5 top-5 z-10 rounded-md border border-border bg-card/40 px-3 py-1.5 text-[12px] font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground sm:right-8 sm:top-6"
+          className="absolute right-5 top-5 z-10 rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground sm:right-8 sm:top-6"
         >
           Cancel
         </Link>

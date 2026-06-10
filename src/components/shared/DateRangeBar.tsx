@@ -13,7 +13,7 @@ export interface DateRangePreset {
 
 /* Pill style — single source of truth for the date filter look. */
 const PILL_BASE =
-  "rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors";
+  "rounded-full border px-3 py-1 text-sm font-semibold transition-colors";
 const PILL_ACTIVE = "border-primary bg-primary/10 text-primary";
 const PILL_INACTIVE =
   "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground";
@@ -102,7 +102,7 @@ export function DateRangeBar({
         className
       )}
     >
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Calendar className="size-3.5" />
         {label}
       </span>
@@ -137,12 +137,12 @@ export function DateRangeBar({
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-72 p-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Custom range
             </p>
             <div className="space-y-2">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                   From
                 </label>
                 <input
@@ -153,11 +153,11 @@ export function DateRangeBar({
                     setLocalFrom(e.target.value);
                     onCustomChange?.(e.target.value, localTo);
                   }}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] text-foreground"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                   To
                 </label>
                 <input
@@ -168,7 +168,7 @@ export function DateRangeBar({
                     setLocalTo(e.target.value);
                     onCustomChange?.(localFrom, e.target.value);
                   }}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] text-foreground"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                 />
               </div>
               <div className="flex justify-end gap-1.5 pt-1">
@@ -201,7 +201,7 @@ export function DateRangeBar({
       )}
 
       {showingLabel && (
-        <span className="ml-auto text-[11px] text-muted-foreground">
+        <span className="ml-auto text-xs text-muted-foreground">
           {showingLabel}
         </span>
       )}
@@ -210,7 +210,7 @@ export function DateRangeBar({
           type="button"
           onClick={onClear}
           className={cn(
-            "text-[11px] text-muted-foreground underline-offset-2 hover:text-primary hover:underline",
+            "text-xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline",
             !showingLabel && "ml-auto"
           )}
         >

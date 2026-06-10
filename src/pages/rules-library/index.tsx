@@ -25,6 +25,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -106,7 +114,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
       <span
         key={`kw-${i}`}
         className={cn(
-          "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-[11px] font-bold",
+          "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-xs font-bold",
           m.teal ? "" : cn(m.bgClass, m.textClass)
         )}
         style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
@@ -136,7 +144,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
         <span
           key={`op-${i}`}
           className={cn(
-            "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-[11px] font-bold",
+            "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-xs font-bold",
             isLt ? "bg-sev-critical/15 text-sev-critical" : "bg-info/15 text-info"
           )}
         >
@@ -173,7 +181,7 @@ function SeverityBadge({ severity }: { severity: RuleSeverity }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -194,7 +202,7 @@ function ExpandableTags({ tags }: { tags: string[] }) {
       {visible.map((t) => (
         <span
           key={t}
-          className="rounded border border-border bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground"
+          className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground"
         >
           {t}
         </span>
@@ -204,20 +212,20 @@ function ExpandableTags({ tags }: { tags: string[] }) {
           <PopoverTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
-              className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary hover:bg-primary/15"
+              className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary hover:bg-primary/15"
             >
               +{rest.length} more tags
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" sideOffset={6} className="z-[100] w-64 p-3">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               All Tags
             </p>
             <div className="flex flex-wrap gap-1.5">
               {tags.map((t) => (
                 <span
                   key={t}
-                  className="rounded border border-border bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground"
+                  className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground"
                 >
                   {t}
                 </span>
@@ -257,7 +265,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -278,7 +286,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -342,9 +350,9 @@ function RuleFilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -352,7 +360,7 @@ function RuleFilterPanel({
               {["All severities", "All tags"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -368,7 +376,7 @@ function RuleFilterPanel({
                 onChange(EMPTY_RULE_FILTERS);
                 onSearchChange("");
               }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -389,7 +397,7 @@ function RuleFilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by rule ID, name, tag…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -398,7 +406,7 @@ function RuleFilterPanel({
               { key: "tags"     as const, label: "Tags",      opts: TAG_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -438,7 +446,7 @@ function RuleActiveFilterBar({
       {allActive.map(({ group, value, label }) => (
         <span
           key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
         >
           {label}
           <button
@@ -451,7 +459,7 @@ function RuleActiveFilterBar({
       ))}
       <button
         onClick={onClearAll}
-        className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
+        className="ml-auto text-xs text-muted-foreground underline hover:text-primary"
       >
         Clear all
       </button>
@@ -485,7 +493,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
         <div className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-xl">
           <button
             onClick={() => { setOpen(false); onEdit(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex w-full items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Edit2 className="size-3.5" />
             Edit Rule
@@ -493,7 +501,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
           <div className="my-1 h-px bg-border" />
           <button
             onClick={() => { setOpen(false); onDelete(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-sev-critical hover:bg-sev-critical/10"
+            className="flex w-full items-center gap-2 px-3 py-2 text-base text-sev-critical hover:bg-sev-critical/10"
           >
             <Trash2 className="size-3.5" />
             Delete Rule
@@ -512,7 +520,7 @@ function KeywordBadge({ type, isAndAlso, onClick }: { type: RowType; isAndAlso?:
     <button
       onClick={onClick}
       className={cn(
-        "flex w-[80px] flex-shrink-0 items-center justify-between gap-1 rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-bold transition-opacity hover:opacity-80",
+        "flex w-[80px] flex-shrink-0 items-center justify-between gap-1 rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-opacity hover:opacity-80",
         m.teal ? "" : cn(m.bgClass, m.textClass, m.borderClass)
       )}
       style={m.teal ? TEAL_INLINE : undefined}
@@ -548,7 +556,7 @@ function SwapPopover({
       ref={ref}
       className="absolute left-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden rounded-xl border border-border bg-card py-1.5 shadow-2xl"
     >
-      <p className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="px-3 pb-1 pt-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Change Row Type
       </p>
       {SWAP_OPTIONS.map(({ type, desc }) => {
@@ -564,14 +572,14 @@ function SwapPopover({
           >
             <span
               className={cn(
-                "w-[68px] flex-shrink-0 rounded px-2 py-px text-center font-mono text-[11px] font-bold",
+                "w-[68px] flex-shrink-0 rounded px-2 py-px text-center font-mono text-xs font-bold",
                 m.teal ? "" : cn(m.bgClass, m.textClass)
               )}
               style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
             >
               {m.label}
             </span>
-            <span className="text-[12px] text-muted-foreground">{desc}</span>
+            <span className="text-sm text-muted-foreground">{desc}</span>
           </button>
         );
       })}
@@ -599,7 +607,7 @@ function OperatorPill({ value, onChange }: { value: string; onChange: (v: string
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-1 rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-bold transition-colors",
+          "flex items-center gap-1 rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-colors",
           isLt
             ? "border-sev-critical/40 bg-sev-critical/15 text-sev-critical"
             : "border-info/40 bg-info/15 text-info"
@@ -615,7 +623,7 @@ function OperatorPill({ value, onChange }: { value: string; onChange: (v: string
               key={op}
               onClick={() => { onChange(op); setOpen(false); }}
               className={cn(
-                "w-full px-3 py-2 text-left text-[12px] transition-colors hover:bg-muted",
+                "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
                 op === value ? "font-semibold text-foreground" : "text-muted-foreground"
               )}
             >
@@ -667,7 +675,7 @@ function FieldSearch({
           onChange={(e) => { onChange(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+          className="flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
         {value && (
           <button
@@ -685,7 +693,7 @@ function FieldSearch({
               key={opt}
               onClick={() => { onChange(opt); setOpen(false); }}
               className={cn(
-                "w-full px-3 py-2 text-left text-[13px] transition-colors hover:bg-muted",
+                "w-full px-3 py-2 text-left text-base transition-colors hover:bg-muted",
                 opt === value ? "font-semibold text-foreground" : "text-muted-foreground"
               )}
             >
@@ -808,22 +816,22 @@ function ConditionRowItem({
             type="time"
             value={row.value || "08:00"}
             onChange={(e) => onUpdate(row.id, { value: e.target.value })}
-            className="bg-transparent text-[12px] text-foreground outline-none"
+            className="bg-transparent text-sm text-foreground outline-none"
           />
-          <span className="text-[11px] text-muted-foreground">to</span>
+          <span className="text-xs text-muted-foreground">to</span>
           <input
             type="time"
             value={row.unit || "18:00"}
             min={row.value || "00:00"}
             onChange={(e) => onUpdate(row.id, { unit: e.target.value })}
-            className="bg-transparent text-[12px] text-foreground outline-none"
+            className="bg-transparent text-sm text-foreground outline-none"
           />
         </div>
       )}
 
       {/* Suffix for WHEN */}
       {row.type === "WHEN" && (
-        <span className="flex-shrink-0 text-[13px] text-muted-foreground">is detected</span>
+        <span className="flex-shrink-0 text-base text-muted-foreground">is detected</span>
       )}
 
       {/* Operator + value + unit for AND / OR / FOR */}
@@ -834,16 +842,18 @@ function ConditionRowItem({
             type="number"
             value={row.value}
             onChange={(e) => onUpdate(row.id, { value: e.target.value })}
-            className="w-16 rounded-md border border-border bg-background px-2 py-1.5 text-center text-[13px] text-foreground outline-none focus:border-primary"
+            className="w-16 rounded-md border border-border bg-background px-2 py-1.5 text-center text-base text-foreground outline-none focus:border-primary"
           />
-          <select
-            value={row.unit}
-            onChange={(e) => onUpdate(row.id, { unit: e.target.value })}
-            className="rounded-md border border-border bg-card px-2 py-1.5 text-[12px] text-foreground outline-none focus:border-primary"
-          >
-            <option value="">Unit</option>
-            {UNITS_LIST.map((u) => <option key={u} value={u}>{u}</option>)}
-          </select>
+          <Select value={row.unit} onValueChange={(v) => onUpdate(row.id, { unit: v })}>
+            <SelectTrigger className="h-8 w-auto text-sm">
+              <SelectValue placeholder="Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {UNITS_LIST.map((u) => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </>
       )}
 
@@ -896,7 +906,7 @@ function TagInput({
         {tags.map((t) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-[12px] font-medium text-foreground"
+            className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-sm font-medium text-foreground"
           >
             {t}
             <button
@@ -919,13 +929,13 @@ function TagInput({
             if (e.key === "Backspace" && !val && tags.length > 0) onRemove(tags[tags.length - 1]);
           }}
           placeholder={tags.length === 0 ? "+ Add tag" : ""}
-          className="min-w-[80px] flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+          className="min-w-[80px] flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
           {filteredSuggestions.length > 0 && (
-            <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
             </div>
           )}
@@ -933,7 +943,7 @@ function TagInput({
             <button
               key={sg}
               onMouseDown={(e) => { e.preventDefault(); commit(sg); }}
-              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-[13px] text-foreground hover:bg-muted"
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-foreground hover:bg-muted"
             >
               <span className="inline-block size-1.5 rounded-full bg-primary/60" />
               {sg}
@@ -944,7 +954,7 @@ function TagInput({
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
               <button
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-[13px] text-primary hover:bg-primary/10"
+                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
@@ -986,7 +996,7 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search templates…" className="h-8 pl-8 text-[12px]" />
+            placeholder="Search templates…" className="h-8 pl-8 text-sm" />
         </div>
         <Popover open={tagOpen} onOpenChange={setTagOpen}>
           <PopoverTrigger asChild>
@@ -994,7 +1004,7 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
               <span className="inline-flex items-center gap-1.5">
                 Tags
                 {tagFilter.length > 0 && (
-                  <span className="rounded-full bg-primary px-1.5 py-px text-[10px] font-bold text-primary-foreground">
+                  <span className="rounded-full bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
                     {tagFilter.length}
                   </span>
                 )}
@@ -1008,7 +1018,7 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
               return (
                 <button key={tag}
                   onClick={() => setTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag])}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
                   <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                     checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                     {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -1019,7 +1029,7 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
             })}
             {tagFilter.length > 0 && (
               <button onClick={() => setTagFilter([])}
-                className="mt-1 w-full rounded px-2 py-1.5 text-center text-[11px] text-muted-foreground underline hover:text-primary">
+                className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
                 Clear all
               </button>
             )}
@@ -1028,7 +1038,7 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[12px] italic text-muted-foreground">
+        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm italic text-muted-foreground">
           No templates match the current filters.
         </p>
       ) : (
@@ -1039,21 +1049,21 @@ function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) =
             className="w-full rounded-xl border border-border bg-background p-3.5 text-left transition-all hover:border-primary"
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-[13px] font-bold text-foreground">{tpl.name}</span>
-              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[10px] font-semibold text-muted-foreground">
+              <span className="text-base font-bold text-foreground">{tpl.name}</span>
+              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs font-semibold text-muted-foreground">
                 {tpl.model}
               </span>
             </div>
-            <p className="mb-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
               {tpl.description}
             </p>
             <div className="flex flex-wrap items-center gap-1">
               {tpl.tags.slice(0, 4).map((t) => (
-                <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground">
+                <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">
                   {t}
                 </span>
               ))}
-              <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+              <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
                 {tpl.conditions.length} Rules
               </span>
             </div>
@@ -1092,7 +1102,7 @@ function BuilderSidePanel({
             key={t}
             onClick={() => onTabChange(t)}
             className={cn(
-              "mr-6 border-b-2 pb-3 pt-3.5 text-[13px] font-semibold capitalize transition-colors",
+              "mr-6 border-b-2 pb-3 pt-3.5 text-base font-semibold capitalize transition-colors",
               tab === t
                 ? "border-foreground text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -1106,18 +1116,18 @@ function BuilderSidePanel({
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {tab === "summary" && (
           <>
-            <p className="text-[12px] font-semibold text-foreground">Rule in Plain English</p>
-            <div className="min-h-[90px] rounded-lg border border-border bg-background p-3.5 text-[13px] leading-relaxed">
+            <p className="text-sm font-semibold text-foreground">Rule in Plain English</p>
+            <div className="min-h-[90px] rounded-lg border border-border bg-background p-3.5 text-base leading-relaxed">
               {buildSummary(rows)}
             </div>
 
             {hasSummary && showEstimatedRate && (
               <div className="rounded-lg border border-border bg-background p-3.5">
-                <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
                   Estimated trigger rate
                 </p>
-                <div className="font-mono text-[22px] font-bold text-foreground">~14</div>
-                <p className="mb-2 text-[11px] text-muted-foreground">
+                <div className="font-mono text-2xl font-bold text-foreground">~14</div>
+                <p className="mb-2 text-xs text-muted-foreground">
                   times in the past 7 days (based on historical data)
                 </p>
                 <div className="flex h-9 items-end gap-0.5">
@@ -1125,17 +1135,17 @@ function BuilderSidePanel({
                     <div key={i} className="flex-1 rounded-sm bg-primary opacity-70" style={{ height: `${h}%` }} />
                   ))}
                 </div>
-                <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
+                <div className="mt-1 flex justify-between font-mono text-3xs text-muted-foreground">
                   {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d) => <span key={d}>{d}</span>)}
                 </div>
               </div>
             )}
 
             <div className="rounded-lg border border-border bg-background p-3.5">
-              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
                 Severity Score When Fired
               </p>
-              <p className="mb-3 text-[11px] text-muted-foreground">
+              <p className="mb-3 text-xs text-muted-foreground">
                 Priority of the alert when this rule triggers
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -1146,7 +1156,7 @@ function BuilderSidePanel({
                       key={sev}
                       onClick={() => onSeverityChange(sev)}
                       className={cn(
-                        "flex items-center gap-2 rounded-lg border px-3 py-2 text-[12px] font-semibold transition-all",
+                        "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all",
                         isActive
                           ? active
                           : "border-border bg-muted text-muted-foreground hover:text-foreground"
@@ -1304,33 +1314,33 @@ function RuleBuilder({
       <div className="grid grid-cols-[1fr_360px] items-start gap-5">
         <div className="space-y-6">
           <div>
-            <h2 className="mb-4 text-[16px] font-bold text-foreground">Rule Information</h2>
+            <h2 className="mb-4 text-lg font-bold text-foreground">Rule Information</h2>
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+                <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Name <span className="text-sev-critical">*</span>
                 </label>
                 <Input
                   value={s.name}
                   onChange={(e) => patch({ name: e.target.value })}
                   placeholder="e.g. Helmet not worn in Armoury-B"
-                  className="h-10 text-[13px]"
+                  className="h-10 text-base"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+                <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Description <span className="text-sev-critical">*</span>
                 </label>
-                <textarea
+                <Textarea
                   value={s.description}
                   onChange={(e) => patch({ description: e.target.value })}
                   placeholder="e.g. Triggers when a person is detected inside Armoury-B without a helmet for more than 5 seconds during operating hours."
                   rows={2}
-                  className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                  className="w-full resize-none text-base"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+                <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Tag(s) <span className="text-sev-critical">*</span>
                 </label>
                 <TagInput
@@ -1346,8 +1356,8 @@ function RuleBuilder({
           <div>
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-[16px] font-bold text-foreground">Rule Conditions</h2>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                <h2 className="text-lg font-bold text-foreground">Rule Conditions</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   Define the trigger, conditions, duration and actions for this rule.
                 </p>
               </div>
@@ -1367,7 +1377,7 @@ function RuleBuilder({
                   <div className="flex size-11 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary">
                     <Plus className="size-5" />
                   </div>
-                  <p className="text-[13px]">
+                  <p className="text-base">
                     Click to add your first condition
                   </p>
                 </button>
@@ -1461,9 +1471,9 @@ function DeleteModal({
             <Trash2 className="size-4" />
             Delete Rule
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
-        <div className="px-5 py-4 text-[13px] text-muted-foreground">
+        <div className="px-5 py-4 text-base text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{ruleName}</span>? Any models that
           reference this rule will need to be updated.
@@ -1690,14 +1700,14 @@ export default function RulesLibraryPage() {
               <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input value={templateSearch} onChange={(e) => setTemplateSearch(e.target.value)}
                 placeholder="Search templates by name, description or tag…"
-                className="h-9 w-full border-0 bg-transparent pl-9 text-[13px] focus-visible:ring-0" />
+                className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
             </div>
             <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-1.5">
                   Tags
                   {templateTagFilter.length > 0 && (
-                    <span className="ml-1 rounded-full bg-primary px-1.5 py-px text-[10px] font-bold text-primary-foreground">
+                    <span className="ml-1 rounded-full bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
                       {templateTagFilter.length}
                     </span>
                   )}
@@ -1706,7 +1716,7 @@ export default function RulesLibraryPage() {
               </PopoverTrigger>
               <PopoverContent align="end" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
                 {allTemplateTags.length === 0 ? (
-                  <p className="px-2 py-3 text-center text-[11px] italic text-muted-foreground">No tags yet</p>
+                  <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">No tags yet</p>
                 ) : (
                   <>
                     {allTemplateTags.map((tag) => {
@@ -1715,7 +1725,7 @@ export default function RulesLibraryPage() {
                         <button key={tag} onClick={() => {
                           setTemplateTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag]);
                         }}
-                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
                           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                             checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                             {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -1726,7 +1736,7 @@ export default function RulesLibraryPage() {
                     })}
                     {templateTagFilter.length > 0 && (
                       <button onClick={() => setTemplateTagFilter([])}
-                        className="mt-1 w-full rounded px-2 py-1.5 text-center text-[11px] text-muted-foreground underline hover:text-primary">
+                        className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
                         Clear all
                       </button>
                     )}
@@ -1734,7 +1744,7 @@ export default function RulesLibraryPage() {
                 )}
               </PopoverContent>
             </Popover>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {filteredTemplates.length} of {userTemplates.length}
             </span>
           </div>
@@ -1744,16 +1754,16 @@ export default function RulesLibraryPage() {
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
             <LayoutTemplate className="size-10 opacity-20" />
             <p className="text-sm">No templates yet.</p>
-            <p className="max-w-xs text-center text-[12px]">
+            <p className="max-w-xs text-center text-sm">
               When creating or editing a rule, click <strong className="text-foreground">Save as Template</strong> to add it here.
             </p>
           </div>
         ) : filteredTemplates.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
             <LayoutTemplate className="size-8 opacity-20" />
-            <p className="text-[13px]">No templates match the current filters.</p>
+            <p className="text-base">No templates match the current filters.</p>
             <button onClick={() => { setTemplateSearch(""); setTemplateTagFilter([]); }}
-              className="text-[11px] underline hover:text-primary">Clear filters</button>
+              className="text-xs underline hover:text-primary">Clear filters</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1761,29 +1771,29 @@ export default function RulesLibraryPage() {
               <div key={tpl.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <TruncatedText text={tpl.name} className="text-[13px] font-bold text-foreground" />
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">Saved {tpl.savedAtDisplay}</p>
+                    <TruncatedText text={tpl.name} className="text-base font-bold text-foreground" />
+                    <p className="mt-0.5 text-xs text-muted-foreground">Saved {tpl.savedAtDisplay}</p>
                   </div>
                   <SeverityBadge severity={tpl.severity} />
                 </div>
                 {tpl.description && (
-                  <TruncatedText text={tpl.description} className="line-clamp-2 text-[12px] text-muted-foreground" />
+                  <TruncatedText text={tpl.description} className="line-clamp-2 text-sm text-muted-foreground" />
                 )}
                 {tpl.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {tpl.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-[10px] text-muted-foreground">
+                      <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-2xs text-muted-foreground">
                         {t}
                       </span>
                     ))}
                     {tpl.tags.length > 3 && (
-                      <span className="rounded border border-border bg-muted px-1.5 py-px text-[10px] text-muted-foreground">
+                      <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs text-muted-foreground">
                         +{tpl.tags.length - 3}
                       </span>
                     )}
                   </div>
                 )}
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {tpl.conditions.length} condition{tpl.conditions.length === 1 ? "" : "s"}
                 </p>
                 <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-2">
@@ -1834,7 +1844,7 @@ export default function RulesLibraryPage() {
             <LayoutTemplate className="size-3.5" />
             View Templates
             {userTemplates.length > 0 && (
-              <span className="rounded-full bg-primary px-1.5 py-px text-[10px] font-semibold text-primary-foreground">
+              <span className="rounded-full bg-primary px-1.5 py-px text-2xs font-semibold text-primary-foreground">
                 {userTemplates.length}
               </span>
             )}
@@ -1867,7 +1877,7 @@ export default function RulesLibraryPage() {
 
       {/* Count + sort */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           Rule{filtered.length !== 1 ? "s" : ""}
           {(search || hasActiveFilters) && (
@@ -1879,18 +1889,18 @@ export default function RulesLibraryPage() {
             </button>
           )}
         </p>
-        <div className="relative flex-shrink-0">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[12px] text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="name-asc">Name (A→Z)</option>
-            <option value="name-desc">Name (Z→A)</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex-shrink-0">
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name-asc">Name (A→Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z→A)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -1922,7 +1932,7 @@ export default function RulesLibraryPage() {
                     <th
                       key={label}
                       className={cn(
-                        "px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60",
+                        "px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
                         cls
                       )}
                     >
@@ -1946,11 +1956,11 @@ export default function RulesLibraryPage() {
                   <tr
                     key={rule.id}
                     onClick={() => openEdit(rule)}
-                    className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     {/* Rule ID */}
                     <td className="px-4 py-3">
-                      <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                         {rule.id}
                       </span>
                     </td>
@@ -1958,7 +1968,7 @@ export default function RulesLibraryPage() {
                     {/* Rule Name + Severity badge */}
                     <td className="px-4 py-3">
                       <div className="flex flex-col items-start gap-1.5">
-                        <span className="text-[13px] font-semibold text-foreground transition-colors group-hover:text-primary">
+                        <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary">
                           {rule.name}
                         </span>
                         <SeverityBadge severity={rule.severity} />
@@ -1967,7 +1977,7 @@ export default function RulesLibraryPage() {
 
                     {/* Description */}
                     <td className="px-4 py-3">
-                      <TruncatedText text={rule.description} className="line-clamp-2 text-[13px] text-muted-foreground" />
+                      <TruncatedText text={rule.description} className="line-clamp-2 text-base text-muted-foreground" />
                     </td>
 
                     {/* Tags */}
@@ -1977,7 +1987,7 @@ export default function RulesLibraryPage() {
 
                     {/* Created */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Calendar className="size-3 flex-shrink-0" />
                         {rule.createdAtDisplay}
                       </div>

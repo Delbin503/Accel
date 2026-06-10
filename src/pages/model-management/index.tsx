@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -105,7 +106,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-3" sideOffset={6} align="start">
-        <p className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/50">
+        <p className="mb-2.5 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/50">
           Choose Icon
         </p>
         <div className="grid grid-cols-5 gap-1.5">
@@ -143,7 +144,7 @@ function SeverityBadge({ severity }: { severity: RuleSeverity }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.bg,
         s.text
       )}
@@ -160,7 +161,7 @@ function FileTypeBadge({ type }: { type: StepFileType }) {
   return (
     <span
       className={cn(
-        "rounded border px-1.5 py-px font-mono text-[10px] font-bold uppercase",
+        "rounded border px-1.5 py-px font-mono text-2xs font-bold uppercase",
         type === "onnx"
           ? "border-primary/30 bg-primary/10 text-primary"
           : "border-info/30 bg-info/10 text-info"
@@ -175,7 +176,7 @@ function FileTypeBadge({ type }: { type: StepFileType }) {
 
 function TagChip({ label }: { label: string }) {
   return (
-    <span className="rounded border border-border bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground">
+    <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">
       {label}
     </span>
   );
@@ -217,7 +218,7 @@ function MoreTagsPopover({
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary transition-colors hover:bg-primary/20"
+          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary transition-colors hover:bg-primary/20"
         >
           {label ?? `+${hiddenTags.length} more`}
         </span>
@@ -230,7 +231,7 @@ function MoreTagsPopover({
         align="start"
         className="z-[100] w-56 p-3"
       >
-        <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/55">
+        <p className="mb-2 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
           All Tags · {allTags.length}
         </p>
         <div className="flex flex-wrap gap-1">
@@ -281,7 +282,7 @@ function TagInput({
         {tags.map((t) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-[12px] font-medium text-foreground"
+            className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-sm font-medium text-foreground"
           >
             {t}
             <button
@@ -310,13 +311,13 @@ function TagInput({
             if (e.key === "Backspace" && !val && tags.length > 0) onRemove(tags[tags.length - 1]);
           }}
           placeholder={tags.length === 0 ? "+ Add tag" : ""}
-          className="min-w-[80px] flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+          className="min-w-[80px] flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
           {filteredSuggestions.length > 0 && (
-            <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
             </div>
           )}
@@ -324,7 +325,7 @@ function TagInput({
             <button
               key={s}
               onMouseDown={(e) => { e.preventDefault(); commit(s); }}
-              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-[13px] text-foreground hover:bg-muted"
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-foreground hover:bg-muted"
             >
               <span className="inline-block size-1.5 rounded-full bg-primary/60" />
               {s}
@@ -335,7 +336,7 @@ function TagInput({
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
               <button
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-[13px] text-primary hover:bg-primary/10"
+                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
@@ -362,15 +363,15 @@ function SectionHeader({
   return (
     <div className="mb-3 border-t border-border pt-3">
       <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {label}
         </span>
         {count !== undefined && (
-          <span className="font-mono text-[10px] text-muted-foreground">{count}</span>
+          <span className="font-mono text-2xs text-muted-foreground">{count}</span>
         )}
       </div>
       {description && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/70">{description}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground/70">{description}</p>
       )}
     </div>
   );
@@ -415,24 +416,24 @@ function ModelCard({
             <TruncatedText
               text={model.name}
               className={cn(
-                "text-[13px] font-bold",
+                "text-base font-bold",
                 selected ? "text-primary" : "text-foreground"
               )}
             />
-            <p className="font-mono text-[11px] text-muted-foreground">{model.id}</p>
+            <p className="font-mono text-xs text-muted-foreground">{model.id}</p>
           </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
-          <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+          <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
             {model.sequenceIds.length} Steps
           </span>
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
             {model.attachedRuleIds.length} Rules
           </span>
         </div>
       </div>
 
-      <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-[12px] text-muted-foreground" />
+      <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-sm text-muted-foreground" />
 
       {model.tags.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1">
@@ -448,7 +449,7 @@ function ModelCard({
           )}
         </div>
       ) : (
-        <span className="text-[11px] italic text-muted-foreground/40">No tags</span>
+        <span className="text-xs italic text-muted-foreground/40">No tags</span>
       )}
     </button>
   );
@@ -471,34 +472,34 @@ function CreateModelModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Create Model</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">Set basic information to get started.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Set basic information to get started.</p>
         </DialogHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Model Information
           </p>
           <div>
-            <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
               Model Name <span className="text-destructive">*</span>
             </label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter model name"
-              className="h-10 text-[13px]"
+              className="h-10 text-base"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
               Model Description <span className="text-destructive">*</span>
             </label>
-            <textarea
+            <Textarea
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="Describe what the model is capable of…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              className="w-full resize-none"
             />
           </div>
         </div>
@@ -540,43 +541,43 @@ function AddStepModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add New Step</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Define what the AI should verify at this step.
           </p>
         </DialogHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
               Action Label <span className="text-destructive">*</span>
             </label>
             <Input
               value={actionLabel}
               onChange={(e) => setActionLabel(e.target.value)}
               placeholder="e.g. Verify worker is wearing approved helmet"
-              className="h-10 text-[13px]"
+              className="h-10 text-base"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
               Label <span className="text-destructive">*</span>
             </label>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="e.g. Helmet Detection v2.1"
-              className="h-10 text-[13px]"
+              className="h-10 text-base"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-semibold text-foreground">
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
               File <span className="text-destructive">*</span>
             </label>
             <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-5 transition-colors hover:border-primary/40">
               <UploadCloud className="size-7 text-muted-foreground" />
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Upload a <span className="font-semibold text-foreground">.onnx</span> or <span className="font-semibold text-foreground">.json</span> file or drag and drop
               </p>
               <Input
@@ -588,10 +589,10 @@ function AddStepModal({
                   else if (v.toLowerCase().endsWith(".onnx")) setFileType("onnx");
                 }}
                 placeholder="filename.onnx"
-                className="h-8 text-center text-[12px]"
+                className="h-8 text-center text-sm"
               />
             </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               Accepted: .onnx (model) or .json (artefact). Max file size 100 MB. Type is detected from the extension.
             </p>
           </div>
@@ -635,9 +636,9 @@ function DeleteModelModal({
             <Trash2 className="size-4" />
             Delete Model
           </DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
-        <div className="px-5 py-4 text-[13px] text-muted-foreground">
+        <div className="px-5 py-4 text-base text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{name}</span>? Any deployments that
           reference this model will need to be updated.
@@ -688,8 +689,8 @@ function PoolStepCard({
         <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
       )}
       <div className="min-w-0 flex-1">
-        <TruncatedText text={step.actionLabel} className="text-[12px] font-semibold text-foreground" />
-        <p className="font-mono text-[11px] text-muted-foreground">{step.label}</p>
+        <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
+        <p className="font-mono text-xs text-muted-foreground">{step.label}</p>
       </div>
       <FileTypeBadge type={step.fileType} />
       {editable && (
@@ -746,12 +747,12 @@ function SequenceItem({
       {editable && (
         <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
       )}
-      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[10px] font-bold text-primary">
+      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <TruncatedText text={step.actionLabel} className="text-[12px] font-semibold text-foreground" />
-        <p className="font-mono text-[11px] text-muted-foreground">{step.fileName}</p>
+        <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
+        <p className="font-mono text-xs text-muted-foreground">{step.fileName}</p>
       </div>
       <FileTypeBadge type={step.fileType} />
       {editable && (
@@ -782,7 +783,7 @@ function AttachedRuleCard({
     <div className="rounded-lg border border-border bg-background px-3 py-2.5">
       <div className="mb-1 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[12px] font-semibold text-foreground">{rule.name}</span>
+          <span className="text-sm font-semibold text-foreground">{rule.name}</span>
           <SeverityBadge severity={rule.severity} />
         </div>
         {editable && (
@@ -794,7 +795,7 @@ function AttachedRuleCard({
           </button>
         )}
       </div>
-      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground" />
+      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
       <div className="flex flex-wrap gap-1">
         {rule.tags.slice(0, 3).map((t) => (
           <TagChip key={t} label={t} />
@@ -844,7 +845,7 @@ function RuleLibraryCard({
           {editable && (
             <GripVertical className="size-3 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
           )}
-          <span className="text-[12px] font-semibold text-foreground">{rule.name}</span>
+          <span className="text-sm font-semibold text-foreground">{rule.name}</span>
           <SeverityBadge severity={rule.severity} />
         </div>
         {editable && (
@@ -857,7 +858,7 @@ function RuleLibraryCard({
           </button>
         )}
       </div>
-      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground" />
+      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
       <div className="flex flex-wrap gap-1">
         {rule.tags.slice(0, 3).map((t) => (
           <TagChip key={t} label={t} />
@@ -882,7 +883,7 @@ function EmptyDetailState() {
       <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
         <Plus className="size-6" />
       </div>
-      <p className="text-[13px]">Select a model to configure</p>
+      <p className="text-base">Select a model to configure</p>
     </div>
   );
 }
@@ -1122,7 +1123,7 @@ function ModelDetailPanel({
             <Input
               value={draft.name}
               onChange={(e) => patchDraft({ name: e.target.value })}
-              className="h-9 text-[14px] font-bold"
+              className="h-9 text-md font-bold"
               placeholder="Model name"
             />
           </div>
@@ -1147,23 +1148,23 @@ function ModelDetailPanel({
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-[15px] font-bold text-foreground">{model.name}</h2>
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground">
+                <h2 className="text-md font-bold text-foreground">{model.name}</h2>
+                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
                   {model.id}
                 </span>
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="size-3" />
                   {model.createdAtDisplay}
                 </span>
                 <span className="text-muted-foreground/30">·</span>
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Layers className="size-3" />
                   {model.sequenceIds.length} Steps
                 </span>
                 <span className="text-muted-foreground/30">·</span>
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <BookOpen className="size-3" />
                   {model.attachedRuleIds.length} Rules
                 </span>
@@ -1193,18 +1194,18 @@ function ModelDetailPanel({
         {isEditing ? (
           <div className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
               </label>
-              <textarea
+              <Textarea
                 value={draft.description}
                 onChange={(e) => patchDraft({ description: e.target.value })}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                className="w-full resize-none"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Tags
               </label>
               <TagInput
@@ -1217,7 +1218,7 @@ function ModelDetailPanel({
           </div>
         ) : (
           <div className="border-b border-border px-5 py-3">
-            <p className="mb-2 text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
               {model.description}
             </p>
             {model.tags.length > 0 && (
@@ -1235,7 +1236,7 @@ function ModelDetailPanel({
             {/* ── SEQUENCE section (edit mode) ── */}
             <div className="px-5 pb-5 pt-4">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[13px] font-bold uppercase tracking-widest text-foreground">
+                <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Sequence
                 </h3>
                 <Button
@@ -1261,12 +1262,12 @@ function ModelDetailPanel({
                   {draft.steps.length === 0 ? (
                     <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                       <UploadCloud className="size-7 opacity-20" />
-                      <p className="text-center text-[12px]">Click "+ Add Step" to upload</p>
+                      <p className="text-center text-sm">Click "+ Add Step" to upload</p>
                     </div>
                   ) : poolSteps.length === 0 ? (
                     <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                       <Check className="size-6 opacity-20" />
-                      <p className="text-center text-[12px]">All steps placed in sequence</p>
+                      <p className="text-center text-sm">All steps placed in sequence</p>
                     </div>
                   ) : (
                     <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
@@ -1312,7 +1313,7 @@ function ModelDetailPanel({
                     {sequenceSteps.length === 0 ? (
                       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
                         <Hash className="size-7 opacity-20" />
-                        <p className="text-center text-[12px]">
+                        <p className="text-center text-sm">
                           Drag steps from the pool to build the sequence
                         </p>
                       </div>
@@ -1349,7 +1350,7 @@ function ModelDetailPanel({
             {/* ── RULES section (edit mode) ── */}
             <div className="px-5 pb-6 pt-4">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[13px] font-bold uppercase tracking-widest text-foreground">
+                <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Rules
                 </h3>
                 <Button
@@ -1378,13 +1379,13 @@ function ModelDetailPanel({
                       value={ruleSearch}
                       onChange={(e) => setRuleSearch(e.target.value)}
                       placeholder="Search rules…"
-                      className="h-8 w-full rounded-lg border border-border bg-background pl-8 pr-3 text-[12px] text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary"
+                      className="h-8 w-full rounded-lg border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary"
                     />
                   </div>
                   {libraryRules.length === 0 ? (
                     <div className="flex h-[412px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border text-muted-foreground">
                       <BookOpen className="size-7 opacity-20" />
-                      <p className="text-center text-[12px]">
+                      <p className="text-center text-sm">
                         {ruleSearch
                           ? "No rules match your search"
                           : allRules.length === 0
@@ -1436,7 +1437,7 @@ function ModelDetailPanel({
                     {attachedRules.length === 0 ? (
                       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
                         <BookOpen className="size-7 opacity-20" />
-                        <p className="text-center text-[12px]">← Drag rules from the library</p>
+                        <p className="text-center text-sm">← Drag rules from the library</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -1463,8 +1464,8 @@ function ModelDetailPanel({
           /* ── VIEW MODE — single combined section ── */
           <div className="px-5 pb-6 pt-4">
             <div className="mb-4">
-              <p className="text-[13px] font-bold text-foreground">Model Configuration</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-base font-bold text-foreground">Model Configuration</p>
+              <p className="text-xs text-muted-foreground">
                 {sequenceSteps.length} sequence step{sequenceSteps.length !== 1 ? "s" : ""} ·{" "}
                 {attachedRules.length} detection rule{attachedRules.length !== 1 ? "s" : ""} linked to this model
               </p>
@@ -1482,7 +1483,7 @@ function ModelDetailPanel({
                 {sequenceSteps.length === 0 ? (
                   <div className="flex h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                     <Hash className="size-7 opacity-20" />
-                    <p className="text-center text-[12px]">No sequence defined</p>
+                    <p className="text-center text-sm">No sequence defined</p>
                   </div>
                 ) : (
                   <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
@@ -1515,7 +1516,7 @@ function ModelDetailPanel({
                 {attachedRules.length === 0 ? (
                   <div className="flex h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                     <BookOpen className="size-7 opacity-20" />
-                    <p className="text-center text-[12px]">No rules attached</p>
+                    <p className="text-center text-sm">No rules attached</p>
                   </div>
                 ) : (
                   <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
@@ -1672,10 +1673,10 @@ export default function ModelManagementPage() {
         <div className="flex-shrink-0 border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Models
               </p>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {models.length} model{models.length !== 1 ? "s" : ""} configured
               </p>
             </div>
@@ -1687,14 +1688,14 @@ export default function ModelManagementPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search model"
-              className="h-9 pl-9 text-[13px]"
+              className="h-9 pl-9 text-base"
             />
           </div>
 
           <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
             <PopoverTrigger asChild>
               <button className={cn(
-                "flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-[13px] transition-colors hover:border-primary",
+                "flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-base transition-colors hover:border-primary",
                 tagFilterOpen ? "border-primary" : "border-border",
                 tagFilter.length > 0 ? "text-foreground" : "text-muted-foreground"
               )}>
@@ -1711,7 +1712,7 @@ export default function ModelManagementPage() {
                 return (
                   <button key={tag}
                     onClick={() => setTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag])}
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
                     <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                       checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                       {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -1722,7 +1723,7 @@ export default function ModelManagementPage() {
               })}
               {tagFilter.length > 0 && (
                 <button onClick={() => setTagFilter([])}
-                  className="mt-1 w-full rounded px-2 py-1.5 text-center text-[11px] text-muted-foreground underline hover:text-primary">
+                  className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
                   Clear all
                 </button>
               )}
@@ -1734,7 +1735,7 @@ export default function ModelManagementPage() {
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
               <AlignLeft className="size-8 opacity-20" />
-              <p className="text-[12px]">No models match your search.</p>
+              <p className="text-sm">No models match your search.</p>
             </div>
           ) : (
             filtered.map((m) => (

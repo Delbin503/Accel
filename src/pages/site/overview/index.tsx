@@ -65,17 +65,17 @@ function CameraHealthCell({ cameras }: { cameras: CameraData[] }) {
   const total   = cameras.length;
   const offline = total - online;
   if (total === 0) {
-    return <span className="text-[12px] text-muted-foreground/60">—</span>;
+    return <span className="text-sm text-muted-foreground/60">—</span>;
   }
   const allOnline = offline === 0;
   return (
     <div className="flex items-center gap-2">
       <Video className={cn("size-3", allOnline ? "text-success" : "text-muted-foreground")} />
-      <span className="font-mono text-[12px] font-semibold text-foreground">
+      <span className="font-mono text-sm font-semibold text-foreground">
         {online}<span className="text-muted-foreground/60">/{total}</span>
       </span>
       {offline > 0 && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-0.5 text-[10px] font-semibold text-sev-critical">
+        <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-sev-critical">
           <span className="size-1 rounded-full bg-sev-critical" />
           {offline} offline
         </span>
@@ -135,7 +135,7 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary" : "text-muted-foreground"
           )}
@@ -151,7 +151,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -197,9 +197,9 @@ function FilterPanel({
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -207,7 +207,7 @@ function FilterPanel({
               {["All statuses", "All floor plans"].map((l) => (
                 <span
                   key={l}
-                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {l}
                 </span>
@@ -219,7 +219,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
@@ -240,7 +240,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search sites by name, address or description…"
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -249,7 +249,7 @@ function FilterPanel({
               { key: "floorPlan" as const, label: "Floor Plan", opts: FLOOR_PLAN_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -355,7 +355,7 @@ export default function SiteOverviewPage() {
         onSearchChange={setSearch}
       />
 
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "site" : "sites"} match current filters
         {hasFilters && (
@@ -385,7 +385,7 @@ export default function SiteOverviewPage() {
                 <tr className="border-b border-border text-left">
                   {["SITE ID", "SITE", "STATUS", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
                     <th key={h}
-                      className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
                     </th>
                   ))}
@@ -398,9 +398,9 @@ export default function SiteOverviewPage() {
                   return (
                     <tr key={site.id}
                       onClick={() => openSite(site.id)}
-                      className="group cursor-pointer text-[13px] transition-colors hover:bg-muted/20">
+                      className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                           {site.id}
                         </span>
                       </td>
@@ -414,7 +414,7 @@ export default function SiteOverviewPage() {
                             />
                             <TruncatedText
                               title={site.address || "No address yet"}
-                              className="text-[11px] text-muted-foreground"
+                              className="text-xs text-muted-foreground"
                             >
                               <MapPin className="mr-0.5 inline size-2.5" />
                               {site.address || "No address yet"}
@@ -423,25 +423,25 @@ export default function SiteOverviewPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.bg, s.text)}>
+                        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
                           <span className={cn("size-1.5 rounded-full", s.dot, site.status === "active" && "animate-pulse")} />
                           {s.label}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         {site.floorPlan ? (
-                          <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success">
+                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
                             <ImageIcon className="size-3" />
                             Ready
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
                             Missing
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 font-mono text-[12px] font-semibold text-foreground">
+                        <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-foreground">
                           <Shapes className="size-3 text-muted-foreground" />
                           {site.areas.length}
                         </span>
@@ -449,12 +449,12 @@ export default function SiteOverviewPage() {
                       <td className="px-4 py-3">
                         <CameraHealthCell cameras={siteCams} />
                       </td>
-                      <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
+                      <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
                         {site.operatingHours
                           ? <>{site.operatingHours.from}<span className="text-muted-foreground/50"> – </span>{site.operatingHours.to}</>
                           : <span className="text-muted-foreground/50">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{site.createdAtDisplay}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{site.createdAtDisplay}</td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -464,18 +464,18 @@ export default function SiteOverviewPage() {
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
                             <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted">
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                               <ArrowUpRight className="size-3.5 text-muted-foreground" />
                               Open Site
                             </button>
                             <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted">
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                               <Edit3 className="size-3.5 text-muted-foreground" />
                               Edit Site
                             </button>
                             <div className="my-1 border-t border-border" />
                             <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-sev-critical hover:bg-sev-critical/10">
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10">
                               <Trash2 className="size-3.5" />
                               Delete Site
                             </button>

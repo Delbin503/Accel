@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AuthLayout } from "./AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -79,14 +80,14 @@ export default function OnboardingSitePage() {
     <AuthLayout
       brandSlot={
         <>
-          <h2 className="text-[28px] font-bold leading-tight text-foreground">
+          <h2 className="text-4xl font-bold leading-tight text-foreground">
             Set up your first site.
           </h2>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             A <strong className="text-foreground">site</strong> is a physical location — an office, warehouse, base or store.
             Cameras, areas and detections all live under their parent site, and each site gets its own subscription.
           </p>
-          <ul className="space-y-3 text-[13px] text-muted-foreground">
+          <ul className="space-y-3 text-base text-muted-foreground">
             <li className="flex items-start gap-2.5">
               <Check className="mt-0.5 size-3.5 flex-shrink-0 text-success" />
               <span>You can add more sites later — there's no limit.</span>
@@ -106,61 +107,65 @@ export default function OnboardingSitePage() {
       <div>
         <OnboardingProgress current="site" />
 
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground">Create your first site</h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Create your first site</h1>
+        <p className="mt-1 text-base text-muted-foreground">
           Add basic details and the areas you want to monitor.
         </p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site name
             </label>
             <div className="relative">
               <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input value={name} onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Astra HQ, FedEx Changi" className="h-10 pl-9 text-[13px]" />
+                placeholder="e.g. Astra HQ, FedEx Changi" className="h-10 pl-9 text-base" />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Address
             </label>
             <div className="relative">
               <MapPin className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input value={address} onChange={(e) => setAddress(e.target.value)}
-                placeholder="123 Anson Road, Singapore 079914" className="h-10 pl-9 text-[13px]" />
+                placeholder="123 Anson Road, Singapore 079914" className="h-10 pl-9 text-base" />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Timezone
             </label>
             <div className="relative">
-              <Globe2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
-                <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
-                <option value="Asia/Jakarta">Asia/Jakarta (GMT+7)</option>
-                <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
-                <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (GMT+8)</option>
-                <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-                <option value="UTC">UTC (GMT+0)</option>
-                <option value="America/New_York">America/New_York (GMT-5)</option>
-                <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
-              </select>
+              <Globe2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+                <SelectTrigger className="h-10 w-full pl-9 text-base">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Asia/Singapore">Asia/Singapore (GMT+8)</SelectItem>
+                  <SelectItem value="Asia/Jakarta">Asia/Jakarta (GMT+7)</SelectItem>
+                  <SelectItem value="Asia/Bangkok">Asia/Bangkok (GMT+7)</SelectItem>
+                  <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (GMT+8)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (GMT+9)</SelectItem>
+                  <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York (GMT-5)</SelectItem>
+                  <SelectItem value="America/Los_Angeles">America/Los_Angeles (GMT-8)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Areas <span className="text-muted-foreground/60">(at least 1 required)</span>
               </label>
               <button onClick={addArea}
-                className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:underline">
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
                 <Plus className="size-3" />
                 Add area
               </button>
@@ -170,7 +175,7 @@ export default function OnboardingSitePage() {
                 <div key={a.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5">
                   <span className="size-3 flex-shrink-0 rounded-full" style={{ background: a.color }} />
                   <Input value={a.name} onChange={(e) => renameArea(a.id, e.target.value)}
-                    placeholder="Area name" className="h-8 flex-1 border-0 bg-transparent text-[13px] focus-visible:ring-0" />
+                    placeholder="Area name" className="h-8 flex-1 border-0 bg-transparent text-base focus-visible:ring-0" />
                   <button onClick={() => removeArea(a.id)}
                     disabled={areas.length === 1}
                     className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-sev-critical disabled:opacity-30"
@@ -183,7 +188,7 @@ export default function OnboardingSitePage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-[12px] text-sev-critical">
+            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
               <AlertCircle className="size-3.5 flex-shrink-0" />
               {error}
             </div>
@@ -194,13 +199,13 @@ export default function OnboardingSitePage() {
               <ArrowLeft className="size-3.5" />
               Back to sign in
             </Button>
-            <Button className="ml-auto h-10 gap-2 px-5 text-[13px]" onClick={submit}>
+            <Button className="ml-auto h-10 gap-2 px-5 text-base" onClick={submit}>
               Continue
               <ArrowRight className="size-3.5" />
             </Button>
           </div>
 
-          <p className="text-center text-[11px] text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground">
             Step 1 of 2 · After this, choose a plan to unlock the dashboard.
           </p>
         </div>

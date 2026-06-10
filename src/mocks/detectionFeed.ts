@@ -1,6 +1,6 @@
 import type { DetectionEvent, DismissedEvent } from "@/types/detection";
 
-export const MOCK_EVENTS: DetectionEvent[] = [
+const RAW_EVENTS: DetectionEvent[] = [
   /* ── Today: 19 May 2026 ──────────────────────────────────────────────── */
   {
     id: "EVT-2026-0519-001",
@@ -8,9 +8,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "movement",
     typeLabel: "Asset movement — unauthorized",
-    useCaseId: "UC-AM-04",
+    useCaseId: "Mdl_002",
     useCaseTitle: "Asset movement detection with cross-reference to access control logs. Threshold: 60s window without matching credential.",
-    model: "accel-vms v4.2.1",
+    model: "Intrusion & Asset Monitor",
     modelKey: "vms-4-2-1",
     summary:
       "Asset [[AST-WPN-0421]] exited [[Armoury-B]] at **14:23**. Person [[PER-U-7782]] detected in frame — !!no matching access record within 60s window!!.",
@@ -43,9 +43,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "escalated",
     type: "unauth",
     typeLabel: "Restricted zone entry",
-    useCaseId: "UC-RZ-01",
+    useCaseId: "Mdl_002",
     useCaseTitle: "Restricted zone presence with credential verification.",
-    model: "accel-vms v4.2.1",
+    model: "Intrusion & Asset Monitor",
     modelKey: "vms-4-2-1",
     caseId: "CASE-2026-0142",
     summary:
@@ -77,9 +77,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "compliance",
     typeLabel: "Compliance breach — Pat-down SOP",
-    useCaseId: "UC-CB-02",
+    useCaseId: "Mdl_001",
     useCaseTitle: "SOP compliance verification for security checkpoint procedures.",
-    model: "accel-sop v2.0",
+    model: "SOP Compliance",
     modelKey: "sop-2",
     summary:
       "Pat-down procedure not completed for subject at [[Checkpoint-A2]] at **10:18** — !!required steps missing: torso check, ankle check!!.",
@@ -110,9 +110,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "loiter",
     typeLabel: "Loitering",
-    useCaseId: "UC-LT-01",
+    useCaseId: "Mdl_002",
     useCaseTitle: "Loitering detection with dwell time threshold per zone.",
-    model: "accel-vms v4.2.1",
+    model: "Intrusion & Asset Monitor",
     modelKey: "vms-4-2-1",
     summary:
       "Person [[PER-K-3320]] remained in [[Lobby-East]] for **8m 24s** — !!exceeds threshold of 5 min for this zone!!.",
@@ -143,9 +143,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "unauth",
     typeLabel: "Unattended object",
-    useCaseId: "UC-UO-03",
+    useCaseId: "Mdl_003",
     useCaseTitle: "Stationary object detection with dwell time analysis.",
-    model: "accel-vms v4.1.0",
+    model: "Unattended Object Detection",
     modelKey: "vms-4-1-0",
     summary:
       "Object detected in [[Concourse-B]] at **08:55**, stationary for **3m 12s** — !!below standard alert threshold; logged for review!!.",
@@ -177,9 +177,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "movement",
     typeLabel: "Asset movement — after-hours",
-    useCaseId: "UC-AM-04",
+    useCaseId: "Mdl_002",
     useCaseTitle: "Asset movement with cross-reference to access logs.",
-    model: "accel-vms v4.2.1",
+    model: "Intrusion & Asset Monitor",
     modelKey: "vms-4-2-1",
     summary:
       "Asset [[AST-EQP-2218]] exited [[Storage-C]] at **22:17**. Person [[PER-K-1140]] identified — !!movement outside operational hours (18:00–06:00)!!.",
@@ -213,9 +213,9 @@ export const MOCK_EVENTS: DetectionEvent[] = [
     status: "pending",
     type: "unauth",
     typeLabel: "Unauthorized presence",
-    useCaseId: "UC-UP-02",
+    useCaseId: "Mdl_004",
     useCaseTitle: "Unidentified person in restricted zone with credential lookup.",
-    model: "accel-vms v3.9.2",
+    model: "Unidentified Person Monitor",
     modelKey: "vms-3-9-2",
     summary:
       "Unidentified person detected in [[Server-Room-1]] at **16:33** — !!no matching credential within 30s window!!.",
@@ -241,7 +241,7 @@ export const MOCK_EVENTS: DetectionEvent[] = [
   },
 ];
 
-export const MOCK_DISMISSED: DismissedEvent[] = [
+const RAW_DISMISSED: DismissedEvent[] = [
   {
     event: {
       id: "EVT-2026-0519-D01",
@@ -249,9 +249,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "loiter",
       typeLabel: "Loitering",
-      useCaseId: "UC-LT-01",
+      useCaseId: "Mdl_002",
       useCaseTitle: "Loitering detection with dwell time threshold per zone.",
-      model: "accel-vms v4.2.1",
+      model: "Intrusion & Asset Monitor",
       modelKey: "vms-4-2-1",
       summary: "Person in [[Lobby-West]] for **6m 02s** — threshold 5 min.",
       vlmReasoning: "Individual waiting near lobby seating area.",
@@ -285,9 +285,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "movement",
       typeLabel: "Asset movement — unauthorized",
-      useCaseId: "UC-AM-04",
+      useCaseId: "Mdl_002",
       useCaseTitle: "Asset movement detection with cross-reference to access control logs.",
-      model: "accel-vms v4.2.1",
+      model: "Intrusion & Asset Monitor",
       modelKey: "vms-4-2-1",
       summary: "Asset [[AST-MED-0088]] exited [[Medical-Bay-2]] at **08:44**.",
       vlmReasoning: "Medical equipment moved during routine shift handover.",
@@ -322,9 +322,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "unauth",
       typeLabel: "Unattended object",
-      useCaseId: "UC-UO-03",
+      useCaseId: "Mdl_003",
       useCaseTitle: "Stationary object detection with dwell time analysis.",
-      model: "accel-vms v4.1.0",
+      model: "Unattended Object Detection",
       modelKey: "vms-4-1-0",
       summary: "Object in [[Canteen-B]] stationary for **3m 44s**.",
       vlmReasoning: "Lunch bag left on table during meal period.",
@@ -358,9 +358,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "compliance",
       typeLabel: "Compliance breach — Pat-down SOP",
-      useCaseId: "UC-CB-02",
+      useCaseId: "Mdl_001",
       useCaseTitle: "SOP compliance verification for security checkpoint procedures.",
-      model: "accel-sop v2.0",
+      model: "SOP Compliance",
       modelKey: "sop-2",
       summary: "Pat-down at [[Checkpoint-C1]] — !!steps 4–5 not detected!!.",
       vlmReasoning: "Guard performed compliant check; model occlusion caused missed steps.",
@@ -394,9 +394,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "unauth",
       typeLabel: "Restricted zone entry",
-      useCaseId: "UC-RZ-01",
+      useCaseId: "Mdl_002",
       useCaseTitle: "Restricted zone presence with credential verification.",
-      model: "accel-vms v4.2.1",
+      model: "Intrusion & Asset Monitor",
       modelKey: "vms-4-2-1",
       summary: "Person [[PER-K-0092]] in [[Lab-3]] at **11:03**.",
       vlmReasoning: "Authorized researcher — system credential sync lag.",
@@ -431,9 +431,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "movement",
       typeLabel: "Asset movement — unauthorized",
-      useCaseId: "UC-AM-04",
+      useCaseId: "Mdl_002",
       useCaseTitle: "Asset movement detection with cross-reference to access control logs.",
-      model: "accel-vms v4.2.1",
+      model: "Intrusion & Asset Monitor",
       modelKey: "vms-4-2-1",
       summary: "Asset [[AST-WPN-0390]] moved from [[Armoury-A]] at **19:42**.",
       vlmReasoning: "Scheduled maintenance drill — no actual breach.",
@@ -468,9 +468,9 @@ export const MOCK_DISMISSED: DismissedEvent[] = [
       status: "dismissed",
       type: "loiter",
       typeLabel: "Loitering",
-      useCaseId: "UC-LT-01",
+      useCaseId: "Mdl_002",
       useCaseTitle: "Loitering detection with dwell time threshold per zone.",
-      model: "accel-vms v4.2.1",
+      model: "Intrusion & Asset Monitor",
       modelKey: "vms-4-2-1",
       summary: "Person in [[Loading-Bay-3]] for **7m 11s**.",
       vlmReasoning: "Driver waiting for loading crew — per loading bay SOP.",
@@ -544,11 +544,29 @@ export const FILTER_OPTIONS = {
     { value: "tuas", label: "Tuas Port Terminal" },
   ],
   model: [
-    { value: "vms-4-2-1", label: "accel-vms v4.2.1" },
-    { value: "vms-4-1-0", label: "accel-vms v4.1.0" },
-    { value: "vms-3-9-2", label: "accel-vms v3.9.2" },
-    { value: "sop-2", label: "accel-sop v2.0" },
-    { value: "anpr-3", label: "accel-anpr v3.1" },
-    { value: "ppe-1", label: "accel-ppe v1.0" },
+    { value: "vms-asset",  label: "Asset Movement Detection" },
+    { value: "vms-zone",   label: "Restricted Zone Monitor" },
+    { value: "vms-loiter", label: "Loitering Detection" },
+    { value: "vms-4-1-0",  label: "Unattended Object Detection" },
+    { value: "vms-3-9-2",  label: "Unidentified Person Monitor" },
+    { value: "sop-2",      label: "SOP Compliance" },
   ],
 } as const;
+
+/* Per-scenario model identity. The original Mdl_002 family is split so each
+ * detection scenario carries its own distinct model ID, name and key. */
+function applyModelIdentity<T extends DetectionEvent>(e: T): T {
+  if (e.type === "movement")
+    return { ...e, useCaseId: "Mdl_002", model: "Asset Movement Detection", modelKey: "vms-asset" };
+  if (e.type === "loiter")
+    return { ...e, useCaseId: "Mdl_006", model: "Loitering Detection", modelKey: "vms-loiter" };
+  if (e.type === "unauth" && e.useCaseId === "Mdl_002")
+    return { ...e, useCaseId: "Mdl_005", model: "Restricted Zone Monitor", modelKey: "vms-zone" };
+  return e;
+}
+
+export const MOCK_EVENTS: DetectionEvent[] = RAW_EVENTS.map(applyModelIdentity);
+export const MOCK_DISMISSED: DismissedEvent[] = RAW_DISMISSED.map((d) => ({
+  ...d,
+  event: applyModelIdentity(d.event),
+}));

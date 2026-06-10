@@ -19,6 +19,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
@@ -31,6 +39,7 @@ import type { DetectionEvent, Severity } from "@/types/detection";
 import type { AnyEntity } from "@/types/entities";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 /* ── Section heading ─────────────────────────────────────────────────────── */
 
@@ -43,7 +52,7 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
       {aside}
@@ -67,7 +76,7 @@ function LinkedThumb({ event }: { event: DetectionEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-0.5 py-px text-[9px] font-semibold text-white",
+              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
               box.variant === "person" ? "bg-info" : "bg-primary"
             )}
             style={{ top: box.top, left: box.left }}
@@ -76,7 +85,7 @@ function LinkedThumb({ event }: { event: DetectionEvent }) {
           </span>
         </React.Fragment>
       ))}
-      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-[10px] text-white">
+      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
         {event.time.slice(0, 5)}
       </span>
     </div>
@@ -104,22 +113,22 @@ function LinkedEventCard({
       <div className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
-          <span className="text-[13px] font-semibold text-foreground">{event.typeLabel}</span>
+          <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground">
             <span className="size-1.5 rounded-full bg-purple" />
             {event.model}
           </span>
         </div>
-        <p className="mb-2 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mb-2 line-clamp-2 text-base leading-relaxed text-muted-foreground">
           {parseEventText(event.summary)}
         </p>
-        <div className="flex flex-wrap items-center gap-3.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {event.areaDisplay} · {event.camera}
@@ -161,7 +170,7 @@ function ChangeStatusModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Change Case Status</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Select the new status for this incident case.
           </p>
         </DialogHeader>
@@ -190,10 +199,10 @@ function ChangeStatusModal({
                 </span>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-foreground">{opt.label}</span>
+                    <span className="text-base font-semibold text-foreground">{opt.label}</span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wider",
+                        "inline-flex items-center gap-1 rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
                         s.badge
                       )}
                     >
@@ -201,7 +210,7 @@ function ChangeStatusModal({
                       {s.label}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{opt.desc}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</p>
                 </div>
               </button>
             );
@@ -269,7 +278,7 @@ function ReassignModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Reassign Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Transfer ownership to another team member.
           </p>
         </DialogHeader>
@@ -282,11 +291,11 @@ function ReassignModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, user ID or role…"
-              className="h-9 pl-9 text-[13px]"
+              className="h-9 pl-9 text-base"
             />
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Role</span>
+            <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Role</span>
             {ROLE_PILLS.map((p) => {
               const active = roleFilter === p.key;
               const count = p.key === "all" ? ASSIGNEES.length : ASSIGNEES.filter((a) => a.role === p.key).length;
@@ -295,7 +304,7 @@ function ReassignModal({
                   key={p.key}
                   onClick={() => setRoleFilter(p.key)}
                   className={cn(
-                    "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
+                    "rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
                     active
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
@@ -310,7 +319,7 @@ function ReassignModal({
 
         <div className="flex-1 space-y-1.5 overflow-y-auto p-5">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-[12px] italic text-muted-foreground">
+            <p className="py-8 text-center text-sm italic text-muted-foreground">
               No members match the current filters.
             </p>
           ) : filtered.map((a) => {
@@ -326,22 +335,22 @@ function ReassignModal({
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                   {a.name.charAt(0)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-foreground">{a.name}</span>
+                    <span className="text-base font-semibold text-foreground">{a.name}</span>
                     {role && (
                       <span className={cn(
-                        "inline-flex items-center rounded-full border px-1.5 py-px text-[9px] font-bold uppercase tracking-wider",
+                        "inline-flex items-center rounded-full border px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
                         role.bg, role.text
                       )}>
                         {role.label}
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-[11px] text-muted-foreground">{a.id}</div>
+                  <div className="font-mono text-xs text-muted-foreground">{a.id}</div>
                 </div>
                 {picked.id === a.id && <Check className="size-4 text-primary" />}
               </button>
@@ -433,7 +442,7 @@ function LinkNewIncidentsModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Link New Incidents</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Select incidents from the same site to add to this case.
           </p>
         </DialogHeader>
@@ -446,39 +455,41 @@ function LinkNewIncidentsModal({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search events..."
-                className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 text-[12px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
-            <select
-              value={areaFilter}
-              onChange={(e) => setAreaFilter(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="all">All areas</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-            <select
-              value={cameraFilter}
-              onChange={(e) => setCameraFilter(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-[12px] text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="all">All cameras</option>
-              {cameras.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
+              <SelectTrigger className="h-8 w-full text-sm">
+                <SelectValue placeholder="All areas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All areas</SelectItem>
+                {areas.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
+              <SelectTrigger className="h-8 w-full text-sm">
+                <SelectValue placeholder="All cameras" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All cameras</SelectItem>
+                {cameras.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {visible.length === 0 ? (
             <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-8 text-muted-foreground">
               <Search className="size-8 opacity-20" />
-              <p className="text-[13px]">No available incidents from this site.</p>
+              <p className="text-base">No available incidents from this site.</p>
             </div>
           ) : (
             <div className="max-h-[340px] space-y-1.5 overflow-y-auto pr-0.5">
@@ -508,12 +519,12 @@ function LinkNewIncidentsModal({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono text-[11px] text-muted-foreground">{e.id}</span>
-                        <span className="text-[12px] font-semibold text-foreground">
+                        <span className="font-mono text-xs text-muted-foreground">{e.id}</span>
+                        <span className="text-sm font-semibold text-foreground">
                           {e.typeLabel}
                         </span>
                       </div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="size-2.5" />
                         {e.areaDisplay} · {e.camera} · {e.dateDisplay}
                       </div>
@@ -525,7 +536,7 @@ function LinkNewIncidentsModal({
           )}
 
           {selectedIds.size > 0 && (
-            <p className="text-right text-[12px] font-semibold text-primary">
+            <p className="text-right text-sm font-semibold text-primary">
               {selectedIds.size} incident{selectedIds.size > 1 ? "s" : ""} selected
             </p>
           )}
@@ -592,26 +603,26 @@ function EditCaseModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Edit Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Update the case title, severity, and notes.
           </p>
         </DialogHeader>
 
         <div className="space-y-4 p-5">
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               placeholder="Case title..."
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Severity
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -620,7 +631,7 @@ function EditCaseModal({
                   key={opt.value}
                   onClick={() => setSeverity(opt.value)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-[11px] font-semibold transition-colors",
+                    "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-xs font-semibold transition-colors",
                     severity === opt.value
                       ? "border-primary bg-primary-muted text-primary"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary"
@@ -637,14 +648,14 @@ function EditCaseModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="w-full text-base"
               placeholder="Add case notes..."
             />
           </div>
@@ -687,7 +698,7 @@ function DeleteCaseModal({
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-destructive">Delete Case</DialogTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">This action cannot be undone.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
         </DialogHeader>
 
         <div className="px-5 py-5">
@@ -695,15 +706,15 @@ function DeleteCaseModal({
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
               <div>
-                <p className="text-[13px] font-semibold text-foreground">
+                <p className="text-base font-semibold text-foreground">
                   You are about to permanently delete:
                 </p>
-                <p className="mt-1 font-mono text-[12px] text-muted-foreground">{caseId}</p>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">{caseTitle}</p>
+                <p className="mt-1 font-mono text-sm text-muted-foreground">{caseId}</p>
+                <p className="mt-0.5 text-base text-muted-foreground">{caseTitle}</p>
               </div>
             </div>
           </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             All linked incident associations will be removed. The original detection events will not
             be affected.
           </p>
@@ -896,14 +907,14 @@ function ActivityItem({
 
       {/* Content */}
       <div className={cn("min-w-0 pb-5", isLast && "pb-0")}>
-        <p className="mb-0.5 text-[11px] text-muted-foreground">
+        <p className="mb-0.5 text-xs text-muted-foreground">
           {entry.timestampDisplay}
           <span className="mx-1.5 opacity-40">·</span>
           {entry.elapsed}
         </p>
         <p
           className={cn(
-            "text-[13px] font-semibold leading-snug",
+            "text-base font-semibold leading-snug",
             isSla ? "text-sev-critical" : "text-foreground"
           )}
         >
@@ -913,7 +924,7 @@ function ActivityItem({
           {entry.title}
         </p>
         {entry.description && (
-          <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
             {entry.description}
           </p>
         )}
@@ -925,7 +936,7 @@ function ActivityItem({
 function CaseActivityTimeline({ activity }: { activity: CaseActivity[] }) {
   if (activity.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border py-8 text-center text-[13px] text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border py-8 text-center text-base text-muted-foreground">
         No activity recorded yet.
       </div>
     );
@@ -978,22 +989,22 @@ function EntityCard({
   const style = ENTITY_KIND_STYLE[kind] ?? ENTITY_KIND_STYLE.asset;
 
   function renderSubtitle() {
-    if (!entity) return <p className="mb-1 text-[12px] italic text-muted-foreground">No profile on record</p>;
+    if (!entity) return <p className="mb-1 text-sm italic text-muted-foreground">No profile on record</p>;
     if (entity.kind === "person")
-      return <p className="mb-1 text-[13px] text-muted-foreground">{entity.name}</p>;
+      return <p className="mb-1 text-base text-muted-foreground">{entity.name}</p>;
     if (entity.kind === "vehicle") {
       const v = entity;
       return (
-        <p className="mb-1 text-[13px] text-muted-foreground">
+        <p className="mb-1 text-base text-muted-foreground">
           {[v.vehicleType, v.color].filter(Boolean).join(" · ")}
           {v.plate && (
-            <span className="ml-1 font-mono text-[12px] text-foreground">{v.plate}</span>
+            <span className="ml-1 font-mono text-sm text-foreground">{v.plate}</span>
           )}
         </p>
       );
     }
     return (
-      <p className="mb-1 text-[13px] text-muted-foreground">
+      <p className="mb-1 text-base text-muted-foreground">
         {entity.type}
         <span className="mx-1 opacity-40">·</span>
         {entity.category}
@@ -1005,7 +1016,7 @@ function EntityCard({
     if (!entity) return null;
     if (entity.kind === "person") {
       return (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="font-semibold text-muted-foreground/70">RE-ID:</span>
             {(entity.reIdConfidence / 100).toFixed(3)}
@@ -1020,7 +1031,7 @@ function EntityCard({
     if (entity.kind === "vehicle") {
       if (!entity.registeredTo) return null;
       return (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="font-semibold text-muted-foreground/70">Registered:</span>
             {entity.registeredTo}
@@ -1040,13 +1051,13 @@ function EntityCard({
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              "inline-flex items-center rounded border px-1.5 py-px text-[10px] font-bold uppercase tracking-wider",
+              "inline-flex items-center rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
               style.chipClass
             )}
           >
             {style.label}
           </span>
-          <span className="font-mono text-[12px] font-semibold text-foreground">{entityId}</span>
+          <span className="font-mono text-sm font-semibold text-foreground">{entityId}</span>
         </div>
         {renderSubtitle()}
         {renderStats()}
@@ -1055,7 +1066,7 @@ function EntityCard({
       {entity && onViewInfo && (
         <button
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-[12px] font-medium text-primary hover:underline"
+          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary hover:underline"
         >
           View Info →
         </button>
@@ -1101,7 +1112,7 @@ function UpdateCaseMenu({
         }}
         disabled={disabled}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] transition-colors",
+          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-base transition-colors",
           danger
             ? "text-destructive hover:bg-destructive/10"
             : "text-foreground hover:bg-muted",
@@ -1117,7 +1128,7 @@ function UpdateCaseMenu({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button size="sm" className="gap-1.5 text-[12px]">
+        <Button size="sm" className="gap-1.5 text-sm">
           Update Case
           <ChevronDown
             className={cn("size-3.5 transition-transform", open && "rotate-180")}
@@ -1125,7 +1136,7 @@ function UpdateCaseMenu({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-52 p-1.5">
-        <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           Manage
         </div>
         {item(<RefreshCw className="size-3.5" />, "Change Status", onChangeStatus)}
@@ -1144,7 +1155,7 @@ function UpdateCaseMenu({
           !isActive
         )}
         <div className="my-1.5 border-t border-border" />
-        <div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           Case
         </div>
         {item(<Pencil className="size-3.5" />, "Edit Case", onEditCase)}
@@ -1280,10 +1291,10 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                     <SeverityBadge severity={caseData.severity} />
                     <CaseStatusBadge status={caseData.status} />
                   </div>
-                  <SheetTitle className="text-[17px] font-bold leading-snug">
+                  <SheetTitle className="text-lg font-bold leading-snug">
                     {caseData.title}
                   </SheetTitle>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {caseData.id} · {caseData.siteDisplay}
                   </p>
                 </div>
@@ -1296,7 +1307,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <SheetTitle className="text-[15px] text-muted-foreground">
+                <SheetTitle className="text-md text-muted-foreground">
                   Case not found
                 </SheetTitle>
                 <button
@@ -1328,18 +1339,18 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                       [
                         "Assigned To",
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+                          <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xs font-bold text-primary">
                             {caseData.assignedTo.name.charAt(0)}
                           </span>
-                          <span className="truncate text-[12px]">{caseData.assignedTo.name}</span>
-                          <span className="font-mono text-[10px] text-muted-foreground">
+                          <TruncatedText text={caseData.assignedTo.name} className="text-sm" />
+                          <span className="font-mono text-2xs text-muted-foreground">
                             ({caseData.assignedTo.id})
                           </span>
                         </span>,
                       ],
                       [
                         "Incidents",
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-px text-[12px] font-bold text-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-px text-sm font-bold text-foreground">
                           {caseData.incidentIds.length}
                         </span>,
                       ],
@@ -1348,10 +1359,10 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                     ] as [string, React.ReactNode][]
                   ).map(([label, value]) => (
                     <div key={label} className="flex flex-col gap-0.5">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                         {label}
                       </span>
-                      <span className="text-[13px] font-medium text-foreground">{value}</span>
+                      <span className="text-base font-medium text-foreground">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -1361,7 +1372,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
               {caseData.notes && (
                 <div>
                   <SectionTitle>Case Notes</SectionTitle>
-                  <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3.5 text-[13px] leading-relaxed text-foreground">
+                  <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3.5 text-base leading-relaxed text-foreground">
                     {caseData.notes}
                   </div>
                 </div>
@@ -1372,7 +1383,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                 <div>
                   <SectionTitle
                     aside={
-                      <span className="rounded-full bg-muted px-2 py-px text-[11px] font-semibold text-muted-foreground">
+                      <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
                         {involvedEntities.length}
                       </span>
                     }
@@ -1403,12 +1414,12 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                             setAreaFilter("all");
                             setCameraFilter("all");
                           }}
-                          className="text-[11px] text-muted-foreground hover:text-primary"
+                          className="text-xs text-muted-foreground hover:text-primary"
                         >
                           Clear ×
                         </button>
                       )}
-                      <span className="rounded-full bg-muted px-2 py-px text-[11px] font-semibold text-muted-foreground">
+                      <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
                         {filteredEvents.length}
                         {filteredEvents.length !== allLinkedEvents.length
                           ? ` / ${allLinkedEvents.length}`
@@ -1422,31 +1433,33 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
 
                 {allLinkedEvents.length > 0 && (
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select
-                      value={areaFilter}
-                      onChange={(e) => setAreaFilter(e.target.value)}
-                      className="h-7 rounded-md border border-border bg-card px-2 text-[11px] text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="all">All areas</option>
-                      {linkedAreas.map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={cameraFilter}
-                      onChange={(e) => setCameraFilter(e.target.value)}
-                      className="h-7 rounded-md border border-border bg-card px-2 text-[11px] text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="all">All cameras</option>
-                      {linkedCameras.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="text-[11px] text-muted-foreground">
+                    <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
+                      <SelectTrigger className="h-7 w-full text-xs">
+                        <SelectValue placeholder="All areas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All areas</SelectItem>
+                        {linkedAreas.map((a) => (
+                          <SelectItem key={a} value={a}>
+                            {a}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
+                      <SelectTrigger className="h-7 w-full text-xs">
+                        <SelectValue placeholder="All cameras" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All cameras</SelectItem>
+                        {linkedCameras.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-xs text-muted-foreground">
                       Click a card to view event details
                     </span>
                   </div>
@@ -1455,7 +1468,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                 {allLinkedEvents.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-10 text-muted-foreground">
                     <Link2 className="size-7 opacity-20" />
-                    <p className="text-[13px]">No incidents linked yet.</p>
+                    <p className="text-base">No incidents linked yet.</p>
                     {isActive && (
                       <Button variant="ghost" size="sm" onClick={() => setLinkModal(true)}>
                         Link incidents
@@ -1464,7 +1477,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
                   </div>
                 ) : filteredEvents.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-8 text-muted-foreground">
-                    <p className="text-[13px]">No incidents match this filter.</p>
+                    <p className="text-base">No incidents match this filter.</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1486,10 +1499,10 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
 
                 {unresolvedIds.length > 0 && (
                   <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       <strong className="text-foreground">{unresolvedIds.length}</strong> additional
                       incident{unresolvedIds.length > 1 ? "s" : ""} linked (details pending sync):{" "}
-                      <span className="font-mono text-[10px]">{unresolvedIds.join(", ")}</span>
+                      <span className="font-mono text-2xs">{unresolvedIds.join(", ")}</span>
                     </p>
                   </div>
                 )}
@@ -1522,7 +1535,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="ml-auto gap-1.5 text-[12px]"
+                className="ml-auto gap-1.5 text-sm"
                 onClick={() => handleExportPDF(caseData, allLinkedEvents)}
               >
                 <FileDown className="size-3.5" />

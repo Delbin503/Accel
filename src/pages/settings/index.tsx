@@ -15,6 +15,13 @@ import {
   Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/ThemeProvider";
@@ -23,8 +30,8 @@ function SectionCard({ title, description, children }: { title: string; descript
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="border-b border-border px-5 py-4">
-        <h2 className="text-[14px] font-bold text-foreground">{title}</h2>
-        {description && <p className="mt-0.5 text-[12px] text-muted-foreground">{description}</p>}
+        <h2 className="text-md font-bold text-foreground">{title}</h2>
+        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
       <div className="px-5 py-4">{children}</div>
     </div>
@@ -60,8 +67,8 @@ function PrefRow({
     <div className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
       <Icon className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-foreground">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{description}</p>
+        <p className="text-base font-semibold text-foreground">{title}</p>
+        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p>
       </div>
       <div className="flex-shrink-0">{control}</div>
     </div>
@@ -133,7 +140,7 @@ export default function SettingsPage() {
 
       <SectionCard title="Appearance" description="Choose how the dashboard looks.">
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Theme</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Theme</p>
           <div className="grid grid-cols-3 gap-2">
             {([
               { v: "light",  label: "Light",  icon: Sun     },
@@ -152,7 +159,7 @@ export default function SettingsPage() {
                   )}
                 >
                   <Icon className="size-5" />
-                  <span className="text-[12px] font-semibold">{label}</span>
+                  <span className="text-sm font-semibold">{label}</span>
                 </button>
               );
             })}
@@ -165,13 +172,13 @@ export default function SettingsPage() {
       </SectionCard>
 
       <SectionCard title="Notifications" description="Choose where and when we should reach you.">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Email Notifications</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email Notifications</p>
         <div className="space-y-2">
           <PrefRow icon={Mail} title="Critical incidents" description="Email me when a Critical severity incident is detected." control={<Toggle checked={notifEmailIncidents} onChange={setNotifEmailIncidents} />} />
           <PrefRow icon={Mail} title="Weekly summary" description="Get a digest of detections, cases and SLA performance every Monday." control={<Toggle checked={notifEmailWeekly} onChange={setNotifEmailWeekly} />} />
           <PrefRow icon={Mail} title="Daily activity digest" description="Once-daily recap of activity at end-of-day." control={<Toggle checked={notifEmailDigest} onChange={setNotifEmailDigest} />} />
         </div>
-        <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Push & In-App</p>
+        <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Push & In-App</p>
         <div className="space-y-2">
           <PrefRow icon={Smartphone} title="Critical alerts" description="Push notification for any Critical detection or escalation." control={<Toggle checked={notifPushCritical} onChange={setNotifPushCritical} />} />
           <PrefRow icon={Bell} title="Mentions and case assignments" description="When you are assigned a case or @-mentioned in a note." control={<Toggle checked={notifPushMentions} onChange={setNotifPushMentions} />} />
@@ -183,27 +190,43 @@ export default function SettingsPage() {
       <SectionCard title="Regional" description="Set your language, timezone and date format.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Globe className="size-3" />
               Language
             </label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
-              {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-            </select>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((l) => (
+                  <SelectItem key={l.value} value={l.value}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Clock className="size-3" />
               Timezone
             </label>
-            <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">
-              {TIMEZONES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
+            <Select value={timezone} onValueChange={setTimezone}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date Format</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date Format</p>
             <div className="grid grid-cols-2 gap-1.5">
               {DATE_FORMATS.map((f) => (
                 <button key={f.value} onClick={() => setDateFormat(f.value)}
@@ -212,14 +235,14 @@ export default function SettingsPage() {
                       ? "border-primary bg-primary/5"
                       : "border-border bg-background hover:border-primary/40"
                   )}>
-                  <p className={cn("text-[12px] font-semibold", dateFormat === f.value ? "text-primary" : "text-foreground")}>{f.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.sub}</p>
+                  <p className={cn("text-sm font-semibold", dateFormat === f.value ? "text-primary" : "text-foreground")}>{f.label}</p>
+                  <p className="text-2xs text-muted-foreground">{f.sub}</p>
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Time Format</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time Format</p>
             <div className="grid grid-cols-2 gap-1.5">
               {([
                 { v: "24h", label: "23:59", sub: "24-hour" },
@@ -231,8 +254,8 @@ export default function SettingsPage() {
                       ? "border-primary bg-primary/5"
                       : "border-border bg-background hover:border-primary/40"
                   )}>
-                  <p className={cn("text-[12px] font-semibold", timeFormat === f.v ? "text-primary" : "text-foreground")}>{f.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.sub}</p>
+                  <p className={cn("text-sm font-semibold", timeFormat === f.v ? "text-primary" : "text-foreground")}>{f.label}</p>
+                  <p className="text-2xs text-muted-foreground">{f.sub}</p>
                 </button>
               ))}
             </div>
@@ -245,8 +268,8 @@ export default function SettingsPage() {
           <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold text-foreground">Sign out of all devices</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">Sign out of all devices</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Revoke all active sessions. You will need to sign in again on every device.
               </p>
             </div>
@@ -257,8 +280,8 @@ export default function SettingsPage() {
           <div className="flex items-start gap-3 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3.5 py-3">
             <CheckCircle2 className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold text-foreground">Delete account</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">Delete account</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Account deletion is permanent. Contact your organization owner to begin the off-boarding process.
               </p>
             </div>

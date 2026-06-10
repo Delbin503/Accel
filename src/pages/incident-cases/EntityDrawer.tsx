@@ -43,7 +43,7 @@ const SEV_LABEL: Record<Severity, string> = {
 function SeverityChip({ severity }: { severity: Severity }) {
   return (
     <span
-      className="inline-flex items-center rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-white"
+      className="inline-flex items-center rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider text-white"
       style={{ background: `var(--sev-${severity})` }}
     >
       {SEV_LABEL[severity]}
@@ -66,9 +66,9 @@ function TimelineRow({ entry }: { entry: EntityTimelineEntry }) {
       <div className="min-w-0">
         <div className="mb-1 flex flex-wrap items-center gap-1.5">
           <SeverityChip severity={entry.severity} />
-          <span className="text-[13px] font-semibold text-foreground">{entry.eventType}</span>
+          <span className="text-base font-semibold text-foreground">{entry.eventType}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {entry.location}
@@ -83,15 +83,15 @@ function TimelineRow({ entry }: { entry: EntityTimelineEntry }) {
           </span>
         </div>
         {entry.note && (
-          <p className="mt-1.5 text-[11px] text-muted-foreground italic">"{entry.note}"</p>
+          <p className="mt-1.5 text-xs text-muted-foreground italic">"{entry.note}"</p>
         )}
       </div>
       <div className="flex flex-col items-end justify-start gap-1">
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="font-mono text-xs text-muted-foreground">
           {(entry.confidence / 100).toFixed(3)} conf
         </span>
         {entry.caseId && (
-          <span className="rounded bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+          <span className="rounded bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
             {entry.caseId}
           </span>
         )}
@@ -140,7 +140,7 @@ function LinkedCaseCard({
         <SeverityChip severity={severity} />
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wider",
+            "inline-flex items-center gap-1 rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
             STATUS_DOT[status] && "text-foreground"
           )}
         >
@@ -148,11 +148,11 @@ function LinkedCaseCard({
           {STATUS_LABEL[status] ?? status}
         </span>
       </div>
-      <p className="mb-1.5 text-[13px] font-semibold leading-snug text-foreground">{title}</p>
-      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+      <p className="mb-1.5 text-base font-semibold leading-snug text-foreground">{title}</p>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="font-mono">{id}</span>
         <span>Assigned: {assignee}</span>
-        <span className="ml-auto rounded-full bg-muted px-2 py-px text-[11px] font-semibold text-foreground">
+        <span className="ml-auto rounded-full bg-muted px-2 py-px text-xs font-semibold text-foreground">
           {eventCount} event{eventCount !== 1 ? "s" : ""}
         </span>
       </div>
@@ -216,12 +216,12 @@ function DetectedTimeline({ entries }: { entries: EntityTimelineEntry[] }) {
   return (
     <div>
       <div className="mb-2.5">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Detected Timeline
         </span>
       </div>
       {entries.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-8 text-center text-[13px] text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border py-8 text-center text-base text-muted-foreground">
           No detections recorded.
         </div>
       ) : (
@@ -265,11 +265,11 @@ function PossibleMatchCard({
       <div className="flex items-start gap-3 px-3.5 py-3">
         {/* Side-by-side avatars */}
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="flex size-9 items-center justify-center rounded-full border-2 border-info bg-info/15 font-mono text-[10px] font-bold text-info">
+          <div className="flex size-9 items-center justify-center rounded-full border-2 border-info bg-info/15 font-mono text-2xs font-bold text-info">
             ?
           </div>
           <ChevronDown className="size-3 rotate-[-90deg] text-muted-foreground" />
-          <div className="flex size-9 items-center justify-center rounded-full border-2 border-success bg-success/15 font-mono text-[10px] font-bold text-success">
+          <div className="flex size-9 items-center justify-center rounded-full border-2 border-success bg-success/15 font-mono text-2xs font-bold text-success">
             {match.candidateLabel.split(" ").map((w) => w[0]).slice(0, 2).join("")}
           </div>
         </div>
@@ -277,29 +277,29 @@ function PossibleMatchCard({
         {/* Detail */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-[13px] font-bold text-foreground">
+            <p className="text-base font-bold text-foreground">
               Potentially <span className="font-mono text-success">{match.candidateId}</span>
             </p>
-            <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", scoreBg, scoreColor)}>
+            <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", scoreBg, scoreColor)}>
               {match.similarity}% match
             </span>
             {isApproved && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-success/15 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
                 <Check className="size-2.5" strokeWidth={3} />
                 Merged
               </span>
             )}
             {isRejected && (
-              <span className="inline-flex items-center gap-0.5 rounded-full border border-sev-critical/30 bg-sev-critical/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sev-critical">
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-sev-critical/30 bg-sev-critical/15 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
                 <X className="size-2.5" strokeWidth={3} />
                 Rejected
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {match.candidateLabel} · {match.reasonLabel}
           </p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground/80">
+          <p className="mt-0.5 text-2xs text-muted-foreground/80">
             {match.candidateDetections} prior detection{match.candidateDetections === 1 ? "" : "s"} · last seen {match.candidateLastSeen}
           </p>
         </div>
@@ -322,13 +322,13 @@ function PossibleMatchCard({
 
       {/* Expandable detail */}
       <button onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 border-t border-border/40 px-3.5 py-1.5 text-[10px] text-muted-foreground hover:bg-muted/30">
+        className="flex w-full items-center justify-between gap-2 border-t border-border/40 px-3.5 py-1.5 text-2xs text-muted-foreground hover:bg-muted/30">
         <span>{expanded ? "Hide" : "Show"} similarity breakdown</span>
         <ChevronDown className={cn("size-3 transition-transform", expanded && "rotate-180")} />
       </button>
       {expanded && (
         <div className="space-y-1.5 border-t border-border/40 px-3.5 py-3">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="mb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             Per-feature similarity
           </p>
           {match.features.map((f) => {
@@ -336,15 +336,15 @@ function PossibleMatchCard({
             const t = f.score >= 80 ? "text-success" : f.score >= 65 ? "text-warning" : "text-muted-foreground";
             return (
               <div key={f.label} className="flex items-center gap-2">
-                <p className="w-32 flex-shrink-0 text-[11px] text-muted-foreground">{f.label}</p>
+                <p className="w-32 flex-shrink-0 text-xs text-muted-foreground">{f.label}</p>
                 <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                   <div className={cn("absolute inset-y-0 left-0 rounded-full", c)} style={{ width: `${f.score}%` }} />
                 </div>
-                <p className={cn("w-10 flex-shrink-0 text-right font-mono text-[11px] font-bold", t)}>{f.score}%</p>
+                <p className={cn("w-10 flex-shrink-0 text-right font-mono text-xs font-bold", t)}>{f.score}%</p>
               </div>
             );
           })}
-          <div className="mt-3 rounded border border-border bg-background px-2.5 py-1.5 text-[10px] text-muted-foreground">
+          <div className="mt-3 rounded border border-border bg-background px-2.5 py-1.5 text-2xs text-muted-foreground">
             <p className="mb-0.5 font-semibold text-foreground">Candidate profile</p>
             <p>Sites: {match.candidateSitesObserved.join(", ")}</p>
             <p>First seen: {match.candidateFirstSeenDisplay} · {match.candidateDetections} historical detections</p>
@@ -388,17 +388,17 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
   return (
     <div>
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           <Sparkles className="size-3 text-info" />
           Possible Identity Matches
           {pending > 0 && (
-            <span className="rounded-full bg-info/15 px-1.5 py-px text-[10px] font-bold normal-case tracking-normal text-info">
+            <span className="rounded-full bg-info/15 px-1.5 py-px text-2xs font-bold normal-case tracking-normal text-info">
               {pending} pending review
             </span>
           )}
         </span>
         <button onClick={() => setShowInfo((v) => !v)}
-          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground underline hover:text-primary">
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline hover:text-primary">
           <Info className="size-3" />
           {showInfo ? "Hide" : "How does this work?"}
         </button>
@@ -411,10 +411,10 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
             <GitMerge className="size-3 text-white" strokeWidth={3} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               Identities merged — <span className="font-mono">{entity.id}</span> now linked to <span className="font-mono text-success">{approvedMatch.candidateId}</span>
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {approvedMatch.candidateLabel} · Recognition model retrained with combined embeddings · {approvedMatch.candidateDetections + entity.totalDetections} historical detections unified
             </p>
           </div>
@@ -423,14 +423,14 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
       {rejectedCount > 0 && !approvedMatch && (
         <div className="mb-3 flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3.5 py-2.5">
           <X className="mt-0.5 size-3.5 flex-shrink-0 text-muted-foreground" />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {rejectedCount} suggestion{rejectedCount > 1 ? "s" : ""} rejected — these candidates will not be re-suggested for <span className="font-mono">{entity.id}</span>.
           </p>
         </div>
       )}
 
       {showInfo && (
-        <div className="mb-3 rounded-lg border border-info/30 bg-info/[0.04] px-3.5 py-3 text-[11px] leading-relaxed text-muted-foreground">
+        <div className="mb-3 rounded-lg border border-info/30 bg-info/[0.04] px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
           <p>
             The system uses <strong className="text-foreground">adaptive identity recognition</strong> to maintain a consistent profile even when a person's appearance changes.
             If significant changes (new hairstyle, accessories, occlusion, lighting) drop direct-match confidence, the system classifies them as a new ID
@@ -461,7 +461,7 @@ function LinkedCasesSection({ linkedCases }: { linkedCases: import("@/types/enti
   if (linkedCases.length === 0) return null;
   return (
     <div>
-      <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Linked Cases
       </div>
       <div className="space-y-2">
@@ -494,7 +494,7 @@ function PersonBody({ entity }: { entity: PersonEntity }) {
               "Sites Observed",
               <span className="flex flex-wrap gap-1">
                 {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-[11px] text-muted-foreground">{s}</span>
+                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
                 ))}
               </span>,
             ],
@@ -502,8 +502,8 @@ function PersonBody({ entity }: { entity: PersonEntity }) {
           ] as [string, React.ReactNode][]
         ).map(([label, value]) => (
           <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-[13px] font-medium text-foreground">{value}</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+            <span className="text-base font-medium text-foreground">{value}</span>
           </div>
         ))}
       </div>
@@ -539,7 +539,7 @@ function AssetBody({ entity }: { entity: AssetEntity }) {
               "Sites Observed",
               <span className="flex flex-wrap gap-1">
                 {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-[11px] text-muted-foreground">{s}</span>
+                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
                 ))}
               </span>,
             ],
@@ -548,8 +548,8 @@ function AssetBody({ entity }: { entity: AssetEntity }) {
           ] as [string, React.ReactNode][]
         ).map(([label, value]) => (
           <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-[13px] font-medium text-foreground">{value}</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+            <span className="text-base font-medium text-foreground">{value}</span>
           </div>
         ))}
       </div>
@@ -581,7 +581,7 @@ function VehicleBody({ entity }: { entity: VehicleEntity }) {
               "Sites Observed",
               <span className="flex flex-wrap gap-1">
                 {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-[11px] text-muted-foreground">{s}</span>
+                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
                 ))}
               </span>,
             ],
@@ -590,8 +590,8 @@ function VehicleBody({ entity }: { entity: VehicleEntity }) {
           ] as [string, React.ReactNode][]
         ).map(([label, value]) => (
           <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-[13px] font-medium text-foreground">{value}</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+            <span className="text-base font-medium text-foreground">{value}</span>
           </div>
         ))}
       </div>
@@ -617,17 +617,17 @@ const KIND_BADGE: Record<
   person: {
     label: "Person",
     className:
-      "inline-flex items-center gap-1 rounded border border-info/30 bg-info/10 px-2 py-px text-[10px] font-bold uppercase tracking-wider text-info",
+      "inline-flex items-center gap-1 rounded border border-info/30 bg-info/10 px-2 py-px text-2xs font-bold uppercase tracking-wider text-info",
   },
   asset: {
     label: "Asset",
     className:
-      "inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-px text-[10px] font-bold uppercase tracking-wider text-primary",
+      "inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-px text-2xs font-bold uppercase tracking-wider text-primary",
   },
   vehicle: {
     label: "Vehicle",
     className:
-      "inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-2 py-px text-[10px] font-bold uppercase tracking-wider text-success",
+      "inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-2 py-px text-2xs font-bold uppercase tracking-wider text-success",
   },
 };
 
@@ -664,19 +664,19 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
                     </span>
                   )}
                   {entity.identified ? (
-                    <span className="rounded border border-success/20 bg-success-soft px-1.5 py-px text-[10px] font-semibold text-success">
+                    <span className="rounded border border-success/20 bg-success-soft px-1.5 py-px text-2xs font-semibold text-success">
                       Identified
                     </span>
                   ) : (
-                    <span className="rounded border border-border bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                    <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
                       Unidentified
                     </span>
                   )}
                 </div>
-                <SheetTitle className="font-mono text-[16px] font-bold leading-snug">
+                <SheetTitle className="font-mono text-lg font-bold leading-snug">
                   {entity.id}
                 </SheetTitle>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">{entitySubtitle(entity)}</p>
+                <p className="mt-0.5 text-base text-muted-foreground">{entitySubtitle(entity)}</p>
               </div>
               <button
                 onClick={onClose}
@@ -687,7 +687,7 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-[15px] text-muted-foreground">Entity not found</SheetTitle>
+              <SheetTitle className="text-md text-muted-foreground">Entity not found</SheetTitle>
               <button
                 onClick={onClose}
                 className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"

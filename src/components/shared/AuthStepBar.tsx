@@ -28,7 +28,7 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
             <div className="flex shrink-0 items-center gap-1.5">
               <span
                 className={cn(
-                  "flex size-5 items-center justify-center rounded-full border text-[9px] font-bold transition-colors",
+                  "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
                   done
                     ? "border-primary bg-primary text-primary-foreground"
                     : active
@@ -40,7 +40,7 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
               </span>
               <span
                 className={cn(
-                  "hidden text-[11px] font-semibold transition-colors sm:inline",
+                  "hidden text-xs font-semibold transition-colors sm:inline",
                   done
                     ? "text-primary"
                     : active

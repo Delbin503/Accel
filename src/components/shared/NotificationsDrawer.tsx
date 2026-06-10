@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotificationsStore, type NotificationItem, type NotificationKind } from "@/stores/useNotificationsStore";
+import { TruncatedText } from "./TruncatedText";
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
   incident: { bg: "bg-sev-critical/15", text: "text-sev-critical", icon: AlertTriangle, label: "Incident" },
@@ -127,12 +128,12 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
             <Bell className="size-4 text-primary" />
             Notifications
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-sev-critical px-1.5 py-0.5 text-[10px] font-bold text-white">
+              <span className="inline-flex items-center justify-center rounded-full bg-sev-critical px-1.5 py-0.5 text-2xs font-bold text-white">
                 {unreadCount}
               </span>
             )}
           </SheetTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {filtered.length} of {items.length} shown
           </p>
         </SheetHeader>
@@ -140,7 +141,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
         {/* Filter bar */}
         <div className="flex flex-shrink-0 flex-col gap-2 border-b border-border px-5 py-3">
           <div className="flex items-center gap-1.5 overflow-x-auto">
-            <span className="inline-flex flex-shrink-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="inline-flex flex-shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Calendar className="size-3" />
               Date
             </span>
@@ -151,7 +152,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                   key={p.key}
                   onClick={() => setRange(p.key)}
                   className={cn(
-                    "flex-shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
+                    "flex-shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
                     active
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
@@ -166,30 +167,30 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           {/* Custom date range — collapsible. Two date inputs side by side. */}
           {range === "custom" && (
             <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
-              <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">From</span>
+              <label className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="font-semibold uppercase tracking-wider text-2xs">From</span>
                 <input
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
                   max={customTo}
-                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-[11px] text-foreground"
+                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
                 />
               </label>
-              <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">To</span>
+              <label className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="font-semibold uppercase tracking-wider text-2xs">To</span>
                 <input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
                   min={customFrom}
-                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-[11px] text-foreground"
+                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
                 />
               </label>
             </div>
           )}
           <div className="flex items-center justify-between gap-2">
-            <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <input
                 type="checkbox"
                 checked={showUnreadOnly}
@@ -201,7 +202,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
             <button
               onClick={markAllRead}
               disabled={unreadCount === 0}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
             >
               <CheckCheck className="size-3" />
               Mark all as read
@@ -214,13 +215,13 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           {grouped.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-muted-foreground">
               <Bell className="size-8 opacity-30" />
-              <p className="text-[13px] font-medium">No notifications match the current filters.</p>
-              <p className="text-[11px]">Try widening the date range or unchecking "Unread only".</p>
+              <p className="text-base font-medium">No notifications match the current filters.</p>
+              <p className="text-xs">Try widening the date range or unchecking "Unread only".</p>
             </div>
           ) : (
             grouped.map(([day, group]) => (
               <div key={day}>
-                <div className="sticky top-0 z-10 border-b border-border bg-card/95 px-5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
+                <div className="sticky top-0 z-10 border-b border-border bg-card/95 px-5 py-1.5 text-2xs font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
                   {fmtGroupHeading(day)}
                 </div>
                 <ul className="divide-y divide-border/60">
@@ -245,30 +246,31 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className={cn(
-                                "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[9px] font-bold uppercase tracking-wider",
+                                "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
                                 k.bg, k.text, "border-current/30"
                               )}>
                                 {k.label}
                               </span>
-                              <span className="font-mono text-[10px] text-muted-foreground">{relTime(n.createdAt)}</span>
+                              <span className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
                               {!n.read && (
-                                <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
+                                <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary">
                                   <span className="size-1.5 rounded-full bg-primary" />
                                   New
                                 </span>
                               )}
                             </div>
                             <p className={cn(
-                              "mt-1 text-[13px] font-semibold",
+                              "mt-1 text-base font-semibold",
                               n.read ? "text-foreground" : "text-foreground"
                             )}>
                               {n.title}
                             </p>
-                            <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                              {n.description}
-                            </p>
+                            <TruncatedText
+                              text={n.description}
+                              className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
+                            />
                             {n.href && (
-                              <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
                                 Open <ArrowUpRight className="size-3" />
                               </span>
                             )}
@@ -284,7 +286,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
         </div>
 
         <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-5 py-3">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             <strong className="text-foreground">{unreadCount}</strong> unread
           </p>
           <Button variant="outline" onClick={onClose}>Close</Button>

@@ -51,7 +51,7 @@ export function PasswordStrengthBar({
       </div>
       <p
         className={cn(
-          "flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider",
+          "flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider",
           score >= 4
             ? "text-success"
             : score >= 3
