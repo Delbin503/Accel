@@ -18,6 +18,8 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { makeBlankSite, generatedFloorPlan, AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";
@@ -194,10 +196,14 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   <Clock className="size-3" />
                   Timezone
                 </label>
-                <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-                  {TIMEZONES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+                  <SelectTrigger className="h-9 w-full text-base">
+                    <SelectValue placeholder="Select a timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIMEZONES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -215,9 +221,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Description (optional)
                 </label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
                   placeholder="A short description of this site…"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground focus:border-primary focus:outline-none" />
+                  className="w-full text-base" />
               </div>
               <div>
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Accent</p>

@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -493,12 +494,12 @@ function CreateModelModal({
             <label className="mb-1.5 block text-base font-semibold text-foreground">
               Model Description <span className="text-destructive">*</span>
             </label>
-            <textarea
+            <Textarea
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="Describe what the model is capable of…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              className="w-full resize-none"
             />
           </div>
         </div>
@@ -1196,11 +1197,11 @@ function ModelDetailPanel({
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
               </label>
-              <textarea
+              <Textarea
                 value={draft.description}
                 onChange={(e) => patchDraft({ description: e.target.value })}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                className="w-full resize-none"
               />
             </div>
             <div>

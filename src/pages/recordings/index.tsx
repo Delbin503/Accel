@@ -30,6 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -386,10 +388,14 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assign To</label>
-              <select value={assignee.id} onChange={(e) => { const a = ASSIGNEES.find((x) => x.id === e.target.value); if (a) setAssignee(a); }}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-                {ASSIGNEES.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.id})</option>)}
-              </select>
+              <Select value={assignee.id} onValueChange={(v) => { const a = ASSIGNEES.find((x) => x.id === v); if (a) setAssignee(a); }}>
+                <SelectTrigger className="h-9 w-full text-base">
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSIGNEES.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.id})</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {/* SLA target — auto-set by severity (mirrors Detection Feed escalate modal) */}
@@ -443,8 +449,8 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
+              className="w-full text-base" />
           </div>
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">

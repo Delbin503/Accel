@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/users";
@@ -152,31 +153,37 @@ function GeneralSection() {
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Site</label>
-            <select value={defaultSite} onChange={(e) => setDefaultSite(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-              <option value="astra">Astra HQ</option>
-              <option value="fedex">FedEx Changi</option>
-              <option value="sembawang">Sembawang Naval</option>
-            </select>
+            <Select value={defaultSite} onValueChange={(v) => setDefaultSite(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="astra">Astra HQ</SelectItem>
+                <SelectItem value="fedex">FedEx Changi</SelectItem>
+                <SelectItem value="sembawang">Sembawang Naval</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Timezone</label>
-            <select value={defaultTz} onChange={(e) => setDefaultTz(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-              {TIMEZONE_OPTS.map((tz) => (
-                <option key={tz.value} value={tz.value}>{tz.label}</option>
-              ))}
-            </select>
+            <Select value={defaultTz} onValueChange={(v) => setDefaultTz(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TIMEZONE_OPTS.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Language</label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-              <option value="en">English</option>
-              <option value="zh">中文</option>
-              <option value="ja">日本語</option>
-              <option value="ko">한국어</option>
-            </select>
+            <Select value={language} onValueChange={(v) => setLanguage(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="zh">中文</SelectItem>
+                <SelectItem value="ja">日本語</SelectItem>
+                <SelectItem value="ko">한국어</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </SectionCard>
@@ -185,13 +192,15 @@ function GeneralSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date format</label>
-            <select value={dateFormat} onChange={(e) => setDateFormat(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              <option>DD MMM YYYY</option>
-              <option>YYYY-MM-DD</option>
-              <option>MM/DD/YYYY</option>
-              <option>DD/MM/YYYY</option>
-            </select>
+            <Select value={dateFormat} onValueChange={(v) => setDateFormat(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="DD MMM YYYY">DD MMM YYYY</SelectItem>
+                <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time format</label>
@@ -233,12 +242,14 @@ function GeneralSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Number format</label>
-            <select value={numberFormat} onChange={(e) => setNumberFormat(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              <option>1,234.56</option>
-              <option>1.234,56</option>
-              <option>1 234,56</option>
-            </select>
+            <Select value={numberFormat} onValueChange={(v) => setNumberFormat(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1,234.56">1,234.56</SelectItem>
+                <SelectItem value="1.234,56">1.234,56</SelectItem>
+                <SelectItem value="1 234,56">1 234,56</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Measurement units</label>
@@ -735,12 +746,14 @@ function NotificationsSection() {
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">SMS Provider</label>
-            <select value={smsProvider} onChange={(e) => setSmsProvider(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-              <option value="twilio">Twilio</option>
-              <option value="sns">AWS SNS</option>
-              <option value="messagebird">MessageBird</option>
-            </select>
+            <Select value={smsProvider} onValueChange={(v) => setSmsProvider(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="twilio">Twilio</SelectItem>
+                <SelectItem value="sns">AWS SNS</SelectItem>
+                <SelectItem value="messagebird">MessageBird</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </SectionCard>
@@ -765,21 +778,25 @@ function CameraDefaultsSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Codec</label>
-            <select value={codec} onChange={(e) => setCodec(e.target.value as "h264" | "h265")}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              <option value="h264">H.264</option>
-              <option value="h265">H.265 / HEVC</option>
-            </select>
+            <Select value={codec} onValueChange={(v) => setCodec(v as "h264" | "h265")}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="h264">H.264</SelectItem>
+                <SelectItem value="h265">H.265 / HEVC</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resolution</label>
-            <select value={resolution} onChange={(e) => setResolution(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              <option>1280x720</option>
-              <option>1920x1080</option>
-              <option>2560x1440</option>
-              <option>3840x2160</option>
-            </select>
+            <Select value={resolution} onValueChange={(v) => setResolution(v)}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1280x720">1280x720</SelectItem>
+                <SelectItem value="1920x1080">1920x1080</SelectItem>
+                <SelectItem value="2560x1440">2560x1440</SelectItem>
+                <SelectItem value="3840x2160">3840x2160</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -906,17 +923,21 @@ function NvrDefaultsSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default channel count</label>
-            <select value={defaultChannelCount} onChange={(e) => setDefaultChannelCount(Number(e.target.value))}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              {[8, 16, 32, 64].map((n) => <option key={n} value={n}>{n} channels</option>)}
-            </select>
+            <Select value={String(defaultChannelCount)} onValueChange={(v) => setDefaultChannelCount(Number(v))}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[8, 16, 32, 64].map((n) => <SelectItem key={n} value={String(n)}>{n} channels</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Health check every</label>
-            <select value={healthCheckInterval} onChange={(e) => setHealthCheckInterval(Number(e.target.value))}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base">
-              {[15, 30, 60, 120, 300].map((s) => <option key={s} value={s}>{s} s</option>)}
-            </select>
+            <Select value={String(healthCheckInterval)} onValueChange={(v) => setHealthCheckInterval(Number(v))}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[15, 30, 60, 120, 300].map((s) => <SelectItem key={s} value={String(s)}>{s} s</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </SectionCard>

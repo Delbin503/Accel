@@ -19,6 +19,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
@@ -450,30 +458,32 @@ function LinkNewIncidentsModal({
                 className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
-            <select
-              value={areaFilter}
-              onChange={(e) => setAreaFilter(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="all">All areas</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-            <select
-              value={cameraFilter}
-              onChange={(e) => setCameraFilter(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="all">All cameras</option>
-              {cameras.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
+              <SelectTrigger className="h-8 w-full text-sm">
+                <SelectValue placeholder="All areas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All areas</SelectItem>
+                {areas.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
+              <SelectTrigger className="h-8 w-full text-sm">
+                <SelectValue placeholder="All cameras" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All cameras</SelectItem>
+                {cameras.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {visible.length === 0 ? (
@@ -641,11 +651,11 @@ function EditCaseModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="w-full text-base"
               placeholder="Add case notes..."
             />
           </div>
@@ -1423,30 +1433,32 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
 
                 {allLinkedEvents.length > 0 && (
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select
-                      value={areaFilter}
-                      onChange={(e) => setAreaFilter(e.target.value)}
-                      className="h-7 rounded-md border border-border bg-card px-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="all">All areas</option>
-                      {linkedAreas.map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={cameraFilter}
-                      onChange={(e) => setCameraFilter(e.target.value)}
-                      className="h-7 rounded-md border border-border bg-card px-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="all">All cameras</option>
-                      {linkedCameras.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+                    <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
+                      <SelectTrigger className="h-7 w-full text-xs">
+                        <SelectValue placeholder="All areas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All areas</SelectItem>
+                        {linkedAreas.map((a) => (
+                          <SelectItem key={a} value={a}>
+                            {a}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
+                      <SelectTrigger className="h-7 w-full text-xs">
+                        <SelectValue placeholder="All cameras" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All cameras</SelectItem>
+                        {linkedCameras.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <span className="text-xs text-muted-foreground">
                       Click a card to view event details
                     </span>

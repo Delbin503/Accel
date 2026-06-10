@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
@@ -247,11 +248,11 @@ export function EscalateModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Initial Notes
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add context for the investigator..."
-              className="min-h-[70px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="min-h-[70px] w-full resize-y text-base"
             />
           </div>
         </div>

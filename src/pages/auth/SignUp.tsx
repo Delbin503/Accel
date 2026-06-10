@@ -39,6 +39,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -860,22 +868,25 @@ export default function SignUpPage() {
                 />
               </CompactField>
               <CompactField label="Country *">
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base"
-                >
-                  {[
-                    "Singapore",
-                    "Malaysia",
-                    "Thailand",
-                    "United States",
-                    "United Kingdom",
-                    "Australia",
-                  ].map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
+                <Select value={country} onValueChange={(v) => setCountry(v)}>
+                  <SelectTrigger className="h-9 w-full text-base">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      "Singapore",
+                      "Malaysia",
+                      "Thailand",
+                      "United States",
+                      "United Kingdom",
+                      "Australia",
+                    ].map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </CompactField>
               <CompactField label="City *">
                 <Input
@@ -1121,17 +1132,18 @@ export default function SignUpPage() {
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Timezone
               </label>
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </select>
+              <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+                <SelectTrigger className="h-10 w-full text-base">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMEZONES.map((tz) => (
+                    <SelectItem key={tz} value={tz}>
+                      {tz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1166,12 +1178,12 @@ export default function SignUpPage() {
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Description (optional)
             </label>
-            <textarea
+            <Textarea
               value={siteDescription}
               onChange={(e) => setSiteDescription(e.target.value)}
               rows={2}
               placeholder="A short description of this site…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+              className="w-full text-base"
             />
           </div>
           {error && <ErrorBox message={error} />}
@@ -1652,16 +1664,16 @@ function InviteUsersModal({
                 </span>
               )}
             </div>
-            <textarea
+            <Textarea
               value={emails}
               onChange={(e) => setEmails(e.target.value)}
               placeholder="alice@acme.com, bob@acme.com…"
               rows={2}
               className={cn(
-                "w-full rounded-md border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none",
+                "w-full text-base",
                 parsed.invalid.length > 0
                   ? "border-sev-critical/40 focus:border-sev-critical"
-                  : "border-input focus:border-primary"
+                  : "focus:border-primary"
               )}
             />
             <p className="mt-0.5 text-2xs text-muted-foreground/70">

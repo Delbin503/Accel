@@ -53,6 +53,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
@@ -2484,76 +2491,74 @@ function HistoryTab({
               <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </div>
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="all">All statuses</option>
-                  <option value="passed">Passed</option>
-                  <option value="failed">Failed</option>
-                  <option value="warning">Warning</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+              >
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="passed">Passed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="warning">Warning</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Verdict
               </div>
-              <div className="relative">
-                <select
-                  value={verdictFilter}
-                  onChange={(e) => setVerdictFilter(e.target.value as typeof verdictFilter)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="all">All verdicts</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="pending">Pending</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              </div>
+              <Select
+                value={verdictFilter}
+                onValueChange={(v) => setVerdictFilter(v as typeof verdictFilter)}
+              >
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="All verdicts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All verdicts</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Model
               </div>
-              <div className="relative">
-                <select
-                  value={modelFilter}
-                  onChange={(e) => setModelFilter(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="all">All models</option>
+              <Select value={modelFilter} onValueChange={(v) => setModelFilter(v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="All models" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All models</SelectItem>
                   {allModelNames.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 VLM
               </div>
-              <div className="relative">
-                <select
-                  value={vlmFilter}
-                  onChange={(e) => setVlmFilter(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-base text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="all">All VLMs</option>
+              <Select value={vlmFilter} onValueChange={(v) => setVlmFilter(v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="All VLMs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All VLMs</SelectItem>
                   {allVlmNames.map((v) => (
-                    <option key={v} value={v}>{v}</option>
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
                   ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              </div>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -2574,16 +2579,19 @@ function HistoryTab({
           </button>
         )}
       </p>
-      <div className="relative flex-shrink-0">
-        <select
+      <div className="flex-shrink-0">
+        <Select
           value={sortAsc ? "oldest" : "newest"}
-          onChange={(e) => setSortAsc(e.target.value === "oldest")}
-          className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+          onValueChange={(v) => setSortAsc(v === "oldest")}
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue placeholder="Newest first" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="oldest">Oldest first</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
 

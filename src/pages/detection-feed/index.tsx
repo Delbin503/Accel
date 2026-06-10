@@ -16,6 +16,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
@@ -853,12 +860,17 @@ export default function DetectionFeedPage() {
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
         </p>
-        <select className="rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none">
-          <option>Newest first</option>
-          <option>Severity (high → low)</option>
-          <option>Confidence (high → low)</option>
-          <option>By site</option>
-        </select>
+        <Select defaultValue="newest">
+          <SelectTrigger className="w-auto text-sm">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="severity">Severity (high → low)</SelectItem>
+            <SelectItem value="confidence">Confidence (high → low)</SelectItem>
+            <SelectItem value="site">By site</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* ── Event groups ────────────────────────────────────────────────── */}

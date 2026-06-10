@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -352,12 +353,16 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
             className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
             <ChevronRight className="size-3.5" />
           </button>
-          <select value={gridSize} onChange={(e) => { setGridSize(Number(e.target.value)); setPage(1); }}
-            className="h-7 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none">
-            <option value={2}>2×2 grid (4)</option>
-            <option value={3}>3×3 grid (9)</option>
-            <option value={4}>4×4 grid (16)</option>
-          </select>
+          <Select value={String(gridSize)} onValueChange={(v) => { setGridSize(Number(v)); setPage(1); }}>
+            <SelectTrigger className="h-7 w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2">2×2 grid (4)</SelectItem>
+              <SelectItem value="3">3×3 grid (9)</SelectItem>
+              <SelectItem value="4">4×4 grid (16)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>

@@ -32,6 +32,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -1788,40 +1789,44 @@ function AddNvrModal({
             </div>
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Model</label>
-              <select
-                value={fields.model}
-                onChange={(e) => set("model", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select an NVR model</option>
-                <option value="Hikvision DS-9664NI-I8">Hikvision DS-9664NI-I8 (64-ch)</option>
-                <option value="Hikvision DS-7716NI-I4">Hikvision DS-7716NI-I4 (16-ch)</option>
-                <option value="Dahua NVR5864-4KS2">Dahua NVR5864-4KS2 (64-ch)</option>
-                <option value="Dahua NVR4232-4KS2">Dahua NVR4232-4KS2 (32-ch)</option>
-                <option value="Uniview NVR308-32E2">Uniview NVR308-32E2 (32-ch)</option>
-              </select>
+              <Select value={fields.model} onValueChange={(v) => set("model", v)}>
+                <SelectTrigger className="h-9 w-full font-mono">
+                  <SelectValue placeholder="Select an NVR model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Hikvision DS-9664NI-I8">Hikvision DS-9664NI-I8 (64-ch)</SelectItem>
+                  <SelectItem value="Hikvision DS-7716NI-I4">Hikvision DS-7716NI-I4 (16-ch)</SelectItem>
+                  <SelectItem value="Dahua NVR5864-4KS2">Dahua NVR5864-4KS2 (64-ch)</SelectItem>
+                  <SelectItem value="Dahua NVR4232-4KS2">Dahua NVR4232-4KS2 (32-ch)</SelectItem>
+                  <SelectItem value="Uniview NVR308-32E2">Uniview NVR308-32E2 (32-ch)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
-              <select
-                value={fields.siteId}
-                onChange={(e) => set("siteId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select a site</option>
-                {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select a site" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMERA_SITES.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
-              <select
-                value={fields.areaId}
-                onChange={(e) => set("areaId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select an area</option>
-                {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select an area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMERA_AREAS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -1844,16 +1849,16 @@ function AddNvrModal({
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
-              <select
-                value={fields.channelCount}
-                onChange={(e) => set("channelCount", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select channels</option>
-                {[4, 8, 16, 32, 64].map((c) => (
-                  <option key={c} value={c}>{c} channels</option>
-                ))}
-              </select>
+              <Select value={fields.channelCount} onValueChange={(v) => set("channelCount", v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select channels" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[4, 8, 16, 32, 64].map((c) => (
+                    <SelectItem key={c} value={String(c)}>{c} channels</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
@@ -1877,16 +1882,19 @@ function AddNvrModal({
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
-              <select
+              <Select
                 value={fields.cleanupSchedule}
-                onChange={(e) => set("cleanupSchedule", e.target.value as NvrData["cleanupSchedule"])}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
+                onValueChange={(v) => set("cleanupSchedule", v as NvrData["cleanupSchedule"])}
               >
-                <option value="">Select cleanup mode</option>
-                <option value="auto-age">Auto · Age based</option>
-                <option value="auto-channel">Auto · Channel based</option>
-                <option value="manual">Manual only</option>
-              </select>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select cleanup mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto-age">Auto · Age based</SelectItem>
+                  <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
+                  <SelectItem value="manual">Manual only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -1999,25 +2007,29 @@ function EditNvrModal({
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
-              <select
-                value={fields.siteId}
-                onChange={(e) => set("siteId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select a site</option>
-                {CAMERA_SITES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select a site" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMERA_SITES.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
-              <select
-                value={fields.areaId}
-                onChange={(e) => set("areaId", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Select an area</option>
-                {CAMERA_AREAS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select an area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMERA_AREAS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -2060,16 +2072,19 @@ function EditNvrModal({
             </div>
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
-              <select
+              <Select
                 value={fields.cleanupSchedule}
-                onChange={(e) => set("cleanupSchedule", e.target.value as NvrFormFields["cleanupSchedule"])}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
+                onValueChange={(v) => set("cleanupSchedule", v as NvrFormFields["cleanupSchedule"])}
               >
-                <option value="">Select cleanup mode</option>
-                <option value="auto-age">Auto · Age based</option>
-                <option value="auto-channel">Auto · Channel based</option>
-                <option value="manual">Manual only</option>
-              </select>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="Select cleanup mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto-age">Auto · Age based</SelectItem>
+                  <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
+                  <SelectItem value="manual">Manual only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

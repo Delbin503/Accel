@@ -35,6 +35,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -1690,21 +1691,29 @@ function TextInput({ value, onChange, mono, placeholder, type = "text", disabled
     />
   );
 }
+// shadcn Select cannot use value="". Map "" to a sentinel internally so the
+// external API (value/onChange/options accepting "" entries) stays unchanged.
+const FORM_SELECT_EMPTY = "__empty__";
+
 function FormSelect({ value, onChange, options, disabled }: { value: string; onChange: (v: string) => void; options: readonly { value: string; label: string }[]; disabled?: boolean }) {
+  const placeholder = options.find((o) => o.value === "")?.label;
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+    <Select
+      value={value === "" ? FORM_SELECT_EMPTY : value}
+      onValueChange={(v) => onChange(v === FORM_SELECT_EMPTY ? "" : v)}
       disabled={disabled}
-      className={cn(
-        "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none",
-        disabled && "cursor-not-allowed opacity-60"
-      )}
     >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
+      <SelectTrigger className="h-9 w-full text-base">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value === "" ? FORM_SELECT_EMPTY : o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 

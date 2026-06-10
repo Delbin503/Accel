@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
@@ -1209,10 +1210,16 @@ function BillingDetailsSection() {
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
               <div className="relative">
                 <Globe className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <select value={draft.country} onChange={(e) => patch("country", e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base">
-                  {["Singapore", "Malaysia", "Thailand", "United States", "United Kingdom", "Australia", "Japan"].map((c) => <option key={c}>{c}</option>)}
-                </select>
+                <Select value={draft.country} onValueChange={(v) => patch("country", v)}>
+                  <SelectTrigger className="h-9 w-full pl-9 text-base">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Singapore", "Malaysia", "Thailand", "United States", "United Kingdom", "Australia", "Japan"].map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

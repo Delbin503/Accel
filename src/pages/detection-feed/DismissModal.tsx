@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { DetectionEvent } from "@/types/detection";
 
@@ -147,11 +148,11 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes (optional)
             </label>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add details — helps the model team understand the context..."
-              className="min-h-[60px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="min-h-[60px] w-full resize-y"
             />
           </div>
         </div>

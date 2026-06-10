@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AuthLayout } from "./AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -139,18 +140,22 @@ export default function OnboardingSitePage() {
               Timezone
             </label>
             <div className="relative">
-              <Globe2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground focus:border-primary focus:outline-none">
-                <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
-                <option value="Asia/Jakarta">Asia/Jakarta (GMT+7)</option>
-                <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
-                <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (GMT+8)</option>
-                <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-                <option value="UTC">UTC (GMT+0)</option>
-                <option value="America/New_York">America/New_York (GMT-5)</option>
-                <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
-              </select>
+              <Globe2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+                <SelectTrigger className="h-10 w-full pl-9 text-base">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Asia/Singapore">Asia/Singapore (GMT+8)</SelectItem>
+                  <SelectItem value="Asia/Jakarta">Asia/Jakarta (GMT+7)</SelectItem>
+                  <SelectItem value="Asia/Bangkok">Asia/Bangkok (GMT+7)</SelectItem>
+                  <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (GMT+8)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (GMT+9)</SelectItem>
+                  <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York (GMT-5)</SelectItem>
+                  <SelectItem value="America/Los_Angeles">America/Los_Angeles (GMT-8)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

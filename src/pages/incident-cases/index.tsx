@@ -15,6 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
@@ -534,15 +541,16 @@ export default function IncidentCasesPage() {
           <strong className="text-foreground">{filtered.length}</strong> case
           {filtered.length !== 1 ? "s" : ""} match current filters
         </p>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
-        >
-          <option value="newest">Newest first</option>
-          <option value="severity">Severity (high → low)</option>
-          <option value="status">By status</option>
-        </select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+          <SelectTrigger className="w-auto text-sm">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="severity">Severity (high → low)</SelectItem>
+            <SelectItem value="status">By status</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* ── Table ────────────────────────────────────────────────────────── */}

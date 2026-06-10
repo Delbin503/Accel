@@ -39,6 +39,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -459,27 +466,33 @@ export default function OnPremSetupPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label>Country / Region</Label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+              <Select value={country} onValueChange={(v) => setCountry(v)}>
+                <SelectTrigger className="h-10 w-full text-base">
+                  <SelectValue placeholder="Select a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Time zone</Label>
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-base"
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz}>{tz}</option>
-                ))}
-              </select>
+              <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+                <SelectTrigger className="h-10 w-full text-base">
+                  <SelectValue placeholder="Select a time zone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMEZONES.map((tz) => (
+                    <SelectItem key={tz} value={tz}>
+                      {tz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

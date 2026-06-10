@@ -25,6 +25,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -836,14 +844,16 @@ function ConditionRowItem({
             onChange={(e) => onUpdate(row.id, { value: e.target.value })}
             className="w-16 rounded-md border border-border bg-background px-2 py-1.5 text-center text-base text-foreground outline-none focus:border-primary"
           />
-          <select
-            value={row.unit}
-            onChange={(e) => onUpdate(row.id, { unit: e.target.value })}
-            className="rounded-md border border-border bg-card px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary"
-          >
-            <option value="">Unit</option>
-            {UNITS_LIST.map((u) => <option key={u} value={u}>{u}</option>)}
-          </select>
+          <Select value={row.unit} onValueChange={(v) => onUpdate(row.id, { unit: v })}>
+            <SelectTrigger className="h-8 w-auto text-sm">
+              <SelectValue placeholder="Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {UNITS_LIST.map((u) => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </>
       )}
 
@@ -1321,12 +1331,12 @@ function RuleBuilder({
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Description <span className="text-sev-critical">*</span>
                 </label>
-                <textarea
+                <Textarea
                   value={s.description}
                   onChange={(e) => patch({ description: e.target.value })}
                   placeholder="e.g. Triggers when a person is detected inside Armoury-B without a helmet for more than 5 seconds during operating hours."
                   rows={2}
-                  className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                  className="w-full resize-none text-base"
                 />
               </div>
               <div>
@@ -1879,18 +1889,18 @@ export default function RulesLibraryPage() {
             </button>
           )}
         </p>
-        <div className="relative flex-shrink-0">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="name-asc">Name (A→Z)</option>
-            <option value="name-desc">Name (Z→A)</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex-shrink-0">
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name-asc">Name (A→Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z→A)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

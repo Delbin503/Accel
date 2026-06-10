@@ -30,6 +30,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
@@ -511,16 +513,20 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
-            <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none">
-              {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
-            </select>
+            <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
+              <SelectTrigger className="h-9 w-full text-base">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONES.map((tz) => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
               placeholder="A short description of this site…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none" />
+              className="w-full text-base" />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">

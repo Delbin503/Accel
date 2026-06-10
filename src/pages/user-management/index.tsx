@@ -37,6 +37,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -987,14 +988,14 @@ function InviteUsersModal({
                 </span>
               )}
             </div>
-            <textarea
+            <Textarea
               value={emails}
               onChange={(e) => setEmails(e.target.value)}
               placeholder="alice@acme.com, bob@acme.com…"
               rows={2}
               className={cn(
-                "w-full rounded-md border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none",
-                parsed.invalid.length > 0 ? "border-sev-critical/40 focus:border-sev-critical" : "border-input focus:border-primary"
+                "w-full",
+                parsed.invalid.length > 0 && "border-sev-critical/40 focus:border-sev-critical"
               )}
             />
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
@@ -1797,12 +1798,12 @@ function SuspendUserModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Note (optional)
             </label>
-            <textarea
+            <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Reason for suspension — visible to admins and in the audit log."
               rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="w-full"
             />
           </div>
 
