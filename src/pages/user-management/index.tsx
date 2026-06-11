@@ -1540,6 +1540,113 @@ function ManageSiteModal({
 
 /* ── Edit User modal ─────────────────────────────────────────────────────── */
 
+/* Country dialing codes for the phone field (name + code; no flag emojis per
+   the design system's icon rules). */
+const COUNTRY_CODES: { code: string; name: string }[] = [
+  { code: "+65",  name: "Singapore" },
+  { code: "+60",  name: "Malaysia" },
+  { code: "+62",  name: "Indonesia" },
+  { code: "+66",  name: "Thailand" },
+  { code: "+63",  name: "Philippines" },
+  { code: "+84",  name: "Vietnam" },
+  { code: "+91",  name: "India" },
+  { code: "+86",  name: "China" },
+  { code: "+852", name: "Hong Kong" },
+  { code: "+81",  name: "Japan" },
+  { code: "+82",  name: "South Korea" },
+  { code: "+61",  name: "Australia" },
+  { code: "+64",  name: "New Zealand" },
+  { code: "+44",  name: "United Kingdom" },
+  { code: "+1",   name: "United States" },
+  { code: "+971", name: "United Arab Emirates" },
+  { code: "+966", name: "Saudi Arabia" },
+  { code: "+49",  name: "Germany" },
+  { code: "+33",  name: "France" },
+];
+
+const DEFAULT_DIAL_CODE = "+65";
+
+/** Split a stored phone string ("+65 9123 4567") into dial code + national number. */
+function splitPhone(raw: string | undefined): { dialCode: string; number: string } {
+  const v = (raw ?? "").trim();
+  if (!v) return { dialCode: DEFAULT_DIAL_CODE, number: "" };
+  // Longest code first so "+65" wins over "+6", "+1" matched last, etc.
+  const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find((c) => v.startsWith(c.code));
+  if (match) return { dialCode: match.code, number: v.slice(match.code.length).trim() };
+  return { dialCode: DEFAULT_DIAL_CODE, number: v };
+}
+
+function PhoneField({
+  dialCode,
+  number,
+  onDialCode,
+  onNumber,
+}: {
+  dialCode: string;
+  number: string;
+  onDialCode: (code: string) => void;
+  onNumber: (n: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+  const list = COUNTRY_CODES.filter(
+    (c) => !query || c.name.toLowerCase().includes(query.toLowerCase()) || c.code.includes(query)
+  );
+
+  return (
+    <div className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
+      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(""); }}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
+          >
+            {dialCode}
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-64 p-1.5">
+          <div className="relative mb-1">
+            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country or code"
+              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {list.length === 0 ? (
+              <p className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>
+            ) : (
+              list.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => { onDialCode(c.code); setOpen(false); setQuery(""); }}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60",
+                    c.code === dialCode && "bg-primary/10"
+                  )}
+                >
+                  <span className="truncate text-foreground">{c.name}</span>
+                  <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">{c.code}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+      <input
+        value={number}
+        onChange={(e) => onNumber(e.target.value)}
+        placeholder="9123 4567"
+        inputMode="tel"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+      />
+    </div>
+  );
+}
+
 function EditUserModal({
   open,
   user,
@@ -1553,7 +1660,8 @@ function EditUserModal({
 }) {
   const [fullName, setFullName] = React.useState("");
   const [displayName, setDisplayName] = React.useState("");
-  const [phone, setPhone] = React.useState("");
+  const [dialCode, setDialCode] = React.useState(DEFAULT_DIAL_CODE);
+  const [phoneNumber, setPhoneNumber] = React.useState("");
   const [department, setDepartment] = React.useState("");
 
   React.useEffect(() => {
@@ -1563,12 +1671,17 @@ function EditUserModal({
         v === "Pending Invite" || v === "—" || v.trim() === "";
       setFullName(isPlaceholder(user.fullName) ? "" : user.fullName);
       setDisplayName(isPlaceholder(user.displayName) ? "" : user.displayName);
-      setPhone(user.phone ?? "");
+      const parsed = splitPhone(user.phone);
+      setDialCode(parsed.dialCode);
+      setPhoneNumber(parsed.number);
       setDepartment(user.department ?? "");
     }
   }, [open, user]);
 
   if (!user) return null;
+
+  // Recombine code + number; an empty number means "no phone".
+  const phone = phoneNumber.trim() ? `${dialCode} ${phoneNumber.trim()}` : "";
 
   const unchanged =
     fullName === user.fullName &&
@@ -1592,25 +1705,29 @@ function EditUserModal({
             <RoleBadge role={user.role} />
           </div>
 
-          {[
-            { label: "Full Name",    value: fullName,    set: setFullName,    mono: false, placeholder: "e.g. Delbin Arkar" },
-            { label: "Display Name", value: displayName, set: setDisplayName, mono: false, placeholder: "e.g. Delbin (shown to teammates)" },
-            { label: "Phone",        value: phone,       set: setPhone,       mono: true,  placeholder: "+65 9123 4567" },
-            { label: "Department",   value: department,  set: setDepartment,  mono: false, placeholder: "e.g. Operations, Security, IT" },
-          ].map(({ label, value, set, mono, placeholder }) => (
-            <div key={label}>
+          {([
+            { label: "Full Name",    kind: "text",  value: fullName,    set: setFullName,    mono: false, placeholder: "e.g. Delbin Arkar" },
+            { label: "Display Name", kind: "text",  value: displayName, set: setDisplayName, mono: false, placeholder: "e.g. Delbin (shown to teammates)" },
+            { label: "Phone",        kind: "phone" },
+            { label: "Department",   kind: "text",  value: department,  set: setDepartment,  mono: false, placeholder: "e.g. Operations, Security, IT" },
+          ] as const).map((f) => (
+            <div key={f.label}>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {label}
+                {f.label}
               </label>
-              <input
-                value={value}
-                onChange={(e) => set(e.target.value)}
-                placeholder={placeholder}
-                className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  mono && "font-mono"
-                )}
-              />
+              {f.kind === "phone" ? (
+                <PhoneField dialCode={dialCode} number={phoneNumber} onDialCode={setDialCode} onNumber={setPhoneNumber} />
+              ) : (
+                <input
+                  value={f.value}
+                  onChange={(e) => f.set(e.target.value)}
+                  placeholder={f.placeholder}
+                  className={cn(
+                    "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                    f.mono && "font-mono"
+                  )}
+                />
+              )}
             </div>
           ))}
           <p className="text-xs text-muted-foreground">
