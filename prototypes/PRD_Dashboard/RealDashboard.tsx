@@ -11,11 +11,7 @@ import {
   Filter,
   Check,
   ChevronDown,
-  Cpu,
   MemoryStick,
-  HardDrive,
-  Network,
-  Power,
   Video,
   TriangleAlert,
   X,
@@ -23,9 +19,9 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { KpiCard } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { DashboardSkeleton, ErrorState, EmptyState, type ForcedState } from "./states";
+import { DashboardSkeleton, ErrorState, type ForcedState, type HealthMode } from "./states";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -205,10 +201,16 @@ function shiftDate(iso: string, days: number) {
 export default function DashboardPage({
   forced = "normal",
   onResolveForced = () => {},
-}: { forced?: ForcedState; onResolveForced?: () => void }) {
+  forcedHealth = "degraded",
+}: { forced?: ForcedState; onResolveForced?: () => void; forcedHealth?: HealthMode }) {
   const navigate = useNavigate();
-  const cameras = useCamerasStore((s) => s.cameras);
-  const sites = useSitesStore((s) => s.sites);
+  // PROTOTYPE-ONLY: "empty" forces every section to show its no-data state while
+  // keeping the full layout (all cards) visible.
+  const emptyMode = forced === "empty";
+  const camerasRaw = useCamerasStore((s) => s.cameras);
+  const sitesRaw = useSitesStore((s) => s.sites);
+  const cameras = emptyMode ? [] : camerasRaw;
+  const sites = emptyMode ? [] : sitesRaw;
 
   /* ── Date filter state ───────────────────────────────────────────── */
   const [dateRange, setDateRange] = React.useState<DateRange>("today");
@@ -240,17 +242,19 @@ export default function DashboardPage({
 
   /* ── Filtered events / cases ─────────────────────────────────────── */
   const filteredEvents = React.useMemo(() => {
+    if (emptyMode) return [];
     if (!dateBounds.from || !dateBounds.to) return MOCK_EVENTS;
     return MOCK_EVENTS.filter((e) => e.date >= dateBounds.from && e.date <= dateBounds.to);
-  }, [dateBounds]);
+  }, [dateBounds, emptyMode]);
 
   const filteredCases = React.useMemo(() => {
+    if (emptyMode) return [];
     if (!dateBounds.from || !dateBounds.to) return MOCK_CASES;
     return MOCK_CASES.filter((c) => {
       const d = c.createdAt.slice(0, 10);
       return d >= dateBounds.from && d <= dateBounds.to;
     });
-  }, [dateBounds]);
+  }, [dateBounds, emptyMode]);
 
   /* ── Derived stats ───────────────────────────────────────────────── */
   const camOnline = cameras.filter((c) => c.status === "online").length;
@@ -362,25 +366,23 @@ export default function DashboardPage({
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 4);
 
-  const recentActivity = MOCK_ACTIVITY_LOGS.slice(0, 8);
+  const recentActivity = emptyMode ? [] : MOCK_ACTIVITY_LOGS.slice(0, 8);
 
-  /* ── System health metrics + overall % ───────────────────────────── */
-  const healthMetrics: { label: string; value: string; pct: number; tone: "ok" | "warn" | "crit"; icon: React.ElementType }[] = [
-    { label: "CPU",      value: "42%", pct: 42, tone: "ok",   icon: Cpu },
-    { label: "Memory",   value: "68%", pct: 68, tone: "warn", icon: MemoryStick },
-    { label: "Disk I/O", value: "24%", pct: 24, tone: "ok",   icon: HardDrive },
-    { label: "Network",  value: "18%", pct: 18, tone: "ok",   icon: Network },
-    { label: "Uptime",   value: "42d", pct: 92, tone: "ok",   icon: Power },
-  ];
-  /* ── System status pill + inline alert banner when unhealthy ─────────── */
-  const worstHealth = healthMetrics.find((m) => m.tone === "crit")
-    ?? healthMetrics.find((m) => m.tone === "warn");
-  const systemStatus: "healthy" | "degraded" | "critical" =
-    worstHealth?.tone === "crit" ? "critical" :
-    worstHealth?.tone === "warn" ? "degraded" :
-    "healthy";
+  const sitesTotal = sites.length;
+  const sitesActive = sites.filter((s) => s.status === "active").length;
+
+  /* ── System health — driven by the dev Health control (PROTOTYPE-ONLY) ── */
+  const systemStatus: "healthy" | "degraded" | "critical" = forcedHealth;
+  const worstHealth =
+    forcedHealth === "healthy"
+      ? undefined
+      : forcedHealth === "critical"
+        ? { label: "Memory", value: "96%", pct: 96, tone: "crit" as const, icon: MemoryStick }
+        : { label: "Memory", value: "68%", pct: 68, tone: "warn" as const, icon: MemoryStick };
 
   const [alertAcknowledged, setAlertAcknowledged] = React.useState(false);
+  // Re-show the banner when the Health mode changes (dev preview convenience).
+  React.useEffect(() => { setAlertAcknowledged(false); }, [forcedHealth]);
   const showAlertBanner = systemStatus !== "healthy" && !!worstHealth && !alertAcknowledged;
 
   const statusStyles =
@@ -392,8 +394,9 @@ export default function DashboardPage({
     systemStatus === "degraded" ? "Degraded" :
                                   "Healthy";
 
-  // PROTOTYPE-ONLY: forced states for the dev tester (drop when promoting to src).
-  if (forced !== "normal") {
+  // PROTOTYPE-ONLY: loading & error replace the page; "empty" falls through and
+  // renders the full layout with empty data (each section shows its own no-data state).
+  if (forced === "loading" || forced === "error") {
     return (
       <div className="flex flex-col gap-4">
         <PageHeader>
@@ -404,13 +407,7 @@ export default function DashboardPage({
             </PageHeader.Description>
           </PageHeader.Content>
         </PageHeader>
-        {forced === "loading" ? (
-          <DashboardSkeleton />
-        ) : forced === "error" ? (
-          <ErrorState onRetry={onResolveForced} />
-        ) : (
-          <EmptyState />
-        )}
+        {forced === "loading" ? <DashboardSkeleton /> : <ErrorState onRetry={onResolveForced} />}
       </div>
     );
   }
@@ -500,64 +497,37 @@ export default function DashboardPage({
         }
       />
 
-      {/* KPI — split: live status vs period metrics (PRD fix 1) */}
-      <div className="space-y-3">
-        {/* Live Status — always real-time, unaffected by the date filter */}
-        <div>
-          <div className="mb-1.5 flex items-center gap-2">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Live Status</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-1.5 py-px text-2xs font-bold uppercase tracking-wider text-success">
-              <span className="size-1.5 animate-pulse rounded-full bg-success" /> Live
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <KpiCard
-              label="Cameras Online"
-              value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
-              sub={`${camTotal - camOnline} offline`}
-              accent="success"
-              onClick={() => navigate("/site/cameras")}
-            />
-            <KpiCard
-              label="System Health"
-              value={statusLabel}
-              sub={worstHealth ? `${worstHealth.label} at ${worstHealth.value}` : "All systems normal"}
-              accent={systemStatus === "critical" ? "sev-critical" : systemStatus === "degraded" ? "warning" : "success"}
-            />
-          </div>
-        </div>
-
-        {/* Period Metrics — react to the selected date range */}
-        <div>
-          <div className="mb-1.5 flex items-center gap-2">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Period Metrics</span>
-            <span className="text-2xs text-muted-foreground">· {dateLabel}</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <KpiCard
-              label="Total Detections"
-              value={eventsInRange}
-              sub={dateLabel}
-              accent="info"
-              onClick={() => navigate("/detection-feed")}
-            />
-            <KpiCard
-              label="Open Cases"
-              value={casesOpen}
-              sub="In selected range"
-              accent="sev-critical"
-              onClick={() => navigate("/incidents")}
-            />
-            <KpiCard
-              label="Escalated Cases"
-              value={casesEscalated}
-              sub="Critical · in range"
-              accent="warning"
-              onClick={() => navigate("/incidents")}
-            />
-          </div>
-        </div>
-      </div>
+      {/* Top KPI strip */}
+      <KpiGrid cols={4}>
+        <KpiCard
+          label="Sites"
+          value={sitesTotal}
+          sub={`${sitesActive} active`}
+          accent="primary"
+          onClick={() => navigate("/site/overview")}
+        />
+        <KpiCard
+          label="Cameras"
+          value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
+          sub={`${camTotal - camOnline} offline`}
+          accent="success"
+          onClick={() => navigate("/site/cameras")}
+        />
+        <KpiCard
+          label="Events"
+          value={eventsInRange}
+          sub={dateLabel}
+          accent="info"
+          onClick={() => navigate("/detection-feed")}
+        />
+        <KpiCard
+          label="Open Cases"
+          value={casesOpen}
+          sub={`${casesEscalated} critical`}
+          accent="sev-critical"
+          onClick={() => navigate("/incidents")}
+        />
+      </KpiGrid>
 
       {/* Detections trend — full width now that System Health lives in the header */}
       <div>

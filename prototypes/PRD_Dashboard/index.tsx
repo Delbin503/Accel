@@ -10,20 +10,26 @@ import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RealDashboard from "./RealDashboard";
 import { StateTester } from "./StateTester";
-import type { ForcedState } from "./states";
+import type { ForcedState, HealthMode } from "./states";
 import "./proto.css";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right, low opacity, reveals on hover. */
-function FloatingTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
+function FloatingTester(props: {
+  value: ForcedState;
+  onChange: (s: ForcedState) => void;
+  health: HealthMode;
+  onHealthChange: (h: HealthMode) => void;
+}) {
   return (
     <div className="fixed bottom-6 right-6 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
-      <StateTester value={value} onChange={onChange} />
+      <StateTester {...props} />
     </div>
   );
 }
 
 function App() {
   const [forced, setForced] = React.useState<ForcedState>("normal");
+  const [health, setHealth] = React.useState<HealthMode>("degraded");
   const resolve = () => setForced("normal");
 
   return (
@@ -42,12 +48,12 @@ function App() {
               </header>
               <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="*" element={<RealDashboard forced={forced} onResolveForced={resolve} />} />
+                  <Route path="*" element={<RealDashboard forced={forced} onResolveForced={resolve} forcedHealth={health} />} />
                 </Routes>
               </main>
             </div>
           </div>
-          <FloatingTester value={forced} onChange={setForced} />
+          <FloatingTester value={forced} onChange={setForced} health={health} onHealthChange={setHealth} />
           <Toaster position="top-center" theme="dark" richColors />
         </SidebarProvider>
       </TooltipProvider>

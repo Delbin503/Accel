@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 /** Dev-only forced states for the State Tester (prototype-only). */
 export type ForcedState = "normal" | "loading" | "empty" | "error";
 
+/** Dev-only System Health override (prototype-only, Dashboard). */
+export type HealthMode = "healthy" | "degraded" | "critical";
+
 export function DashboardSkeleton() {
   return (
     <div className="space-y-4">
