@@ -4,8 +4,6 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
   Check,
   X,
@@ -31,7 +29,6 @@ import {
   Ban,
   Clock,
   Plus,
-  CreditCard,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -163,7 +160,7 @@ const KPI_CONFIGS: {
   getValue: (items: UserData[]) => number;
 }[] = [
   { key: "all",       label: "Total Users",     sub: "All registered accounts",        accent: "primary",      getValue: (i) => i.length },
-  { key: "owners",    label: "Owners",          sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
+  { key: "owners",    label: "Owner",           sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
   { key: "admins",    label: "Admins",          sub: "Can grant any permission",       accent: "info",         getValue: (i) => i.filter((u) => u.role === "admin").length },
   { key: "users",     label: "Users",           sub: "Site-scoped daily users",        accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
   { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "sev-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
@@ -892,29 +889,46 @@ function InviteUsersModal({
 
         {/* Scrollable body — modal height is fixed; content scrolls inside. */}
         <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
-          {/* Seat summary strip (kept) */}
-          <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
-            {(["owner", "admin", "user"] as UserRole[]).map((r) => {
-              const s = seatUsage[r];
-              const isLow = s.available === 0;
-              const isSelected = role === r;
-              return (
-                <div key={r} className={cn(
-                  "rounded-md border px-2 py-1.5 transition-colors",
-                  isSelected ? "border-primary bg-primary/5" : "border-border bg-card"
-                )}>
-                  <div className="mb-0.5 flex items-center justify-between gap-1">
-                    <RoleBadge role={r} withIcon={false} />
-                    <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
-                      {s.available} left
-                    </span>
-                  </div>
-                  <p className="font-mono text-2xs text-muted-foreground">
-                    {s.assigned} / {s.total} used
-                  </p>
-                </div>
-              );
-            })}
+          {/* Seat tiles double as the role selector — pick a tier to invite into. */}
+          <div>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Seat Type
+            </label>
+            <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
+              {(["owner", "admin", "user"] as UserRole[]).map((r) => {
+                const s = seatUsage[r];
+                const isLow = s.available === 0;
+                const isSelected = role === r;
+                // Owner is assigned only via ownership transfer — not invitable here.
+                const selectable = r !== "owner";
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    disabled={!selectable}
+                    onClick={() => selectable && setRole(r)}
+                    className={cn(
+                      "rounded-md border px-2 py-1.5 text-left transition-colors",
+                      isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
+                      selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
+                    )}
+                  >
+                    <div className="mb-0.5 flex items-center justify-between gap-1">
+                      <RoleBadge role={r} withIcon={false} />
+                      <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                        {s.available} left
+                      </span>
+                    </div>
+                    <p className="font-mono text-2xs text-muted-foreground">
+                      {s.assigned} / {s.total} used
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-2xs text-muted-foreground/70">
+              Owner role can only be assigned via ownership transfer.
+            </p>
           </div>
 
           {/* Site Access — moved ABOVE the email field, rendered as a dropdown */}
@@ -1010,53 +1024,6 @@ function InviteUsersModal({
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Role */}
-          <div>
-            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Role</label>
-            <div className="space-y-1.5">
-              {(["admin", "user"] as const).map((r) => {
-                const s = seatUsage[r];
-                const willExceed = role === r && parsed.valid.length > s.available;
-                return (
-                  <button
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={cn(
-                      "flex w-full items-start gap-2.5 rounded-md border bg-background px-2.5 py-2 text-left transition-colors",
-                      role === r ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                    )}
-                  >
-                    <div className={cn(
-                      "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-                      role === r ? "border-primary" : "border-muted-foreground/40"
-                    )}>
-                      {role === r && <span className="size-1.5 rounded-full bg-primary" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <RoleBadge role={r} />
-                        <span className={cn("font-mono text-2xs font-bold",
-                          s.available === 0 ? "text-sev-critical" :
-                          willExceed ? "text-sev-critical" :
-                          s.available <= 2 ? "text-warning" :
-                          "text-success"
-                        )}>
-                          {s.available}/{s.total} seats
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">
-                        {USER_ROLE_DESCRIPTIONS[r]}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
-              Owner role can only be assigned via ownership transfer.
-            </p>
           </div>
 
           {(noSeats || overSeat) && (
@@ -1183,7 +1150,6 @@ function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, SeatUsage>
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <CreditCard className="size-3.5 text-primary" />
           Seat Usage
         </div>
         <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
@@ -1218,9 +1184,13 @@ function ChangeRoleModal({
   const initial = users.length === 1 ? users[0].role : "user";
   const [role, setRole] = React.useState<UserRole>(initial);
   const [showPurchase, setShowPurchase] = React.useState(false);
+  const [showTransfer, setShowTransfer] = React.useState(false);
+  const [password, setPassword] = React.useState("");
   const isBulk = users.length > 1;
 
-  React.useEffect(() => { if (open) { setRole(initial); setShowPurchase(false); } }, [open, initial]);
+  React.useEffect(() => {
+    if (open) { setRole(initial); setShowPurchase(false); setShowTransfer(false); setPassword(""); }
+  }, [open, initial]);
 
   if (users.length === 0) return null;
 
@@ -1231,8 +1201,14 @@ function ChangeRoleModal({
   const currentTier = MOCK_SEATS[role];
   const purchaseTotal = seatShortfall * currentTier.pricePerMonth;
   const sameRole = !isBulk && role === users[0].role;
+  const isOwnerTransfer = role === "owner";
 
   function handleApply() {
+    // Promoting to Owner is an ownership transfer — confirm + re-auth first.
+    if (isOwnerTransfer) {
+      setShowTransfer(true);
+      return;
+    }
     if (seatShortfall > 0) {
       setShowPurchase(true);
       return;
@@ -1246,23 +1222,65 @@ function ChangeRoleModal({
     onConfirm(role);
   }
 
+  function confirmTransfer() {
+    if (!password.trim()) return;
+    onConfirm("owner");
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">
-            {showPurchase
+            {showTransfer
+              ? "Transfer Ownership"
+              : showPurchase
               ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
               : isBulk ? `Change Role (${users.length})` : "Change Role"}
           </DialogTitle>
-          {showPurchase && (
+          {showPurchase && !showTransfer && (
             <p className="mt-0.5 text-sm text-muted-foreground">
               No available {currentTier.label.toLowerCase()} seats — purchase to continue.
             </p>
           )}
+          {showTransfer && (
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Confirm your identity to transfer the Owner role.
+            </p>
+          )}
         </DialogHeader>
 
-        {!showPurchase ? (
+        {showTransfer ? (
+          <div className="space-y-3 px-5 py-4">
+            <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] px-3.5 py-3">
+              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+              <div>
+                <p className="text-base font-semibold text-foreground">You are transferring ownership</p>
+                <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                  {!isBulk ? (
+                    <><strong className="text-foreground">{users[0].fullName}</strong> will become the workspace <strong className="text-foreground">Owner</strong>.</>
+                  ) : (
+                    "The selected user will become the workspace Owner."
+                  )}{" "}
+                  There is only one Owner per workspace — the current Owner will be downgraded to Admin.
+                  This action is irreversible without another transfer. Are you sure you want to proceed?
+                </p>
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Re-enter your password to confirm
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your account password"
+                className="h-9 text-base"
+              />
+            </div>
+          </div>
+        ) : !showPurchase ? (
           <div className="space-y-3 px-5 py-4">
             {isBulk ? (
               <p className="text-sm text-muted-foreground">
@@ -1280,10 +1298,10 @@ function ChangeRoleModal({
             )}
             <p className="text-sm text-muted-foreground">Choose a role</p>
             {USER_ROLE_OPTIONS.map((opt) => {
-              const tier = MOCK_SEATS[opt.value];
               const u = seatUsage[opt.value];
+              // Owner is an ownership transfer, not a seat purchase — never a "shortfall".
               const willHaveShortfall = !isBulk
-                ? (opt.value !== users[0].role && u.available === 0)
+                ? (opt.value !== "owner" && opt.value !== users[0].role && u.available === 0)
                 : false;
               return (
                 <button
@@ -1305,9 +1323,6 @@ function ChangeRoleModal({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <RoleBadge role={opt.value} />
-                      <span className="inline-flex items-center gap-1 font-mono text-sm font-bold text-foreground">
-                        ${tier.pricePerMonth}<span className="text-2xs font-normal text-muted-foreground">/mo</span>
-                      </span>
                     </div>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">
                       {USER_ROLE_DESCRIPTIONS[opt.value]}
@@ -1330,13 +1345,13 @@ function ChangeRoleModal({
               );
             })}
 
-            {seatShortfall > 0 && (
+            {seatShortfall > 0 && !isOwnerTransfer && (
               <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
                 <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
                 <p className="text-sm leading-snug text-muted-foreground">
-                  Applying this change requires <strong className="text-foreground">{seatShortfall}</strong> additional{" "}
-                  {currentTier.label.toLowerCase()} seat{seatShortfall === 1 ? "" : "s"} at{" "}
-                  <strong className="text-foreground">${currentTier.pricePerMonth}/mo each</strong>. You will be prompted to purchase.
+                  No {currentTier.label.toLowerCase()} seats left — applying this change adds{" "}
+                  <strong className="text-foreground">{seatShortfall}</strong> seat{seatShortfall === 1 ? "" : "s"}.
+                  You'll be asked to confirm the charge on Apply.
                 </p>
               </div>
             )}
@@ -1375,7 +1390,15 @@ function ChangeRoleModal({
         )}
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
-          {showPurchase ? (
+          {showTransfer ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setShowTransfer(false)}>Back</Button>
+              <Button size="sm" variant="destructive" disabled={!password.trim()} onClick={confirmTransfer} className="gap-1.5">
+                <Crown className="size-3.5" />
+                Transfer Ownership
+              </Button>
+            </>
+          ) : showPurchase ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => setShowPurchase(false)}>Back</Button>
               <Button size="sm" onClick={confirmPurchaseAndApply} className="gap-1.5">
@@ -1386,11 +1409,8 @@ function ChangeRoleModal({
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-              <Button size="sm" disabled={sameRole} onClick={handleApply} className="gap-1.5">
-                {seatShortfall > 0 ? <>
-                  <CreditCard className="size-3.5" />
-                  Continue · ${purchaseTotal}/mo
-                </> : "Apply"}
+              <Button size="sm" disabled={sameRole} onClick={handleApply}>
+                Apply
               </Button>
             </>
           )}
@@ -2070,7 +2090,7 @@ interface DialogState {
 export default function UserManagementPage() {
   const [users, setUsers] = React.useState<UserData[]>(MOCK_USERS);
   const [seatTotals, setSeatTotals] = React.useState<Record<UserRole, number>>({
-    owner: MOCK_SEATS.owner.total,
+    owner: 1, // exactly one Owner per workspace — always 1/1 (100%)
     admin: MOCK_SEATS.admin.total,
     user:  MOCK_SEATS.user.total,
   });
@@ -2079,7 +2099,8 @@ export default function UserManagementPage() {
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
-  const [page, setPage] = React.useState(1);
+  const PAGE_STEP = 20;
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
   const [dialog, setDialog] = React.useState<DialogState>({ kind: null, userIds: [] });
@@ -2089,8 +2110,6 @@ export default function UserManagementPage() {
     if (next.kind === "success") toast.success(next.message);
     else                         toast.error(next.message);
   }, []);
-  const pageSize = 10;
-
   const seatUsage = React.useMemo(() => computeSeatUsage(users, seatTotals), [users, seatTotals]);
 
   function handlePurchaseSeat(role: UserRole, quantity: number) {
@@ -2127,22 +2146,22 @@ export default function UserManagementPage() {
     return list;
   }, [users, kpiFilter, filters, search, sort]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
   const drawerUser = drawerId ? users.find((u) => u.id === drawerId) ?? null : null;
   const dialogUsers = dialog.userIds
     .map((id) => users.find((u) => u.id === id))
     .filter((u): u is UserData => !!u);
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpiFilter !== "all");
 
-  const allPageSelected = pageItems.length > 0 && pageItems.every((u) => selectedIds.has(u.id));
-  const somePageSelected = !allPageSelected && pageItems.some((u) => selectedIds.has(u.id));
+  const allPageSelected = visibleItems.length > 0 && visibleItems.every((u) => selectedIds.has(u.id));
+  const somePageSelected = !allPageSelected && visibleItems.some((u) => selectedIds.has(u.id));
 
   function togglePageAll() {
     setSelectedIds((curr) => {
       const next = new Set(curr);
-      if (allPageSelected) pageItems.forEach((u) => next.delete(u.id));
-      else pageItems.forEach((u) => next.add(u.id));
+      if (allPageSelected) visibleItems.forEach((u) => next.delete(u.id));
+      else visibleItems.forEach((u) => next.add(u.id));
       return next;
     });
   }
@@ -2156,7 +2175,7 @@ export default function UserManagementPage() {
 
   function handleKpiClick(key: KpiFilter) {
     setKpiFilter((current) => (current === key ? "all" : key));
-    setPage(1);
+    setVisibleCount(PAGE_STEP);
   }
 
   function openDialog(kind: Exclude<DialogKind, null | "invite">, ids: string[]) {
@@ -2166,12 +2185,24 @@ export default function UserManagementPage() {
 
   function handleChangeRole(role: UserRole) {
     const ids = dialog.userIds;
-    setUsers((curr) => curr.map((u) => (ids.includes(u.id) ? { ...u, role } : u)));
+    setUsers((curr) =>
+      curr.map((u) => {
+        if (ids.includes(u.id)) return { ...u, role };
+        // Ownership transfer — demote the existing Owner so there is only ever one.
+        if (role === "owner" && u.role === "owner") return { ...u, role: "admin" as UserRole };
+        return u;
+      })
+    );
     closeDialog();
     setSelectedIds(new Set());
     setToast({
       kind: "success",
-      message: ids.length > 1 ? `${ids.length} users updated to ${USER_ROLE_LABELS[role]}` : "Role updated successfully",
+      message:
+        role === "owner"
+          ? "Ownership transferred — previous Owner is now an Admin"
+          : ids.length > 1
+          ? `${ids.length} users updated to ${USER_ROLE_LABELS[role]}`
+          : "Role updated successfully",
     });
   }
 
@@ -2343,9 +2374,9 @@ export default function UserManagementPage() {
       {/* Filter panel */}
       <FilterPanel
         filters={filters}
-        onChange={(f) => { setFilters(f); setPage(1); }}
+        onChange={(f) => { setFilters(f); setVisibleCount(PAGE_STEP); }}
         search={search}
-        onSearchChange={(v) => { setSearch(v); setPage(1); }}
+        onSearchChange={(v) => { setSearch(v); setVisibleCount(PAGE_STEP); }}
       />
 
       {/* Count + sort */}
@@ -2424,7 +2455,7 @@ export default function UserManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {pageItems.map((u) => {
+                {visibleItems.map((u) => {
                   const isSel = selectedIds.has(u.id);
                   return (
                     <tr
@@ -2521,32 +2552,24 @@ export default function UserManagementPage() {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
+          {/* Load more — newest 20 shown first, older entries loaded on demand */}
+          <div className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
+            {hasMore && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleCount((c) => c + PAGE_STEP)}
+                className="gap-1.5"
+              >
+                <ChevronDown className="size-3.5" />
+                Load Older Entries
+              </Button>
+            )}
             <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
-                : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
+                : `Showing ${visibleItems.length} of ${filtered.length}`}
             </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
-              >
-                <ChevronLeft className="size-3.5" />
-              </button>
-              <span className="px-2 text-sm text-foreground">
-                {page} <span className="text-muted-foreground/60">of {pageCount}</span>
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                disabled={page === pageCount}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
-              >
-                <ChevronRight className="size-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       )}

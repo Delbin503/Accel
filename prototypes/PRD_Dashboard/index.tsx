@@ -10,7 +10,7 @@ import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RealDashboard from "./RealDashboard";
 import { StateTester } from "./StateTester";
-import type { ForcedState, HealthMode } from "./states";
+import type { ForcedState, HealthMode, ScaleMode } from "./states";
 import "./proto.css";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right, low opacity, reveals on hover. */
@@ -19,6 +19,8 @@ function FloatingTester(props: {
   onChange: (s: ForcedState) => void;
   health: HealthMode;
   onHealthChange: (h: HealthMode) => void;
+  scale: ScaleMode;
+  onScaleChange: (s: ScaleMode) => void;
 }) {
   return (
     <div className="fixed bottom-6 right-6 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
@@ -30,6 +32,7 @@ function FloatingTester(props: {
 function App() {
   const [forced, setForced] = React.useState<ForcedState>("normal");
   const [health, setHealth] = React.useState<HealthMode>("degraded");
+  const [scale, setScale] = React.useState<ScaleMode>("normal");
   const resolve = () => setForced("normal");
 
   return (
@@ -48,12 +51,12 @@ function App() {
               </header>
               <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="*" element={<RealDashboard forced={forced} onResolveForced={resolve} forcedHealth={health} />} />
+                  <Route path="*" element={<RealDashboard forced={forced} onResolveForced={resolve} forcedHealth={health} scale={scale} />} />
                 </Routes>
               </main>
             </div>
           </div>
-          <FloatingTester value={forced} onChange={setForced} health={health} onHealthChange={setHealth} />
+          <FloatingTester value={forced} onChange={setForced} health={health} onHealthChange={setHealth} scale={scale} onScaleChange={setScale} />
           <Toaster position="top-center" theme="dark" richColors />
         </SidebarProvider>
       </TooltipProvider>

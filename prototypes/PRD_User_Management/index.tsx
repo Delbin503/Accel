@@ -9,8 +9,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import RealDetectionFeed from "./RealDetectionFeed";
-import RealDismissed from "./RealDismissed";
+import RealUserManagement from "./RealUserManagement";
 import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
@@ -68,7 +67,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark">
-    <MemoryRouter initialEntries={["/detection-feed"]}>
+    <MemoryRouter initialEntries={["/users"]}>
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
@@ -82,8 +81,7 @@ function App() {
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="/detection-feed" element={<RealDetectionFeed forced={forced} onResolveForced={resolve} />} />
-                  <Route path="/detection-feed/dismissed" element={<RealDismissed forced={forced} onResolveForced={resolve} />} />
+                  <Route path="/users" element={<RealUserManagement forced={forced} onResolveForced={resolve} />} />
                   <Route path="*" element={<NotInPrototype />} />
                 </Routes>
               </main>
@@ -104,7 +102,7 @@ function NotInPrototype() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
-      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">Detection Feed</strong> and <strong className="text-foreground">Dismissed Events</strong>.</p>
+      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">User Management</strong>.</p>
     </div>
   );
 }

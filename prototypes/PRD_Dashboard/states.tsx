@@ -7,6 +7,9 @@ export type ForcedState = "normal" | "loading" | "empty" | "error";
 /** Dev-only System Health override (prototype-only, Dashboard). */
 export type HealthMode = "healthy" | "degraded" | "critical";
 
+/** Dev-only site-scale preview (prototype-only, Dashboard). */
+export type ScaleMode = "normal" | "many";
+
 export function DashboardSkeleton() {
   return (
     <div className="space-y-4">

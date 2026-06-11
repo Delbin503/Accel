@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -21,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { DashboardSkeleton, ErrorState, type ForcedState, type HealthMode } from "./states";
+import { DashboardSkeleton, ErrorState, type ForcedState, type HealthMode, type ScaleMode } from "./states";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -29,6 +30,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
+import { MOCK_NVRS } from "@/mocks/nvr";
 
 /* ── Zone severity thresholds (configurable in System Config) ───────── */
 export const ZONE_SEVERITY_THRESHOLDS = {
@@ -112,6 +114,69 @@ const SITE_COLOR_MAP: Record<string, string> = {
 const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--sev-critical)", "var(--primary)"];
 function siteColor(siteName: string, idx: number) {
   return SITE_COLOR_MAP[siteName] ?? SITE_FALLBACK_COLORS[idx % SITE_FALLBACK_COLORS.length];
+}
+
+/* ── Site chip row for trend chart ──────────────────────────────────── */
+
+const MAX_CHART_SITES = 5;
+
+function SiteChipRow({
+  sites,
+  selected,
+  onChange,
+}: {
+  sites: { name: string; count: number; color: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  function handleToggle(name: string) {
+    if (selected.includes(name)) {
+      if (selected.length === 1) return;
+      onChange(selected.filter((s) => s !== name));
+    } else {
+      if (selected.length >= MAX_CHART_SITES) {
+        const oldest = selected[0];
+        onChange([...selected.slice(1), name]);
+        toast(`${oldest} removed — max ${MAX_CHART_SITES} sites visible at once`);
+      } else {
+        onChange([...selected, name]);
+      }
+    }
+  }
+
+  return (
+    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+      {sites.map((s) => {
+        const isActive = selected.includes(s.name);
+        return (
+          <button
+            key={s.name}
+            onClick={() => handleToggle(s.name)}
+            style={isActive ? {
+              backgroundColor: `color-mix(in srgb, ${s.color} 15%, transparent)`,
+              borderColor: `color-mix(in srgb, ${s.color} 40%, transparent)`,
+              color: s.color,
+            } : undefined}
+            className={cn(
+              "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
+              isActive
+                ? "border-current/30"
+                : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+            )}
+          >
+            <span className="size-1.5 flex-shrink-0 rounded-full" style={{ background: s.color }} />
+            {s.name}
+            <span className={cn(
+              "rounded-full px-1 py-px font-mono text-3xs",
+              isActive ? "bg-white/10" : "bg-muted text-muted-foreground"
+            )}>
+              {s.count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 /* ── Site multi-select dropdown ──────────────────────────────────────── */
@@ -202,7 +267,8 @@ export default function DashboardPage({
   forced = "normal",
   onResolveForced = () => {},
   forcedHealth = "degraded",
-}: { forced?: ForcedState; onResolveForced?: () => void; forcedHealth?: HealthMode }) {
+  scale = "normal",
+}: { forced?: ForcedState; onResolveForced?: () => void; forcedHealth?: HealthMode; scale?: ScaleMode }) {
   const navigate = useNavigate();
   // PROTOTYPE-ONLY: "empty" forces every section to show its no-data state while
   // keeping the full layout (all cards) visible.
@@ -265,6 +331,15 @@ export default function DashboardPage({
 
   // Detections grouped by site → { site, critical, medium, low, total }
   const detectionsBySite = React.useMemo(() => {
+    // PROTOTYPE-ONLY: 20-site preview — synthetic dataset so the chart/cards show scale.
+    if (scale === "many") {
+      return Array.from({ length: 20 }, (_, i) => {
+        const critical = i % 5 === 0 ? 1 + (i % 3) : 0;
+        const medium = 1 + ((i * 3) % 5);
+        const low = 2 + ((i * 2) % 6);
+        return { site: `Site ${i + 1}`, critical, medium, low, total: critical + medium + low };
+      }).sort((a, b) => b.total - a.total);
+    }
     const map = new Map<string, { site: string; critical: number; medium: number; low: number; total: number }>();
     for (const e of filteredEvents) {
       if (!map.has(e.siteDisplay)) {
@@ -275,13 +350,19 @@ export default function DashboardPage({
       row.total += 1;
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [filteredEvents]);
+  }, [filteredEvents, scale]);
 
-  // Per-site weekly trend (synthetic distribution, scaled by site totals)
+  // Per-site trend — bucket labels adapt to the selected date range
+  // (today/yesterday → hours, month → weeks, week/custom → days).
   const siteTrend = React.useMemo(() => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const buckets =
+      dateRange === "today" || dateRange === "yesterday"
+        ? ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00"]
+        : dateRange === "month"
+          ? ["Week 1", "Week 2", "Week 3", "Week 4"]
+          : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const maxTotal = Math.max(1, ...detectionsBySite.map((s) => s.total));
-    return days.map((day, di) => {
+    return buckets.map((day, di) => {
       const row: Record<string, string | number> = { day };
       detectionsBySite.forEach((s, si) => {
         const peak = 6 + (s.total / maxTotal) * 18;
@@ -290,7 +371,19 @@ export default function DashboardPage({
       });
       return row;
     });
-  }, [detectionsBySite]);
+  }, [detectionsBySite, dateRange]);
+
+  const chartSiteOptions = React.useMemo(
+    () => detectionsBySite.map((s, i) => ({ name: s.site, count: s.total, color: siteColor(s.site, i) })),
+    [detectionsBySite]
+  );
+
+  const [selectedSites, setSelectedSites] = React.useState<string[]>(() =>
+    detectionsBySite.slice(0, 3).map((s) => s.site)
+  );
+  React.useEffect(() => {
+    setSelectedSites(detectionsBySite.slice(0, 3).map((s) => s.site));
+  }, [dateRange, scale]);
 
   // Zone areas + per-camera event breakdown
   type ZoneCameraStat = { camera: string; total: number; critical: number; medium: number; low: number };
@@ -352,11 +445,19 @@ export default function DashboardPage({
     return zoneAreas.filter((z) => zoneSiteFilter.includes(z.siteKey));
   }, [zoneAreas, zoneSiteFilter]);
 
-  const camerasBySite = sites.map((s) => ({
-    name: s.name,
-    online: cameras.filter((c) => c.siteId === s.id && c.status === "online").length,
-    offline: cameras.filter((c) => c.siteId === s.id && c.status !== "online").length,
-  }));
+  const scaleMany = scale === "many";
+  const camerasBySite = scaleMany
+    ? // PROTOTYPE-ONLY: synthetic 20-site dataset to preview the chart at scale.
+      Array.from({ length: 20 }, (_, i) => {
+        const total = 3 + ((i * 7) % 8); // 3–10 cameras
+        const offline = i % 4 === 0 ? 1 + (i % 3) : 0;
+        return { name: `Site ${i + 1}`, online: total - offline, offline };
+      })
+    : sites.map((s) => ({
+        name: s.name,
+        online: cameras.filter((c) => c.siteId === s.id && c.status === "online").length,
+        offline: cameras.filter((c) => c.siteId === s.id && c.status !== "online").length,
+      }));
 
   // Recent events / cases (top N from filtered)
   const recentEvents = [...filteredEvents]
@@ -368,8 +469,12 @@ export default function DashboardPage({
 
   const recentActivity = emptyMode ? [] : MOCK_ACTIVITY_LOGS.slice(0, 8);
 
-  const sitesTotal = sites.length;
-  const sitesActive = sites.filter((s) => s.status === "active").length;
+  const sitesTotal = scaleMany ? 20 : sites.length;
+  const sitesActive = scaleMany ? 20 : sites.filter((s) => s.status === "active").length;
+
+  // NVR devices KPI (gated by empty mode like the other live counts).
+  const nvrTotal = emptyMode ? 0 : MOCK_NVRS.length;
+  const nvrOnline = emptyMode ? 0 : MOCK_NVRS.filter((n) => n.status === "online").length;
 
   /* ── System health — driven by the dev Health control (PROTOTYPE-ONLY) ── */
   const systemStatus: "healthy" | "degraded" | "critical" = forcedHealth;
@@ -497,37 +602,60 @@ export default function DashboardPage({
         }
       />
 
-      {/* Top KPI strip */}
-      <KpiGrid cols={4}>
-        <KpiCard
-          label="Sites"
-          value={sitesTotal}
-          sub={`${sitesActive} active`}
-          accent="primary"
-          onClick={() => navigate("/site/overview")}
-        />
-        <KpiCard
-          label="Cameras"
-          value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
-          sub={`${camTotal - camOnline} offline`}
-          accent="success"
-          onClick={() => navigate("/site/cameras")}
-        />
-        <KpiCard
-          label="Events"
-          value={eventsInRange}
-          sub={dateLabel}
-          accent="info"
-          onClick={() => navigate("/detection-feed")}
-        />
-        <KpiCard
-          label="Open Cases"
-          value={casesOpen}
-          sub={`${casesEscalated} critical`}
-          accent="sev-critical"
-          onClick={() => navigate("/incidents")}
-        />
-      </KpiGrid>
+      {/* KPI strip — Live Status | Period Metrics */}
+      <div className="flex gap-4">
+        <div className="flex-[3] space-y-2">
+          <div className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-success animate-pulse" />
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Live status</p>
+          </div>
+          <KpiGrid cols={3}>
+            <KpiCard
+              label="Sites"
+              value={sitesTotal}
+              sub={`${sitesActive} active`}
+              accent="primary"
+              onClick={() => navigate("/site/overview")}
+            />
+            <KpiCard
+              label="Cameras"
+              value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
+              sub={`${camTotal - camOnline} offline`}
+              accent="success"
+              onClick={() => navigate("/site/cameras")}
+            />
+            <KpiCard
+              label="NVR Devices"
+              value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
+              sub={`${nvrTotal - nvrOnline} offline`}
+              accent="purple"
+              onClick={() => navigate("/site/nvr")}
+            />
+          </KpiGrid>
+        </div>
+        <div className="w-px self-stretch bg-border" />
+        <div className="w-64 shrink-0 space-y-2">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Period · {dateLabel}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <KpiCard
+              label="Events"
+              value={eventsInRange}
+              sub={dateLabel}
+              accent="info"
+              onClick={() => navigate("/detection-feed")}
+            />
+            <KpiCard
+              label="Open Cases"
+              value={casesOpen}
+              sub={`${casesEscalated} critical`}
+              accent="sev-critical"
+              onClick={() => navigate("/incidents")}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Detections trend — full width now that System Health lives in the header */}
       <div>
@@ -544,6 +672,11 @@ export default function DashboardPage({
               <p className="px-3 py-8 text-center text-sm italic text-muted-foreground">No detections recorded in this range.</p>
             ) : (
               <>
+                <SiteChipRow
+                  sites={chartSiteOptions}
+                  selected={selectedSites}
+                  onChange={setSelectedSites}
+                />
                 <div className="h-[240px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={siteTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -555,22 +688,27 @@ export default function DashboardPage({
                         cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3 }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
-                      {detectionsBySite.map((s, i) => (
-                        <Line
-                          key={s.site}
-                          type="monotone"
-                          dataKey={s.site}
-                          stroke={siteColor(s.site, i)}
-                          strokeWidth={2}
-                          dot={{ r: 2.5 }}
-                          activeDot={{ r: 4 }}
-                        />
-                      ))}
+                      {chartSiteOptions
+                        .filter((s) => selectedSites.includes(s.name))
+                        .map((s) => (
+                          <Line
+                            key={s.name}
+                            type="monotone"
+                            dataKey={s.name}
+                            stroke={s.color}
+                            strokeWidth={2}
+                            dot={{ r: 2.5 }}
+                            activeDot={{ r: 4 }}
+                          />
+                        ))}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {detectionsBySite.slice(0, 4).map((s, i) => {
+                  {detectionsBySite
+                    .filter((s) => selectedSites.includes(s.site))
+                    .map((s) => {
+                    const i = detectionsBySite.findIndex((d) => d.site === s.site);
                     const color = siteColor(s.site, i);
                     return (
                       <Popover key={s.site}>
@@ -813,20 +951,31 @@ export default function DashboardPage({
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/site/overview")}>
             Sites <ArrowUpRight className="size-3" />
           </Button>}>
-          <div className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} interval={0} angle={-12} textAnchor="end" height={50} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                  cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                />
-                <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="var(--sev-critical)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* With many sites the chart scrolls horizontally so labels/bars stay legible. */}
+          <div className={cn("h-[260px]", scaleMany && "overflow-x-auto")}>
+            <div className="h-full" style={scaleMany ? { minWidth: camerasBySite.length * 52 } : undefined}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--muted-foreground)"
+                    fontSize={11}
+                    interval={0}
+                    angle={scaleMany ? -45 : -12}
+                    textAnchor="end"
+                    height={scaleMany ? 64 : 50}
+                  />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
+                    cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+                  />
+                  <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="offline" stackId="a" fill="var(--sev-critical)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">

@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "accel-prototypes",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "prototype"],
+      "port": 5174
     }
   ]
 }

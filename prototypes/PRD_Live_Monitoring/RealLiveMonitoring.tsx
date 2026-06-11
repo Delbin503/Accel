@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -257,12 +258,16 @@ function HeroView({
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Cameras {multiSite ? `· ${Object.keys(bySite).length} sites` : `· ${Object.values(bySite)[0]?.siteName ?? ""}`}
             </p>
-            <p
-              className="cursor-help text-xs text-muted-foreground"
-              title={`${cameras.length} cameras · ${onlineCount} online · ${offlineCount} offline`}
-            >
-              <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on{offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
-            </p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="cursor-default text-xs text-muted-foreground">
+                  <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on{offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent>
+                {cameras.length} cameras · {onlineCount} online · {offlineCount} offline
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <CategoryChip label="All" count={cameras.length} active />
@@ -290,12 +295,16 @@ function HeroView({
                         {siteData.siteName}
                       </p>
                     </div>
-                    <span
-                      className="cursor-help text-2xs text-muted-foreground"
-                      title={`${group.cams.filter((c) => c.status !== "online").length} offline · ${group.cams.length} camera${group.cams.length === 1 ? "" : "s"} in this area`}
-                    >
-                      <AlertTriangle className="mr-0.5 inline size-2.5" />{group.cams.filter((c) => c.status !== "online").length} · {group.cams.length}
-                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-default text-2xs text-muted-foreground">
+                          <AlertTriangle className="mr-0.5 inline size-2.5" />{group.cams.filter((c) => c.status !== "online").length} · {group.cams.length}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {group.cams.filter((c) => c.status !== "online").length} offline · {group.cams.length} camera{group.cams.length === 1 ? "" : "s"} in this area
+                      </TooltipContent>
+                    </Tooltip>
                   </summary>
                   <div className="mt-1 grid grid-cols-2 gap-1.5">
                     {group.cams.map((c) => (
