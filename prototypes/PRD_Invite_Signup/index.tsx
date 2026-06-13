@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { AccountSetup, type AccountProfile } from "./AccountSetup";
 import { OtpVerify } from "./OtpVerify";
 import { WelcomeModal } from "./WelcomeModal";
@@ -57,7 +56,7 @@ function SetupRoute({
 
   return (
     <AuthShell>
-      {stage === "verify" ? (
+      {stage !== "setup" ? (
         <OtpVerify
           email={MOCK_INVITE.email}
           onVerified={() => setStage("welcome")}

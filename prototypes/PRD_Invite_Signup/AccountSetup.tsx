@@ -231,8 +231,6 @@ export function AccountSetup({
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground">Email and User ID cannot be changed after creation.</p>
-
         {/* Terms agreement */}
         <label htmlFor="terms" className="flex items-center gap-2.5 pt-1">
           <Checkbox id="terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} />

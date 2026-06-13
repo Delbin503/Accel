@@ -31,8 +31,8 @@ export function WelcomeModal({
           </DialogTitle>
           <DialogDescription className="mt-1.5 text-md text-muted-foreground">
             Your account is all set. You've joined{" "}
-            <strong className="text-foreground">{invite.orgName}</strong> as a{" "}
-            <strong className="text-foreground">{roleLabel(invite.role)}</strong>.
+            <strong className="text-foreground">{invite.orgName}</strong> with the{" "}
+            <strong className="text-foreground">{roleLabel(invite.role)}</strong> role.
           </DialogDescription>
         </div>
 
