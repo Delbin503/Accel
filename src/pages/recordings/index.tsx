@@ -896,7 +896,10 @@ export default function RecordingsPage() {
                     </div>
                   </div>
                   <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
-                  <div className="absolute left-9 top-2.5"><RecordingModeChip mode={r.mode} /></div>
+                  {/* Mode chip sits flush-left; shifts right only while the (hover-only) checkbox is shown. */}
+                  <div className={cn("absolute top-2.5 transition-all", isSelected ? "left-9" : "left-2.5 group-hover:left-9")}>
+                    <RecordingModeChip mode={r.mode} />
+                  </div>
                   <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
                     <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
                     <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>

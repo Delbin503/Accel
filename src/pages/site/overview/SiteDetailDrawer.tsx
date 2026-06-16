@@ -581,7 +581,7 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
 
 /* ── Drawer ──────────────────────────────────────────────────────────── */
 
-export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | null; open: boolean; onClose: () => void }) {
+export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }: { siteId: string | null; open: boolean; onClose: () => void; initialEdit?: boolean }) {
   const {
     sites, setFloorPlan, addArea, updateArea, deleteArea,
     placeCamera, updatePlacement, removePlacement, updateSite, deleteSite,
@@ -598,6 +598,11 @@ export function SiteDetailDrawer({ siteId, open, onClose }: { siteId: string | n
   const [editAreaTarget, setEditAreaTarget] = React.useState<AreaShape | null>(null);
   const [editSiteOpen, setEditSiteOpen] = React.useState(false);
   const [deleteSiteOpen, setDeleteSiteOpen] = React.useState(false);
+
+  // Open the Edit Site modal straight away when launched from the table "Edit Site" action.
+  React.useEffect(() => {
+    if (open && initialEdit) setEditSiteOpen(true);
+  }, [open, initialEdit, siteId]);
   const [pendingCameraId, setPendingCameraId] = React.useState<string | null>(null);
   const [renamingId, setRenamingId] = React.useState<string | null>(null);
   const [renameValue, setRenameValue] = React.useState("");
@@ -892,7 +897,6 @@ function OverviewTab({
 
       {/* ── Quick counts (Areas + Cameras + Placed) ── */}
       <div>
-        <SiteSectionTitle>Quick Counts</SiteSectionTitle>
         <div className="grid grid-cols-3 gap-2.5">
           <SharedKpiCard compact
             label="Areas"
@@ -918,15 +922,34 @@ function OverviewTab({
         </div>
       </div>
 
-      {/* ── Description (like Event Summary block) ── */}
-      {site.description && (
-        <div>
-          <SiteSectionTitle>Site Summary</SiteSectionTitle>
-          <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
-            {site.description}
-          </div>
+      {/* ── Site Details — directly under quick counts ── */}
+      <div>
+        <SiteSectionTitle>Site Details</SiteSectionTitle>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+          {([
+            ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
+            ["Name",           <span>{site.name}</span>],
+            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
+              <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
+              {STATUS_STYLES[site.status].label}
+            </span>],
+            ["Address",        <span>{site.address || "—"}</span>],
+            ["Timezone",       <span>{site.timezone}</span>],
+            ["Operating Hours",
+              site.operatingHours
+                ? <span className="font-mono text-xs">{site.operatingHours.from} – {site.operatingHours.to}</span>
+                : <span className="text-muted-foreground">—</span>
+            ],
+            ["Created",        <span>{site.createdAtDisplay}</span>],
+            ["Floor Plan",     <span>{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</span>],
+          ] as [string, React.ReactNode][]).map(([label, value]) => (
+            <div key={label as string} className="flex flex-col gap-0.5">
+              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+              <span className="text-base font-medium text-foreground">{value}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* ── Camera Health — expandable rows; click a row to see the cameras in that bucket ── */}
       <div>
@@ -1074,35 +1097,6 @@ function OverviewTab({
             })}
           </div>
         )}
-      </div>
-
-      {/* ── Site Details — flat grid matching Recording/Event detail panels ── */}
-      <div>
-        <SiteSectionTitle>Site Details</SiteSectionTitle>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-          {([
-            ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
-            ["Name",           <span>{site.name}</span>],
-            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
-              <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
-              {STATUS_STYLES[site.status].label}
-            </span>],
-            ["Address",        <span>{site.address || "—"}</span>],
-            ["Timezone",       <span>{site.timezone}</span>],
-            ["Operating Hours",
-              site.operatingHours
-                ? <span className="font-mono text-xs">{site.operatingHours.from} – {site.operatingHours.to}</span>
-                : <span className="text-muted-foreground">—</span>
-            ],
-            ["Created",        <span>{site.createdAtDisplay}</span>],
-            ["Floor Plan",     <span>{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</span>],
-          ] as [string, React.ReactNode][]).map(([label, value]) => (
-            <div key={label as string} className="flex flex-col gap-0.5">
-              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-              <span className="text-base font-medium text-foreground">{value}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* hidden — keeps lint happy for unused imports referenced via children below if any */}

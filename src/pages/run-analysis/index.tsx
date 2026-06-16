@@ -734,16 +734,21 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                       <TruncatedText text={step.actionLabel} className="text-xs font-semibold text-foreground" />
                       <p className="font-mono text-3xs text-muted-foreground">{step.label}</p>
                     </div>
-                    <span
-                      className={cn(
-                        "rounded border px-1.5 py-px font-mono text-3xs font-bold uppercase",
-                        step.fileType === "onnx"
-                          ? "border-primary/30 bg-primary/10 text-primary"
-                          : "border-info/30 bg-info/10 text-info"
-                      )}
-                    >
-                      {step.fileType}
-                    </span>
+                    {(() => {
+                      const ext = step.modelFile.trim().match(/\.([a-z0-9]+)$/i)?.[1].toLowerCase() ?? "file";
+                      return (
+                        <span
+                          className={cn(
+                            "rounded border px-1.5 py-px font-mono text-3xs font-bold uppercase",
+                            ext === "json"
+                              ? "border-info/30 bg-info/10 text-info"
+                              : "border-primary/30 bg-primary/10 text-primary"
+                          )}
+                        >
+                          {ext}
+                        </span>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

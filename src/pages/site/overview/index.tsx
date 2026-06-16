@@ -99,7 +99,6 @@ const EMPTY_FILTERS: SiteFilters = { status: [], floorPlan: [] };
 
 const SITE_STATUS_OPTS: FilterOption[] = [
   { value: "active", label: "Active" },
-  { value: "setup", label: "Setup" },
   { value: "inactive", label: "Inactive" },
 ];
 const FLOOR_PLAN_OPTS: FilterOption[] = [
@@ -277,6 +276,7 @@ export default function SiteOverviewPage() {
   const [filters, setFilters] = React.useState<SiteFilters>(EMPTY_FILTERS);
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [drawerSiteId, setDrawerSiteId] = React.useState<string | null>(null);
+  const [editFromMenu, setEditFromMenu] = React.useState(false);
 
   // Sync deep-link route /site/:siteId
   React.useEffect(() => {
@@ -305,11 +305,18 @@ export default function SiteOverviewPage() {
   const onlineCameras = cameras.filter((c) => c.status === "online").length;
 
   function openSite(id: string) {
+    setEditFromMenu(false);
+    setDrawerSiteId(id);
+    navigate(`/site/${id}`, { replace: false });
+  }
+  function editSite(id: string) {
+    setEditFromMenu(true);
     setDrawerSiteId(id);
     navigate(`/site/${id}`, { replace: false });
   }
   function closeDrawer() {
     setDrawerSiteId(null);
+    setEditFromMenu(false);
     if (params.siteId) navigate("/site/overview", { replace: true });
   }
 
@@ -468,7 +475,7 @@ export default function SiteOverviewPage() {
                               <ArrowUpRight className="size-3.5 text-muted-foreground" />
                               Open Site
                             </button>
-                            <button onClick={() => openSite(site.id)}
+                            <button onClick={() => editSite(site.id)}
                               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                               <Edit3 className="size-3.5 text-muted-foreground" />
                               Edit Site
@@ -492,7 +499,7 @@ export default function SiteOverviewPage() {
       )}
 
       <CreateSiteWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreate={handleCreate} accentChoices={SITE_ACCENT_COLORS} />
-      <SiteDetailDrawer siteId={drawerSiteId} open={drawerSiteId !== null} onClose={closeDrawer} />
+      <SiteDetailDrawer siteId={drawerSiteId} open={drawerSiteId !== null} onClose={closeDrawer} initialEdit={editFromMenu} />
     </div>
   );
 }

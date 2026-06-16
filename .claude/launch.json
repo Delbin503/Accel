@@ -5,13 +5,15 @@
       "name": "accel-trms",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     },
     {
       "name": "accel-prototypes",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "prototype"],
-      "port": 5174
+      "port": 5174,
+      "autoPort": true
     }
   ]
 }

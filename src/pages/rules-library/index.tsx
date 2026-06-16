@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Plus,
@@ -1525,6 +1525,9 @@ function DeleteModal({
 export default function RulesLibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Set when we arrived here to edit a model's extracted rule — save bounces back to the model.
+  const extractedHandoff = React.useRef<{ returnTo: string; modelId: string; ruleId: string } | null>(null);
   const initialView = searchParams.get("new") === "true" ? "builder" : "list";
   const [view, setView] = React.useState<"list" | "builder" | "templates">(initialView);
   const [builderMode, setBuilderMode] = React.useState<"create" | "edit">("create");
@@ -1563,7 +1566,28 @@ export default function RulesLibraryPage() {
   const cameFromModel = React.useRef(searchParams.get("new") === "true");
   const returnModelId = React.useRef(searchParams.get("model"));
   React.useEffect(() => {
-    if (searchParams.get("new") === "true") {
+    // Opened from Model Management "Edit" on a model-extracted rule → edit it on the full
+    // builder page; saving bounces back to the model editor.
+    const handoff = (location.state as { extractedEdit?: { rule: RuleData; modelId: string; ruleId: string; returnTo: string } } | null)?.extractedEdit;
+    if (handoff) {
+      extractedHandoff.current = { returnTo: handoff.returnTo, modelId: handoff.modelId, ruleId: handoff.ruleId };
+      setEditingRule(handoff.rule);
+      setBuilderMode("edit");
+      setView("builder");
+      window.history.replaceState({}, "");
+      return;
+    }
+    // Opened from Model Management "Edit" on a library rule → jump straight to its builder.
+    const editId = searchParams.get("edit");
+    if (editId) {
+      const target = rules.find((r) => r.id === editId);
+      if (target) {
+        setEditingRule(target);
+        setBuilderMode("edit");
+        setView("builder");
+      }
+      setSearchParams({}, { replace: true });
+    } else if (searchParams.get("new") === "true") {
       setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1605,6 +1629,22 @@ export default function RulesLibraryPage() {
   function handleConfirm(
     data: Omit<RuleData, "id" | "createdAt" | "createdAtDisplay" | "createdTimeDisplay">
   ) {
+    // Editing a model-extracted rule — hand the edited fields back to the model editor.
+    if (extractedHandoff.current) {
+      const h = extractedHandoff.current;
+      extractedHandoff.current = null;
+      navigate(h.returnTo, {
+        replace: true,
+        state: {
+          extractedResult: {
+            modelId: h.modelId,
+            ruleId: h.ruleId,
+            patch: { name: data.name, severity: data.severity, description: data.description, tags: data.tags },
+          },
+        },
+      });
+      return;
+    }
     if (builderMode === "edit" && editingRule) {
       setRules((prev) => prev.map((r) => (r.id === editingRule.id ? { ...editingRule, ...data } : r)));
       // Sync edits back to module-level mock so other pages see the change.
@@ -1685,7 +1725,15 @@ export default function RulesLibraryPage() {
         mode={builderMode}
         editingRule={editingRule}
         existingTags={existingRuleTags}
-        onBack={() => setView("list")}
+        onBack={() => {
+          if (extractedHandoff.current) {
+            const h = extractedHandoff.current;
+            extractedHandoff.current = null;
+            navigate(h.returnTo, { replace: true });
+          } else {
+            setView("list");
+          }
+        }}
         onConfirm={handleConfirm}
         onSaveTemplate={handleSaveTemplate}
       />

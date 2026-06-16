@@ -4,8 +4,6 @@ import {
   Bell,
   Mail,
   Smartphone,
-  Globe,
-  Clock,
   Moon,
   Sun,
   Monitor,
@@ -15,13 +13,6 @@ import {
   Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/ThemeProvider";
@@ -75,29 +66,6 @@ function PrefRow({
   );
 }
 
-const TIMEZONES = [
-  { value: "Asia/Singapore", label: "(GMT+08:00) Singapore" },
-  { value: "Asia/Tokyo",     label: "(GMT+09:00) Tokyo" },
-  { value: "Asia/Bangkok",   label: "(GMT+07:00) Bangkok" },
-  { value: "Asia/Dubai",     label: "(GMT+04:00) Dubai" },
-  { value: "Europe/London",  label: "(GMT+00:00) London" },
-  { value: "America/New_York", label: "(GMT-05:00) New York" },
-];
-
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "中文 (Chinese)" },
-  { value: "ja", label: "日本語 (Japanese)" },
-  { value: "ko", label: "한국어 (Korean)" },
-];
-
-const DATE_FORMATS = [
-  { value: "dd-mmm-yyyy", label: "25 May 2026", sub: "DD Mmm YYYY" },
-  { value: "yyyy-mm-dd",  label: "2026-05-25",  sub: "ISO 8601" },
-  { value: "mm/dd/yyyy",  label: "05/25/2026",  sub: "US" },
-  { value: "dd/mm/yyyy",  label: "25/05/2026",  sub: "EU" },
-];
-
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
@@ -108,11 +76,6 @@ export default function SettingsPage() {
   const [notifPushMentions, setNotifPushMentions] = React.useState(true);
   const [notifSound, setNotifSound] = React.useState(true);
   const [notifDesktop, setNotifDesktop] = React.useState(true);
-
-  const [language, setLanguage] = React.useState("en");
-  const [timezone, setTimezone] = React.useState("Asia/Singapore");
-  const [dateFormat, setDateFormat] = React.useState("dd-mmm-yyyy");
-  const [timeFormat, setTimeFormat] = React.useState<"24h" | "12h">("24h");
 
   const [autoPlayClips, setAutoPlayClips] = React.useState(true);
   const [denserTables, setDenserTables] = React.useState(false);
@@ -184,82 +147,6 @@ export default function SettingsPage() {
           <PrefRow icon={Bell} title="Mentions and case assignments" description="When you are assigned a case or @-mentioned in a note." control={<Toggle checked={notifPushMentions} onChange={setNotifPushMentions} />} />
           <PrefRow icon={Volume2} title="Notification sound" description="Play a chime when a Critical detection arrives." control={<Toggle checked={notifSound} onChange={setNotifSound} />} />
           <PrefRow icon={Monitor} title="Desktop notifications" description="Show OS-level notifications while the dashboard is open in the background." control={<Toggle checked={notifDesktop} onChange={setNotifDesktop} />} />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Regional" description="Set your language, timezone and date format.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Globe className="size-3" />
-              Language
-            </label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((l) => (
-                  <SelectItem key={l.value} value={l.value}>
-                    {l.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Clock className="size-3" />
-              Timezone
-            </label>
-            <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIMEZONES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date Format</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {DATE_FORMATS.map((f) => (
-                <button key={f.value} onClick={() => setDateFormat(f.value)}
-                  className={cn("rounded-md border px-2.5 py-2 text-left transition-colors",
-                    dateFormat === f.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-background hover:border-primary/40"
-                  )}>
-                  <p className={cn("text-sm font-semibold", dateFormat === f.value ? "text-primary" : "text-foreground")}>{f.label}</p>
-                  <p className="text-2xs text-muted-foreground">{f.sub}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time Format</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {([
-                { v: "24h", label: "23:59", sub: "24-hour" },
-                { v: "12h", label: "11:59 PM", sub: "12-hour" },
-              ] as { v: "24h" | "12h"; label: string; sub: string }[]).map((f) => (
-                <button key={f.v} onClick={() => setTimeFormat(f.v)}
-                  className={cn("rounded-md border px-2.5 py-2 text-left transition-colors",
-                    timeFormat === f.v
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-background hover:border-primary/40"
-                  )}>
-                  <p className={cn("text-sm font-semibold", timeFormat === f.v ? "text-primary" : "text-foreground")}>{f.label}</p>
-                  <p className="text-2xs text-muted-foreground">{f.sub}</p>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </SectionCard>
 

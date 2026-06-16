@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -48,8 +48,8 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS, MODEL_TAGS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
-import type { ModelData, ModelStep, StepFileType } from "@/types/modelManagement";
-import type { RuleData, RuleSeverity } from "@/types/rules";
+import type { ModelData, ModelStep, ExtractedRule } from "@/types/modelManagement";
+import type { RuleData, RuleSeverity, ConditionRow } from "@/types/rules";
 
 /* ── Counter ─────────────────────────────────────────────────────────────── */
 
@@ -157,17 +157,23 @@ function SeverityBadge({ severity }: { severity: RuleSeverity }) {
 
 /* ── File type badge ─────────────────────────────────────────────────────── */
 
-function FileTypeBadge({ type }: { type: StepFileType }) {
+function fileExt(fileName: string): string {
+  const m = fileName.trim().match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : "file";
+}
+
+function FileTypeBadge({ fileName }: { fileName: string }) {
+  const ext = fileExt(fileName);
   return (
     <span
       className={cn(
         "rounded border px-1.5 py-px font-mono text-2xs font-bold uppercase",
-        type === "onnx"
-          ? "border-primary/30 bg-primary/10 text-primary"
-          : "border-info/30 bg-info/10 text-info"
+        ext === "json"
+          ? "border-info/30 bg-info/10 text-info"
+          : "border-primary/30 bg-primary/10 text-primary"
       )}
     >
-      {type}
+      {ext}
     </span>
   );
 }
@@ -428,7 +434,7 @@ function ModelCard({
             {model.sequenceIds.length} Steps
           </span>
           <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
-            {model.attachedRuleIds.length} Rules
+            {model.attachedRuleIds.length + model.extractedRules.length} Rules
           </span>
         </div>
       </div>
@@ -457,6 +463,37 @@ function ModelCard({
 
 /* ── Create model modal ──────────────────────────────────────────────────── */
 
+/* Reusable upload dropzone — filename entry stands in for a real file picker. */
+function UploadDropzone({
+  value,
+  onChange,
+  primary,
+  hint,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  primary: React.ReactNode;
+  hint: string;
+  placeholder: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-5 transition-colors hover:border-primary/40">
+      <UploadCloud className="size-7 text-muted-foreground" />
+      <p className="text-center text-sm text-muted-foreground">{primary}</p>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-9 text-center text-base"
+      />
+      <p className="text-center text-xs text-muted-foreground/80">{hint}</p>
+    </div>
+  );
+}
+
+const MODEL_FILE_EXTS = ".onnx, .tflite, .engine, .pt, .pth, .pb, .xml + .bin, .mlmodel, .mlpackage";
+
 function CreateModelModal({
   onConfirm,
   onCancel,
@@ -466,13 +503,16 @@ function CreateModelModal({
 }) {
   const [name, setName] = React.useState("");
   const [desc, setDesc] = React.useState("");
+  const valid = name.trim() && desc.trim();
 
   return (
     <Dialog open onOpenChange={(v) => !v && onCancel()}>
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Create Model</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">Set basic information to get started.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Set basic information — add verification steps and upload model files next.
+          </p>
         </DialogHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -508,11 +548,7 @@ function CreateModelModal({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button
-            size="sm"
-            disabled={!name.trim()}
-            onClick={() => name.trim() && onConfirm(name.trim(), desc.trim())}
-          >
+          <Button size="sm" disabled={!valid} onClick={() => valid && onConfirm(name.trim(), desc.trim())}>
             Confirm
           </Button>
         </div>
@@ -524,25 +560,28 @@ function CreateModelModal({
 /* ── Add step modal ──────────────────────────────────────────────────────── */
 
 function AddStepModal({
+  initial,
   onConfirm,
   onCancel,
 }: {
+  initial?: Omit<ModelStep, "id" | "order">;
   onConfirm: (step: Omit<ModelStep, "id" | "order">) => void;
   onCancel: () => void;
 }) {
-  const [actionLabel, setActionLabel] = React.useState("");
-  const [label, setLabel] = React.useState("Model_12");
-  const [fileType, setFileType] = React.useState<StepFileType>("onnx");
-  const [fileName, setFileName] = React.useState("");
-  const valid = actionLabel.trim() && label.trim() && fileName.trim();
+  const isEdit = !!initial;
+  const [actionLabel, setActionLabel] = React.useState(initial?.actionLabel ?? "");
+  const [label, setLabel] = React.useState(initial?.label ?? "Model_12");
+  const [modelFile, setModelFile] = React.useState(initial?.modelFile ?? "");
+  const [manifestFile, setManifestFile] = React.useState(initial?.manifestFile ?? "");
+  const valid = actionLabel.trim() && label.trim() && modelFile.trim() && manifestFile.trim();
 
   return (
     <Dialog open onOpenChange={(v) => !v && onCancel()}>
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Add New Step</DialogTitle>
+          <DialogTitle className="text-base font-bold">{isEdit ? "Edit Step" : "Add New Step"}</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Define what the AI should verify at this step.
+            Define what the AI should verify at this step, then upload its model and manifest.
           </p>
         </DialogHeader>
 
@@ -561,7 +600,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Label <span className="text-destructive">*</span>
+              Model Title <span className="text-destructive">*</span>
             </label>
             <Input
               value={label}
@@ -573,28 +612,28 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              File <span className="text-destructive">*</span>
+              Model File <span className="text-destructive">*</span>
             </label>
-            <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-5 transition-colors hover:border-primary/40">
-              <UploadCloud className="size-7 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Upload a <span className="font-semibold text-foreground">.onnx</span> or <span className="font-semibold text-foreground">.json</span> file or drag and drop
-              </p>
-              <Input
-                value={fileName}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setFileName(v);
-                  if (v.toLowerCase().endsWith(".json")) setFileType("json");
-                  else if (v.toLowerCase().endsWith(".onnx")) setFileType("onnx");
-                }}
-                placeholder="filename.onnx"
-                className="h-8 text-center text-sm"
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Accepted: .onnx (model) or .json (artefact). Max file size 100 MB. Type is detected from the extension.
-            </p>
+            <UploadDropzone
+              value={modelFile}
+              onChange={setModelFile}
+              primary={<>Upload your <span className="font-semibold text-foreground">CV model file</span> or drag and drop</>}
+              placeholder="model.onnx"
+              hint={`Accepted: ${MODEL_FILE_EXTS}. Max file size 1 GB.`}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
+              Manifest File <span className="text-destructive">*</span>
+            </label>
+            <UploadDropzone
+              value={manifestFile}
+              onChange={setManifestFile}
+              primary={<>Upload the <span className="font-semibold text-foreground">.json</span> manifest or drag and drop</>}
+              placeholder="model.manifest.json"
+              hint="Accepted: .json. Max file size 10 MB."
+            />
           </div>
         </div>
 
@@ -606,7 +645,7 @@ function AddStepModal({
             size="sm"
             disabled={!valid}
             onClick={() =>
-              valid && onConfirm({ label, actionLabel, fileType, fileName: fileName.trim() })
+              valid && onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() })
             }
           >
             Confirm
@@ -663,6 +702,7 @@ function PoolStepCard({
   step,
   editable,
   isDragging,
+  onEdit,
   onRemove,
   onDragStart,
   onDragEnd,
@@ -670,6 +710,7 @@ function PoolStepCard({
   step: ModelStep;
   editable: boolean;
   isDragging: boolean;
+  onEdit: () => void;
   onRemove: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -680,7 +721,7 @@ function PoolStepCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        "group flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 transition-all",
+        "group relative flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 transition-all",
         isDragging && "opacity-40",
         editable && "cursor-grab active:cursor-grabbing"
       )}
@@ -692,17 +733,55 @@ function PoolStepCard({
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
         <p className="font-mono text-xs text-muted-foreground">{step.label}</p>
       </div>
-      <FileTypeBadge type={step.fileType} />
+      <FileTypeBadge fileName={step.modelFile} />
       {editable && (
-        <button
-          onClick={onRemove}
-          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
-          title="Remove step entirely"
-        >
-          <X className="size-3" />
-        </button>
+        <HoverActions>
+          <IconAction icon={Edit2} title="Edit step" onClick={onEdit} tone="primary" />
+          <IconAction icon={Trash2} title="Delete step" onClick={onRemove} tone="danger" />
+        </HoverActions>
       )}
     </div>
+  );
+}
+
+/* ── Hover-only card actions — absolutely positioned so they never reserve
+   layout space (text width stays constant whether hovered or not). ──────── */
+
+function HoverActions({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "top" }) {
+  return (
+    <div
+      className={cn(
+        "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-sm group-hover:flex",
+        align === "top" ? "top-1.5" : "top-1/2 -translate-y-1/2"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function IconAction({
+  icon: Icon,
+  title,
+  onClick,
+  tone = "primary",
+}: {
+  icon: React.ElementType;
+  title: string;
+  onClick: () => void;
+  tone?: "primary" | "danger";
+}) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      title={title}
+      className={cn(
+        "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
+        tone === "danger" ? "hover:bg-sev-critical/10 hover:text-sev-critical" : "hover:bg-primary/10 hover:text-primary"
+      )}
+    >
+      <Icon className="size-3" />
+    </button>
   );
 }
 
@@ -752,9 +831,9 @@ function SequenceItem({
       </span>
       <div className="min-w-0 flex-1">
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
-        <p className="font-mono text-xs text-muted-foreground">{step.fileName}</p>
+        <p className="font-mono text-xs text-muted-foreground">{step.modelFile}</p>
       </div>
-      <FileTypeBadge type={step.fileType} />
+      <FileTypeBadge fileName={step.modelFile} />
       {editable && (
         <button
           onClick={onRemoveFromSequence}
@@ -768,32 +847,52 @@ function SequenceItem({
   );
 }
 
-/* ── Attached rule card ──────────────────────────────────────────────────── */
+/* ── Rule source badge (Model vs Library) ────────────────────────────────── */
+
+function SourceBadge({ source }: { source: "model" | "library" }) {
+  const isModel = source === "model";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
+        isModel
+          ? "border-purple/30 bg-purple/10 text-purple"
+          : "border-info/30 bg-info/10 text-info"
+      )}
+    >
+      {isModel ? <Cpu className="size-2.5" /> : <BookOpen className="size-2.5" />}
+      {isModel ? "Model" : "Library"}
+    </span>
+  );
+}
+
+/* ── Attached rule card (from Rule Library) ──────────────────────────────── */
 
 function AttachedRuleCard({
   rule,
   editable,
+  onEdit,
   onDetach,
 }: {
   rule: RuleData;
   editable: boolean;
+  onEdit: () => void;
   onDetach: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-background px-3 py-2.5">
-      <div className="mb-1 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold text-foreground">{rule.name}</span>
+    <div className="group relative rounded-lg border border-border bg-background px-3 py-2.5">
+      {editable && (
+        <HoverActions align="top">
+          <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
+          <IconAction icon={Trash2} title="Detach rule" onClick={onDetach} tone="danger" />
+        </HoverActions>
+      )}
+      <div className="mb-1.5 pr-12">
+        <span className="block text-sm font-semibold text-foreground">{rule.name}</span>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <SourceBadge source="library" />
           <SeverityBadge severity={rule.severity} />
         </div>
-        {editable && (
-          <button
-            onClick={onDetach}
-            className="flex size-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 hover:bg-sev-critical/10 hover:text-sev-critical"
-          >
-            <X className="size-3" />
-          </button>
-        )}
       </div>
       <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
       <div className="flex flex-wrap gap-1">
@@ -812,6 +911,51 @@ function AttachedRuleCard({
   );
 }
 
+/* ── Extracted rule card (auto-parsed from the model file) ───────────────── */
+
+function ExtractedRuleCard({
+  rule,
+  editable,
+  onEdit,
+  onRemove,
+}: {
+  rule: ExtractedRule;
+  editable: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="group relative rounded-lg border border-purple/20 bg-purple/[0.04] px-3 py-2.5">
+      {editable && (
+        <HoverActions align="top">
+          <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
+          <IconAction icon={Trash2} title="Remove extracted rule" onClick={onRemove} tone="danger" />
+        </HoverActions>
+      )}
+      <div className="mb-1.5 pr-12">
+        <span className="block text-sm font-semibold text-foreground">{rule.name}</span>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <SourceBadge source="model" />
+          {rule.severity && <SeverityBadge severity={rule.severity} />}
+        </div>
+      </div>
+      {rule.description && (
+        <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
+      )}
+      {rule.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {rule.tags.slice(0, 3).map((t) => (
+            <TagChip key={t} label={t} />
+          ))}
+          {rule.tags.length > 3 && (
+            <MoreTagsPopover hiddenTags={rule.tags.slice(3)} allTags={rule.tags} label={`+${rule.tags.length - 3}`} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Rule library card (draggable, shows attached state) ─────────────────── */
 
 function RuleLibraryCard({
@@ -821,6 +965,7 @@ function RuleLibraryCard({
   onDragStart,
   onDragEnd,
   onAttach,
+  onEdit,
 }: {
   rule: RuleData;
   editable: boolean;
@@ -828,6 +973,7 @@ function RuleLibraryCard({
   onDragStart: () => void;
   onDragEnd: () => void;
   onAttach: () => void;
+  onEdit: () => void;
 }) {
   return (
     <div
@@ -849,13 +995,22 @@ function RuleLibraryCard({
           <SeverityBadge severity={rule.severity} />
         </div>
         {editable && (
-          <button
-            onClick={onAttach}
-            className="flex size-5 flex-shrink-0 items-center justify-center rounded border border-primary/30 bg-primary/10 text-primary opacity-0 transition-opacity hover:bg-primary/20 group-hover:opacity-100"
-            title="Attach rule"
-          >
-            <Plus className="size-3" />
-          </button>
+          <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="flex size-5 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+              title="Edit rule"
+            >
+              <Edit2 className="size-3" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAttach(); }}
+              className="flex size-5 items-center justify-center rounded border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+              title="Attach rule"
+            >
+              <Plus className="size-3" />
+            </button>
+          </div>
         )}
       </div>
       <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
@@ -898,6 +1053,7 @@ interface EditDraft {
   steps: ModelStep[];
   sequenceIds: string[];
   attachedRuleIds: string[];
+  extractedRules: ExtractedRule[];
 }
 
 function modelToDraft(m: ModelData): EditDraft {
@@ -909,7 +1065,93 @@ function modelToDraft(m: ModelData): EditDraft {
     steps: m.steps.map((s) => ({ ...s })),
     sequenceIds: [...m.sequenceIds],
     attachedRuleIds: [...m.attachedRuleIds],
+    extractedRules: m.extractedRules.map((r) => ({ ...r, conditions: [...r.conditions] })),
   };
+}
+
+/* ── Extract-rules prompt (after a step's model file is uploaded) ────────── */
+
+function ExtractRulesPrompt({
+  modelFile,
+  onConfirm,
+  onSkip,
+}: {
+  modelFile: string;
+  onConfirm: () => void;
+  onSkip: () => void;
+}) {
+  // Closing (x / Esc / overlay) doesn't dismiss outright — it asks to confirm exit.
+  const [confirmingExit, setConfirmingExit] = React.useState(false);
+  return (
+    <Dialog open onOpenChange={(v) => { if (!v) setConfirmingExit(true); }}>
+      <DialogContent className="w-[460px] max-w-[95vw] p-0">
+        {confirmingExit ? (
+          <>
+            <DialogHeader className="border-b border-border px-5 py-4">
+              <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-warning">
+                <AlertTriangle className="size-4" />
+                End model creation?
+              </DialogTitle>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Exiting now will end model creation without extracting rules. Do you want to continue or exit?
+              </p>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+              <Button variant="ghost" size="sm" onClick={() => setConfirmingExit(false)}>
+                Continue
+              </Button>
+              <Button variant="destructive" size="sm" onClick={onSkip}>
+                Exit
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader className="border-b border-border px-5 py-4">
+              <DialogTitle className="flex items-center gap-2.5 text-base font-bold">
+                <Cpu className="size-4 text-purple" />
+                Extract Rules from Model
+              </DialogTitle>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Pull the detection rules embedded in{" "}
+                <span className="font-mono text-foreground">{modelFile}</span>?
+              </p>
+            </DialogHeader>
+            <div className="px-5 py-4 text-sm text-muted-foreground">
+              Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
+              tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+              <Button size="sm" onClick={onConfirm} className="gap-1.5">
+                <Cpu className="size-3.5" />
+                Extract Rules
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* Simulated parse — derive rules from a step's model file (two shapes). */
+function extractRulesFromModel(seedId: string, modelFile: string): ExtractedRule[] {
+  const singleBlock = modelFile.trim().length % 2 === 1;
+  if (singleBlock) {
+    return [
+      {
+        id: `${seedId}-x1`,
+        name: "Extracted policy",
+        description: `Auto-extracted from ${modelFile}.`,
+        tags: ["Object Detection"],
+        conditions: ["class = target", "confidence > 85%", "bbox_area > 0.02", "dwell > 1s", "zone = monitored", "not occluded"],
+      },
+    ];
+  }
+  return [
+    { id: `${seedId}-x1`, name: "Primary detection", description: `Auto-extracted from ${modelFile}.`, tags: ["Object Detection"], conditions: ["class = target", "confidence > 85%"] },
+    { id: `${seedId}-x2`, name: "Secondary check", description: "Context confirmation.", tags: ["Behaviour"], conditions: ["class = context", "state = present"] },
+  ];
 }
 
 /* ── Drag payload ────────────────────────────────────────────────────────── */
@@ -943,7 +1185,10 @@ function ModelDetailPanel({
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState<EditDraft>(() => modelToDraft(model));
   const [showAddStep, setShowAddStep] = React.useState(false);
+  const [editStepId, setEditStepId] = React.useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  // Prompt to extract rules after a step's model file is added/edited.
+  const [extractStep, setExtractStep] = React.useState<{ id: string; modelFile: string } | null>(null);
 
   // Step drag state
   const [activeDrag, setActiveDrag] = React.useState(false);
@@ -1257,7 +1502,7 @@ function ModelDetailPanel({
                   <SectionHeader
                     label="Step Pool"
                     count={poolSteps.length}
-                    description="drag steps → sequence to build pipeline"
+                    description="Drag steps → sequence to build pipeline"
                   />
                   {draft.steps.length === 0 ? (
                     <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
@@ -1277,6 +1522,7 @@ function ModelDetailPanel({
                           step={step}
                           editable
                           isDragging={poolDragId === step.id}
+                          onEdit={() => setEditStepId(step.id)}
                           onRemove={() =>
                             patchDraft({
                               steps: draft.steps.filter((s) => s.id !== step.id),
@@ -1296,7 +1542,7 @@ function ModelDetailPanel({
                   <SectionHeader
                     label="Sequence"
                     count={sequenceSteps.length}
-                    description="each step triggers an AI model in order"
+                    description="Each step triggers an AI model in order"
                   />
                   <div
                     onDragOver={handleSeqContainerDragOver}
@@ -1353,15 +1599,28 @@ function ModelDetailPanel({
                 <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Rules
                 </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/rules?new=true&model=${model.id}`)}
-                  className="gap-1.5"
-                >
-                  <Plus className="size-3" />
-                  Add Rule
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setExtractStep({ id: genId(), modelFile: draft.steps[0]?.modelFile ?? `${draft.name || "model"}.onnx` })
+                    }
+                    className="gap-1.5"
+                  >
+                    <Cpu className="size-3" />
+                    Extract from Model
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/rules?new=true&model=${model.id}`)}
+                    className="gap-1.5"
+                  >
+                    <Plus className="size-3" />
+                    Add Rule
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1371,7 +1630,7 @@ function ModelDetailPanel({
                   <SectionHeader
                     label="Rule Library"
                     count={libraryRules.length}
-                    description="drag rules → detection rules"
+                    description="Drag rules → detection rules"
                   />
                   <div className="relative mb-2.5">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/50" />
@@ -1403,6 +1662,7 @@ function ModelDetailPanel({
                           isDragging={ruleDragId === rule.id}
                           onDragStart={() => handleRuleDragStart(rule.id)}
                           onDragEnd={handleRuleDragEnd}
+                          onEdit={() => navigate(`/rules?edit=${rule.id}`)}
                           onAttach={() =>
                             patchDraft({
                               attachedRuleIds: [...draft.attachedRuleIds, rule.id],
@@ -1418,8 +1678,8 @@ function ModelDetailPanel({
                 <div>
                   <SectionHeader
                     label="Detection Rules"
-                    count={attachedRules.length}
-                    description="rules that trigger on this model"
+                    count={draft.extractedRules.length + attachedRules.length}
+                    description="Model-extracted + library rules"
                   />
                   <div
                     onDragOver={handleDetectionDragOver}
@@ -1429,23 +1689,56 @@ function ModelDetailPanel({
                       "h-[460px] overflow-y-auto rounded-xl border-2 border-dashed pr-1 transition-all",
                       detectionRulesOver
                         ? "border-primary/40 bg-primary/[0.03]"
-                        : attachedRules.length === 0
+                        : draft.extractedRules.length + attachedRules.length === 0
                         ? "border-border"
                         : "border-transparent"
                     )}
                   >
-                    {attachedRules.length === 0 ? (
+                    {draft.extractedRules.length + attachedRules.length === 0 ? (
                       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
                         <BookOpen className="size-7 opacity-20" />
                         <p className="text-center text-sm">← Drag rules from the library</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
+                        {draft.extractedRules.map((rule) => (
+                          <ExtractedRuleCard
+                            key={rule.id}
+                            rule={rule}
+                            editable
+                            onEdit={() => {
+                              const stub: RuleData = {
+                                id: `ext:${model.id}:${rule.id}`,
+                                name: rule.name,
+                                description: rule.description,
+                                severity: rule.severity ?? "medium",
+                                tags: [...rule.tags],
+                                conditions: [
+                                  { id: "c1", type: "WHEN", field: rule.name, operator: "", value: "", unit: "" } as ConditionRow,
+                                ],
+                                createdAt: "",
+                                createdAtDisplay: "",
+                                createdTimeDisplay: "",
+                              };
+                              navigate("/rules", {
+                                state: {
+                                  extractedEdit: { rule: stub, modelId: model.id, ruleId: rule.id, returnTo: `/models?model=${model.id}` },
+                                },
+                              });
+                            }}
+                            onRemove={() =>
+                              patchDraft({
+                                extractedRules: draft.extractedRules.filter((r) => r.id !== rule.id),
+                              })
+                            }
+                          />
+                        ))}
                         {attachedRules.map((rule) => (
                           <AttachedRuleCard
                             key={rule.id}
                             rule={rule}
                             editable
+                            onEdit={() => navigate(`/rules?edit=${rule.id}`)}
                             onDetach={() =>
                               patchDraft({
                                 attachedRuleIds: draft.attachedRuleIds.filter((id) => id !== rule.id),
@@ -1467,7 +1760,7 @@ function ModelDetailPanel({
               <p className="text-base font-bold text-foreground">Model Configuration</p>
               <p className="text-xs text-muted-foreground">
                 {sequenceSteps.length} sequence step{sequenceSteps.length !== 1 ? "s" : ""} ·{" "}
-                {attachedRules.length} detection rule{attachedRules.length !== 1 ? "s" : ""} linked to this model
+                {draft.extractedRules.length + attachedRules.length} detection rule{draft.extractedRules.length + attachedRules.length !== 1 ? "s" : ""} linked to this model
               </p>
             </div>
 
@@ -1478,7 +1771,7 @@ function ModelDetailPanel({
                 <SectionHeader
                   label="Sequence"
                   count={sequenceSteps.length}
-                  description="each step triggers an AI model in order"
+                  description="Each step triggers an AI model in order"
                 />
                 {sequenceSteps.length === 0 ? (
                   <div className="flex h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
@@ -1510,21 +1803,25 @@ function ModelDetailPanel({
               <div>
                 <SectionHeader
                   label="Detection Rules"
-                  count={attachedRules.length}
-                  description="rules that trigger on this model"
+                  count={draft.extractedRules.length + attachedRules.length}
+                  description="Model-extracted + library rules"
                 />
-                {attachedRules.length === 0 ? (
+                {draft.extractedRules.length + attachedRules.length === 0 ? (
                   <div className="flex h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                     <BookOpen className="size-7 opacity-20" />
                     <p className="text-center text-sm">No rules attached</p>
                   </div>
                 ) : (
                   <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
+                    {draft.extractedRules.map((rule) => (
+                      <ExtractedRuleCard key={rule.id} rule={rule} editable={false} onEdit={() => {}} onRemove={() => {}} />
+                    ))}
                     {attachedRules.map((rule) => (
                       <AttachedRuleCard
                         key={rule.id}
                         rule={rule}
                         editable={false}
+                        onEdit={() => {}}
                         onDetach={() => {}}
                       />
                     ))}
@@ -1537,13 +1834,34 @@ function ModelDetailPanel({
       </div>
 
       {/* Modals */}
-      {showAddStep && (
+      {(showAddStep || editStepId) && (
         <AddStepModal
-          onCancel={() => setShowAddStep(false)}
+          initial={editStepId ? draft.steps.find((s) => s.id === editStepId) : undefined}
+          onCancel={() => { setShowAddStep(false); setEditStepId(null); }}
           onConfirm={(s) => {
-            const newStep: ModelStep = { ...s, id: genId(), order: draft.steps.length + 1 };
-            patchDraft({ steps: [...draft.steps, newStep] });
-            setShowAddStep(false);
+            if (editStepId) {
+              patchDraft({ steps: draft.steps.map((st) => (st.id === editStepId ? { ...st, ...s } : st)) });
+              setEditStepId(null);
+            } else {
+              const newStep: ModelStep = { ...s, id: genId(), order: draft.steps.length + 1 };
+              patchDraft({ steps: [...draft.steps, newStep] });
+              setShowAddStep(false);
+            }
+            // Offer to pull rules from the just-uploaded model file.
+            setExtractStep({ id: editStepId ?? genId(), modelFile: s.modelFile });
+          }}
+        />
+      )}
+
+      {extractStep && (
+        <ExtractRulesPrompt
+          modelFile={extractStep.modelFile}
+          onSkip={() => setExtractStep(null)}
+          onConfirm={() => {
+            const pulled = extractRulesFromModel(extractStep.id, extractStep.modelFile);
+            patchDraft({ extractedRules: [...pulled, ...draft.extractedRules] });
+            setExtractStep(null);
+            toast.success(`Extracted ${pulled.length} rule${pulled.length === 1 ? "" : "s"} from ${extractStep.modelFile}`);
           }}
         />
       )}
@@ -1572,14 +1890,35 @@ export default function ModelManagementPage() {
   const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
   const [showCreate, setShowCreate] = React.useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
-  // Re-open the model editor when returning from "+Add Rule" (/models?model=<id>).
+  // Re-open the model editor when returning from "+Add Rule" (/models?model=<id>),
+  // and apply any edits made to an extracted rule on the Rule Library builder page.
   React.useEffect(() => {
     const m = searchParams.get("model");
-    if (m) {
-      setSelectedId(m);
-      setSearchParams({}, { replace: true });
+    if (m) setSelectedId(m);
+
+    const result = (location.state as {
+      extractedResult?: { modelId: string; ruleId: string; patch: Partial<ExtractedRule> };
+    } | null)?.extractedResult;
+    if (result) {
+      setModels((prev) =>
+        prev.map((mdl) =>
+          mdl.id === result.modelId
+            ? {
+                ...mdl,
+                extractedRules: mdl.extractedRules.map((r) =>
+                  r.id === result.ruleId ? { ...r, ...result.patch } : r
+                ),
+              }
+            : mdl
+        )
+      );
+      toast.success("Extracted rule updated");
+      window.history.replaceState({}, "");
     }
+
+    if (m) setSearchParams({}, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1604,8 +1943,9 @@ export default function ModelManagementPage() {
     const n = new Date();
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const display = `${n.getDate()} ${MONTHS[n.getMonth()]} ${n.getFullYear()}, ${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+    const id = `Mdl_${String(models.length + 1).padStart(3, "0")}`;
     const newModel: ModelData = {
-      id: `Mdl_${String(models.length + 1).padStart(3, "0")}`,
+      id,
       name,
       description,
       tags: [],
@@ -1613,13 +1953,16 @@ export default function ModelManagementPage() {
       steps: [],
       sequenceIds: [],
       attachedRuleIds: [],
+      extractedRules: [],
       createdAt: n.toISOString(),
       createdAtDisplay: display,
     };
     setModels((prev) => [newModel, ...prev]);
     setSelectedId(newModel.id);
     setShowCreate(false);
-    toast.success(`Model "${newModel.name}" created`);
+    toast.success(`Model "${newModel.name}" created`, {
+      description: "Add verification steps to upload model files and extract rules.",
+    });
   }
 
   function handleSave(id: string, d: EditDraft) {
@@ -1635,6 +1978,7 @@ export default function ModelManagementPage() {
               steps: d.steps,
               sequenceIds: d.sequenceIds,
               attachedRuleIds: d.attachedRuleIds,
+              extractedRules: d.extractedRules,
             }
           : m
       )

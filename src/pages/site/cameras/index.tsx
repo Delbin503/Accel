@@ -899,12 +899,12 @@ function LinkNvrModal({
             </ul>
           )}
         </div>
-        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={commit} disabled={!selection} className="gap-1.5">
             <Link2 className="size-3.5" />
             Link Channel
           </Button>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
         </div>
       </DialogContent>
     </Dialog>
