@@ -948,6 +948,12 @@ function OverviewTab({
               <span className="text-base font-medium text-foreground">{value}</span>
             </div>
           ))}
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Description</span>
+            <span className={cn("text-base font-medium", site.description ? "text-foreground" : "text-muted-foreground")}>
+              {site.description || "—"}
+            </span>
+          </div>
         </div>
       </div>
 
