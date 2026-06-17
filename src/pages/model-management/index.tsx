@@ -727,7 +727,7 @@ function PoolStepCard({
       )}
     >
       {editable && (
-        <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
+        <GripVertical className="hidden size-3.5 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
       )}
       <div className="min-w-0 flex-1">
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
@@ -824,7 +824,7 @@ function SequenceItem({
       )}
     >
       {editable && (
-        <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
+        <GripVertical className="hidden size-3.5 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
       )}
       <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
         {index + 1}
@@ -989,7 +989,7 @@ function RuleLibraryCard({
       <div className="mb-1 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           {editable && (
-            <GripVertical className="size-3 flex-shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
+            <GripVertical className="hidden size-3 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
           )}
           <span className="text-sm font-semibold text-foreground">{rule.name}</span>
           <SeverityBadge severity={rule.severity} />
@@ -1039,6 +1039,46 @@ function EmptyDetailState() {
         <Plus className="size-6" />
       </div>
       <p className="text-base">Select a model to configure</p>
+    </div>
+  );
+}
+
+/* ── Edit progress — Sequence / Rules completion (edit mode only) ────────── */
+
+function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; rulesCount: number }) {
+  const items = [
+    { key: "sequence", label: "Sequence", icon: Layers, done: sequenceCount > 0, count: sequenceCount },
+    { key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount },
+  ];
+  return (
+    <div className="flex flex-shrink-0 items-center gap-2 border-b border-border bg-muted/10 px-5 py-3">
+      {items.map((it, i) => {
+        const Icon = it.icon;
+        return (
+          <div key={it.key} className="flex items-center gap-2">
+            <div
+              className={cn(
+                "flex size-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
+                it.done ? "border-success bg-success text-white" : "border-border bg-muted text-muted-foreground"
+              )}
+            >
+              {it.done ? <Check className="size-3" strokeWidth={3} /> : <Icon className="size-3" />}
+            </div>
+            <p
+              className={cn(
+                "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors",
+                it.done ? "text-success" : "text-muted-foreground"
+              )}
+            >
+              {it.label}
+              <span className="font-mono text-2xs text-muted-foreground/70">{it.count}</span>
+            </p>
+            {i < items.length - 1 && (
+              <div className={cn("h-0.5 w-6 rounded-full transition-colors sm:w-10", it.done ? "bg-success" : "bg-border")} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1169,12 +1209,14 @@ function ModelDetailPanel({
   allModels,
   onSave,
   onDelete,
+  onEditingChange,
 }: {
   model: ModelData;
   allRules: RuleData[];
   allModels: ModelData[];
   onSave: (id: string, draft: EditDraft) => void;
   onDelete: (id: string) => void;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const allTagsForModels = React.useMemo(() => {
     const set = new Set<string>(MODEL_TAGS);
@@ -1210,6 +1252,11 @@ function ModelDetailPanel({
     setIsEditing(false);
     setRuleSearch("");
   }, [model.id]);
+
+  // Let the page hide the model list while this panel is in edit mode.
+  React.useEffect(() => {
+    onEditingChange?.(isEditing);
+  }, [isEditing, onEditingChange]);
 
   function patchDraft(p: Partial<EditDraft>) {
     setDraft((d) => ({ ...d, ...p }));
@@ -1437,6 +1484,11 @@ function ModelDetailPanel({
       {/* ── Combined scrollable content (Description/Tags scrolls with rest) ── */}
       <div className="flex-1 overflow-y-auto">
         {isEditing ? (
+          <>
+          <EditProgress
+            sequenceCount={sequenceSteps.length}
+            rulesCount={draft.extractedRules.length + attachedRules.length}
+          />
           <div className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1461,6 +1513,7 @@ function ModelDetailPanel({
               />
             </div>
           </div>
+          </>
         ) : (
           <div className="border-b border-border px-5 py-3">
             <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
@@ -1889,6 +1942,8 @@ export default function ModelManagementPage() {
   const [tagFilter, setTagFilter] = React.useState<string[]>([]);
   const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
   const [showCreate, setShowCreate] = React.useState(false);
+  // Hide the model list while a model is being edited (restored on Save/Cancel).
+  const [editing, setEditing] = React.useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
@@ -1990,6 +2045,7 @@ export default function ModelManagementPage() {
     const target = models.find((m) => m.id === id);
     setModels((prev) => prev.filter((m) => m.id !== id));
     setSelectedId(null);
+    setEditing(false);
     toast.success(`Model "${target?.name ?? id}" deleted`);
   }
 
@@ -2012,7 +2068,8 @@ export default function ModelManagementPage() {
 
     <div className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
 
-      {/* ── Left panel ── */}
+      {/* ── Left panel — hidden while editing a model ── */}
+      {!editing && (
       <div className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-shrink-0 border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -2093,6 +2150,7 @@ export default function ModelManagementPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* ── Right panel ── */}
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -2103,6 +2161,7 @@ export default function ModelManagementPage() {
             allModels={models}
             onSave={handleSave}
             onDelete={handleDelete}
+            onEditingChange={setEditing}
           />
         ) : (
           <EmptyDetailState />
