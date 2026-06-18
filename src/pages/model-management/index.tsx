@@ -1051,27 +1051,26 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
     { key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount },
   ];
   return (
-    <div className="flex flex-shrink-0 items-center gap-2 border-b border-border bg-muted/10 px-5 py-3">
+    <div className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
       {items.map((it, i) => {
         const Icon = it.icon;
         return (
           <div key={it.key} className="flex items-center gap-2">
             <div
               className={cn(
-                "flex size-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
+                "flex size-7 items-center justify-center rounded-full border-2 transition-colors",
                 it.done ? "border-success bg-success text-white" : "border-border bg-muted text-muted-foreground"
               )}
             >
-              {it.done ? <Check className="size-3" strokeWidth={3} /> : <Icon className="size-3" />}
+              <Icon className="size-3.5" />
             </div>
             <p
               className={cn(
-                "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors",
+                "text-xs font-semibold uppercase tracking-wider transition-colors",
                 it.done ? "text-success" : "text-muted-foreground"
               )}
             >
-              {it.label}
-              <span className="font-mono text-2xs text-muted-foreground/70">{it.count}</span>
+              {it.label} — {it.count}
             </p>
             {i < items.length - 1 && (
               <div className={cn("h-0.5 w-6 rounded-full transition-colors sm:w-10", it.done ? "bg-success" : "bg-border")} />
@@ -1485,10 +1484,6 @@ function ModelDetailPanel({
       <div className="flex-1 overflow-y-auto">
         {isEditing ? (
           <>
-          <EditProgress
-            sequenceCount={sequenceSteps.length}
-            rulesCount={draft.extractedRules.length + attachedRules.length}
-          />
           <div className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1531,6 +1526,10 @@ function ModelDetailPanel({
 
         {isEditing ? (
           <>
+            <EditProgress
+              sequenceCount={sequenceSteps.length}
+              rulesCount={draft.extractedRules.length + attachedRules.length}
+            />
             {/* ── SEQUENCE section (edit mode) ── */}
             <div className="px-5 pb-5 pt-4">
               <div className="mb-4 flex items-center justify-between">
