@@ -25,7 +25,6 @@ import {
   Link2,
   Cpu,
   Radio,
-  CircleDot,
   FileVideo,
   Layers,
   Unlink,
@@ -42,10 +41,11 @@ import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_DEPLOYMENTS } from "@/mocks/deployments";
-import { getRecordingsForCamera, type RecordingDisplay } from "@/mocks/recordings";
+import { getRecordingsForCamera } from "@/mocks/recordings";
 import type { CameraData, CameraStatus, BoundaryZone } from "@/types/cameras";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { RecordingCard } from "@/components/shared/RecordingCard";
 import type { DeploymentData } from "@/types/deployments";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -334,82 +334,6 @@ function DeployStatusPill({ status }: { status: DeploymentData["status"] }) {
       <span className={cn("size-1.5 flex-shrink-0 rounded-full", s.dot)} />
       {s.label}
     </span>
-  );
-}
-
-/* ── Recording mode chip ─────────────────────────────────────────────────── */
-
-const RECORDING_MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; label: string }> = {
-  continuous: { bg: "bg-primary/10 border-primary/20",     text: "text-primary",    label: "Continuous" },
-  event:      { bg: "bg-info/10 border-info/20",           text: "text-info",       label: "Event" },
-  scheduled:  { bg: "bg-purple-soft border-purple/20",     text: "text-purple",     label: "Scheduled" },
-};
-
-function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) {
-  const s = RECORDING_MODE_STYLES[mode];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
-        s.bg,
-        s.text
-      )}
-    >
-      {s.label}
-    </span>
-  );
-}
-
-/* ── Recording card ──────────────────────────────────────────────────────── */
-
-function RecordingCard({ r, isSelected, onToggle, onOpen }: {
-  r: RecordingDisplay; isSelected: boolean; onToggle: () => void; onOpen: () => void;
-}) {
-  return (
-    <div className={cn("group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-md",
-      isSelected ? "border-primary" : "border-border hover:border-primary/40")}>
-      <button
-        onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        className={cn("absolute left-2.5 top-2.5 z-20 flex size-5 items-center justify-center rounded border-2 transition-colors",
-          isSelected ? "border-primary bg-primary" : "border-white/60 bg-black/40 hover:border-white opacity-0 group-hover:opacity-100",
-          isSelected && "opacity-100")}
-        aria-label="Select recording for deletion">
-        {isSelected && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-      </button>
-      <button onClick={onOpen} className="flex flex-col items-stretch text-left">
-        <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
-          <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-transform group-hover:scale-110">
-              <Play className="size-4 text-white" />
-            </div>
-          </div>
-          <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">{r.durationDisplay}</div>
-          <div className="absolute left-9 top-2.5"><RecordingModeChip mode={r.mode} /></div>
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
-            <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
-            <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
-          </div>
-        </div>
-        <div className="p-3.5">
-          <div className="mb-1 flex items-start justify-between gap-2">
-            <TruncatedText text={`Recording · ${r.dateLabel}`} className="text-base font-bold text-foreground transition-colors group-hover:text-primary" />
-            <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
-          </div>
-          <p className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-2.5" />
-            {r.areaName}
-          </p>
-          <div className="flex items-center justify-between border-t border-border/60 pt-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-2xs font-semibold text-success">
-              <CircleDot className="size-2.5" />
-              {r.eventCount} events
-            </span>
-            <span className="font-mono text-2xs text-muted-foreground">{r.durationDisplay}</span>
-          </div>
-        </div>
-      </button>
-    </div>
   );
 }
 
@@ -1498,8 +1422,9 @@ function CameraDrawer({
                   {filteredRecordings.map((r) => (
                     <RecordingCard
                       key={r.id}
-                      r={r}
-                      isSelected={selectedRecordingIds.has(r.id)}
+                      recording={r}
+                      variant="drawer"
+                      selected={selectedRecordingIds.has(r.id)}
                       onToggle={() => setSelectedRecordingIds((curr) => {
                         const next = new Set(curr);
                         next.has(r.id) ? next.delete(r.id) : next.add(r.id);
