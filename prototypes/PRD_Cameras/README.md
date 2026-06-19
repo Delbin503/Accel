@@ -23,6 +23,13 @@ Open the printed URL and pick **PRD_Cameras** (served at
 Use the floating **Dev · State** control (bottom-right, low opacity, reveals on
 hover) to switch states. **Retry** in the error state returns to Populated.
 
+## Recording card (detail drawer)
+
+Open a camera → **Recordings** tab in the detail drawer. Those cards use the
+shared [`src/components/shared/RecordingCard.tsx`](../../src/components/shared/RecordingCard.tsx)
+(`variant="drawer"`) — the same component the **Recordings** module uses
+(`variant="page"`), so the layouts stay identical. See `PRD_Recordings`.
+
 ## Files
 
 | File | Purpose |

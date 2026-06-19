@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import RealSiteManagement from "./RealSiteManagement";
+import RealRecordings from "./RealRecordings";
 import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
@@ -67,7 +67,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark">
-    <MemoryRouter initialEntries={["/site/overview"]}>
+    <MemoryRouter initialEntries={["/recordings"]}>
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
@@ -81,9 +81,7 @@ function App() {
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="/site/overview" element={<RealSiteManagement forced={forced} onResolveForced={resolve} />} />
-                  {/* Site detail opens via deep-link /site/:siteId (drawer reads the param). */}
-                  <Route path="/site/:siteId" element={<RealSiteManagement forced={forced} onResolveForced={resolve} />} />
+                  <Route path="/recordings" element={<RealRecordings forced={forced} onResolveForced={resolve} />} />
                   <Route path="*" element={<NotInPrototype />} />
                 </Routes>
               </main>
@@ -104,7 +102,7 @@ function NotInPrototype() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
-      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">Site Management</strong>.</p>
+      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">Recordings</strong>.</p>
     </div>
   );
 }
