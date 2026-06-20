@@ -492,7 +492,7 @@ function UploadDropzone({
   );
 }
 
-const MODEL_FILE_EXTS = ".onnx, .tflite, .engine, .pt, .pth, .pb, .xml + .bin, .mlmodel, .mlpackage";
+const MODEL_FILE_EXTS = ".onnx";
 
 function CreateModelModal({
   onConfirm,
@@ -884,7 +884,7 @@ function AttachedRuleCard({
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
-          <IconAction icon={Trash2} title="Detach rule" onClick={onDetach} tone="danger" />
+          <IconAction icon={X} title="Detach rule" onClick={onDetach} tone="danger" />
         </HoverActions>
       )}
       <div className="mb-1.5 pr-12">
@@ -929,7 +929,7 @@ function ExtractedRuleCard({
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
-          <IconAction icon={Trash2} title="Remove extracted rule" onClick={onRemove} tone="danger" />
+          <IconAction icon={X} title="Remove extracted rule" onClick={onRemove} tone="danger" />
         </HoverActions>
       )}
       <div className="mb-1.5 pr-12">
@@ -1058,8 +1058,8 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
           <div key={it.key} className="flex items-center gap-2">
             <div
               className={cn(
-                "flex size-7 items-center justify-center rounded-full border-2 transition-colors",
-                it.done ? "border-success bg-success text-white" : "border-border bg-muted text-muted-foreground"
+                "flex size-7 items-center justify-center rounded-full border-2 border-dashed transition-colors",
+                it.done ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" />
@@ -1067,13 +1067,13 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
             <p
               className={cn(
                 "text-xs font-semibold uppercase tracking-wider transition-colors",
-                it.done ? "text-success" : "text-muted-foreground"
+                it.done ? "text-foreground" : "text-muted-foreground"
               )}
             >
-              {it.label} — {it.count}
+              {it.count} {it.label} selected
             </p>
             {i < items.length - 1 && (
-              <div className={cn("h-0.5 w-6 rounded-full transition-colors sm:w-10", it.done ? "bg-success" : "bg-border")} />
+              <div className={cn("h-0.5 w-6 rounded-full transition-colors sm:w-10", it.done ? "bg-primary/40" : "bg-border")} />
             )}
           </div>
         );

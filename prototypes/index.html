@@ -5,35 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Prototypes</title>
     <style>
+      :root {
+        --bg: #0d0d0f;
+        --panel: #161618;
+        --panel-2: #1b1b1e;
+        --border: #2a2a2e;
+        --border-soft: #232327;
+        --text: #f4f4f5;
+        --muted: #8a8a92;
+        --faint: #56565c;
+        --orange: #f9681f;
+        --orange-soft: rgba(249, 104, 31, 0.12);
+        --orange-border: rgba(249, 104, 31, 0.45);
+      }
+      * { box-sizing: border-box; }
       body {
-        font-family: system-ui, sans-serif;
-        background: #111;
-        color: #eee;
-        padding: 48px;
+        font-family: "Manrope", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(1200px 600px at 70% -10%, rgba(249,104,31,0.06), transparent 60%), var(--bg);
+        color: var(--text);
         margin: 0;
+        padding: 56px 32px 80px;
+        min-height: 100vh;
       }
-      h1 { color: #fff; font-size: 1.5rem; margin-bottom: 8px; }
-      p.sub { color: #888; font-size: 0.875rem; margin-bottom: 32px; }
-      ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-      li a {
-        display: inline-block;
-        background: #1e1e1e;
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 14px 20px;
-        color: #DD7224;
-        text-decoration: none;
-        font-size: 0.95rem;
-        transition: border-color 0.15s;
+      .wrap { max-width: 1120px; margin: 0 auto; }
+
+      header.page { margin-bottom: 36px; }
+      .eyebrow {
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--orange); margin-bottom: 10px;
       }
-      li a:hover { border-color: #DD7224; }
-      .empty { color: #555; font-size: 0.9rem; }
+      h1 { color: var(--text); font-size: 1.9rem; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.01em; }
+      p.sub { color: var(--muted); font-size: 0.95rem; margin: 0 0 18px; max-width: 620px; line-height: 1.5; }
+
+      .legend { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+      .legend .item { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--muted); }
+      .dot { width: 9px; height: 9px; border-radius: 999px; }
+      .dot.ready { background: var(--orange); }
+      .dot.soon { background: var(--faint); }
+
+      .phase { margin-top: 34px; }
+      .phase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .phase-title { font-size: 1.05rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+      .badge {
+        font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border);
+        color: var(--muted); background: var(--panel);
+      }
+      .badge.p0 { color: #ffb27a; border-color: var(--orange-border); background: var(--orange-soft); }
+      .badge.p1 { color: #9aa6ff; border-color: rgba(120,134,255,0.35); background: rgba(120,134,255,0.10); }
+      .count { margin-left: auto; font-size: 0.76rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+      .rule { height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin-bottom: 16px; }
+
+      .grid {
+        display: grid; gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+      }
+
+      .card {
+        position: relative; display: flex; flex-direction: column; gap: 10px;
+        background: var(--panel); border: 1px solid var(--border-soft);
+        border-radius: 12px; padding: 15px 16px; min-height: 92px;
+        text-decoration: none; overflow: hidden;
+      }
+      .card .name { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.25; }
+      .card .meta { margin-top: auto; display: flex; align-items: center; justify-content: space-between; }
+
+      /* Ready (clickable) */
+      a.card.ready { transition: border-color 0.15s, transform 0.15s, background 0.15s; }
+      a.card.ready::before {
+        content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--orange); opacity: 0.85;
+      }
+      a.card.ready:hover { border-color: var(--orange-border); transform: translateY(-2px); background: var(--panel-2); }
+      a.card.ready .open { color: var(--orange); font-size: 0.8rem; font-weight: 700; }
+
+      /* Coming soon (greyed) */
+      .card.soon { background: #121214; border-style: dashed; border-color: #232327; }
+      .card.soon .name { color: var(--faint); }
+      .card.soon .tag {
+        font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        color: var(--faint); border: 1px solid #2a2a2e; border-radius: 999px; padding: 2px 8px;
+      }
+
+      /* Variant chips (a module backed by several prototypes) */
+      .variants { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+      .chip {
+        font-size: 0.74rem; font-weight: 600; text-decoration: none;
+        padding: 4px 10px; border-radius: 999px; border: 1px solid var(--orange-border);
+        color: var(--orange); background: var(--orange-soft); transition: background 0.15s;
+      }
+      .chip:hover { background: rgba(249,104,31,0.2); }
+      .chip.soon { color: var(--faint); border-color: #2a2a2e; background: transparent; cursor: default; }
+
+      footer.note { margin-top: 44px; color: var(--faint); font-size: 0.76rem; }
     </style>
   </head>
   <body>
-    <h1>🧪 Prototypes</h1>
-    <p class="sub">Each prototype is isolated from the main app. Select one to open it.</p>
-    <div id="root"></div>
+    <div class="wrap">
+      <header class="page">
+        <div class="eyebrow">Design Prototypes</div>
+        <h1>🧪 Prototypes</h1>
+        <p class="sub">
+          Each prototype is isolated from the main app. Modules are grouped by delivery
+          phase and priority — orange cards are ready to open, grey cards don't have a
+          design PRD yet.
+        </p>
+        <div class="legend">
+          <span class="item"><span class="dot ready"></span> Prototype ready</span>
+          <span class="item"><span class="dot soon"></span> No design yet</span>
+        </div>
+      </header>
+      <div id="root"></div>
+    </div>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>
