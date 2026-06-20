@@ -7,8 +7,7 @@ export type OnPremStepKey = "license" | "site" | "admin" | "operators";
 const STEPS: { key: OnPremStepKey; label: string }[] = [
   { key: "license", label: "Activate License" },
   { key: "site", label: "Configure Site" },
-  { key: "admin", label: "Bootstrap Admin" },
-  { key: "operators", label: "Add Operators" },
+  { key: "operators", label: "Add Members" },
 ];
 
 /**

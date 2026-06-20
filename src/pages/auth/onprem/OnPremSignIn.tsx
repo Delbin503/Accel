@@ -1,21 +1,10 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  LogIn,
-  AlertCircle,
-  Loader2,
-  ShieldCheck,
-  KeyRound,
-} from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "../AuthLayout";
-import { DeploymentModeSwitcher } from "@/components/shared/DeploymentModeSwitcher";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
 
@@ -23,22 +12,17 @@ import { cn } from "@/lib/utils";
  * On-Premise sign-in page.
  *
  * Differences from cloud sign-in:
- *   - Username (not email) as primary identifier
- *   - Optional 2FA code reveal
- *   - "Use recovery code" link instead of "Forgot password"
- *   - No SSO, no "Create one" link (operators are provisioned by the admin)
- *   - Single-site appliance — site name shown at top
+ *   - No SSO, no "Create one" link (members are provisioned by the admin)
+ *   - Single-site appliance — first-run setup entry below the form
  */
 export default function OnPremSignInPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const signIn = useAuthStore((s) => s.signIn);
 
-  const [username, setUsername] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [twoFactorCode, setTwoFactorCode] = React.useState("");
   const [showPw, setShowPw] = React.useState(false);
-  const [showTwoFactor, setShowTwoFactor] = React.useState(false);
   const [remember, setRemember] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -48,36 +32,29 @@ export default function OnPremSignInPage() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (username.trim().length < 2 || password.length < 4) {
-      setError("Enter your username and password (4+ characters).");
-      return;
-    }
-    if (showTwoFactor && twoFactorCode.length < 6) {
-      setError("Enter the 6-digit code from your authenticator.");
+    if (!email.includes("@") || password.length < 4) {
+      setError("Enter a valid email and password (4+ characters).");
       return;
     }
     setLoading(true);
     setTimeout(() => {
-      const initials = username
-        .replace(/[^a-zA-Z]/g, "")
-        .slice(0, 2)
-        .toUpperCase() || "OP";
-      const displayName = username
+      const initials = email.split("@")[0].slice(0, 2).toUpperCase() || "OP";
+      const displayName = email
+        .split("@")[0]
         .split(/[._]+/)
         .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
         .join(" ");
       signIn({
         id: "usr-onprem-" + Math.random().toString(36).slice(2, 6),
-        name: displayName || username,
+        name: displayName || email,
         initials,
         role: "admin",
-        email: username,
-        username,
+        email,
         notificationCount: 0,
         orgName: "Sembawang Naval Base",
         deploymentMode: "onprem",
       });
-      toast.success(`Welcome back, ${displayName.split(" ")[0] || username}`, {
+      toast.success(`Welcome back, ${displayName.split(" ")[0] || email}`, {
         description: "Loading the on-premise workspace…",
       });
       navigate(redirectTo, { replace: true });
@@ -87,28 +64,28 @@ export default function OnPremSignInPage() {
   return (
     <AuthLayout>
       <div>
-        <DeploymentModeSwitcher />
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Sign in to your appliance
         </h1>
         <p className="mt-1 text-base text-muted-foreground">
-          Use the username assigned to you by your site administrator.
+          Use the email assigned to you by your site administrator.
         </p>
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Username
+              Email
             </label>
             <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                autoComplete="username"
+                type="email"
+                autoComplete="email"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. kc.loke"
-                className="h-10 pl-9 font-mono text-base"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@appliance.local"
+                className="h-10 pl-9 text-base"
               />
             </div>
           </div>
@@ -134,56 +111,10 @@ export default function OnPremSignInPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
-                {showPw ? (
-                  <EyeOff className="size-3.5" />
-                ) : (
-                  <Eye className="size-3.5" />
-                )}
+                {showPw ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
           </div>
-
-          {showTwoFactor ? (
-            <div>
-              <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="size-3" />
-                  2FA Code
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowTwoFactor(false);
-                    setTwoFactorCode("");
-                  }}
-                  className="text-2xs font-semibold text-muted-foreground/70 hover:text-foreground"
-                >
-                  Skip
-                </button>
-              </label>
-              <Input
-                inputMode="numeric"
-                maxLength={6}
-                value={twoFactorCode}
-                onChange={(e) =>
-                  setTwoFactorCode(
-                    e.target.value.replace(/\D/g, "").slice(0, 6)
-                  )
-                }
-                placeholder="6-digit code from your authenticator"
-                className="h-10 text-center font-mono text-md tracking-[0.35em]"
-              />
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowTwoFactor(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-card/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-secondary/40 hover:text-foreground"
-            >
-              <ShieldCheck className="size-3.5" />
-              Enter 2FA code
-            </button>
-          )}
 
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -195,19 +126,12 @@ export default function OnPremSignInPage() {
               />
               Keep me signed in
             </label>
-            <button
-              type="button"
-              onClick={() =>
-                toast.message("Recovery code stub", {
-                  description:
-                    "Use the printed 16-character recovery code from initial setup, or contact your administrator.",
-                })
-              }
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            <Link
+              to="/on-premise/forgot-password"
+              className="text-sm font-semibold text-primary hover:underline"
             >
-              <KeyRound className="size-3" />
-              Use recovery code
-            </button>
+              Forgot password?
+            </Link>
           </div>
 
           {error && (
@@ -217,11 +141,7 @@ export default function OnPremSignInPage() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="h-10 w-full gap-2 text-base"
-            disabled={loading}
-          >
+          <Button type="submit" className="mt-2 h-10 w-full gap-2 text-base" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="size-3.5 animate-spin" /> Authenticating…
@@ -247,11 +167,9 @@ export default function OnPremSignInPage() {
           )}
         >
           <div>
-            <p className="text-base font-bold text-foreground">
-              Set up this appliance
-            </p>
+            <p className="text-base font-bold text-foreground">Set up this appliance</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Activate license, configure the site, create the Super Admin.
+              Activate license, configure the site, add members.
             </p>
           </div>
           <span className="text-xl text-secondary">→</span>

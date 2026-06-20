@@ -29,7 +29,11 @@ const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string }
 
 const TIER_ORDER: PlanTier[] = ["starter", "professional", "enterprise"];
 
-export default function OnboardingSubscriptionPage() {
+export default function OnboardingSubscriptionPage({
+  initialStep = "pick",
+}: {
+  initialStep?: "pick" | "payment";
+} = {}) {
   const navigate = useNavigate();
   const setHasActiveSubscription = useAuthStore((s) => s.setHasActiveSubscription);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
@@ -46,7 +50,7 @@ export default function OnboardingSubscriptionPage() {
 
   const [picked, setPicked] = React.useState<PlanTier>("professional");
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
-  const [step, setStep] = React.useState<"pick" | "payment">("pick");
+  const [step, setStep] = React.useState<"pick" | "payment">(initialStep);
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
   const [expiry, setExpiry] = React.useState("");

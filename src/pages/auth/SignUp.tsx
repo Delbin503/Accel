@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   CreditCard,
   Plus,
-  Trash2,
   Sparkles,
   Zap,
   Rocket,
@@ -29,10 +28,19 @@ import {
   Crown,
   ShieldCheck,
   CircleUser,
+  Phone,
+  Briefcase,
+  Search,
+  ChevronDown,
   Lock as LockIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +61,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
 import { PLANS, type PlanTier, SEAT_PRICING, MOCK_SEATS } from "@/mocks/licenses";
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
+import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
@@ -69,6 +78,35 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
   professional: Zap,
   enterprise: Rocket,
 };
+
+/* Distinct icon colours per tier — mirrors OnboardingSubscription PLAN_COLORS. */
+const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string }> = {
+  starter: { bg: "bg-info/10", border: "border-info/40", text: "text-info" },
+  professional: { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary" },
+  enterprise: { bg: "bg-success/10", border: "border-success/40", text: "text-success" },
+};
+
+const COUNTRY_CODES: { code: string; name: string }[] = [
+  { code: "+65", name: "Singapore" },
+  { code: "+60", name: "Malaysia" },
+  { code: "+62", name: "Indonesia" },
+  { code: "+66", name: "Thailand" },
+  { code: "+63", name: "Philippines" },
+  { code: "+84", name: "Vietnam" },
+  { code: "+91", name: "India" },
+  { code: "+86", name: "China" },
+  { code: "+852", name: "Hong Kong" },
+  { code: "+81", name: "Japan" },
+  { code: "+82", name: "South Korea" },
+  { code: "+61", name: "Australia" },
+  { code: "+64", name: "New Zealand" },
+  { code: "+44", name: "United Kingdom" },
+  { code: "+1", name: "United States" },
+  { code: "+971", name: "United Arab Emirates" },
+  { code: "+966", name: "Saudi Arabia" },
+  { code: "+49", name: "Germany" },
+  { code: "+33", name: "France" },
+];
 
 type InviteRole = "admin" | "user";
 
@@ -190,7 +228,12 @@ const TIMEZONES = [
   "Australia/Sydney",
 ];
 
-export default function SignUpPage() {
+export default function SignUpPage({
+  initialStep = "account",
+}: {
+  /** Prototype-only deep-link entry: jump the wizard to a specific step. */
+  initialStep?: "account" | "plan" | "payment" | "site" | "team";
+} = {}) {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.signUp);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
@@ -199,12 +242,21 @@ export default function SignUpPage() {
   const addSite = useSitesStore((s) => s.addSite);
   const addSubscription = useSubscriptionsStore((s) => s.add);
 
-  const [step, setStep] = React.useState<WizardStep>("account");
+  const [step, setStep] = React.useState<WizardStep>(
+    initialStep === "payment" ? "plan" : initialStep
+  );
   const [accountSubStep, setAccountSubStep] = React.useState<"form" | "otp">("form");
-  const [planSubStep, setPlanSubStep] = React.useState<PlanSubStep>("pick");
+  const [planSubStep, setPlanSubStep] = React.useState<PlanSubStep>(
+    initialStep === "payment" ? "payment" : "pick"
+  );
 
   /* Account info */
-  const [fullName, setFullName] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [department, setDepartment] = React.useState("");
+  const [dialCode, setDialCode] = React.useState("+65");
+  const [phoneNumber, setPhoneNumber] = React.useState("");
+  const fullName = `${firstName} ${lastName}`.trim();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPw, setConfirmPw] = React.useState("");
@@ -268,7 +320,8 @@ export default function SignUpPage() {
   function submitAccount(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (fullName.trim().length < 2) return setError("Enter your full name.");
+    if (firstName.trim().length < 1) return setError("Enter your first name.");
+    if (lastName.trim().length < 1) return setError("Enter your last name.");
     if (!email.includes("@")) return setError("Enter a valid email address.");
     if (password.length < 8)
       return setError("Password must be at least 8 characters.");
@@ -339,6 +392,11 @@ export default function SignUpPage() {
 
   function selectPlan() {
     setPlanSubStep("payment");
+  }
+
+  function skipPlan() {
+    setError(null);
+    setStep("site");
   }
 
   function submitPayment(e: React.FormEvent) {
@@ -495,15 +553,46 @@ export default function SignUpPage() {
           subtitle="Start a free 30-day trial. No credit card needed yet."
         />
         <form onSubmit={submitAccount} className="mt-7 space-y-4">
-          <Field label="Full name" icon={User}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="First name" icon={User}>
+              <Input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="e.g. Delbin"
+                className="h-10 pl-9 text-base"
+                autoComplete="given-name"
+              />
+            </Field>
+            <Field label="Last name" icon={User}>
+              <Input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="e.g. Arkar"
+                className="h-10 pl-9 text-base"
+                autoComplete="family-name"
+              />
+            </Field>
+          </div>
+          <Field label="Department (Optional)" icon={Briefcase}>
             <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="e.g. Delbin Arkar"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="e.g. Security Operations"
               className="h-10 pl-9 text-base"
-              autoComplete="name"
+              autoComplete="organization-title"
             />
           </Field>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Phone Number
+            </label>
+            <PhoneField
+              dialCode={dialCode}
+              number={phoneNumber}
+              onDialCode={setDialCode}
+              onNumber={setPhoneNumber}
+            />
+          </div>
           <Field label="Work email" icon={Mail}>
             <Input
               type="email"
@@ -566,7 +655,8 @@ export default function SignUpPage() {
             type="submit"
             disabled={
               otpSending ||
-              fullName.trim().length < 2 ||
+              firstName.trim().length < 1 ||
+              lastName.trim().length < 1 ||
               !email.includes("@") ||
               !isStrongPassword(password) ||
               password !== confirmPw ||
@@ -612,7 +702,7 @@ export default function SignUpPage() {
             </>
           }
         />
-        <form onSubmit={submitOtp} className="mt-7 space-y-5">
+        <form onSubmit={submitOtp} className="mt-6 space-y-5">
           <div
             onPaste={otpPaste}
             className="flex items-center justify-center gap-2"
@@ -710,6 +800,7 @@ export default function SignUpPage() {
             (tier) => {
               const p = PLANS[tier];
               const Icon = PLAN_ICONS[tier];
+              const color = PLAN_COLORS[tier];
               const monthly =
                 cycle === "annual"
                   ? Math.round(p.pricePerYear / 12)
@@ -732,8 +823,14 @@ export default function SignUpPage() {
                     </span>
                   )}
                   <div className="flex items-center gap-2.5">
-                    <div className="flex size-8 items-center justify-center rounded-lg border border-secondary/30 bg-secondary/10">
-                      <Icon className="size-3.5 text-secondary" />
+                    <div
+                      className={cn(
+                        "flex size-8 items-center justify-center rounded-lg border",
+                        color.border,
+                        color.bg
+                      )}
+                    >
+                      <Icon className={cn("size-3.5", color.text)} />
                     </div>
                     <div>
                       <p className="text-base font-bold text-foreground">
@@ -768,7 +865,10 @@ export default function SignUpPage() {
             }
           )}
         </div>
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex items-center justify-end gap-2">
+          <Button variant="ghost" onClick={skipPlan} className="h-10 text-base">
+            Skip
+          </Button>
           <Button onClick={selectPlan} className="h-10 gap-2 px-8 text-base">
             Select this Plan <ArrowRight className="size-3.5" />
           </Button>
@@ -799,7 +899,7 @@ export default function SignUpPage() {
               Card Information
             </p>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <CompactField label="Card Holder Name *">
+              <CompactField label="Card Holder Name">
                 <Input
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
@@ -807,7 +907,7 @@ export default function SignUpPage() {
                   className="h-9 text-base"
                 />
               </CompactField>
-              <CompactField label="Card Number *">
+              <CompactField label="Card Number">
                 <Input
                   value={cardNumber}
                   onChange={(e) => setCardNumber(fmtCard(e.target.value))}
@@ -816,7 +916,7 @@ export default function SignUpPage() {
                   inputMode="numeric"
                 />
               </CompactField>
-              <CompactField label="Expiry Date *">
+              <CompactField label="Expiry Date">
                 <Input
                   value={expiry}
                   onChange={(e) => setExpiry(fmtExpiry(e.target.value))}
@@ -825,7 +925,7 @@ export default function SignUpPage() {
                   inputMode="numeric"
                 />
               </CompactField>
-              <CompactField label="Security Code (CVV) *">
+              <CompactField label="Security Code (CVV)">
                 <Input
                   value={cvc}
                   onChange={(e) =>
@@ -851,7 +951,7 @@ export default function SignUpPage() {
               Billing Information
             </p>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <CompactField label="Billing Address *">
+              <CompactField label="Billing Address">
                 <Input
                   value={billingAddress}
                   onChange={(e) => setBillingAddress(e.target.value)}
@@ -867,7 +967,7 @@ export default function SignUpPage() {
                   className="h-9 text-base"
                 />
               </CompactField>
-              <CompactField label="Country *">
+              <CompactField label="Country">
                 <Select value={country} onValueChange={(v) => setCountry(v)}>
                   <SelectTrigger className="h-9 w-full text-base">
                     <SelectValue placeholder="Select country" />
@@ -888,7 +988,7 @@ export default function SignUpPage() {
                   </SelectContent>
                 </Select>
               </CompactField>
-              <CompactField label="City *">
+              <CompactField label="City">
                 <Input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -896,7 +996,7 @@ export default function SignUpPage() {
                   className="h-9 text-base"
                 />
               </CompactField>
-              <CompactField label="Postal Code *">
+              <CompactField label="Postal Code">
                 <Input
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
@@ -907,7 +1007,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          <div className="self-start rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
+          <div className="self-start rounded-lg border border-border/60 bg-card/40 p-5 pr-6 backdrop-blur-sm">
             <p className="mb-3 text-base font-bold text-foreground">
               Your {plan.name} Plan
             </p>
@@ -1027,11 +1127,11 @@ export default function SignUpPage() {
             </dl>
           </div>
 
-          <div className="self-start rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <p className="mb-3 text-base font-bold text-foreground">
+          <div className="self-start rounded-lg border border-border/60 bg-card/40 p-6 backdrop-blur-sm">
+            <p className="mb-4 text-base font-bold text-foreground">
               Overview
             </p>
-            <div className="space-y-1.5 text-sm">
+            <div className="space-y-2.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
               <Line label={`${plan.name} plan`} value={`$${monthlyPerSite}`} />
               {additionalSeats > 0 && (
@@ -1040,21 +1140,21 @@ export default function SignUpPage() {
                   value={`$${additionalSeats * monthlyPerSeat}`}
                 />
               )}
-              <div className="flex justify-between border-t border-border/60 pt-1.5">
+              <div className="flex justify-between border-t border-border/60 pt-2.5">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-mono text-foreground">
                   ${totalDue.toLocaleString()}
                 </span>
               </div>
               <Line label="Tax (0%)" value="$0.00" />
-              <div className="flex justify-between border-t border-border/60 pt-1.5 text-base font-bold">
+              <div className="flex justify-between border-t border-border/60 pt-2.5 text-base font-bold">
                 <span className="text-foreground">Total due today</span>
                 <span className="font-mono text-foreground">
                   ${totalDue.toLocaleString()}
                 </span>
               </div>
             </div>
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-4 space-y-2.5">
               <label className="flex items-start gap-2 text-xs text-muted-foreground">
                 <input
                   type="checkbox"
@@ -1103,6 +1203,13 @@ export default function SignUpPage() {
 
   /* ── Step 3: Site info ──────────────────────────────────────────── */
   if (step === "site") {
+    const siteSlug = siteName
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 12);
+    const siteId = siteSlug ? `SITE-${siteSlug}` : "SITE-XXXX";
     return (
       <WizardShell onCancel={() => navigate("/signin")} currentStep="site">
         <BackLink onClick={goBack} />
@@ -1117,6 +1224,15 @@ export default function SignUpPage() {
               onChange={(e) => setSiteName(e.target.value)}
               placeholder="e.g. Astra HQ"
               className="h-10 pl-9 text-base"
+            />
+          </Field>
+          <Field label="Site ID (auto-generated)" icon={LockIcon}>
+            <Input
+              value={siteId}
+              readOnly
+              disabled
+              placeholder="SITE-XXXX"
+              className="h-10 cursor-not-allowed bg-muted/30 pl-9 font-mono text-base text-muted-foreground"
             />
           </Field>
           <Field label="Site address" icon={MapPin}>
@@ -1199,6 +1315,19 @@ export default function SignUpPage() {
   if (step === "team") {
     const adminCount = invites.filter((i) => i.role === "admin").length;
     const userCount = invites.filter((i) => i.role === "user").length;
+    const mkSeat = (r: UserRole, assigned: number): SeatUsage => ({
+      role: r,
+      total: MOCK_SEATS[r].total,
+      assigned,
+      available: Math.max(0, MOCK_SEATS[r].total - assigned),
+      price: MOCK_SEATS[r].pricePerMonth,
+      label: MOCK_SEATS[r].label,
+    });
+    const seatUsage: Record<UserRole, SeatUsage> = {
+      owner: mkSeat("owner", 1),
+      admin: mkSeat("admin", adminCount),
+      user: mkSeat("user", userCount),
+    };
     return (
       <WizardShell wide onCancel={() => navigate("/signin")} currentStep="team">
         <BackLink onClick={goBack} />
@@ -1207,124 +1336,126 @@ export default function SignUpPage() {
           subtitle="Choose the type of access each team member will need. You can adjust later."
         />
 
-        <div className="mt-6 flex items-center justify-between">
-          <p className="text-base font-bold text-foreground">Members</p>
-          <div className="flex items-center gap-2">
-            <SeatChip role="owner" count={1} />
-            <SeatChip role="admin" count={adminCount} />
-            <SeatChip role="user" count={userCount + 1} />
-            <Button onClick={() => setInviteOpen(true)} className="h-9 gap-1.5">
-              <Plus className="size-3.5" />
-              Invite Users
-            </Button>
-          </div>
+        <div className="mt-6">
+          <SeatStrip usage={seatUsage} billingCycle="Monthly" />
         </div>
 
-        <div className="mt-3 overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
-          <table className="w-full">
-            <thead className="bg-muted/20 text-left">
-              <tr className="border-b border-border/60">
-                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
-                  Name
-                </th>
-                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
-                  Seat
-                </th>
-                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
-                  Includes
-                </th>
-                <th className="px-4 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              <tr>
-                <td className="px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="flex size-7 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
-                      {fullName
-                        .split(" ")
-                        .map((p) => p[0]?.toUpperCase())
-                        .slice(0, 2)
-                        .join("") || "U"}
-                    </div>
-                    <div>
-                      <p className="inline-flex items-center gap-1.5 text-base font-semibold text-foreground">
-                        {fullName || "You"}
-                        <span className="rounded bg-muted px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-                          Owner
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {email}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-2.5">
-                  <RoleBadge role="owner" />
-                </td>
-                <td className="px-4 py-2.5 text-sm text-muted-foreground">
-                  {USER_ROLE_DESCRIPTIONS.owner}
-                </td>
-                <td className="px-4 py-2.5" />
-              </tr>
+        <div className="mt-5 flex items-center justify-between">
+          <p className="text-base font-bold text-foreground">Members</p>
+          <Button onClick={() => setInviteOpen(true)} className="h-9 gap-1.5">
+            <Plus className="size-3.5" />
+            Invite Users
+          </Button>
+        </div>
 
-              {invites.map((inv) => (
-                <tr key={inv.id}>
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="flex size-7 items-center justify-center rounded-full bg-muted">
-                        <Mail className="size-3 text-muted-foreground" />
+        <div className="mt-3 flex max-h-[calc(100vh-22rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
+          <div className="flex-1 overflow-y-auto">
+            <table className="w-full">
+              <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
+                <tr className="border-b border-border text-left">
+                  {["USER", "USER ID", "ROLE", "STATUS", "INCLUDES"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                <tr className="text-base transition-colors hover:bg-muted/20">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary">
+                        {fullName
+                          .split(" ")
+                          .map((p) => p[0]?.toUpperCase())
+                          .slice(0, 2)
+                          .join("") || "U"}
                       </div>
-                      <div>
-                        <p className="text-base font-semibold text-warning">
-                          Pending
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {fullName || "You"}
+                          <span className="ml-1.5 text-xs font-medium text-muted-foreground">
+                            (You)
+                          </span>
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {inv.email}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5">
-                    <RoleBadge role={inv.role} />
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    USR-001
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground">
-                    {USER_ROLE_DESCRIPTIONS[inv.role]}
+                  <td className="px-4 py-3">
+                    <RoleBadge role="owner" />
                   </td>
-                  <td className="px-4 py-2.5">
-                    <button
-                      onClick={() =>
-                        setInvites((curr) =>
-                          curr.filter((r) => r.id !== inv.id)
-                        )
-                      }
-                      className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
+                      Active
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {USER_ROLE_DESCRIPTIONS.owner}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
+
+                {invites.map((inv) => (
+                  <tr
+                    key={inv.id}
+                    className="text-base transition-colors hover:bg-muted/20"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                          <Mail className="size-3.5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground">
+                            {inv.email.split("@")[0]}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {inv.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground/50">
+                      —
+                    </td>
+                    <td className="px-4 py-3">
+                      <RoleBadge role={inv.role} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
+                        Pending
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {USER_ROLE_DESCRIPTIONS[inv.role]}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
             Current Total:{" "}
             <strong className="text-foreground">{1 + invites.length}</strong>{" "}
             assigned seat{invites.length === 0 ? "" : "s"}
           </div>
-        </div>
 
-        <div className="mt-6 flex items-center justify-between gap-2">
-          <Button variant="ghost" onClick={finish}>
-            Skip for now
-          </Button>
-          <Button onClick={finish} className="h-10 gap-1.5">
-            <CheckCircle2 className="size-3.5" />
-            Finish & Enter Dashboard
-          </Button>
+          <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-4 py-3.5">
+            <Button variant="ghost" onClick={finish}>
+              Skip for now
+            </Button>
+            <Button onClick={finish} className="h-10 gap-1.5">
+              <CheckCircle2 className="size-3.5" />
+              Finish & Enter Dashboard
+            </Button>
+          </div>
         </div>
 
         <InviteUsersModal
@@ -1409,6 +1540,97 @@ function Field({
   );
 }
 
+function PhoneField({
+  dialCode,
+  number,
+  onDialCode,
+  onNumber,
+}: {
+  dialCode: string;
+  number: string;
+  onDialCode: (code: string) => void;
+  onNumber: (n: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+  const list = COUNTRY_CODES.filter(
+    (c) =>
+      !query ||
+      c.name.toLowerCase().includes(query.toLowerCase()) ||
+      c.code.includes(query)
+  );
+
+  return (
+    <div className="flex h-10 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
+      <Popover
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setQuery("");
+        }}
+      >
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
+          >
+            <Phone className="size-3.5 text-muted-foreground" />
+            {dialCode}
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-64 p-1.5">
+          <div className="relative mb-1">
+            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country or code"
+              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {list.length === 0 ? (
+              <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+                No match
+              </p>
+            ) : (
+              list.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => {
+                    onDialCode(c.code);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60",
+                    c.code === dialCode && "bg-primary/10"
+                  )}
+                >
+                  <span className="truncate text-foreground">{c.name}</span>
+                  <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">
+                    {c.code}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+      <input
+        value={number}
+        onChange={(e) => onNumber(e.target.value)}
+        placeholder="9123 4567"
+        inputMode="tel"
+        autoComplete="tel-national"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+      />
+    </div>
+  );
+}
+
 function CompactField({
   label,
   children,
@@ -1489,22 +1711,6 @@ function Line({
   );
 }
 
-function SeatChip({ role, count }: { role: UserRole; count: number }) {
-  const s = ROLE_STYLES[role];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold",
-        s.bg,
-        s.text
-      )}
-    >
-      {USER_ROLE_LABELS[role]} ·{" "}
-      <span className="font-mono font-bold">{count}</span>
-    </span>
-  );
-}
-
 /* ── Invite Users modal — mirrors the one in User Management ──────────
  * Differences from User Management:
  *   • Site Access input is disabled and locked to the just-created site
@@ -1570,39 +1776,51 @@ function InviteUsersModal({
         </DialogHeader>
 
         <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
-          {/* Seat usage strip */}
-          <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
-            {(["owner", "admin", "user"] as UserRole[]).map((r) => {
-              const s = usage[r];
-              const isLow = s.available === 0;
-              const isSelected = role === r;
-              return (
-                <div
-                  key={r}
-                  className={cn(
-                    "rounded-md border px-2 py-1.5 transition-colors",
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-card"
-                  )}
-                >
-                  <div className="mb-0.5 flex items-center justify-between gap-1">
-                    <RoleBadge role={r} withIcon={false} />
-                    <span
-                      className={cn(
-                        "font-mono text-3xs font-bold",
-                        isLow ? "text-sev-critical" : "text-success"
-                      )}
-                    >
-                      {s.available} left
-                    </span>
-                  </div>
-                  <p className="font-mono text-2xs text-muted-foreground">
-                    {s.assigned} / {s.total} used
-                  </p>
-                </div>
-              );
-            })}
+          {/* Seat tiles double as the role selector — pick a tier to invite into. */}
+          <div>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Seat Type
+            </label>
+            <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
+              {(["owner", "admin", "user"] as UserRole[]).map((r) => {
+                const s = usage[r];
+                const isLow = s.available === 0;
+                const isSelected = role === r;
+                // Owner is assigned only via ownership transfer — not invitable here.
+                const selectable = r !== "owner";
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    disabled={!selectable}
+                    onClick={() => selectable && setRole(r as InviteRole)}
+                    className={cn(
+                      "rounded-md border px-2 py-1.5 text-left transition-colors",
+                      isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
+                      selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
+                    )}
+                  >
+                    <div className="mb-0.5 flex items-center justify-between gap-1">
+                      <RoleBadge role={r} withIcon={false} />
+                      <span
+                        className={cn(
+                          "font-mono text-3xs font-bold",
+                          isLow ? "text-sev-critical" : "text-success"
+                        )}
+                      >
+                        {s.available} left
+                      </span>
+                    </div>
+                    <p className="font-mono text-2xs text-muted-foreground">
+                      {s.assigned} / {s.total} used
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-2xs text-muted-foreground/70">
+              Owner role can only be assigned via ownership transfer.
+            </p>
           </div>
 
           {/* Site Access — locked to the newly-created site */}
@@ -1696,69 +1914,6 @@ function InviteUsersModal({
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Role */}
-          <div>
-            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Role
-            </label>
-            <div className="space-y-1.5">
-              {(["admin", "user"] as InviteRole[]).map((r) => {
-                const s = usage[r];
-                const willExceed =
-                  role === r && parsed.valid.length > s.available;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={cn(
-                      "flex w-full items-start gap-2.5 rounded-md border bg-background px-2.5 py-2 text-left transition-colors",
-                      role === r
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-                        role === r ? "border-primary" : "border-muted-foreground/40"
-                      )}
-                    >
-                      {role === r && (
-                        <span className="size-1.5 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <RoleBadge role={r} />
-                        <span
-                          className={cn(
-                            "font-mono text-2xs font-bold",
-                            s.available === 0
-                              ? "text-sev-critical"
-                              : willExceed
-                                ? "text-sev-critical"
-                                : s.available <= 2
-                                  ? "text-warning"
-                                  : "text-success"
-                          )}
-                        >
-                          {s.available}/{s.total} seats
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">
-                        {USER_ROLE_DESCRIPTIONS[r]}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
-              Owner role can only be assigned via ownership transfer.
-            </p>
           </div>
 
           {(noSeats || overSeat) && (

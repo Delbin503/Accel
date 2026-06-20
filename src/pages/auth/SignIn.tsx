@@ -1,18 +1,14 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "./AuthLayout";
-import { DeploymentModeSwitcher } from "@/components/shared/DeploymentModeSwitcher";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
 
 export default function SignInPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const signIn = useAuthStore((s) => s.signIn);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPw, setShowPw] = React.useState(false);
@@ -31,33 +27,14 @@ export default function SignInPage() {
     }
     setLoading(true);
     setTimeout(() => {
-      const initials = email.split("@")[0].slice(0, 2).toUpperCase();
-      const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
-      const displayName = local
-        .split(" ")
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
-      const firstName = displayName.split(" ")[0] || displayName;
-      signIn({
-        id: "usr-" + Math.random().toString(36).slice(2, 6),
-        name: displayName || email,
-        initials,
-        role: "admin",
-        email,
-        notificationCount: 0,
-        orgName: "My Workspace",
-      });
-      toast.success(`Welcome back, ${firstName}! 👋`, {
-        description: "Loading your Accel workspace…",
-      });
-      navigate(redirectTo, { replace: true });
+      // Email verification step before the session is established.
+      navigate("/signin/verify", { state: { email, from: redirectTo } });
     }, 250);
   }
 
   return (
     <AuthLayout>
       <div>
-        <DeploymentModeSwitcher />
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Welcome
         </h1>
@@ -141,7 +118,7 @@ export default function SignInPage() {
 
           <Button
             type="submit"
-            className="h-10 w-full gap-2 text-base"
+            className="mt-2 h-10 w-full gap-2 text-base"
             disabled={loading}
           >
             {loading ? (

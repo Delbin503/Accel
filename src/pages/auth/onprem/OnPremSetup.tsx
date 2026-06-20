@@ -4,8 +4,6 @@ import { toast } from "sonner";
 import {
   User,
   Lock,
-  Eye,
-  EyeOff,
   Building2,
   Clock,
   Shapes,
@@ -18,17 +16,13 @@ import {
   Play,
   KeyRound,
   Upload,
-  Cpu,
   ShieldCheck,
   WifiOff,
   Wifi,
   Globe,
-  Copy,
-  Printer,
   RefreshCcw,
   CheckCircle2,
-  HardDrive,
-  AlertTriangle,
+  LoaderCircle,
   Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,11 +46,8 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { OnPremStepBar, type OnPremStepKey } from "@/components/shared/OnPremStepBar";
-import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
 
 /* ── Constants ──────────────────────────────────────────────────────── */
-
-const HARDWARE_FINGERPRINT = "FP-7A4E:9B2C:E118:F034:NX-JETSON-ORIN-AGX-64";
 
 const TIMEZONES = [
   "Asia/Singapore (SGT · UTC+8)",
@@ -111,28 +102,26 @@ const NETWORK_MODES: {
   },
 ];
 
-type OperatorRole = "manager" | "operator" | "viewer";
+type MemberRole = "admin" | "user";
 type FirstLoginMethod = "setup-code" | "temp-password";
 
-interface Operator {
+interface Member {
   id: string;
-  fullName: string;
-  username: string;
-  role: OperatorRole;
+  firstName: string;
+  lastName: string;
+  role: MemberRole;
   firstLogin: FirstLoginMethod;
   setupCode?: string;
 }
 
-const OPERATOR_ROLE_LABELS: Record<OperatorRole, string> = {
-  manager: "Site Manager",
-  operator: "Operator",
-  viewer: "Viewer",
+const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
+  admin: "Admin",
+  user: "User",
 };
 
-const OPERATOR_ROLE_STYLES: Record<OperatorRole, string> = {
-  manager: "bg-info/15 border-info/30 text-info",
-  operator: "bg-secondary/15 border-secondary/30 text-secondary",
-  viewer: "bg-success/15 border-success/30 text-success",
+const MEMBER_ROLE_STYLES: Record<MemberRole, string> = {
+  admin: "bg-info/15 border-info/30 text-info",
+  user: "bg-warning/15 border-warning/30 text-warning",
 };
 
 function genSetupCode(): string {
@@ -146,16 +135,7 @@ function genSetupCode(): string {
   return `${block()}-${block()}`;
 }
 
-function genRecoveryCode(): string {
-  const block = () =>
-    Math.random()
-      .toString(36)
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 4)
-      .padEnd(4, "0");
-  return `${block()}-${block()}-${block()}-${block()}`;
-}
+type LicenseStatus = "idle" | "validating" | "valid" | "invalid";
 
 /* ── Wizard shell ───────────────────────────────────────────────────── */
 
@@ -204,7 +184,11 @@ function WizardShell({
 
 /* ── Page ───────────────────────────────────────────────────────────── */
 
-export default function OnPremSetupPage() {
+export default function OnPremSetupPage({
+  initialStep = "license",
+}: {
+  initialStep?: OnPremStepKey;
+} = {}) {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.signUp);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
@@ -212,13 +196,12 @@ export default function OnPremSetupPage() {
   const setHasActiveSubscription = useAuthStore((s) => s.setHasActiveSubscription);
   const addSite = useSitesStore((s) => s.addSite);
 
-  const [step, setStep] = React.useState<OnPremStepKey>("license");
+  const [step, setStep] = React.useState<OnPremStepKey>(initialStep);
   const [error, setError] = React.useState<string | null>(null);
 
   /* ── Step 1: License ──────────────────────────────────────────── */
-  const [licenseKey, setLicenseKey] = React.useState(
-    "ACCL-ENTP-DSTA-A4F2-9B71-3D08-7XYZ-K2M8"
-  );
+  const [licenseFile, setLicenseFile] = React.useState<string | null>(null);
+  const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus>("idle");
 
   /* ── Step 2: Site ────────────────────────────────────────────── */
   const [siteName, setSiteName] = React.useState("");
@@ -229,20 +212,28 @@ export default function OnPremSetupPage() {
   const [opFrom, setOpFrom] = React.useState("06:00");
   const [opTo, setOpTo] = React.useState("18:00");
 
-  /* ── Step 3: Admin ───────────────────────────────────────────── */
-  const [bootstrapUsername] = React.useState("admin@local.appliance");
-  const [bootstrapPw, setBootstrapPw] = React.useState("");
-  const [showBootstrap, setShowBootstrap] = React.useState(false);
-  const [newPw, setNewPw] = React.useState("");
-  const [confirmPw, setConfirmPw] = React.useState("");
-  const [showNew, setShowNew] = React.useState(false);
-  const [showConfirm, setShowConfirm] = React.useState(false);
-  const [recoveryCode, setRecoveryCode] = React.useState(() => genRecoveryCode());
+  const bootstrapUsername = "admin@local.appliance";
 
-  /* ── Step 4: Operators ───────────────────────────────────────── */
-  const [operators, setOperators] = React.useState<Operator[]>([]);
-  const [operatorModalOpen, setOperatorModalOpen] = React.useState(false);
-  const [editingOperator, setEditingOperator] = React.useState<Operator | null>(null);
+  /* ── Step 3: Members ─────────────────────────────────────────── */
+  const [members, setMembers] = React.useState<Member[]>([]);
+  const [memberModalOpen, setMemberModalOpen] = React.useState(false);
+  const [editingMember, setEditingMember] = React.useState<Member | null>(null);
+
+  function pickLicenseFile() {
+    // Demo dropzone: simulate a chosen file, then auto-validate.
+    const name = `entitlement-${siteCode || "appliance"}.lic`;
+    setLicenseFile(name);
+  }
+
+  React.useEffect(() => {
+    if (!licenseFile) return;
+    setLicenseStatus("validating");
+    const invalid = /bad|invalid/i.test(licenseFile);
+    const t = setTimeout(() => {
+      setLicenseStatus(invalid ? "invalid" : "valid");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [licenseFile]);
 
   function goBack() {
     setError(null);
@@ -251,8 +242,7 @@ export default function OnPremSetupPage() {
       return;
     }
     if (step === "site") setStep("license");
-    else if (step === "admin") setStep("site");
-    else if (step === "operators") setStep("admin");
+    else if (step === "operators") setStep("site");
   }
 
   /* ── Step submit handlers ──────────────────────────────────── */
@@ -260,9 +250,8 @@ export default function OnPremSetupPage() {
   function submitLicense(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const stripped = licenseKey.replace(/\s|-/g, "");
-    if (stripped.length < 24) {
-      setError("Enter a valid 32-character license key.");
+    if (licenseStatus !== "valid") {
+      setError("Upload a valid license file to continue.");
       return;
     }
     toast.success("License activated", {
@@ -276,46 +265,35 @@ export default function OnPremSetupPage() {
     setError(null);
     if (siteName.trim().length < 2) return setError("Enter a site name.");
     if (siteCode.trim().length < 3) return setError("Enter a site code.");
-    setStep("admin");
-  }
-
-  function submitAdmin(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (bootstrapPw.trim().length < 4)
-      return setError("Enter the bootstrap password from your sealed envelope.");
-    if (newPw.length < 14)
-      return setError("New password must be at least 14 characters.");
-    if (newPw !== confirmPw) return setError("Passwords don't match.");
     setStep("operators");
   }
 
-  function openAddOperator() {
-    setEditingOperator(null);
-    setOperatorModalOpen(true);
+  function openAddMember() {
+    setEditingMember(null);
+    setMemberModalOpen(true);
   }
 
-  function openEditOperator(op: Operator) {
-    setEditingOperator(op);
-    setOperatorModalOpen(true);
+  function openEditMember(m: Member) {
+    setEditingMember(m);
+    setMemberModalOpen(true);
   }
 
-  function saveOperator(op: Operator) {
-    setOperators((curr) => {
-      const exists = curr.some((x) => x.id === op.id);
-      return exists ? curr.map((x) => (x.id === op.id ? op : x)) : [...curr, op];
+  function saveMember(m: Member) {
+    setMembers((curr) => {
+      const exists = curr.some((x) => x.id === m.id);
+      return exists ? curr.map((x) => (x.id === m.id ? m : x)) : [...curr, m];
     });
-    setOperatorModalOpen(false);
+    setMemberModalOpen(false);
     toast.success(
-      editingOperator
-        ? "Operator updated"
-        : `${op.fullName} added · first-login via ${op.firstLogin === "setup-code" ? "setup code" : "temp password"}`
+      editingMember
+        ? "Member updated"
+        : `${m.firstName} ${m.lastName} added · first-login via ${m.firstLogin === "setup-code" ? "setup code" : "temp password"}`
     );
   }
 
-  function removeOperator(id: string) {
-    setOperators((curr) => curr.filter((x) => x.id !== id));
-    toast.success("Operator removed");
+  function removeMember(id: string) {
+    setMembers((curr) => curr.filter((x) => x.id !== id));
+    toast.success("Member removed");
   }
 
   function finishSetup() {
@@ -360,7 +338,7 @@ export default function OnPremSetupPage() {
     completeOnboarding();
 
     toast.success("Setup complete", {
-      description: `${siteName.trim()} is now ready. Operators can sign in with their codes.`,
+      description: `${siteName.trim()} is now ready. Members can sign in with their codes.`,
     });
     navigate("/", { replace: true });
   }
@@ -373,47 +351,45 @@ export default function OnPremSetupPage() {
         <BackLink onClick={goBack} label="Back to sign in" />
         <Heading
           title="Activate your license"
-          subtitle="Enter the license key from your installation pack. This appliance cannot be used until activation completes."
+          subtitle="Upload the license file from your installation pack. This appliance cannot be used until activation completes."
         />
-        <form onSubmit={submitLicense} className="mt-7 space-y-4">
+        <form onSubmit={submitLicense} className="mt-10 space-y-5">
           <div>
-            <Label>License Key</Label>
-            <div className="relative">
-              <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={licenseKey}
-                onChange={(e) => setLicenseKey(e.target.value)}
-                placeholder="ACCL-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-                className="h-10 pl-9 font-mono text-sm tracking-wider"
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              32 characters from your renewal email or sealed envelope.
-            </p>
-          </div>
-
-          <div>
-            <Label>Or upload license file</Label>
+            <Label>Upload license file</Label>
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              onClick={pickLicenseFile}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-6 text-sm text-muted-foreground transition-colors hover:border-secondary/50 hover:text-foreground"
             >
               <Upload className="size-4" />
-              Drop <strong className="text-foreground">.lic</strong> file here or click to browse
+              {licenseFile ? (
+                <span className="font-mono text-foreground">{licenseFile}</span>
+              ) : (
+                <>
+                  Drop <strong className="text-foreground">.lic</strong> file here or click to browse
+                </>
+              )}
             </button>
           </div>
 
-          <div className="rounded-md border border-border/60 bg-card/40 p-3.5">
-            <div className="mb-1.5 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Cpu className="size-3" /> This appliance's hardware fingerprint
+          {licenseStatus === "validating" && (
+            <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/40 px-3 py-2.5 text-sm text-muted-foreground">
+              <LoaderCircle className="size-4 animate-spin text-primary" />
+              Validating license…
             </div>
-            <p className="font-mono text-xs leading-relaxed text-muted-foreground">
-              {HARDWARE_FINGERPRINT}
-            </p>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
-              Auto-detected. Your license key must match this fingerprint.
-            </p>
-          </div>
+          )}
+          {licenseStatus === "valid" && (
+            <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/[0.08] px-3 py-2.5 text-sm text-success">
+              <CheckCircle2 className="size-4 flex-shrink-0" />
+              License valid — entitlement matches this appliance's fingerprint.
+            </div>
+          )}
+          {licenseStatus === "invalid" && (
+            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2.5 text-sm text-sev-critical">
+              <AlertCircle className="size-4 flex-shrink-0" />
+              License invalid — this file does not match this appliance. Upload a valid .lic file.
+            </div>
+          )}
 
           <InfoBanner
             tone="info"
@@ -425,7 +401,11 @@ export default function OnPremSetupPage() {
           </InfoBanner>
 
           {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-base">
+          <Button
+            type="submit"
+            disabled={licenseStatus !== "valid"}
+            className="mt-2 h-10 w-full gap-2 text-base"
+          >
             Activate & Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
@@ -441,9 +421,9 @@ export default function OnPremSetupPage() {
         <BackLink onClick={goBack} />
         <Heading
           title="Configure this site"
-          subtitle="These details identify the deployment and set the operational defaults. On-Premise appliances manage exactly one site."
+          subtitle="Add basic details and the operational defaults. On-Premise appliances manage exactly one site."
         />
-        <form onSubmit={submitSite} className="mt-7 space-y-4">
+        <form onSubmit={submitSite} className="mt-10 space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Site name" icon={Building2}>
               <Input
@@ -510,14 +490,14 @@ export default function OnPremSetupPage() {
                     className={cn(
                       "flex flex-col items-start gap-1.5 rounded-md border bg-card/40 px-3 py-2.5 text-left backdrop-blur-sm transition-colors",
                       selected
-                        ? "border-secondary bg-secondary/10"
-                        : "border-border/60 hover:border-secondary/40"
+                        ? "border-primary bg-primary/[0.06]"
+                        : "border-border/60 hover:border-primary/40"
                     )}
                   >
                     <div
                       className={cn(
                         "flex items-center gap-1.5 text-sm font-bold",
-                        selected ? "text-secondary" : "text-foreground"
+                        selected ? "text-primary" : "text-foreground"
                       )}
                     >
                       <Icon className="size-3.5" />
@@ -567,200 +547,96 @@ export default function OnPremSetupPage() {
     );
   }
 
-  /* ── Render: Admin ─────────────────────────────────────────── */
-
-  if (step === "admin") {
-    return (
-      <WizardShell currentStep="admin" onCancel={() => navigate("/on-premise/signin")}>
-        <BackLink onClick={goBack} />
-        <Heading
-          title="Replace the bootstrap password"
-          subtitle="You were issued a temporary password in the sealed envelope. Replace it now — it can never be used again after this step."
-        />
-        <form onSubmit={submitAdmin} className="mt-7 space-y-4">
-          <Field label="Bootstrap username (from envelope)" icon={User}>
-            <Input
-              value={bootstrapUsername}
-              disabled
-              className="h-10 pl-9 font-mono text-base"
-            />
-          </Field>
-
-          <Field label="Bootstrap password (from envelope)" icon={Lock}>
-            <Input
-              type={showBootstrap ? "text" : "password"}
-              value={bootstrapPw}
-              onChange={(e) => setBootstrapPw(e.target.value)}
-              placeholder="Paste the temp password from the sealed envelope"
-              className="h-10 px-9 text-base"
-            />
-            <EyeToggle
-              on={showBootstrap}
-              onClick={() => setShowBootstrap((v) => !v)}
-            />
-          </Field>
-
-          <div>
-            <Field label="New password" icon={Lock}>
-              <Input
-                type={showNew ? "text" : "password"}
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-                placeholder="At least 14 characters"
-                className="h-10 px-9 text-base"
-              />
-              <EyeToggle on={showNew} onClick={() => setShowNew((v) => !v)} />
-            </Field>
-            <PasswordStrengthBar className="mt-1.5" password={newPw} />
-          </div>
-
-          <Field label="Confirm new password" icon={Lock}>
-            <Input
-              type={showConfirm ? "text" : "password"}
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-              placeholder="Re-enter new password"
-              className="h-10 px-9 text-base"
-            />
-            <EyeToggle
-              on={showConfirm}
-              onClick={() => setShowConfirm((v) => !v)}
-            />
-          </Field>
-
-          <InfoBanner
-            tone="warning"
-            icon={<AlertTriangle className="size-3.5" />}
-            title="No online recovery"
-          >
-            This appliance is offline. If you lose this password, recovery
-            requires the printed recovery code below or physical re-imaging by
-            the vendor.
-          </InfoBanner>
-
-          <div className="rounded-md border border-secondary/30 bg-secondary/[0.06] p-4">
-            <div className="mb-1 flex items-center gap-1.5 text-sm font-bold text-secondary">
-              <HardDrive className="size-3.5" /> Recovery code
-            </div>
-            <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-              If you forget your password, this 16-character code can be used
-              once to reset it.{" "}
-              <strong className="text-foreground">
-                Print this and store it offline.
-              </strong>
-            </p>
-            <div className="rounded-md border border-dashed border-secondary/40 bg-background/40 py-3.5 text-center font-mono text-xl font-bold tracking-[0.18em] text-secondary">
-              {recoveryCode}
-            </div>
-            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
-              <RecoveryActionBtn
-                icon={<Printer className="size-3" />}
-                label="Print"
-                onClick={() =>
-                  toast.message("Print dialog stub", {
-                    description: "A printable copy of the recovery code would open here.",
-                  })
-                }
-              />
-              <RecoveryActionBtn
-                icon={<Copy className="size-3" />}
-                label="Copy"
-                onClick={() => {
-                  navigator.clipboard?.writeText(recoveryCode);
-                  toast.success("Recovery code copied to clipboard");
-                }}
-              />
-              <RecoveryActionBtn
-                icon={<RefreshCcw className="size-3" />}
-                label="Regenerate"
-                onClick={() => {
-                  setRecoveryCode(genRecoveryCode());
-                  toast.message("New recovery code generated");
-                }}
-              />
-            </div>
-          </div>
-
-          {error && <ErrorBox message={error} />}
-          <Button type="submit" className="h-10 w-full gap-2 text-base">
-            Continue <ArrowRight className="size-3.5" />
-          </Button>
-        </form>
-      </WizardShell>
-    );
-  }
-
-  /* ── Render: Operators ─────────────────────────────────────── */
+  /* ── Render: Members ───────────────────────────────────────── */
 
   return (
     <WizardShell currentStep="operators" onCancel={() => navigate("/on-premise/signin")}>
       <BackLink onClick={goBack} />
       <Heading
-        title="Add your operators"
-        subtitle="Since this is an offline appliance, each operator gets a setup code (handed over physically) or a temporary password to use on first sign-in."
+        title="Add Members"
+        subtitle="Since this is an offline appliance, each member gets a setup code (handed over physically) or a temporary password to use on first sign-in."
       />
 
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-base font-bold text-foreground">
-            Operators added so far{" "}
+            Members added so far{" "}
             <span className="font-mono text-muted-foreground">
-              ({operators.length})
+              ({members.length})
             </span>
           </p>
-          <Button onClick={openAddOperator} className="h-9 gap-1.5">
+          <Button onClick={openAddMember} className="h-9 gap-1.5">
             <Plus className="size-3.5" />
-            Add Operator
+            Add Member
           </Button>
         </div>
 
-        {operators.length === 0 ? (
+        {members.length === 0 ? (
           <div className="rounded-md border border-dashed border-border/70 bg-card/30 p-8 text-center backdrop-blur-sm">
             <User className="mx-auto mb-2 size-6 text-muted-foreground/60" />
             <p className="text-base font-semibold text-foreground">
-              No operators yet
+              No members yet
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              You can add operators now or after finishing setup from{" "}
+              You can add members now or after finishing setup from{" "}
               <strong className="text-foreground">Settings → Users</strong>.
             </p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-md border border-border/60 bg-card/40 backdrop-blur-sm">
-            <table className="w-full text-left">
-              <thead className="bg-muted/20">
-                <tr className="border-b border-border/60">
-                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Name</th>
-                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Username</th>
-                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Role</th>
-                  <th className="px-3 py-2 text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">First-login</th>
-                  <th className="px-3 py-2" />
+            <table className="w-full">
+              <thead className="bg-muted/30">
+                <tr className="border-b border-border text-left">
+                  {["MEMBER", "ROLE", "FIRST SIGN-IN", "ACTION"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {operators.map((op) => (
-                  <tr key={op.id}>
-                    <td className="px-3 py-2.5 text-base font-semibold text-foreground">
-                      {op.fullName}
+                {members.map((m) => (
+                  <tr key={m.id} className="text-base transition-colors hover:bg-muted/20">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <MemberAvatar firstName={m.firstName} lastName={m.lastName} />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground">
+                            {m.firstName} {m.lastName}
+                          </p>
+                          {m.firstLogin === "setup-code" ? (
+                            <p className="text-xs text-muted-foreground">
+                              Setup code{" "}
+                              <span className="font-mono font-semibold text-primary">
+                                {m.setupCode}
+                              </span>
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Temp password on first sign-in
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
-                      {op.username}
-                    </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-4 py-3">
                       <span
                         className={cn(
                           "inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
-                          OPERATOR_ROLE_STYLES[op.role]
+                          MEMBER_ROLE_STYLES[m.role]
                         )}
                       >
-                        {OPERATOR_ROLE_LABELS[op.role]}
+                        {MEMBER_ROLE_LABELS[m.role]}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5">
-                      {op.firstLogin === "setup-code" ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-secondary/15 px-2 py-0.5 text-2xs font-semibold text-secondary">
+                    <td className="px-4 py-3">
+                      {m.firstLogin === "setup-code" ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary">
                           <KeyRound className="size-3" />
-                          {op.setupCode}
+                          Setup code
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
@@ -769,19 +645,19 @@ export default function OnPremSetupPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         <button
-                          onClick={() => openEditOperator(op)}
+                          onClick={() => openEditMember(m)}
                           className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          aria-label="Edit operator"
+                          aria-label="Edit member"
                         >
                           <Pencil className="size-3" />
                         </button>
                         <button
-                          onClick={() => removeOperator(op.id)}
+                          onClick={() => removeMember(m.id)}
                           className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                          aria-label="Remove operator"
+                          aria-label="Remove member"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -800,8 +676,8 @@ export default function OnPremSetupPage() {
           title="Hand-off in person"
           className="mt-4"
         >
-          Print this user list with codes (admin only) before completing setup.
-          Operators enrol 2FA themselves on their first sign-in.
+          Print this member list with codes (admin only) before completing setup.
+          Members enrol 2FA themselves on their first sign-in.
         </InfoBanner>
 
         {error && <ErrorBox message={error} className="mt-3" />}
@@ -817,19 +693,31 @@ export default function OnPremSetupPage() {
         </div>
       </div>
 
-      <OperatorModal
-        open={operatorModalOpen}
-        onClose={() => setOperatorModalOpen(false)}
-        onSave={saveOperator}
-        existing={editingOperator}
+      <MemberModal
+        open={memberModalOpen}
+        onClose={() => setMemberModalOpen(false)}
+        onSave={saveMember}
+        existing={editingMember}
       />
     </WizardShell>
   );
 }
 
-/* ── Operator modal ─────────────────────────────────────────────── */
+/* ── Member avatar ──────────────────────────────────────────────── */
 
-function OperatorModal({
+function MemberAvatar({ firstName, lastName }: { firstName: string; lastName: string }) {
+  const initials =
+    `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "?";
+  return (
+    <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted font-mono text-sm font-semibold text-muted-foreground">
+      {initials}
+    </div>
+  );
+}
+
+/* ── Member modal ───────────────────────────────────────────────── */
+
+function MemberModal({
   open,
   onClose,
   onSave,
@@ -837,12 +725,12 @@ function OperatorModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: (op: Operator) => void;
-  existing: Operator | null;
+  onSave: (m: Member) => void;
+  existing: Member | null;
 }) {
-  const [fullName, setFullName] = React.useState("");
-  const [username, setUsername] = React.useState("");
-  const [role, setRole] = React.useState<OperatorRole>("operator");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [role, setRole] = React.useState<MemberRole>("user");
   const [firstLogin, setFirstLogin] =
     React.useState<FirstLoginMethod>("setup-code");
   const [setupCode, setSetupCode] = React.useState("");
@@ -852,16 +740,16 @@ function OperatorModal({
   React.useEffect(() => {
     if (open) {
       if (existing) {
-        setFullName(existing.fullName);
-        setUsername(existing.username);
+        setFirstName(existing.firstName);
+        setLastName(existing.lastName);
         setRole(existing.role);
         setFirstLogin(existing.firstLogin);
         setSetupCode(existing.setupCode ?? genSetupCode());
         setTempPw("");
       } else {
-        setFullName("");
-        setUsername("");
-        setRole("operator");
+        setFirstName("");
+        setLastName("");
+        setRole("user");
         setFirstLogin("setup-code");
         setSetupCode(genSetupCode());
         setTempPw("");
@@ -872,14 +760,14 @@ function OperatorModal({
 
   function submit() {
     setErr(null);
-    if (fullName.trim().length < 2) return setErr("Enter a full name.");
-    if (username.trim().length < 2) return setErr("Enter a username.");
+    if (firstName.trim().length < 1) return setErr("Enter a first name.");
+    if (lastName.trim().length < 1) return setErr("Enter a last name.");
     if (firstLogin === "temp-password" && tempPw.length < 8)
       return setErr("Temp password must be at least 8 characters.");
     onSave({
-      id: existing?.id ?? `op-${Math.random().toString(36).slice(2, 6)}`,
-      fullName: fullName.trim(),
-      username: username.trim(),
+      id: existing?.id ?? `mbr-${Math.random().toString(36).slice(2, 6)}`,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       role,
       firstLogin,
       setupCode: firstLogin === "setup-code" ? setupCode : undefined,
@@ -891,39 +779,39 @@ function OperatorModal({
       <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">
-            {existing ? "Edit operator" : "Add operator"}
+            {existing ? "Edit member" : "Add member"}
           </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            On-prem operators sign in with their username + first-login
-            credential. They'll be prompted to enrol 2FA on first sign-in.
+            On-prem members sign in with their first-login credential. They'll
+            be prompted to enrol 2FA on first sign-in.
           </p>
         </DialogHeader>
 
         <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          <div>
-            <Label>Full name</Label>
-            <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="e.g. KC Loke"
-              className="h-9 text-base"
-            />
-          </div>
-          <div>
-            <Label>Username</Label>
-            <Input
-              value={username}
-              onChange={(e) =>
-                setUsername(e.target.value.toLowerCase().replace(/\s+/g, "."))
-              }
-              placeholder="e.g. kc.loke"
-              className="h-9 font-mono text-base"
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <Label>First name</Label>
+              <Input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="e.g. KC"
+                className="h-9 text-base"
+              />
+            </div>
+            <div>
+              <Label>Last name</Label>
+              <Input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="e.g. Loke"
+                className="h-9 text-base"
+              />
+            </div>
           </div>
           <div>
             <Label>Role</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["manager", "operator", "viewer"] as OperatorRole[]).map((r) => (
+            <div className="grid grid-cols-2 gap-2">
+              {(["admin", "user"] as MemberRole[]).map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -931,11 +819,11 @@ function OperatorModal({
                   className={cn(
                     "rounded-md border px-2.5 py-1.5 text-sm font-semibold transition-colors",
                     role === r
-                      ? "border-secondary bg-secondary/10 text-secondary"
-                      : "border-border text-muted-foreground hover:border-secondary/40"
+                      ? "border-primary bg-primary/[0.06] text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40"
                   )}
                 >
-                  {OPERATOR_ROLE_LABELS[r]}
+                  {MEMBER_ROLE_LABELS[r]}
                 </button>
               ))}
             </div>
@@ -947,7 +835,7 @@ function OperatorModal({
               <FirstLoginCard
                 selected={firstLogin === "setup-code"}
                 title="Setup code (recommended)"
-                description="A one-time 8-char code printed by you and handed over physically. Operator picks their own password on first sign-in."
+                description="A one-time 8-char code printed by you and handed over physically. The member picks their own password on first sign-in."
                 icon={<KeyRound className="size-3.5" />}
                 onClick={() => setFirstLogin("setup-code")}
               />
@@ -965,7 +853,7 @@ function OperatorModal({
             <div>
               <Label>Setup code</Label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-md border border-secondary/30 bg-secondary/[0.06] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-secondary">
+                <div className="flex-1 rounded-md border border-primary/40 bg-primary/[0.10] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-primary">
                   {setupCode}
                 </div>
                 <button
@@ -1000,7 +888,7 @@ function OperatorModal({
             Cancel
           </Button>
           <Button onClick={submit}>
-            {existing ? "Save changes" : "Add operator"}
+            {existing ? "Save changes" : "Add member"}
           </Button>
         </div>
       </DialogContent>
@@ -1028,17 +916,17 @@ function FirstLoginCard({
       className={cn(
         "flex w-full items-start gap-2 rounded-md border bg-background px-3 py-2.5 text-left transition-colors",
         selected
-          ? "border-secondary bg-secondary/[0.06]"
-          : "border-border hover:border-secondary/40"
+          ? "border-primary bg-primary/[0.06]"
+          : "border-border hover:border-primary/40"
       )}
     >
       <div
         className={cn(
           "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-          selected ? "border-secondary" : "border-muted-foreground/40"
+          selected ? "border-primary" : "border-muted-foreground/40"
         )}
       >
-        {selected && <span className="size-1.5 rounded-full bg-secondary" />}
+        {selected && <span className="size-1.5 rounded-full bg-primary" />}
       </div>
       <div className="flex-1">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
@@ -1130,19 +1018,6 @@ function Field({
   );
 }
 
-function EyeToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-      aria-label={on ? "Hide password" : "Show password"}
-    >
-      {on ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-    </button>
-  );
-}
-
 function ErrorBox({
   message,
   className,
@@ -1199,23 +1074,3 @@ function InfoBanner({
   );
 }
 
-function RecoveryActionBtn({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}

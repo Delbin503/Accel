@@ -1054,7 +1054,7 @@ function InviteUsersModal({
 
 /* ── Seat usage strip (top of page) ──────────────────────────────────────── */
 
-interface SeatUsage { role: UserRole; total: number; assigned: number; available: number; price: number; label: string }
+export interface SeatUsage { role: UserRole; total: number; assigned: number; available: number; price: number; label: string }
 
 function computeSeatUsage(users: UserData[], totals: Record<UserRole, number>): Record<UserRole, SeatUsage> {
   return (["owner", "admin", "user"] as UserRole[]).reduce((acc, role) => {
@@ -1141,7 +1141,7 @@ function SeatPill({
   );
 }
 
-function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, SeatUsage>; billingCycle: string }) {
+export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, SeatUsage>; billingCycle: string }) {
   const totalAll     = (["owner", "admin", "user"] as UserRole[]).reduce((s, r) => s + usage[r].total, 0);
   const assignedAll  = (["owner", "admin", "user"] as UserRole[]).reduce((s, r) => s + usage[r].assigned, 0);
   const availableAll = Math.max(0, totalAll - assignedAll);
