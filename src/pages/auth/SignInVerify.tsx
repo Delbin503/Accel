@@ -88,7 +88,7 @@ export default function SignInVerifyPage() {
           We sent a 6-digit code to <strong className="text-foreground">{email}</strong>.
         </p>
 
-        <form onSubmit={submit} className="mt-6 space-y-5">
+        <form onSubmit={submit} className="mt-6 space-y-4">
           <div onPaste={onPaste} className="flex items-center justify-center gap-2">
             {otp.map((d, i) => (
               <input

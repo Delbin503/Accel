@@ -28,6 +28,7 @@ import {
   FileVideo,
   Layers,
   Unlink,
+  RefreshCw,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -705,6 +706,43 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
 
 type DrawerTab = "overview" | "recordings";
 
+/* Drawer body — loading skeleton (mirrors the overview layout). */
+function CameraDrawerSkeleton() {
+  return (
+    <div className="flex-1 space-y-5 overflow-y-auto p-5">
+      <div className="aspect-video w-full animate-pulse rounded-xl bg-muted" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+      <div className="space-y-2.5">
+        <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+        <div className="h-24 w-full animate-pulse rounded-xl bg-muted" />
+      </div>
+      <div className="space-y-2.5">
+        <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+        <div className="h-16 w-full animate-pulse rounded-xl bg-muted" />
+      </div>
+    </div>
+  );
+}
+
+/* Drawer body — error state with retry. */
+function CameraDrawerError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-muted-foreground">
+      <AlertTriangle className="size-8 text-sev-critical" />
+      <p className="text-sm text-foreground">Couldn't load camera details.</p>
+      <p className="text-xs">The feed and configuration for this camera are unavailable.</p>
+      <Button variant="outline" size="sm" className="mt-1 gap-1.5" onClick={onRetry}>
+        <RefreshCw className="size-3.5" />
+        Retry
+      </Button>
+    </div>
+  );
+}
+
 const RECORDING_DATE_FILTERS: { key: string; label: string }[] = [
   { key: "all",       label: "All" },
   { key: "today",     label: "Today" },
@@ -835,9 +873,13 @@ function LinkNvrModal({
   );
 }
 
+type DrawerAsync = "idle" | "loading" | "error";
+
 interface CameraDrawerProps {
   camera: CameraData | null;
   open: boolean;
+  /** Async detail-fetch state. "idle" shows content immediately. */
+  asyncState?: DrawerAsync;
   onClose: () => void;
   onOpenNvr: (nvrId: string) => void;
   onEdit: () => void;
@@ -855,6 +897,7 @@ interface CameraDrawerProps {
 function CameraDrawer({
   camera,
   open,
+  asyncState = "idle",
   onClose,
   onOpenNvr,
   onEdit,
@@ -877,6 +920,9 @@ function CameraDrawer({
   const [selectedRecordingIds, setSelectedRecordingIds] = React.useState<Set<string>>(new Set());
   const [zonesEditing, setZonesEditing] = React.useState(false);
   const [zoneDrawOpen, setZoneDrawOpen] = React.useState(false);
+  // Detail-fetch phase. Retry clears the forced async state back to content.
+  const [retried, setRetried] = React.useState(false);
+  const phase: DrawerAsync = retried ? "idle" : asyncState;
 
   React.useEffect(() => {
     if (open) {
@@ -888,6 +934,7 @@ function CameraDrawer({
       setSelectedRecordingIds(new Set());
       setZonesEditing(false);
       setZoneDrawOpen(false);
+      setRetried(false);
     }
   }, [open, camera?.id]);
 
@@ -1003,8 +1050,14 @@ function CameraDrawer({
           )}
         </SheetHeader>
 
+        {/* Detail-fetch states */}
+        {camera && phase === "loading" && <CameraDrawerSkeleton />}
+        {camera && phase === "error" && (
+          <CameraDrawerError onRetry={() => setRetried(true)} />
+        )}
+
         {/* Body */}
-        {camera && tab === "overview" && (
+        {camera && phase === "idle" && tab === "overview" && (
           <div className="flex-1 space-y-5 overflow-y-auto p-5">
             {/* Live feed */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -1327,7 +1380,7 @@ function CameraDrawer({
           </div>
         )}
 
-        {camera && tab === "recordings" && (
+        {camera && phase === "idle" && tab === "recordings" && (
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
             {/* Search + date filters */}
             <div className="space-y-3">
@@ -1440,7 +1493,7 @@ function CameraDrawer({
         )}
 
         {/* Floating selection bar inside drawer */}
-        {camera && tab === "recordings" && selectedRecordingIds.size > 0 && (
+        {camera && phase === "idle" && tab === "recordings" && selectedRecordingIds.size > 0 && (
           <div className="absolute inset-x-4 bottom-20 z-40 mx-auto flex max-w-[640px] flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
             <div className="flex items-center gap-2">
               <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -1471,7 +1524,7 @@ function CameraDrawer({
         )}
 
         {/* Footer */}
-        {camera && (
+        {camera && phase === "idle" && (
           <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
             <Button size="sm" className="gap-1.5" onClick={onEdit}>
               <Pencil className="size-3.5" />
@@ -2022,7 +2075,12 @@ function ConfirmModal({
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-export default function CamerasPage() {
+export default function CamerasPage({
+  drawerAsync = "idle",
+}: {
+  /** Prototype hook — forces the camera drawer's detail-fetch state. */
+  drawerAsync?: DrawerAsync;
+} = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const cameras = useCamerasStore((s) => s.cameras);
@@ -2378,6 +2436,7 @@ export default function CamerasPage() {
       <CameraDrawer
         camera={drawerCamera}
         open={drawerId !== null}
+        asyncState={drawerAsync}
         onClose={() => setDrawerId(null)}
         onOpenNvr={(nvrId) => {
           setDrawerId(null);

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "./AuthLayout";
@@ -33,16 +33,21 @@ export default function SignInPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout hideBrand>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Welcome
-        </h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          Sign in to your Accel workspace to continue.
-        </p>
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
+            <Play className="size-7 fill-white text-white" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Welcome
+          </h1>
+          <p className="mt-2 text-base text-muted-foreground">
+            Sign in to your Accel workspace to continue.
+          </p>
+        </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-3">
+        <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Email

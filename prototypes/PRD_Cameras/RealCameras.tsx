@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import CamerasPage from "@/pages/site/cameras";
-import { CameraTableSkeleton, ErrorState, EmptyState, type ForcedState } from "./shared";
+import { CameraTableSkeleton, ErrorState, EmptyState, type ForcedState, type DrawerAsync } from "./shared";
 
 /* Header shown for the non-populated states so they read like the real page. */
 function StateHeader() {
@@ -28,13 +28,16 @@ function StateHeader() {
 export default function RealCameras({
   forced,
   onResolveForced,
+  drawerAsync,
 }: {
   forced: ForcedState;
   onResolveForced: () => void;
+  drawerAsync: DrawerAsync;
 }) {
   // Populated state is the real, fully-working page (KPIs, camera table,
   // add/edit camera, NVR channel linking, detection-zone editor, detail sheet).
-  if (forced === "normal") return <CamerasPage />;
+  // drawerAsync forces the camera drawer's detail-fetch state for previewing.
+  if (forced === "normal") return <CamerasPage drawerAsync={drawerAsync} />;
 
   return (
     <div className="flex flex-col gap-5">

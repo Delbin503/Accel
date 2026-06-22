@@ -131,11 +131,11 @@ export default function ForgotPasswordPage() {
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Forgot password?
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Enter the email associated with your Accel account. We'll send a
               6-digit verification code.
             </p>
-            <form onSubmit={submitEmail} className="mt-6 space-y-3">
+            <form onSubmit={submitEmail} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Email
@@ -187,12 +187,12 @@ export default function ForgotPasswordPage() {
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Check your email
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               We sent a 6-digit code to{" "}
               <strong className="text-foreground">{email}</strong>. Enter it
               below to verify.
             </p>
-            <form onSubmit={submitCode} className="mt-6 space-y-3">
+            <form onSubmit={submitCode} className="mt-6 space-y-4">
               <div
                 onPaste={handleCodePaste}
                 className="flex items-center justify-between gap-2"
@@ -243,10 +243,10 @@ export default function ForgotPasswordPage() {
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Create new password
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Choose a strong password — at least 8 characters.
             </p>
-            <form onSubmit={submitReset} className="mt-6 space-y-3">
+            <form onSubmit={submitReset} className="mt-6 space-y-4">
               <div>
                 <PasswordField
                   label="New password"
@@ -282,10 +282,10 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full border-2 border-success/50 bg-success/10">
               <CheckCircle2 className="size-7 text-success" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Password updated
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Redirecting you to sign in…
             </p>
           </div>

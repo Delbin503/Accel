@@ -2,7 +2,6 @@ import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  User,
   Lock,
   Building2,
   Clock,
@@ -24,9 +23,13 @@ import {
   CheckCircle2,
   LoaderCircle,
   Mail,
+  Crown,
+  CircleUser,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +49,9 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { OnPremStepBar, type OnPremStepKey } from "@/components/shared/OnPremStepBar";
+import { SeatStrip, type SeatUsage } from "@/pages/user-management";
+import { MOCK_SEATS } from "@/mocks/licenses";
+import type { UserRole } from "@/types/users";
 
 /* ── Constants ──────────────────────────────────────────────────────── */
 
@@ -60,19 +66,6 @@ const TIMEZONES = [
   "America/New_York (EST · UTC-5)",
   "Australia/Sydney (AEST · UTC+10)",
   "UTC",
-];
-
-const COUNTRIES = [
-  "Singapore",
-  "Indonesia",
-  "Malaysia",
-  "Thailand",
-  "Philippines",
-  "Vietnam",
-  "Australia",
-  "United Kingdom",
-  "United States",
-  "Other",
 ];
 
 type NetworkMode = "airgapped" | "hybrid" | "connected";
@@ -109,20 +102,63 @@ interface Member {
   id: string;
   firstName: string;
   lastName: string;
+  email: string;
   role: MemberRole;
   firstLogin: FirstLoginMethod;
   setupCode?: string;
 }
+
+const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
   admin: "Admin",
   user: "User",
 };
 
-const MEMBER_ROLE_STYLES: Record<MemberRole, string> = {
-  admin: "bg-info/15 border-info/30 text-info",
-  user: "bg-warning/15 border-warning/30 text-warning",
+/* Role badge (owner / admin / user) — matches the On-Cloud invite layout. */
+const ROLE_BADGE: Record<
+  UserRole,
+  { bg: string; text: string; icon: React.ElementType; label: string }
+> = {
+  owner: { bg: "border-success/30 bg-success/15", text: "text-success", icon: Crown, label: "Owner" },
+  admin: { bg: "border-info/30 bg-info/15", text: "text-info", icon: ShieldCheck, label: "Admin" },
+  user: { bg: "border-warning/30 bg-warning/15", text: "text-warning", icon: CircleUser, label: "User" },
 };
+
+function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boolean }) {
+  const s = ROLE_BADGE[role];
+  const Icon = s.icon;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
+        s.bg,
+        s.text
+      )}
+    >
+      {withIcon && <Icon className="size-3" />}
+      {s.label}
+    </span>
+  );
+}
+
+/* Seat usage for the appliance license — owner is the bootstrap admin (1),
+ * admin/user come from the members added during setup. */
+function computeMemberSeatUsage(members: Member[]): Record<UserRole, SeatUsage> {
+  const mk = (r: UserRole, assigned: number): SeatUsage => ({
+    role: r,
+    total: MOCK_SEATS[r].total,
+    assigned,
+    available: Math.max(0, MOCK_SEATS[r].total - assigned),
+    price: MOCK_SEATS[r].pricePerMonth,
+    label: MOCK_SEATS[r].label,
+  });
+  return {
+    owner: mk("owner", 1),
+    admin: mk("admin", members.filter((m) => m.role === "admin").length),
+    user: mk("user", members.filter((m) => m.role === "user").length),
+  };
+}
 
 function genSetupCode(): string {
   const block = () =>
@@ -143,10 +179,12 @@ function WizardShell({
   children,
   currentStep,
   onCancel,
+  wide = false,
 }: {
   children: React.ReactNode;
   currentStep: OnPremStepKey;
   onCancel: () => void;
+  wide?: boolean;
 }) {
   return (
     <div className="relative flex min-h-screen flex-col text-foreground">
@@ -176,7 +214,7 @@ function WizardShell({
       </header>
 
       <main className="relative z-10 flex flex-1 justify-center px-4 pt-6 pb-8 sm:px-6 sm:pt-10">
-        <div className="w-full max-w-[560px]">{children}</div>
+        <div className={cn("w-full", wide ? "max-w-[1024px]" : "max-w-[560px]")}>{children}</div>
       </main>
     </div>
   );
@@ -205,8 +243,9 @@ export default function OnPremSetupPage({
 
   /* ── Step 2: Site ────────────────────────────────────────────── */
   const [siteName, setSiteName] = React.useState("");
-  const [siteCode, setSiteCode] = React.useState("");
-  const [country, setCountry] = React.useState("Singapore");
+  const [siteAddress, setSiteAddress] = React.useState("");
+  const [primaryArea, setPrimaryArea] = React.useState("");
+  const [siteDescription, setSiteDescription] = React.useState("");
   const [timezone, setTimezone] = React.useState(TIMEZONES[0]);
   const [networkMode, setNetworkMode] = React.useState<NetworkMode>("airgapped");
   const [opFrom, setOpFrom] = React.useState("06:00");
@@ -221,7 +260,7 @@ export default function OnPremSetupPage({
 
   function pickLicenseFile() {
     // Demo dropzone: simulate a chosen file, then auto-validate.
-    const name = `entitlement-${siteCode || "appliance"}.lic`;
+    const name = `entitlement-appliance.lic`;
     setLicenseFile(name);
   }
 
@@ -264,7 +303,7 @@ export default function OnPremSetupPage({
     e.preventDefault();
     setError(null);
     if (siteName.trim().length < 2) return setError("Enter a site name.");
-    if (siteCode.trim().length < 3) return setError("Enter a site code.");
+    if (siteAddress.trim().length < 3) return setError("Enter a site address.");
     setStep("operators");
   }
 
@@ -299,14 +338,16 @@ export default function OnPremSetupPage({
   function finishSetup() {
     // Create the single on-prem site.
     const site = makeBlankSite(siteName.trim(), "#DD7224");
-    site.address = country;
+    site.address = siteAddress.trim();
     site.timezone = timezone.split(" ")[0];
     site.operatingHours = { from: opFrom, to: opTo };
-    site.description = `On-premise · ${NETWORK_MODES.find((n) => n.key === networkMode)?.label} · Site code ${siteCode}`;
+    site.description =
+      siteDescription.trim() ||
+      `On-premise · ${NETWORK_MODES.find((n) => n.key === networkMode)?.label}`;
     site.areas = [
       {
         id: `area-${Math.random().toString(36).slice(2, 6)}`,
-        name: "Main Area",
+        name: primaryArea.trim() || "Main Area",
         color: "#DD7224",
         points: [],
       },
@@ -416,6 +457,13 @@ export default function OnPremSetupPage({
   /* ── Render: Site ──────────────────────────────────────────── */
 
   if (step === "site") {
+    const siteSlug = siteName
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 12);
+    const siteId = siteSlug ? `SITE-${siteSlug}` : "SITE-XXXX";
     return (
       <WizardShell currentStep="site" onCancel={() => navigate("/on-premise/signin")}>
         <BackLink onClick={goBack} />
@@ -423,42 +471,36 @@ export default function OnPremSetupPage({
           title="Configure this site"
           subtitle="Add basic details and the operational defaults. On-Premise appliances manage exactly one site."
         />
-        <form onSubmit={submitSite} className="mt-10 space-y-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Site name" icon={Building2}>
-              <Input
-                value={siteName}
-                onChange={(e) => setSiteName(e.target.value)}
-                placeholder="e.g. Sembawang Naval Base"
-                className="h-10 pl-9 text-base"
-              />
-            </Field>
-            <Field label="Site code" icon={Shapes}>
-              <Input
-                value={siteCode}
-                onChange={(e) => setSiteCode(e.target.value.toUpperCase())}
-                placeholder="SBW-NAV-001"
-                className="h-10 pl-9 font-mono text-base"
-              />
-            </Field>
-          </div>
+        <form onSubmit={submitSite} className="mt-8 space-y-4">
+          <Field label="Site name" icon={Building2}>
+            <Input
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              placeholder="e.g. Sembawang Naval Base"
+              className="h-10 pl-9 text-base"
+            />
+          </Field>
+
+          <Field label="Site ID (auto-generated)" icon={Lock}>
+            <Input
+              value={siteId}
+              readOnly
+              disabled
+              placeholder="SITE-XXXX"
+              className="h-10 cursor-not-allowed bg-muted/30 pl-9 font-mono text-base text-muted-foreground"
+            />
+          </Field>
+
+          <Field label="Site address" icon={MapPin}>
+            <Input
+              value={siteAddress}
+              onChange={(e) => setSiteAddress(e.target.value)}
+              placeholder="8 Admiralty Road West, Singapore 759956"
+              className="h-10 pl-9 text-base"
+            />
+          </Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Country / Region</Label>
-              <Select value={country} onValueChange={(v) => setCountry(v)}>
-                <SelectTrigger className="h-10 w-full text-base">
-                  <SelectValue placeholder="Select a country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div>
               <Label>Time zone</Label>
               <Select value={timezone} onValueChange={(v) => setTimezone(v)}>
@@ -474,7 +516,34 @@ export default function OnPremSetupPage({
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label icon={Clock}>Operating Hours</Label>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="time"
+                  value={opFrom}
+                  onChange={(e) => setOpFrom(e.target.value)}
+                  className="h-10 flex-1 text-base"
+                />
+                <span className="text-xs text-muted-foreground">to</span>
+                <Input
+                  type="time"
+                  value={opTo}
+                  onChange={(e) => setOpTo(e.target.value)}
+                  className="h-10 flex-1 text-base"
+                />
+              </div>
+            </div>
           </div>
+
+          <Field label="Primary area" icon={Shapes}>
+            <Input
+              value={primaryArea}
+              onChange={(e) => setPrimaryArea(e.target.value)}
+              placeholder="e.g. Main Gate, Armoury, Loading Bay…"
+              className="h-10 pl-9 text-base"
+            />
+          </Field>
 
           <div>
             <Label>Network mode</Label>
@@ -512,31 +581,16 @@ export default function OnPremSetupPage({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label icon={Clock}>Operating hours · start</Label>
-              <Input
-                type="time"
-                value={opFrom}
-                onChange={(e) => setOpFrom(e.target.value)}
-                className="h-10 text-base"
-              />
-            </div>
-            <div>
-              <Label icon={Clock}>Operating hours · end</Label>
-              <Input
-                type="time"
-                value={opTo}
-                onChange={(e) => setOpTo(e.target.value)}
-                className="h-10 text-base"
-              />
-            </div>
+          <div>
+            <Label>Description (optional)</Label>
+            <Textarea
+              value={siteDescription}
+              onChange={(e) => setSiteDescription(e.target.value)}
+              rows={2}
+              placeholder="A short description of this site…"
+              className="w-full text-base"
+            />
           </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Detections outside these hours are treated as{" "}
-            <strong className="text-foreground">after-hours events</strong> by default. Per
-            use-case overrides can be configured later.
-          </p>
 
           {error && <ErrorBox message={error} />}
           <Button type="submit" className="h-10 w-full gap-2 text-base">
@@ -549,8 +603,10 @@ export default function OnPremSetupPage({
 
   /* ── Render: Members ───────────────────────────────────────── */
 
+  const seatUsage = computeMemberSeatUsage(members);
+
   return (
-    <WizardShell currentStep="operators" onCancel={() => navigate("/on-premise/signin")}>
+    <WizardShell wide currentStep="operators" onCancel={() => navigate("/on-premise/signin")}>
       <BackLink onClick={goBack} />
       <Heading
         title="Add Members"
@@ -558,131 +614,139 @@ export default function OnPremSetupPage({
       />
 
       <div className="mt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-base font-bold text-foreground">
-            Members added so far{" "}
-            <span className="font-mono text-muted-foreground">
-              ({members.length})
-            </span>
-          </p>
-          <Button onClick={openAddMember} className="h-9 gap-1.5">
-            <Plus className="size-3.5" />
-            Add Member
-          </Button>
-        </div>
+        <SeatStrip usage={seatUsage} billingCycle="Perpetual" />
+      </div>
 
-        {members.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border/70 bg-card/30 p-8 text-center backdrop-blur-sm">
-            <User className="mx-auto mb-2 size-6 text-muted-foreground/60" />
-            <p className="text-base font-semibold text-foreground">
-              No members yet
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              You can add members now or after finishing setup from{" "}
-              <strong className="text-foreground">Settings → Users</strong>.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-md border border-border/60 bg-card/40 backdrop-blur-sm">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
-                  {["MEMBER", "ROLE", "FIRST SIGN-IN", "ACTION"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {members.map((m) => (
-                  <tr key={m.id} className="text-base transition-colors hover:bg-muted/20">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <MemberAvatar firstName={m.firstName} lastName={m.lastName} />
-                        <div className="min-w-0">
-                          <p className="font-semibold text-foreground">
-                            {m.firstName} {m.lastName}
-                          </p>
-                          {m.firstLogin === "setup-code" ? (
-                            <p className="text-xs text-muted-foreground">
-                              Setup code{" "}
-                              <span className="font-mono font-semibold text-primary">
-                                {m.setupCode}
-                              </span>
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">
-                              Temp password on first sign-in
-                            </p>
-                          )}
-                        </div>
+      <InfoBanner
+        tone="info"
+        icon={<Mail className="size-3.5" />}
+        title="Hand-off in person"
+        className="mt-4"
+      >
+        Print this member list with codes (admin only) before completing setup.
+        Members enrol 2FA themselves on their first sign-in.
+      </InfoBanner>
+
+      <div className="mt-5 flex items-center justify-between">
+        <p className="text-base font-bold text-foreground">Members</p>
+        <Button onClick={openAddMember} className="h-9 gap-1.5">
+          <Plus className="size-3.5" />
+          Add Member
+        </Button>
+      </div>
+
+      <div className="mt-3 flex max-h-[calc(100vh-26rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full">
+            <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
+              <tr className="border-b border-border text-left">
+                {["MEMBER", "ROLE", "STATUS", "FIRST SIGN-IN", "ACTION"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {/* Bootstrap appliance owner — already provisioned. */}
+              <tr className="text-base transition-colors hover:bg-muted/20">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-success/15 font-mono text-sm font-semibold text-success">
+                      <Crown className="size-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">
+                        Appliance Owner
+                        <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
+                      </p>
+                      <p className="font-mono text-xs text-muted-foreground">{bootstrapUsername}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <RoleBadge role="owner" />
+                </td>
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
+                    Active
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">Configured</td>
+                <td className="px-4 py-3" />
+              </tr>
+
+              {members.map((m) => (
+                <tr key={m.id} className="text-base transition-colors hover:bg-muted/20">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <MemberAvatar firstName={m.firstName} lastName={m.lastName} />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {m.firstName} {m.lastName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{m.email}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
-                          MEMBER_ROLE_STYLES[m.role]
-                        )}
-                      >
-                        {MEMBER_ROLE_LABELS[m.role]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {m.firstLogin === "setup-code" ? (
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <RoleBadge role={m.role} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
+                      Pending
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {m.firstLogin === "setup-code" ? (
+                      <div className="flex flex-col items-start gap-1">
                         <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary">
                           <KeyRound className="size-3" />
                           Setup code
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
-                          <Lock className="size-3" />
-                          Temp password
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => openEditMember(m)}
-                          className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          aria-label="Edit member"
-                        >
-                          <Pencil className="size-3" />
-                        </button>
-                        <button
-                          onClick={() => removeMember(m.id)}
-                          className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                          aria-label="Remove member"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
+                        <span className="font-mono text-xs font-semibold text-primary">{m.setupCode}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
+                        <Lock className="size-3" />
+                        Temp password
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => openEditMember(m)}
+                        className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                        aria-label="Edit member"
+                      >
+                        <Pencil className="size-3" />
+                      </button>
+                      <button
+                        onClick={() => removeMember(m.id)}
+                        className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
+                        aria-label="Remove member"
+                      >
+                        <Trash2 className="size-3" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        <InfoBanner
-          tone="info"
-          icon={<Mail className="size-3.5" />}
-          title="Hand-off in person"
-          className="mt-4"
-        >
-          Print this member list with codes (admin only) before completing setup.
-          Members enrol 2FA themselves on their first sign-in.
-        </InfoBanner>
+        <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
+          Current Total:{" "}
+          <strong className="text-foreground">{1 + members.length}</strong> assigned seat
+          {members.length === 0 ? "" : "s"}
+        </div>
 
-        {error && <ErrorBox message={error} className="mt-3" />}
-
-        <div className="mt-6 flex items-center justify-between">
+        <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-4 py-3.5">
           <Button variant="ghost" onClick={finishSetup}>
             Skip — finish later
           </Button>
@@ -693,11 +757,15 @@ export default function OnPremSetupPage({
         </div>
       </div>
 
+      {error && <ErrorBox message={error} className="mt-3" />}
+
       <MemberModal
         open={memberModalOpen}
         onClose={() => setMemberModalOpen(false)}
         onSave={saveMember}
         existing={editingMember}
+        siteName={siteName || "Sembawang Naval Base"}
+        currentMembers={members}
       />
     </WizardShell>
   );
@@ -722,14 +790,19 @@ function MemberModal({
   onClose,
   onSave,
   existing,
+  siteName,
+  currentMembers,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (m: Member) => void;
   existing: Member | null;
+  siteName: string;
+  currentMembers: Member[];
 }) {
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [role, setRole] = React.useState<MemberRole>("user");
   const [firstLogin, setFirstLogin] =
     React.useState<FirstLoginMethod>("setup-code");
@@ -737,11 +810,29 @@ function MemberModal({
   const [tempPw, setTempPw] = React.useState("");
   const [err, setErr] = React.useState<string | null>(null);
 
+  /* Seat usage for the role tiles — exclude the member being edited so its
+   * own seat isn't double-counted against availability. */
+  const usage = React.useMemo(() => {
+    const others = existing ? currentMembers.filter((m) => m.id !== existing.id) : currentMembers;
+    const mk = (r: UserRole, assigned: number) => {
+      const total = MOCK_SEATS[r].total;
+      return { assigned, total, available: Math.max(0, total - assigned) };
+    };
+    return {
+      owner: mk("owner", 1),
+      admin: mk("admin", others.filter((m) => m.role === "admin").length),
+      user: mk("user", others.filter((m) => m.role === "user").length),
+    } as Record<UserRole, { assigned: number; total: number; available: number }>;
+  }, [currentMembers, existing]);
+
+  const noSeats = usage[role].available === 0;
+
   React.useEffect(() => {
     if (open) {
       if (existing) {
         setFirstName(existing.firstName);
         setLastName(existing.lastName);
+        setEmail(existing.email);
         setRole(existing.role);
         setFirstLogin(existing.firstLogin);
         setSetupCode(existing.setupCode ?? genSetupCode());
@@ -749,6 +840,7 @@ function MemberModal({
       } else {
         setFirstName("");
         setLastName("");
+        setEmail("");
         setRole("user");
         setFirstLogin("setup-code");
         setSetupCode(genSetupCode());
@@ -762,12 +854,15 @@ function MemberModal({
     setErr(null);
     if (firstName.trim().length < 1) return setErr("Enter a first name.");
     if (lastName.trim().length < 1) return setErr("Enter a last name.");
+    if (!MEMBER_EMAIL_RE.test(email.trim())) return setErr("Enter a valid email address.");
+    if (noSeats) return setErr(`No ${MEMBER_ROLE_LABELS[role]} seats remaining.`);
     if (firstLogin === "temp-password" && tempPw.length < 8)
       return setErr("Temp password must be at least 8 characters.");
     onSave({
       id: existing?.id ?? `mbr-${Math.random().toString(36).slice(2, 6)}`,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      email: email.trim(),
       role,
       firstLogin,
       setupCode: firstLogin === "setup-code" ? setupCode : undefined,
@@ -809,23 +904,77 @@ function MemberModal({
             </div>
           </div>
           <div>
-            <Label>Role</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["admin", "user"] as MemberRole[]).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRole(r)}
-                  className={cn(
-                    "rounded-md border px-2.5 py-1.5 text-sm font-semibold transition-colors",
-                    role === r
-                      ? "border-primary bg-primary/[0.06] text-primary"
-                      : "border-border text-muted-foreground hover:border-primary/40"
-                  )}
-                >
-                  {MEMBER_ROLE_LABELS[r]}
-                </button>
-              ))}
+            <Label>Email</Label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="member@appliance.local"
+                className="h-9 pl-9 text-base"
+              />
+            </div>
+          </div>
+          {/* Seat tiles double as the role selector — pick a tier to add into. */}
+          <div>
+            <Label>Seat Type</Label>
+            <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
+              {(["owner", "admin", "user"] as UserRole[]).map((r) => {
+                const s = usage[r];
+                const isLow = s.available === 0;
+                const isSelected = role === r;
+                // Owner is the appliance bootstrap account — not assignable here.
+                const selectable = r !== "owner";
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    disabled={!selectable}
+                    onClick={() => selectable && setRole(r as MemberRole)}
+                    className={cn(
+                      "rounded-md border px-2 py-1.5 text-left transition-colors",
+                      isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
+                      selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
+                    )}
+                  >
+                    <div className="mb-0.5 flex items-center justify-between gap-1">
+                      <RoleBadge role={r} withIcon={false} />
+                      <span
+                        className={cn(
+                          "font-mono text-3xs font-bold",
+                          isLow ? "text-sev-critical" : "text-success"
+                        )}
+                      >
+                        {s.available} left
+                      </span>
+                    </div>
+                    <p className="font-mono text-2xs text-muted-foreground">
+                      {s.assigned} / {s.total} used
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-2xs text-muted-foreground/70">
+              Owner is the appliance bootstrap account and can't be reassigned here.
+            </p>
+          </div>
+
+          {/* Site Access — locked to the appliance's site. */}
+          <div>
+            <Label>Site Access</Label>
+            <div
+              className="flex h-9 w-full cursor-not-allowed items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-base"
+              aria-disabled="true"
+            >
+              <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate text-foreground">
+                {siteName}
+              </span>
+              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
+                <Lock className="size-3" /> Locked to this appliance
+              </span>
             </div>
           </div>
 
@@ -880,6 +1029,16 @@ function MemberModal({
             </div>
           )}
 
+          {noSeats && (
+            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
+              <AlertCircle className="mt-0.5 size-3 flex-shrink-0" />
+              <p>
+                <strong>No {MEMBER_ROLE_LABELS[role]} seats remaining.</strong> Remove a member or
+                pick another seat type.
+              </p>
+            </div>
+          )}
+
           {err && <ErrorBox message={err} />}
         </div>
 
@@ -887,7 +1046,7 @@ function MemberModal({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={submit}>
+          <Button onClick={submit} disabled={noSeats}>
             {existing ? "Save changes" : "Add member"}
           </Button>
         </div>

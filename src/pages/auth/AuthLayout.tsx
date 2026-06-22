@@ -13,10 +13,13 @@ export function AuthLayout({
   children,
   cancelHref,
   wide,
+  hideBrand = false,
 }: {
   children: React.ReactNode;
   cancelHref?: string;
   wide?: boolean;
+  /** Hide the corner brand — used by pages that show a centered hero logo. */
+  hideBrand?: boolean;
   /** Reserved — kept for backwards-compat with old callsite signatures. */
   brandSlot?: React.ReactNode;
 }) {
@@ -24,17 +27,19 @@ export function AuthLayout({
     <div className="relative min-h-screen text-foreground">
       <AuthBackground />
 
-      <Link
-        to="/signin"
-        className="absolute left-5 top-5 z-10 flex items-center gap-2 sm:left-8 sm:top-6"
-      >
-        <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
-          <Play className="size-3 fill-white text-white" />
-        </div>
-        <p className="text-md font-bold tracking-tight text-foreground">
-          Accel
-        </p>
-      </Link>
+      {!hideBrand && (
+        <Link
+          to="/signin"
+          className="absolute left-5 top-5 z-10 flex items-center gap-2 sm:left-8 sm:top-6"
+        >
+          <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
+            <Play className="size-3 fill-white text-white" />
+          </div>
+          <p className="text-md font-bold tracking-tight text-foreground">
+            Accel
+          </p>
+        </Link>
+      )}
 
       {cancelHref && (
         <Link

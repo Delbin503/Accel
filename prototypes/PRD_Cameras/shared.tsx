@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 /** Dev-only forced states for the State Tester (prototype-only). */
 export type ForcedState = "normal" | "loading" | "empty" | "error";
 
+/** Camera-drawer detail-fetch state (prototype-only). */
+export type DrawerAsync = "idle" | "loading" | "error";
+
 /** Skeleton that mirrors the Cameras layout: KPIs → toolbar → table. */
 export function CameraTableSkeleton() {
   return (

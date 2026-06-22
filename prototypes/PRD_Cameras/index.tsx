@@ -11,15 +11,25 @@ import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RealCameras from "./RealCameras";
 import { StateTester } from "./StateTester";
-import type { ForcedState } from "./shared";
+import type { ForcedState, DrawerAsync } from "./shared";
 import "./proto.css";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right (left of the back-to-top
    button), low opacity, reveals on hover. Excluded when promoting to src. */
-function FloatingTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
+function FloatingTester({
+  value,
+  onChange,
+  drawer,
+  onDrawer,
+}: {
+  value: ForcedState;
+  onChange: (s: ForcedState) => void;
+  drawer: DrawerAsync;
+  onDrawer: (d: DrawerAsync) => void;
+}) {
   return (
     <div className="fixed bottom-6 right-24 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
-      <StateTester value={value} onChange={onChange} />
+      <StateTester value={value} onChange={onChange} drawer={drawer} onDrawer={onDrawer} />
     </div>
   );
 }
@@ -62,6 +72,7 @@ function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | nul
 
 function App() {
   const [forced, setForced] = React.useState<ForcedState>("normal");
+  const [drawerAsync, setDrawerAsync] = React.useState<DrawerAsync>("idle");
   const resolve = () => setForced("normal");
   const mainRef = React.useRef<HTMLElement>(null);
 
@@ -81,14 +92,14 @@ function App() {
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="/site/cameras" element={<RealCameras forced={forced} onResolveForced={resolve} />} />
+                  <Route path="/site/cameras" element={<RealCameras forced={forced} onResolveForced={resolve} drawerAsync={drawerAsync} />} />
                   <Route path="*" element={<NotInPrototype />} />
                 </Routes>
               </main>
             </div>
           </div>
           <BackToTop scrollRef={mainRef} />
-          <FloatingTester value={forced} onChange={setForced} />
+          <FloatingTester value={forced} onChange={setForced} drawer={drawerAsync} onDrawer={setDrawerAsync} />
           <Toaster position="top-center" theme="dark" richColors />
         </SidebarProvider>
       </TooltipProvider>
