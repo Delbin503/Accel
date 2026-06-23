@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import RealNvrDevices from "./RealNvrDevices";
+import RealRunAnalysis from "./RealRunAnalysis";
 import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
@@ -67,7 +67,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark">
-    <MemoryRouter initialEntries={["/site/nvr"]}>
+    <MemoryRouter initialEntries={["/analysis"]}>
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
@@ -81,7 +81,7 @@ function App() {
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="/site/nvr" element={<RealNvrDevices forced={forced} onResolveForced={resolve} />} />
+                  <Route path="/analysis" element={<RealRunAnalysis forced={forced} onResolveForced={resolve} />} />
                   <Route path="*" element={<NotInPrototype />} />
                 </Routes>
               </main>
@@ -102,7 +102,7 @@ function NotInPrototype() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
-      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">NVR Devices</strong>.</p>
+      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">Run Analysis</strong>.</p>
     </div>
   );
 }

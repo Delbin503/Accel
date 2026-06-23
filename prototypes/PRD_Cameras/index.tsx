@@ -100,7 +100,7 @@ function App() {
           </div>
           <BackToTop scrollRef={mainRef} />
           <FloatingTester value={forced} onChange={setForced} drawer={drawerAsync} onDrawer={setDrawerAsync} />
-          <Toaster position="top-center" theme="dark" richColors />
+          <Toaster position="top-right" theme="dark" />
         </SidebarProvider>
       </TooltipProvider>
       </QueryClientProvider>

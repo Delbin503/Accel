@@ -73,7 +73,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <TooltipProvider delayDuration={200}>
             <Shell />
-            <Toaster position="top-center" theme="dark" richColors />
+            <Toaster position="top-right" theme="dark" />
           </TooltipProvider>
         </QueryClientProvider>
       </MemoryRouter>

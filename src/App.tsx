@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
+import { useTheme } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   RequireOnboarding,
@@ -55,9 +56,10 @@ import OnPremForgotPasswordPage from "@/pages/auth/onprem/OnPremForgotPassword";
 import OnPremSetupPage from "@/pages/auth/onprem/OnPremSetup";
 
 function App() {
+  const { theme } = useTheme();
   return (
     <>
-    <Toaster position="top-right" richColors closeButton expand={false} />
+    <Toaster position="top-right" theme={theme} closeButton expand={false} />
     <Routes>
       {/* Auth pages — only shown when not yet authenticated/onboarded */}
       <Route element={<RedirectIfAuthed />}>

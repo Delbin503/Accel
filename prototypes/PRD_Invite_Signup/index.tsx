@@ -156,7 +156,7 @@ function App() {
                 setRunId((n) => n + 1);
               }}
             />
-            <Toaster position="top-center" theme="dark" richColors />
+            <Toaster position="top-right" theme="dark" />
           </TooltipProvider>
         </QueryClientProvider>
       </MemoryRouter>

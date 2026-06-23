@@ -49,7 +49,7 @@ function App() {
             </div>
           </div>
           <FloatingTester value={forced} onChange={setForced} />
-          <Toaster position="top-center" theme="dark" richColors />
+          <Toaster position="top-right" theme="dark" />
         </SidebarProvider>
       </TooltipProvider>
       </QueryClientProvider>

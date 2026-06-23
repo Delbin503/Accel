@@ -441,11 +441,99 @@ function SummaryField({
 
 /* ─── Deploy wizard ──────────────────────────────────────────────────────── */
 
+/* ─── Forced data-states (loading / empty / error) ───────────────────────── */
+
+export type DeployForcedState = "normal" | "loading" | "empty" | "error";
+
+function SkeletonCol() {
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
+        <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+        <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
+      </div>
+      <div className="min-h-0 flex-1 space-y-2 p-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeployWizardSkeleton() {
+  return (
+    <div className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => <SkeletonCol key={i} />)}
+      </div>
+    </div>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <KpiGrid cols={5}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-[120px] animate-pulse rounded-xl bg-muted" />
+        ))}
+      </KpiGrid>
+      <div className="h-11 w-full animate-pulse rounded-xl bg-muted" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-40 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContentError({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-20 text-muted-foreground">
+      <AlertTriangle className="size-8 text-sev-critical" />
+      <p className="text-sm text-foreground">Couldn't load deployments.</p>
+      {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>}
+    </div>
+  );
+}
+
+function HistoryEmpty() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+      <Cpu className="size-10 opacity-30" />
+      <p className="text-sm font-medium text-foreground">No models deployed yet</p>
+      <p className="text-[12px]">Deploy a validated model to cameras from the Deploy tab to see it here.</p>
+    </div>
+  );
+}
+
+/* Empty model column — no validated models exist to deploy. */
+function ModelColumnEmpty() {
+  const navigate = useNavigate();
+  return (
+    <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 px-3 text-center text-muted-foreground">
+      <Cpu className="size-7 opacity-30" />
+      <p className="text-sm">Create a model in the Model Management to continue.</p>
+      <Button size="sm" className="gap-1.5" onClick={() => navigate("/models")}>
+        <Plus className="size-4" />
+        Go to Model Management
+      </Button>
+    </div>
+  );
+}
+
 function DeployWizard({
   onCommit,
+  forcedState = "normal",
+  onRetry,
 }: {
   onCommit: (records: DeploymentData[]) => void;
   onShowHistory?: () => void;
+  forcedState?: DeployForcedState;
+  onRetry?: () => void;
 }) {
   const [modelSearch, setModelSearch] = React.useState("");
   const [siteSearch, setSiteSearch] = React.useState("");
@@ -545,6 +633,15 @@ function DeployWizard({
 
   function commitDeploy() {
     if (!canDeploy || !selectedModel || !selectedSite) return;
+    // Simulated edge failure — surfaced as a toast, not a page state.
+    if (selectedModel.id === "Mdl_002") {
+      toast.error("Deployment failed", {
+        description:
+          "Edge agent rejected the model bundle — checksum mismatch on some cameras. Rolled back to the previously active model.",
+      });
+      setConfirmOpen(false);
+      return;
+    }
     const now = new Date();
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const dStr = `${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}, ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
@@ -576,6 +673,11 @@ function DeployWizard({
     setConfirmOpen(false);
   }
 
+  if (forcedState === "loading") return <DeployWizardSkeleton />;
+  if (forcedState === "error") return <ContentError onRetry={onRetry} />;
+
+  const isEmpty = forcedState === "empty";
+
   return (
     <div className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
 
@@ -590,7 +692,9 @@ function DeployWizard({
           onSearchChange={setModelSearch}
           searchPlaceholder="Search model"
         >
-          {filteredModels.length === 0 ? (
+          {isEmpty ? (
+            <ModelColumnEmpty />
+          ) : filteredModels.length === 0 ? (
             <EmptyState icon={<Cpu className="size-7 opacity-30" />} text="No deployable models" />
           ) : (
             filteredModels.map((m) => (
@@ -743,8 +847,12 @@ interface ModelAggregate {
 
 function HistoryView({
   deployments,
+  forcedState = "normal",
+  onRetry,
 }: {
   deployments: DeploymentData[];
+  forcedState?: DeployForcedState;
+  onRetry?: () => void;
 }) {
   const navigate = useNavigate();
   const [search, setSearch] = React.useState("");
@@ -799,6 +907,10 @@ function HistoryView({
   }, [models]);
 
   const drawerModel = drawerModelId ? models.find((m) => m.modelId === drawerModelId) ?? null : null;
+
+  if (forcedState === "loading") return <HistorySkeleton />;
+  if (forcedState === "error") return <ContentError onRetry={onRetry} />;
+  if (forcedState === "empty") return <HistoryEmpty />;
 
   return (
     <div className="flex flex-col gap-4">
@@ -950,16 +1062,19 @@ function ModelDeploymentsDrawer({
 }) {
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
   const [areaFilter, setAreaFilter] = React.useState<string[]>([]);
+  const [cameraSearch, setCameraSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
   /* Reset selection when filters change */
   const rows = React.useMemo(() => {
+    const q = cameraSearch.toLowerCase().trim();
     return model.deployments.filter((d) => {
       if (siteFilter.length > 0 && !siteFilter.includes(d.siteId)) return false;
       if (areaFilter.length > 0 && !areaFilter.includes(d.areaId)) return false;
+      if (q && !d.cameraName.toLowerCase().includes(q) && !d.cameraId.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [model.deployments, siteFilter, areaFilter]);
+  }, [model.deployments, siteFilter, areaFilter, cameraSearch]);
 
   const siteOptions = React.useMemo(() => {
     const seen = new Set<string>();
@@ -1029,6 +1144,19 @@ function ModelDeploymentsDrawer({
             >
               <X className="size-4" />
             </button>
+          </div>
+        </div>
+
+        {/* Camera search */}
+        <div className="flex-shrink-0 border-b border-border bg-card/40 px-5 py-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={cameraSearch}
+              onChange={(e) => setCameraSearch(e.target.value)}
+              placeholder="Search cameras by name or ID…"
+              className="h-9 pl-9 text-base"
+            />
           </div>
         </div>
 
@@ -1233,7 +1361,14 @@ function DrawerFilter({
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-export default function ModelDeploymentPage() {
+export default function ModelDeploymentPage({
+  forcedState = "normal",
+  onRetry,
+}: {
+  /** Prototype hook — forces the page's data-state (loading / empty / error). */
+  forcedState?: DeployForcedState;
+  onRetry?: () => void;
+} = {}) {
   const [tab, setTab] = React.useState<"deploy" | "history">("deploy");
   const [deployments, setDeployments] = React.useState<DeploymentData[]>(MOCK_DEPLOYMENTS);
 
@@ -1276,9 +1411,9 @@ export default function ModelDeploymentPage() {
       </PageHeader>
 
       {tab === "deploy" ? (
-        <DeployWizard onCommit={handleCommit} />
+        <DeployWizard onCommit={handleCommit} forcedState={forcedState} onRetry={onRetry} />
       ) : (
-        <HistoryView deployments={deployments} />
+        <HistoryView deployments={deployments} forcedState={forcedState} onRetry={onRetry} />
       )}
     </div>
   );

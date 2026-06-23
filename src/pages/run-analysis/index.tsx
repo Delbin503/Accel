@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
@@ -1192,7 +1193,14 @@ function AnalysisFailedScreen({
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 /* ───────────────────────────────────────────────────────────────────────── */
 
-export default function RunAnalysisPage() {
+export default function RunAnalysisPage({
+  forcedState = "normal",
+  onRetry,
+}: {
+  /** Prototype hook — forces the page's data-state (loading / empty / error / no-results). */
+  forcedState?: RunForcedState;
+  onRetry?: () => void;
+} = {}) {
   const [tab, setTab] = React.useState<"analysis" | "history">("analysis");
 
   // Flow state
@@ -1424,6 +1432,7 @@ export default function RunAnalysisPage() {
             totalModels={allModels.length}
             onNext={() => setFlowStep("upload")}
             onShowHistory={() => setTab("history")}
+            forcedState={forcedState}
           />
         ) : flowStep === "upload" ? (
           <UploadStep
@@ -1478,6 +1487,8 @@ export default function RunAnalysisPage() {
             toast.success(`Analysis "${target?.name ?? id}" deleted`);
           }}
           onBackToAnalysis={() => setTab("analysis")}
+          forcedState={forcedState}
+          onRetry={onRetry}
         />
       )}
 
@@ -1494,6 +1505,80 @@ export default function RunAnalysisPage() {
 
 /* ─── Step 1 ─────────────────────────────────────────────────────────────── */
 
+/* ─── Forced data-states (loading / empty / error / no-results) ──────────── */
+
+export type RunForcedState = "normal" | "loading" | "empty" | "error" | "noresults";
+
+function ModelChooserSkeleton() {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
+      ))}
+    </div>
+  );
+}
+
+/* Empty model list — no validated models to run an analysis on. */
+function ModelListEmptyCTA() {
+  const navigate = useNavigate();
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-20 text-center text-muted-foreground">
+      <Cpu className="size-8 opacity-30" />
+      <p className="text-sm">Create a model in the Model Management to continue.</p>
+      <Button size="sm" className="gap-1.5" onClick={() => navigate("/models")}>
+        <Plus className="size-4" />
+        Go to Model Management
+      </Button>
+    </div>
+  );
+}
+
+function ContentError({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-20 text-muted-foreground">
+      <AlertTriangle className="size-8 text-sev-critical" />
+      <p className="text-sm text-foreground">Couldn't load analysis history.</p>
+      {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>}
+    </div>
+  );
+}
+
+function HistoryNoResults({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+      <Search className="size-10 opacity-30" />
+      <p className="text-sm font-medium text-foreground">No analyses match your filters</p>
+      <p className="text-[12px]">Try a different status, model, or date range — or clear the active filters.</p>
+      <Button variant="outline" size="sm" className="mt-1" onClick={onClear}>Clear filters</Button>
+    </div>
+  );
+}
+
+function HistorySkeletonRA() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-[96px] animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+      <div className="h-11 w-full animate-pulse rounded-xl bg-muted" />
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="h-10 border-b border-border bg-muted/30" />
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 border-b border-border/60 px-4 py-3 last:border-0">
+            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+            <div className="h-3 flex-1 animate-pulse rounded bg-muted" />
+            <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SelectStep({
   selectedModelId,
   onSelectModel,
@@ -1508,6 +1593,7 @@ function SelectStep({
   totalModels,
   onNext,
   onShowHistory,
+  forcedState,
 }: {
   selectedModelId: string | null;
   onSelectModel: (id: string) => void;
@@ -1522,7 +1608,10 @@ function SelectStep({
   totalModels: number;
   onNext: () => void;
   onShowHistory: () => void;
+  forcedState?: RunForcedState;
 }) {
+  const isLoading = forcedState === "loading";
+  const isEmpty = forcedState === "empty";
   return (
     <div className="flex flex-col gap-4">
 
@@ -1605,7 +1694,11 @@ function SelectStep({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          {filteredModels.length === 0 ? (
+          {isLoading ? (
+            <ModelChooserSkeleton />
+          ) : isEmpty ? (
+            <ModelListEmptyCTA />
+          ) : filteredModels.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Search className="size-8 opacity-20" />
               <p className="text-sm">No models match your search.</p>
@@ -1627,7 +1720,14 @@ function SelectStep({
 
       {/* ── Right panel — configuration ── */}
       <div className="flex w-[440px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        {selectedModel ? (
+        {isLoading ? (
+          <div className="flex h-full flex-col gap-3 p-5">
+            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-24 w-full animate-pulse rounded-xl bg-muted" />
+            <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
+            <div className="mt-auto h-10 w-full animate-pulse rounded-md bg-muted" />
+          </div>
+        ) : selectedModel ? (
           <ModelConfigurePanel
             model={selectedModel}
             allRules={allRules}
@@ -2269,11 +2369,15 @@ function HistoryTab({
   onView,
   onDelete,
   onBackToAnalysis,
+  forcedState = "normal",
+  onRetry,
 }: {
   pastAnalyses: PastAnalysis[];
   onView: (id: string) => void;
   onDelete: (id: string) => void;
   onBackToAnalysis: () => void;
+  forcedState?: RunForcedState;
+  onRetry?: () => void;
 }) {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | RunStatus>("all");
@@ -2366,10 +2470,7 @@ function HistoryTab({
     return "text-sev-critical";
   }
 
-  return (
-  <div className="flex flex-col gap-4">
-
-    {/* Title row with right action */}
+  const HistoryHeader = (
     <div className="flex items-start justify-between gap-3">
       <div>
         <h2 className="text-xl font-bold text-foreground">Analysis History</h2>
@@ -2378,17 +2479,29 @@ function HistoryTab({
         </p>
       </div>
       <div className="flex flex-shrink-0 items-center gap-2 pt-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onBackToAnalysis}
-          className="gap-1.5 text-base"
-        >
+        <Button variant="ghost" size="sm" onClick={onBackToAnalysis} className="gap-1.5 text-base">
           <ArrowLeft className="size-3.5" />
           Back to Run Analysis
         </Button>
       </div>
     </div>
+  );
+
+  if (forcedState === "loading") {
+    return <div className="flex flex-col gap-4">{HistoryHeader}<HistorySkeletonRA /></div>;
+  }
+  if (forcedState === "error") {
+    return <div className="flex flex-col gap-4">{HistoryHeader}<ContentError onRetry={onRetry} /></div>;
+  }
+  if (forcedState === "noresults") {
+    return <div className="flex flex-col gap-4">{HistoryHeader}<HistoryNoResults onClear={clearFilters} /></div>;
+  }
+
+  return (
+  <div className="flex flex-col gap-4">
+
+    {/* Title row with right action */}
+    {HistoryHeader}
 
     {/* KPI cards */}
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

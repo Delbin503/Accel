@@ -91,7 +91,7 @@ function App() {
           </div>
           <BackToTop scrollRef={mainRef} />
           <FloatingTester value={forced} onChange={setForced} />
-          <Toaster position="top-center" theme="dark" richColors />
+          <Toaster position="top-right" theme="dark" />
         </SidebarProvider>
       </TooltipProvider>
       </QueryClientProvider>

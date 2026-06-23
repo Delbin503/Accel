@@ -330,3 +330,9 @@
 .animate-auth-blob-3 { animation: auth-blob-drift-3 30s ease-in-out infinite; }
 .animate-auth-scanline { animation: auth-scanline 14s linear infinite; }
 .animate-auth-pulse  { animation: auth-pulse 4s ease-in-out infinite; }
+/* Sonner toast — align the leading icon with the title row (not vertically
+   centred across title + description) for a consistent look across all toasts. */
+[data-sonner-toast] [data-icon] {
+  align-self: flex-start;
+  margin-top: 2px;
+}

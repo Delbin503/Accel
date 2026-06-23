@@ -269,7 +269,16 @@ export default function OnPremSetupPage({
     setLicenseStatus("validating");
     const invalid = /bad|invalid/i.test(licenseFile);
     const t = setTimeout(() => {
-      setLicenseStatus(invalid ? "invalid" : "valid");
+      if (invalid) {
+        setLicenseStatus("invalid");
+        return;
+      }
+      // Valid file — activate and advance to Configure Site automatically.
+      setLicenseStatus("valid");
+      toast.success("License key worked", {
+        description: "Validation succeeded against this appliance's fingerprint.",
+      });
+      setStep("site");
     }, 1200);
     return () => clearTimeout(t);
   }, [licenseFile]);
