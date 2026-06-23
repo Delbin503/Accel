@@ -23,7 +23,7 @@ const PHASES: Phase[] = [
       { name: "Site · Cameras", slug: "PRD_Cameras" },
       { name: "Live Monitoring", slug: "PRD_Live_Monitoring" },
       { name: "Model Management", slug: "PRD_Model_Management" },
-      { name: "Model Deployment" },
+      { name: "Model Deployment", slug: "PRD_Model_Deployment" },
     ],
   },
   {
@@ -39,7 +39,7 @@ const PHASES: Phase[] = [
     phase: "Phase 2",
     priority: "P0",
     modules: [
-      { name: "Run Analysis" },
+      { name: "Run Analysis", slug: "PRD_Run_Analysis" },
       { name: "System Configuration" },
       { name: "Site · NVR Devices", slug: "PRD_NVR_Devices" },
       { name: "Recordings", slug: "PRD_Recordings" },

@@ -1528,7 +1528,7 @@ function ModelListEmptyCTA() {
       <p className="text-sm">Create a model in the Model Management to continue.</p>
       <Button size="sm" className="gap-1.5" onClick={() => navigate("/models")}>
         <Plus className="size-4" />
-        Go to Model Management
+        Create Model
       </Button>
     </div>
   );
