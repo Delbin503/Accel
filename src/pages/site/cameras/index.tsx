@@ -190,7 +190,10 @@ function FilterPanel({
     onChange({ ...filters, [group]: values });
   }
 
-  const NVR_OPTS = MOCK_NVRS.map((n) => ({ value: n.id, label: n.name }));
+  const NVR_OPTS = [
+    { value: "linked", label: "Linked" },
+    { value: "unlinked", label: "Unlinked" },
+  ];
 
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -2118,7 +2121,7 @@ export default function CamerasPage({
       if (filters.site.length > 0 && !filters.site.includes(c.siteId)) return false;
       if (filters.area.length > 0 && !filters.area.includes(c.areaId)) return false;
       if (filters.status.length > 0 && !filters.status.includes(c.status)) return false;
-      if (filters.nvr.length > 0 && (!c.nvrId || !filters.nvr.includes(c.nvrId))) return false;
+      if (filters.nvr.length > 0 && !filters.nvr.includes(c.nvrId ? "linked" : "unlinked")) return false;
       if (search) {
         const q = search.toLowerCase();
         const hay = [c.id, c.name, c.ipAddress, c.nvrName ?? "", c.areaName, c.siteName].join(" ").toLowerCase();

@@ -53,6 +53,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-001",
     fullName: "Delbin Arkar",
+    firstName: "Delbin",
+    lastName: "Arkar",
     displayName: "Delbin",
     email: "delbin@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=12",
@@ -81,6 +83,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-002",
     fullName: "Henry William",
+    firstName: "Henry",
+    lastName: "William",
     displayName: "Henry",
     email: "henry@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=15",
@@ -103,6 +107,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-003",
     fullName: "Kelvin KFA",
+    firstName: "Kelvin",
+    lastName: "KFA",
     displayName: "Kelvin",
     email: "kelvin@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=33",
@@ -135,6 +141,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-004",
     fullName: "Henyf Hilan",
+    firstName: "Henyf",
+    lastName: "Hilan",
     displayName: "Henyf",
     email: "henyf@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=52",
@@ -157,6 +165,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-005",
     fullName: "Ariana Lifa",
+    firstName: "Ariana",
+    lastName: "Lifa",
     displayName: "Ariana",
     email: "ariana@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=47",
@@ -182,6 +192,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-006",
     fullName: "Pending Invite",
+    firstName: "—",
+    lastName: "—",
     displayName: "—",
     email: "nsngs83@gmail.com",
     role: "admin",
@@ -200,6 +212,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-007",
     fullName: "Pending Invite",
+    firstName: "—",
+    lastName: "—",
     displayName: "—",
     email: "sjsj343@gmail.com",
     role: "admin",
@@ -221,6 +235,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-008",
     fullName: "Marcus Tan",
+    firstName: "Marcus",
+    lastName: "Tan",
     displayName: "Marcus",
     email: "marcus@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=23",
@@ -243,6 +259,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-009",
     fullName: "Priya Raman",
+    firstName: "Priya",
+    lastName: "Raman",
     displayName: "Priya",
     email: "priya@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=44",
@@ -272,6 +290,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-010",
     fullName: "Jordan Kim",
+    firstName: "Jordan",
+    lastName: "Kim",
     displayName: "Jordan",
     email: "jordan@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=8",
@@ -297,6 +317,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-011",
     fullName: "Sofia Reyes",
+    firstName: "Sofia",
+    lastName: "Reyes",
     displayName: "Sofia",
     email: "sofia@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=26",
@@ -319,6 +341,8 @@ export const MOCK_USERS: UserData[] = [
   {
     id: "USR-012",
     fullName: "Owen Carter",
+    firstName: "Owen",
+    lastName: "Carter",
     displayName: "Owen",
     email: "owen@bluesilo.studio",
     avatarUrl: "https://i.pravatar.cc/120?img=18",

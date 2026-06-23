@@ -42,6 +42,8 @@ export interface UserActivity {
 export interface UserData {
   id: string;
   fullName: string;
+  firstName: string;
+  lastName: string;
   displayName: string;
   email: string;
   avatarUrl?: string;

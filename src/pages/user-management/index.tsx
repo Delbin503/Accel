@@ -633,9 +633,9 @@ function UserDrawer({
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
                   [
-                    ["Full Name",     user.fullName],
+                    ["First Name",    user.firstName || "—"],
                     ["Status",        <StatusPill status={user.status} />],
-                    ["Display Name",  user.displayName],
+                    ["Last Name",     user.lastName || "—"],
                     ["Role",          <RoleBadge role={user.role} />],
                     ["Phone",         <span className="font-mono text-xs">{user.phone ?? "—"}</span>],
                     ["User ID",       <span className="font-mono text-xs text-primary">{user.id}</span>],
@@ -1658,19 +1658,18 @@ function EditUserModal({
   onClose: () => void;
   onConfirm: (patch: Partial<UserData>) => void;
 }) {
-  const [fullName, setFullName] = React.useState("");
-  const [displayName, setDisplayName] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [dialCode, setDialCode] = React.useState(DEFAULT_DIAL_CODE);
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const [department, setDepartment] = React.useState("");
 
   React.useEffect(() => {
     if (open && user) {
-      // Treat "Pending Invite" / placeholder "—" values as empty so the placeholder text shows.
-      const isPlaceholder = (v: string) =>
-        v === "Pending Invite" || v === "—" || v.trim() === "";
-      setFullName(isPlaceholder(user.fullName) ? "" : user.fullName);
-      setDisplayName(isPlaceholder(user.displayName) ? "" : user.displayName);
+      // Treat placeholder "—" values as empty so the placeholder text shows.
+      const clean = (v: string) => (v === "—" || v.trim() === "" ? "" : v);
+      setFirstName(clean(user.firstName));
+      setLastName(clean(user.lastName));
       const parsed = splitPhone(user.phone);
       setDialCode(parsed.dialCode);
       setPhoneNumber(parsed.number);
@@ -1684,8 +1683,8 @@ function EditUserModal({
   const phone = phoneNumber.trim() ? `${dialCode} ${phoneNumber.trim()}` : "";
 
   const unchanged =
-    fullName === user.fullName &&
-    displayName === user.displayName &&
+    firstName === user.firstName &&
+    lastName === user.lastName &&
     phone === (user.phone ?? "") &&
     department === (user.department ?? "");
 
@@ -1706,10 +1705,10 @@ function EditUserModal({
           </div>
 
           {([
-            { label: "Full Name",    kind: "text",  value: fullName,    set: setFullName,    mono: false, placeholder: "e.g. Delbin Arkar" },
-            { label: "Display Name", kind: "text",  value: displayName, set: setDisplayName, mono: false, placeholder: "e.g. Delbin (shown to teammates)" },
-            { label: "Phone",        kind: "phone" },
-            { label: "Department",   kind: "text",  value: department,  set: setDepartment,  mono: false, placeholder: "e.g. Operations, Security, IT" },
+            { label: "First Name",  kind: "text",  value: firstName, set: setFirstName, mono: false, placeholder: "e.g. Delbin" },
+            { label: "Last Name",   kind: "text",  value: lastName,  set: setLastName,  mono: false, placeholder: "e.g. Arkar" },
+            { label: "Phone",       kind: "phone" },
+            { label: "Department",  kind: "text",  value: department, set: setDepartment, mono: false, placeholder: "e.g. Operations, Security, IT" },
           ] as const).map((f) => (
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1738,11 +1737,12 @@ function EditUserModal({
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
-            disabled={unchanged || !fullName.trim()}
+            disabled={unchanged || !firstName.trim()}
             onClick={() =>
               onConfirm({
-                fullName: fullName.trim(),
-                displayName: displayName.trim(),
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                fullName: `${firstName.trim()} ${lastName.trim()}`.trim(),
                 phone: phone.trim() || undefined,
                 department: department.trim() || undefined,
               })
@@ -2249,7 +2249,7 @@ export default function UserManagementPage() {
       if (filters.site.length > 0 && !filters.site.some((s) => u.sitePermissions.find((p) => p.siteId === s))) return false;
       if (search) {
         const q = search.toLowerCase();
-        const hay = [u.id, u.fullName, u.email, u.displayName].join(" ").toLowerCase();
+        const hay = [u.id, u.fullName, u.firstName, u.lastName, u.email].join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -2430,6 +2430,8 @@ export default function UserManagementPage() {
     const newUsers: UserData[] = list.map((email, i) => ({
       id: `USR-${(users.length + i + 1).toString().padStart(3, "0")}`,
       fullName: "Pending Invite",
+      firstName: "—",
+      lastName: "—",
       displayName: "—",
       email,
       role,
