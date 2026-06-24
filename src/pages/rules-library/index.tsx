@@ -1346,7 +1346,7 @@ function RuleBuilder({
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
-                  Rule Name <span className="text-sev-critical">*</span>
+                  Rule Name
                 </label>
                 <Input
                   value={s.name}
@@ -1357,7 +1357,7 @@ function RuleBuilder({
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
-                  Rule Description <span className="text-sev-critical">*</span>
+                  Rule Description
                 </label>
                 <Textarea
                   value={s.description}
@@ -1369,7 +1369,7 @@ function RuleBuilder({
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
-                  Rule Tag(s) <span className="text-sev-critical">*</span>
+                  Rule Tag(s)
                 </label>
                 <TagInput
                   tags={s.tags}

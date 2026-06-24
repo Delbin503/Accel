@@ -521,7 +521,7 @@ function CreateModelModal({
           </p>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Model Name <span className="text-destructive">*</span>
+              Model Name
             </label>
             <Input
               value={name}
@@ -532,7 +532,7 @@ function CreateModelModal({
           </div>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Model Description <span className="text-destructive">*</span>
+              Model Description
             </label>
             <Textarea
               value={desc}
@@ -588,7 +588,7 @@ function AddStepModal({
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Action Label <span className="text-destructive">*</span>
+              Action Label
             </label>
             <Input
               value={actionLabel}
@@ -600,7 +600,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Model Title <span className="text-destructive">*</span>
+              Model Title
             </label>
             <Input
               value={label}
@@ -612,7 +612,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Model File <span className="text-destructive">*</span>
+              Model File
             </label>
             <UploadDropzone
               value={modelFile}
@@ -625,7 +625,7 @@ function AddStepModal({
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
-              Manifest File <span className="text-destructive">*</span>
+              Manifest File
             </label>
             <UploadDropzone
               value={manifestFile}

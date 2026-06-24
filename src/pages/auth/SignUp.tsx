@@ -1292,7 +1292,7 @@ export default function SignUpPage({
           </Field>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Description (optional)
+              Description (Optional)
             </label>
             <Textarea
               value={siteDescription}

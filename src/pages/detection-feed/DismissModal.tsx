@@ -146,7 +146,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
           {/* Notes */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Notes (optional)
+              Notes (Optional)
             </label>
             <Textarea
               value={notes}

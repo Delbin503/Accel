@@ -180,14 +180,14 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Building2 className="size-3" />
-                  Site Name <span className="text-sev-critical">*</span>
+                  Site Name
                 </label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Astra HQ" className="h-9 text-base" />
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <MapPin className="size-3" />
-                  Address <span className="text-sev-critical">*</span>
+                  Address
                 </label>
                 <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
               </div>
@@ -219,7 +219,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               </div>
               <div>
                 <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Description (optional)
+                  Description (Optional)
                 </label>
                 <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
                   placeholder="A short description of this site…"
@@ -255,7 +255,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Shapes className="size-3" />
-                  Add Area <span className="text-sev-critical">*</span>
+                  Add Area
                 </label>
                 <div className="flex items-center gap-2">
                   <Input

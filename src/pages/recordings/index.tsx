@@ -431,7 +431,7 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
               className="w-full text-base" />
           </div>

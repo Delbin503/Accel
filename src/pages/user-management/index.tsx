@@ -1933,7 +1933,7 @@ function SuspendUserModal({
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Note (optional)
+              Note (Optional)
             </label>
             <Textarea
               value={note}

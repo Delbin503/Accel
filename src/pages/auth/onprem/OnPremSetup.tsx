@@ -591,7 +591,7 @@ export default function OnPremSetupPage({
           </div>
 
           <div>
-            <Label>Description (optional)</Label>
+            <Label>Description (Optional)</Label>
             <Textarea
               value={siteDescription}
               onChange={(e) => setSiteDescription(e.target.value)}

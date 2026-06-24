@@ -1899,7 +1899,7 @@ function CameraFormModal({
             </p>
             <div className="grid grid-cols-2 gap-3">
               <FormField
-                label="Link to NVR (optional)"
+                label="Link to NVR (Optional)"
                 hint={
                   siteNvrs.length === 0
                     ? "No NVRs registered at this site."

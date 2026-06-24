@@ -1812,7 +1812,7 @@ function UploadStep({
 
             <div className="mb-4">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Analysis Name <span className="text-sev-critical">*</span>
+                Analysis Name
               </label>
               <Input
                 value={analysisName}
@@ -1824,7 +1824,7 @@ function UploadStep({
 
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Video Footage <span className="text-sev-critical">*</span>
+                Video Footage
               </label>
               <VideoUploader
                 file={uploadedFile}
@@ -1846,7 +1846,7 @@ function UploadStep({
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Select VLM Model <span className="text-sev-critical">*</span>
+              Select VLM Model
             </p>
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <div className="border-b border-border bg-muted/20 px-4 py-3">
