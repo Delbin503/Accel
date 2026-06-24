@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 type Step = "email" | "code" | "reset" | "done";
 
 /** On-Premise password recovery — mirrors the cloud forgot-password flow,
- *  routed back to the appliance sign-in. */
+ *  routed back to the account sign-in. */
 export default function OnPremForgotPasswordPage() {
   const navigate = useNavigate();
   const [step, setStep] = React.useState<Step>("email");
@@ -117,7 +117,7 @@ export default function OnPremForgotPasswordPage() {
           <>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Forgot password?</h1>
             <p className="mt-2 text-base text-muted-foreground">
-              Enter the email assigned to your appliance account. We'll send a 6-digit verification code.
+              Enter the email assigned to your account account. We'll send a 6-digit verification code.
             </p>
             <form onSubmit={submitEmail} className="mt-6 space-y-4">
               <div>
@@ -132,7 +132,7 @@ export default function OnPremForgotPasswordPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@appliance.local"
+                    placeholder="you@account.local"
                     className="h-10 pl-9 text-base"
                   />
                 </div>

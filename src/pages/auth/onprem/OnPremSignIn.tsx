@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  *
  * Differences from cloud sign-in:
  *   - No SSO, no "Create one" link (members are provisioned by the admin)
- *   - Single-site appliance — first-run setup entry below the form
+ *   - Single-site account — first-run setup entry below the form
  */
 export default function OnPremSignInPage() {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ export default function OnPremSignInPage() {
             <Play className="size-7 fill-white text-white" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Sign in to your appliance
+            Sign in to your account
           </h1>
           <p className="mt-2 text-base text-muted-foreground">
             Use the email assigned to you by your site administrator.
@@ -89,7 +89,7 @@ export default function OnPremSignInPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@appliance.local"
+                placeholder="you@account.local"
                 className="h-10 pl-9 text-base"
               />
             </div>
@@ -172,7 +172,7 @@ export default function OnPremSignInPage() {
           )}
         >
           <div>
-            <p className="text-base font-bold text-foreground">Set up this appliance</p>
+            <p className="text-base font-bold text-foreground">Set up this account</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Activate license, configure the site, add members.
             </p>

@@ -903,11 +903,13 @@ function TagInput({
   onAdd,
   onRemove,
   suggestions = [],
+  invalid = false,
 }: {
   tags: string[];
   onAdd: (t: string) => void;
   onRemove: (t: string) => void;
   suggestions?: readonly string[];
+  invalid?: boolean;
 }) {
   const [val, setVal] = React.useState("");
   const [open, setOpen] = React.useState(false);
@@ -928,7 +930,10 @@ function TagInput({
   return (
     <div className="relative">
       <div
-        className="flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary"
+        className={cn(
+          "flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary",
+          invalid && "border-sev-critical"
+        )}
         onClick={() => { ref.current?.focus(); setOpen(true); }}
       >
         {tags.map((t) => (
@@ -1210,6 +1215,13 @@ function BuilderSidePanel({
 
 /* ── Builder state ───────────────────────────────────────────────────────── */
 
+interface BuilderErrors {
+  name?: string;
+  description?: string;
+  tags?: string;
+  conditions?: string;
+}
+
 interface BuilderState {
   name: string;
   description: string;
@@ -1218,6 +1230,7 @@ interface BuilderState {
   severity: RuleSeverity;
   sideTab: "summary" | "template";
   swapRowId: string | null;
+  errors: BuilderErrors;
 }
 
 const EMPTY_BUILDER: BuilderState = {
@@ -1228,6 +1241,7 @@ const EMPTY_BUILDER: BuilderState = {
   severity: "critical",
   sideTab: "summary",
   swapRowId: null,
+  errors: {},
 };
 
 function ruleToBuilder(rule: RuleData): BuilderState {
@@ -1239,6 +1253,7 @@ function ruleToBuilder(rule: RuleData): BuilderState {
     severity: rule.severity,
     sideTab: "summary",
     swapRowId: null,
+    errors: {},
   };
 }
 
@@ -1280,8 +1295,15 @@ function RuleBuilder({
     setS((prev) => ({ ...prev, ...p }));
   }
 
+  function clearError(field: keyof BuilderErrors) {
+    setS((prev) =>
+      prev.errors[field] ? { ...prev, errors: { ...prev.errors, [field]: undefined } } : prev
+    );
+  }
+
   function addCondition() {
     const isFirst = s.rows.length === 0;
+    clearError("conditions");
     patch({
       rows: [
         ...s.rows,
@@ -1295,6 +1317,24 @@ function RuleBuilder({
         },
       ],
     });
+  }
+
+  function validate(): BuilderErrors {
+    const errors: BuilderErrors = {};
+    if (!s.name.trim()) errors.name = "Rule name is required.";
+    if (!s.description.trim()) errors.description = "Rule description is required.";
+    if (s.tags.length === 0) errors.tags = "Add at least one tag.";
+    if (s.rows.length === 0) errors.conditions = "Add at least one condition.";
+    return errors;
+  }
+
+  function handleConfirmClick() {
+    const errors = validate();
+    if (Object.keys(errors).length > 0) {
+      patch({ errors });
+      return;
+    }
+    onConfirm({ name: s.name, description: s.description, tags: s.tags, conditions: s.rows, severity: s.severity });
   }
 
 
@@ -1350,10 +1390,12 @@ function RuleBuilder({
                 </label>
                 <Input
                   value={s.name}
-                  onChange={(e) => patch({ name: e.target.value })}
+                  onChange={(e) => { patch({ name: e.target.value }); clearError("name"); }}
                   placeholder="e.g. Helmet not worn in Armoury-B"
                   className="h-10 text-base"
+                  aria-invalid={!!s.errors.name}
                 />
+                {s.errors.name && <p className="mt-1 text-xs text-sev-critical">{s.errors.name}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -1361,11 +1403,15 @@ function RuleBuilder({
                 </label>
                 <Textarea
                   value={s.description}
-                  onChange={(e) => patch({ description: e.target.value })}
+                  onChange={(e) => { patch({ description: e.target.value }); clearError("description"); }}
                   placeholder="e.g. Triggers when a person is detected inside Armoury-B without a helmet for more than 5 seconds during operating hours."
                   rows={2}
                   className="w-full resize-none text-base"
+                  aria-invalid={!!s.errors.description}
                 />
+                {s.errors.description && (
+                  <p className="mt-1 text-xs text-sev-critical">{s.errors.description}</p>
+                )}
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -1373,10 +1419,12 @@ function RuleBuilder({
                 </label>
                 <TagInput
                   tags={s.tags}
-                  onAdd={(t) => patch({ tags: [...s.tags, t] })}
+                  onAdd={(t) => { patch({ tags: [...s.tags, t] }); clearError("tags"); }}
                   onRemove={(t) => patch({ tags: s.tags.filter((x) => x !== t) })}
                   suggestions={existingTags}
+                  invalid={!!s.errors.tags}
                 />
+                {s.errors.tags && <p className="mt-1 text-xs text-sev-critical">{s.errors.tags}</p>}
               </div>
             </div>
           </div>
@@ -1395,7 +1443,12 @@ function RuleBuilder({
               </Button>
             </div>
 
-            <div className="min-h-[320px] rounded-xl border border-border bg-card p-5">
+            <div
+              className={cn(
+                "min-h-[320px] rounded-xl border border-border bg-card p-5",
+                s.errors.conditions && "border-sev-critical"
+              )}
+            >
               {s.rows.length === 0 ? (
                 <button
                   type="button"
@@ -1432,6 +1485,9 @@ function RuleBuilder({
                 </div>
               )}
             </div>
+            {s.errors.conditions && (
+              <p className="mt-1 text-xs text-sev-critical">{s.errors.conditions}</p>
+            )}
           </div>
         </div>
 
@@ -1467,8 +1523,7 @@ function RuleBuilder({
           </Button>
           <Button
             size="sm"
-            disabled={!canSave}
-            onClick={() => onConfirm({ name: s.name, description: s.description, tags: s.tags, conditions: s.rows, severity: s.severity })}
+            onClick={handleConfirmClick}
             className="gap-1.5"
           >
             <Check className="size-3.5" />

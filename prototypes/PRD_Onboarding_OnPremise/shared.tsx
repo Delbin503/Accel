@@ -35,7 +35,7 @@ export function LoadingPreview() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Working…</h1>
           <p className="mt-1 text-base text-muted-foreground">
-            Signing in / activating the appliance license.
+            Signing in / activating the account license.
           </p>
         </div>
       </div>
@@ -70,7 +70,7 @@ export function DonePreview() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Setup complete</h1>
           <p className="mt-1 text-base text-muted-foreground">
-            The appliance is ready — the dashboard would load here in the real app.
+            The account is ready — the dashboard would load here in the real app.
           </p>
         </div>
         <Button size="sm" className="gap-1.5" onClick={() => navigate("/on-premise/signin")}>
@@ -86,7 +86,7 @@ export function NotInPrototype() {
     <AuthLayout>
       <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center text-muted-foreground">
         <p className="text-base font-medium text-foreground">Not part of this prototype</p>
-        <p className="text-sm">This prototype covers the <strong className="text-foreground">On-Premise</strong> appliance flow. See <strong className="text-foreground">PRD_Onboarding_Cloud</strong> for the cloud flow.</p>
+        <p className="text-sm">This prototype covers the <strong className="text-foreground">On-Premise</strong> account flow. See <strong className="text-foreground">PRD_Onboarding_Cloud</strong> for the cloud flow.</p>
       </div>
     </AuthLayout>
   );

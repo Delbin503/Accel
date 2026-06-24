@@ -470,15 +470,22 @@ function UploadDropzone({
   primary,
   hint,
   placeholder,
+  invalid,
 }: {
   value: string;
   onChange: (v: string) => void;
   primary: React.ReactNode;
   hint: string;
   placeholder: string;
+  invalid?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-5 transition-colors hover:border-primary/40">
+    <div
+      className={cn(
+        "flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 transition-colors hover:border-primary/40",
+        invalid ? "border-sev-critical" : "border-border"
+      )}
+    >
       <UploadCloud className="size-7 text-muted-foreground" />
       <p className="text-center text-sm text-muted-foreground">{primary}</p>
       <Input
@@ -486,6 +493,7 @@ function UploadDropzone({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="h-9 text-center text-base"
+        aria-invalid={!!invalid}
       />
       <p className="text-center text-xs text-muted-foreground/80">{hint}</p>
     </div>
@@ -503,7 +511,15 @@ function CreateModelModal({
 }) {
   const [name, setName] = React.useState("");
   const [desc, setDesc] = React.useState("");
-  const valid = name.trim() && desc.trim();
+  const [errors, setErrors] = React.useState<{ name?: string; desc?: string }>({});
+
+  function submit() {
+    const next: { name?: string; desc?: string } = {};
+    if (!name.trim()) next.name = "Model name is required.";
+    if (!desc.trim()) next.desc = "Model description is required.";
+    setErrors(next);
+    if (Object.keys(next).length === 0) onConfirm(name.trim(), desc.trim());
+  }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onCancel()}>
@@ -525,10 +541,15 @@ function CreateModelModal({
             </label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
+              }}
               placeholder="Enter model name"
               className="h-10 text-base"
+              aria-invalid={!!errors.name}
             />
+            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -536,11 +557,16 @@ function CreateModelModal({
             </label>
             <Textarea
               value={desc}
-              onChange={(e) => setDesc(e.target.value)}
+              onChange={(e) => {
+                setDesc(e.target.value);
+                if (errors.desc) setErrors((p) => ({ ...p, desc: undefined }));
+              }}
               placeholder="Describe what the model is capable of…"
               rows={3}
               className="w-full resize-none"
+              aria-invalid={!!errors.desc}
             />
+            {errors.desc && <p className="mt-1 text-xs text-sev-critical">{errors.desc}</p>}
           </div>
         </div>
 
@@ -548,7 +574,7 @@ function CreateModelModal({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button size="sm" disabled={!valid} onClick={() => valid && onConfirm(name.trim(), desc.trim())}>
+          <Button size="sm" onClick={submit}>
             Confirm
           </Button>
         </div>
@@ -573,7 +599,28 @@ function AddStepModal({
   const [label, setLabel] = React.useState(initial?.label ?? "Model_12");
   const [modelFile, setModelFile] = React.useState(initial?.modelFile ?? "");
   const [manifestFile, setManifestFile] = React.useState(initial?.manifestFile ?? "");
-  const valid = actionLabel.trim() && label.trim() && modelFile.trim() && manifestFile.trim();
+  const [errors, setErrors] = React.useState<{
+    actionLabel?: string;
+    label?: string;
+    modelFile?: string;
+    manifestFile?: string;
+  }>({});
+
+  function submit() {
+    const next: {
+      actionLabel?: string;
+      label?: string;
+      modelFile?: string;
+      manifestFile?: string;
+    } = {};
+    if (!actionLabel.trim()) next.actionLabel = "Action label is required.";
+    if (!label.trim()) next.label = "Model title is required.";
+    if (!modelFile.trim()) next.modelFile = "Upload a model file.";
+    if (!manifestFile.trim()) next.manifestFile = "Upload a manifest file.";
+    setErrors(next);
+    if (Object.keys(next).length === 0)
+      onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() });
+  }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onCancel()}>
@@ -592,10 +639,17 @@ function AddStepModal({
             </label>
             <Input
               value={actionLabel}
-              onChange={(e) => setActionLabel(e.target.value)}
+              onChange={(e) => {
+                setActionLabel(e.target.value);
+                if (errors.actionLabel) setErrors((p) => ({ ...p, actionLabel: undefined }));
+              }}
               placeholder="e.g. Verify worker is wearing approved helmet"
               className="h-10 text-base"
+              aria-invalid={!!errors.actionLabel}
             />
+            {errors.actionLabel && (
+              <p className="mt-1 text-xs text-sev-critical">{errors.actionLabel}</p>
+            )}
           </div>
 
           <div>
@@ -604,10 +658,15 @@ function AddStepModal({
             </label>
             <Input
               value={label}
-              onChange={(e) => setLabel(e.target.value)}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                if (errors.label) setErrors((p) => ({ ...p, label: undefined }));
+              }}
               placeholder="e.g. Helmet Detection v2.1"
               className="h-10 text-base"
+              aria-invalid={!!errors.label}
             />
+            {errors.label && <p className="mt-1 text-xs text-sev-critical">{errors.label}</p>}
           </div>
 
           <div>
@@ -616,11 +675,18 @@ function AddStepModal({
             </label>
             <UploadDropzone
               value={modelFile}
-              onChange={setModelFile}
+              onChange={(v) => {
+                setModelFile(v);
+                if (errors.modelFile) setErrors((p) => ({ ...p, modelFile: undefined }));
+              }}
               primary={<>Upload your <span className="font-semibold text-foreground">CV model file</span> or drag and drop</>}
               placeholder="model.onnx"
               hint={`Accepted: ${MODEL_FILE_EXTS}. Max file size 1 GB.`}
+              invalid={!!errors.modelFile}
             />
+            {errors.modelFile && (
+              <p className="mt-1 text-xs text-sev-critical">{errors.modelFile}</p>
+            )}
           </div>
 
           <div>
@@ -629,11 +695,18 @@ function AddStepModal({
             </label>
             <UploadDropzone
               value={manifestFile}
-              onChange={setManifestFile}
+              onChange={(v) => {
+                setManifestFile(v);
+                if (errors.manifestFile) setErrors((p) => ({ ...p, manifestFile: undefined }));
+              }}
               primary={<>Upload the <span className="font-semibold text-foreground">.json</span> manifest or drag and drop</>}
               placeholder="model.manifest.json"
               hint="Accepted: .json. Max file size 10 MB."
+              invalid={!!errors.manifestFile}
             />
+            {errors.manifestFile && (
+              <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
+            )}
           </div>
         </div>
 
@@ -641,13 +714,7 @@ function AddStepModal({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button
-            size="sm"
-            disabled={!valid}
-            onClick={() =>
-              valid && onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() })
-            }
-          >
+          <Button size="sm" onClick={submit}>
             Confirm
           </Button>
         </div>

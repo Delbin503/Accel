@@ -82,6 +82,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   const [floorPlanUrl, setFloorPlanUrl] = React.useState<string | null>(null);
   const [floorPlanName, setFloorPlanName] = React.useState<string>("");
   const [floorPlanLabel, setFloorPlanLabel] = React.useState("");
+  const [errors, setErrors] = React.useState<{ name?: string; address?: string; area?: string }>({});
   const fileRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
@@ -91,12 +92,23 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
       setAccent(accentChoices[0]);
       setAreas([]); setNewAreaName("");
       setFloorPlanUrl(null); setFloorPlanName(""); setFloorPlanLabel("");
+      setErrors({});
     }
   }, [open, accentChoices]);
 
   const stepIdx = STEPS.findIndex((s) => s.key === step);
-  const canNextFromDetails = name.trim().length > 0 && address.trim().length > 0;
-  const canNextFromAreas   = areas.length >= 1;
+
+  function validateDetails() {
+    const next: { name?: string; address?: string } = {};
+    if (!name.trim()) next.name = "Site name is required.";
+    if (!address.trim()) next.address = "Site address is required.";
+    return next;
+  }
+  function validateAreas() {
+    const next: { area?: string } = {};
+    if (areas.length < 1) next.area = "Add at least one area.";
+    return next;
+  }
 
   function addArea() {
     const trimmed = newAreaName.trim();
@@ -104,6 +116,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
     const color = AREA_PALETTE[areas.length % AREA_PALETTE.length];
     setAreas((curr) => [...curr, { id: uidArea(), name: trimmed, color, points: [] }]);
     setNewAreaName("");
+    setErrors((e) => ({ ...e, area: undefined }));
   }
   function removeArea(id: string) {
     setAreas((curr) => curr.filter((a) => a.id !== id));
@@ -131,9 +144,23 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   }
 
   function next() {
-    if (step === "details" && canNextFromDetails) setStep("areas");
-    else if (step === "areas" && canNextFromAreas) setStep("floor-plan");
-    else if (step === "floor-plan") setStep("review");
+    if (step === "details") {
+      const v = validateDetails();
+      if (v.name || v.address) {
+        setErrors((e) => ({ ...e, ...v }));
+        return;
+      }
+      setStep("areas");
+    } else if (step === "areas") {
+      const v = validateAreas();
+      if (v.area) {
+        setErrors((e) => ({ ...e, ...v }));
+        return;
+      }
+      setStep("floor-plan");
+    } else if (step === "floor-plan") {
+      setStep("review");
+    }
   }
   function back() {
     if (step === "areas") setStep("details");
@@ -142,6 +169,18 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   }
 
   function create(openEditor: boolean) {
+    const detailErrors = validateDetails();
+    if (detailErrors.name || detailErrors.address) {
+      setErrors((e) => ({ ...e, ...detailErrors }));
+      setStep("details");
+      return;
+    }
+    const areaErrors = validateAreas();
+    if (areaErrors.area) {
+      setErrors((e) => ({ ...e, ...areaErrors }));
+      setStep("areas");
+      return;
+    }
     const site = makeBlankSite(name.trim(), accent);
     site.address = address.trim();
     site.timezone = timezone;
@@ -182,14 +221,16 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   <Building2 className="size-3" />
                   Site Name
                 </label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Astra HQ" className="h-9 text-base" />
+                <Input value={name} onChange={(e) => { setName(e.target.value); setErrors((er) => ({ ...er, name: undefined })); }} placeholder="e.g. Astra HQ" className="h-9 text-base" aria-invalid={!!errors.name} />
+                {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <MapPin className="size-3" />
                   Address
                 </label>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
+                <Input value={address} onChange={(e) => { setAddress(e.target.value); setErrors((er) => ({ ...er, address: undefined })); }} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" aria-invalid={!!errors.address} />
+                {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -264,12 +305,14 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(); } }}
                     placeholder="e.g. Lobby, Loading Bay, Server Room…"
                     className="h-9 flex-1 text-base"
+                    aria-invalid={!!errors.area}
                   />
                   <Button onClick={addArea} disabled={!newAreaName.trim()} className="gap-1.5">
                     <Plus className="size-3.5" />
                     Add
                   </Button>
                 </div>
+                {errors.area && <p className="mt-1 text-xs text-sev-critical">{errors.area}</p>}
                 <p className="mt-1 text-2xs text-muted-foreground">Press Enter to add quickly</p>
               </div>
 
@@ -449,15 +492,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 {step === "floor-plan" && !floorPlanUrl && (
                   <Button variant="outline" onClick={next}>Skip for now</Button>
                 )}
-                <Button onClick={next}
-                  disabled={
-                    (step === "details"    && !canNextFromDetails) ||
-                    (step === "areas"      && !canNextFromAreas)   ||
-                    // Floor plan: Continue only enabled once user picks/uploads a floor plan.
-                    // The "Skip for now" button above remains available for users who want to defer.
-                    (step === "floor-plan" && !floorPlanUrl)
-                  }
-                  className="gap-1.5">
+                <Button onClick={next} className="gap-1.5">
                   Continue
                   <ChevronRight className="size-3.5" />
                 </Button>

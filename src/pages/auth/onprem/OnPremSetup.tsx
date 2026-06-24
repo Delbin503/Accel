@@ -142,7 +142,7 @@ function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boole
   );
 }
 
-/* Seat usage for the appliance license — owner is the bootstrap admin (1),
+/* Seat usage for the account license — owner is the bootstrap admin (1),
  * admin/user come from the members added during setup. */
 function computeMemberSeatUsage(members: Member[]): Record<UserRole, SeatUsage> {
   const mk = (r: UserRole, assigned: number): SeatUsage => ({
@@ -251,7 +251,7 @@ export default function OnPremSetupPage({
   const [opFrom, setOpFrom] = React.useState("06:00");
   const [opTo, setOpTo] = React.useState("18:00");
 
-  const bootstrapUsername = "admin@local.appliance";
+  const bootstrapUsername = "admin@local.account";
 
   /* ── Step 3: Members ─────────────────────────────────────────── */
   const [members, setMembers] = React.useState<Member[]>([]);
@@ -260,7 +260,7 @@ export default function OnPremSetupPage({
 
   function pickLicenseFile() {
     // Demo dropzone: simulate a chosen file, then auto-validate.
-    const name = `entitlement-appliance.lic`;
+    const name = `entitlement-account.lic`;
     setLicenseFile(name);
   }
 
@@ -276,7 +276,7 @@ export default function OnPremSetupPage({
       // Valid file — activate and advance to Configure Site automatically.
       setLicenseStatus("valid");
       toast.success("License key worked", {
-        description: "Validation succeeded against this appliance's fingerprint.",
+        description: "Validation succeeded against this account's fingerprint.",
       });
       setStep("site");
     }, 1200);
@@ -303,7 +303,7 @@ export default function OnPremSetupPage({
       return;
     }
     toast.success("License activated", {
-      description: "Validation succeeded against this appliance's fingerprint.",
+      description: "Validation succeeded against this account's fingerprint.",
     });
     setStep("site");
   }
@@ -401,7 +401,7 @@ export default function OnPremSetupPage({
         <BackLink onClick={goBack} label="Back to sign in" />
         <Heading
           title="Activate your license"
-          subtitle="Upload the license file from your installation pack. This appliance cannot be used until activation completes."
+          subtitle="Upload the license file from your installation pack. This account cannot be used until activation completes."
         />
         <form onSubmit={submitLicense} className="mt-10 space-y-5">
           <div>
@@ -431,13 +431,13 @@ export default function OnPremSetupPage({
           {licenseStatus === "valid" && (
             <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/[0.08] px-3 py-2.5 text-sm text-success">
               <CheckCircle2 className="size-4 flex-shrink-0" />
-              License valid — entitlement matches this appliance's fingerprint.
+              License valid — entitlement matches this account's fingerprint.
             </div>
           )}
           {licenseStatus === "invalid" && (
             <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2.5 text-sm text-sev-critical">
               <AlertCircle className="size-4 flex-shrink-0" />
-              License invalid — this file does not match this appliance. Upload a valid .lic file.
+              License invalid — this file does not match this account. Upload a valid .lic file.
             </div>
           )}
 
@@ -478,7 +478,7 @@ export default function OnPremSetupPage({
         <BackLink onClick={goBack} />
         <Heading
           title="Configure this site"
-          subtitle="Add basic details and the operational defaults. On-Premise appliances manage exactly one site."
+          subtitle="Add basic details and the operational defaults. On-Premise accounts manage exactly one site."
         />
         <form onSubmit={submitSite} className="mt-8 space-y-4">
           <Field label="Site name" icon={Building2}>
@@ -619,7 +619,7 @@ export default function OnPremSetupPage({
       <BackLink onClick={goBack} />
       <Heading
         title="Add Members"
-        subtitle="Since this is an offline appliance, each member gets a setup code (handed over physically) or a temporary password to use on first sign-in."
+        subtitle="Since this is an offline account, each member gets a setup code (handed over physically) or a temporary password to use on first sign-in."
       />
 
       <div className="mt-6">
@@ -660,7 +660,7 @@ export default function OnPremSetupPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {/* Bootstrap appliance owner — already provisioned. */}
+              {/* Bootstrap account owner — already provisioned. */}
               <tr className="text-base transition-colors hover:bg-muted/20">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
@@ -669,7 +669,7 @@ export default function OnPremSetupPage({
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground">
-                        Appliance Owner
+                        Account Owner
                         <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
                       </p>
                       <p className="font-mono text-xs text-muted-foreground">{bootstrapUsername}</p>
@@ -920,7 +920,7 @@ function MemberModal({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="member@appliance.local"
+                placeholder="member@account.local"
                 className="h-9 pl-9 text-base"
               />
             </div>
@@ -933,7 +933,7 @@ function MemberModal({
                 const s = usage[r];
                 const isLow = s.available === 0;
                 const isSelected = role === r;
-                // Owner is the appliance bootstrap account — not assignable here.
+                // Owner is the account bootstrap account — not assignable here.
                 const selectable = r !== "owner";
                 return (
                   <button
@@ -966,11 +966,11 @@ function MemberModal({
               })}
             </div>
             <p className="mt-1 text-2xs text-muted-foreground/70">
-              Owner is the appliance bootstrap account and can't be reassigned here.
+              Owner is the account bootstrap account and can't be reassigned here.
             </p>
           </div>
 
-          {/* Site Access — locked to the appliance's site. */}
+          {/* Site Access — locked to the account's site. */}
           <div>
             <Label>Site Access</Label>
             <div
@@ -982,7 +982,7 @@ function MemberModal({
                 {siteName}
               </span>
               <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
-                <Lock className="size-3" /> Locked to this appliance
+                <Lock className="size-3" /> Locked to this account
               </span>
             </div>
           </div>

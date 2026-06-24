@@ -1,11 +1,11 @@
 # PRD · Onboarding (On-Premise)
 
 Prototype of the **On-Premise** onboarding flow — the offline single-site
-appliance path: operator sign-in plus the first-run setup wizard. Renders the
+account path: operator sign-in plus the first-run setup wizard. Renders the
 real auth pages full-screen (no app shell), with a floating dev **Screen** jumper.
 
 ```
-Appliance Sign In  →  Setup: License → Site → Admin → Operators  →  Done (dashboard)
+Account Sign In  →  Setup: License → Site → Admin → Operators  →  Done (dashboard)
 ```
 
 ## Run

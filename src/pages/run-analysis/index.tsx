@@ -565,10 +565,12 @@ function VideoUploader({
   file,
   onUpload,
   onClear,
+  invalid = false,
 }: {
   file: { name: string; size: string } | null;
   onUpload: (f: { name: string; size: string }) => void;
   onClear: () => void;
+  invalid?: boolean;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -656,7 +658,10 @@ function VideoUploader({
       onClick={pick}
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
-      className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40"
+      className={cn(
+        "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40",
+        invalid && "border-sev-critical"
+      )}
     >
       <UploadCloud className="size-9 text-muted-foreground/50" />
       <p className="text-base text-muted-foreground">
@@ -1772,7 +1777,16 @@ function UploadStep({
   onRun: () => void;
   onShowHistory: () => void;
 }) {
-  const canRun = analysisName.trim() && uploadedFile && selectedVlmId;
+  const [errors, setErrors] = React.useState<{ name?: string; file?: string; vlm?: string }>({});
+
+  function handleRunClick() {
+    const next: { name?: string; file?: string; vlm?: string } = {};
+    if (!analysisName.trim()) next.name = "Analysis name is required.";
+    if (!uploadedFile) next.file = "Upload a video file to analyze.";
+    if (!selectedVlmId) next.vlm = "Select a VLM model.";
+    setErrors(next);
+    if (Object.keys(next).length === 0) onRun();
+  }
 
   return (
     <div className="space-y-5">
@@ -1794,7 +1808,7 @@ function UploadStep({
             <ArrowLeft className="size-3.5" />
             Go Back
           </Button>
-          <Button size="sm" onClick={onRun} disabled={!canRun} className="gap-1.5">
+          <Button size="sm" onClick={handleRunClick} className="gap-1.5">
             <Sparkles className="size-3.5" />
             Run Analysis
           </Button>
@@ -1816,10 +1830,15 @@ function UploadStep({
               </label>
               <Input
                 value={analysisName}
-                onChange={(e) => setAnalysisName(e.target.value)}
+                onChange={(e) => {
+                  setAnalysisName(e.target.value);
+                  if (e.target.value.trim()) setErrors((prev) => ({ ...prev, name: undefined }));
+                }}
                 placeholder="Enter analysis name (e.g. Model A Analysis)"
                 className="h-10 text-base"
+                aria-invalid={!!errors.name}
               />
+              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
             </div>
 
             <div>
@@ -1828,9 +1847,14 @@ function UploadStep({
               </label>
               <VideoUploader
                 file={uploadedFile}
-                onUpload={setUploadedFile}
+                onUpload={(f) => {
+                  setUploadedFile(f);
+                  setErrors((prev) => ({ ...prev, file: undefined }));
+                }}
                 onClear={() => setUploadedFile(null)}
+                invalid={!!errors.file}
               />
+              {errors.file && <p className="mt-1 text-xs text-sev-critical">{errors.file}</p>}
             </div>
           </div>
         </div>
@@ -1848,7 +1872,12 @@ function UploadStep({
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Select VLM Model
             </p>
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div
+              className={cn(
+                "overflow-hidden rounded-xl border border-border bg-card",
+                errors.vlm && "border-sev-critical"
+              )}
+            >
               <div className="border-b border-border bg-muted/20 px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="size-3.5 text-primary" />
@@ -1864,11 +1893,15 @@ function UploadStep({
                     key={vlm.id}
                     vlm={vlm}
                     selected={selectedVlmId === vlm.id}
-                    onClick={() => setSelectedVlmId(vlm.id)}
+                    onClick={() => {
+                      setSelectedVlmId(vlm.id);
+                      setErrors((prev) => ({ ...prev, vlm: undefined }));
+                    }}
                   />
                 ))}
               </div>
             </div>
+            {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
           </div>
         </div>
       </div>
