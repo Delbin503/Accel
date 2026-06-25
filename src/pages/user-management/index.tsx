@@ -1769,18 +1769,17 @@ function EditUserModal({
 
 /* ── Suspend User modal (with duration picker + note) ────────────────────── */
 
-type SuspendPreset = "1d" | "3d" | "7d" | "30d" | "custom";
+type SuspendPreset = "permanent" | "7d" | "30d" | "custom";
 
 const SUSPEND_DURATION_LABEL: Record<SuspendPreset, string> = {
-  "1d":     "1 day",
-  "3d":     "3 days",
+  permanent: "Permanent",
   "7d":     "7 days",
   "30d":    "1 month",
   custom: "Custom range",
 };
 
-const PRESET_DAYS: Record<Exclude<SuspendPreset, "custom">, number> = {
-  "1d": 1, "3d": 3, "7d": 7, "30d": 30,
+const PRESET_DAYS: Record<"7d" | "30d", number> = {
+  "7d": 7, "30d": 30,
 };
 
 function addDays(date: Date, days: number): Date {
@@ -1837,6 +1836,8 @@ function SuspendUserModal({
     let endsDisplay: string;
     if (preset === "custom") {
       endsDisplay = fmtDate(new Date(endDate));
+    } else if (preset === "permanent") {
+      endsDisplay = "Permanent";
     } else {
       endsDisplay = fmtDate(addDays(now, PRESET_DAYS[preset]));
     }
@@ -1860,7 +1861,7 @@ function SuspendUserModal({
     });
   }
 
-  const PRESETS: SuspendPreset[] = ["1d", "3d", "7d", "30d", "custom"];
+  const PRESETS: SuspendPreset[] = ["permanent", "7d", "30d", "custom"];
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1895,7 +1896,7 @@ function SuspendUserModal({
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Duration
             </p>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {PRESETS.map((p) => (
                 <button
                   key={p}
@@ -1907,7 +1908,7 @@ function SuspendUserModal({
                       : "border-border bg-background text-muted-foreground hover:border-primary/40"
                   )}
                 >
-                  {p === "custom" ? <Calendar className="size-3.5" /> : <Clock className="size-3.5" />}
+                  {p === "custom" ? <Calendar className="size-3.5" /> : p === "permanent" ? <ShieldOff className="size-3.5" /> : <Clock className="size-3.5" />}
                   {SUSPEND_DURATION_LABEL[p]}
                 </button>
               ))}
@@ -2495,7 +2496,7 @@ export default function UserManagementPage() {
             value={cfg.getValue(users)}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}

@@ -3,8 +3,8 @@ export type UserRole = "owner" | "admin" | "user";
 export type UserStatus = "active" | "pending" | "suspended";
 
 export interface Suspension {
-  /** "1d" | "3d" | "7d" | "30d" | "custom" */
-  preset: "1d" | "3d" | "7d" | "30d" | "custom";
+  /** "permanent" | "7d" | "30d" | "custom" */
+  preset: "permanent" | "7d" | "30d" | "custom";
   startedAtDisplay: string;
   endsAtDisplay: string;     // e.g. "May 26, 2026" or "Indefinite"
   suspendedBy: string;

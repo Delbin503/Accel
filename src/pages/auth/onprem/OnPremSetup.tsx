@@ -17,7 +17,6 @@ import {
   Upload,
   ShieldCheck,
   WifiOff,
-  Wifi,
   Globe,
   RefreshCcw,
   CheckCircle2,
@@ -80,12 +79,6 @@ const NETWORK_MODES: {
     label: "Air-gapped",
     description: "No internet · defence-grade",
     icon: WifiOff,
-  },
-  {
-    key: "hybrid",
-    label: "Hybrid",
-    description: "Internet for updates only",
-    icon: Wifi,
   },
   {
     key: "connected",
@@ -241,7 +234,15 @@ export default function OnPremSetupPage({
   const [licenseFile, setLicenseFile] = React.useState<string | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus>("idle");
 
-  /* ── Step 2: Site ────────────────────────────────────────────── */
+  /* ── Step 2: Owner ───────────────────────────────────────────── */
+  const [ownerFirstName, setOwnerFirstName] = React.useState("");
+  const [ownerLastName, setOwnerLastName] = React.useState("");
+  const [ownerEmail, setOwnerEmail] = React.useState("");
+  const [ownerPhone, setOwnerPhone] = React.useState("");
+  const [ownerTitle, setOwnerTitle] = React.useState("");
+  const [ownerOrg, setOwnerOrg] = React.useState("");
+
+  /* ── Step 3: Site ────────────────────────────────────────────── */
   const [siteName, setSiteName] = React.useState("");
   const [siteAddress, setSiteAddress] = React.useState("");
   const [primaryArea, setPrimaryArea] = React.useState("");
@@ -253,7 +254,7 @@ export default function OnPremSetupPage({
 
   const bootstrapUsername = "admin@local.account";
 
-  /* ── Step 3: Members ─────────────────────────────────────────── */
+  /* ── Step 4: Members ─────────────────────────────────────────── */
   const [members, setMembers] = React.useState<Member[]>([]);
   const [memberModalOpen, setMemberModalOpen] = React.useState(false);
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
@@ -273,12 +274,12 @@ export default function OnPremSetupPage({
         setLicenseStatus("invalid");
         return;
       }
-      // Valid file — activate and advance to Configure Site automatically.
+      // Valid file — activate and advance to Owner Details automatically.
       setLicenseStatus("valid");
       toast.success("License key worked", {
         description: "Validation succeeded against this account's fingerprint.",
       });
-      setStep("site");
+      setStep("owner");
     }, 1200);
     return () => clearTimeout(t);
   }, [licenseFile]);
@@ -289,7 +290,8 @@ export default function OnPremSetupPage({
       navigate("/on-premise/signin");
       return;
     }
-    if (step === "site") setStep("license");
+    if (step === "owner") setStep("license");
+    else if (step === "site") setStep("owner");
     else if (step === "operators") setStep("site");
   }
 
@@ -305,6 +307,17 @@ export default function OnPremSetupPage({
     toast.success("License activated", {
       description: "Validation succeeded against this account's fingerprint.",
     });
+    setStep("owner");
+  }
+
+  function submitOwner(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (ownerFirstName.trim().length < 2) return setError("Enter the owner's first name.");
+    if (ownerLastName.trim().length < 1) return setError("Enter the owner's last name.");
+    if (!MEMBER_EMAIL_RE.test(ownerEmail.trim()))
+      return setError("Enter a valid owner email address.");
+    if (ownerOrg.trim().length < 2) return setError("Enter the organization name.");
     setStep("site");
   }
 
@@ -364,20 +377,19 @@ export default function OnPremSetupPage({
     site.status = "active";
     addSite(site);
 
-    // Sign in as the bootstrap admin.
-    const initials = bootstrapUsername
-      .replace(/[^a-zA-Z]/g, "")
-      .slice(0, 2)
-      .toUpperCase() || "AD";
+    // Sign in as the bootstrap owner — identity comes from the Owner Details step.
+    const ownerFullName = `${ownerFirstName.trim()} ${ownerLastName.trim()}`.trim();
+    const initials =
+      (ownerFirstName.charAt(0) + ownerLastName.charAt(0)).toUpperCase() || "AD";
     signUp({
       id: "usr-onprem-001",
-      name: "Super Admin",
+      name: ownerFullName || "Super Admin",
       initials,
       role: "admin",
-      email: bootstrapUsername,
-      username: bootstrapUsername,
+      email: ownerEmail.trim() || bootstrapUsername,
+      username: ownerEmail.trim() || bootstrapUsername,
       notificationCount: 0,
-      orgName: siteName.trim(),
+      orgName: ownerOrg.trim() || siteName.trim(),
       deploymentMode: "onprem",
     });
 
@@ -401,7 +413,7 @@ export default function OnPremSetupPage({
         <BackLink onClick={goBack} label="Back to sign in" />
         <Heading
           title="Activate your license"
-          subtitle="Upload the license file from your installation pack. This account cannot be used until activation completes."
+          subtitle="Upload the license file from your installation pack to continue."
         />
         <form onSubmit={submitLicense} className="mt-10 space-y-5">
           <div>
@@ -463,6 +475,92 @@ export default function OnPremSetupPage({
     );
   }
 
+  /* ── Render: Owner Details ─────────────────────────────────── */
+
+  if (step === "owner") {
+    return (
+      <WizardShell currentStep="owner" onCancel={() => navigate("/on-premise/signin")}>
+        <BackLink onClick={goBack} />
+        <Heading
+          title="Owner details"
+          subtitle="The owner is the first admin account and the contact for license renewals."
+        />
+        <form onSubmit={submitOwner} className="mt-7 space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="First name" icon={CircleUser}>
+              <Input
+                value={ownerFirstName}
+                onChange={(e) => setOwnerFirstName(e.target.value)}
+                placeholder="Jane"
+                className="h-10 pl-9 text-sm"
+              />
+            </Field>
+            <Field label="Last name" icon={CircleUser}>
+              <Input
+                value={ownerLastName}
+                onChange={(e) => setOwnerLastName(e.target.value)}
+                placeholder="Tan"
+                className="h-10 pl-9 text-sm"
+              />
+            </Field>
+          </div>
+
+          <Field label="Work email" icon={Mail}>
+            <Input
+              type="email"
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              placeholder="jane.tan@example.gov.sg"
+              className="h-10 pl-9 text-sm"
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Phone (Optional)" icon={Lock}>
+              <Input
+                value={ownerPhone}
+                onChange={(e) => setOwnerPhone(e.target.value)}
+                placeholder="+65 8123 4567"
+                className="h-10 pl-9 text-sm"
+              />
+            </Field>
+            <Field label="Job title (Optional)" icon={ShieldCheck}>
+              <Input
+                value={ownerTitle}
+                onChange={(e) => setOwnerTitle(e.target.value)}
+                placeholder="Security Operations Lead"
+                className="h-10 pl-9 text-sm"
+              />
+            </Field>
+          </div>
+
+          <Field label="Organization" icon={Building2}>
+            <Input
+              value={ownerOrg}
+              onChange={(e) => setOwnerOrg(e.target.value)}
+              placeholder="Republic of Singapore Navy"
+              className="h-10 pl-9 text-sm"
+            />
+          </Field>
+
+          <InfoBanner
+            tone="info"
+            icon={<ShieldCheck className="size-3.5" />}
+            title="Stored locally"
+          >
+            Owner details stay on this device only — shown in audit logs and on the
+            license certificate, never transmitted off-site.
+          </InfoBanner>
+
+          {error && <ErrorBox message={error} />}
+          <Button type="submit" className="mt-2 h-10 w-full gap-2 text-base">
+            Continue to site setup <ArrowRight className="size-3.5" />
+          </Button>
+        </form>
+      </WizardShell>
+    );
+  }
+
   /* ── Render: Site ──────────────────────────────────────────── */
 
   if (step === "site") {
@@ -478,7 +576,7 @@ export default function OnPremSetupPage({
         <BackLink onClick={goBack} />
         <Heading
           title="Configure this site"
-          subtitle="Add basic details and the operational defaults. On-Premise accounts manage exactly one site."
+          subtitle="Set the site details and operating defaults."
         />
         <form onSubmit={submitSite} className="mt-8 space-y-4">
           <Field label="Site name" icon={Building2}>
@@ -619,7 +717,7 @@ export default function OnPremSetupPage({
       <BackLink onClick={goBack} />
       <Heading
         title="Add Members"
-        subtitle="Since this is an offline account, each member gets a setup code (handed over physically) or a temporary password to use on first sign-in."
+        subtitle="Each member gets an auto-generated password for their first sign-in."
       />
 
       <div className="mt-6">

@@ -361,9 +361,9 @@ export const MOCK_USERS: UserData[] = [
     twoFactorEnabled: false,
     passwordChangedDisplay: "180 days ago",
     suspension: {
-      preset: "3d",
+      preset: "7d",
       startedAtDisplay: "May 19, 2026 · 10:15",
-      endsAtDisplay: "May 22, 2026",
+      endsAtDisplay: "May 26, 2026",
       suspendedBy: "Delbin Arkar",
       note: "Repeated 2FA bypass attempts. Re-enabling MFA required before lift.",
     },
