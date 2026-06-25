@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { MOCK_USERS } from "@/mocks/users";
@@ -62,9 +63,10 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
   const [confirm, setConfirm] = React.useState("");
   const [showCurrent, setShowCurrent] = React.useState(false);
   const [showNext, setShowNext] = React.useState(false);
+  const [errors, setErrors] = React.useState<{ current?: string; next?: string; confirm?: string }>({});
 
   React.useEffect(() => {
-    if (open) { setCurrent(""); setNext(""); setConfirm(""); setShowCurrent(false); setShowNext(false); }
+    if (open) { setCurrent(""); setNext(""); setConfirm(""); setShowCurrent(false); setShowNext(false); setErrors({}); }
   }, [open]);
 
   const lengthOk = next.length >= 12;
@@ -72,9 +74,15 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
   const hasNumber = /\d/.test(next);
   const hasSymbol = /[^A-Za-z0-9]/.test(next);
   const matches = next.length > 0 && next === confirm;
-  const canSubmit = current.length > 0 && lengthOk && mixedCase && hasNumber && hasSymbol && matches;
+  const requirementsOk = lengthOk && mixedCase && hasNumber && hasSymbol;
 
   function submit() {
+    const nextErrors: { current?: string; next?: string; confirm?: string } = {};
+    if (current.length === 0) nextErrors.current = "Enter your current password.";
+    if (!requirementsOk) nextErrors.next = "New password doesn't meet the requirements.";
+    if (!matches) nextErrors.confirm = "Passwords don't match.";
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
     onClose();
     toast.success("Password updated", { description: "You will stay signed in on this device." });
   }
@@ -89,24 +97,27 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Password</label>
             <div className="relative">
-              <Input type={showCurrent ? "text" : "password"} value={current} onChange={(e) => setCurrent(e.target.value)} className="h-9 pr-9 text-base" />
+              <Input type={showCurrent ? "text" : "password"} value={current} aria-invalid={!!errors.current} onChange={(e) => { setCurrent(e.target.value); if (errors.current) setErrors((p) => ({ ...p, current: undefined })); }} className="h-9 pr-9 text-base" />
               <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showCurrent ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
+            {errors.current && <p className="mt-1 text-xs text-sev-critical">{errors.current}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
             <div className="relative">
-              <Input type={showNext ? "text" : "password"} value={next} onChange={(e) => setNext(e.target.value)} className="h-9 pr-9 text-base" />
+              <Input type={showNext ? "text" : "password"} value={next} aria-invalid={!!errors.next} onChange={(e) => { setNext(e.target.value); if (errors.next) setErrors((p) => ({ ...p, next: undefined })); }} className="h-9 pr-9 text-base" />
               <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showNext ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
+            {errors.next && <p className="mt-1 text-xs text-sev-critical">{errors.next}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
-            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-base" />
+            <Input type="password" value={confirm} aria-invalid={!!errors.confirm} onChange={(e) => { setConfirm(e.target.value); if (errors.confirm) setErrors((p) => ({ ...p, confirm: undefined })); }} className="h-9 text-base" />
+            {errors.confirm && <p className="mt-1 text-xs text-sev-critical">{errors.confirm}</p>}
           </div>
           <div className="space-y-1 rounded-lg border border-border bg-background px-3 py-2.5">
             {([
@@ -125,7 +136,7 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!canSubmit} onClick={submit} className="gap-1.5">
+          <Button onClick={submit} className="gap-1.5">
             <KeyRound className="size-3.5" />
             Update Password
           </Button>
@@ -137,7 +148,19 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
 
 function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () => void; onEnable: () => void }) {
   const [code, setCode] = React.useState("");
-  React.useEffect(() => { if (open) setCode(""); }, [open]);
+  const [errors, setErrors] = React.useState<{ code?: string }>({});
+  React.useEffect(() => { if (open) { setCode(""); setErrors({}); } }, [open]);
+
+  function submit() {
+    if (code.length !== 6) {
+      setErrors({ code: "Enter the 6-digit code." });
+      return;
+    }
+    setErrors({});
+    onEnable();
+    onClose();
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
@@ -163,13 +186,14 @@ function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () =>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">6-digit verification code</label>
-            <Input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" maxLength={6}
+            <Input value={code} aria-invalid={!!errors.code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); if (errors.code) setErrors((p) => ({ ...p, code: undefined })); }} placeholder="000000" maxLength={6}
               className="h-10 text-center font-mono text-xl tracking-[0.5em]" />
+            {errors.code && <p className="mt-1 text-xs text-sev-critical">{errors.code}</p>}
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={code.length !== 6} onClick={() => { onEnable(); onClose(); }} className="gap-1.5">
+          <Button onClick={submit} className="gap-1.5">
             <ShieldCheck className="size-3.5" />
             Enable 2FA
           </Button>
@@ -187,7 +211,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = React.useState(seedUser.displayName);
   const [email] = React.useState(authUser?.email ?? seedUser.email);
   const [phone, setPhone] = React.useState(seedUser.phone ?? "");
-  const [department, setDepartment] = React.useState(seedUser.department ?? "");
+  const [departments, setDepartments] = React.useState<string[]>(seedUser.departments);
   const [twoFactor, setTwoFactor] = React.useState(seedUser.twoFactorEnabled);
   const [pwdOpen, setPwdOpen] = React.useState(false);
   const [twoFAOpen, setTwoFAOpen] = React.useState(false);
@@ -199,7 +223,7 @@ export default function ProfilePage() {
     fullName !== seedUser.fullName ||
     displayName !== seedUser.displayName ||
     phone !== (seedUser.phone ?? "") ||
-    department !== (seedUser.department ?? "");
+    departments.join("|") !== seedUser.departments.join("|");
 
   function saveChanges() {
     toast.success("Profile updated", { description: "Your changes have been saved." });
@@ -284,7 +308,7 @@ export default function ProfilePage() {
               <Building2 className="size-3" />
               Department
             </label>
-            <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Security Operations" className="h-9 text-base" />
+            <DepartmentSelect value={departments} onChange={setDepartments} placeholder="Security Operations" />
           </div>
         </div>
       </SectionCard>

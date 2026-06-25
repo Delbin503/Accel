@@ -56,6 +56,7 @@ const PHASES: Phase[] = [
           { label: "Cloud", slug: "PRD_Onboarding_Cloud" },
           { label: "On-Premise", slug: "PRD_Onboarding_OnPremise" },
           { label: "Invite Signup", slug: "PRD_Invite_Signup" },
+          { label: "Temp Password", slug: "PRD_Onboarding_TempPassword" },
         ],
       },
       { name: "Profile Settings" },

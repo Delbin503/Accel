@@ -29,7 +29,6 @@ import {
   ShieldCheck,
   CircleUser,
   Phone,
-  Briefcase,
   Search,
   ChevronDown,
   Lock as LockIcon,
@@ -64,6 +63,7 @@ import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
+import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { AuthStepBar, type AuthStepKey } from "@/components/shared/AuthStepBar";
 import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
@@ -253,7 +253,7 @@ export default function SignUpPage({
   /* Account info */
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
-  const [department, setDepartment] = React.useState("");
+  const [departments, setDepartments] = React.useState<string[]>([]);
   const [dialCode, setDialCode] = React.useState("+65");
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const fullName = `${firstName} ${lastName}`.trim();
@@ -573,15 +573,16 @@ export default function SignUpPage({
               />
             </Field>
           </div>
-          <Field label="Department (Optional)" icon={Briefcase}>
-            <Input
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department (Optional)
+            </label>
+            <DepartmentSelect
+              value={departments}
+              onChange={setDepartments}
               placeholder="e.g. Security Operations"
-              className="h-10 pl-9 text-base"
-              autoComplete="organization-title"
             />
-          </Field>
+          </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Phone Number

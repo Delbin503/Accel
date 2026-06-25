@@ -52,7 +52,7 @@ export interface UserData {
   isCurrentUser?: boolean;
 
   phone?: string;
-  department?: string;
+  departments: string[];
   createdAtDisplay: string;
   lastActiveAt: string;
   lastActiveDisplay: string;

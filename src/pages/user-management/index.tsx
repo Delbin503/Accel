@@ -52,6 +52,13 @@ import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
+import { DEPARTMENTS } from "@/mocks/departments";
+
+const DEPARTMENT_OPTIONS: { value: string; label: string }[] = DEPARTMENTS.map((d) => ({
+  value: d,
+  label: d,
+}));
 
 /* ── Role badge ──────────────────────────────────────────────────────────── */
 
@@ -238,11 +245,12 @@ function FilterDropdown({
 /* ── Filter panel ────────────────────────────────────────────────────────── */
 
 interface UserFilters {
-  role:   string[];
-  status: string[];
-  site:   string[];
+  role:       string[];
+  status:     string[];
+  site:       string[];
+  department: string[];
 }
-const EMPTY_FILTERS: UserFilters = { role: [], status: [], site: [] };
+const EMPTY_FILTERS: UserFilters = { role: [], status: [], site: [], department: [] };
 
 function FilterPanel({
   filters,
@@ -319,8 +327,9 @@ function FilterPanel({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
-              { key: "status" as const, label: "Status", opts: USER_STATUS_OPTIONS as readonly FilterOption[] },
-              { key: "site"   as const, label: "Site",   opts: USER_SITES },
+              { key: "status"     as const, label: "Status",     opts: USER_STATUS_OPTIONS as readonly FilterOption[] },
+              { key: "site"       as const, label: "Site",       opts: USER_SITES },
+              { key: "department" as const, label: "Department", opts: DEPARTMENT_OPTIONS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
                 <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -639,7 +648,23 @@ function UserDrawer({
                     ["Role",          <RoleBadge role={user.role} />],
                     ["Phone",         <span className="font-mono text-xs">{user.phone ?? "—"}</span>],
                     ["User ID",       <span className="font-mono text-xs text-primary">{user.id}</span>],
-                    ["Department",    user.department ?? "—"],
+                    [
+                      "Department",
+                      user.departments.length > 0 ? (
+                        <span className="flex flex-wrap gap-1">
+                          {user.departments.map((d) => (
+                            <span
+                              key={d}
+                              className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
+                            >
+                              {d}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        "—"
+                      ),
+                    ],
                     ["Email",         user.email],
                     ["Created On",    user.createdAtDisplay],
                     ["Last Active",   user.lastActiveDisplay],
@@ -849,16 +874,17 @@ function InviteUsersModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onInvite: (emails: string, role: UserRole, sites: string[]) => void;
+  onInvite: (emails: string, role: UserRole, sites: string[], departments: string[]) => void;
   seatUsage: Record<UserRole, SeatUsage>;
 }) {
   const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<UserRole>("user");
   const [sites, setSites] = React.useState<string[]>([]);
+  const [departments, setDepartments] = React.useState<string[]>([]);
   const [errors, setErrors] = React.useState<{ emails?: string; sites?: string }>({});
 
   React.useEffect(() => {
-    if (open) { setEmails(""); setRole("user"); setSites([]); setErrors({}); }
+    if (open) { setEmails(""); setRole("user"); setSites([]); setDepartments([]); setErrors({}); }
   }, [open]);
 
   const parsed = React.useMemo(() => parseEmails(emails), [emails]);
@@ -876,7 +902,7 @@ function InviteUsersModal({
     if (sites.length === 0) next.sites = "Select at least one site.";
     setErrors(next);
     if (Object.keys(next).length > 0 || overSeat || noSeats) return;
-    onInvite(emails, role, sites);
+    onInvite(emails, role, sites, departments);
   }
 
   const siteLabel =
@@ -994,6 +1020,14 @@ function InviteUsersModal({
                 </div>
               </PopoverContent>
             </Popover>
+          </div>
+
+          {/* Department */}
+          <div>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department (Optional)
+            </label>
+            <DepartmentSelect value={departments} onChange={setDepartments} />
           </div>
 
           {/* Emails */}
@@ -1673,7 +1707,7 @@ function EditUserModal({
   const [lastName, setLastName] = React.useState("");
   const [dialCode, setDialCode] = React.useState(DEFAULT_DIAL_CODE);
   const [phoneNumber, setPhoneNumber] = React.useState("");
-  const [department, setDepartment] = React.useState("");
+  const [departments, setDepartments] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (open && user) {
@@ -1684,7 +1718,7 @@ function EditUserModal({
       const parsed = splitPhone(user.phone);
       setDialCode(parsed.dialCode);
       setPhoneNumber(parsed.number);
-      setDepartment(user.department ?? "");
+      setDepartments(user.departments);
     }
   }, [open, user]);
 
@@ -1697,7 +1731,7 @@ function EditUserModal({
     firstName === user.firstName &&
     lastName === user.lastName &&
     phone === (user.phone ?? "") &&
-    department === (user.department ?? "");
+    departments.join("|") === user.departments.join("|");
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1719,7 +1753,6 @@ function EditUserModal({
             { label: "First Name",  kind: "text",  value: firstName, set: setFirstName, mono: false, placeholder: "e.g. Delbin" },
             { label: "Last Name",   kind: "text",  value: lastName,  set: setLastName,  mono: false, placeholder: "e.g. Arkar" },
             { label: "Phone",       kind: "phone" },
-            { label: "Department",  kind: "text",  value: department, set: setDepartment, mono: false, placeholder: "e.g. Operations, Security, IT" },
           ] as const).map((f) => (
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1740,6 +1773,12 @@ function EditUserModal({
               )}
             </div>
           ))}
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department
+            </label>
+            <DepartmentSelect value={departments} onChange={setDepartments} />
+          </div>
           <p className="text-xs text-muted-foreground">
             Email and User ID cannot be changed after creation.
           </p>
@@ -1755,7 +1794,7 @@ function EditUserModal({
                 lastName: lastName.trim(),
                 fullName: `${firstName.trim()} ${lastName.trim()}`.trim(),
                 phone: phone.trim() || undefined,
-                department: department.trim() || undefined,
+                departments,
               })
             }
           >
@@ -2259,6 +2298,7 @@ export default function UserManagementPage() {
       if (filters.role.length > 0 && !filters.role.includes(u.role)) return false;
       if (filters.status.length > 0 && !filters.status.includes(u.status)) return false;
       if (filters.site.length > 0 && !filters.site.some((s) => u.sitePermissions.find((p) => p.siteId === s))) return false;
+      if (filters.department.length > 0 && !filters.department.some((d) => u.departments.includes(d))) return false;
       if (search) {
         const q = search.toLowerCase();
         const hay = [u.id, u.fullName, u.firstName, u.lastName, u.email].join(" ").toLowerCase();
@@ -2430,7 +2470,7 @@ export default function UserManagementPage() {
     setToast({ kind: "success", message: "2FA reset — user must re-enrol on next sign-in" });
   }
 
-  function handleInvite(emails: string, role: UserRole, sites: string[]) {
+  function handleInvite(emails: string, role: UserRole, sites: string[], departments: string[]) {
     const list = emails.split(",").map((s) => s.trim()).filter(Boolean);
     const sitePerms: SitePermission[] = sites.map((s) => ({
       siteId: s,
@@ -2448,6 +2488,7 @@ export default function UserManagementPage() {
       email,
       role,
       status: "pending",
+      departments,
       createdAtDisplay: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
       lastActiveAt: "",
       lastActiveDisplay: "—",
