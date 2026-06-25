@@ -348,7 +348,7 @@ export default function OnPremSetupPage({
     toast.success(
       editingMember
         ? "Member updated"
-        : `${m.firstName} ${m.lastName} added · first-login via ${m.firstLogin === "setup-code" ? "setup code" : "temp password"}`
+        : `${m.firstName} ${m.lastName} added · ${m.firstLogin === "setup-code" ? "fixed" : "temporary"} password`
     );
   }
 
@@ -808,20 +808,20 @@ export default function OnPremSetupPage({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {m.firstLogin === "setup-code" ? (
-                      <div className="flex flex-col items-start gap-1">
+                    <div className="flex flex-col items-start gap-1">
+                      {m.firstLogin === "setup-code" ? (
                         <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary">
                           <KeyRound className="size-3" />
-                          Setup code
+                          Fixed Password
                         </span>
-                        <span className="font-mono text-xs font-semibold text-primary">{m.setupCode}</span>
-                      </div>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
-                        <Lock className="size-3" />
-                        Temp password
-                      </span>
-                    )}
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
+                          <Lock className="size-3" />
+                          Temporary Password
+                        </span>
+                      )}
+                      {m.setupCode && <span className="font-mono text-xs font-semibold text-primary">{m.setupCode}</span>}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
@@ -914,7 +914,6 @@ function MemberModal({
   const [firstLogin, setFirstLogin] =
     React.useState<FirstLoginMethod>("setup-code");
   const [setupCode, setSetupCode] = React.useState("");
-  const [tempPw, setTempPw] = React.useState("");
   const [err, setErr] = React.useState<string | null>(null);
 
   /* Seat usage for the role tiles — exclude the member being edited so its
@@ -943,7 +942,6 @@ function MemberModal({
         setRole(existing.role);
         setFirstLogin(existing.firstLogin);
         setSetupCode(existing.setupCode ?? genSetupCode());
-        setTempPw("");
       } else {
         setFirstName("");
         setLastName("");
@@ -951,7 +949,6 @@ function MemberModal({
         setRole("user");
         setFirstLogin("setup-code");
         setSetupCode(genSetupCode());
-        setTempPw("");
       }
       setErr(null);
     }
@@ -963,8 +960,6 @@ function MemberModal({
     if (lastName.trim().length < 1) return setErr("Enter a last name.");
     if (!MEMBER_EMAIL_RE.test(email.trim())) return setErr("Enter a valid email address.");
     if (noSeats) return setErr(`No ${MEMBER_ROLE_LABELS[role]} seats remaining.`);
-    if (firstLogin === "temp-password" && tempPw.length < 8)
-      return setErr("Temp password must be at least 8 characters.");
     onSave({
       id: existing?.id ?? `mbr-${Math.random().toString(36).slice(2, 6)}`,
       firstName: firstName.trim(),
@@ -972,7 +967,7 @@ function MemberModal({
       email: email.trim(),
       role,
       firstLogin,
-      setupCode: firstLogin === "setup-code" ? setupCode : undefined,
+      setupCode,
     });
   }
 
@@ -1090,51 +1085,37 @@ function MemberModal({
             <div className="grid grid-cols-1 gap-2">
               <FirstLoginCard
                 selected={firstLogin === "setup-code"}
-                title="Setup code (recommended)"
-                description="A one-time 8-char code printed by you and handed over physically. The member picks their own password on first sign-in."
+                title="Fixed Password"
+                description="The system generates a password the member keeps using to sign in."
                 icon={<KeyRound className="size-3.5" />}
                 onClick={() => setFirstLogin("setup-code")}
               />
               <FirstLoginCard
                 selected={firstLogin === "temp-password"}
-                title="Temporary password"
-                description="Assign a temp password they'll be forced to change immediately on first sign-in."
+                title="Temporary Password"
+                description="The system generates a one-time password the member must change on their first sign-in."
                 icon={<Lock className="size-3.5" />}
                 onClick={() => setFirstLogin("temp-password")}
               />
             </div>
           </div>
 
-          {firstLogin === "setup-code" && (
-            <div>
-              <Label>Setup code</Label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-md border border-primary/40 bg-primary/[0.10] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-primary">
-                  {setupCode}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSetupCode(genSetupCode())}
-                  className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-                  aria-label="Regenerate"
-                >
-                  <RefreshCcw className="size-3.5" />
-                </button>
+          <div>
+            <Label>Generated Password</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 rounded-md border border-primary/40 bg-primary/[0.10] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-primary">
+                {setupCode}
               </div>
+              <button
+                type="button"
+                onClick={() => setSetupCode(genSetupCode())}
+                className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
+                aria-label="Regenerate"
+              >
+                <RefreshCcw className="size-3.5" />
+              </button>
             </div>
-          )}
-
-          {firstLogin === "temp-password" && (
-            <div>
-              <Label>Temporary password</Label>
-              <Input
-                value={tempPw}
-                onChange={(e) => setTempPw(e.target.value)}
-                placeholder="At least 8 characters"
-                className="h-9 text-base"
-              />
-            </div>
-          )}
+          </div>
 
           {noSeats && (
             <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
