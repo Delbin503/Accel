@@ -586,17 +586,27 @@ function EditCaseModal({
   const [title, setTitle] = React.useState(initialTitle);
   const [severity, setSeverity] = React.useState<Severity>(initialSeverity);
   const [notes, setNotes] = React.useState(initialNotes);
+  const [titleErr, setTitleErr] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
       setTitle(initialTitle);
       setSeverity(initialSeverity);
       setNotes(initialNotes);
+      setTitleErr(null);
     }
   }, [open, initialTitle, initialSeverity, initialNotes]);
 
   const unchanged =
     title.trim() === initialTitle && severity === initialSeverity && notes === initialNotes;
+
+  function handleSave() {
+    if (!title.trim()) {
+      setTitleErr("Case title is required.");
+      return;
+    }
+    onConfirm(title.trim(), severity, notes);
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -615,10 +625,14 @@ function EditCaseModal({
             </label>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
+              className={cn(
+                "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                titleErr && "border-sev-critical"
+              )}
               placeholder="Case title..."
             />
+            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
           </div>
 
           <div>
@@ -649,7 +663,7 @@ function EditCaseModal({
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Notes
+              Notes (Optional)
             </label>
             <Textarea
               value={notes}
@@ -667,8 +681,8 @@ function EditCaseModal({
           </Button>
           <Button
             size="sm"
-            disabled={!title.trim() || unchanged}
-            onClick={() => onConfirm(title.trim(), severity, notes)}
+            disabled={unchanged}
+            onClick={handleSave}
           >
             Save Changes
           </Button>

@@ -318,6 +318,7 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
   const [severity, setSeverity] = React.useState<Severity>("medium");
   const [assignee, setAssignee] = React.useState<CaseAssignee>(ASSIGNEES[0]);
   const [notes, setNotes] = React.useState("");
+  const [errors, setErrors] = React.useState<{ title?: string; events?: string }>({});
 
   React.useEffect(() => {
     if (open && recording) {
@@ -330,11 +331,20 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
       setSeverity(selectedEvents.length > 0 ? max : "medium");
       setNotes("");
       setAssignee(ASSIGNEES[0]);
+      setErrors({});
     }
   }, [open, recording, selectedEvents]);
 
   if (!recording) return null;
-  const canSubmit = title.trim().length > 0 && selectedEvents.length > 0;
+
+  function handleConfirm() {
+    const next: { title?: string; events?: string } = {};
+    if (!title.trim()) next.title = "Case title is required.";
+    if (selectedEvents.length === 0) next.events = "Select at least one incident to link.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onConfirm({ title: title.trim(), severity, assignee, notes });
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -349,7 +359,8 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Case Title</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 text-base" />
+            <Input value={title} onChange={(e) => { setTitle(e.target.value); if (errors.title) setErrors((p) => ({ ...p, title: undefined })); }} aria-invalid={!!errors.title} className="h-9 text-base" />
+            {errors.title && <p className="mt-1 text-xs text-sev-critical">{errors.title}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -411,7 +422,7 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
               })()}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-background p-3">
+          <div className={cn("rounded-lg border border-border bg-background p-3", errors.events && "border-sev-critical")}>
             <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Linked Incidents ({selectedEvents.length})
             </p>
@@ -430,6 +441,7 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
               </ul>
             )}
           </div>
+          {errors.events && <p className="-mt-2 text-xs text-sev-critical">{errors.events}</p>}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
@@ -438,7 +450,7 @@ function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!canSubmit} onClick={() => onConfirm({ title: title.trim(), severity, assignee, notes })} className="gap-1.5">
+          <Button onClick={handleConfirm} className="gap-1.5">
             <Check className="size-3.5" />
             Create Case
           </Button>

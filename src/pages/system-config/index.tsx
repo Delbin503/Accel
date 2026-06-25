@@ -145,7 +145,8 @@ function GeneralSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization Name</label>
-            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} className="h-9 text-base" />
+            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} aria-invalid={!orgName.trim()} className="h-9 text-base" />
+            {!orgName.trim() && <p className="mt-1 text-xs text-sev-critical">Organization name is required.</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization ID</label>

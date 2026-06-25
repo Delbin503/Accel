@@ -124,6 +124,7 @@ export function EscalateModal({
   const [assignee, setAssignee] = React.useState<CaseAssignee>(ASSIGNEES[0]);
   const [notes, setNotes] = React.useState("");
   const [title, setTitle] = React.useState("");
+  const [titleErr, setTitleErr] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
@@ -136,13 +137,17 @@ export function EscalateModal({
       }
       setNotes("");
       setAssignee(ASSIGNEES[0]);
+      setTitleErr(null);
     }
   }, [open, event, isBulk, bulkCount]);
 
   const sla = SLA_BY_SEVERITY[pickedSev];
 
   function handleConfirm() {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setTitleErr("Provide a case title.");
+      return;
+    }
     onConfirm({ title: title.trim(), severity: pickedSev, assignee, notes });
   }
 
@@ -183,10 +188,12 @@ export function EscalateModal({
             </label>
             <Input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
+              aria-invalid={!!titleErr}
               className="text-base"
               placeholder="Describe the incident..."
             />
+            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
           </div>
 
           {/* Severity + Assignee */}
@@ -261,7 +268,7 @@ export function EscalateModal({
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button size="sm" disabled={!title.trim()} onClick={handleConfirm}>
+          <Button size="sm" onClick={handleConfirm}>
             Create Case
           </Button>
         </div>

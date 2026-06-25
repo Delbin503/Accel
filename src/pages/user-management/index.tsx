@@ -855,9 +855,10 @@ function InviteUsersModal({
   const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<UserRole>("user");
   const [sites, setSites] = React.useState<string[]>([]);
+  const [errors, setErrors] = React.useState<{ emails?: string; sites?: string }>({});
 
   React.useEffect(() => {
-    if (open) { setEmails(""); setRole("user"); setSites([]); }
+    if (open) { setEmails(""); setRole("user"); setSites([]); setErrors({}); }
   }, [open]);
 
   const parsed = React.useMemo(() => parseEmails(emails), [emails]);
@@ -865,11 +866,18 @@ function InviteUsersModal({
   const overSeat = parsed.valid.length > seatsLeft;
   const noSeats = seatsLeft === 0;
 
-  const canSubmit =
-    parsed.valid.length > 0 &&
-    parsed.invalid.length === 0 &&
-    sites.length > 0 &&
-    !overSeat;
+  // Clear validation errors as the user edits emails / site selection.
+  React.useEffect(() => { setErrors({}); }, [emails, sites]);
+
+  function handleSend() {
+    const next: { emails?: string; sites?: string } = {};
+    if (parsed.valid.length === 0) next.emails = "Enter at least one valid email address.";
+    else if (parsed.invalid.length > 0) next.emails = "Fix the invalid email addresses before sending.";
+    if (sites.length === 0) next.sites = "Select at least one site.";
+    setErrors(next);
+    if (Object.keys(next).length > 0 || overSeat || noSeats) return;
+    onInvite(emails, role, sites);
+  }
 
   const siteLabel =
     sites.length === 0                 ? "Select sites" :
@@ -1015,6 +1023,7 @@ function InviteUsersModal({
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
+            {errors.emails && <p className="mt-1 text-xs text-sev-critical">{errors.emails}</p>}
             {parsed.invalid.length > 0 && (
               <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
                 <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
@@ -1025,6 +1034,8 @@ function InviteUsersModal({
               </div>
             )}
           </div>
+
+          {errors.sites && <p className="text-xs text-sev-critical">{errors.sites}</p>}
 
           {(noSeats || overSeat) && (
             <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
@@ -1042,7 +1053,7 @@ function InviteUsersModal({
 
         <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={!canSubmit} onClick={() => onInvite(emails, role, sites)} className="gap-1.5">
+          <Button size="sm" onClick={handleSend} className="gap-1.5">
             <Mail className="size-3.5" />
             Send Invite
           </Button>

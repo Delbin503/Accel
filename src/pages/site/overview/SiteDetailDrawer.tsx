@@ -439,9 +439,14 @@ function FloorPlanEmpty({ onUpload, onUseSample }: { onUpload: (url: string, nam
 function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null; open: boolean; onClose: () => void; onSave: (patch: Partial<AreaShape>) => void }) {
   const [name, setName] = React.useState("");
   const [color, setColor] = React.useState(AREA_PALETTE[0]);
-  React.useEffect(() => { if (open && area) { setName(area.name); setColor(area.color); } }, [open, area]);
+  const [nameErr, setNameErr] = React.useState<string | null>(null);
+  React.useEffect(() => { if (open && area) { setName(area.name); setColor(area.color); setNameErr(null); } }, [open, area]);
   if (!area) return null;
   const dirty = name !== area.name || color !== area.color;
+  function handleSave() {
+    if (!name.trim()) { setNameErr("Area name is required."); return; }
+    onSave({ name: name.trim(), color });
+  }
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
@@ -451,7 +456,8 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
         <div className="space-y-3 px-5 py-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-base" />
+            <Input value={name} onChange={(e) => { setName(e.target.value); if (nameErr) setNameErr(null); }} aria-invalid={!!nameErr} className="h-9 text-base" />
+            {nameErr && <p className="mt-1 text-xs text-sev-critical">{nameErr}</p>}
           </div>
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
@@ -469,7 +475,7 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!dirty || !name.trim()} onClick={() => onSave({ name: name.trim(), color })} className="gap-1.5">
+          <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
             <Save className="size-3.5" />
             Save
           </Button>
@@ -489,11 +495,20 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
   const [address, setAddress] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [errors, setErrors] = React.useState<{ name?: string; address?: string }>({});
   React.useEffect(() => {
-    if (open && site) { setName(site.name); setAddress(site.address); setDescription(site.description ?? ""); setTimezone(site.timezone); }
+    if (open && site) { setName(site.name); setAddress(site.address); setDescription(site.description ?? ""); setTimezone(site.timezone); setErrors({}); }
   }, [open, site]);
   if (!site) return null;
   const dirty = name !== site.name || address !== site.address || description !== (site.description ?? "") || timezone !== site.timezone;
+  function handleSave() {
+    const next: { name?: string; address?: string } = {};
+    if (!name.trim()) next.name = "Site name is required.";
+    if (!address.trim()) next.address = "Site address is required.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onSave({ name: name.trim(), address: address.trim(), description: description.trim() || undefined, timezone });
+  }
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
@@ -503,13 +518,15 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
         <div className="space-y-3 px-5 py-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Astra HQ" className="h-9 text-base" />
+            <Input value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
+              aria-invalid={!!errors.name} placeholder="e.g. Astra HQ" className="h-9 text-base" />
+            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)}
-              placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
+            <Input value={address} onChange={(e) => { setAddress(e.target.value); if (errors.address) setErrors((p) => ({ ...p, address: undefined })); }}
+              aria-invalid={!!errors.address} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
+            {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
@@ -523,7 +540,7 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (Optional)</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
               placeholder="A short description of this site…"
               className="w-full text-base" />
@@ -531,9 +548,7 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!dirty || !name.trim()}
-            onClick={() => onSave({ name: name.trim(), address: address.trim(), description: description.trim() || undefined, timezone })}
-            className="gap-1.5">
+          <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
             <Save className="size-3.5" />
             Save Changes
           </Button>
