@@ -11,7 +11,7 @@ import { StateTester } from "./StateTester";
 import "./proto.css";
 
 function Shell() {
-  const [step, setStep] = React.useState<TempPwStep>("signin");
+  const [step, setStep] = React.useState<TempPwStep>("setup");
 
   return (
     <div className="min-h-screen w-full bg-background">

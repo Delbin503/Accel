@@ -1,11 +1,11 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  Mail,
   Lock,
   Eye,
   EyeOff,
-  LogIn,
+  User,
+  Phone,
   ArrowLeft,
   ArrowRight,
   KeyRound,
@@ -14,22 +14,30 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AuthLayout } from "@/pages/auth/AuthLayout";
+import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
 import { cn } from "@/lib/utils";
 
-export type TempPwStep = "signin" | "2fa" | "newpw" | "done";
+export type TempPwStep = "setup" | "2fa" | "newpw" | "done";
 
 const MOCK_EMAIL = "alex.tan@account.local";
 
 /**
  * First-time sign-in for an on-premise member issued a Temporary Password.
  *
- *   Sign in  →  Two-factor verification  →  Create new password  →  Dashboard
+ *   Set up account  →  Two-factor verification  →  Create new password  →  Dashboard
  *
- * Reuses the visual structure of OnPremSignIn, SignInVerify and the
- * OnPremForgotPassword "create new password" step. Inline field errors follow
- * the project pattern (aria-invalid + <p className="mt-1 text-xs text-sev-critical">).
+ * Reuses the visual structure of the invite "Set up your account" page,
+ * SignInVerify, and the OnPremForgotPassword "create new password" step. Inline
+ * field errors follow the project pattern (aria-invalid + <p className="mt-1 text-xs text-sev-critical">).
  */
 export function TempPasswordFlow({
   step,
@@ -39,10 +47,10 @@ export function TempPasswordFlow({
   onStep: (s: TempPwStep) => void;
 }) {
   switch (step) {
-    case "signin":
-      return <SignInStep onNext={() => onStep("2fa")} />;
+    case "setup":
+      return <SetupStep onNext={() => onStep("2fa")} />;
     case "2fa":
-      return <TwoFactorStep onNext={() => onStep("newpw")} onBack={() => onStep("signin")} />;
+      return <TwoFactorStep onNext={() => onStep("newpw")} onBack={() => onStep("setup")} />;
     case "newpw":
       return <NewPasswordStep onDone={() => onStep("done")} onBack={() => onStep("2fa")} />;
     case "done":
@@ -50,28 +58,27 @@ export function TempPasswordFlow({
   }
 }
 
-/* ── Step 1 · Sign in with the temporary password ───────────────────────── */
+/* ── Step 1 · Set up your account (profile details) ─────────────────────── */
 
-function SignInStep({ onNext }: { onNext: () => void }) {
-  const [email, setEmail] = React.useState(MOCK_EMAIL);
-  const [password, setPassword] = React.useState("");
-  const [showPw, setShowPw] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState<{ email?: string; password?: string }>({});
+const DIAL_CODES = ["+65", "+60", "+62", "+66", "+63", "+84", "+44", "+1"];
+
+function SetupStep({ onNext }: { onNext: () => void }) {
+  const [fullName, setFullName] = React.useState("");
+  const [displayName, setDisplayName] = React.useState("");
+  const [dialCode, setDialCode] = React.useState("+65");
+  const [phone, setPhone] = React.useState("");
+  const [departments, setDepartments] = React.useState<string[]>([]);
+  const [agree, setAgree] = React.useState(false);
+  const [errors, setErrors] = React.useState<{ fullName?: string; agree?: string }>({});
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const next: { email?: string; password?: string } = {};
-    if (!email.includes("@")) next.email = "Enter a valid email.";
-    if (!password.trim()) next.password = "Enter the temporary password you were given.";
+    const next: { fullName?: string; agree?: string } = {};
+    if (!fullName.trim()) next.fullName = "Enter your full name.";
+    if (!agree) next.agree = "Please accept the Terms to continue.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onNext();
-    }, 350);
+    onNext();
   }
 
   return (
@@ -81,79 +88,113 @@ function SignInStep({ onNext }: { onNext: () => void }) {
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
             <KeyRound className="size-7 text-white" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Sign in to your account</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Set up your account</h1>
           <p className="mt-2 text-base text-muted-foreground">
-            Use the email assigned to you by your site administrator.
+            Complete your profile to finish setting up your account.
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
+        {/* Account context */}
+        <div className="mb-4 flex items-center gap-2.5 rounded-lg border border-border bg-card/40 px-3 py-2.5">
+          <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary">
+            AT
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-base font-semibold text-foreground">{MOCK_EMAIL}</span>
+            <p className="text-xs text-muted-foreground">Signing in with a temporary password</p>
+          </div>
+        </div>
+
+        <form onSubmit={submit} className="space-y-4" noValidate>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Email
+              Full name
             </label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <User className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                type="email"
-                autoComplete="email"
-                value={email}
+                value={fullName}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrors((p) => ({ ...p, email: undefined }));
+                  setFullName(e.target.value);
+                  setErrors((p) => ({ ...p, fullName: undefined }));
                 }}
-                placeholder="you@account.local"
-                aria-invalid={!!errors.email}
+                placeholder="e.g. Delbin Arkar"
+                aria-invalid={!!errors.fullName}
                 className="h-10 pl-9 text-base"
               />
             </div>
-            {errors.email && <p className="mt-1 text-xs text-sev-critical">{errors.email}</p>}
+            {errors.fullName && <p className="mt-1 text-xs text-sev-critical">{errors.fullName}</p>}
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Temporary password
+              Display name (Optional)
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <User className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                type={showPw ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setErrors((p) => ({ ...p, password: undefined }));
-                }}
-                placeholder="Enter your temporary password"
-                aria-invalid={!!errors.password}
-                className="h-10 px-9 text-base"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Delbin (shown to teammates)"
+                className="h-10 pl-9 text-base"
               />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label={showPw ? "Hide password" : "Show password"}
-              >
-                {showPw ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
             </div>
-            {errors.password && <p className="mt-1 text-xs text-sev-critical">{errors.password}</p>}
           </div>
 
-          <div className="rounded-md border border-border bg-card/40 px-3 py-2.5 text-xs text-muted-foreground">
-            You were given a temporary password — you'll set your own after verifying.
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Phone (Optional)
+            </label>
+            <div className="flex h-10 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
+              <Select value={dialCode} onValueChange={setDialCode}>
+                <SelectTrigger className="h-full w-auto gap-1 rounded-none border-0 border-r border-input bg-transparent px-3 font-mono text-base">
+                  <Phone className="size-3.5 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIAL_CODES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="9123 4567"
+                inputMode="tel"
+                className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
           </div>
 
-          <Button type="submit" className="mt-2 h-10 w-full gap-2 text-base" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="size-3.5 animate-spin" /> Authenticating…
-              </>
-            ) : (
-              <>
-                <LogIn className="size-3.5" /> Sign In
-              </>
-            )}
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department (Optional)
+            </label>
+            <DepartmentSelect value={departments} onChange={setDepartments} placeholder="Select departments" />
+          </div>
+
+          <div>
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => {
+                  setAgree(e.target.checked);
+                  setErrors((p) => ({ ...p, agree: undefined }));
+                }}
+                className="mt-0.5 size-3.5 accent-primary"
+              />
+              <span>
+                I agree to the <span className="font-semibold text-primary underline">Terms of Service</span> and{" "}
+                <span className="font-semibold text-primary underline">Privacy Policy</span>.
+              </span>
+            </label>
+            {errors.agree && <p className="mt-1 text-xs text-sev-critical">{errors.agree}</p>}
+          </div>
+
+          <Button type="submit" className="mt-2 h-10 w-full gap-2 text-base">
+            Continue <ArrowRight className="size-3.5" />
           </Button>
         </form>
 

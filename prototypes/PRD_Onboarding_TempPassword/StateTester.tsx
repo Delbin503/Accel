@@ -8,7 +8,7 @@ import type { TempPwStep } from "./TempPasswordFlow";
    ────────────────────────────────────────────────────────────────────────── */
 
 const STEPS: { key: TempPwStep; label: string }[] = [
-  { key: "signin", label: "Sign in" },
+  { key: "setup", label: "Set up" },
   { key: "2fa", label: "2FA" },
   { key: "newpw", label: "New password" },
   { key: "done", label: "Dashboard" },
