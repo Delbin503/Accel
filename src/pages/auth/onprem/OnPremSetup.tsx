@@ -525,24 +525,23 @@ export default function OnPremSetupPage({
             />
           </Field>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Phone (Optional)</Label>
-              <PhoneField
-                dialCode={ownerDialCode}
-                number={ownerPhoneNumber}
-                onDialCode={setOwnerDialCode}
-                onNumber={setOwnerPhoneNumber}
-              />
-            </div>
-            <div>
-              <Label>Department (Optional)</Label>
-              <DepartmentSelect
-                value={ownerDepartments}
-                onChange={setOwnerDepartments}
-                placeholder="Security Operations"
-              />
-            </div>
+          <div>
+            <Label>Phone (Optional)</Label>
+            <PhoneField
+              dialCode={ownerDialCode}
+              number={ownerPhoneNumber}
+              onDialCode={setOwnerDialCode}
+              onNumber={setOwnerPhoneNumber}
+            />
+          </div>
+
+          <div>
+            <Label>Department (Optional)</Label>
+            <DepartmentSelect
+              value={ownerDepartments}
+              onChange={setOwnerDepartments}
+              placeholder="Security Operations"
+            />
           </div>
 
           <Field label="Organization" icon={Building2}>
