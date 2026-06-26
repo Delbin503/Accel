@@ -1708,12 +1708,105 @@ interface AddNvrFields {
   channelCount: string;
   retentionDays: string;
   cleanupSchedule: NvrData["cleanupSchedule"] | "";
+  /** Age-based cleanup: "remove recordings older than" (days). */
+  cleanupAgeDays: string;
+  /** Channel-based cleanup: channels selected for cleanup. */
+  cleanupChannels: number[];
 }
 
 function nextNvrId(takenIds: string[]): string {
   let n = 1;
   while (takenIds.includes(`NVR-${String(n).padStart(3, "0")}`)) n++;
   return `NVR-${String(n).padStart(3, "0")}`;
+}
+
+const CLEANUP_AGE_PRESETS = [7, 14, 30, 60, 90];
+
+/** Age-based cleanup: "remove recordings older than N days" preset chips. */
+function CleanupAgePicker({
+  value, onChange, error,
+}: {
+  value: string;
+  onChange: (days: string) => void;
+  error?: string;
+}) {
+  return (
+    <div className="col-span-2">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Remove recordings older than
+      </label>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {CLEANUP_AGE_PRESETS.map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => onChange(String(d))}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+              value === String(d)
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            )}
+          >
+            {d} days
+          </button>
+        ))}
+      </div>
+      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
+    </div>
+  );
+}
+
+/** Channel-based cleanup: multi-select chips of the NVR's channels. */
+function CleanupChannelPicker({
+  count, value, onChange, error,
+}: {
+  count: number;
+  value: number[];
+  onChange: (channels: number[]) => void;
+  error?: string;
+}) {
+  return (
+    <div className="col-span-2">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Channels to clean up
+      </label>
+      {count > 0 ? (
+        <>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {Array.from({ length: count }, (_, i) => i + 1).map((ch) => {
+              const checked = value.includes(ch);
+              return (
+                <button
+                  key={ch}
+                  type="button"
+                  onClick={() => onChange(checked ? value.filter((c) => c !== ch) : [...value, ch])}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+                    checked
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  )}
+                >
+                  Ch {String(ch).padStart(2, "0")}
+                </button>
+              );
+            })}
+          </div>
+          {value.length > 0 && (
+            <p className="mt-1.5 text-2xs text-muted-foreground">
+              {value.length} channel{value.length === 1 ? "" : "s"} selected
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
+          Select a channel count first.
+        </div>
+      )}
+      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
+    </div>
+  );
 }
 
 function AddNvrModal({
@@ -1736,28 +1829,46 @@ function AddNvrModal({
     channelCount: "",
     retentionDays: "",
     cleanupSchedule: "",
+    cleanupAgeDays: "",
+    cleanupChannels: [],
   });
 
   const [fields, setFields] = React.useState<AddNvrFields>(blank);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   React.useEffect(() => {
-    if (open) setFields(blank());
+    if (open) { setFields(blank()); setErrors({}); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   function set<K extends keyof AddNvrFields>(key: K, value: AddNvrFields[K]) {
     setFields((curr) => ({ ...curr, [key]: value }));
+    setErrors((curr) => {
+      if (!curr[key as string]) return curr;
+      const next = { ...curr };
+      delete next[key as string];
+      return next;
+    });
   }
 
-  const canSubmit =
-    fields.name.trim() &&
-    fields.model.trim() &&
-    fields.siteId &&
-    fields.areaId &&
-    fields.ipAddress.trim() &&
-    Number(fields.channelCount) > 0 &&
-    Number(fields.totalStorageGb) > 0 &&
-    fields.cleanupSchedule !== "";
+  function handleSubmit() {
+    const next: Record<string, string> = {};
+    if (!fields.name.trim()) next.name = "NVR name is required.";
+    if (!fields.model.trim()) next.model = "Select a model.";
+    if (!fields.siteId) next.siteId = "Select a site.";
+    if (!fields.areaId) next.areaId = "Select an area.";
+    if (!fields.ipAddress.trim()) next.ipAddress = "IP address is required.";
+    if (!(Number(fields.channelCount) > 0)) next.channelCount = "Channel count is required.";
+    if (!(Number(fields.totalStorageGb) > 0)) next.totalStorageGb = "Total storage is required.";
+    if (fields.cleanupSchedule === "") next.cleanupSchedule = "Select a cleanup schedule.";
+    if (fields.cleanupSchedule === "auto-age" && !fields.cleanupAgeDays)
+      next.cleanupAgeDays = "Select how old recordings must be before cleanup.";
+    if (fields.cleanupSchedule === "auto-channel" && fields.cleanupChannels.length === 0)
+      next.cleanupChannels = "Select at least one channel to clean up.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onConfirm(fields);
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1784,13 +1895,17 @@ function AddNvrModal({
                 value={fields.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="e.g. FedEx Changi · NVR-A"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.name && "border-sev-critical"
+                )}
               />
+              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
             </div>
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Model</label>
               <Select value={fields.model} onValueChange={(v) => set("model", v)}>
-                <SelectTrigger className="h-9 w-full font-mono">
+                <SelectTrigger className={cn("h-9 w-full font-mono", errors.model && "border-sev-critical")}>
                   <SelectValue placeholder="Select an NVR model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1801,11 +1916,12 @@ function AddNvrModal({
                   <SelectItem value="Uniview NVR308-32E2">Uniview NVR308-32E2 (32-ch)</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.model && <p className="mt-1 text-xs text-sev-critical">{errors.model}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-sev-critical")}>
                   <SelectValue placeholder="Select a site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1814,11 +1930,12 @@ function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.siteId && <p className="mt-1 text-xs text-sev-critical">{errors.siteId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-sev-critical")}>
                   <SelectValue placeholder="Select an area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1827,6 +1944,7 @@ function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.areaId && <p className="mt-1 text-xs text-sev-critical">{errors.areaId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -1834,11 +1952,15 @@ function AddNvrModal({
                 value={fields.ipAddress}
                 onChange={(e) => set("ipAddress", e.target.value)}
                 placeholder="10.10.0.10"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.ipAddress && "border-sev-critical"
+                )}
               />
+              {errors.ipAddress && <p className="mt-1 text-xs text-sev-critical">{errors.ipAddress}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port (Optional)</label>
               <input
                 type="number"
                 value={fields.httpPort}
@@ -1850,7 +1972,7 @@ function AddNvrModal({
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
               <Select value={fields.channelCount} onValueChange={(v) => set("channelCount", v)}>
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.channelCount && "border-sev-critical")}>
                   <SelectValue placeholder="Select channels" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1859,6 +1981,7 @@ function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.channelCount && <p className="mt-1 text-xs text-sev-critical">{errors.channelCount}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
@@ -1867,11 +1990,15 @@ function AddNvrModal({
                 value={fields.totalStorageGb}
                 onChange={(e) => set("totalStorageGb", e.target.value)}
                 placeholder="8000"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.totalStorageGb && "border-sev-critical"
+                )}
               />
+              {errors.totalStorageGb && <p className="mt-1 text-xs text-sev-critical">{errors.totalStorageGb}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days) (Optional)</label>
               <input
                 type="number"
                 value={fields.retentionDays}
@@ -1880,13 +2007,13 @@ function AddNvrModal({
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
-            <div>
+            <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cleanup Mode</label>
               <Select
                 value={fields.cleanupSchedule}
                 onValueChange={(v) => set("cleanupSchedule", v as NvrData["cleanupSchedule"])}
               >
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-sev-critical")}>
                   <SelectValue placeholder="Select cleanup mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1895,7 +2022,23 @@ function AddNvrModal({
                   <SelectItem value="manual">Manual only</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}
             </div>
+            {fields.cleanupSchedule === "auto-age" && (
+              <CleanupAgePicker
+                value={fields.cleanupAgeDays}
+                onChange={(d) => set("cleanupAgeDays", d)}
+                error={errors.cleanupAgeDays}
+              />
+            )}
+            {fields.cleanupSchedule === "auto-channel" && (
+              <CleanupChannelPicker
+                count={Number(fields.channelCount) || 0}
+                value={fields.cleanupChannels}
+                onChange={(chs) => set("cleanupChannels", chs)}
+                error={errors.cleanupChannels}
+              />
+            )}
           </div>
 
           <div className="rounded-lg border border-info/30 bg-info/[0.06] px-3 py-2.5 text-sm text-muted-foreground">
@@ -1905,7 +2048,7 @@ function AddNvrModal({
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={!canSubmit} onClick={() => onConfirm(fields)} className="gap-1.5">
+          <Button size="sm" onClick={handleSubmit} className="gap-1.5">
             <Plus className="size-3.5" />
             Add NVR
           </Button>
@@ -1926,6 +2069,8 @@ interface NvrFormFields {
   totalStorageGb: string;
   retentionDays: string;
   cleanupSchedule: NvrData["cleanupSchedule"] | "";
+  cleanupAgeDays: string;
+  cleanupChannels: number[];
 }
 
 function EditNvrModal({
@@ -1938,7 +2083,9 @@ function EditNvrModal({
 }) {
   const [fields, setFields] = React.useState<NvrFormFields>({
     name: "", siteId: "", areaId: "", ipAddress: "", httpPort: "", totalStorageGb: "", retentionDays: "", cleanupSchedule: "",
+    cleanupAgeDays: "", cleanupChannels: [],
   });
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   React.useEffect(() => {
     if (open && nvr) {
@@ -1951,17 +2098,41 @@ function EditNvrModal({
         totalStorageGb: String(nvr.totalStorageGb),
         retentionDays: String(nvr.retentionDays),
         cleanupSchedule: nvr.cleanupSchedule,
+        cleanupAgeDays: nvr.cleanupSchedule === "auto-age" ? String(nvr.retentionDays) : "",
+        cleanupChannels: [],
       });
+      setErrors({});
     }
   }, [open, nvr]);
 
-  if (!nvr) return null;
-
   function set<K extends keyof NvrFormFields>(key: K, value: NvrFormFields[K]) {
     setFields((curr) => ({ ...curr, [key]: value }));
+    setErrors((curr) => {
+      if (!curr[key as string]) return curr;
+      const next = { ...curr };
+      delete next[key as string];
+      return next;
+    });
   }
 
-  const canSubmit = fields.name.trim() && fields.ipAddress.trim() && fields.siteId && fields.areaId;
+  function handleSubmit() {
+    const next: Record<string, string> = {};
+    if (!fields.name.trim()) next.name = "NVR name is required.";
+    if (!fields.siteId) next.siteId = "Select a site.";
+    if (!fields.areaId) next.areaId = "Select an area.";
+    if (!fields.ipAddress.trim()) next.ipAddress = "IP address is required.";
+    if (!(Number(fields.totalStorageGb) > 0)) next.totalStorageGb = "Total storage is required.";
+    if (fields.cleanupSchedule === "") next.cleanupSchedule = "Select a cleanup schedule.";
+    if (fields.cleanupSchedule === "auto-age" && !fields.cleanupAgeDays)
+      next.cleanupAgeDays = "Select how old recordings must be before cleanup.";
+    if (fields.cleanupSchedule === "auto-channel" && fields.cleanupChannels.length === 0)
+      next.cleanupChannels = "Select at least one channel to clean up.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onConfirm(fields);
+  }
+
+  if (!nvr) return null;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2002,13 +2173,17 @@ function EditNvrModal({
                 value={fields.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="e.g. FedEx Changi · NVR-A"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.name && "border-sev-critical"
+                )}
               />
+              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-sev-critical")}>
                   <SelectValue placeholder="Select a site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -2017,11 +2192,12 @@ function EditNvrModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.siteId && <p className="mt-1 text-xs text-sev-critical">{errors.siteId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-sev-critical")}>
                   <SelectValue placeholder="Select an area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -2030,6 +2206,7 @@ function EditNvrModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.areaId && <p className="mt-1 text-xs text-sev-critical">{errors.areaId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -2037,11 +2214,15 @@ function EditNvrModal({
                 value={fields.ipAddress}
                 onChange={(e) => set("ipAddress", e.target.value)}
                 placeholder="10.10.0.10"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.ipAddress && "border-sev-critical"
+                )}
               />
+              {errors.ipAddress && <p className="mt-1 text-xs text-sev-critical">{errors.ipAddress}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port (Optional)</label>
               <input
                 type="number"
                 value={fields.httpPort}
@@ -2057,11 +2238,15 @@ function EditNvrModal({
                 value={fields.totalStorageGb}
                 onChange={(e) => set("totalStorageGb", e.target.value)}
                 placeholder="8000"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.totalStorageGb && "border-sev-critical"
+                )}
               />
+              {errors.totalStorageGb && <p className="mt-1 text-xs text-sev-critical">{errors.totalStorageGb}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days)</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days) (Optional)</label>
               <input
                 type="number"
                 value={fields.retentionDays}
@@ -2076,7 +2261,7 @@ function EditNvrModal({
                 value={fields.cleanupSchedule}
                 onValueChange={(v) => set("cleanupSchedule", v as NvrFormFields["cleanupSchedule"])}
               >
-                <SelectTrigger className="h-9 w-full">
+                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-sev-critical")}>
                   <SelectValue placeholder="Select cleanup mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -2085,12 +2270,28 @@ function EditNvrModal({
                   <SelectItem value="manual">Manual only</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}
             </div>
+            {fields.cleanupSchedule === "auto-age" && (
+              <CleanupAgePicker
+                value={fields.cleanupAgeDays}
+                onChange={(d) => set("cleanupAgeDays", d)}
+                error={errors.cleanupAgeDays}
+              />
+            )}
+            {fields.cleanupSchedule === "auto-channel" && (
+              <CleanupChannelPicker
+                count={nvr.channelCount}
+                value={fields.cleanupChannels}
+                onChange={(chs) => set("cleanupChannels", chs)}
+                error={errors.cleanupChannels}
+              />
+            )}
           </div>
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={!canSubmit} onClick={() => onConfirm(fields)} className="gap-1.5">
+          <Button size="sm" onClick={handleSubmit} className="gap-1.5">
             <Check className="size-3.5" />
             Save Changes
           </Button>
