@@ -11,15 +11,12 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
-  Pencil,
   Play,
-  KeyRound,
   Upload,
   ShieldCheck,
   WifiOff,
   Wifi,
   Globe,
-  RefreshCcw,
   CheckCircle2,
   LoaderCircle,
   Mail,
@@ -105,16 +102,11 @@ const NETWORK_MODES: {
 ];
 
 type MemberRole = "admin" | "user";
-type FirstLoginMethod = "setup-code" | "temp-password";
 
 interface Member {
   id: string;
-  firstName: string;
-  lastName: string;
   email: string;
   role: MemberRole;
-  firstLogin: FirstLoginMethod;
-  setupCode?: string;
 }
 
 const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -123,6 +115,31 @@ const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
   admin: "Admin",
   user: "User",
 };
+
+/* Email parser — same regex + token rules as the On-Cloud invite modal. */
+function parseEmails(raw: string): {
+  all: string[];
+  valid: string[];
+  invalid: string[];
+  duplicates: string[];
+} {
+  const tokens = raw.split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const valid: string[] = [];
+  const invalid: string[] = [];
+  const duplicates: string[] = [];
+  for (const t of tokens) {
+    const lower = t.toLowerCase();
+    if (seen.has(lower)) {
+      duplicates.push(t);
+      continue;
+    }
+    seen.add(lower);
+    if (MEMBER_EMAIL_RE.test(t)) valid.push(t);
+    else invalid.push(t);
+  }
+  return { all: tokens, valid, invalid, duplicates };
+}
 
 /* Role badge (owner / admin / user) — matches the On-Cloud invite layout. */
 const ROLE_BADGE: Record<
@@ -167,17 +184,6 @@ function computeMemberSeatUsage(members: Member[]): Record<UserRole, SeatUsage> 
     admin: mk("admin", members.filter((m) => m.role === "admin").length),
     user: mk("user", members.filter((m) => m.role === "user").length),
   };
-}
-
-function genSetupCode(): string {
-  const block = () =>
-    Math.random()
-      .toString(36)
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 4)
-      .padEnd(4, "0");
-  return `${block()}-${block()}`;
 }
 
 type LicenseStatus = "idle" | "validating" | "valid" | "invalid";
@@ -274,7 +280,6 @@ export default function OnPremSetupPage({
   /* ── Step 4: Members ─────────────────────────────────────────── */
   const [members, setMembers] = React.useState<Member[]>([]);
   const [memberModalOpen, setMemberModalOpen] = React.useState(false);
-  const [editingMember, setEditingMember] = React.useState<Member | null>(null);
 
   function pickLicenseFile() {
     // Demo dropzone: simulate a chosen file, then auto-validate.
@@ -347,31 +352,26 @@ export default function OnPremSetupPage({
   }
 
   function openAddMember() {
-    setEditingMember(null);
     setMemberModalOpen(true);
   }
 
-  function openEditMember(m: Member) {
-    setEditingMember(m);
-    setMemberModalOpen(true);
-  }
-
-  function saveMember(m: Member) {
-    setMembers((curr) => {
-      const exists = curr.some((x) => x.id === m.id);
-      return exists ? curr.map((x) => (x.id === m.id ? m : x)) : [...curr, m];
-    });
+  function sendInvites(emails: string[], role: MemberRole) {
+    const rows: Member[] = emails.map((email) => ({
+      id: `mbr-${Math.random().toString(36).slice(2, 6)}`,
+      email,
+      role,
+    }));
+    setMembers((curr) => [...curr, ...rows]);
     setMemberModalOpen(false);
     toast.success(
-      editingMember
-        ? "Member updated"
-        : `${m.firstName} ${m.lastName} added · ${m.firstLogin === "setup-code" ? "fixed" : "temporary"} password`
+      `${rows.length} invite${rows.length === 1 ? "" : "s"} sent`,
+      { description: "Invitees receive a one-time email link valid for 7 days." }
     );
   }
 
   function removeMember(id: string) {
     setMembers((curr) => curr.filter((x) => x.id !== id));
-    toast.success("Member removed");
+    toast.success("Invite removed");
   }
 
   function finishSetup() {
@@ -734,28 +734,18 @@ export default function OnPremSetupPage({
       <BackLink onClick={goBack} />
       <Heading
         title="Add Members"
-        subtitle="Each member gets an auto-generated password for their first sign-in."
+        subtitle="Choose the type of access each team member will need. You can adjust later."
       />
 
       <div className="mt-6">
         <SeatStrip usage={seatUsage} billingCycle="Perpetual" />
       </div>
 
-      <InfoBanner
-        tone="info"
-        icon={<Mail className="size-3.5" />}
-        title="Hand-off in person"
-        className="mt-4"
-      >
-        Print this member list with codes (admin only) before completing setup.
-        Members enrol 2FA themselves on their first sign-in.
-      </InfoBanner>
-
       <div className="mt-5 flex items-center justify-between">
         <p className="text-base font-bold text-foreground">Members</p>
         <Button onClick={openAddMember} className="h-9 gap-1.5">
           <Plus className="size-3.5" />
-          Add Member
+          Invite Users
         </Button>
       </div>
 
@@ -764,7 +754,7 @@ export default function OnPremSetupPage({
           <table className="w-full">
             <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
               <tr className="border-b border-border text-left">
-                {["MEMBER", "ROLE", "STATUS", "FIRST SIGN-IN", "ACTION"].map((h) => (
+                {["MEMBER", "ROLE", "STATUS", "ACTION"].map((h) => (
                   <th
                     key={h}
                     className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
@@ -799,7 +789,6 @@ export default function OnPremSetupPage({
                     Active
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">Configured</td>
                 <td className="px-4 py-3" />
               </tr>
 
@@ -807,10 +796,12 @@ export default function OnPremSetupPage({
                 <tr key={m.id} className="text-base transition-colors hover:bg-muted/20">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <MemberAvatar firstName={m.firstName} lastName={m.lastName} />
+                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                        <Mail className="size-3.5 text-muted-foreground" />
+                      </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-foreground">
-                          {m.firstName} {m.lastName}
+                          {m.email.split("@")[0]}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">{m.email}</p>
                       </div>
@@ -825,34 +816,11 @@ export default function OnPremSetupPage({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-col items-start gap-1">
-                      {m.firstLogin === "setup-code" ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary">
-                          <KeyRound className="size-3" />
-                          Fixed Password
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold text-info">
-                          <Lock className="size-3" />
-                          Temporary Password
-                        </span>
-                      )}
-                      {m.setupCode && <span className="font-mono text-xs font-semibold text-primary">{m.setupCode}</span>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => openEditMember(m)}
-                        className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                        aria-label="Edit member"
-                      >
-                        <Pencil className="size-3" />
-                      </button>
                       <button
                         onClick={() => removeMember(m.id)}
                         className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                        aria-label="Remove member"
+                        aria-label="Remove invite"
                       >
                         <Trash2 className="size-3" />
                       </button>
@@ -886,8 +854,7 @@ export default function OnPremSetupPage({
       <MemberModal
         open={memberModalOpen}
         onClose={() => setMemberModalOpen(false)}
-        onSave={saveMember}
-        existing={editingMember}
+        onInvite={sendInvites}
         siteName={siteName || "Sembawang Naval Base"}
         currentMembers={members}
       />
@@ -895,155 +862,75 @@ export default function OnPremSetupPage({
   );
 }
 
-/* ── Member avatar ──────────────────────────────────────────────── */
-
-function MemberAvatar({ firstName, lastName }: { firstName: string; lastName: string }) {
-  const initials =
-    `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "?";
-  return (
-    <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted font-mono text-sm font-semibold text-muted-foreground">
-      {initials}
-    </div>
-  );
-}
-
-/* ── Member modal ───────────────────────────────────────────────── */
+/* ── Member modal — mirrors the On-Cloud Invite Users modal exactly ── */
 
 function MemberModal({
   open,
   onClose,
-  onSave,
-  existing,
+  onInvite,
   siteName,
   currentMembers,
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: (m: Member) => void;
-  existing: Member | null;
+  onInvite: (emails: string[], role: MemberRole) => void;
   siteName: string;
   currentMembers: Member[];
 }) {
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [email, setEmail] = React.useState("");
+  const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<MemberRole>("user");
-  const [firstLogin, setFirstLogin] =
-    React.useState<FirstLoginMethod>("setup-code");
-  const [setupCode, setSetupCode] = React.useState("");
-  const [err, setErr] = React.useState<string | null>(null);
-
-  /* Seat usage for the role tiles — exclude the member being edited so its
-   * own seat isn't double-counted against availability. */
-  const usage = React.useMemo(() => {
-    const others = existing ? currentMembers.filter((m) => m.id !== existing.id) : currentMembers;
-    const mk = (r: UserRole, assigned: number) => {
-      const total = MOCK_SEATS[r].total;
-      return { assigned, total, available: Math.max(0, total - assigned) };
-    };
-    return {
-      owner: mk("owner", 1),
-      admin: mk("admin", others.filter((m) => m.role === "admin").length),
-      user: mk("user", others.filter((m) => m.role === "user").length),
-    } as Record<UserRole, { assigned: number; total: number; available: number }>;
-  }, [currentMembers, existing]);
-
-  const noSeats = usage[role].available === 0;
 
   React.useEffect(() => {
     if (open) {
-      if (existing) {
-        setFirstName(existing.firstName);
-        setLastName(existing.lastName);
-        setEmail(existing.email);
-        setRole(existing.role);
-        setFirstLogin(existing.firstLogin);
-        setSetupCode(existing.setupCode ?? genSetupCode());
-      } else {
-        setFirstName("");
-        setLastName("");
-        setEmail("");
-        setRole("user");
-        setFirstLogin("setup-code");
-        setSetupCode(genSetupCode());
-      }
-      setErr(null);
+      setEmails("");
+      setRole("user");
     }
-  }, [open, existing]);
+  }, [open]);
 
-  function submit() {
-    setErr(null);
-    if (firstName.trim().length < 1) return setErr("Enter a first name.");
-    if (lastName.trim().length < 1) return setErr("Enter a last name.");
-    if (!MEMBER_EMAIL_RE.test(email.trim())) return setErr("Enter a valid email address.");
-    if (noSeats) return setErr(`No ${MEMBER_ROLE_LABELS[role]} seats remaining.`);
-    onSave({
-      id: existing?.id ?? `mbr-${Math.random().toString(36).slice(2, 6)}`,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim(),
-      role,
-      firstLogin,
-      setupCode,
-    });
-  }
+  const parsed = React.useMemo(() => parseEmails(emails), [emails]);
+
+  const usage: Record<UserRole, { assigned: number; total: number; available: number }> =
+    React.useMemo(() => {
+      const mk = (r: UserRole, assigned: number) => {
+        const total = MOCK_SEATS[r].total;
+        return { assigned, total, available: Math.max(0, total - assigned) };
+      };
+      return {
+        owner: mk("owner", 1),
+        admin: mk("admin", currentMembers.filter((m) => m.role === "admin").length),
+        user: mk("user", currentMembers.filter((m) => m.role === "user").length),
+      };
+    }, [currentMembers]);
+
+  const seatsLeft = usage[role].available;
+  const overSeat = parsed.valid.length > seatsLeft;
+  const noSeats = seatsLeft === 0;
+
+  const canSubmit =
+    parsed.valid.length > 0 && parsed.invalid.length === 0 && !overSeat;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {existing ? "Edit member" : "Add member"}
-          </DialogTitle>
+          <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            On-prem members sign in with their first-login credential. They'll
-            be prompted to enrol 2FA on first sign-in.
+            Invitees receive a one-time email link valid for 7 days.
           </p>
         </DialogHeader>
 
-        <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label>First name</Label>
-              <Input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="e.g. KC"
-                className="h-9 text-base"
-              />
-            </div>
-            <div>
-              <Label>Last name</Label>
-              <Input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="e.g. Loke"
-                className="h-9 text-base"
-              />
-            </div>
-          </div>
+        <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
+          {/* Seat tiles double as the role selector — pick a tier to invite into. */}
           <div>
-            <Label>Email</Label>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="member@account.local"
-                className="h-9 pl-9 text-base"
-              />
-            </div>
-          </div>
-          {/* Seat tiles double as the role selector — pick a tier to add into. */}
-          <div>
-            <Label>Seat Type</Label>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Seat Type
+            </label>
             <div className="grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-background p-2">
               {(["owner", "admin", "user"] as UserRole[]).map((r) => {
                 const s = usage[r];
                 const isLow = s.available === 0;
                 const isSelected = role === r;
-                // Owner is the account bootstrap account — not assignable here.
+                // Owner is assigned only via ownership transfer — not invitable here.
                 const selectable = r !== "owner";
                 return (
                   <button
@@ -1076,132 +963,122 @@ function MemberModal({
               })}
             </div>
             <p className="mt-1 text-2xs text-muted-foreground/70">
-              Owner is the account bootstrap account and can't be reassigned here.
+              Owner role can only be assigned via ownership transfer.
             </p>
           </div>
 
-          {/* Site Access — locked to the account's site. */}
+          {/* Site Access — locked to the current site */}
           <div>
-            <Label>Site Access</Label>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Site Access
+            </label>
             <div
               className="flex h-9 w-full cursor-not-allowed items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-base"
               aria-disabled="true"
             >
               <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate text-foreground">
-                {siteName}
-              </span>
+              <span className="min-w-0 flex-1 truncate text-foreground">{siteName || "Your new site"}</span>
               <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
-                <Lock className="size-3" /> Locked to this account
+                <Lock className="size-3" /> Locked to current site
               </span>
             </div>
+            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+              Additional sites can be added later from the Sites page.
+            </p>
           </div>
 
+          {/* Emails */}
           <div>
-            <Label>First-login method</Label>
-            <div className="grid grid-cols-1 gap-2">
-              <FirstLoginCard
-                selected={firstLogin === "setup-code"}
-                title="Fixed Password"
-                description="The system generates a password the member keeps using to sign in."
-                icon={<KeyRound className="size-3.5" />}
-                onClick={() => setFirstLogin("setup-code")}
-              />
-              <FirstLoginCard
-                selected={firstLogin === "temp-password"}
-                title="Temporary Password"
-                description="The system generates a one-time password the member must change on their first sign-in."
-                icon={<Lock className="size-3.5" />}
-                onClick={() => setFirstLogin("temp-password")}
-              />
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Email Addresses
+              </label>
+              {parsed.valid.length > 0 && (
+                <span className="text-2xs text-muted-foreground">
+                  <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>
+                    {parsed.valid.length}
+                  </strong>{" "}
+                  valid
+                  {parsed.invalid.length > 0 && (
+                    <>
+                      {" "}
+                      · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid
+                    </>
+                  )}
+                  {parsed.duplicates.length > 0 && (
+                    <>
+                      {" "}
+                      · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate
+                    </>
+                  )}
+                </span>
+              )}
             </div>
-          </div>
-
-          <div>
-            <Label>Generated Password</Label>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 rounded-md border border-primary/40 bg-primary/[0.10] px-3 py-2 text-center font-mono text-md font-bold tracking-[0.15em] text-primary">
-                {setupCode}
+            <Textarea
+              value={emails}
+              onChange={(e) => setEmails(e.target.value)}
+              placeholder="alice@acme.com, bob@acme.com…"
+              rows={2}
+              className={cn(
+                "w-full text-base",
+                parsed.invalid.length > 0
+                  ? "border-sev-critical/40 focus:border-sev-critical"
+                  : "focus:border-primary"
+              )}
+            />
+            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+              Separate multiple emails with commas, spaces, or new lines.
+            </p>
+            {parsed.invalid.length > 0 && (
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
+                <AlertCircle className="mt-0.5 size-3 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">
+                    {parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:
+                  </p>
+                  <p className="font-mono text-2xs opacity-80">
+                    {parsed.invalid.slice(0, 5).join(", ")}
+                    {parsed.invalid.length > 5 ? ` +${parsed.invalid.length - 5} more` : ""}
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSetupCode(genSetupCode())}
-                className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-                aria-label="Regenerate"
-              >
-                <RefreshCcw className="size-3.5" />
-              </button>
-            </div>
+            )}
           </div>
 
-          {noSeats && (
+          {(noSeats || overSeat) && (
             <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
               <AlertCircle className="mt-0.5 size-3 flex-shrink-0" />
-              <p>
-                <strong>No {MEMBER_ROLE_LABELS[role]} seats remaining.</strong> Remove a member or
-                pick another seat type.
-              </p>
+              <div>
+                {noSeats ? (
+                  <p>
+                    <strong>No {MEMBER_ROLE_LABELS[role]} seats remaining.</strong> Upgrade your plan or remove pending invites.
+                  </p>
+                ) : (
+                  <p>
+                    <strong>Not enough seats.</strong> Inviting {parsed.valid.length} but only {seatsLeft} available.
+                  </p>
+                )}
+              </div>
             </div>
           )}
-
-          {err && <ErrorBox message={err} />}
         </div>
 
         <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={noSeats}>
-            {existing ? "Save changes" : "Add member"}
+          <Button
+            size="sm"
+            disabled={!canSubmit}
+            onClick={() => onInvite(parsed.valid, role)}
+            className="gap-1.5"
+          >
+            <Mail className="size-3.5" />
+            Send Invite
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function FirstLoginCard({
-  selected,
-  title,
-  description,
-  icon,
-  onClick,
-}: {
-  selected: boolean;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-start gap-2 rounded-md border bg-background px-3 py-2.5 text-left transition-colors",
-        selected
-          ? "border-primary bg-primary/[0.06]"
-          : "border-border hover:border-primary/40"
-      )}
-    >
-      <div
-        className={cn(
-          "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-          selected ? "border-primary" : "border-muted-foreground/40"
-        )}
-      >
-        {selected && <span className="size-1.5 rounded-full bg-primary" />}
-      </div>
-      <div className="flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-          {icon}
-          {title}
-        </p>
-        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-          {description}
-        </p>
-      </div>
-    </button>
   );
 }
 
