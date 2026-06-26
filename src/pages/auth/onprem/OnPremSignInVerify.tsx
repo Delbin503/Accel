@@ -1,19 +1,25 @@
 import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, AlertCircle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout } from "../AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
 
-export default function SignInVerifyPage() {
+/**
+ * On-Premise sign-in 2FA step.
+ *
+ * Reached after the on-prem sign-in form. The actual session is established
+ * here, once the 6-digit code is verified.
+ */
+export default function OnPremSignInVerifyPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const signIn = useAuthStore((s) => s.signIn);
 
   const state = (location.state as { email?: string; from?: string } | null) ?? {};
-  const email = state.email ?? "you@company.com";
+  const email = state.email ?? "you@account.local";
   const from = state.from ?? "/";
 
   const [otp, setOtp] = React.useState<string[]>(["", "", "", "", "", ""]);
@@ -51,43 +57,49 @@ export default function SignInVerifyPage() {
       setError("Enter the full 6-digit code.");
       return;
     }
-    const initials = email.split("@")[0].slice(0, 2).toUpperCase();
-    const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
-    const displayName = local
-      .split(" ")
+    const initials = email.split("@")[0].slice(0, 2).toUpperCase() || "OP";
+    const displayName = email
+      .split("@")[0]
+      .split(/[._]+/)
       .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
       .join(" ");
-    const firstName = displayName.split(" ")[0] || displayName;
     signIn({
-      id: "usr-" + Math.random().toString(36).slice(2, 6),
+      id: "usr-onprem-" + Math.random().toString(36).slice(2, 6),
       name: displayName || email,
       initials,
       role: "admin",
       email,
       notificationCount: 0,
-      orgName: "My Workspace",
+      orgName: "Sembawang Naval Base",
+      deploymentMode: "onprem",
     });
-    toast.success(`Welcome back, ${firstName}! 👋`, {
-      description: "Loading your Accel workspace…",
+    toast.success(`Welcome back, ${displayName.split(" ")[0] || email}`, {
+      description: "Loading the on-premise workspace…",
     });
     navigate(from, { replace: true });
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout hideBrand>
       <div>
         <button
           type="button"
-          onClick={() => navigate("/signin")}
+          onClick={() => navigate("/on-premise/signin")}
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           Back
         </button>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Verify your email</h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          We sent a 6-digit code to <strong className="text-foreground">{email}</strong>.
-        </p>
+
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
+            <Play className="size-7 fill-white text-white" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Verify your email</h1>
+          <p className="mt-2 text-base text-muted-foreground">
+            We sent a 6-digit code to <strong className="text-foreground">{email}</strong>.
+          </p>
+        </div>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div onPaste={onPaste} className="flex items-center justify-center gap-2">

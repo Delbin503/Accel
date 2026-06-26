@@ -91,7 +91,7 @@ export const MOCK_NVRS: NvrData[] = [
     totalStorageGb: 4000,
     usedStorageGb: 1850,
     retentionDays: 14,
-    cleanupSchedule: "manual",
+    cleanupSchedule: "auto-channel",
     channels: genChannels("NVR-003", 8),
     channelsInUse: 3,
     channelCount: 8,

@@ -52,6 +52,7 @@ import OnboardingSubscriptionPage from "@/pages/auth/OnboardingSubscription";
 
 // On-Premise flow (offline single-site appliance)
 import OnPremSignInPage from "@/pages/auth/onprem/OnPremSignIn";
+import OnPremSignInVerifyPage from "@/pages/auth/onprem/OnPremSignInVerify";
 import OnPremForgotPasswordPage from "@/pages/auth/onprem/OnPremForgotPassword";
 import OnPremSetupPage from "@/pages/auth/onprem/OnPremSetup";
 
@@ -73,6 +74,7 @@ function App() {
           so /on-premise/* renders regardless of current cloud auth state. */}
       <Route path="/on-premise" element={<Navigate to="/on-premise/signin" replace />} />
       <Route path="/on-premise/signin" element={<OnPremSignInPage />} />
+      <Route path="/on-premise/signin/verify" element={<OnPremSignInVerifyPage />} />
       <Route path="/on-premise/forgot-password" element={<OnPremForgotPasswordPage />} />
       <Route path="/on-premise/setup"  element={<OnPremSetupPage />} />
       <Route path="/on-premise/signup" element={<Navigate to="/on-premise/setup" replace />} />

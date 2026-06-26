@@ -17,6 +17,7 @@ import {
   Upload,
   ShieldCheck,
   WifiOff,
+  Wifi,
   Globe,
   RefreshCcw,
   CheckCircle2,
@@ -88,6 +89,12 @@ const NETWORK_MODES: {
     label: "Air-gapped",
     description: "No internet · defence-grade",
     icon: WifiOff,
+  },
+  {
+    key: "hybrid",
+    label: "Hybrid",
+    description: "Local-first · scheduled sync",
+    icon: Wifi,
   },
   {
     key: "connected",
@@ -526,7 +533,7 @@ export default function OnPremSetupPage({
           </Field>
 
           <div>
-            <Label>Phone (Optional)</Label>
+            <Label>Phone number</Label>
             <PhoneField
               dialCode={ownerDialCode}
               number={ownerPhoneNumber}

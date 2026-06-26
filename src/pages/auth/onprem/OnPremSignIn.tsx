@@ -1,11 +1,9 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "../AuthLayout";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,7 +16,6 @@ import { cn } from "@/lib/utils";
 export default function OnPremSignInPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const signIn = useAuthStore((s) => s.signIn);
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -38,26 +35,8 @@ export default function OnPremSignInPage() {
     }
     setLoading(true);
     setTimeout(() => {
-      const initials = email.split("@")[0].slice(0, 2).toUpperCase() || "OP";
-      const displayName = email
-        .split("@")[0]
-        .split(/[._]+/)
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
-      signIn({
-        id: "usr-onprem-" + Math.random().toString(36).slice(2, 6),
-        name: displayName || email,
-        initials,
-        role: "admin",
-        email,
-        notificationCount: 0,
-        orgName: "Sembawang Naval Base",
-        deploymentMode: "onprem",
-      });
-      toast.success(`Welcome back, ${displayName.split(" ")[0] || email}`, {
-        description: "Loading the on-premise workspace…",
-      });
-      navigate(redirectTo, { replace: true });
+      setLoading(false);
+      navigate("/on-premise/signin/verify", { state: { email, from: redirectTo } });
     }, 300);
   }
 

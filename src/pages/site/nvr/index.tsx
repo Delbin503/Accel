@@ -1757,7 +1757,7 @@ function CleanupAgePicker({
   );
 }
 
-/** Channel-based cleanup: multi-select chips of the NVR's channels. */
+/** Channel-based cleanup: multi-select dropdown of the NVR's channels. */
 function CleanupChannelPicker({
   count, value, onChange, error,
 }: {
@@ -1766,43 +1766,101 @@ function CleanupChannelPicker({
   onChange: (channels: number[]) => void;
   error?: string;
 }) {
+  const [open, setOpen] = React.useState(false);
+  const channels = Array.from({ length: count }, (_, i) => i + 1);
+  const allSelected = count > 0 && value.length === count;
+
+  function toggle(ch: number) {
+    onChange(value.includes(ch) ? value.filter((c) => c !== ch) : [...value, ch]);
+  }
+
+  const label =
+    value.length === 0
+      ? "Select channels"
+      : allSelected
+        ? "All channels"
+        : value
+            .slice()
+            .sort((a, b) => a - b)
+            .map((c) => `Ch ${String(c).padStart(2, "0")}`)
+            .join(", ");
+
   return (
     <div className="col-span-2">
       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Channels to clean up
       </label>
       {count > 0 ? (
-        <>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {Array.from({ length: count }, (_, i) => i + 1).map((ch) => {
-              const checked = value.includes(ch);
-              return (
-                <button
-                  key={ch}
-                  type="button"
-                  onClick={() => onChange(checked ? value.filter((c) => c !== ch) : [...value, ch])}
-                  className={cn(
-                    "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
-                    checked
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  )}
-                >
-                  Ch {String(ch).padStart(2, "0")}
-                </button>
-              );
-            })}
-          </div>
-          {value.length > 0 && (
-            <p className="mt-1.5 text-2xs text-muted-foreground">
-              {value.length} channel{value.length === 1 ? "" : "s"} selected
-            </p>
-          )}
-        </>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-left text-base transition-colors hover:border-primary",
+                open ? "border-primary" : "border-input",
+                error && "border-sev-critical",
+                value.length === 0 && "text-muted-foreground"
+              )}
+            >
+              <span className="truncate">{label}</span>
+              <ChevronDown
+                className={cn(
+                  "size-3.5 flex-shrink-0 text-muted-foreground transition-transform",
+                  open && "rotate-180"
+                )}
+              />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
+            <button
+              type="button"
+              onClick={() => onChange(allSelected ? [] : channels)}
+              className="mb-1 flex w-full items-center gap-2 rounded-md border-b border-border px-2 py-1.5 text-left text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              <span
+                className={cn(
+                  "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border transition-colors",
+                  allSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"
+                )}
+              >
+                {allSelected && <Check className="size-2.5" strokeWidth={3} />}
+              </span>
+              Select all channels
+            </button>
+            <div className="max-h-56 overflow-y-auto">
+              {channels.map((ch) => {
+                const checked = value.includes(ch);
+                return (
+                  <button
+                    key={ch}
+                    type="button"
+                    onClick={() => toggle(ch)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border transition-colors",
+                        checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"
+                      )}
+                    >
+                      {checked && <Check className="size-2.5" strokeWidth={3} />}
+                    </span>
+                    Ch {String(ch).padStart(2, "0")}
+                  </button>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
       ) : (
         <div className="rounded-lg border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
           Select a channel count first.
         </div>
+      )}
+      {count > 0 && value.length > 0 && (
+        <p className="mt-1.5 text-2xs text-muted-foreground">
+          {value.length} channel{value.length === 1 ? "" : "s"} selected
+        </p>
       )}
       {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
     </div>
@@ -2019,7 +2077,6 @@ function AddNvrModal({
                 <SelectContent>
                   <SelectItem value="auto-age">Auto · Age based</SelectItem>
                   <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
-                  <SelectItem value="manual">Manual only</SelectItem>
                 </SelectContent>
               </Select>
               {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}
@@ -2267,7 +2324,6 @@ function EditNvrModal({
                 <SelectContent>
                   <SelectItem value="auto-age">Auto · Age based</SelectItem>
                   <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
-                  <SelectItem value="manual">Manual only</SelectItem>
                 </SelectContent>
               </Select>
               {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}

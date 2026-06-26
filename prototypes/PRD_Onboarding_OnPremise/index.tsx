@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import OnPremSignInPage from "@/pages/auth/onprem/OnPremSignIn";
+import OnPremSignInVerifyPage from "@/pages/auth/onprem/OnPremSignInVerify";
 import OnPremForgotPasswordPage from "@/pages/auth/onprem/OnPremForgotPassword";
 import OnPremSetupPage from "@/pages/auth/onprem/OnPremSetup";
 import { StateTester } from "./StateTester";
@@ -47,8 +48,10 @@ function Shell() {
         <Routes>
           <Route path="/on-premise" element={<Navigate to="/on-premise/signin" replace />} />
           <Route path="/on-premise/signin" element={<OnPremSignInPage />} />
+          <Route path="/on-premise/signin/verify" element={<OnPremSignInVerifyPage />} />
           <Route path="/on-premise/forgot-password" element={<OnPremForgotPasswordPage />} />
           <Route path="/on-premise/setup" element={<OnPremSetupPage key="op-license" initialStep="license" />} />
+          <Route path="/on-premise/setup/owner" element={<OnPremSetupPage key="op-owner" initialStep="owner" />} />
           <Route path="/on-premise/setup/site" element={<OnPremSetupPage key="op-site" initialStep="site" />} />
           <Route path="/on-premise/setup/operators" element={<OnPremSetupPage key="op-operators" initialStep="operators" />} />
           <Route path="/done" element={<DonePreview />} />
