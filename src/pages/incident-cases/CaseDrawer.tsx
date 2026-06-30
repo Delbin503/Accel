@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ListErrorState } from "@/components/shared/PageStates";
 import { cn } from "@/lib/utils";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
@@ -1184,9 +1186,34 @@ function UpdateCaseMenu({
 interface CaseDrawerProps {
   caseId: string | null;
   onClose: () => void;
+  /** Prototype hook — forces the drawer's data-state (loading / error). */
+  forcedState?: "normal" | "loading" | "empty" | "error";
+  onRetry?: () => void;
 }
 
-export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
+/* Prototype-only loading skeleton for the drawer body. */
+function CaseDrawerSkeleton() {
+  return (
+    <div className="flex-1 space-y-5 overflow-y-auto p-5">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1.5">
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-16 w-full rounded-lg" />
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }: CaseDrawerProps) {
   const { cases, updateStatus, reassign, linkEvents, editCase, deleteCase } =
     useIncidentCasesStore();
   const caseData = caseId ? (cases.find((c) => c.id === caseId) ?? null) : null;
@@ -1298,7 +1325,19 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
         >
           {/* ── Header ─────────────────────────────────────────────────────── */}
           <SheetHeader className="border-b border-border bg-card px-5 py-4">
-            {caseData ? (
+            {forcedState === "loading" || forcedState === "error" ? (
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-md text-muted-foreground">
+                  {forcedState === "loading" ? "Loading case…" : "Couldn't load case"}
+                </SheetTitle>
+                <button
+                  onClick={onClose}
+                  className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : caseData ? (
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
@@ -1335,7 +1374,13 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
           </SheetHeader>
 
           {/* ── Body ───────────────────────────────────────────────────────── */}
-          {caseData ? (
+          {forcedState === "loading" ? (
+            <CaseDrawerSkeleton />
+          ) : forcedState === "error" ? (
+            <div className="flex flex-1 items-center justify-center p-5">
+              <ListErrorState onRetry={onRetry} title="Couldn't load this case" />
+            </div>
+          ) : caseData ? (
             <div className="flex-1 space-y-5 overflow-y-auto p-5">
               {/* Case Details */}
               <div>
@@ -1536,7 +1581,7 @@ export function CaseDrawer({ caseId, onClose }: CaseDrawerProps) {
           )}
 
           {/* ── Footer ─────────────────────────────────────────────────────── */}
-          {caseData && (
+          {caseData && forcedState !== "loading" && forcedState !== "error" && (
             <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
               <UpdateCaseMenu
                 isActive={!!isActive}

@@ -32,7 +32,7 @@ const PHASES: Phase[] = [
     modules: [
       { name: "Detection Feed", slug: "PRD_Detection_Feed" },
       { name: "Rules Library", slug: "PRD_Rule_Library" },
-      { name: "Incident Cases" },
+      { name: "Incident Cases", slug: "PRD_Incident_Cases" },
     ],
   },
   {
@@ -62,7 +62,7 @@ const PHASES: Phase[] = [
       { name: "Profile Settings" },
       { name: "Dashboard", slug: "PRD_Dashboard" },
       { name: "Site · Overview", slug: "PRD_Site_Management" },
-      { name: "Device Health" },
+      { name: "Device Health", slug: "PRD_Device_Health" },
       { name: "Billing / Subscription" },
     ],
   },

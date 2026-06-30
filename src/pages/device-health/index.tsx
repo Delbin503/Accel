@@ -26,6 +26,8 @@ import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListLoadingState, ListErrorState } from "@/components/shared/PageStates";
 import { storageBandFor } from "@/types/nvr";
 import type { CameraData } from "@/types/cameras";
 import type { NvrData } from "@/types/nvr";
@@ -393,7 +395,16 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 const HEALTH_RANK: Record<HealthStatus, number> = { failed: 0, offline: 1, online: 2 };
 
-export default function DeviceHealthPage() {
+/** Prototype hook — forces the page's data-state (loading / empty / error). */
+export type DeviceHealthForcedState = "normal" | "loading" | "empty" | "error";
+
+export default function DeviceHealthPage({
+  forcedState = "normal",
+  onRetry,
+}: {
+  forcedState?: DeviceHealthForcedState;
+  onRetry?: () => void;
+} = {}) {
   const navigate = useNavigate();
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<DeviceFilters>(EMPTY_FILTERS);
@@ -403,7 +414,11 @@ export default function DeviceHealthPage() {
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
-  const allDevices = React.useMemo(() => buildRows(), []);
+  // Prototype-only: force a zero-data view without touching the mock source.
+  const allDevices = React.useMemo(
+    () => (forcedState === "empty" ? [] : buildRows()),
+    [forcedState]
+  );
 
   const filtered = React.useMemo(() => {
     let list = allDevices.filter((d) => {
@@ -468,6 +483,12 @@ export default function DeviceHealthPage() {
         </PageHeader.Actions>
       </PageHeader>
 
+      {forcedState === "loading" ? (
+        <ListLoadingState kpiCols={4} columns={8} />
+      ) : forcedState === "error" ? (
+        <ListErrorState onRetry={onRetry} title="Couldn't load device health" />
+      ) : (
+        <>
       {/* KPI cards */}
       <KpiGrid cols={4}>
         {KPI_CONFIGS.map((cfg) => (
@@ -531,7 +552,14 @@ export default function DeviceHealthPage() {
       </div>
 
       {/* Table */}
-      {filtered.length === 0 ? (
+      {forcedState === "empty" ? (
+        <EmptyState
+          icon={HeartPulse}
+          title="No devices yet"
+          description="Cameras and NVRs appear here once they're registered to the workspace."
+          className="rounded-xl border border-dashed border-border"
+        />
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <HeartPulse className="size-10 opacity-20" />
           <p className="text-sm">No devices match the current filters.</p>
@@ -651,6 +679,8 @@ export default function DeviceHealthPage() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -29,7 +29,12 @@ import { CaseStatusBadge, STATUS_CONFIG } from "@/pages/incident-cases/shared";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { CaseDrawer } from "@/pages/incident-cases/CaseDrawer";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListLoadingState, ListErrorState } from "@/components/shared/PageStates";
 import type { IncidentCase, CaseStatus } from "@/types/incidents";
+
+/** Prototype hook — forces the page's data-state (loading / empty / error). */
+export type CasesForcedState = "normal" | "loading" | "empty" | "error";
 import type { Severity } from "@/types/detection";
 
 export { CaseStatusBadge, STATUS_CONFIG };
@@ -392,9 +397,17 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-export default function IncidentCasesPage() {
+export default function IncidentCasesPage({
+  forcedState = "normal",
+  onRetry,
+}: {
+  forcedState?: CasesForcedState;
+  onRetry?: () => void;
+} = {}) {
   const location = useLocation();
-  const cases = useIncidentCasesStore((s) => s.cases);
+  const storeCases = useIncidentCasesStore((s) => s.cases);
+  // Prototype-only: force a zero-data view without touching the store.
+  const cases = forcedState === "empty" ? [] : storeCases;
 
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [filters, setFilters] = React.useState<CaseFilters>(EMPTY_FILTERS);
@@ -485,6 +498,12 @@ export default function IncidentCasesPage() {
         </PageHeader.Content>
       </PageHeader>
 
+      {forcedState === "loading" ? (
+        <ListLoadingState kpiCols={6} columns={8} />
+      ) : forcedState === "error" ? (
+        <ListErrorState onRetry={onRetry} title="Couldn't load incident cases" />
+      ) : (
+        <>
       {/* ── KPI cards ────────────────────────────────────────────────────── */}
       <KpiGrid cols={6}>
         {KPI_CONFIGS.map((cfg) => (
@@ -554,7 +573,14 @@ export default function IncidentCasesPage() {
       </div>
 
       {/* ── Table ────────────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
+      {forcedState === "empty" ? (
+        <EmptyState
+          icon={FolderOpen}
+          title="No incident cases yet"
+          description="When AI flags a security incident, the case appears here for triage."
+          className="rounded-xl border border-dashed border-border"
+        />
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <FolderOpen className="size-10 opacity-20" />
           <p className="text-sm">No cases match the current filters.</p>
@@ -607,8 +633,15 @@ export default function IncidentCasesPage() {
           </div>
         </div>
       )}
+        </>
+      )}
 
-      <CaseDrawer caseId={drawerCaseId} onClose={() => setDrawerCaseId(null)} />
+      <CaseDrawer
+        caseId={drawerCaseId}
+        onClose={() => setDrawerCaseId(null)}
+        forcedState={forcedState}
+        onRetry={onRetry}
+      />
     </div>
   );
 }
