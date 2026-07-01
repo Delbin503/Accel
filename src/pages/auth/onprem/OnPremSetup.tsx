@@ -116,6 +116,8 @@ const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
   user: "User",
 };
 
+const LICENSE_ORGANIZATION_NAME = "Republic of Singapore Navy";
+
 /* Email parser — same regex + token rules as the On-Cloud invite modal. */
 function parseEmails(raw: string): {
   all: string[];
@@ -263,7 +265,7 @@ export default function OnPremSetupPage({
   const [ownerDialCode, setOwnerDialCode] = React.useState("+65");
   const [ownerPhoneNumber, setOwnerPhoneNumber] = React.useState("");
   const [ownerDepartments, setOwnerDepartments] = React.useState<string[]>([]);
-  const [ownerOrg, setOwnerOrg] = React.useState("");
+  const [ownerOrg, setOwnerOrg] = React.useState(LICENSE_ORGANIZATION_NAME);
 
   /* ── Step 3: Site ────────────────────────────────────────────── */
   const [siteName, setSiteName] = React.useState("");
@@ -298,6 +300,7 @@ export default function OnPremSetupPage({
       }
       // Valid file — activate and advance to Owner Details automatically.
       setLicenseStatus("valid");
+      setOwnerOrg(LICENSE_ORGANIZATION_NAME);
       toast.success("License key worked", {
         description: "Validation succeeded against this account's fingerprint.",
       });
@@ -339,6 +342,7 @@ export default function OnPremSetupPage({
     if (ownerLastName.trim().length < 1) return setError("Enter the owner's last name.");
     if (!MEMBER_EMAIL_RE.test(ownerEmail.trim()))
       return setError("Enter a valid owner email address.");
+    if (ownerDepartments.length === 0) return setError("Select at least one department.");
     if (ownerOrg.trim().length < 2) return setError("Enter the organization name.");
     setStep("site");
   }
@@ -543,7 +547,7 @@ export default function OnPremSetupPage({
           </div>
 
           <div>
-            <Label>Department (Optional)</Label>
+            <Label>Department</Label>
             <DepartmentSelect
               value={ownerDepartments}
               onChange={setOwnerDepartments}
@@ -554,8 +558,8 @@ export default function OnPremSetupPage({
           <Field label="Organization" icon={Building2}>
             <Input
               value={ownerOrg}
-              onChange={(e) => setOwnerOrg(e.target.value)}
-              placeholder="Republic of Singapore Navy"
+              readOnly
+              aria-readonly="true"
               className="h-10 pl-9 text-sm"
             />
           </Field>
@@ -1327,4 +1331,3 @@ function InfoBanner({
     </div>
   );
 }
-

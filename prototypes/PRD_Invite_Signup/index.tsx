@@ -73,7 +73,7 @@ function SetupRoute({
       )}
       <WelcomeModal
         open={stage === "welcome"}
-        firstName={profile?.displayName ?? ""}
+        firstName={profile?.firstName ?? ""}
         invite={MOCK_INVITE}
         onEnter={() => navigate("/dashboard")}
       />
@@ -84,7 +84,7 @@ function SetupRoute({
 /* The destination — real app shell (sidebar + header) with a first-run landing.
    Proves the invitee lands inside the authenticated dashboard. */
 function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
-  const name = profile?.displayName || "there";
+  const name = profile?.firstName || "there";
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background">

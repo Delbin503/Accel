@@ -677,10 +677,6 @@ function NvrDrawer({
               <SectionTitle
                 aside={
                   <div className="flex items-center gap-1.5">
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={onExportAll}>
-                      <Download className="size-3.5" />
-                      Export Recordings
-                    </Button>
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={onCleanup}>
                       <Sparkles className="size-3.5" />
                       Clean Up Storage

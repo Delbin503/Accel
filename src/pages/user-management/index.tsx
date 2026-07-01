@@ -881,7 +881,7 @@ function InviteUsersModal({
   const [role, setRole] = React.useState<UserRole>("user");
   const [sites, setSites] = React.useState<string[]>([]);
   const [departments, setDepartments] = React.useState<string[]>([]);
-  const [errors, setErrors] = React.useState<{ emails?: string; sites?: string }>({});
+  const [errors, setErrors] = React.useState<{ emails?: string; sites?: string; departments?: string }>({});
 
   React.useEffect(() => {
     if (open) { setEmails(""); setRole("user"); setSites([]); setDepartments([]); setErrors({}); }
@@ -893,13 +893,14 @@ function InviteUsersModal({
   const noSeats = seatsLeft === 0;
 
   // Clear validation errors as the user edits emails / site selection.
-  React.useEffect(() => { setErrors({}); }, [emails, sites]);
+  React.useEffect(() => { setErrors({}); }, [emails, sites, departments]);
 
   function handleSend() {
-    const next: { emails?: string; sites?: string } = {};
+    const next: { emails?: string; sites?: string; departments?: string } = {};
     if (parsed.valid.length === 0) next.emails = "Enter at least one valid email address.";
     else if (parsed.invalid.length > 0) next.emails = "Fix the invalid email addresses before sending.";
     if (sites.length === 0) next.sites = "Select at least one site.";
+    if (departments.length === 0) next.departments = "Select at least one department.";
     setErrors(next);
     if (Object.keys(next).length > 0 || overSeat || noSeats) return;
     onInvite(emails, role, sites, departments);
@@ -1025,9 +1026,14 @@ function InviteUsersModal({
           {/* Department */}
           <div>
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Department (Optional)
+              Department
             </label>
-            <DepartmentSelect value={departments} onChange={setDepartments} />
+            <DepartmentSelect
+              value={departments}
+              onChange={setDepartments}
+              className={errors.departments ? "border-sev-critical/60" : undefined}
+            />
+            {errors.departments && <p className="mt-1 text-xs text-sev-critical">{errors.departments}</p>}
           </div>
 
           {/* Emails */}
@@ -1750,8 +1756,8 @@ function EditUserModal({
           </div>
 
           {([
-            { label: "First Name",  kind: "text",  value: firstName, set: setFirstName, mono: false, placeholder: "e.g. Delbin" },
-            { label: "Last Name",   kind: "text",  value: lastName,  set: setLastName,  mono: false, placeholder: "e.g. Arkar" },
+            { label: "First Name",  kind: "text",  value: firstName, set: setFirstName, mono: false, placeholder: "e.g. Delbin", icon: CircleUser },
+            { label: "Last Name",   kind: "text",  value: lastName,  set: setLastName,  mono: false, placeholder: "e.g. Arkar", icon: CircleUser },
             { label: "Phone",       kind: "phone" },
           ] as const).map((f) => (
             <div key={f.label}>
@@ -1761,15 +1767,18 @@ function EditUserModal({
               {f.kind === "phone" ? (
                 <PhoneField dialCode={dialCode} number={phoneNumber} onDialCode={setDialCode} onNumber={setPhoneNumber} />
               ) : (
-                <input
-                  value={f.value}
-                  onChange={(e) => f.set(e.target.value)}
-                  placeholder={f.placeholder}
-                  className={cn(
-                    "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                    f.mono && "font-mono"
-                  )}
-                />
+                <div className="relative">
+                  <f.icon className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={f.value}
+                    onChange={(e) => f.set(e.target.value)}
+                    placeholder={f.placeholder}
+                    className={cn(
+                      "h-9 w-full rounded-md border border-input bg-background px-9 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                      f.mono && "font-mono"
+                    )}
+                  />
+                </div>
               )}
             </div>
           ))}

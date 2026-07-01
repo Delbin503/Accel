@@ -38,7 +38,7 @@ Mirrors the **Member Details** shown in the dashboard user drawer
 (`src/pages/user-management`, `UserData` in `src/types/users.ts`):
 
 - **Shown read-only (assigned by admin):** Email + Role (in the identity chip)
-- **Invitee fills:** Full Name, Display Name, Phone (optional), Department (optional),
+- **Invitee fills:** First Name, Last Name, Phone (optional), Department,
   Password (+ confirm, with a strength meter), and must tick **I agree to the Terms
   of Service and Privacy Policy** before the account can be created.
 

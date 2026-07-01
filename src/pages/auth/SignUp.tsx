@@ -2,7 +2,6 @@ import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  User,
   Mail,
   Lock,
   Eye,
@@ -322,6 +321,7 @@ export default function SignUpPage({
     setError(null);
     if (firstName.trim().length < 1) return setError("Enter your first name.");
     if (lastName.trim().length < 1) return setError("Enter your last name.");
+    if (departments.length === 0) return setError("Select at least one department.");
     if (!email.includes("@")) return setError("Enter a valid email address.");
     if (password.length < 8)
       return setError("Password must be at least 8 characters.");
@@ -554,7 +554,7 @@ export default function SignUpPage({
         />
         <form onSubmit={submitAccount} className="mt-7 space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="First name" icon={User}>
+            <Field label="First name" icon={CircleUser}>
               <Input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -563,7 +563,7 @@ export default function SignUpPage({
                 autoComplete="given-name"
               />
             </Field>
-            <Field label="Last name" icon={User}>
+            <Field label="Last name" icon={CircleUser}>
               <Input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
@@ -575,7 +575,7 @@ export default function SignUpPage({
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Department (Optional)
+              Department
             </label>
             <DepartmentSelect
               value={departments}
@@ -658,6 +658,7 @@ export default function SignUpPage({
               otpSending ||
               firstName.trim().length < 1 ||
               lastName.trim().length < 1 ||
+              departments.length === 0 ||
               !email.includes("@") ||
               !isStrongPassword(password) ||
               password !== confirmPw ||

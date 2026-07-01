@@ -343,10 +343,21 @@ function DeployStatusPill({ status }: { status: DeploymentData["status"] }) {
 
 /* ── Draw zone modal ─────────────────────────────────────────────────────── */
 
-function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpdateZone, onRemoveZone, onUpdateZoneBox }: {
+function DrawZoneModal({
+  open,
+  cameraName,
+  existingZones,
+  initialEditingZoneId,
+  onClose,
+  onSave,
+  onUpdateZone,
+  onRemoveZone,
+  onUpdateZoneBox,
+}: {
   open: boolean;
   cameraName: string;
   existingZones: BoundaryZone[];
+  initialEditingZoneId?: string | null;
   onClose: () => void;
   onSave: (label: string, box: [number, number, number, number]) => void;
   onUpdateZone: (zoneId: string, label: string) => void;
@@ -363,12 +374,15 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
 
   React.useEffect(() => {
     if (open) {
+      const initialZone = initialEditingZoneId
+        ? existingZones.find((z) => z.id === initialEditingZoneId)
+        : null;
       setLabel("");
       setDraft(null);
-      setEditingZoneId(null);
-      setEditingLabel("");
+      setEditingZoneId(initialZone?.id ?? null);
+      setEditingLabel(initialZone?.label ?? "");
     }
-  }, [open]);
+  }, [open, initialEditingZoneId, existingZones]);
 
   // Live-edited box for the currently-edited existing zone
   const editingZone = editingZoneId ? existingZones.find((z) => z.id === editingZoneId) : null;
@@ -697,9 +711,6 @@ function DrawZoneModal({ open, cameraName, existingZones, onClose, onSave, onUpd
             )}
           </div>
         </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3.5">
-          <Button variant="outline" onClick={onClose}>Close</Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
@@ -923,6 +934,7 @@ function CameraDrawer({
   const [selectedRecordingIds, setSelectedRecordingIds] = React.useState<Set<string>>(new Set());
   const [zonesEditing, setZonesEditing] = React.useState(false);
   const [zoneDrawOpen, setZoneDrawOpen] = React.useState(false);
+  const [zoneDrawEditingZoneId, setZoneDrawEditingZoneId] = React.useState<string | null>(null);
   // Detail-fetch phase. Retry clears the forced async state back to content.
   const [retried, setRetried] = React.useState(false);
   const phase: DrawerAsync = retried ? "idle" : asyncState;
@@ -937,6 +949,7 @@ function CameraDrawer({
       setSelectedRecordingIds(new Set());
       setZonesEditing(false);
       setZoneDrawOpen(false);
+      setZoneDrawEditingZoneId(null);
       setRetried(false);
     }
   }, [open, camera?.id]);
@@ -1357,13 +1370,25 @@ function CameraDrawer({
                       <span className="ml-auto font-mono text-2xs text-muted-foreground">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
-                      {zonesEditing && (
-                        <button onClick={() => onZoneRemove(camera.id, z.id)}
-                          className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-sev-critical/10 hover:text-sev-critical"
-                          title="Remove zone">
-                          <Trash2 className="size-3" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setZoneDrawEditingZoneId(z.id);
+                          setZoneDrawOpen(true);
+                        }}
+                        className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                        title="Edit zone"
+                        aria-label={`Edit ${z.label}`}
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onZoneRemove(camera.id, z.id)}
+                        className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-sev-critical/40 hover:bg-sev-critical/10 hover:text-sev-critical"
+                        title="Delete zone"
+                        aria-label={`Delete ${z.label}`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -1373,7 +1398,13 @@ function CameraDrawer({
                   <p className="mr-auto text-xs text-muted-foreground">
                     Draw the zone directly on the live camera view.
                   </p>
-                  <Button onClick={() => setZoneDrawOpen(true)} className="gap-1.5">
+                  <Button
+                    onClick={() => {
+                      setZoneDrawEditingZoneId(null);
+                      setZoneDrawOpen(true);
+                    }}
+                    className="gap-1.5"
+                  >
                     <Plus className="size-3.5" />
                     Add Zone
                   </Button>
@@ -1550,7 +1581,11 @@ function CameraDrawer({
           open={zoneDrawOpen}
           cameraName={camera.name}
           existingZones={camera.boundaryZones}
-          onClose={() => setZoneDrawOpen(false)}
+          initialEditingZoneId={zoneDrawEditingZoneId}
+          onClose={() => {
+            setZoneDrawOpen(false);
+            setZoneDrawEditingZoneId(null);
+          }}
           onSave={(label, box) => onZoneAdd(camera.id, label, box)}
           onUpdateZone={(zoneId, label) => onZoneUpdate(camera.id, zoneId, label)}
           onRemoveZone={(zoneId) => onZoneRemove(camera.id, zoneId)}
@@ -1645,29 +1680,32 @@ function fromCamera(c: CameraData): CameraFormFields {
   };
 }
 
-function FormField({ label, children, span = 1, hint }: { label: string; children: React.ReactNode; span?: 1 | 2; hint?: string }) {
+function FormField({ label, children, span = 1, hint, error }: { label: string; children: React.ReactNode; span?: 1 | 2; hint?: string; error?: string }) {
   return (
     <div className={cn(span === 2 && "col-span-2")}>
       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       {children}
+      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
-function TextInput({ value, onChange, mono, placeholder, type = "text", disabled }: { value: string | number; onChange: (v: string) => void; mono?: boolean; placeholder?: string; type?: "text" | "number"; disabled?: boolean }) {
+function TextInput({ value, onChange, mono, placeholder, type = "text", disabled, invalid }: { value: string | number; onChange: (v: string) => void; mono?: boolean; placeholder?: string; type?: "text" | "number"; disabled?: boolean; invalid?: boolean }) {
   return (
     <input
       type={type}
       value={value}
       placeholder={placeholder}
       disabled={disabled}
+      aria-invalid={invalid || undefined}
       onChange={(e) => onChange(e.target.value)}
       className={cn(
         "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
         mono && "font-mono",
-        disabled && "cursor-not-allowed opacity-60"
+        disabled && "cursor-not-allowed opacity-60",
+        invalid && "border-sev-critical"
       )}
     />
   );
@@ -1676,7 +1714,7 @@ function TextInput({ value, onChange, mono, placeholder, type = "text", disabled
 // external API (value/onChange/options accepting "" entries) stays unchanged.
 const FORM_SELECT_EMPTY = "__empty__";
 
-function FormSelect({ value, onChange, options, disabled }: { value: string; onChange: (v: string) => void; options: readonly { value: string; label: string }[]; disabled?: boolean }) {
+function FormSelect({ value, onChange, options, disabled, invalid }: { value: string; onChange: (v: string) => void; options: readonly { value: string; label: string }[]; disabled?: boolean; invalid?: boolean }) {
   const placeholder = options.find((o) => o.value === "")?.label;
   return (
     <Select
@@ -1684,7 +1722,7 @@ function FormSelect({ value, onChange, options, disabled }: { value: string; onC
       onValueChange={(v) => onChange(v === FORM_SELECT_EMPTY ? "" : v)}
       disabled={disabled}
     >
-      <SelectTrigger className="h-9 w-full text-base">
+      <SelectTrigger className={cn("h-9 w-full text-base", invalid && "border-sev-critical")} aria-invalid={invalid || undefined}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -1714,14 +1752,19 @@ function CameraFormModal({
   onSubmit: (fields: CameraFormFields) => void;
 }) {
   const [fields, setFields] = React.useState<CameraFormFields>(() => emptyForm(takenIds));
+  const [errors, setErrors] = React.useState<{ name?: string; ipAddress?: string; siteId?: string; areaId?: string }>({});
 
   React.useEffect(() => {
-    if (open) setFields(initial ?? emptyForm(takenIds));
+    if (open) {
+      setFields(initial ?? emptyForm(takenIds));
+      setErrors({});
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
   function set<K extends keyof CameraFormFields>(key: K, value: CameraFormFields[K]) {
     setFields((curr) => ({ ...curr, [key]: value }));
+    if (key in errors) setErrors((curr) => ({ ...curr, [key]: undefined }));
   }
   function toggleDay(day: number) {
     setFields((curr) => ({
@@ -1769,15 +1812,23 @@ function CameraFormModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields.nvrId, availableChannels.length]);
 
-  const canSubmit =
-    fields.name.trim() &&
-    fields.ipAddress.trim() &&
-    (fields.recordingMode === "continuous" ||
-      (fields.scheduleDays.length > 0 && fields.scheduleStart < fields.scheduleEnd));
+  const scheduleValid =
+    fields.recordingMode === "continuous" ||
+    (fields.scheduleDays.length > 0 && fields.scheduleStart < fields.scheduleEnd);
 
   // In edit mode, keep Save disabled until the user actually changes something.
   const isDirty =
     mode === "add" || (initial != null && JSON.stringify(fields) !== JSON.stringify(initial));
+
+  function handleSubmit() {
+    const next: { name?: string; ipAddress?: string; siteId?: string; areaId?: string } = {};
+    if (!fields.name.trim()) next.name = "Camera name is required.";
+    if (!fields.ipAddress.trim()) next.ipAddress = "IP address is required.";
+    if (!fields.siteId) next.siteId = "Select a site.";
+    if (!fields.areaId) next.areaId = "Select an area.";
+    setErrors(next);
+    if (Object.keys(next).length === 0 && scheduleValid) onSubmit(fields);
+  }
 
   const nvrOptions = siteNvrs.length === 0
     ? [{ value: "", label: "— No NVR at this site —" }]
@@ -1809,33 +1860,37 @@ function CameraFormModal({
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Camera Name" span={2}>
+            <FormField label="Camera Name" span={2} error={errors.name}>
               <TextInput
                 value={fields.name}
                 onChange={(v) => set("name", v)}
                 placeholder="e.g. Loading Bay 3 — Dock"
+                invalid={!!errors.name}
               />
             </FormField>
-            <FormField label="Site">
+            <FormField label="Site" error={errors.siteId}>
               <FormSelect
                 value={fields.siteId}
                 onChange={(v) => set("siteId", v)}
                 options={[{ value: "", label: "Select a site" }, ...CAMERA_SITES]}
+                invalid={!!errors.siteId}
               />
             </FormField>
-            <FormField label="Area">
+            <FormField label="Area" error={errors.areaId}>
               <FormSelect
                 value={fields.areaId}
                 onChange={(v) => set("areaId", v)}
                 options={[{ value: "", label: "Select an area" }, ...CAMERA_AREAS]}
+                invalid={!!errors.areaId}
               />
             </FormField>
-            <FormField label="IP Address">
+            <FormField label="IP Address" error={errors.ipAddress}>
               <TextInput
                 value={fields.ipAddress}
                 onChange={(v) => set("ipAddress", v)}
                 placeholder="10.10.0.101"
                 mono
+                invalid={!!errors.ipAddress}
               />
             </FormField>
             <FormField label="RTSP Port">
@@ -2015,7 +2070,7 @@ function CameraFormModal({
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={!canSubmit || !isDirty} onClick={() => onSubmit(fields)} className="gap-1.5">
+          <Button size="sm" disabled={mode === "edit" && !isDirty} onClick={handleSubmit} className="gap-1.5">
             {mode === "add" ? <Plus className="size-3.5" /> : <Check className="size-3.5" />}
             {mode === "add" ? "Add Camera" : "Save Changes"}
           </Button>

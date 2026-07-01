@@ -1,16 +1,17 @@
 import * as React from "react";
-import { Eye, EyeOff, CircleAlert } from "lucide-react";
+import { Eye, EyeOff, CircleAlert, CircleUser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { cn } from "@/lib/utils";
 import { AccelMark, roleLabel, type InviteContext } from "./shared";
 import { PhoneField, DEFAULT_DIAL_CODE } from "./PhoneField";
 
 export interface AccountProfile {
-  fullName: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   phone: string;
-  department: string;
+  departments: string[];
 }
 
 /* Role pill — mirrors the dashboard RoleBadge palette. */
@@ -71,11 +72,11 @@ export function AccountSetup({
   invite: InviteContext;
   onComplete: (profile: AccountProfile) => void;
 }) {
-  const [fullName, setFullName] = React.useState("");
-  const [displayName, setDisplayName] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [dialCode, setDialCode] = React.useState(DEFAULT_DIAL_CODE);
   const [phoneNumber, setPhoneNumber] = React.useState("");
-  const [department, setDepartment] = React.useState("");
+  const [departments, setDepartments] = React.useState<string[]>([]);
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [showPw, setShowPw] = React.useState(false);
@@ -84,10 +85,11 @@ export function AccountSetup({
 
   const pwLongEnough = password.length >= MIN_PASSWORD;
   const pwMatches = confirm.length > 0 && password === confirm;
-  const nameValid = fullName.trim().length >= 2;
+  const firstNameValid = firstName.trim().length >= 1;
+  const lastNameValid = lastName.trim().length >= 1;
   const strength = passwordStrength(password);
 
-  const canSubmit = nameValid && pwLongEnough && pwMatches && agreed;
+  const canSubmit = firstNameValid && lastNameValid && departments.length > 0 && pwLongEnough && pwMatches && agreed;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,10 +97,10 @@ export function AccountSetup({
     if (!canSubmit) return;
     const phone = phoneNumber.trim() ? `${dialCode} ${phoneNumber.trim()}` : "";
     onComplete({
-      fullName: fullName.trim(),
-      displayName: displayName.trim() || fullName.trim().split(/\s+/)[0] || "",
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       phone,
-      department: department.trim(),
+      departments,
     });
   }
 
@@ -126,33 +128,46 @@ export function AccountSetup({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-        <div>
-          <label htmlFor="fullName" className={labelClass}>Full Name</label>
-          <input
-            id="fullName"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="e.g. Delbin Arkar"
-            autoComplete="name"
-            className={cn(inputClass, submitted && !nameValid && "border-sev-critical")}
-          />
-          {submitted && !nameValid && (
-            <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
-              <CircleAlert className="size-3" /> Enter your full name.
-            </p>
-          )}
-        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="firstName" className={labelClass}>First Name</label>
+            <div className="relative">
+              <CircleUser className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="e.g. Delbin"
+                autoComplete="given-name"
+                className={cn(inputClass, "pl-9", submitted && !firstNameValid && "border-sev-critical")}
+              />
+            </div>
+            {submitted && !firstNameValid && (
+              <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+                <CircleAlert className="size-3" /> Enter your first name.
+              </p>
+            )}
+          </div>
 
-        <div>
-          <label htmlFor="displayName" className={labelClass}>Display Name</label>
-          <input
-            id="displayName"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="e.g. Delbin (shown to teammates)"
-            autoComplete="nickname"
-            className={inputClass}
-          />
+          <div>
+            <label htmlFor="lastName" className={labelClass}>Last Name</label>
+            <div className="relative">
+              <CircleUser className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="e.g. Arkar"
+                autoComplete="family-name"
+                className={cn(inputClass, "pl-9", submitted && !lastNameValid && "border-sev-critical")}
+              />
+            </div>
+            {submitted && !lastNameValid && (
+              <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+                <CircleAlert className="size-3" /> Enter your last name.
+              </p>
+            )}
+          </div>
         </div>
 
         <div>
@@ -161,15 +176,18 @@ export function AccountSetup({
         </div>
 
         <div>
-          <label htmlFor="department" className={labelClass}>Department</label>
-          <input
-            id="department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="e.g. Operations, Security, IT"
-            autoComplete="organization-title"
-            className={inputClass}
+          <label className={labelClass}>Department</label>
+          <DepartmentSelect
+            value={departments}
+            onChange={setDepartments}
+            placeholder="Select departments"
+            className={submitted && departments.length === 0 ? "border-sev-critical" : undefined}
           />
+          {submitted && departments.length === 0 && (
+            <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+              <CircleAlert className="size-3" /> Select at least one department.
+            </p>
+          )}
         </div>
 
         <div>
