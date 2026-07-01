@@ -2,10 +2,11 @@ import * as React from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type OnPremStepKey = "license" | "site" | "admin" | "operators";
+export type OnPremStepKey = "license" | "owner" | "site" | "operators";
 
 const STEPS: { key: OnPremStepKey; label: string }[] = [
   { key: "license", label: "Activate License" },
+  { key: "owner", label: "Owner Details" },
   { key: "site", label: "Configure Site" },
   { key: "operators", label: "Add Members" },
 ];
