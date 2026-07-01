@@ -1,83 +1,102 @@
 /**
- * Animated background for auth / onboarding screens.
+ * Animated Accel auth background.
  *
- * Three layers, all behind the form, all pointer-events:none:
- *   1. Subtle dot grid — evokes the surveillance / CV camera-overlay feel.
- *   2. Drifting blob orbs in the brand palette (orange/blue/purple)
- *      that float slowly via CSS @keyframes (see index.css).
- *   3. A slow vertical scanline that sweeps top-to-bottom every 14s,
- *      mimicking a security camera's IR pass.
+ * Product-specific motion: the campus surveillance image carries the product
+ * context, while lightweight SVG overlays add live routes, detection zones, and
+ * status pings. Kept low-contrast so auth/onboarding forms remain primary.
  */
 export function AuthBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-background">
-      {/* Vignette base — slightly darker at the corners */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.025) 0%, transparent 60%), radial-gradient(120% 80% at 50% 100%, rgba(0,0,0,0.35) 0%, transparent 55%)",
-        }}
+      <img
+        className="auth-bg-image absolute inset-0 h-full w-full object-cover"
+        src="/assets/onboarding-surveillance-bg.png"
+        alt=""
+        aria-hidden
       />
+      <div className="auth-bg-image-shade absolute inset-0" />
+      <div className="auth-bg-grid absolute inset-0" />
+      <div className="auth-bg-scanline absolute inset-x-0 top-0 h-px" />
 
-      {/* Dot grid */}
-      <div
-        className="absolute inset-0 opacity-[0.10]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.65) 1px, transparent 0)",
-          backgroundSize: "28px 28px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, #000 40%, transparent 80%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, #000 40%, transparent 80%)",
-        }}
-      />
+      <svg
+        className="auth-onboarding-motion absolute inset-0 h-full w-full"
+        viewBox="0 0 1680 960"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden
+      >
+        <defs>
+          <filter id="auth-route-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-      {/* Drifting blob orbs */}
-      <div
-        className="animate-auth-blob-1 absolute -left-32 -top-32 size-[520px] rounded-full opacity-[0.18]"
-        style={{
-          background:
-            "radial-gradient(circle, #DD7224 0%, transparent 65%)",
-          filter: "blur(70px)",
-        }}
-      />
-      <div
-        className="animate-auth-blob-2 absolute -right-40 top-1/4 size-[460px] rounded-full opacity-[0.14]"
-        style={{
-          background:
-            "radial-gradient(circle, #4477FF 0%, transparent 65%)",
-          filter: "blur(70px)",
-        }}
-      />
-      <div
-        className="animate-auth-blob-3 absolute -bottom-40 left-1/3 size-[500px] rounded-full opacity-[0.12]"
-        style={{
-          background:
-            "radial-gradient(circle, #B33CFF 0%, transparent 65%)",
-          filter: "blur(80px)",
-        }}
-      />
+        <g className="auth-zone-layer" filter="url(#auth-route-glow)">
+          <path className="auth-zone auth-zone-a" d="M80 255L215 220L258 410L124 430Z" />
+          <path className="auth-zone auth-zone-b" d="M1250 84H1494V245H1278V160H1250Z" />
+          <path className="auth-zone auth-zone-c" d="M1262 585L1508 550L1560 700L1388 768L1278 706Z" />
+        </g>
 
-      {/* Slow scanning line — security-camera IR pass feel */}
-      <div className="animate-auth-scanline absolute inset-x-0 top-0 h-px">
-        <div
-          className="h-px w-full"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 0%, rgba(221,114,36,0.35) 25%, rgba(221,114,36,0.55) 50%, rgba(221,114,36,0.35) 75%, transparent 100%)",
-            boxShadow: "0 0 16px rgba(221,114,36,0.35)",
-          }}
-        />
-      </div>
+        <g className="auth-flow-lines">
+          <path className="auth-flow auth-flow-a" d="M175 360C280 365 318 454 430 466S625 436 760 470" />
+          <path className="auth-flow auth-flow-b" d="M760 470C930 438 1060 430 1212 440S1420 516 1605 478" />
+          <path className="auth-flow auth-flow-c" d="M1214 440C1165 340 1190 210 1294 138" />
+          <path className="auth-flow auth-flow-d" d="M1214 440C1190 575 1072 696 932 818" />
+          <path className="auth-flow auth-flow-e" d="M1214 440C1276 560 1338 666 1485 640" />
+        </g>
 
-      {/* Corner crosshair marks — subtle CCTV / HUD feel */}
+        <g className="auth-route-beads" filter="url(#auth-route-glow)">
+          <circle className="auth-route-bead auth-delay-0" cx="430" cy="466" r="3.5" />
+          <circle className="auth-route-bead auth-delay-2" cx="1212" cy="440" r="3.5" />
+          <circle className="auth-route-bead auth-delay-4" cx="1485" cy="640" r="3.5" />
+        </g>
+
+        <g className="auth-detection-pings" filter="url(#auth-route-glow)">
+          <Ping x={108} y={178} delayClass="auth-delay-0" />
+          <Ping x={238} y={365} delayClass="auth-delay-2" />
+          <Ping x={1288} y={132} delayClass="auth-delay-1" />
+          <Ping x={1500} y={635} delayClass="auth-delay-3" />
+          <Ping x={1635} y={690} delayClass="auth-delay-5" variant="critical" />
+        </g>
+
+        <g className="auth-status-dots">
+          <circle cx="108" cy="178" r="4" />
+          <circle cx="238" cy="365" r="4" />
+          <circle cx="1288" cy="132" r="4" />
+          <circle cx="1500" cy="635" r="4" />
+          <circle className="auth-status-dot-critical" cx="1635" cy="690" r="4" />
+        </g>
+      </svg>
+
+      <div className="auth-bg-focus absolute inset-0" />
+
       <Crosshair className="absolute left-4 top-4" />
       <Crosshair className="absolute right-4 top-4 scale-x-[-1]" />
-      <Crosshair className="absolute left-4 bottom-4 scale-y-[-1]" />
-      <Crosshair className="absolute right-4 bottom-4 scale-[-1]" />
+      <Crosshair className="absolute bottom-4 left-4 scale-y-[-1]" />
+      <Crosshair className="absolute bottom-4 right-4 scale-[-1]" />
     </div>
+  );
+}
+
+function Ping({
+  x,
+  y,
+  delayClass,
+  variant = "default",
+}: {
+  x: number;
+  y: number;
+  delayClass: string;
+  variant?: "default" | "critical";
+}) {
+  return (
+    <g className={`auth-ping auth-ping-${variant} ${delayClass}`} transform={`translate(${x} ${y})`}>
+      <circle r="18" />
+      <circle r="34" />
+    </g>
   );
 }
 

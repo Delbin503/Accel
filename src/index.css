@@ -298,38 +298,169 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Auth background animations — vision-AI vibe drifting blobs + scanline
+   Auth/onboarding background animations — Accel campus surveillance image
    ───────────────────────────────────────────────────────────────────────── */
-@keyframes auth-blob-drift-1 {
-  0%, 100% { transform: translate(0, 0)        scale(1);   }
-  33%      { transform: translate(80px, 60px)  scale(1.1); }
-  66%      { transform: translate(-40px, 120px) scale(0.95);}
-}
-@keyframes auth-blob-drift-2 {
-  0%, 100% { transform: translate(0, 0)         scale(1);   }
-  40%      { transform: translate(-100px, -40px) scale(1.15);}
-  75%      { transform: translate(60px, 80px)    scale(0.92);}
-}
-@keyframes auth-blob-drift-3 {
-  0%, 100% { transform: translate(0, 0)         scale(1);   }
-  50%      { transform: translate(120px, -80px)  scale(1.08);}
-}
-@keyframes auth-scanline {
-  0%   { transform: translateY(-10vh); opacity: 0;    }
-  10%  { opacity: 1;                                  }
-  90%  { opacity: 1;                                  }
-  100% { transform: translateY(110vh); opacity: 0;    }
-}
-@keyframes auth-pulse {
-  0%, 100% { opacity: 0.35; }
-  50%      { opacity: 0.65; }
+@keyframes auth-bg-drift {
+  0%, 100% { transform: scale(1.035) translate3d(0, 0, 0); }
+  50%      { transform: scale(1.07) translate3d(-1.4%, -0.8%, 0); }
 }
 
-.animate-auth-blob-1 { animation: auth-blob-drift-1 22s ease-in-out infinite; }
-.animate-auth-blob-2 { animation: auth-blob-drift-2 26s ease-in-out infinite; }
-.animate-auth-blob-3 { animation: auth-blob-drift-3 30s ease-in-out infinite; }
-.animate-auth-scanline { animation: auth-scanline 14s linear infinite; }
-.animate-auth-pulse  { animation: auth-pulse 4s ease-in-out infinite; }
+@keyframes auth-scanline {
+  0%   { transform: translateY(-12vh); opacity: 0; }
+  10%  { opacity: 0.8; }
+  88%  { opacity: 0.8; }
+  100% { transform: translateY(112vh); opacity: 0; }
+}
+
+@keyframes auth-flow {
+  to { stroke-dashoffset: -140; }
+}
+
+@keyframes auth-zone-breathe {
+  0%, 100% { opacity: 0.2; }
+  50%      { opacity: 0.46; }
+}
+
+@keyframes auth-route-bead {
+  0%, 100% { opacity: 0.18; transform: scale(0.8); }
+  45%      { opacity: 0.95; transform: scale(1.35); }
+}
+
+@keyframes auth-ping {
+  0%, 100% { opacity: 0.04; stroke-width: 1; }
+  36%      { opacity: 0.44; stroke-width: 2; }
+  72%      { opacity: 0.1; stroke-width: 1; }
+}
+
+.auth-bg-image {
+  animation: auth-bg-drift 34s ease-in-out infinite;
+  opacity: 0.9;
+  transform-origin: center;
+}
+
+.auth-bg-image-shade {
+  background:
+    radial-gradient(ellipse 42% 58% at 50% 50%, hsl(0 0% 0% / 0.12) 0%, hsl(0 0% 0% / 0.34) 48%, transparent 74%),
+    linear-gradient(90deg, hsl(0 0% 0% / 0.5), transparent 24%, transparent 74%, hsl(0 0% 0% / 0.52)),
+    linear-gradient(180deg, hsl(0 0% 0% / 0.32), transparent 34%, hsl(0 0% 0% / 0.4));
+}
+
+.auth-bg-grid {
+  opacity: 0.08;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--primary) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--primary) 14%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 88% 64% at 56% 50%, hsl(0 0% 0%) 42%, transparent 84%);
+  -webkit-mask-image: radial-gradient(ellipse 88% 64% at 56% 50%, hsl(0 0% 0%) 42%, transparent 84%);
+}
+
+.auth-bg-scanline {
+  animation: auth-scanline 15s linear infinite;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--primary) 38%, transparent) 32%, color-mix(in oklab, var(--primary) 62%, transparent) 50%, color-mix(in oklab, var(--primary) 38%, transparent) 68%, transparent 100%);
+  box-shadow: 0 0 18px color-mix(in oklab, var(--primary) 28%, transparent);
+}
+
+.auth-onboarding-motion {
+  color: var(--primary);
+  opacity: 0.72;
+  mask-image: radial-gradient(ellipse 38% 44% at 50% 50%, hsl(0 0% 0% / 0.12) 0%, hsl(0 0% 0% / 0.62) 48%, hsl(0 0% 0%) 84%);
+  -webkit-mask-image: radial-gradient(ellipse 38% 44% at 50% 50%, hsl(0 0% 0% / 0.12) 0%, hsl(0 0% 0% / 0.62) 48%, hsl(0 0% 0%) 84%);
+}
+
+.auth-zone {
+  animation: auth-zone-breathe 7s ease-in-out infinite;
+  fill: color-mix(in oklab, var(--primary) 9%, transparent);
+  stroke: color-mix(in oklab, var(--primary) 52%, transparent);
+  stroke-dasharray: 10 8;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.auth-zone-b { animation-delay: 1.2s; }
+.auth-zone-c { animation-delay: 2.4s; }
+
+.auth-flow {
+  animation: auth-flow 6.4s linear infinite;
+  fill: none;
+  stroke: color-mix(in oklab, var(--primary) 62%, transparent);
+  stroke-dasharray: 2 22;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.auth-flow-b {
+  animation-duration: 7.6s;
+  animation-delay: 0.9s;
+  opacity: 0.82;
+}
+
+.auth-flow-c {
+  animation-duration: 6.8s;
+  animation-delay: 1.4s;
+  opacity: 0.72;
+}
+
+.auth-flow-d {
+  animation-duration: 8s;
+  animation-delay: 1.8s;
+  opacity: 0.62;
+}
+
+.auth-flow-e {
+  animation-duration: 7.2s;
+  animation-delay: 2.2s;
+  opacity: 0.68;
+}
+
+.auth-route-bead {
+  animation: auth-route-bead 4.8s ease-in-out infinite;
+  fill: color-mix(in oklab, var(--primary) 88%, var(--foreground) 12%);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.auth-ping {
+  animation: auth-ping 5.2s ease-in-out infinite;
+  fill: none;
+  stroke: var(--primary);
+}
+
+.auth-ping-critical {
+  stroke: var(--destructive);
+}
+
+.auth-status-dots circle {
+  fill: var(--success);
+  opacity: 0.78;
+}
+
+.auth-status-dots .auth-status-dot-critical {
+  fill: var(--destructive);
+}
+
+.auth-bg-focus {
+  background: radial-gradient(ellipse 34% 42% at 50% 50%, hsl(0 0% 4% / 0.72) 0%, hsl(0 0% 5% / 0.5) 42%, transparent 76%);
+}
+
+.auth-delay-0 { animation-delay: 0s; }
+.auth-delay-1 { animation-delay: 0.7s; }
+.auth-delay-2 { animation-delay: 1.3s; }
+.auth-delay-3 { animation-delay: 2s; }
+.auth-delay-4 { animation-delay: 2.6s; }
+.auth-delay-5 { animation-delay: 3.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-bg-image,
+  .auth-bg-scanline,
+  .auth-flow,
+  .auth-zone,
+  .auth-route-bead,
+  .auth-ping {
+    animation: none;
+  }
+}
+
 /* Sonner toast — align the leading icon with the title row (not vertically
    centred across title + description) for a consistent look across all toasts. */
 [data-sonner-toast] [data-icon] {
