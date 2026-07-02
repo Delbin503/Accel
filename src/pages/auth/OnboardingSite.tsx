@@ -33,10 +33,12 @@ export default function OnboardingSitePage() {
     { id: uid("area"), name: "Entrance",  color: AREA_PALETTE[1], points: [] },
   ]);
   const [error, setError] = React.useState<string | null>(null);
+  const [errors, setErrors] = React.useState<{ name?: string; address?: string; areas?: string }>({});
 
   function addArea() {
     const idx = areas.length % AREA_PALETTE.length;
     setAreas((a) => [...a, { id: uid("area"), name: `Area ${a.length + 1}`, color: AREA_PALETTE[idx], points: [] }]);
+    setErrors((e) => ({ ...e, areas: undefined }));
   }
 
   function removeArea(id: string) {
@@ -45,14 +47,19 @@ export default function OnboardingSitePage() {
 
   function renameArea(id: string, newName: string) {
     setAreas((a) => a.map((x) => (x.id === id ? { ...x, name: newName } : x)));
+    setErrors((e) => ({ ...e, areas: undefined }));
   }
 
   function submit() {
     setError(null);
-    if (!name.trim()) { setError("Give your site a name."); return; }
-    if (!address.trim()) { setError("Add an address so detections can be located."); return; }
-    if (areas.length === 0) { setError("Add at least one area to monitor."); return; }
-    if (areas.some((a) => !a.name.trim())) { setError("Each area needs a name."); return; }
+    const nextErrors: { name?: string; address?: string; areas?: string } = {};
+    if (!name.trim()) nextErrors.name = "Site name is required.";
+    if (!address.trim()) nextErrors.address = "Site address is required.";
+    if (areas.length === 0) nextErrors.areas = "Add at least one area.";
+    else if (areas.some((a) => !a.name.trim())) nextErrors.areas = "Area name is required.";
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     const site: SiteData = {
       id: uid("site"),
@@ -119,9 +126,12 @@ export default function OnboardingSitePage() {
             </label>
             <div className="relative">
               <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={name} onChange={(e) => setName(e.target.value)}
+              <Input value={name}
+                onChange={(e) => { setName(e.target.value); setErrors((er) => ({ ...er, name: undefined })); }}
+                aria-invalid={!!errors.name}
                 placeholder="e.g. Astra HQ, FedEx Changi" className="h-10 pl-9 text-base" />
             </div>
+            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
           </div>
 
           <div>
@@ -130,14 +140,17 @@ export default function OnboardingSitePage() {
             </label>
             <div className="relative">
               <MapPin className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={address} onChange={(e) => setAddress(e.target.value)}
+              <Input value={address}
+                onChange={(e) => { setAddress(e.target.value); setErrors((er) => ({ ...er, address: undefined })); }}
+                aria-invalid={!!errors.address}
                 placeholder="123 Anson Road, Singapore 079914" className="h-10 pl-9 text-base" />
             </div>
+            {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Timezone
+              Timezone <span className="text-muted-foreground/60">(Optional)</span>
             </label>
             <div className="relative">
               <Globe2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -172,9 +185,13 @@ export default function OnboardingSitePage() {
             </div>
             <div className="space-y-1.5">
               {areas.map((a) => (
-                <div key={a.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5">
+                <div key={a.id} className={cn(
+                  "flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5",
+                  errors.areas && !a.name.trim() && "border-sev-critical"
+                )}>
                   <span className="size-3 flex-shrink-0 rounded-full" style={{ background: a.color }} />
                   <Input value={a.name} onChange={(e) => renameArea(a.id, e.target.value)}
+                    aria-invalid={!!errors.areas && !a.name.trim()}
                     placeholder="Area name" className="h-8 flex-1 border-0 bg-transparent text-base focus-visible:ring-0" />
                   <button onClick={() => removeArea(a.id)}
                     disabled={areas.length === 1}
@@ -185,6 +202,7 @@ export default function OnboardingSitePage() {
                 </div>
               ))}
             </div>
+            {errors.areas && <p className="mt-1 text-xs text-sev-critical">{errors.areas}</p>}
           </div>
 
           {error && (

@@ -56,6 +56,12 @@ export default function OnboardingSubscriptionPage({
   const [expiry, setExpiry] = React.useState("");
   const [cvc, setCvc] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [errors, setErrors] = React.useState<{
+    cardName?: string;
+    cardNumber?: string;
+    expiry?: string;
+    cvc?: string;
+  }>({});
   const [loading, setLoading] = React.useState(false);
 
   if (!targetSite) {
@@ -91,10 +97,14 @@ export default function OnboardingSubscriptionPage({
   function activate() {
     setError(null);
     const cleaned = cardNumber.replace(/\s/g, "");
-    if (cardName.trim().length === 0) { setError("Add the name on your card."); return; }
-    if (cleaned.length < 13) { setError("Enter a valid card number."); return; }
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) { setError("Enter expiry as MM/YY."); return; }
-    if (cvc.length < 3) { setError("Enter the card's CVC code."); return; }
+    const nextErrors: typeof errors = {};
+    if (cardName.trim().length === 0) nextErrors.cardName = "Name on card is required.";
+    if (cleaned.length < 13) nextErrors.cardNumber = "Enter a valid card number.";
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) nextErrors.expiry = "Enter a valid expiry (MM/YY).";
+    if (cvc.length < 3) nextErrors.cvc = "Enter a valid CVC.";
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     setLoading(true);
     setTimeout(() => {
@@ -279,27 +289,39 @@ export default function OnboardingSubscriptionPage({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on card</label>
-                <Input value={cardName} onChange={(e) => setCardName(e.target.value)}
+                <Input value={cardName}
+                  onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }}
+                  aria-invalid={!!errors.cardName}
                   placeholder="Full name as shown on card" className="h-10 text-base" />
+                {errors.cardName && <p className="mt-1 text-xs text-sev-critical">{errors.cardName}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card number</label>
                 <div className="relative">
                   <CreditCard className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))}
+                  <Input value={cardNumber}
+                    onChange={(e) => { setCardNumber(formatCard(e.target.value)); setErrors((p) => ({ ...p, cardNumber: undefined })); }}
+                    aria-invalid={!!errors.cardNumber}
                     placeholder="1234 5678 9012 3456" className="h-10 pl-9 font-mono text-base" inputMode="numeric" />
                 </div>
+                {errors.cardNumber && <p className="mt-1 text-xs text-sev-critical">{errors.cardNumber}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
-                  <Input value={expiry} onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                  <Input value={expiry}
+                    onChange={(e) => { setExpiry(formatExpiry(e.target.value)); setErrors((p) => ({ ...p, expiry: undefined })); }}
+                    aria-invalid={!!errors.expiry}
                     placeholder="MM/YY" className="h-10 font-mono text-base" inputMode="numeric" />
+                  {errors.expiry && <p className="mt-1 text-xs text-sev-critical">{errors.expiry}</p>}
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
-                  <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  <Input value={cvc}
+                    onChange={(e) => { setCvc(e.target.value.replace(/\D/g, "").slice(0, 4)); setErrors((p) => ({ ...p, cvc: undefined })); }}
+                    aria-invalid={!!errors.cvc}
                     placeholder="123" className="h-10 font-mono text-base" inputMode="numeric" />
+                  {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
                 </div>
               </div>
 

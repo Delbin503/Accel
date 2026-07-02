@@ -117,7 +117,7 @@ function App() {
           <Route path="deployment" element={<ModelDeploymentPage />} />
 
           {/* System */}
-          <Route path="users" element={<UserManagementPage />} />
+          <Route path="users/*" element={<UserManagementPage />} />
           <Route path="device-health" element={<DeviceHealthPage />} />
           <Route path="config" element={<SystemConfigPage />} />
           <Route path="activity-logs" element={<ActivityLogsPage />} />

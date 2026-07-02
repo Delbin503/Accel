@@ -117,7 +117,7 @@ export default function OnPremForgotPasswordPage() {
           <>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Forgot password?</h1>
             <p className="mt-2 text-base text-muted-foreground">
-              Enter the email assigned to your account account. We'll send a 6-digit verification code.
+              Enter the email assigned to your account. We'll send a 6-digit verification code.
             </p>
             <form onSubmit={submitEmail} className="mt-6 space-y-4">
               <div>

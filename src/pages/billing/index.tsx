@@ -843,14 +843,25 @@ function AddCardModal({ open, onClose, onSave }: {
   const [cardNumber, setCardNumber] = React.useState("");
   const [expiry, setExpiry] = React.useState("");
   const [cvc, setCvc] = React.useState("");
+  const [errors, setErrors] = React.useState<{ cardName?: string; cardNumber?: string; expiry?: string; cvc?: string }>({});
 
   React.useEffect(() => {
-    if (open) { setCardName(""); setCardNumber(""); setExpiry(""); setCvc(""); }
+    if (open) { setCardName(""); setCardNumber(""); setExpiry(""); setCvc(""); setErrors({}); }
   }, [open]);
 
   const cleaned = cardNumber.replace(/\s/g, "");
   const last4 = cleaned.slice(-4);
-  const canSubmit = cleaned.length >= 13 && /^\d{2}\/\d{2}$/.test(expiry) && cvc.length >= 3 && cardName.trim().length > 0;
+
+  function handleAdd() {
+    const next: { cardName?: string; cardNumber?: string; expiry?: string; cvc?: string } = {};
+    if (cardName.trim().length === 0) next.cardName = "Name on card is required.";
+    if (cleaned.length < 13) next.cardNumber = "Enter a valid card number.";
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) next.expiry = "Enter a valid expiry (MM/YY).";
+    if (cvc.length < 3) next.cvc = "Enter a valid CVC.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onSave(last4, expiry, detectBrand(cleaned));
+  }
 
   function formatCard(v: string) {
     return v.replace(/\D/g, "").slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 ");
@@ -877,26 +888,30 @@ function AddCardModal({ open, onClose, onSave }: {
         <div className="space-y-3 px-5 py-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
-            <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" className="h-9 text-base" />
+            <Input value={cardName} onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }} placeholder="Delbin Arkar" className="h-9 text-base" aria-invalid={!!errors.cardName} />
+            {errors.cardName && <p className="mt-1 text-xs text-sev-critical">{errors.cardName}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
-            <Input value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-base" inputMode="numeric" />
+            <Input value={cardNumber} onChange={(e) => { setCardNumber(formatCard(e.target.value)); setErrors((p) => ({ ...p, cardNumber: undefined })); }} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cardNumber} />
+            {errors.cardNumber && <p className="mt-1 text-xs text-sev-critical">{errors.cardNumber}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
-              <Input value={expiry} onChange={(e) => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" className="h-9 font-mono text-base" inputMode="numeric" />
+              <Input value={expiry} onChange={(e) => { setExpiry(formatExpiry(e.target.value)); setErrors((p) => ({ ...p, expiry: undefined })); }} placeholder="MM/YY" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.expiry} />
+              {errors.expiry && <p className="mt-1 text-xs text-sev-critical">{errors.expiry}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
-              <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="h-9 font-mono text-base" inputMode="numeric" />
+              <Input value={cvc} onChange={(e) => { setCvc(e.target.value.replace(/\D/g, "").slice(0, 4)); setErrors((p) => ({ ...p, cvc: undefined })); }} placeholder="123" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cvc} />
+              {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
             </div>
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!canSubmit} onClick={() => onSave(last4, expiry, detectBrand(cleaned))} className="gap-1.5">
+          <Button onClick={handleAdd} className="gap-1.5">
             <CreditCard className="size-3.5" /> Add Card
           </Button>
         </div>
@@ -1128,12 +1143,22 @@ function BillingDetailsSection() {
     country: "Singapore",
   });
   const [draft, setDraft] = React.useState<BillingDetails>(details);
+  const [errors, setErrors] = React.useState<Partial<Record<keyof BillingDetails, string>>>({});
 
   function patch(k: keyof BillingDetails, v: string) {
     setDraft((d) => ({ ...d, [k]: v }));
+    setErrors((e) => ({ ...e, [k]: undefined }));
   }
 
   function save() {
+    const next: Partial<Record<keyof BillingDetails, string>> = {};
+    if (draft.email.trim().length === 0) next.email = "Email is required.";
+    if (draft.company.trim().length === 0) next.company = "Company is required.";
+    if (draft.address.trim().length === 0) next.address = "Address is required.";
+    if (draft.city.trim().length === 0) next.city = "City is required.";
+    if (draft.postcode.trim().length === 0) next.postcode = "Postcode is required.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
     setDetails(draft);
     setEditing(false);
     toast.success("Billing details saved", { description: "Future invoices will use these details." });
@@ -1176,35 +1201,40 @@ function BillingDetailsSection() {
               </label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-base" placeholder="billing@company.com" />
+                <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-base" placeholder="billing@company.com" aria-invalid={!!errors.email} />
               </div>
+              {errors.email && <p className="mt-1 text-xs text-sev-critical">{errors.email}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company / Organisation</label>
               <div className="relative">
                 <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-base" placeholder="Acme Corp Pte Ltd" />
+                <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-base" placeholder="Acme Corp Pte Ltd" aria-invalid={!!errors.company} />
               </div>
+              {errors.company && <p className="mt-1 text-xs text-sev-critical">{errors.company}</p>}
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number (Optional)</label>
               <Input value={draft.taxId} onChange={(e) => patch("taxId", e.target.value)} className="h-9 text-base" placeholder="e.g. GST-201234567A" />
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Street Address</label>
-              <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-base" placeholder="8 Marina Boulevard" />
+              <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-base" placeholder="8 Marina Boulevard" aria-invalid={!!errors.address} />
+              {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">City</label>
-              <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-base" placeholder="Singapore" />
+              <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-base" placeholder="Singapore" aria-invalid={!!errors.city} />
+              {errors.city && <p className="mt-1 text-xs text-sev-critical">{errors.city}</p>}
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">State / Province</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">State / Province (Optional)</label>
               <Input value={draft.state} onChange={(e) => patch("state", e.target.value)} className="h-9 text-base" placeholder="Optional" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Postcode</label>
-              <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-base" placeholder="018984" />
+              <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-base" placeholder="018984" aria-invalid={!!errors.postcode} />
+              {errors.postcode && <p className="mt-1 text-xs text-sev-critical">{errors.postcode}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country</label>

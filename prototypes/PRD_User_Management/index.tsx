@@ -81,7 +81,7 @@ function App() {
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="/users" element={<RealUserManagement forced={forced} onResolveForced={resolve} />} />
+                  <Route path="/users/*" element={<RealUserManagement forced={forced} onResolveForced={resolve} />} />
                   <Route path="*" element={<NotInPrototype />} />
                 </Routes>
               </main>

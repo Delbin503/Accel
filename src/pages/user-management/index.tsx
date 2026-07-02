@@ -1,9 +1,11 @@
 import * as React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   SlidersHorizontal,
   Check,
   X,
@@ -257,15 +259,23 @@ function FilterPanel({
   onChange,
   search,
   onSearchChange,
+  hideStatus = false,
 }: {
   filters: UserFilters;
   onChange: (f: UserFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  hideStatus?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
   const activeCount = filterCount + (search ? 1 : 0);
+  const emptyFilterLabels = hideStatus ? ["All sites"] : ["All statuses", "All sites"];
+  const filterGroups = [
+    ...(!hideStatus ? [{ key: "status" as const, label: "Status", opts: USER_STATUS_OPTIONS as readonly FilterOption[] }] : []),
+    { key: "site"       as const, label: "Site",       opts: USER_SITES },
+    { key: "department" as const, label: "Department", opts: DEPARTMENT_OPTIONS },
+  ];
 
   function setGroup(group: keyof UserFilters, values: string[]) {
     onChange({ ...filters, [group]: values });
@@ -286,7 +296,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All statuses", "All sites"].map((l) => (
+              {emptyFilterLabels.map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
@@ -326,11 +336,7 @@ function FilterPanel({
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              { key: "status"     as const, label: "Status",     opts: USER_STATUS_OPTIONS as readonly FilterOption[] },
-              { key: "site"       as const, label: "Site",       opts: USER_SITES },
-              { key: "department" as const, label: "Department", opts: DEPARTMENT_OPTIONS },
-            ].map(({ key, label, opts }) => (
+            {filterGroups.map(({ key, label, opts }) => (
               <div key={key}>
                 <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
@@ -527,11 +533,66 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
   );
 }
 
+function DeletedAccountInfoCard({
+  deletedAtDisplay,
+  deletedBy,
+  onRestore,
+}: {
+  deletedAtDisplay: string;
+  deletedBy: string;
+  onRestore: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5">
+          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-sev-critical/30 bg-sev-critical/10">
+            <Trash2 className="size-4 text-sev-critical" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-sev-critical">Account Deleted</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              This account is removed from active access. Restore it to make the user active again.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 border-success/40 text-success hover:bg-success/10"
+          onClick={onRestore}
+        >
+          <RotateCcw className="size-3.5" />
+          Restore
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-sev-critical/15 pt-3">
+        <div>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted On</p>
+          <p className="mt-0.5 text-sm font-semibold text-sev-critical">{deletedAtDisplay}</p>
+        </div>
+        <div>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted By</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{deletedBy}</p>
+        </div>
+      </div>
+      <div className="mt-3 rounded-lg border border-sev-critical/15 bg-card px-3 py-2.5">
+        <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
+        <p className="text-sm leading-relaxed text-foreground">
+          Restore returns the user to the active user list with their previous role and site permissions.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ── User detail drawer ──────────────────────────────────────────────────── */
 
 interface UserDrawerProps {
   user: UserData | null;
   open: boolean;
+  mode?: "active" | "deleted";
+  deletedMeta?: { deletedAtDisplay: string; deletedBy: string };
   onClose: () => void;
   onEdit: () => void;
   onChangeRole: () => void;
@@ -539,6 +600,7 @@ interface UserDrawerProps {
   onSuspend: () => void;
   onReinstate: () => void;
   onDelete: () => void;
+  onRestore?: () => void;
   onResetPassword: () => void;
   onReset2FA: () => void;
 }
@@ -546,6 +608,8 @@ interface UserDrawerProps {
 function UserDrawer({
   user,
   open,
+  mode = "active",
+  deletedMeta,
   onClose,
   onEdit,
   onChangeRole,
@@ -553,9 +617,11 @@ function UserDrawer({
   onSuspend,
   onReinstate,
   onDelete,
+  onRestore,
   onResetPassword,
   onReset2FA,
 }: UserDrawerProps) {
+  const isDeleted = mode === "deleted";
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
@@ -610,8 +676,16 @@ function UserDrawer({
         {/* ── Body ───────────────────────────────────────────────────────── */}
         {user ? (
           <div className="flex-1 space-y-5 overflow-y-auto p-5">
+            {isDeleted && deletedMeta && (
+              <DeletedAccountInfoCard
+                deletedAtDisplay={deletedMeta.deletedAtDisplay}
+                deletedBy={deletedMeta.deletedBy}
+                onRestore={() => onRestore?.()}
+              />
+            )}
+
             {/* Suspension banner */}
-            {user.status === "suspended" && user.suspension && (
+            {!isDeleted && user.status === "suspended" && user.suspension && (
               <SuspensionInfoCard suspension={user.suspension} onReinstate={onReinstate} />
             )}
 
@@ -641,9 +715,9 @@ function UserDrawer({
               <SectionTitle>Member Details</SectionTitle>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
-                  [
+                  ([
                     ["First Name",    user.firstName || "—"],
-                    ["Status",        <StatusPill status={user.status} />],
+                    ...(!isDeleted ? [["Status", <StatusPill status={user.status} />] as [string, React.ReactNode]] : []),
                     ["Last Name",     user.lastName || "—"],
                     ["Role",          <RoleBadge role={user.role} />],
                     ["Phone",         <span className="font-mono text-xs">{user.phone ?? "—"}</span>],
@@ -668,7 +742,7 @@ function UserDrawer({
                     ["Email",         user.email],
                     ["Created On",    user.createdAtDisplay],
                     ["Last Active",   user.lastActiveDisplay],
-                  ] as [string, React.ReactNode][]
+                  ] as [string, React.ReactNode][])
                 ).map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-0.5">
                     <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -690,8 +764,9 @@ function UserDrawer({
               ) : (
                 <div className="space-y-1.5">
                   <p className="mb-2 text-xs text-muted-foreground">
-                    User can access the following sites. Revoke a site to remove access immediately
-                    (next sign-in or active session refresh).
+                    {isDeleted
+                      ? "These were the user's assigned sites before deletion."
+                      : "User can access the following sites. Revoke a site to remove access immediately (next sign-in or active session refresh)."}
                   </p>
                   {user.sitePermissions.map((p) => (
                     <div
@@ -735,6 +810,7 @@ function UserDrawer({
             </div>
 
             {/* Authentication — wired buttons (Fix #2) */}
+            {!isDeleted && (
             <div>
               <SectionTitle>Authentication</SectionTitle>
               <div className="space-y-2">
@@ -775,6 +851,7 @@ function UserDrawer({
                 </div>
               </div>
             </div>
+            )}
 
             {/* Activities */}
             <div>
@@ -821,23 +898,37 @@ function UserDrawer({
         {/* ── Footer ─────────────────────────────────────────────────────── */}
         {user && (
           <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
-            <UpdateUserMenu
-              isSuspended={user.status === "suspended"}
-              onEdit={onEdit}
-              onChangeRole={onChangeRole}
-              onManageSite={onManageSite}
-              onSuspend={onSuspend}
-              onReinstate={onReinstate}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-              onClick={onDelete}
-            >
-              <Trash2 className="size-3.5" />
-              Delete User
-            </Button>
+            {isDeleted ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto gap-1.5 border-success/40 text-success hover:bg-success/10"
+                onClick={() => onRestore?.()}
+              >
+                <RotateCcw className="size-3.5" />
+                Restore Account
+              </Button>
+            ) : (
+              <>
+                <UpdateUserMenu
+                  isSuspended={user.status === "suspended"}
+                  onEdit={onEdit}
+                  onChangeRole={onChangeRole}
+                  onManageSite={onManageSite}
+                  onSuspend={onSuspend}
+                  onReinstate={onReinstate}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete User
+                </Button>
+              </>
+            )}
           </div>
         )}
       </SheetContent>
@@ -1484,13 +1575,14 @@ function ManageSiteModal({
   onClose: () => void;
   onConfirm: (sites: string[]) => void;
 }) {
-  const initial =
-    users.length === 1 ? users[0].sitePermissions.map((p) => p.siteId) : [];
-  const [sites, setSites] = React.useState<string[]>(initial);
+  const initialSites = users.length === 1 ? users[0].sitePermissions.map((p) => p.siteId) : [];
+  const initialSitesKey = initialSites.slice().sort().join("|");
+  const [sites, setSites] = React.useState<string[]>(initialSites);
   const [siteSearch, setSiteSearch] = React.useState("");
   const isBulk = users.length > 1;
+  const isDirty = sites.slice().sort().join("|") !== initialSitesKey;
 
-  React.useEffect(() => { if (open) { setSites(initial); setSiteSearch(""); } }, [open, JSON.stringify(initial)]);
+  React.useEffect(() => { if (open) { setSites(initialSites); setSiteSearch(""); } }, [open, initialSitesKey]);
 
   if (users.length === 0) return null;
 
@@ -1582,7 +1674,9 @@ function ManageSiteModal({
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={() => onConfirm(sites)}>Apply</Button>
+          <Button size="sm" disabled={!isDirty} onClick={() => onConfirm(sites)}>
+            Save Changes
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -2234,6 +2328,46 @@ function BulkActionBar({
   );
 }
 
+function DeletedUsersBulkActionBar({
+  count,
+  onClear,
+  onRestore,
+}: {
+  count: number;
+  onClear: () => void;
+  onRestore: () => void;
+}) {
+  if (count === 0) return null;
+  return (
+    <div className="fixed inset-x-6 bottom-6 z-40 mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-success bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--success)/0.22)]">
+      <div className="flex items-center gap-2">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-success text-success-foreground">
+          <CheckSquare className="size-3.5" />
+        </div>
+        <span className="text-base font-semibold text-foreground">
+          {count} deleted user{count > 1 ? "s" : ""} selected
+        </span>
+      </div>
+      <div className="ml-auto flex flex-wrap items-center gap-1.5">
+        <Button variant="ghost" size="sm" className="gap-1.5 text-sm text-muted-foreground" onClick={onClear}>
+          <X className="size-3.5" />
+          Clear selection
+        </Button>
+        <div className="mx-1 h-4 w-px bg-border" />
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 border-success/40 text-sm text-success hover:bg-success/10"
+          onClick={onRestore}
+        >
+          <RotateCcw className="size-3.5" />
+          Restore Users
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Toast ───────────────────────────────────────────────────────────────── */
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
@@ -2264,8 +2398,313 @@ interface DialogState {
   userIds: string[];
 }
 
+type DeletedUserData = UserData & {
+  deletedAtDisplay: string;
+  deletedAtMs: number;
+  deletedBy: string;
+};
+
+function DeletedUsersPage({
+  users,
+  onBack,
+  onRestore,
+  onBulkRestore,
+}: {
+  users: DeletedUserData[];
+  onBack: () => void;
+  onRestore: (user: DeletedUserData) => void;
+  onBulkRestore: (users: DeletedUserData[]) => void;
+}) {
+  const PAGE_STEP = 20;
+  const [search, setSearch] = React.useState("");
+  const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
+  const [drawerId, setDrawerId] = React.useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
+  const [sort, setSort] = React.useState<SortKey>("newest");
+  const [sortOpen, setSortOpen] = React.useState(false);
+
+  const filtered = React.useMemo(() => {
+    let list = users.filter((u) => {
+      if (filters.role.length > 0 && !filters.role.includes(u.role)) return false;
+      if (filters.site.length > 0 && !filters.site.some((s) => u.sitePermissions.find((p) => p.siteId === s))) return false;
+      if (filters.department.length > 0 && !filters.department.some((d) => u.departments.includes(d))) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const hay = [u.id, u.fullName, u.firstName, u.lastName, u.email].join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    list = [...list].sort((a, b) => {
+      if (sort === "name-asc") return a.fullName.localeCompare(b.fullName);
+      if (sort === "last-active") return (b.lastActiveAt || "").localeCompare(a.lastActiveAt || "");
+      if (sort === "oldest") return a.deletedAtMs - b.deletedAtMs;
+      return b.deletedAtMs - a.deletedAtMs;
+    });
+    return list;
+  }, [users, filters, search, sort]);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
+  const drawerUser = drawerId ? users.find((u) => u.id === drawerId) ?? null : null;
+  const allPageSelected = visibleItems.length > 0 && visibleItems.every((u) => selectedIds.has(u.id));
+  const somePageSelected = !allPageSelected && visibleItems.some((u) => selectedIds.has(u.id));
+  const selectedUsers = React.useMemo(
+    () => users.filter((u) => selectedIds.has(u.id)),
+    [users, selectedIds]
+  );
+
+  React.useEffect(() => {
+    setSelectedIds((curr) => {
+      const validIds = new Set(users.map((u) => u.id));
+      const next = new Set([...curr].filter((id) => validIds.has(id)));
+      return next.size === curr.size ? curr : next;
+    });
+  }, [users]);
+
+  function togglePageAll() {
+    setSelectedIds((curr) => {
+      const next = new Set(curr);
+      if (allPageSelected) visibleItems.forEach((u) => next.delete(u.id));
+      else visibleItems.forEach((u) => next.add(u.id));
+      return next;
+    });
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds((curr) => {
+      const next = new Set(curr);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function handleBulkRestore() {
+    if (selectedUsers.length === 0) return;
+    onBulkRestore(selectedUsers);
+    setSelectedIds(new Set());
+    setDrawerId(null);
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader>
+        <PageHeader.Content>
+          <PageHeader.Title>Deleted Users List</PageHeader.Title>
+          <PageHeader.Description>
+            Review users removed from User Management. Audit history is preserved for compliance.
+          </PageHeader.Description>
+        </PageHeader.Content>
+        <PageHeader.Actions>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={onBack}>
+            <ChevronLeft className="size-4" />
+            Back to Users
+          </Button>
+        </PageHeader.Actions>
+      </PageHeader>
+
+      <FilterPanel
+        filters={filters}
+        onChange={(f) => { setFilters(f); setVisibleCount(PAGE_STEP); }}
+        search={search}
+        onSearchChange={(v) => { setSearch(v); setVisibleCount(PAGE_STEP); }}
+        hideStatus
+      />
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-base text-muted-foreground">
+          <strong className="text-foreground">{filtered.length}</strong>{" "}
+          {filtered.length === 1 ? "deleted user" : "deleted users"} match current filters
+          {hasFilters && (
+            <button
+              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
+              className="ml-2 text-muted-foreground underline hover:text-primary"
+            >
+              Clear filters
+            </button>
+          )}
+        </p>
+        <Popover open={sortOpen} onOpenChange={setSortOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="gap-1.5">
+              {SORT_OPTIONS.find((o) => o.key === sort)?.label}
+              <ChevronDown className="size-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1">
+            {SORT_OPTIONS.map((o) => (
+              <button
+                key={o.key}
+                onClick={() => { setSort(o.key); setSortOpen(false); }}
+                className={cn(
+                  "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                  sort === o.key ? "text-primary" : "text-foreground"
+                )}
+              >
+                {o.label}
+                {sort === o.key && <Check className="size-3.5" />}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+          <Trash2 className="size-10 opacity-20" />
+          <p className="text-sm">{users.length === 0 ? "No deleted users yet." : "No deleted users match the current filters."}</p>
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/30">
+                <tr className="border-b border-border text-left">
+                  <th className="w-[44px] px-4 py-2.5">
+                    <Checkbox
+                      checked={allPageSelected}
+                      indeterminate={somePageSelected}
+                      onChange={togglePageAll}
+                    />
+                  </th>
+                  {["USER ID", "USER", "ROLE", "SITES", "DELETED ON", "ACTION"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {visibleItems.map((u) => {
+                  const isSel = selectedIds.has(u.id);
+                  return (
+                  <tr
+                    key={u.id}
+                    onClick={() => setDrawerId(u.id)}
+                    className={cn(
+                      "group cursor-pointer text-base transition-colors hover:bg-muted/20",
+                      isSel && "bg-success/[0.04]"
+                    )}
+                  >
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={isSel} onChange={() => toggleRow(u.id)} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{u.id}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar user={u} size={32} />
+                        <div className="min-w-0">
+                          <TruncatedText text={u.fullName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                          <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
+                    <td className="px-4 py-3"><SitesCell user={u} /></td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{u.deletedAtDisplay}</td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground"
+                            aria-label={`Actions for ${u.fullName}`}
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-44 p-1" align="end">
+                          <button
+                            onClick={() => setDrawerId(u.id)}
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                          >
+                            <CircleUser className="size-3.5 text-muted-foreground" />
+                            View details
+                          </button>
+                          <button
+                            onClick={() => onRestore(u)}
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
+                          >
+                            <RotateCcw className="size-3.5" />
+                            Restore User
+                          </button>
+                        </PopoverContent>
+                      </Popover>
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
+            {hasMore && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleCount((c) => c + PAGE_STEP)}
+                className="gap-1.5"
+              >
+                <ChevronDown className="size-3.5" />
+                Load Older Entries
+              </Button>
+            )}
+            <p className="text-sm text-muted-foreground">
+              {filtered.length === 0 ? "0 of 0" : `Showing ${visibleItems.length} of ${filtered.length}`}
+            </p>
+          </div>
+        </div>
+      )}
+      <UserDrawer
+        user={drawerUser}
+        open={drawerId !== null}
+        mode="deleted"
+        deletedMeta={drawerUser ? { deletedAtDisplay: drawerUser.deletedAtDisplay, deletedBy: drawerUser.deletedBy } : undefined}
+        onClose={() => setDrawerId(null)}
+        onEdit={() => undefined}
+        onChangeRole={() => undefined}
+        onManageSite={() => undefined}
+        onSuspend={() => undefined}
+        onReinstate={() => undefined}
+        onDelete={() => undefined}
+        onRestore={() => {
+          if (!drawerUser) return;
+          onRestore(drawerUser);
+          setDrawerId(null);
+        }}
+        onResetPassword={() => undefined}
+        onReset2FA={() => undefined}
+      />
+      <DeletedUsersBulkActionBar
+        count={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onRestore={handleBulkRestore}
+      />
+    </div>
+  );
+}
+
 export default function UserManagementPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isDeletedUsersPage = location.pathname.endsWith("/deleted");
   const [users, setUsers] = React.useState<UserData[]>(MOCK_USERS);
+  const [deletedUsers, setDeletedUsers] = React.useState<DeletedUserData[]>([]);
   const [seatTotals, setSeatTotals] = React.useState<Record<UserRole, number>>({
     owner: 1, // exactly one Owner per workspace — always 1/1 (100%)
     admin: MOCK_SEATS.admin.total,
@@ -2453,7 +2892,24 @@ export default function UserManagementPage() {
 
   function handleDelete() {
     const ids = dialog.userIds;
-    const target = users.find((u) => u.id === ids[0]);
+    const targets = users.filter((u) => ids.includes(u.id));
+    const target = targets[0];
+    const deletedAt = new Date();
+    const deletedAtDate = deletedAt.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+    const deletedAtTime = deletedAt.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const deletedAtDisplay = `${deletedAtDate} · ${deletedAtTime}`;
+    setDeletedUsers((curr) => [
+      ...targets.map((u) => ({ ...u, deletedAtDisplay, deletedAtMs: deletedAt.getTime(), deletedBy: "Delbin Arkar" })),
+      ...curr,
+    ]);
     setUsers((curr) => curr.filter((u) => !ids.includes(u.id)));
     closeDialog();
     setDrawerId(null);
@@ -2462,8 +2918,33 @@ export default function UserManagementPage() {
       kind: "success",
       message:
         ids.length > 1
-          ? `${ids.length} users removed from this organization.`
-          : `${target?.fullName ?? "User"} removed from this organization.`,
+          ? `${ids.length} users moved to Deleted Users List.`
+          : `${target?.fullName ?? "User"} moved to Deleted Users List.`,
+    });
+  }
+
+  function handleRestoreDeletedUser(user: DeletedUserData) {
+    const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, ...restoredUser } = user;
+    setDeletedUsers((curr) => curr.filter((u) => u.id !== user.id));
+    setUsers((curr) => [
+      { ...restoredUser, status: "active" as UserStatus, suspension: undefined },
+      ...curr,
+    ]);
+    setToast({ kind: "success", message: `${user.fullName} restored to User Management.` });
+  }
+
+  function handleRestoreDeletedUsers(restoredUsers: DeletedUserData[]) {
+    if (restoredUsers.length === 0) return;
+    const restoredIds = new Set(restoredUsers.map((u) => u.id));
+    const activeUsers = restoredUsers.map((user) => {
+      const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, ...restoredUser } = user;
+      return { ...restoredUser, status: "active" as UserStatus, suspension: undefined };
+    });
+    setDeletedUsers((curr) => curr.filter((u) => !restoredIds.has(u.id)));
+    setUsers((curr) => [...activeUsers, ...curr]);
+    setToast({
+      kind: "success",
+      message: `${restoredUsers.length} deleted user${restoredUsers.length > 1 ? "s" : ""} restored to User Management.`,
     });
   }
 
@@ -2517,6 +2998,17 @@ export default function UserManagementPage() {
     });
   }
 
+  if (isDeletedUsersPage) {
+    return (
+      <DeletedUsersPage
+        users={deletedUsers}
+        onBack={() => navigate("/users")}
+        onRestore={handleRestoreDeletedUser}
+        onBulkRestore={handleRestoreDeletedUsers}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
@@ -2527,6 +3019,24 @@ export default function UserManagementPage() {
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              setDrawerId(null);
+              setSelectedIds(new Set());
+              navigate("/users/deleted");
+            }}
+          >
+            <Trash2 className="size-4" />
+            Deleted Users List
+            {deletedUsers.length > 0 && (
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-3xs font-bold text-primary-foreground">
+                {deletedUsers.length}
+              </span>
+            )}
+          </Button>
           <Button size="sm" className="gap-1.5" onClick={() => setDialog({ kind: "invite", userIds: [] })}>
             <UserPlus className="size-4" />
             Invite Users

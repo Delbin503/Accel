@@ -2126,6 +2126,28 @@ interface NvrFormFields {
   cleanupChannels: number[];
 }
 
+function buildNvrFormFields(nvr: NvrData): NvrFormFields {
+  return {
+    name: nvr.name,
+    siteId: nvr.siteId,
+    areaId: nvr.areaId,
+    ipAddress: nvr.ipAddress,
+    httpPort: String(nvr.httpPort),
+    totalStorageGb: String(nvr.totalStorageGb),
+    retentionDays: String(nvr.retentionDays),
+    cleanupSchedule: nvr.cleanupSchedule,
+    cleanupAgeDays: nvr.cleanupSchedule === "auto-age" ? String(nvr.retentionDays) : "",
+    cleanupChannels: [],
+  };
+}
+
+function serializeNvrFormFields(fields: NvrFormFields): string {
+  return JSON.stringify({
+    ...fields,
+    cleanupChannels: [...fields.cleanupChannels].sort((a, b) => a - b),
+  });
+}
+
 function EditNvrModal({
   open, nvr, onClose, onConfirm,
 }: {
@@ -2138,22 +2160,14 @@ function EditNvrModal({
     name: "", siteId: "", areaId: "", ipAddress: "", httpPort: "", totalStorageGb: "", retentionDays: "", cleanupSchedule: "",
     cleanupAgeDays: "", cleanupChannels: [],
   });
+  const [initialFields, setInitialFields] = React.useState<NvrFormFields | null>(null);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   React.useEffect(() => {
     if (open && nvr) {
-      setFields({
-        name: nvr.name,
-        siteId: nvr.siteId,
-        areaId: nvr.areaId,
-        ipAddress: nvr.ipAddress,
-        httpPort: String(nvr.httpPort),
-        totalStorageGb: String(nvr.totalStorageGb),
-        retentionDays: String(nvr.retentionDays),
-        cleanupSchedule: nvr.cleanupSchedule,
-        cleanupAgeDays: nvr.cleanupSchedule === "auto-age" ? String(nvr.retentionDays) : "",
-        cleanupChannels: [],
-      });
+      const next = buildNvrFormFields(nvr);
+      setFields(next);
+      setInitialFields(next);
       setErrors({});
     }
   }, [open, nvr]);
@@ -2186,6 +2200,8 @@ function EditNvrModal({
   }
 
   if (!nvr) return null;
+
+  const isDirty = initialFields !== null && serializeNvrFormFields(fields) !== serializeNvrFormFields(initialFields);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2343,7 +2359,7 @@ function EditNvrModal({
         </div>
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} className="gap-1.5">
+          <Button size="sm" disabled={!isDirty} onClick={handleSubmit} className="gap-1.5">
             <Check className="size-3.5" />
             Save Changes
           </Button>

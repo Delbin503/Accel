@@ -371,6 +371,7 @@ function DrawZoneModal({
   const [editingLabel, setEditingLabel] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const drawRef = React.useRef<{ startX: number; startY: number; mode: "draw" | "move" | null }>({ startX: 0, startY: 0, mode: null });
+  const isEditingInitialZone = Boolean(initialEditingZoneId);
 
   React.useEffect(() => {
     if (open) {
@@ -492,9 +493,12 @@ function DrawZoneModal({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[85vh] w-[840px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit Detection Zones</DialogTitle>
+          <DialogTitle className="text-base font-bold">
+            {isEditingInitialZone ? "Edit Detection Zones" : "Add Detection Zone"}
+          </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            View, draw and edit boundary zones on <strong className="text-foreground">{cameraName}</strong>.
+            {isEditingInitialZone ? "View, draw and edit" : "Draw and configure"} boundary zones on{" "}
+            <strong className="text-foreground">{cameraName}</strong>.
             Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.
           </p>
         </DialogHeader>
@@ -932,7 +936,6 @@ function CameraDrawer({
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
   const [selectedRecordingIds, setSelectedRecordingIds] = React.useState<Set<string>>(new Set());
-  const [zonesEditing, setZonesEditing] = React.useState(false);
   const [zoneDrawOpen, setZoneDrawOpen] = React.useState(false);
   const [zoneDrawEditingZoneId, setZoneDrawEditingZoneId] = React.useState<string | null>(null);
   // Detail-fetch phase. Retry clears the forced async state back to content.
@@ -947,7 +950,6 @@ function CameraDrawer({
       setCustomFrom("");
       setCustomTo("");
       setSelectedRecordingIds(new Set());
-      setZonesEditing(false);
       setZoneDrawOpen(false);
       setZoneDrawEditingZoneId(null);
       setRetried(false);
@@ -1346,15 +1348,23 @@ function CameraDrawer({
             <div>
               <SectionTitle
                 aside={
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setZonesEditing((v) => !v)}>
-                    {zonesEditing ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
-                    {zonesEditing ? "Done" : "Add Zone"}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setZoneDrawEditingZoneId(null);
+                      setZoneDrawOpen(true);
+                    }}
+                  >
+                    <Plus className="size-3.5" />
+                    Add Zone
                   </Button>
                 }
               >
                 Boundary Zones ({camera.boundaryZones.length})
               </SectionTitle>
-              {camera.boundaryZones.length === 0 && !zonesEditing ? (
+              {camera.boundaryZones.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                   No zones drawn yet.
                 </div>
@@ -1391,23 +1401,6 @@ function CameraDrawer({
                       </button>
                     </div>
                   ))}
-                </div>
-              )}
-              {zonesEditing && (
-                <div className="mt-2 flex items-center justify-end gap-2 rounded-lg border border-primary/30 bg-primary/[0.04] px-3 py-2">
-                  <p className="mr-auto text-xs text-muted-foreground">
-                    Draw the zone directly on the live camera view.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      setZoneDrawEditingZoneId(null);
-                      setZoneDrawOpen(true);
-                    }}
-                    className="gap-1.5"
-                  >
-                    <Plus className="size-3.5" />
-                    Add Zone
-                  </Button>
                 </div>
               )}
             </div>
