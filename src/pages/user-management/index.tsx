@@ -576,12 +576,6 @@ function DeletedAccountInfoCard({
           <p className="mt-0.5 text-sm font-medium text-foreground">{deletedBy}</p>
         </div>
       </div>
-      <div className="mt-3 rounded-lg border border-sev-critical/15 bg-card px-3 py-2.5">
-        <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
-        <p className="text-sm leading-relaxed text-foreground">
-          Restore returns the user to the active user list with their previous role and site permissions.
-        </p>
-      </div>
     </div>
   );
 }
