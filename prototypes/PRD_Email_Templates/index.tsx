@@ -14,6 +14,13 @@ import "./proto.css";
 
 import invitationHtml from "./templates/invitation.html?raw";
 import otpHtml from "./templates/otp-verification.html?raw";
+import signinCodeHtml from "./templates/signin-code.html?raw";
+import passwordResetHtml from "./templates/password-reset-request.html?raw";
+import passwordChangedHtml from "./templates/password-changed.html?raw";
+import twoFaHtml from "./templates/2fa-changed.html?raw";
+import welcomeHtml from "./templates/welcome.html?raw";
+import roleChangedHtml from "./templates/role-changed.html?raw";
+import ownershipHtml from "./templates/ownership-transfer.html?raw";
 
 interface Template {
   id: string;
@@ -43,6 +50,66 @@ const TEMPLATES: Template[] = [
     html: otpHtml,
   },
   {
+    id: "signin-code",
+    name: "Sign-in Verification Code",
+    subject: "Your Accel sign-in code",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent: "At login, when two-factor authentication is enabled.",
+    audience: "The user signing in.",
+    mergeTags: ["{{firstName}}", "{{code}}", "{{expiryMinutes}}", "{{device}}", "{{location}}", "{{time}}", "{{supportEmail}}"],
+    file: "templates/signin-code.html",
+    html: signinCodeHtml,
+  },
+  {
+    id: "password-reset-request",
+    name: "Password Reset Request",
+    subject: "Reset your Accel password",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent: "When a user requests a password reset. Delivers a verification code (not a link) to enter.",
+    audience: "The user who requested the reset.",
+    mergeTags: ["{{firstName}}", "{{code}}", "{{expiryMinutes}}", "{{requestedFrom}}", "{{supportEmail}}"],
+    file: "templates/password-reset-request.html",
+    html: passwordResetHtml,
+  },
+  {
+    id: "password-changed",
+    name: "Password Changed / Reset Confirmation",
+    subject: "Your Accel password was changed",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent: "After a password is changed — by the user or forced by an admin.",
+    audience: "The affected user.",
+    mergeTags: ["{{firstName}}", "{{changedAt}}", "{{initiatedBy}}", "{{secureUrl}}", "{{supportEmail}}"],
+    file: "templates/password-changed.html",
+    html: passwordChangedHtml,
+  },
+  {
+    id: "2fa-changed",
+    name: "Two-Factor Authentication Changed",
+    subject: "Two-factor authentication was updated",
+    category: "Account & Authentication",
+    priority: "P2",
+    whenSent: "When a user enables or disables 2FA. {{action}} carries \"enabled\" / \"disabled\".",
+    audience: "The affected user (and Owner if disabled on a privileged account).",
+    mergeTags: ["{{firstName}}", "{{action}}", "{{changedAt}}", "{{email}}", "{{supportEmail}}"],
+    file: "templates/2fa-changed.html",
+    html: twoFaHtml,
+  },
+  {
+    id: "welcome",
+    name: "Welcome / Account Activated",
+    subject: "Welcome to Accel",
+    category: "Team & User Management",
+    priority: "P1",
+    whenSent: "Once an invited user finishes setup + email verification and their account is active.",
+    audience: "The newly activated user.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{role}}", "{{siteList}}", "{{dashboardUrl}}", "{{supportEmail}}"],
+    file: "templates/welcome.html",
+    html: welcomeHtml,
+  },
+  {
     id: "invitation",
     name: "User Invitation",
     subject: "You've been invited to Accel",
@@ -53,6 +120,30 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{orgName}}", "{{inviteeName}}", "{{siteName}}", "{{acceptUrl}}", "{{supportEmail}}"],
     file: "templates/invitation.html",
     html: invitationHtml,
+  },
+  {
+    id: "role-changed",
+    name: "Role Changed",
+    subject: "Your role in Accel has been updated",
+    category: "Team & User Management",
+    priority: "P2",
+    whenSent: "When an admin changes a user's role.",
+    audience: "The user whose role changed.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{previousRole}}", "{{newRole}}", "{{changedBy}}", "{{dashboardUrl}}", "{{supportEmail}}"],
+    file: "templates/role-changed.html",
+    html: roleChangedHtml,
+  },
+  {
+    id: "ownership-transfer",
+    name: "Ownership Transfer",
+    subject: "Ownership of your Accel workspace was transferred",
+    category: "Team & User Management",
+    priority: "P1",
+    whenSent: "When workspace ownership is transferred. Sent to both the outgoing and incoming Owner.",
+    audience: "Outgoing and incoming Owner.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{fromName}}", "{{toName}}", "{{transferredAt}}", "{{supportEmail}}"],
+    file: "templates/ownership-transfer.html",
+    html: ownershipHtml,
   },
 ];
 

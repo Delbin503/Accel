@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+  Accel — Welcome / Account Activated (transactional, P1).
+
+  Sent once an invited user finishes setup + email verification and their
+  account is active.
+  Shares the Accel email design (Figma node 3468:1489).
+
+  Merge tags
+  ----------
+  {{firstName}}     e.g. "Alex"
+  {{orgName}}       e.g. "Astra Corp"
+  {{role}}          e.g. "Admin"
+  {{siteList}}      e.g. "Astra HQ, FedEx Changi"
+  {{dashboardUrl}}  link to the dashboard
+  {{supportEmail}}  e.g. "support@accel.com"
+-->
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>Welcome to Accel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#111010; }
+      table { border-collapse: collapse; }
+      img { border:0; line-height:100%; outline:none; text-decoration:none; }
+      a { text-decoration:none; }
+      @media only screen and (max-width:620px) {
+        .container { width:100% !important; }
+        .px { padding-left:28px !important; padding-right:28px !important; }
+        .btn-a { display:block !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background-color:#111010; font-family:'Manrope','Helvetica Neue',Arial,sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#111010;">
+      Your Accel account is ready. Welcome to {{orgName}}.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111010;">
+      <tr>
+        <td align="center" style="padding:40px 16px;">
+          <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" bgcolor="#17120F" style="width:600px; max-width:600px; background-color:#17120F; background-image:linear-gradient(158deg,#2A1A10 0%,#1A1411 42%,#100E0D 100%); border-radius:16px; overflow:hidden;">
+
+            <tr>
+              <td class="px" style="padding:36px 44px 8px 44px;">
+                <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                  <td valign="middle" style="font-size:0; line-height:0;">
+                    <svg width="34" height="31" viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;">
+                      <path d="M23 2 L41 38 L31 38 L22.5 20.5 L14 38 L5 38 Z" fill="#FE5C01"/>
+                      <path d="M4 38 C 12 28 22 25.5 34 29 C 24 27.5 15 31 11 38 Z" fill="#FE5C01"/>
+                    </svg>
+                  </td>
+                  <td style="padding-left:9px; font-size:22px; font-weight:800; font-style:italic; color:#ffffff; letter-spacing:-0.5px;">Accel</td>
+                </tr></table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:24px 44px 0 44px;">
+                <h1 style="margin:0; font-size:26px; line-height:1.3; font-weight:700; color:#ffffff;">Welcome to Accel, {{firstName}}</h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:20px 44px 0 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+                <p style="margin:0;">
+                  Your account is all set. You've joined <strong style="color:#ffffff;">{{orgName}}</strong>
+                  and you're ready to start monitoring.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:24px 44px 0 44px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#171514; border:1px solid #34302E; border-radius:12px;">
+                  <tr>
+                    <td style="padding:16px 20px; font-size:14px; line-height:1.5;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="padding:5px 0; color:#8A857F; width:120px;">Your role</td>
+                          <td style="padding:5px 0; color:#ffffff; font-weight:600;">{{role}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0; color:#8A857F;">Site access</td>
+                          <td style="padding:5px 0; color:#ffffff; font-weight:600;">{{siteList}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" align="center" style="padding:24px 44px 0 44px;">
+                <!--[if mso]>
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{dashboardUrl}}" style="height:48px;v-text-anchor:middle;width:210px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                  <w:anchorlock/>
+                  <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:bold;">Go to dashboard</center>
+                </v:roundrect>
+                <![endif]-->
+                <!--[if !mso]><!-- -->
+                <a class="btn-a" href="{{dashboardUrl}}" style="background-color:#FE5C01; color:#ffffff; display:inline-block; font-size:15px; font-weight:700; line-height:48px; text-align:center; text-decoration:none; padding:0 34px; border-radius:8px;">
+                  Go to dashboard
+                </a>
+                <!--<![endif]-->
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:28px 44px 0 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+                <p style="margin:0;">
+                  Use the dashboard to explore live monitoring, the detection feed, and your assigned
+                  sites. If you have any questions, our support team is here to help.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:24px 44px 4px 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+                <p style="margin:0;">Thanks,</p>
+                <p style="margin:0; color:#ffffff; font-weight:600;">Sigmawave Team</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px" style="padding:28px 44px 36px 44px;">
+                <div style="border-top:1px solid #2E2A28; padding-top:18px; font-size:12px; line-height:1.6; color:#6E6A67;">
+                  <p style="margin:0 0 4px 0;">Need help? Contact <a href="mailto:{{supportEmail}}" style="color:#8A857F; text-decoration:underline;">{{supportEmail}}</a>.</p>
+                  <p style="margin:0; color:#565350;">&copy; Accel — Threat &amp; Risk Monitoring</p>
+                </div>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

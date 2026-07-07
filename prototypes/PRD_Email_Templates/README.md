@@ -22,7 +22,14 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | # | Template | Priority | When it's sent |
 |---|----------|----------|----------------|
 | 1 | **Email Verification / OTP Code** | P1 | Account setup (invite → signup) and on any email change. |
-| 2 | **User Invitation** | P1 | Admin invites someone from the User Management panel. This is the faithful build of the Figma reference and the base every other email follows. |
+| 2 | **Sign-in Verification Code** | P1 | Login, when 2FA is enabled. |
+| 3 | **Password Reset Request** | P1 | User requests a reset — delivers a code (not a link). |
+| 4 | **Password Changed / Reset Confirmation** | P1 | After a password change (self or admin-forced). |
+| 5 | **Two-Factor Authentication Changed** | P2 | User enables/disables 2FA (`{{action}}`). |
+| 6 | **Welcome / Account Activated** | P1 | Account becomes active after setup + verification. |
+| 7 | **User Invitation** | P1 | Admin invites someone. Faithful build of the Figma reference and the base every other email follows. |
+| 8 | **Role Changed** | P2 | Admin changes a user's role. |
+| 9 | **Ownership Transfer** | P1 | Workspace ownership transferred (to both owners). |
 
 Each template is a **standalone, sendable** `.html` file under `templates/`
 (table layout + inline styles, Outlook VML button where needed, Manrope with
