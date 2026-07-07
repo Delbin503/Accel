@@ -536,10 +536,12 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
 function DeletedAccountInfoCard({
   deletedAtDisplay,
   deletedBy,
+  deleteReason,
   onRestore,
 }: {
   deletedAtDisplay: string;
   deletedBy: string;
+  deleteReason?: string;
   onRestore: () => void;
 }) {
   return (
@@ -575,6 +577,12 @@ function DeletedAccountInfoCard({
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted By</p>
           <p className="mt-0.5 text-sm font-medium text-foreground">{deletedBy}</p>
         </div>
+        {deleteReason && (
+          <div className="col-span-2">
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Reason</p>
+            <p className="mt-0.5 text-sm leading-relaxed text-foreground">{deleteReason}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -586,7 +594,7 @@ interface UserDrawerProps {
   user: UserData | null;
   open: boolean;
   mode?: "active" | "deleted";
-  deletedMeta?: { deletedAtDisplay: string; deletedBy: string };
+  deletedMeta?: { deletedAtDisplay: string; deletedBy: string; deleteReason?: string };
   onClose: () => void;
   onEdit: () => void;
   onChangeRole: () => void;
@@ -674,6 +682,7 @@ function UserDrawer({
               <DeletedAccountInfoCard
                 deletedAtDisplay={deletedMeta.deletedAtDisplay}
                 deletedBy={deletedMeta.deletedBy}
+                deleteReason={deletedMeta.deleteReason}
                 onRestore={() => onRestore?.()}
               />
             )}
@@ -2184,8 +2193,14 @@ function DeleteUserModal({
   open: boolean;
   users: UserData[];
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (note: string) => void;
 }) {
+  const [note, setNote] = React.useState("");
+
+  React.useEffect(() => {
+    if (open) setNote("");
+  }, [open]);
+
   if (users.length === 0) return null;
   const isBulk = users.length > 1;
 
@@ -2222,10 +2237,22 @@ function DeleteUserModal({
           <p className="mt-3 text-sm text-muted-foreground">
             Audit history remains preserved for compliance. You will need to re-invite the user to restore access.
           </p>
+          <div className="mt-4">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Note (Optional)
+            </label>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Reason for permanent deletion — preserved in the audit log."
+              rows={3}
+              className="w-full"
+            />
+          </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
+          <Button size="sm" variant="destructive" className="gap-1.5" onClick={() => onConfirm(note)}>
             <Trash2 className="size-3.5" />
             Delete {isBulk ? `${users.length} Users` : "User"}
           </Button>
@@ -2396,6 +2423,7 @@ type DeletedUserData = UserData & {
   deletedAtDisplay: string;
   deletedAtMs: number;
   deletedBy: string;
+  deleteReason?: string;
 };
 
 function DeletedUsersPage({
@@ -2668,7 +2696,7 @@ function DeletedUsersPage({
         user={drawerUser}
         open={drawerId !== null}
         mode="deleted"
-        deletedMeta={drawerUser ? { deletedAtDisplay: drawerUser.deletedAtDisplay, deletedBy: drawerUser.deletedBy } : undefined}
+        deletedMeta={drawerUser ? { deletedAtDisplay: drawerUser.deletedAtDisplay, deletedBy: drawerUser.deletedBy, deleteReason: drawerUser.deleteReason } : undefined}
         onClose={() => setDrawerId(null)}
         onEdit={() => undefined}
         onChangeRole={() => undefined}
@@ -2884,7 +2912,7 @@ export default function UserManagementPage() {
     setToast({ kind: "success", message: "User details updated" });
   }
 
-  function handleDelete() {
+  function handleDelete(note: string) {
     const ids = dialog.userIds;
     const targets = users.filter((u) => ids.includes(u.id));
     const target = targets[0];
@@ -2901,7 +2929,7 @@ export default function UserManagementPage() {
     });
     const deletedAtDisplay = `${deletedAtDate} · ${deletedAtTime}`;
     setDeletedUsers((curr) => [
-      ...targets.map((u) => ({ ...u, deletedAtDisplay, deletedAtMs: deletedAt.getTime(), deletedBy: "Delbin Arkar" })),
+      ...targets.map((u) => ({ ...u, deletedAtDisplay, deletedAtMs: deletedAt.getTime(), deletedBy: "Delbin Arkar", deleteReason: note.trim() || undefined })),
       ...curr,
     ]);
     setUsers((curr) => curr.filter((u) => !ids.includes(u.id)));
@@ -2918,7 +2946,7 @@ export default function UserManagementPage() {
   }
 
   function handleRestoreDeletedUser(user: DeletedUserData) {
-    const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, ...restoredUser } = user;
+    const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, deleteReason: _deleteReason, ...restoredUser } = user;
     setDeletedUsers((curr) => curr.filter((u) => u.id !== user.id));
     setUsers((curr) => [
       { ...restoredUser, status: "active" as UserStatus, suspension: undefined },
@@ -2931,7 +2959,7 @@ export default function UserManagementPage() {
     if (restoredUsers.length === 0) return;
     const restoredIds = new Set(restoredUsers.map((u) => u.id));
     const activeUsers = restoredUsers.map((user) => {
-      const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, ...restoredUser } = user;
+      const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, deleteReason: _deleteReason, ...restoredUser } = user;
       return { ...restoredUser, status: "active" as UserStatus, suspension: undefined };
     });
     setDeletedUsers((curr) => curr.filter((u) => !restoredIds.has(u.id)));
