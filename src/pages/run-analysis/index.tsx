@@ -49,7 +49,6 @@ import {
   Star,
   Scan,
   Radar,
-  Coins,
   CreditCard,
   Ticket,
   Minus,
@@ -67,6 +66,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { CoinIcon } from "@/components/shared/CoinIcon";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
@@ -1985,7 +1985,7 @@ function UploadStep({
               : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
           )}
         >
-          <Coins className={cn("size-3.5", noRunsLeft ? "text-sev-critical" : "text-primary")} />
+          <CoinIcon className="size-3.5" />
           {noRunsLeft ? (
             <span>No runs left · <span className="underline">Buy more</span></span>
           ) : freeRunsRemaining > 0 ? (
@@ -2070,7 +2070,7 @@ function PurchaseRunsModal({
       <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
-            <Coins className="size-4 text-primary" />
+            <CoinIcon className="size-4" />
             Top up Run Analysis
           </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -2085,7 +2085,7 @@ function PurchaseRunsModal({
               Token Balance
             </p>
             <p className="mt-2 flex items-center justify-center gap-2.5 font-mono text-4xl font-bold text-primary">
-              <Coins className="size-7" />
+              <CoinIcon className="size-7" />
               {tokenBalance.toLocaleString()}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">credits available to redeem for runs</p>
@@ -2115,7 +2115,7 @@ function PurchaseRunsModal({
                     <span className="absolute -top-2 rounded-full bg-secondary px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">{p.tag}</span>
                   )}
                   <span className="inline-flex items-center gap-1 font-mono text-md font-bold text-foreground">
-                    <Coins className="size-3.5 text-primary" />{p.tokens}
+                    <CoinIcon className="size-3.5" />{p.tokens}
                   </span>
                   <span className="text-xs text-muted-foreground">SGD ${p.price}</span>
                 </button>
@@ -2192,7 +2192,7 @@ function PurchaseRunsModal({
                     )}
                     <span className="text-md font-bold text-foreground">{p.runs} runs</span>
                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <Coins className="size-3" />{p.tokens}
+                      <CoinIcon className="size-3" />{p.tokens}
                     </span>
                   </button>
                 ))}
@@ -2224,7 +2224,7 @@ function PurchaseRunsModal({
                     <Plus className="size-3.5" />
                   </button>
                   <span className="ml-auto inline-flex items-center gap-1 font-mono text-sm text-muted-foreground">
-                    = <Coins className="size-3.5 text-primary" /> {customCost} tokens
+                    = <CoinIcon className="size-3.5" /> {customCost} tokens
                   </span>
                 </div>
                 <p className="mt-2 text-2xs text-muted-foreground">{TOKENS_PER_RUN} tokens per run.</p>
