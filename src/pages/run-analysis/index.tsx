@@ -2018,6 +2018,7 @@ function PurchaseRunsModal({
   onBuyTokens: (tokens: number) => void;
   onBuyRuns: (runs: number, tokenCost: number) => void;
 }) {
+  const [tab, setTab] = React.useState<"credits" | "runs">("credits");
   const [creditPackIdx, setCreditPackIdx] = React.useState(1);
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
@@ -2077,15 +2078,21 @@ function PurchaseRunsModal({
           </p>
         </DialogHeader>
 
-        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-5 py-2.5">
-          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Token balance</span>
-          <span className="inline-flex items-center gap-1.5 font-mono text-md font-bold text-primary">
-            <Coins className="size-3.5" />
-            {tokenBalance.toLocaleString()}
-          </span>
+        {/* ── Token balance — hero / main section ── */}
+        <div className="flex-shrink-0 px-5 pt-4">
+          <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-5 py-6 text-center">
+            <p className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Token Balance
+            </p>
+            <p className="mt-2 flex items-center justify-center gap-2.5 font-mono text-4xl font-bold text-primary">
+              <Coins className="size-7" />
+              {tokenBalance.toLocaleString()}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">credits available to redeem for runs</p>
+          </div>
         </div>
 
-        <Tabs defaultValue="credits" className="flex-1 overflow-y-auto">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "credits" | "runs")} className="flex-1 overflow-y-auto">
           <TabsList className="mx-5 mt-4">
             <TabsTrigger value="credits" className="gap-1.5"><CreditCard className="size-3.5" /> Buy Credits</TabsTrigger>
             <TabsTrigger value="runs" className="gap-1.5"><Ticket className="size-3.5" /> Run Analysis Packs</TabsTrigger>
@@ -2158,34 +2165,18 @@ function PurchaseRunsModal({
                 {cardErrors.cvc && <p className="mt-1 text-xs text-sev-critical">{cardErrors.cvc}</p>}
               </div>
             </div>
-
-            <Button className="w-full gap-1.5" onClick={buyCredits}>
-              <CreditCard className="size-3.5" />
-              Pay ${CREDIT_PACKS[creditPackIdx].price} · Get {CREDIT_PACKS[creditPackIdx].tokens} tokens
-            </Button>
           </TabsContent>
 
           {/* ── Redeem tokens for runs ── */}
           <TabsContent value="runs" className="space-y-4 px-5 py-4">
-            <div className="flex gap-1.5 rounded-lg border border-border bg-background p-1">
-              <button
-                type="button"
-                onClick={() => setRunMode("pack")}
-                className={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors", runMode === "pack" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-              >
-                Packs
-              </button>
-              <button
-                type="button"
-                onClick={() => setRunMode("custom")}
-                className={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors", runMode === "custom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-              >
-                Custom amount
-              </button>
-            </div>
+            <Tabs value={runMode} onValueChange={(v) => setRunMode(v as "pack" | "custom")}>
+              <TabsList className="w-full">
+                <TabsTrigger value="pack">Packs</TabsTrigger>
+                <TabsTrigger value="custom">Custom amount</TabsTrigger>
+              </TabsList>
 
-            {runMode === "pack" ? (
-              <div className="grid grid-cols-3 gap-2">
+              <TabsContent value="pack" className="mt-3">
+                <div className="grid grid-cols-3 gap-2">
                 {RUN_PACKS.map((p, i) => (
                   <button
                     key={p.runs}
@@ -2205,8 +2196,10 @@ function PurchaseRunsModal({
                     </span>
                   </button>
                 ))}
-              </div>
-            ) : (
+                </div>
+              </TabsContent>
+
+              <TabsContent value="custom" className="mt-3">
               <div className="rounded-lg border border-border bg-card p-4">
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Number of runs</label>
                 <div className="flex items-center gap-3">
@@ -2236,7 +2229,8 @@ function PurchaseRunsModal({
                 </div>
                 <p className="mt-2 text-2xs text-muted-foreground">{TOKENS_PER_RUN} tokens per run.</p>
               </div>
-            )}
+              </TabsContent>
+            </Tabs>
 
             {!(runMode === "pack" ? packAffordable : customAffordable) && (
               <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
@@ -2245,8 +2239,18 @@ function PurchaseRunsModal({
               </div>
             )}
 
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex flex-shrink-0 justify-end border-t border-border px-5 py-3.5">
+          {tab === "credits" ? (
+            <Button className="gap-1.5" onClick={buyCredits}>
+              <CreditCard className="size-3.5" />
+              Pay ${CREDIT_PACKS[creditPackIdx].price} · Get {CREDIT_PACKS[creditPackIdx].tokens} tokens
+            </Button>
+          ) : (
             <Button
-              className="w-full gap-1.5"
+              className="gap-1.5"
               onClick={redeemRuns}
               disabled={runMode === "pack" ? !packAffordable : !customAffordable}
             >
@@ -2255,11 +2259,7 @@ function PurchaseRunsModal({
                 ? `Redeem ${RUN_PACKS[runPackIdx].runs} runs · ${RUN_PACKS[runPackIdx].tokens} tokens`
                 : `Redeem ${customRuns} run${customRuns === 1 ? "" : "s"} · ${customCost} tokens`}
             </Button>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex flex-shrink-0 justify-end border-t border-border px-5 py-3.5">
-          <Button variant="ghost" size="sm" onClick={onClose}>Done</Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
