@@ -363,12 +363,14 @@ function ModelChooserCard({
                 selected ? "text-primary" : "text-foreground"
               )}
             />
-            <span className="mt-0.5 inline-block rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
-              {model.id}
-            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className="inline-block rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
+                {model.id}
+              </span>
+              <ModelSummaryRow model={model} />
+            </div>
           </div>
         </div>
-        <ModelSummaryRow model={model} />
       </div>
       <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-sm text-muted-foreground" />
       {model.tags.length > 0 ? (
