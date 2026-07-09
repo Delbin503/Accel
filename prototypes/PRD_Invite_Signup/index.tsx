@@ -23,7 +23,7 @@ function RestartButton({ onRestart }: { onRestart: () => void }) {
     <button
       onClick={onRestart}
       title="Restart flow"
-      className="fixed bottom-6 right-6 z-[100] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-lg transition-opacity hover:opacity-100 hover:text-foreground"
+      className="fixed top-2 right-16 z-[100] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-lg transition-opacity hover:opacity-100 hover:text-foreground"
     >
       <RotateCcw className="size-3.5" />
       Restart flow

@@ -28,7 +28,7 @@ function FloatingTester({
   onDrawer: (d: DrawerAsync) => void;
 }) {
   return (
-    <div className="fixed bottom-6 right-24 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+    <div className="fixed top-2 right-16 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
       <StateTester value={value} onChange={onChange} drawer={drawer} onDrawer={onDrawer} />
     </div>
   );

@@ -61,7 +61,7 @@ function Shell() {
       )}
 
       {/* PROTOTYPE-ONLY floating tester — low opacity, reveals on hover. */}
-      <div className="fixed bottom-6 right-6 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+      <div className="fixed top-6 right-6 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
         <StateTester screen={screen} onScreen={goTo} async={asyncMode} onAsync={setAsyncMode} />
       </div>
     </div>
