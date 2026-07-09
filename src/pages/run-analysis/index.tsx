@@ -49,9 +49,14 @@ import {
   Star,
   Scan,
   Radar,
+  Coins,
+  CreditCard,
+  Ticket,
+  Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -1017,6 +1022,22 @@ const ANALYZING_STAGES: { label: string; pct: number; etaSec: number }[] = [
   { label: "Finalising scores & compiling report…",     pct: 100, etaSec: 3  },
 ];
 
+/* ── Run Analysis quota & token economics (prototype pricing) ────────────── */
+const FREE_RUN_QUOTA = 3;
+const TOKENS_PER_RUN = 10;
+/* Token credits bought with a card. */
+const CREDIT_PACKS: { tokens: number; price: number; tag?: string }[] = [
+  { tokens: 100, price: 10 },
+  { tokens: 500, price: 45, tag: "Popular" },
+  { tokens: 1000, price: 80, tag: "Best value" },
+];
+/* Run-analysis packs bought with tokens (bulk discount vs 10 tokens/run). */
+const RUN_PACKS: { runs: number; tokens: number; tag?: string }[] = [
+  { runs: 25, tokens: 225 },
+  { runs: 50, tokens: 425, tag: "Popular" },
+  { runs: 100, tokens: 800, tag: "Best value" },
+];
+
 function formatEta(sec: number): string {
   if (sec <= 5) return "almost done";
   if (sec < 60) return `~${sec}s remaining`;
@@ -1214,6 +1235,13 @@ export default function RunAnalysisPage({
   const [analysisName, setAnalysisName] = React.useState("");
   const [uploadedFile, setUploadedFile] = React.useState<{ name: string; size: string } | null>(null);
   const [selectedVlmId, setSelectedVlmId] = React.useState<string | null>(MOCK_VLMS[0]?.id ?? null);
+
+  /* Run Analysis quota — 3 free runs, then top up with token credits. */
+  const [freeRunsRemaining, setFreeRunsRemaining] = React.useState(FREE_RUN_QUOTA);
+  const [purchasedRuns, setPurchasedRuns] = React.useState(0);
+  const [tokenBalance, setTokenBalance] = React.useState(0);
+  const [purchaseOpen, setPurchaseOpen] = React.useState(false);
+  const runsRemaining = freeRunsRemaining + purchasedRuns;
   const [currentResult, setCurrentResult] = React.useState<AnalysisResult | null>(null);
   const [completedToast, setCompletedToast] = React.useState(false);
 
@@ -1304,6 +1332,11 @@ export default function RunAnalysisPage({
   function handleRun() {
     if (!selectedModel) return;
     if (!analysisName.trim() || !uploadedFile || !selectedVlmId) return;
+    if (runsRemaining <= 0) { setPurchaseOpen(true); return; }
+
+    // Consume one run — free quota first, then token-purchased runs.
+    if (freeRunsRemaining > 0) setFreeRunsRemaining((n) => n - 1);
+    else setPurchasedRuns((n) => n - 1);
 
     const willFail = Math.random() < FAILURE_PROBABILITY;
     const result = buildSyntheticResult(
@@ -1451,6 +1484,10 @@ export default function RunAnalysisPage({
             onBack={() => setFlowStep("select")}
             onRun={handleRun}
             onShowHistory={() => setTab("history")}
+            runsRemaining={runsRemaining}
+            freeRunsRemaining={freeRunsRemaining}
+            freeQuota={FREE_RUN_QUOTA}
+            onOpenPurchase={() => setPurchaseOpen(true)}
           />
         ) : isAnalyzing ? (
           <AnalysisLoadingScreen
@@ -1504,6 +1541,26 @@ export default function RunAnalysisPage({
           onClose={() => setViewingPastId(null)}
         />
       )}
+
+      {/* ── Purchase runs / credits modal ── */}
+      <PurchaseRunsModal
+        open={purchaseOpen}
+        onClose={() => setPurchaseOpen(false)}
+        tokenBalance={tokenBalance}
+        onBuyTokens={(tokens) => {
+          setTokenBalance((b) => b + tokens);
+          toast.success(`${tokens} token credits added`, {
+            description: `New balance: ${tokenBalance + tokens} tokens.`,
+          });
+        }}
+        onBuyRuns={(runs, cost) => {
+          setTokenBalance((b) => b - cost);
+          setPurchasedRuns((r) => r + runs);
+          toast.success(`${runs} analysis runs added`, {
+            description: `Spent ${cost} tokens · ${runs} runs ready to use.`,
+          });
+        }}
+      />
     </div>
   );
 }
@@ -1765,6 +1822,10 @@ function UploadStep({
   onBack,
   onRun,
   onShowHistory,
+  runsRemaining,
+  freeRunsRemaining,
+  freeQuota,
+  onOpenPurchase,
 }: {
   selectedModel: ModelData;
   analysisName: string;
@@ -1776,10 +1837,19 @@ function UploadStep({
   onBack: () => void;
   onRun: () => void;
   onShowHistory: () => void;
+  runsRemaining: number;
+  freeRunsRemaining: number;
+  freeQuota: number;
+  onOpenPurchase: () => void;
 }) {
   const [errors, setErrors] = React.useState<{ name?: string; file?: string; vlm?: string }>({});
+  const noRunsLeft = runsRemaining <= 0;
 
   function handleRunClick() {
+    if (noRunsLeft) {
+      onOpenPurchase();
+      return;
+    }
     const next: { name?: string; file?: string; vlm?: string } = {};
     if (!analysisName.trim()) next.name = "Analysis name is required.";
     if (!uploadedFile) next.file = "Upload a video file to analyze.";
@@ -1807,10 +1877,6 @@ function UploadStep({
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5">
             <ArrowLeft className="size-3.5" />
             Go Back
-          </Button>
-          <Button size="sm" onClick={handleRunClick} className="gap-1.5">
-            <Sparkles className="size-3.5" />
-            Run Analysis
           </Button>
         </div>
       </div>
@@ -1905,7 +1971,298 @@ function UploadStep({
           </div>
         </div>
       </div>
+
+      {/* ── Bottom bar: run quota counter + primary CTA (bottom-right) ── */}
+      <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={onOpenPurchase}
+          title="View run credits & top up"
+          className={cn(
+            "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+            noRunsLeft
+              ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical hover:bg-sev-critical/15"
+              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          )}
+        >
+          <Coins className={cn("size-3.5", noRunsLeft ? "text-sev-critical" : "text-primary")} />
+          {noRunsLeft ? (
+            <span>No runs left · <span className="underline">Buy more</span></span>
+          ) : freeRunsRemaining > 0 ? (
+            <span><span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs left</span>
+          ) : (
+            <span><span className="text-foreground">{runsRemaining}</span> purchased runs left</span>
+          )}
+        </button>
+        <Button size="sm" onClick={handleRunClick} disabled={noRunsLeft} className="gap-1.5">
+          <Sparkles className="size-3.5" />
+          Run Analysis
+        </Button>
+      </div>
     </div>
+  );
+}
+
+/* ── Purchase runs / credits modal ───────────────────────────────────────── */
+
+function PurchaseRunsModal({
+  open,
+  onClose,
+  tokenBalance,
+  onBuyTokens,
+  onBuyRuns,
+}: {
+  open: boolean;
+  onClose: () => void;
+  tokenBalance: number;
+  onBuyTokens: (tokens: number) => void;
+  onBuyRuns: (runs: number, tokenCost: number) => void;
+}) {
+  const [creditPackIdx, setCreditPackIdx] = React.useState(1);
+  const [cardName, setCardName] = React.useState("");
+  const [cardNumber, setCardNumber] = React.useState("");
+  const [expiry, setExpiry] = React.useState("");
+  const [cvc, setCvc] = React.useState("");
+  const [cardErrors, setCardErrors] = React.useState<{ name?: string; number?: string; expiry?: string; cvc?: string }>({});
+
+  const [runMode, setRunMode] = React.useState<"custom" | "pack">("pack");
+  const [customRuns, setCustomRuns] = React.useState(10);
+  const [runPackIdx, setRunPackIdx] = React.useState(1);
+
+  React.useEffect(() => {
+    if (open) {
+      setCardErrors({});
+    }
+  }, [open]);
+
+  const customCost = customRuns * TOKENS_PER_RUN;
+
+  function buyCredits() {
+    const cleaned = cardNumber.replace(/\s/g, "");
+    const next: typeof cardErrors = {};
+    if (!cardName.trim()) next.name = "Name on card is required.";
+    if (cleaned.length < 13) next.number = "Enter a valid card number.";
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) next.expiry = "Enter a valid expiry (MM/YY).";
+    if (cvc.length < 3) next.cvc = "Enter a valid CVC.";
+    setCardErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onBuyTokens(CREDIT_PACKS[creditPackIdx].tokens);
+    setCardName(""); setCardNumber(""); setExpiry(""); setCvc("");
+  }
+
+  function redeemRuns() {
+    if (runMode === "custom") {
+      if (customRuns < 1 || customCost > tokenBalance) return;
+      onBuyRuns(customRuns, customCost);
+    } else {
+      const pack = RUN_PACKS[runPackIdx];
+      if (pack.tokens > tokenBalance) return;
+      onBuyRuns(pack.runs, pack.tokens);
+    }
+  }
+
+  const packAffordable = RUN_PACKS[runPackIdx].tokens <= tokenBalance;
+  const customAffordable = customRuns >= 1 && customCost <= tokenBalance;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold">
+            <Coins className="size-4 text-primary" />
+            Top up Run Analysis
+          </DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Buy token credits with a card, then redeem them for analysis runs.
+          </p>
+        </DialogHeader>
+
+        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-5 py-2.5">
+          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Token balance</span>
+          <span className="inline-flex items-center gap-1.5 font-mono text-md font-bold text-primary">
+            <Coins className="size-3.5" />
+            {tokenBalance.toLocaleString()}
+          </span>
+        </div>
+
+        <Tabs defaultValue="credits" className="flex-1 overflow-y-auto">
+          <TabsList className="mx-5 mt-4">
+            <TabsTrigger value="credits" className="gap-1.5"><CreditCard className="size-3.5" /> Buy Credits</TabsTrigger>
+            <TabsTrigger value="runs" className="gap-1.5"><Ticket className="size-3.5" /> Run Analysis Packs</TabsTrigger>
+          </TabsList>
+
+          {/* ── Buy token credits with a card ── */}
+          <TabsContent value="credits" className="space-y-4 px-5 py-4">
+            <div className="grid grid-cols-3 gap-2">
+              {CREDIT_PACKS.map((p, i) => (
+                <button
+                  key={p.tokens}
+                  type="button"
+                  onClick={() => setCreditPackIdx(i)}
+                  className={cn(
+                    "relative flex flex-col items-center gap-0.5 rounded-lg border px-2 py-3 text-center transition-colors",
+                    i === creditPackIdx ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                  )}
+                >
+                  {p.tag && (
+                    <span className="absolute -top-2 rounded-full bg-secondary px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">{p.tag}</span>
+                  )}
+                  <span className="inline-flex items-center gap-1 font-mono text-md font-bold text-foreground">
+                    <Coins className="size-3.5 text-primary" />{p.tokens}
+                  </span>
+                  <span className="text-xs text-muted-foreground">SGD ${p.price}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
+                <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" aria-invalid={!!cardErrors.name} />
+                {cardErrors.name && <p className="mt-1 text-xs text-sev-critical">{cardErrors.name}</p>}
+              </div>
+              <div className="col-span-2">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
+                <Input
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 "))}
+                  placeholder="4242 4242 4242 4242"
+                  className="font-mono"
+                  aria-invalid={!!cardErrors.number}
+                />
+                {cardErrors.number && <p className="mt-1 text-xs text-sev-critical">{cardErrors.number}</p>}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
+                <Input
+                  value={expiry}
+                  onChange={(e) => {
+                    const d = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setExpiry(d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
+                  }}
+                  placeholder="MM/YY"
+                  className="font-mono"
+                  aria-invalid={!!cardErrors.expiry}
+                />
+                {cardErrors.expiry && <p className="mt-1 text-xs text-sev-critical">{cardErrors.expiry}</p>}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
+                <Input
+                  value={cvc}
+                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="123"
+                  className="font-mono"
+                  aria-invalid={!!cardErrors.cvc}
+                />
+                {cardErrors.cvc && <p className="mt-1 text-xs text-sev-critical">{cardErrors.cvc}</p>}
+              </div>
+            </div>
+
+            <Button className="w-full gap-1.5" onClick={buyCredits}>
+              <CreditCard className="size-3.5" />
+              Pay ${CREDIT_PACKS[creditPackIdx].price} · Get {CREDIT_PACKS[creditPackIdx].tokens} tokens
+            </Button>
+          </TabsContent>
+
+          {/* ── Redeem tokens for runs ── */}
+          <TabsContent value="runs" className="space-y-4 px-5 py-4">
+            <div className="flex gap-1.5 rounded-lg border border-border bg-background p-1">
+              <button
+                type="button"
+                onClick={() => setRunMode("pack")}
+                className={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors", runMode === "pack" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                Packs
+              </button>
+              <button
+                type="button"
+                onClick={() => setRunMode("custom")}
+                className={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors", runMode === "custom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                Custom amount
+              </button>
+            </div>
+
+            {runMode === "pack" ? (
+              <div className="grid grid-cols-3 gap-2">
+                {RUN_PACKS.map((p, i) => (
+                  <button
+                    key={p.runs}
+                    type="button"
+                    onClick={() => setRunPackIdx(i)}
+                    className={cn(
+                      "relative flex flex-col items-center gap-0.5 rounded-lg border px-2 py-3 text-center transition-colors",
+                      i === runPackIdx ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                    )}
+                  >
+                    {p.tag && (
+                      <span className="absolute -top-2 rounded-full bg-secondary px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">{p.tag}</span>
+                    )}
+                    <span className="text-md font-bold text-foreground">{p.runs} runs</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Coins className="size-3" />{p.tokens}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-card p-4">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Number of runs</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCustomRuns((n) => Math.max(1, n - 1))}
+                    className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <input
+                    type="number"
+                    value={customRuns}
+                    onChange={(e) => setCustomRuns(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
+                    className="h-9 w-20 rounded-md border border-input bg-background text-center font-mono text-base text-foreground focus:border-primary focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCustomRuns((n) => Math.min(999, n + 1))}
+                    className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                  <span className="ml-auto inline-flex items-center gap-1 font-mono text-sm text-muted-foreground">
+                    = <Coins className="size-3.5 text-primary" /> {customCost} tokens
+                  </span>
+                </div>
+                <p className="mt-2 text-2xs text-muted-foreground">{TOKENS_PER_RUN} tokens per run.</p>
+              </div>
+            )}
+
+            {!(runMode === "pack" ? packAffordable : customAffordable) && (
+              <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
+                <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
+                <p>Not enough tokens. Buy more credits on the <strong>Buy Credits</strong> tab.</p>
+              </div>
+            )}
+
+            <Button
+              className="w-full gap-1.5"
+              onClick={redeemRuns}
+              disabled={runMode === "pack" ? !packAffordable : !customAffordable}
+            >
+              <Ticket className="size-3.5" />
+              {runMode === "pack"
+                ? `Redeem ${RUN_PACKS[runPackIdx].runs} runs · ${RUN_PACKS[runPackIdx].tokens} tokens`
+                : `Redeem ${customRuns} run${customRuns === 1 ? "" : "s"} · ${customCost} tokens`}
+            </Button>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex flex-shrink-0 justify-end border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onClose}>Done</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

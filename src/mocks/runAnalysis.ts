@@ -8,13 +8,10 @@ import type {
 } from "@/types/runAnalysis";
 
 export const MOCK_VLMS: VLMOption[] = [
-  { id: "vlm_001", name: "LLaVA-1.6",   params: "13B Params",  speed: "fast",       description: "Balanced multimodal reasoning" },
-  { id: "vlm_002", name: "MiniCPM-V",   params: "8B Params",   speed: "fast",       description: "Optimised for surveillance footage" },
-  { id: "vlm_003", name: "Qwen2-VL",    params: "7B Params",   speed: "fast",       description: "Strong at object grounding" },
-  { id: "vlm_004", name: "InternVL2",   params: "26B Params",  speed: "balanced",   description: "High-fidelity scene description" },
-  { id: "vlm_005", name: "CogVLM2",     params: "19B Params",  speed: "balanced",   description: "Long-form reasoning" },
-  { id: "vlm_006", name: "Phi-3-Vision", params: "4B Params",  speed: "fast",       description: "Lightweight edge model" },
-  { id: "vlm_007", name: "GPT-4o",      params: "—",           speed: "slow",       description: "Frontier accuracy, slower" },
+  { id: "vlm_qwen3vl",  name: "Qwen3-VL",      params: "256K ctx",    speed: "balanced", description: "Long surveillance-style footage; native long context, second-level indexing" },
+  { id: "vlm_qwen25vl", name: "Qwen2.5-VL",    params: "7B Params",   speed: "fast",     description: "Open-source video support; dynamic resolution, self-hostable" },
+  { id: "vlm_gemini25", name: "Gemini 2.5 Pro", params: "Proprietary", speed: "balanced", description: "Strong video understanding; zero hosting effort" },
+  { id: "vlm_tarsier2", name: "Tarsier2",      params: "7B Params",   speed: "balanced", description: "Purpose-built long-video QA for CCTV/surveillance footage" },
 ];
 
 const SAMPLE_LOG: ActivityLogEntry[] = [
