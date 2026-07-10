@@ -2125,9 +2125,6 @@ function UploadStep({
         onClose={() => setConfirmOpen(false)}
         onConfirm={confirmRun}
         method={runMethod}
-        setMethod={setRunMethod}
-        hasFree={hasFree}
-        hasTokens={hasTokens}
         freeRunsRemaining={freeRunsRemaining}
         tokenBalance={tokenBalance}
         tokensPerRun={tokensPerRun}
@@ -2143,9 +2140,6 @@ function RunConfirmModal({
   onClose,
   onConfirm,
   method,
-  setMethod,
-  hasFree,
-  hasTokens,
   freeRunsRemaining,
   tokenBalance,
   tokensPerRun,
@@ -2154,14 +2148,10 @@ function RunConfirmModal({
   onClose: () => void;
   onConfirm: () => void;
   method: "free" | "tokens";
-  setMethod: (m: "free" | "tokens") => void;
-  hasFree: boolean;
-  hasTokens: boolean;
   freeRunsRemaining: number;
   tokenBalance: number;
   tokensPerRun: number;
 }) {
-  const bothAvailable = hasFree && hasTokens;
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="w-[440px] max-w-[95vw] p-0">
@@ -2171,77 +2161,34 @@ function RunConfirmModal({
             Confirm analysis run
           </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {method === "tokens"
-              ? `This run will use ${tokensPerRun} tokens from your balance.`
-              : "This run will use one of your free runs."}
+            Start the analysis against your uploaded footage. Free runs are used
+            first, then token credits.
           </p>
         </DialogHeader>
 
-        <div className="space-y-3 px-5 py-4">
-          {bothAvailable ? (
-            <>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Choose run method
-              </p>
-              <button
-                type="button"
-                onClick={() => setMethod("free")}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
-                  method === "free" ? "border-primary bg-primary/[0.04]" : "border-border bg-card hover:border-primary/40"
-                )}
-              >
-                <span className={cn("flex size-4 flex-shrink-0 items-center justify-center rounded-full border-2", method === "free" ? "border-primary" : "border-muted-foreground/40")}>
-                  {method === "free" && <span className="size-2 rounded-full bg-primary" />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-base font-semibold text-foreground">Use a free run</p>
-                  <p className="text-xs text-muted-foreground">{freeRunsRemaining} free run{freeRunsRemaining === 1 ? "" : "s"} remaining</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethod("tokens")}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
-                  method === "tokens" ? "border-primary bg-primary/[0.04]" : "border-border bg-card hover:border-primary/40"
-                )}
-              >
-                <span className={cn("flex size-4 flex-shrink-0 items-center justify-center rounded-full border-2", method === "tokens" ? "border-primary" : "border-muted-foreground/40")}>
-                  {method === "tokens" && <span className="size-2 rounded-full bg-primary" />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-                    Use tokens <CoinIcon className="size-3.5" /> {tokensPerRun}
+        <div className="px-5 py-4">
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-3">
+            <CoinIcon className="size-5" />
+            <div className="min-w-0 flex-1">
+              {method === "tokens" ? (
+                <>
+                  <p className="text-base font-semibold text-foreground">
+                    {tokensPerRun} tokens will be used
                   </p>
-                  <p className="text-xs text-muted-foreground">{tokenBalance.toLocaleString()} tokens available</p>
-                </div>
-              </button>
-            </>
-          ) : (
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-3">
-              <CoinIcon className="size-5" />
-              <div className="min-w-0 flex-1">
-                {method === "tokens" ? (
-                  <>
-                    <p className="text-base font-semibold text-foreground">
-                      {tokensPerRun} tokens will be used
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Balance after this run: {(tokenBalance - tokensPerRun).toLocaleString()} tokens
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-base font-semibold text-foreground">One free run will be used</p>
-                    <p className="text-xs text-muted-foreground">
-                      {freeRunsRemaining - 1} free run{freeRunsRemaining - 1 === 1 ? "" : "s"} left afterwards
-                    </p>
-                  </>
-                )}
-              </div>
+                  <p className="text-xs text-muted-foreground">
+                    Balance after this run: {(tokenBalance - tokensPerRun).toLocaleString()} tokens
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-base font-semibold text-foreground">One free run will be used</p>
+                  <p className="text-xs text-muted-foreground">
+                    {freeRunsRemaining - 1} free run{freeRunsRemaining - 1 === 1 ? "" : "s"} left afterwards
+                  </p>
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
