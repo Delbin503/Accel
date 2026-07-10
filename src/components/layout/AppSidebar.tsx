@@ -156,16 +156,35 @@ const NAV_GROUPS: NavGroup[] = [
 
 /* ─── Logo ──────────────────────────────────────────────────────────────── */
 
-function AccelLogo() {
+/* Accel brand mark — triangle "A" with swoosh + tail, in brand orange. */
+function AccelMark({ className }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2.5 px-2 py-1">
-      {/* Orange triangle / play mark */}
-      <div className="flex size-7 items-center justify-center rounded-md bg-primary">
-        <svg viewBox="0 0 14 14" className="size-4 fill-primary-foreground" aria-hidden>
-          <polygon points="2,1 13,7 2,13" />
-        </svg>
-      </div>
-      <span className="text-base font-bold tracking-tight text-foreground">Accel</span>
+    <svg viewBox="0 0 48 48" className={cn("text-primary", className)} aria-hidden>
+      <path d="M20.5 11 L28.5 31.5 L12.5 31.5 Z" fill="currentColor" />
+      <path
+        d="M16 33 C 24.5 28.4 30.5 23.8 40 14.6 C 35.6 24 29 29.2 21 34.8 Z"
+        fill="currentColor"
+      />
+      <path d="M30.6 31.2 L37.6 27 L36 34 L29 35.6 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function AccelLogo() {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 py-1",
+        isCollapsed ? "justify-center px-0" : "px-2"
+      )}
+    >
+      <AccelMark className="size-8 shrink-0" />
+      {!isCollapsed && (
+        <span className="text-lg font-bold tracking-tight text-foreground">Accel</span>
+      )}
     </div>
   );
 }
@@ -278,6 +297,8 @@ function UserProfile({ onBell }: { onBell: () => void }) {
   const signOut = useAuthStore((s) => s.signOut);
   const unreadCount = useNotificationsStore((s) => s.items.filter((n) => !n.read).length);
   const navigate = useNavigate();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   if (!user) return null;
 
@@ -291,23 +312,41 @@ function UserProfile({ onBell }: { onBell: () => void }) {
   }
 
   return (
-    <div className="border-t border-border px-2 py-3">
-      <div className="flex items-stretch gap-2">
+    <div
+      className={cn(
+        "border-t border-border py-3",
+        isCollapsed ? "px-0" : "px-2"
+      )}
+    >
+      <div
+        className={cn(
+          isCollapsed ? "flex flex-col items-center gap-2" : "flex items-stretch gap-2"
+        )}
+      >
         {/* Profile card — opens dropdown menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-transparent bg-card/40 px-2.5 py-2 text-left transition-colors hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            {isCollapsed ? (
+              <button
+                aria-label="Open account menu"
+                className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 {user.initials}
-              </div>
+              </button>
+            ) : (
+              <button className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-transparent bg-card/40 px-2.5 py-2 text-left transition-colors hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {user.initials}
+                </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-                <p className="truncate text-xs capitalize text-primary">{user.role}</p>
-              </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+                  <p className="truncate text-xs capitalize text-primary">{user.role}</p>
+                </div>
 
-              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-            </button>
+                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+              </button>
+            )}
           </DropdownMenuTrigger>
 
           <DropdownMenuContent side="top" align="start" className="w-64 p-0">
@@ -363,7 +402,10 @@ function UserProfile({ onBell }: { onBell: () => void }) {
               ? `${unreadCount} unread notifications`
               : "Open notifications"
           }
-          className="relative flex size-12 shrink-0 items-center justify-center rounded-md border border-transparent bg-card/40 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            "relative flex shrink-0 items-center justify-center rounded-md border border-transparent bg-card/40 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            isCollapsed ? "size-8" : "size-12"
+          )}
         >
           <Bell className="size-4" />
           {unreadCount > 0 && (

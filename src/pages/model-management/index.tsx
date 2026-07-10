@@ -479,23 +479,65 @@ function UploadDropzone({
   placeholder: string;
   invalid?: boolean;
 }) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const accept = `.${placeholder.split(".").pop()}`;
+
+  function pick() {
+    inputRef.current?.click();
+  }
+  function handleFiles(files: FileList | null) {
+    const f = files?.[0];
+    if (f) onChange(f.name);
+  }
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={pick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          pick();
+        }
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        handleFiles(e.dataTransfer.files);
+      }}
       className={cn(
-        "flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 transition-colors hover:border-primary/40",
+        "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 text-center transition-colors hover:border-primary/40",
         invalid ? "border-sev-critical" : "border-border"
       )}
     >
       <UploadCloud className="size-7 text-muted-foreground" />
-      <p className="text-center text-sm text-muted-foreground">{primary}</p>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="h-9 text-center text-base"
-        aria-invalid={!!invalid}
-      />
+      {value ? (
+        <div className="flex max-w-full items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1">
+          <span className="truncate font-mono text-sm text-foreground">{value}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange("");
+            }}
+            aria-label="Remove file"
+            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-sev-critical"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground">{primary}</p>
+      )}
       <p className="text-center text-xs text-muted-foreground/80">{hint}</p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
     </div>
   );
 }
