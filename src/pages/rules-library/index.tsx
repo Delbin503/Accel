@@ -113,6 +113,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
   }
 
   const nodes: React.ReactNode[] = [];
+  const firstThenIdx = rows.findIndex((r) => r.type === "THEN");
 
   rows.forEach((row, i) => {
     const m = ROW_META[row.type];
@@ -127,7 +128,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
         )}
         style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
       >
-        {row.type === "THEN" ? "and also" : m.label}
+        {row.type === "THEN" ? (i === firstThenIdx ? "Then" : "and also") : m.label}
       </span>
     );
 
@@ -533,7 +534,7 @@ function KeywordBadge({ type, isAndAlso, onClick }: { type: RowType; isAndAlso?:
       )}
       style={m.teal ? TEAL_INLINE : undefined}
     >
-      <span>{isAndAlso ? "and also" : m.label}</span>
+      <span>{isAndAlso ? "and also" : type === "THEN" ? "Then" : m.label}</span>
       <ChevronDown className="size-2.5 opacity-60" />
     </button>
   );
@@ -749,6 +750,7 @@ const FIELD_PLACEHOLDER: Record<RowType, string> = {
 
 function ConditionRowItem({
   row,
+  isAndAlso,
   swapOpen,
   onSwapToggle,
   onUpdate,
@@ -761,6 +763,7 @@ function ConditionRowItem({
   onDragEnd,
 }: {
   row: ConditionRow;
+  isAndAlso: boolean;
   swapOpen: boolean;
   onSwapToggle: () => void;
   onUpdate: (id: string, patch: Partial<ConditionRow>) => void;
@@ -791,9 +794,9 @@ function ConditionRowItem({
       {/* Drag handle */}
       <GripVertical className="size-4 flex-shrink-0 cursor-grab text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100" />
 
-      {/* Keyword badge — THEN rows always show "and also" label */}
+      {/* Keyword badge — first THEN shows "Then", later THEN rows show "and also" */}
       <div className="relative flex-shrink-0">
-        <KeywordBadge type={row.type} isAndAlso={row.type === "THEN"} onClick={onSwapToggle} />
+        <KeywordBadge type={row.type} isAndAlso={isAndAlso} onClick={onSwapToggle} />
         {swapOpen && (
           <SwapPopover
             currentType={row.type}
@@ -1464,10 +1467,13 @@ function RuleBuilder({
                 </button>
               ) : (
                 <div className="space-y-3">
-                  {s.rows.map((row, idx) => (
+                  {(() => {
+                    const firstThenIdx = s.rows.findIndex((r) => r.type === "THEN");
+                    return s.rows.map((row, idx) => (
                     <ConditionRowItem
                       key={row.id}
                       row={row}
+                      isAndAlso={row.type === "THEN" && idx !== firstThenIdx}
                       swapOpen={s.swapRowId === row.id}
                       onSwapToggle={() =>
                         patch({ swapRowId: s.swapRowId === row.id ? null : row.id })
@@ -1481,7 +1487,8 @@ function RuleBuilder({
                       onDrop={() => handleDrop(idx)}
                       onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
                     />
-                  ))}
+                    ));
+                  })()}
                 </div>
               )}
             </div>
