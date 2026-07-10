@@ -1278,7 +1278,6 @@ export default function RunAnalysisPage({
   const [tokenBalance, setTokenBalance] = React.useState(0);
   const [totalTokensPurchased, setTotalTokensPurchased] = React.useState(0);
   const [purchaseOpen, setPurchaseOpen] = React.useState(false);
-  const hasPurchased = totalTokensPurchased > 0;
   const runsRemaining = freeRunsRemaining + Math.floor(tokenBalance / TOKENS_PER_RUN);
   const [currentResult, setCurrentResult] = React.useState<AnalysisResult | null>(null);
   const [completedToast, setCompletedToast] = React.useState(false);
@@ -1527,7 +1526,6 @@ export default function RunAnalysisPage({
             setSelectedVlmId={setSelectedVlmId}
             onBack={() => setFlowStep("select")}
             onRun={handleRun}
-            onShowHistory={() => setTab("history")}
             runsRemaining={runsRemaining}
             freeRunsRemaining={freeRunsRemaining}
             freeQuota={FREE_RUN_QUOTA}
@@ -1719,10 +1717,13 @@ function RunQuotaButton({
       <CoinIcon className="size-3.5" />
       {noRunsLeft ? (
         <span>No runs left · <span className="underline">Buy more</span></span>
-      ) : hasPurchased ? (
-        <span><span className="text-foreground">{tokenBalance}</span> / {totalTokensPurchased} tokens left</span>
       ) : (
-        <span><span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs left</span>
+        <span>
+          <span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs
+          {hasPurchased && (
+            <> · <span className="text-foreground">{tokenBalance}</span> tokens</>
+          )}
+        </span>
       )}
     </button>
   );
@@ -1930,7 +1931,6 @@ function UploadStep({
   setSelectedVlmId,
   onBack,
   onRun,
-  onShowHistory,
   runsRemaining,
   freeRunsRemaining,
   freeQuota,
@@ -1948,7 +1948,6 @@ function UploadStep({
   setSelectedVlmId: (id: string) => void;
   onBack: () => void;
   onRun: (method: "free" | "tokens") => void;
-  onShowHistory: () => void;
   runsRemaining: number;
   freeRunsRemaining: number;
   freeQuota: number;
@@ -1962,6 +1961,11 @@ function UploadStep({
 
   const hasFree = freeRunsRemaining > 0;
   const hasTokens = tokenBalance >= tokensPerRun;
+  const runsLeftLabel = hasFree
+    ? ` (${freeRunsRemaining} Free Run${freeRunsRemaining === 1 ? "" : "s"} left)`
+    : hasTokens
+      ? ` (${Math.floor(tokenBalance / tokensPerRun)} run${Math.floor(tokenBalance / tokensPerRun) === 1 ? "" : "s"} left)`
+      : "";
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [runMethod, setRunMethod] = React.useState<"free" | "tokens">("free");
 
@@ -1998,10 +2002,14 @@ function UploadStep({
           </p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
-            <FileText className="size-3.5" />
-            History
-          </Button>
+          <RunQuotaButton
+            runsRemaining={runsRemaining}
+            freeRunsRemaining={freeRunsRemaining}
+            freeQuota={freeQuota}
+            tokenBalance={tokenBalance}
+            totalTokensPurchased={totalTokensPurchased}
+            onOpenPurchase={onOpenPurchase}
+          />
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5">
             <ArrowLeft className="size-3.5" />
             Go Back
@@ -2106,17 +2114,9 @@ function UploadStep({
 
       {/* ── Bottom bar: run quota counter + primary CTA — always visible, outside the scroll region ── */}
       <div className="flex flex-shrink-0 items-center justify-end gap-3 border-t border-border pt-4">
-        <RunQuotaButton
-          runsRemaining={runsRemaining}
-          freeRunsRemaining={freeRunsRemaining}
-          freeQuota={freeQuota}
-          tokenBalance={tokenBalance}
-          totalTokensPurchased={totalTokensPurchased}
-          onOpenPurchase={onOpenPurchase}
-        />
         <Button size="sm" onClick={handleRunClick} disabled={noRunsLeft} className="gap-1.5">
           <Sparkles className="size-3.5" />
-          {totalTokensPurchased > 0 ? `Run Analysis (${tokensPerRun} tokens per run)` : "Run Analysis"}
+          Run Analysis{runsLeftLabel}
         </Button>
       </div>
 
