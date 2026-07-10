@@ -50,12 +50,10 @@ import {
   Scan,
   Radar,
   CreditCard,
-  Ticket,
   Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -1033,12 +1031,61 @@ const CREDIT_PACKS: { tokens: number; price: number; tag?: string }[] = [
   { tokens: 500, price: 45, tag: "Popular" },
   { tokens: 1000, price: 80, tag: "Best value" },
 ];
-/* Run-analysis packs bought with tokens (bulk discount vs 10 tokens/run). */
-const RUN_PACKS: { runs: number; tokens: number; tag?: string }[] = [
-  { runs: 25, tokens: 225 },
-  { runs: 50, tokens: 425, tag: "Popular" },
-  { runs: 100, tokens: 800, tag: "Best value" },
+/* Flat per-token rate for custom amounts — bulk packs above get the discount instead. */
+const CUSTOM_TOKEN_RATE = 0.1;
+
+/* Saved payment methods (mock). */
+type CardBrand = "Mastercard" | "Visa" | "JCB";
+interface PaymentMethodMock {
+  id: string;
+  brand: CardBrand;
+  last4: string;
+  expiry: string;
+  isDefault: boolean;
+}
+const INITIAL_PAYMENT_METHODS: PaymentMethodMock[] = [
+  { id: "pm_1", brand: "Mastercard", last4: "3432", expiry: "08/27", isDefault: true },
+  { id: "pm_2", brand: "Visa", last4: "3432", expiry: "11/26", isDefault: false },
+  { id: "pm_3", brand: "JCB", last4: "3432", expiry: "05/28", isDefault: false },
 ];
+
+function detectCardBrand(num: string): CardBrand {
+  if (num.startsWith("4")) return "Visa";
+  if (num.startsWith("35")) return "JCB";
+  return "Mastercard";
+}
+
+/* Card-brand marks — inline SVG on a white chip (same approach as CoinIcon). */
+function CardBrandLogo({ brand, className }: { brand: CardBrand; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex h-6 w-9 flex-shrink-0 items-center justify-center rounded bg-white",
+        className
+      )}
+    >
+      {brand === "Mastercard" && (
+        <svg viewBox="0 0 32 20" className="h-3.5" aria-hidden="true">
+          <circle cx="13" cy="10" r="7" fill="#EB001B" />
+          <circle cx="19" cy="10" r="7" fill="#F79E1B" />
+          <path d="M16 4.6a7 7 0 0 0 0 10.8 7 7 0 0 0 0-10.8Z" fill="#FF5F00" />
+        </svg>
+      )}
+      {brand === "Visa" && (
+        <span className="font-sans text-[11px] font-black italic tracking-tight text-[#1A1F71]">
+          VISA
+        </span>
+      )}
+      {brand === "JCB" && (
+        <span className="flex overflow-hidden rounded-sm">
+          <span className="bg-[#0B4EA2] px-1 text-[9px] font-bold leading-4 text-white">J</span>
+          <span className="bg-[#BE0027] px-1 text-[9px] font-bold leading-4 text-white">C</span>
+          <span className="bg-[#00913A] px-1 text-[9px] font-bold leading-4 text-white">B</span>
+        </span>
+      )}
+    </span>
+  );
+}
 
 function formatEta(sec: number): string {
   if (sec <= 5) return "almost done";
@@ -1096,18 +1143,6 @@ function AnalysisLoadingScreen({
                 Stage {idx + 1} of {ANALYZING_STAGES.length}
               </span>
             </div>
-          </div>
-
-          <div className="grid w-full grid-cols-5 gap-1.5">
-            {ANALYZING_STAGES.map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "h-1 rounded-full transition-colors",
-                  i <= idx ? "bg-primary" : "bg-muted"
-                )}
-              />
-            ))}
           </div>
 
           {/* Estimated time remaining */}
@@ -1238,12 +1273,13 @@ export default function RunAnalysisPage({
   const [uploadedFile, setUploadedFile] = React.useState<{ name: string; size: string } | null>(null);
   const [selectedVlmId, setSelectedVlmId] = React.useState<string | null>(MOCK_VLMS[0]?.id ?? null);
 
-  /* Run Analysis quota — 3 free runs, then top up with token credits. */
+  /* Run Analysis quota — 3 free runs, then top up with token credits (10 tokens/run). */
   const [freeRunsRemaining, setFreeRunsRemaining] = React.useState(FREE_RUN_QUOTA);
-  const [purchasedRuns, setPurchasedRuns] = React.useState(0);
   const [tokenBalance, setTokenBalance] = React.useState(0);
+  const [totalTokensPurchased, setTotalTokensPurchased] = React.useState(0);
   const [purchaseOpen, setPurchaseOpen] = React.useState(false);
-  const runsRemaining = freeRunsRemaining + purchasedRuns;
+  const hasPurchased = totalTokensPurchased > 0;
+  const runsRemaining = freeRunsRemaining + Math.floor(tokenBalance / TOKENS_PER_RUN);
   const [currentResult, setCurrentResult] = React.useState<AnalysisResult | null>(null);
   const [completedToast, setCompletedToast] = React.useState(false);
 
@@ -1331,14 +1367,15 @@ export default function RunAnalysisPage({
     },
   ];
 
-  function handleRun() {
+  function handleRun(method: "free" | "tokens" = freeRunsRemaining > 0 ? "free" : "tokens") {
     if (!selectedModel) return;
     if (!analysisName.trim() || !uploadedFile || !selectedVlmId) return;
     if (runsRemaining <= 0) { setPurchaseOpen(true); return; }
 
-    // Consume one run — free quota first, then token-purchased runs.
-    if (freeRunsRemaining > 0) setFreeRunsRemaining((n) => n - 1);
-    else setPurchasedRuns((n) => n - 1);
+    // Consume one run from the chosen bucket (fall back if the preferred one is empty).
+    const useTokens = method === "tokens" ? tokenBalance >= TOKENS_PER_RUN : freeRunsRemaining <= 0;
+    if (useTokens) setTokenBalance((n) => n - TOKENS_PER_RUN);
+    else setFreeRunsRemaining((n) => n - 1);
 
     const willFail = Math.random() < FAILURE_PROBABILITY;
     const result = buildSyntheticResult(
@@ -1452,8 +1489,7 @@ export default function RunAnalysisPage({
   /* ─── Render ─── */
 
   return (
-    <div className="flex flex-col gap-4">
-
+    <div className="flex h-full flex-col gap-4">
 
       {/* ── Tab content ── */}
       {tab === "analysis" ? (
@@ -1473,6 +1509,12 @@ export default function RunAnalysisPage({
             onNext={() => setFlowStep("upload")}
             onShowHistory={() => setTab("history")}
             forcedState={forcedState}
+            runsRemaining={runsRemaining}
+            freeRunsRemaining={freeRunsRemaining}
+            freeQuota={FREE_RUN_QUOTA}
+            tokenBalance={tokenBalance}
+            totalTokensPurchased={totalTokensPurchased}
+            onOpenPurchase={() => setPurchaseOpen(true)}
           />
         ) : flowStep === "upload" ? (
           <UploadStep
@@ -1489,6 +1531,9 @@ export default function RunAnalysisPage({
             runsRemaining={runsRemaining}
             freeRunsRemaining={freeRunsRemaining}
             freeQuota={FREE_RUN_QUOTA}
+            tokenBalance={tokenBalance}
+            totalTokensPurchased={totalTokensPurchased}
+            tokensPerRun={TOKENS_PER_RUN}
             onOpenPurchase={() => setPurchaseOpen(true)}
           />
         ) : isAnalyzing ? (
@@ -1551,15 +1596,9 @@ export default function RunAnalysisPage({
         tokenBalance={tokenBalance}
         onBuyTokens={(tokens) => {
           setTokenBalance((b) => b + tokens);
+          setTotalTokensPurchased((t) => t + tokens);
           toast.success(`${tokens} token credits added`, {
             description: `New balance: ${tokenBalance + tokens} tokens.`,
-          });
-        }}
-        onBuyRuns={(runs, cost) => {
-          setTokenBalance((b) => b - cost);
-          setPurchasedRuns((r) => r + runs);
-          toast.success(`${runs} analysis runs added`, {
-            description: `Spent ${cost} tokens · ${runs} runs ready to use.`,
           });
         }}
       />
@@ -1643,6 +1682,52 @@ function HistorySkeletonRA() {
   );
 }
 
+/* ── Run quota / token balance button (History-bar and Upload footer) ───── */
+
+function RunQuotaButton({
+  runsRemaining,
+  freeRunsRemaining,
+  freeQuota,
+  tokenBalance,
+  totalTokensPurchased,
+  onOpenPurchase,
+  className,
+}: {
+  runsRemaining: number;
+  freeRunsRemaining: number;
+  freeQuota: number;
+  tokenBalance: number;
+  totalTokensPurchased: number;
+  onOpenPurchase: () => void;
+  className?: string;
+}) {
+  const noRunsLeft = runsRemaining <= 0;
+  const hasPurchased = totalTokensPurchased > 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpenPurchase}
+      title="View run credits & top up"
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+        noRunsLeft
+          ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical hover:bg-sev-critical/15"
+          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+        className
+      )}
+    >
+      <CoinIcon className="size-3.5" />
+      {noRunsLeft ? (
+        <span>No runs left · <span className="underline">Buy more</span></span>
+      ) : hasPurchased ? (
+        <span><span className="text-foreground">{tokenBalance}</span> / {totalTokensPurchased} tokens left</span>
+      ) : (
+        <span><span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs left</span>
+      )}
+    </button>
+  );
+}
+
 function SelectStep({
   selectedModelId,
   onSelectModel,
@@ -1658,6 +1743,12 @@ function SelectStep({
   onNext,
   onShowHistory,
   forcedState,
+  runsRemaining,
+  freeRunsRemaining,
+  freeQuota,
+  tokenBalance,
+  totalTokensPurchased,
+  onOpenPurchase,
 }: {
   selectedModelId: string | null;
   onSelectModel: (id: string) => void;
@@ -1673,11 +1764,17 @@ function SelectStep({
   onNext: () => void;
   onShowHistory: () => void;
   forcedState?: RunForcedState;
+  runsRemaining: number;
+  freeRunsRemaining: number;
+  freeQuota: number;
+  tokenBalance: number;
+  totalTokensPurchased: number;
+  onOpenPurchase: () => void;
 }) {
   const isLoading = forcedState === "loading";
   const isEmpty = forcedState === "empty";
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4">
 
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -1686,13 +1783,23 @@ function SelectStep({
             Test models against uploaded footage with VLM-powered reasoning before deployment.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5 mt-1">
-          <FileText className="size-3.5" />
-          History
-        </Button>
+        <div className="flex flex-shrink-0 items-center gap-2 pt-1">
+          <RunQuotaButton
+            runsRemaining={runsRemaining}
+            freeRunsRemaining={freeRunsRemaining}
+            freeQuota={freeQuota}
+            tokenBalance={tokenBalance}
+            totalTokensPurchased={totalTokensPurchased}
+            onOpenPurchase={onOpenPurchase}
+          />
+          <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
+            <FileText className="size-3.5" />
+            History
+          </Button>
+        </div>
       </div>
 
-      <div className="flex h-[calc(100vh-16rem)] min-h-[560px] gap-4">
+      <div className="flex flex-1 min-h-[520px] gap-4">
 
       {/* ── Left panel — model chooser ── */}
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -1827,6 +1934,9 @@ function UploadStep({
   runsRemaining,
   freeRunsRemaining,
   freeQuota,
+  tokenBalance,
+  totalTokensPurchased,
+  tokensPerRun,
   onOpenPurchase,
 }: {
   selectedModel: ModelData;
@@ -1837,15 +1947,23 @@ function UploadStep({
   selectedVlmId: string | null;
   setSelectedVlmId: (id: string) => void;
   onBack: () => void;
-  onRun: () => void;
+  onRun: (method: "free" | "tokens") => void;
   onShowHistory: () => void;
   runsRemaining: number;
   freeRunsRemaining: number;
   freeQuota: number;
+  tokenBalance: number;
+  totalTokensPurchased: number;
+  tokensPerRun: number;
   onOpenPurchase: () => void;
 }) {
   const [errors, setErrors] = React.useState<{ name?: string; file?: string; vlm?: string }>({});
   const noRunsLeft = runsRemaining <= 0;
+
+  const hasFree = freeRunsRemaining > 0;
+  const hasTokens = tokenBalance >= tokensPerRun;
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [runMethod, setRunMethod] = React.useState<"free" | "tokens">("free");
 
   function handleRunClick() {
     if (noRunsLeft) {
@@ -1857,14 +1975,22 @@ function UploadStep({
     if (!uploadedFile) next.file = "Upload a video file to analyze.";
     if (!selectedVlmId) next.vlm = "Select a VLM model.";
     setErrors(next);
-    if (Object.keys(next).length === 0) onRun();
+    if (Object.keys(next).length > 0) return;
+    // Default the confirmation to a free run when available, else tokens.
+    setRunMethod(hasFree ? "free" : "tokens");
+    setConfirmOpen(true);
+  }
+
+  function confirmRun() {
+    setConfirmOpen(false);
+    onRun(runMethod);
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex h-[calc(100vh-6rem)] min-h-[520px] flex-col gap-5">
 
       {/* Top actions */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-shrink-0 items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
           <p className="text-base text-muted-foreground">
@@ -1883,125 +2009,252 @@ function UploadStep({
         </div>
       </div>
 
-      <Stepper current="upload" />
+      <div className="flex-shrink-0"><Stepper current="upload" /></div>
 
-      <div className="grid grid-cols-[1fr_420px] gap-5">
+      {/* Scrollable middle region — header/footer stay put, this scrolls if content overflows. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Shared heading sits above both columns so their first labels align. */}
+        <p className="mb-3 text-md font-bold text-foreground">Analysis Information</p>
 
-        {/* ── Left: analysis info + uploader ── */}
-        <div className="space-y-4">
-          <div>
-            <p className="mb-3 text-md font-bold text-foreground">Analysis Information</p>
+        <div className="grid grid-cols-[1fr_420px] gap-5 pb-1">
 
-            <div className="mb-4">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Analysis Name
-              </label>
-              <Input
-                value={analysisName}
-                onChange={(e) => {
-                  setAnalysisName(e.target.value);
-                  if (e.target.value.trim()) setErrors((prev) => ({ ...prev, name: undefined }));
-                }}
-                placeholder="Enter analysis name (e.g. Model A Analysis)"
-                className="h-10 text-base"
-                aria-invalid={!!errors.name}
-              />
-              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+          {/* ── Left: analysis info + uploader ── */}
+          <div className="space-y-4">
+            <div>
+              <div className="mb-4">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Analysis Name
+                </label>
+                <Input
+                  value={analysisName}
+                  onChange={(e) => {
+                    setAnalysisName(e.target.value);
+                    if (e.target.value.trim()) setErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
+                  placeholder="Enter analysis name (e.g. Model A Analysis)"
+                  className="h-10 text-base"
+                  aria-invalid={!!errors.name}
+                />
+                {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Video Footage
+                </label>
+                <VideoUploader
+                  file={uploadedFile}
+                  onUpload={(f) => {
+                    setUploadedFile(f);
+                    setErrors((prev) => ({ ...prev, file: undefined }));
+                  }}
+                  onClear={() => setUploadedFile(null)}
+                  invalid={!!errors.file}
+                />
+                {errors.file && <p className="mt-1 text-xs text-sev-critical">{errors.file}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right: selected model + VLM picker ── */}
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Selected Model
+              </p>
+              <SelectedModelCard model={selectedModel} allRules={MOCK_RULES} />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Video Footage
-              </label>
-              <VideoUploader
-                file={uploadedFile}
-                onUpload={(f) => {
-                  setUploadedFile(f);
-                  setErrors((prev) => ({ ...prev, file: undefined }));
-                }}
-                onClear={() => setUploadedFile(null)}
-                invalid={!!errors.file}
-              />
-              {errors.file && <p className="mt-1 text-xs text-sev-critical">{errors.file}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right: selected model + VLM picker ── */}
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Selected Model
-            </p>
-            <SelectedModelCard model={selectedModel} allRules={MOCK_RULES} />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Select VLM Model
-            </p>
-            <div
-              className={cn(
-                "overflow-hidden rounded-xl border border-border bg-card",
-                errors.vlm && "border-sev-critical"
-              )}
-            >
-              <div className="border-b border-border bg-muted/20 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-3.5 text-primary" />
-                  <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Select VLM Model
+              </p>
+              <div
+                className={cn(
+                  "overflow-hidden rounded-xl border border-border bg-card",
+                  errors.vlm && "border-sev-critical"
+                )}
+              >
+                <div className="border-b border-border bg-muted/20 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-3.5 text-primary" />
+                    <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    AI will describe &amp; reason about the footage
+                  </p>
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  AI will describe &amp; reason about the footage
-                </p>
+                <div className="h-[316px] space-y-1.5 overflow-y-auto p-2">
+                  {MOCK_VLMS.map((vlm) => (
+                    <VLMRow
+                      key={vlm.id}
+                      vlm={vlm}
+                      selected={selectedVlmId === vlm.id}
+                      onClick={() => {
+                        setSelectedVlmId(vlm.id);
+                        setErrors((prev) => ({ ...prev, vlm: undefined }));
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="h-[316px] space-y-1.5 overflow-y-auto p-2">
-                {MOCK_VLMS.map((vlm) => (
-                  <VLMRow
-                    key={vlm.id}
-                    vlm={vlm}
-                    selected={selectedVlmId === vlm.id}
-                    onClick={() => {
-                      setSelectedVlmId(vlm.id);
-                      setErrors((prev) => ({ ...prev, vlm: undefined }));
-                    }}
-                  />
-                ))}
-              </div>
+              {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
             </div>
-            {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
           </div>
         </div>
       </div>
 
-      {/* ── Bottom bar: run quota counter + primary CTA (bottom-right) ── */}
-      <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
-        <button
-          type="button"
-          onClick={onOpenPurchase}
-          title="View run credits & top up"
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
-            noRunsLeft
-              ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical hover:bg-sev-critical/15"
-              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-          )}
-        >
-          <CoinIcon className="size-3.5" />
-          {noRunsLeft ? (
-            <span>No runs left · <span className="underline">Buy more</span></span>
-          ) : freeRunsRemaining > 0 ? (
-            <span><span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs left</span>
-          ) : (
-            <span><span className="text-foreground">{runsRemaining}</span> purchased runs left</span>
-          )}
-        </button>
+      {/* ── Bottom bar: run quota counter + primary CTA — always visible, outside the scroll region ── */}
+      <div className="flex flex-shrink-0 items-center justify-end gap-3 border-t border-border pt-4">
+        <RunQuotaButton
+          runsRemaining={runsRemaining}
+          freeRunsRemaining={freeRunsRemaining}
+          freeQuota={freeQuota}
+          tokenBalance={tokenBalance}
+          totalTokensPurchased={totalTokensPurchased}
+          onOpenPurchase={onOpenPurchase}
+        />
         <Button size="sm" onClick={handleRunClick} disabled={noRunsLeft} className="gap-1.5">
           <Sparkles className="size-3.5" />
-          Run Analysis
+          {totalTokensPurchased > 0 ? `Run Analysis (${tokensPerRun} tokens per run)` : "Run Analysis"}
         </Button>
       </div>
+
+      <RunConfirmModal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmRun}
+        method={runMethod}
+        setMethod={setRunMethod}
+        hasFree={hasFree}
+        hasTokens={hasTokens}
+        freeRunsRemaining={freeRunsRemaining}
+        tokenBalance={tokenBalance}
+        tokensPerRun={tokensPerRun}
+      />
     </div>
+  );
+}
+
+/* ── Run confirmation modal — pick run method (free vs tokens) & confirm ──── */
+
+function RunConfirmModal({
+  open,
+  onClose,
+  onConfirm,
+  method,
+  setMethod,
+  hasFree,
+  hasTokens,
+  freeRunsRemaining,
+  tokenBalance,
+  tokensPerRun,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  method: "free" | "tokens";
+  setMethod: (m: "free" | "tokens") => void;
+  hasFree: boolean;
+  hasTokens: boolean;
+  freeRunsRemaining: number;
+  tokenBalance: number;
+  tokensPerRun: number;
+}) {
+  const bothAvailable = hasFree && hasTokens;
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="w-[440px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold">
+            <Sparkles className="size-4 text-primary" />
+            Confirm analysis run
+          </DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {method === "tokens"
+              ? `This run will use ${tokensPerRun} tokens from your balance.`
+              : "This run will use one of your free runs."}
+          </p>
+        </DialogHeader>
+
+        <div className="space-y-3 px-5 py-4">
+          {bothAvailable ? (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Choose run method
+              </p>
+              <button
+                type="button"
+                onClick={() => setMethod("free")}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
+                  method === "free" ? "border-primary bg-primary/[0.04]" : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <span className={cn("flex size-4 flex-shrink-0 items-center justify-center rounded-full border-2", method === "free" ? "border-primary" : "border-muted-foreground/40")}>
+                  {method === "free" && <span className="size-2 rounded-full bg-primary" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold text-foreground">Use a free run</p>
+                  <p className="text-xs text-muted-foreground">{freeRunsRemaining} free run{freeRunsRemaining === 1 ? "" : "s"} remaining</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMethod("tokens")}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
+                  method === "tokens" ? "border-primary bg-primary/[0.04]" : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <span className={cn("flex size-4 flex-shrink-0 items-center justify-center rounded-full border-2", method === "tokens" ? "border-primary" : "border-muted-foreground/40")}>
+                  {method === "tokens" && <span className="size-2 rounded-full bg-primary" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+                    Use tokens <CoinIcon className="size-3.5" /> {tokensPerRun}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{tokenBalance.toLocaleString()} tokens available</p>
+                </div>
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-3">
+              <CoinIcon className="size-5" />
+              <div className="min-w-0 flex-1">
+                {method === "tokens" ? (
+                  <>
+                    <p className="text-base font-semibold text-foreground">
+                      {tokensPerRun} tokens will be used
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Balance after this run: {(tokenBalance - tokensPerRun).toLocaleString()} tokens
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-base font-semibold text-foreground">One free run will be used</p>
+                    <p className="text-xs text-muted-foreground">
+                      {freeRunsRemaining - 1} free run{freeRunsRemaining - 1 === 1 ? "" : "s"} left afterwards
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={onConfirm}>
+            <Sparkles className="size-3.5" />
+            Proceed
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2012,60 +2265,117 @@ function PurchaseRunsModal({
   onClose,
   tokenBalance,
   onBuyTokens,
-  onBuyRuns,
 }: {
   open: boolean;
   onClose: () => void;
   tokenBalance: number;
   onBuyTokens: (tokens: number) => void;
-  onBuyRuns: (runs: number, tokenCost: number) => void;
 }) {
-  const [tab, setTab] = React.useState<"credits" | "runs">("credits");
-  const [creditPackIdx, setCreditPackIdx] = React.useState(1);
+  /* Either a preset CREDIT_PACKS index, or "custom" for the number-of-runs stepper above it. */
+  const [selection, setSelection] = React.useState<number | "custom">(1);
+  const [customRuns, setCustomRuns] = React.useState(10);
+
+  const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethodMock[]>(INITIAL_PAYMENT_METHODS);
+  const [selectedPaymentId, setSelectedPaymentId] = React.useState<string>(
+    INITIAL_PAYMENT_METHODS.find((p) => p.isDefault)?.id ?? INITIAL_PAYMENT_METHODS[0].id
+  );
+  /* Inline card form — "add" appends a new card, "edit" updates the given id. */
+  const [cardForm, setCardForm] = React.useState<{ mode: "add" | "edit"; id?: string } | null>(null);
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
   const [expiry, setExpiry] = React.useState("");
   const [cvc, setCvc] = React.useState("");
   const [cardErrors, setCardErrors] = React.useState<{ name?: string; number?: string; expiry?: string; cvc?: string }>({});
 
-  const [runMode, setRunMode] = React.useState<"custom" | "pack">("pack");
-  const [customRuns, setCustomRuns] = React.useState(10);
-  const [runPackIdx, setRunPackIdx] = React.useState(1);
-
   React.useEffect(() => {
     if (open) {
       setCardErrors({});
+      setCardForm(null);
     }
   }, [open]);
 
-  const customCost = customRuns * TOKENS_PER_RUN;
+  const customTokens = customRuns * TOKENS_PER_RUN;
+  const customPrice = Math.round(customTokens * CUSTOM_TOKEN_RATE * 100) / 100;
+  const chosen =
+    selection === "custom"
+      ? { tokens: customTokens, price: customPrice }
+      : { tokens: CREDIT_PACKS[selection].tokens, price: CREDIT_PACKS[selection].price };
 
-  function buyCredits() {
-    const cleaned = cardNumber.replace(/\s/g, "");
-    const next: typeof cardErrors = {};
-    if (!cardName.trim()) next.name = "Name on card is required.";
-    if (cleaned.length < 13) next.number = "Enter a valid card number.";
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) next.expiry = "Enter a valid expiry (MM/YY).";
-    if (cvc.length < 3) next.cvc = "Enter a valid CVC.";
-    setCardErrors(next);
-    if (Object.keys(next).length > 0) return;
-    onBuyTokens(CREDIT_PACKS[creditPackIdx].tokens);
+  function resetCardForm() {
+    setCardForm(null);
+    setCardErrors({});
     setCardName(""); setCardNumber(""); setExpiry(""); setCvc("");
   }
 
-  function redeemRuns() {
-    if (runMode === "custom") {
-      if (customRuns < 1 || customCost > tokenBalance) return;
-      onBuyRuns(customRuns, customCost);
-    } else {
-      const pack = RUN_PACKS[runPackIdx];
-      if (pack.tokens > tokenBalance) return;
-      onBuyRuns(pack.runs, pack.tokens);
-    }
+  function openAddCard() {
+    setCardName(""); setCardNumber(""); setExpiry(""); setCvc("");
+    setCardErrors({});
+    setCardForm({ mode: "add" });
   }
 
-  const packAffordable = RUN_PACKS[runPackIdx].tokens <= tokenBalance;
-  const customAffordable = customRuns >= 1 && customCost <= tokenBalance;
+  function openEditCard(pm: PaymentMethodMock) {
+    setCardName(""); setCardNumber(""); setExpiry(pm.expiry); setCvc("");
+    setCardErrors({});
+    setCardForm({ mode: "edit", id: pm.id });
+  }
+
+  function removeCard(id: string) {
+    setPaymentMethods((prev) => {
+      const remaining = prev.filter((p) => p.id !== id);
+      // Keep a default and a valid selection alive.
+      if (remaining.length > 0 && !remaining.some((p) => p.isDefault)) {
+        remaining[0] = { ...remaining[0], isDefault: true };
+      }
+      if (id === selectedPaymentId && remaining.length > 0) {
+        setSelectedPaymentId(remaining.find((p) => p.isDefault)?.id ?? remaining[0].id);
+      }
+      return remaining;
+    });
+  }
+
+  function saveCard() {
+    const cleaned = cardNumber.replace(/\s/g, "");
+    const isEdit = cardForm?.mode === "edit";
+    const next: typeof cardErrors = {};
+    if (!cardName.trim()) next.name = "Name on card is required.";
+    // On edit, the number may be left blank to keep the existing card.
+    if (!(isEdit && cleaned.length === 0) && cleaned.length < 13) next.number = "Enter a valid card number.";
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) next.expiry = "Enter a valid expiry (MM/YY).";
+    if (!(isEdit && cvc.length === 0) && cvc.length < 3) next.cvc = "Enter a valid CVC.";
+    setCardErrors(next);
+    if (Object.keys(next).length > 0) return;
+
+    if (isEdit && cardForm?.id) {
+      const editId = cardForm.id;
+      setPaymentMethods((prev) =>
+        prev.map((p) =>
+          p.id === editId
+            ? {
+                ...p,
+                expiry,
+                ...(cleaned.length >= 13 ? { brand: detectCardBrand(cleaned), last4: cleaned.slice(-4) } : {}),
+              }
+            : p
+        )
+      );
+    } else {
+      const newCard: PaymentMethodMock = {
+        id: `pm_${paymentMethods.length + 1}_${cleaned.slice(-4)}`,
+        brand: detectCardBrand(cleaned),
+        last4: cleaned.slice(-4),
+        expiry,
+        isDefault: paymentMethods.length === 0,
+      };
+      setPaymentMethods((prev) => [...prev, newCard]);
+      setSelectedPaymentId(newCard.id);
+    }
+    resetCardForm();
+  }
+
+  function handlePay() {
+    onBuyTokens(chosen.tokens);
+    onClose();
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2076,12 +2386,12 @@ function PurchaseRunsModal({
             Top up Run Analysis
           </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Buy token credits with a card, then redeem them for analysis runs.
+            Buy token credits and pay with a saved payment method.
           </p>
         </DialogHeader>
 
-        {/* ── Token balance — hero / main section ── */}
-        <div className="flex-shrink-0 px-5 pt-4">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
+          {/* ── Token balance — hero ── */}
           <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-5 py-6 text-center">
             <p className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               Token Balance
@@ -2092,25 +2402,68 @@ function PurchaseRunsModal({
             </p>
             <p className="mt-1 text-sm text-muted-foreground">credits available to redeem for runs</p>
           </div>
-        </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "credits" | "runs")} className="flex-1 overflow-y-auto">
-          <TabsList className="mx-5 mt-4">
-            <TabsTrigger value="credits" className="gap-1.5"><CreditCard className="size-3.5" /> Buy Credits</TabsTrigger>
-            <TabsTrigger value="runs" className="gap-1.5"><Ticket className="size-3.5" /> Run Analysis Packs</TabsTrigger>
-          </TabsList>
+          {/* ── Custom amount — number of runs ── */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Number of Runs
+            </label>
+            <div
+              className={cn(
+                "rounded-lg border p-4 transition-colors",
+                selection === "custom" ? "border-primary bg-primary/5" : "border-border bg-card"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setCustomRuns((n) => Math.max(1, n - 1)); setSelection("custom"); }}
+                  className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <input
+                  type="number"
+                  value={customRuns}
+                  onFocus={() => setSelection("custom")}
+                  onChange={(e) => {
+                    setCustomRuns(Math.max(1, Math.min(999, Number(e.target.value) || 1)));
+                    setSelection("custom");
+                  }}
+                  className="h-9 w-20 rounded-md border border-input bg-background text-center font-mono text-base text-foreground focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setCustomRuns((n) => Math.min(999, n + 1)); setSelection("custom"); }}
+                  className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+                <span className="ml-auto inline-flex items-center gap-1 font-mono text-sm text-muted-foreground">
+                  = <CoinIcon className="size-3.5" /> {customTokens} tokens
+                </span>
+              </div>
+              <p className="mt-2 flex items-center justify-between text-2xs text-muted-foreground">
+                <span>{TOKENS_PER_RUN} tokens per run · no bulk discount</span>
+                <span className="font-mono text-foreground">SGD ${customPrice.toFixed(2)}</span>
+              </p>
+            </div>
+          </div>
 
-          {/* ── Buy token credits with a card ── */}
-          <TabsContent value="credits" className="space-y-4 px-5 py-4">
+          {/* ── Recommended credit packs ── */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Recommended
+            </label>
             <div className="grid grid-cols-3 gap-2">
               {CREDIT_PACKS.map((p, i) => (
                 <button
                   key={p.tokens}
                   type="button"
-                  onClick={() => setCreditPackIdx(i)}
+                  onClick={() => setSelection(i)}
                   className={cn(
                     "relative flex flex-col items-center gap-0.5 rounded-lg border px-2 py-3 text-center transition-colors",
-                    i === creditPackIdx ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                    selection === i ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
                   )}
                 >
                   {p.tag && (
@@ -2123,145 +2476,152 @@ function PurchaseRunsModal({
                 </button>
               ))}
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
-                <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" aria-invalid={!!cardErrors.name} />
-                {cardErrors.name && <p className="mt-1 text-xs text-sev-critical">{cardErrors.name}</p>}
-              </div>
-              <div className="col-span-2">
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
-                <Input
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 "))}
-                  placeholder="4242 4242 4242 4242"
-                  className="font-mono"
-                  aria-invalid={!!cardErrors.number}
-                />
-                {cardErrors.number && <p className="mt-1 text-xs text-sev-critical">{cardErrors.number}</p>}
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
-                <Input
-                  value={expiry}
-                  onChange={(e) => {
-                    const d = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    setExpiry(d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
-                  }}
-                  placeholder="MM/YY"
-                  className="font-mono"
-                  aria-invalid={!!cardErrors.expiry}
-                />
-                {cardErrors.expiry && <p className="mt-1 text-xs text-sev-critical">{cardErrors.expiry}</p>}
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
-                <Input
-                  value={cvc}
-                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="123"
-                  className="font-mono"
-                  aria-invalid={!!cardErrors.cvc}
-                />
-                {cardErrors.cvc && <p className="mt-1 text-xs text-sev-critical">{cardErrors.cvc}</p>}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── Redeem tokens for runs ── */}
-          <TabsContent value="runs" className="space-y-4 px-5 py-4">
-            <Tabs value={runMode} onValueChange={(v) => setRunMode(v as "pack" | "custom")}>
-              <TabsList className="w-full">
-                <TabsTrigger value="pack">Packs</TabsTrigger>
-                <TabsTrigger value="custom">Custom amount</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="pack" className="mt-3">
-                <div className="grid grid-cols-3 gap-2">
-                {RUN_PACKS.map((p, i) => (
-                  <button
-                    key={p.runs}
-                    type="button"
-                    onClick={() => setRunPackIdx(i)}
+          {/* ── Payment method ── */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Payment Method
+            </label>
+            <div className="space-y-2">
+              {paymentMethods.map((pm) => {
+                const active = selectedPaymentId === pm.id;
+                return (
+                  <div
+                    key={pm.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedPaymentId(pm.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedPaymentId(pm.id); }
+                    }}
                     className={cn(
-                      "relative flex flex-col items-center gap-0.5 rounded-lg border px-2 py-3 text-center transition-colors",
-                      i === runPackIdx ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                      "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-3 transition-colors",
+                      active ? "border-primary bg-primary/[0.04]" : "border-border bg-card hover:border-primary/40"
                     )}
                   >
-                    {p.tag && (
-                      <span className="absolute -top-2 rounded-full bg-secondary px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">{p.tag}</span>
-                    )}
-                    <span className="text-md font-bold text-foreground">{p.runs} runs</span>
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <CoinIcon className="size-3" />{p.tokens}
+                    <span
+                      className={cn(
+                        "flex size-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        active ? "border-primary" : "border-muted-foreground/40"
+                      )}
+                    >
+                      {active && <span className="size-2 rounded-full bg-primary" />}
                     </span>
-                  </button>
-                ))}
+                    <CardBrandLogo brand={pm.brand} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold text-foreground">Saved {pm.brand}</span>
+                        {pm.isDefault && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
+                            Default Payment
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-mono text-xs text-muted-foreground">•••• •••• •••• {pm.last4}</p>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); openEditCard(pm); }}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeCard(pm.id); }}
+                        className="text-sm font-medium text-sev-critical hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {cardForm ? (
+                <div className="space-y-3 rounded-lg border border-primary/40 bg-card p-3.5">
+                  <p className="text-sm font-semibold text-foreground">
+                    {cardForm.mode === "edit" ? "Edit card" : "Add new card"}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
+                      <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" aria-invalid={!!cardErrors.name} />
+                      {cardErrors.name && <p className="mt-1 text-xs text-sev-critical">{cardErrors.name}</p>}
+                    </div>
+                    <div className="col-span-2">
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
+                      <Input
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 "))}
+                        placeholder={cardForm.mode === "edit" ? "Leave blank to keep current card" : "4242 4242 4242 4242"}
+                        className="font-mono"
+                        aria-invalid={!!cardErrors.number}
+                      />
+                      {cardErrors.number && <p className="mt-1 text-xs text-sev-critical">{cardErrors.number}</p>}
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
+                      <Input
+                        value={expiry}
+                        onChange={(e) => {
+                          const d = e.target.value.replace(/\D/g, "").slice(0, 4);
+                          setExpiry(d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
+                        }}
+                        placeholder="MM/YY"
+                        className="font-mono"
+                        aria-invalid={!!cardErrors.expiry}
+                      />
+                      {cardErrors.expiry && <p className="mt-1 text-xs text-sev-critical">{cardErrors.expiry}</p>}
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
+                      <Input
+                        value={cvc}
+                        onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder={cardForm.mode === "edit" ? "•••" : "123"}
+                        className="font-mono"
+                        aria-invalid={!!cardErrors.cvc}
+                      />
+                      {cardErrors.cvc && <p className="mt-1 text-xs text-sev-critical">{cardErrors.cvc}</p>}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={resetCardForm}>
+                      <X className="size-3.5" />
+                      Cancel
+                    </Button>
+                    <Button size="sm" className="gap-1.5" onClick={saveCard}>
+                      <Check className="size-3.5" />
+                      {cardForm.mode === "edit" ? "Save changes" : "Save card"}
+                    </Button>
+                  </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="custom" className="mt-3">
-              <div className="rounded-lg border border-border bg-card p-4">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Number of runs</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setCustomRuns((n) => Math.max(1, n - 1))}
-                    className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  >
-                    <Minus className="size-3.5" />
-                  </button>
-                  <input
-                    type="number"
-                    value={customRuns}
-                    onChange={(e) => setCustomRuns(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
-                    className="h-9 w-20 rounded-md border border-input bg-background text-center font-mono text-base text-foreground focus:border-primary focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setCustomRuns((n) => Math.min(999, n + 1))}
-                    className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  >
-                    <Plus className="size-3.5" />
-                  </button>
-                  <span className="ml-auto inline-flex items-center gap-1 font-mono text-sm text-muted-foreground">
-                    = <CoinIcon className="size-3.5" /> {customCost} tokens
-                  </span>
-                </div>
-                <p className="mt-2 text-2xs text-muted-foreground">{TOKENS_PER_RUN} tokens per run.</p>
-              </div>
-              </TabsContent>
-            </Tabs>
-
-            {!(runMode === "pack" ? packAffordable : customAffordable) && (
-              <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
-                <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
-                <p>Not enough tokens. Buy more credits on the <strong>Buy Credits</strong> tab.</p>
-              </div>
-            )}
-
-          </TabsContent>
-        </Tabs>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openAddCard}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-muted/70"
+                >
+                  <Plus className="size-4" />
+                  Add New Card
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-shrink-0 justify-end border-t border-border px-5 py-3.5">
-          {tab === "credits" ? (
-            <Button className="gap-1.5" onClick={buyCredits}>
-              <CreditCard className="size-3.5" />
-              Pay ${CREDIT_PACKS[creditPackIdx].price} · Get {CREDIT_PACKS[creditPackIdx].tokens} tokens
-            </Button>
-          ) : (
-            <Button
-              className="gap-1.5"
-              onClick={redeemRuns}
-              disabled={runMode === "pack" ? !packAffordable : !customAffordable}
-            >
-              <Ticket className="size-3.5" />
-              {runMode === "pack"
-                ? `Redeem ${RUN_PACKS[runPackIdx].runs} runs · ${RUN_PACKS[runPackIdx].tokens} tokens`
-                : `Redeem ${customRuns} run${customRuns === 1 ? "" : "s"} · ${customCost} tokens`}
-            </Button>
-          )}
+          <Button
+            className="gap-1.5"
+            onClick={handlePay}
+            disabled={paymentMethods.length === 0 || !!cardForm}
+          >
+            <CreditCard className="size-3.5" />
+            Pay ${chosen.price.toFixed(2)} · Get {chosen.tokens} tokens
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -2170,10 +2170,41 @@ export default function ModelManagementPage() {
                   text={tagFilter.length === 0 ? "All tags" : tagFilter.length === 1 ? tagFilter[0] : `${tagFilter.length} tags selected`}
                   className="truncate"
                 />
-                <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", tagFilterOpen && "rotate-180")} />
+                {tagFilter.length > 0 ? (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Clear all tags"
+                    title="Clear all"
+                    onClick={(e) => { e.stopPropagation(); setTagFilter([]); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setTagFilter([]); }
+                    }}
+                    className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </span>
+                ) : (
+                  <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", tagFilterOpen && "rotate-180")} />
+                )}
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-[260px] w-56 overflow-y-auto p-1.5">
+              {(() => {
+                const allSelected = tagFilter.length === MODEL_TAGS.length;
+                return (
+                  <button
+                    onClick={() => setTagFilter(allSelected ? [] : [...MODEL_TAGS])}
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base font-semibold text-foreground hover:bg-muted">
+                    <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
+                      allSelected ? "border-primary bg-primary" : "border-muted-foreground/40")}>
+                      {allSelected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+                    </div>
+                    Select all
+                  </button>
+                );
+              })()}
+              <div className="my-1 border-t border-border" />
               {MODEL_TAGS.map((tag) => {
                 const checked = tagFilter.includes(tag);
                 return (
@@ -2189,10 +2220,14 @@ export default function ModelManagementPage() {
                 );
               })}
               {tagFilter.length > 0 && (
-                <button onClick={() => setTagFilter([])}
-                  className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
-                  Clear all
-                </button>
+                <div className="mt-1 border-t border-border pt-1.5">
+                  <button
+                    onClick={() => setTagFilter([])}
+                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary"
+                  >
+                    Remove all
+                  </button>
+                </div>
               )}
             </PopoverContent>
           </Popover>
