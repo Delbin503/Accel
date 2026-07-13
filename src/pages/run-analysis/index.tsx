@@ -572,8 +572,8 @@ function VideoUploader({
   onClear,
   invalid = false,
 }: {
-  file: { name: string; size: string } | null;
-  onUpload: (f: { name: string; size: string }) => void;
+  file: { name: string; size: string; durationSec: number } | null;
+  onUpload: (f: { name: string; size: string; durationSec: number }) => void;
   onClear: () => void;
   invalid?: boolean;
 }) {
@@ -583,23 +583,37 @@ function VideoUploader({
     inputRef.current?.click();
   }
 
+  // Read the real clip length from the file's metadata; fall back if unreadable.
+  function ingest(f: File) {
+    const base = { name: f.name, size: `${(f.size / (1024 * 1024)).toFixed(1)} MB` };
+    try {
+      const url = URL.createObjectURL(f);
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.onloadedmetadata = () => {
+        const dur = isFinite(v.duration) && v.duration > 0 ? v.duration : FALLBACK_DURATION_SEC;
+        URL.revokeObjectURL(url);
+        onUpload({ ...base, durationSec: dur });
+      };
+      v.onerror = () => {
+        URL.revokeObjectURL(url);
+        onUpload({ ...base, durationSec: FALLBACK_DURATION_SEC });
+      };
+      v.src = url;
+    } catch {
+      onUpload({ ...base, durationSec: FALLBACK_DURATION_SEC });
+    }
+  }
+
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (!f) return;
-    onUpload({
-      name: f.name,
-      size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
-    });
+    if (f) ingest(f);
   }
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     const f = e.dataTransfer.files?.[0];
-    if (!f) return;
-    onUpload({
-      name: f.name,
-      size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
-    });
+    if (f) ingest(f);
   }
 
   if (file) {
@@ -642,7 +656,7 @@ function VideoUploader({
               </div>
               <span className="absolute left-[35%] top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
             </div>
-            <span className="font-mono text-xs">32:31</span>
+            <span className="font-mono text-xs">{formatClock(file.durationSec)}</span>
           </div>
           <div className="mt-1.5 flex items-center justify-center gap-3 text-muted-foreground">
             <button className="hover:text-foreground"><SkipBack className="size-4" /></button>
@@ -1023,8 +1037,8 @@ const ANALYZING_STAGES: { label: string; pct: number; etaSec: number }[] = [
 ];
 
 /* ── Run Analysis quota & token economics (prototype pricing) ────────────── */
-const FREE_RUN_QUOTA = 3;
-const TOKENS_PER_RUN = 10;
+const FREE_TRIAL_MINUTES = 10;
+const TOKENS_PER_MINUTE = 10;
 /* Token credits bought with a card. */
 const CREDIT_PACKS: { tokens: number; price: number; tag?: string }[] = [
   { tokens: 100, price: 10 },
@@ -1033,6 +1047,29 @@ const CREDIT_PACKS: { tokens: number; price: number; tag?: string }[] = [
 ];
 /* Flat per-token rate for custom amounts — bulk packs above get the discount instead. */
 const CUSTOM_TOKEN_RATE = 0.1;
+
+/* Video length used when a clip's metadata can't be read (e.g. a stubbed file). */
+const FALLBACK_DURATION_SEC = 480; // 8:00
+
+/** Whole minutes billed for a clip (rounded up, minimum 1). */
+function videoMinutes(durationSec: number): number {
+  return Math.max(1, Math.ceil((durationSec || FALLBACK_DURATION_SEC) / 60));
+}
+
+/** Split a clip's cost across the free-trial pool and paid tokens. */
+function billVideo(durationSec: number, freeMinutesLeft: number) {
+  const minutes = videoMinutes(durationSec);
+  const freeCover = Math.min(Math.max(0, freeMinutesLeft), minutes);
+  const paidMinutes = minutes - freeCover;
+  return { minutes, freeCover, paidMinutes, tokenCost: paidMinutes * TOKENS_PER_MINUTE };
+}
+
+/** mm:ss clock for a duration in seconds. */
+function formatClock(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 /* Saved payment methods (mock). */
 type CardBrand = "Mastercard" | "Visa" | "JCB";
@@ -1270,15 +1307,14 @@ export default function RunAnalysisPage({
   const [flowStep, setFlowStep] = React.useState<FlowStep>("select");
   const [selectedModelId, setSelectedModelId] = React.useState<string | null>(null);
   const [analysisName, setAnalysisName] = React.useState("");
-  const [uploadedFile, setUploadedFile] = React.useState<{ name: string; size: string } | null>(null);
+  const [uploadedFile, setUploadedFile] = React.useState<{ name: string; size: string; durationSec: number } | null>(null);
   const [selectedVlmId, setSelectedVlmId] = React.useState<string | null>(MOCK_VLMS[0]?.id ?? null);
 
-  /* Run Analysis quota — 3 free runs, then top up with token credits (10 tokens/run). */
-  const [freeRunsRemaining, setFreeRunsRemaining] = React.useState(FREE_RUN_QUOTA);
+  /* Run Analysis quota — 10 free trial minutes, then top up with token credits (10 tokens/min). */
+  const [freeMinutesRemaining, setFreeMinutesRemaining] = React.useState(FREE_TRIAL_MINUTES);
   const [tokenBalance, setTokenBalance] = React.useState(0);
   const [totalTokensPurchased, setTotalTokensPurchased] = React.useState(0);
   const [purchaseOpen, setPurchaseOpen] = React.useState(false);
-  const runsRemaining = freeRunsRemaining + Math.floor(tokenBalance / TOKENS_PER_RUN);
   const [currentResult, setCurrentResult] = React.useState<AnalysisResult | null>(null);
   const [completedToast, setCompletedToast] = React.useState(false);
 
@@ -1366,15 +1402,15 @@ export default function RunAnalysisPage({
     },
   ];
 
-  function handleRun(method: "free" | "tokens" = freeRunsRemaining > 0 ? "free" : "tokens") {
+  function handleRun() {
     if (!selectedModel) return;
     if (!analysisName.trim() || !uploadedFile || !selectedVlmId) return;
-    if (runsRemaining <= 0) { setPurchaseOpen(true); return; }
 
-    // Consume one run from the chosen bucket (fall back if the preferred one is empty).
-    const useTokens = method === "tokens" ? tokenBalance >= TOKENS_PER_RUN : freeRunsRemaining <= 0;
-    if (useTokens) setTokenBalance((n) => n - TOKENS_PER_RUN);
-    else setFreeRunsRemaining((n) => n - 1);
+    // Bill the clip: free-trial minutes first, then token credits for the rest.
+    const bill = billVideo(uploadedFile.durationSec, freeMinutesRemaining);
+    if (tokenBalance < bill.tokenCost) { setPurchaseOpen(true); return; }
+    if (bill.freeCover > 0) setFreeMinutesRemaining((n) => n - bill.freeCover);
+    if (bill.tokenCost > 0) setTokenBalance((n) => n - bill.tokenCost);
 
     const willFail = Math.random() < FAILURE_PROBABILITY;
     const result = buildSyntheticResult(
@@ -1508,9 +1544,8 @@ export default function RunAnalysisPage({
             onNext={() => setFlowStep("upload")}
             onShowHistory={() => setTab("history")}
             forcedState={forcedState}
-            runsRemaining={runsRemaining}
-            freeRunsRemaining={freeRunsRemaining}
-            freeQuota={FREE_RUN_QUOTA}
+            freeMinutesRemaining={freeMinutesRemaining}
+            freeTrialMinutes={FREE_TRIAL_MINUTES}
             tokenBalance={tokenBalance}
             totalTokensPurchased={totalTokensPurchased}
             onOpenPurchase={() => setPurchaseOpen(true)}
@@ -1526,12 +1561,10 @@ export default function RunAnalysisPage({
             setSelectedVlmId={setSelectedVlmId}
             onBack={() => setFlowStep("select")}
             onRun={handleRun}
-            runsRemaining={runsRemaining}
-            freeRunsRemaining={freeRunsRemaining}
-            freeQuota={FREE_RUN_QUOTA}
+            freeMinutesRemaining={freeMinutesRemaining}
+            freeTrialMinutes={FREE_TRIAL_MINUTES}
             tokenBalance={tokenBalance}
             totalTokensPurchased={totalTokensPurchased}
-            tokensPerRun={TOKENS_PER_RUN}
             onOpenPurchase={() => setPurchaseOpen(true)}
           />
         ) : isAnalyzing ? (
@@ -1683,43 +1716,41 @@ function HistorySkeletonRA() {
 /* ── Run quota / token balance button (History-bar and Upload footer) ───── */
 
 function RunQuotaButton({
-  runsRemaining,
-  freeRunsRemaining,
-  freeQuota,
+  freeMinutesRemaining,
+  freeTrialMinutes,
   tokenBalance,
   totalTokensPurchased,
   onOpenPurchase,
   className,
 }: {
-  runsRemaining: number;
-  freeRunsRemaining: number;
-  freeQuota: number;
+  freeMinutesRemaining: number;
+  freeTrialMinutes: number;
   tokenBalance: number;
   totalTokensPurchased: number;
   onOpenPurchase: () => void;
   className?: string;
 }) {
-  const noRunsLeft = runsRemaining <= 0;
+  const depleted = freeMinutesRemaining <= 0 && tokenBalance <= 0;
   const hasPurchased = totalTokensPurchased > 0;
   return (
     <button
       type="button"
       onClick={onOpenPurchase}
-      title="View run credits & top up"
+      title="View minutes & top up"
       className={cn(
         "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
-        noRunsLeft
+        depleted
           ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical hover:bg-sev-critical/15"
           : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
         className
       )}
     >
       <CoinIcon className="size-3.5" />
-      {noRunsLeft ? (
-        <span>No runs left · <span className="underline">Buy more</span></span>
+      {depleted ? (
+        <span>No minutes left · <span className="underline">Buy more</span></span>
       ) : (
         <span>
-          <span className="text-foreground">{freeRunsRemaining}</span> / {freeQuota} free runs
+          <span className="text-foreground">{freeMinutesRemaining}</span> / {freeTrialMinutes} free mins
           {hasPurchased && (
             <> · <span className="text-foreground">{tokenBalance}</span> tokens</>
           )}
@@ -1744,9 +1775,8 @@ function SelectStep({
   onNext,
   onShowHistory,
   forcedState,
-  runsRemaining,
-  freeRunsRemaining,
-  freeQuota,
+  freeMinutesRemaining,
+  freeTrialMinutes,
   tokenBalance,
   totalTokensPurchased,
   onOpenPurchase,
@@ -1765,9 +1795,8 @@ function SelectStep({
   onNext: () => void;
   onShowHistory: () => void;
   forcedState?: RunForcedState;
-  runsRemaining: number;
-  freeRunsRemaining: number;
-  freeQuota: number;
+  freeMinutesRemaining: number;
+  freeTrialMinutes: number;
   tokenBalance: number;
   totalTokensPurchased: number;
   onOpenPurchase: () => void;
@@ -1786,9 +1815,8 @@ function SelectStep({
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <RunQuotaButton
-            runsRemaining={runsRemaining}
-            freeRunsRemaining={freeRunsRemaining}
-            freeQuota={freeQuota}
+            freeMinutesRemaining={freeMinutesRemaining}
+            freeTrialMinutes={freeTrialMinutes}
             tokenBalance={tokenBalance}
             totalTokensPurchased={totalTokensPurchased}
             onOpenPurchase={onOpenPurchase}
@@ -1931,46 +1959,42 @@ function UploadStep({
   setSelectedVlmId,
   onBack,
   onRun,
-  runsRemaining,
-  freeRunsRemaining,
-  freeQuota,
+  freeMinutesRemaining,
+  freeTrialMinutes,
   tokenBalance,
   totalTokensPurchased,
-  tokensPerRun,
   onOpenPurchase,
 }: {
   selectedModel: ModelData;
   analysisName: string;
   setAnalysisName: (v: string) => void;
-  uploadedFile: { name: string; size: string } | null;
-  setUploadedFile: (f: { name: string; size: string } | null) => void;
+  uploadedFile: { name: string; size: string; durationSec: number } | null;
+  setUploadedFile: (f: { name: string; size: string; durationSec: number } | null) => void;
   selectedVlmId: string | null;
   setSelectedVlmId: (id: string) => void;
   onBack: () => void;
-  onRun: (method: "free" | "tokens") => void;
-  runsRemaining: number;
-  freeRunsRemaining: number;
-  freeQuota: number;
+  onRun: () => void;
+  freeMinutesRemaining: number;
+  freeTrialMinutes: number;
   tokenBalance: number;
   totalTokensPurchased: number;
-  tokensPerRun: number;
   onOpenPurchase: () => void;
 }) {
   const [errors, setErrors] = React.useState<{ name?: string; file?: string; vlm?: string }>({});
-  const noRunsLeft = runsRemaining <= 0;
+  const depleted = freeMinutesRemaining <= 0 && tokenBalance <= 0;
 
-  const hasFree = freeRunsRemaining > 0;
-  const hasTokens = tokenBalance >= tokensPerRun;
-  const runsLeftLabel = hasFree
-    ? ` (${freeRunsRemaining} Free Run${freeRunsRemaining === 1 ? "" : "s"} left)`
-    : hasTokens
-      ? ` (${Math.floor(tokenBalance / tokensPerRun)} run${Math.floor(tokenBalance / tokensPerRun) === 1 ? "" : "s"} left)`
+  // Billing for the uploaded clip: free-trial minutes first, then tokens.
+  const bill = uploadedFile ? billVideo(uploadedFile.durationSec, freeMinutesRemaining) : null;
+
+  const runsLeftLabel = freeMinutesRemaining > 0
+    ? ` (${freeMinutesRemaining} free min${freeMinutesRemaining === 1 ? "" : "s"} left)`
+    : tokenBalance > 0
+      ? ` (${tokenBalance} tokens left)`
       : "";
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [runMethod, setRunMethod] = React.useState<"free" | "tokens">("free");
 
   function handleRunClick() {
-    if (noRunsLeft) {
+    if (depleted) {
       onOpenPurchase();
       return;
     }
@@ -1980,14 +2004,14 @@ function UploadStep({
     if (!selectedVlmId) next.vlm = "Select a VLM model.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-    // Default the confirmation to a free run when available, else tokens.
-    setRunMethod(hasFree ? "free" : "tokens");
+    // Not enough tokens to cover the minutes beyond the free trial → top up.
+    if (bill && tokenBalance < bill.tokenCost) { onOpenPurchase(); return; }
     setConfirmOpen(true);
   }
 
   function confirmRun() {
     setConfirmOpen(false);
-    onRun(runMethod);
+    onRun();
   }
 
   return (
@@ -2003,9 +2027,8 @@ function UploadStep({
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <RunQuotaButton
-            runsRemaining={runsRemaining}
-            freeRunsRemaining={freeRunsRemaining}
-            freeQuota={freeQuota}
+            freeMinutesRemaining={freeMinutesRemaining}
+            freeTrialMinutes={freeTrialMinutes}
             tokenBalance={tokenBalance}
             totalTokensPurchased={totalTokensPurchased}
             onOpenPurchase={onOpenPurchase}
@@ -2112,9 +2135,24 @@ function UploadStep({
         </div>
       </div>
 
-      {/* ── Bottom bar: run quota counter + primary CTA — always visible, outside the scroll region ── */}
-      <div className="flex flex-shrink-0 items-center justify-end gap-3 border-t border-border pt-4">
-        <Button size="sm" onClick={handleRunClick} disabled={noRunsLeft} className="gap-1.5">
+      {/* ── Bottom bar: clip cost + primary CTA — always visible, outside the scroll region ── */}
+      <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border pt-4">
+        {bill ? (
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CoinIcon className="size-3.5" />
+            {bill.tokenCost > 0 ? (
+              <>
+                <span className="font-semibold text-foreground">{bill.tokenCost} tokens</span> for this {bill.minutes}-min clip
+                {bill.freeCover > 0 && <> · {bill.freeCover} free min applied</>}
+              </>
+            ) : (
+              <>This {bill.minutes}-min clip is <span className="font-semibold text-foreground">covered by your free trial</span></>
+            )}
+          </p>
+        ) : (
+          <span className="text-xs text-muted-foreground/60">Upload a clip to see its cost</span>
+        )}
+        <Button size="sm" onClick={handleRunClick} disabled={depleted} className="gap-1.5">
           <Sparkles className="size-3.5" />
           Run Analysis{runsLeftLabel}
         </Button>
@@ -2124,10 +2162,11 @@ function UploadStep({
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={confirmRun}
-        method={runMethod}
-        freeRunsRemaining={freeRunsRemaining}
+        minutes={bill?.minutes ?? 0}
+        freeCover={bill?.freeCover ?? 0}
+        paidMinutes={bill?.paidMinutes ?? 0}
+        tokenCost={bill?.tokenCost ?? 0}
         tokenBalance={tokenBalance}
-        tokensPerRun={tokensPerRun}
       />
     </div>
   );
@@ -2139,18 +2178,20 @@ function RunConfirmModal({
   open,
   onClose,
   onConfirm,
-  method,
-  freeRunsRemaining,
+  minutes,
+  freeCover,
+  paidMinutes,
+  tokenCost,
   tokenBalance,
-  tokensPerRun,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  method: "free" | "tokens";
-  freeRunsRemaining: number;
+  minutes: number;
+  freeCover: number;
+  paidMinutes: number;
+  tokenCost: number;
   tokenBalance: number;
-  tokensPerRun: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2161,34 +2202,35 @@ function RunConfirmModal({
             Confirm analysis run
           </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Start the analysis against your uploaded footage. Free runs are used
-            first, then token credits.
+            Start the analysis against your uploaded footage. Free-trial minutes
+            are used first, then token credits.
           </p>
         </DialogHeader>
 
-        <div className="px-5 py-4">
-          <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-3">
-            <CoinIcon className="size-5" />
-            <div className="min-w-0 flex-1">
-              {method === "tokens" ? (
-                <>
-                  <p className="text-base font-semibold text-foreground">
-                    {tokensPerRun} tokens will be used
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Balance after this run: {(tokenBalance - tokensPerRun).toLocaleString()} tokens
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-base font-semibold text-foreground">One free run will be used</p>
-                  <p className="text-xs text-muted-foreground">
-                    {freeRunsRemaining - 1} free run{freeRunsRemaining - 1 === 1 ? "" : "s"} left afterwards
-                  </p>
-                </>
-              )}
-            </div>
+        <div className="space-y-2.5 px-5 py-4">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5 text-sm">
+            <span className="text-muted-foreground">Clip length</span>
+            <span className="font-semibold text-foreground">{minutes} min</span>
           </div>
+          {freeCover > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5 text-sm">
+              <span className="text-muted-foreground">From free trial</span>
+              <span className="font-semibold text-foreground">{freeCover} min</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/[0.06] px-3 py-2.5 text-sm">
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <CoinIcon className="size-4" /> Tokens to be consumed
+            </span>
+            <span className="font-mono font-bold text-primary">
+              {tokenCost > 0 ? `${tokenCost} tokens` : "0 · free"}
+            </span>
+          </div>
+          {tokenCost > 0 && (
+            <p className="px-1 text-2xs text-muted-foreground">
+              {paidMinutes} min billed · balance after: {(tokenBalance - tokenCost).toLocaleString()} tokens
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -2220,7 +2262,7 @@ function PurchaseRunsModal({
 }) {
   /* Either a preset CREDIT_PACKS index, or "custom" for the number-of-runs stepper above it. */
   const [selection, setSelection] = React.useState<number | "custom">(1);
-  const [customRuns, setCustomRuns] = React.useState(10);
+  const [customMinutes, setCustomMinutes] = React.useState(10);
 
   const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethodMock[]>(INITIAL_PAYMENT_METHODS);
   const [selectedPaymentId, setSelectedPaymentId] = React.useState<string>(
@@ -2241,7 +2283,7 @@ function PurchaseRunsModal({
     }
   }, [open]);
 
-  const customTokens = customRuns * TOKENS_PER_RUN;
+  const customTokens = customMinutes * TOKENS_PER_MINUTE;
   const customPrice = Math.round(customTokens * CUSTOM_TOKEN_RATE * 100) / 100;
   const chosen =
     selection === "custom"
@@ -2347,13 +2389,13 @@ function PurchaseRunsModal({
               <CoinIcon className="size-7" />
               {tokenBalance.toLocaleString()}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">credits available to redeem for runs</p>
+            <p className="mt-1 text-sm text-muted-foreground">credits available to run your videos ({TOKENS_PER_MINUTE} tokens / min)</p>
           </div>
 
-          {/* ── Custom amount — number of runs ── */}
+          {/* ── Custom amount — number of minutes ── */}
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Number of Runs
+              Number of Minutes
             </label>
             <div
               className={cn(
@@ -2364,24 +2406,24 @@ function PurchaseRunsModal({
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => { setCustomRuns((n) => Math.max(1, n - 1)); setSelection("custom"); }}
+                  onClick={() => { setCustomMinutes((n) => Math.max(1, n - 1)); setSelection("custom"); }}
                   className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 >
                   <Minus className="size-3.5" />
                 </button>
                 <input
                   type="number"
-                  value={customRuns}
+                  value={customMinutes}
                   onFocus={() => setSelection("custom")}
                   onChange={(e) => {
-                    setCustomRuns(Math.max(1, Math.min(999, Number(e.target.value) || 1)));
+                    setCustomMinutes(Math.max(1, Math.min(999, Number(e.target.value) || 1)));
                     setSelection("custom");
                   }}
                   className="h-9 w-20 rounded-md border border-input bg-background text-center font-mono text-base text-foreground focus:border-primary focus:outline-none"
                 />
                 <button
                   type="button"
-                  onClick={() => { setCustomRuns((n) => Math.min(999, n + 1)); setSelection("custom"); }}
+                  onClick={() => { setCustomMinutes((n) => Math.min(999, n + 1)); setSelection("custom"); }}
                   className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 >
                   <Plus className="size-3.5" />
@@ -2391,7 +2433,7 @@ function PurchaseRunsModal({
                 </span>
               </div>
               <p className="mt-2 flex items-center justify-between text-2xs text-muted-foreground">
-                <span>{TOKENS_PER_RUN} tokens per run · no bulk discount</span>
+                <span>{TOKENS_PER_MINUTE} tokens per minute · no bulk discount</span>
                 <span className="font-mono text-foreground">SGD ${customPrice.toFixed(2)}</span>
               </p>
             </div>
@@ -2419,6 +2461,7 @@ function PurchaseRunsModal({
                   <span className="inline-flex items-center gap-1 font-mono text-md font-bold text-foreground">
                     <CoinIcon className="size-3.5" />{p.tokens}
                   </span>
+                  <span className="text-2xs text-muted-foreground/70">≈ {Math.floor(p.tokens / TOKENS_PER_MINUTE)} min</span>
                   <span className="text-xs text-muted-foreground">SGD ${p.price}</span>
                 </button>
               ))}
