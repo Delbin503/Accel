@@ -2162,36 +2162,33 @@ function UploadStep({
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={confirmRun}
-        minutes={bill?.minutes ?? 0}
         freeCover={bill?.freeCover ?? 0}
-        paidMinutes={bill?.paidMinutes ?? 0}
         tokenCost={bill?.tokenCost ?? 0}
         tokenBalance={tokenBalance}
+        freeMinutesRemaining={freeMinutesRemaining}
       />
     </div>
   );
 }
 
-/* ── Run confirmation modal — pick run method (free vs tokens) & confirm ──── */
+/* ── Run confirmation modal — review usage & confirm ────────────────────── */
 
 function RunConfirmModal({
   open,
   onClose,
   onConfirm,
-  minutes,
   freeCover,
-  paidMinutes,
   tokenCost,
   tokenBalance,
+  freeMinutesRemaining,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  minutes: number;
   freeCover: number;
-  paidMinutes: number;
   tokenCost: number;
   tokenBalance: number;
+  freeMinutesRemaining: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2207,58 +2204,37 @@ function RunConfirmModal({
           </p>
         </DialogHeader>
 
-        <div className="space-y-4 px-5 py-5">
-          {/* Hero — what this run costs */}
-          <div
-            className={cn(
-              "flex flex-col items-center gap-1 rounded-xl border py-5 text-center",
-              tokenCost > 0
-                ? "border-primary/25 bg-primary/[0.06]"
-                : "border-success/25 bg-success/[0.06]"
-            )}
-          >
-            <span className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              Tokens to be consumed
-            </span>
-            {tokenCost > 0 ? (
-              <span className="flex items-center gap-2 font-mono text-3xl font-bold text-primary">
-                <CoinIcon className="size-6" />
-                {tokenCost.toLocaleString()}
-              </span>
-            ) : (
-              <span className="flex items-center gap-2 text-2xl font-bold text-success">
-                <CheckCircle2 className="size-6" />
-                Free
-              </span>
-            )}
-            <span className="text-xs text-muted-foreground">
-              {tokenCost > 0
-                ? <>Balance after this run: <span className="font-semibold text-foreground">{(tokenBalance - tokenCost).toLocaleString()}</span> tokens</>
-                : "Covered entirely by your free trial"}
-            </span>
-          </div>
-
-          {/* Breakdown */}
-          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-            <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
-              <span className="text-muted-foreground">Clip length</span>
-              <span className="font-semibold text-foreground">{minutes} min</span>
+        <div className="space-y-3 px-5 py-4">
+          <dl className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-sm text-muted-foreground">Tokens left</dt>
+              <dd className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <CoinIcon className="size-4" />
+                {tokenBalance.toLocaleString()} tokens
+              </dd>
             </div>
-            {freeCover > 0 && (
-              <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
-                <span className="text-muted-foreground">From free trial</span>
-                <span className="font-semibold text-success">{freeCover} min</span>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-sm text-muted-foreground">Tokens for this video</dt>
+              <dd className="text-sm font-semibold text-foreground">
+                {tokenCost.toLocaleString()} tokens
+              </dd>
+            </div>
+          </dl>
+
+          {freeMinutesRemaining > 0 && (
+            <dl className="space-y-3 border-t border-border pt-3">
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-sm text-muted-foreground">Free trial left</dt>
+                <dd className="text-sm font-semibold text-foreground">
+                  {freeMinutesRemaining} min
+                </dd>
               </div>
-            )}
-            {paidMinutes > 0 && (
-              <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
-                <span className="text-muted-foreground">Billed to tokens</span>
-                <span className="font-semibold text-foreground">
-                  {paidMinutes} min · {tokenCost.toLocaleString()} tokens
-                </span>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-sm text-muted-foreground">Free trial for this video</dt>
+                <dd className="text-sm font-semibold text-success">{freeCover} min</dd>
               </div>
-            )}
-          </div>
+            </dl>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">

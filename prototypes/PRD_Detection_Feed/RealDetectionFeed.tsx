@@ -298,61 +298,6 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
   );
 }
 
-/* ─── Active filter pill bar ─────────────────────────────────────────────── */
-
-function ActiveFilterBar({
-  filters,
-  onRemoveFilter,
-  onClearAll,
-}: {
-  filters: Filters;
-  onRemoveFilter: (group: keyof Filters, value: string) => void;
-  onClearAll: () => void;
-}) {
-  const allOptions = {
-    severity: FILTER_OPTIONS.severity as readonly { value: string; label: string }[],
-    type: FILTER_OPTIONS.type as readonly { value: string; label: string }[],
-    site: FILTER_OPTIONS.site as readonly { value: string; label: string }[],
-    area: AREA_OPTIONS as readonly { value: string; label: string }[],
-    model: FILTER_OPTIONS.model as readonly { value: string; label: string }[],
-  };
-
-  const allActive = (Object.keys(filters) as (keyof Filters)[]).flatMap((group) =>
-    filters[group].map((val) => ({
-      group,
-      value: val,
-      label: allOptions[group].find((o) => o.value === val)?.label ?? val,
-    }))
-  );
-
-  if (allActive.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-muted px-3 py-2">
-      {allActive.map(({ group, value, label }) => (
-        <span
-          key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary"
-        >
-          {label}
-          <button
-            onClick={() => onRemoveFilter(group, value)}
-            className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white"
-          >
-            <X className="size-2.5" />
-          </button>
-        </span>
-      ))}
-      <button
-        onClick={onClearAll}
-        className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary"
-      >
-        Clear all
-      </button>
-    </div>
-  );
-}
-
 /* ─── Collapsible filter panel ───────────────────────────────────────────── */
 
 function FilterPanel({
@@ -361,27 +306,25 @@ function FilterPanel({
   search,
   onSearchChange,
   datePreset,
-  onDatePresetChange,
   dateFrom,
   dateTo,
-  onDateFromChange,
-  onDateToChange,
+  additionalActiveCount = 0,
+  onClearAll,
 }: {
   filters: Filters;
   onChange: (f: Filters) => void;
   search: string;
   onSearchChange: (v: string) => void;
   datePreset: DatePreset;
-  onDatePresetChange: (v: DatePreset) => void;
   dateFrom: string;
   dateTo: string;
-  onDateFromChange: (v: string) => void;
-  onDateToChange: (v: string) => void;
+  additionalActiveCount?: number;
+  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
   const dateActive = datePreset !== "all" ? 1 : 0;
-  const activeCount = filterCount + (search ? 1 : 0) + dateActive;
+  const activeCount = filterCount + (search ? 1 : 0) + dateActive + additionalActiveCount;
 
   function setGroup(group: keyof Filters, values: string[]) {
     onChange({ ...filters, [group]: values });
@@ -394,11 +337,10 @@ function FilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-[13px] font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -420,30 +362,28 @@ function FilterPanel({
           <span className="ml-auto hidden text-[11px] text-muted-foreground sm:block">
             Showing <strong className="text-foreground">{presetSummary}</strong>
           </span>
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onChange(EMPTY_FILTERS);
-                onSearchChange("");
-                onDatePresetChange("all");
-                onDateFromChange("");
-                onDateToChange("");
+                onClearAll();
               }}
               className="text-[12px] text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
           )}
-          {open ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -730,10 +670,6 @@ export default function DetectionFeedPage({
     });
   }
 
-  function removeFilter(group: keyof Filters, value: string) {
-    setFilters((f) => ({ ...f, [group]: f[group].filter((v) => v !== value) }));
-  }
-
   function handleKpiClick(key: KpiFilter) {
     setKpiFilter((prev) => (prev === key ? "all" : key));
   }
@@ -873,7 +809,7 @@ export default function DetectionFeedPage({
             value={cfg.getValue(allEvents.filter((e) => e.status !== "dismissed"))}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
@@ -896,13 +832,6 @@ export default function DetectionFeedPage({
         }
       />
 
-      {/* ── Active filter bar ────────────────────────────────────────────── */}
-      <ActiveFilterBar
-        filters={filters}
-        onRemoveFilter={removeFilter}
-        onClearAll={() => setFilters(EMPTY_FILTERS)}
-      />
-
       {/* ── Filter panel ─────────────────────────────────────────────────── */}
       <FilterPanel
         filters={filters}
@@ -910,11 +839,17 @@ export default function DetectionFeedPage({
         search={search}
         onSearchChange={setSearch}
         datePreset={datePreset}
-        onDatePresetChange={setDatePreset}
         dateFrom={dateFrom}
         dateTo={dateTo}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
+        additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
+        onClearAll={() => {
+          setFilters(EMPTY_FILTERS);
+          setSearch("");
+          setKpiFilter("all");
+          setDatePreset("all");
+          setDateFrom("");
+          setDateTo("");
+        }}
       />
 
       {/* ── Feed header ──────────────────────────────────────────────────── */}
@@ -962,6 +897,9 @@ export default function DetectionFeedPage({
               setFilters(EMPTY_FILTERS);
               setKpiFilter("all");
               setSearch("");
+              setDatePreset("all");
+              setDateFrom("");
+              setDateTo("");
             }}
           >
             Clear filters

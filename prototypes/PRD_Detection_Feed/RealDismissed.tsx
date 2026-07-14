@@ -181,15 +181,19 @@ function FilterPanel({
   onChange,
   search,
   onSearchChange,
+  additionalActiveCount = 0,
+  onClearAll,
 }: {
   filters: DismissedFilters;
   onChange: (f: DismissedFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  additionalActiveCount?: number;
+  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
-  const activeCount = filterCount + (search ? 1 : 0);
+  const activeCount = filterCount + (search ? 1 : 0) + additionalActiveCount;
 
   function setGroup(group: keyof DismissedFilters, values: string[]) {
     onChange({ ...filters, [group]: values });
@@ -197,11 +201,10 @@ function FilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-[13px] font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -217,22 +220,24 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_DISMISSED_FILTERS); onSearchChange(""); }}
+              onClick={(e) => { e.stopPropagation(); onClearAll(); }}
               className="text-[12px] text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
           )}
-          {open
-            ? <ChevronUp className="size-4 text-muted-foreground" />
-            : <ChevronDown className="size-4 text-muted-foreground" />
-          }
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open
+              ? <ChevronUp className="size-4 text-muted-foreground" />
+              : <ChevronDown className="size-4 text-muted-foreground" />
+            }
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -269,63 +274,6 @@ function FilterPanel({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ── Active filter pills ─────────────────────────────────────────────────── */
-
-function ActiveFilterBar({
-  filters,
-  search,
-  onRemove,
-  onClearAll,
-  onClearSearch,
-}: {
-  filters: DismissedFilters;
-  search: string;
-  onRemove: (group: keyof DismissedFilters, value: string) => void;
-  onClearAll: () => void;
-  onClearSearch: () => void;
-}) {
-  const allOptions = {
-    reason: DISMISSED_FILTER_OPTIONS.reason as readonly FilterOption[],
-    site:   DISMISSED_FILTER_OPTIONS.site   as readonly FilterOption[],
-    area:   DISMISSED_FILTER_OPTIONS.area   as readonly FilterOption[],
-    model:  DISMISSED_FILTER_OPTIONS.model  as readonly FilterOption[],
-  };
-
-  const allActive = (Object.keys(filters) as (keyof DismissedFilters)[]).flatMap((group) =>
-    filters[group].map((val) => ({
-      group,
-      value: val,
-      label: allOptions[group].find((o) => o.value === val)?.label ?? val,
-    }))
-  );
-
-  if (allActive.length === 0 && !search) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-muted px-3 py-2">
-      {search && (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-          "{search}"
-          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
-            <X className="size-2.5" />
-          </button>
-        </span>
-      )}
-      {allActive.map(({ group, value, label }) => (
-        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-          {label}
-          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white">
-            <X className="size-2.5" />
-          </button>
-        </span>
-      ))}
-      <button onClick={onClearAll} className="ml-auto text-[11px] text-muted-foreground underline hover:text-primary">
-        Clear all
-      </button>
     </div>
   );
 }
@@ -492,10 +440,6 @@ export default function DismissedEventsPage({
     setKpiFilter((prev) => (prev === key ? "all" : key));
   };
 
-  function removeFilter(group: keyof DismissedFilters, value: string) {
-    setFilters((f) => ({ ...f, [group]: f[group].filter((v) => v !== value) }));
-  }
-
   const baseItems = MOCK_DISMISSED.filter((d) => !restoredIds.has(d.event.id));
 
   const visible = baseItems.filter((d) => {
@@ -562,7 +506,7 @@ export default function DismissedEventsPage({
             value={cfg.getValue(baseItems)}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
@@ -574,15 +518,12 @@ export default function DismissedEventsPage({
         onChange={setFilters}
         search={search}
         onSearchChange={setSearch}
-      />
-
-      {/* ── Active filter pills ───────────────────────────────────────────── */}
-      <ActiveFilterBar
-        filters={filters}
-        search={search}
-        onRemove={removeFilter}
-        onClearAll={() => { setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
-        onClearSearch={() => setSearch("")}
+        additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
+        onClearAll={() => {
+          setFilters(EMPTY_DISMISSED_FILTERS);
+          setSearch("");
+          setKpiFilter("all");
+        }}
       />
 
       {/* ── Results bar ──────────────────────────────────────────────────── */}

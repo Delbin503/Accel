@@ -128,7 +128,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
         )}
         style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
       >
-        {row.type === "THEN" ? (i === firstThenIdx ? "Then" : "and also") : m.label}
+        {row.type === "THEN" ? (i === firstThenIdx ? "Then" : "And Also") : m.label}
       </span>
     );
 
@@ -353,11 +353,10 @@ function RuleFilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -376,7 +375,7 @@ function RuleFilterPanel({
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
@@ -390,13 +389,15 @@ function RuleFilterPanel({
               Clear all
             </button>
           )}
-          {open ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -429,49 +430,6 @@ function RuleFilterPanel({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ── Active filter bar ───────────────────────────────────────────────────── */
-
-function RuleActiveFilterBar({
-  filters,
-  onRemove,
-  onClearAll,
-}: {
-  filters: RuleFilters;
-  onRemove: (group: keyof RuleFilters, value: string) => void;
-  onClearAll: () => void;
-}) {
-  const allActive = (Object.keys(filters) as (keyof RuleFilters)[]).flatMap((group) =>
-    filters[group].map((val) => ({ group, value: val, label: val }))
-  );
-
-  if (allActive.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-      {allActive.map(({ group, value, label }) => (
-        <span
-          key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
-        >
-          {label}
-          <button
-            onClick={() => onRemove(group, value)}
-            className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white"
-          >
-            <X className="size-2.5" />
-          </button>
-        </span>
-      ))}
-      <button
-        onClick={onClearAll}
-        className="ml-auto text-xs text-muted-foreground underline hover:text-primary"
-      >
-        Clear all
-      </button>
     </div>
   );
 }
@@ -534,7 +492,7 @@ function KeywordBadge({ type, isAndAlso, onClick }: { type: RowType; isAndAlso?:
       )}
       style={m.teal ? TEAL_INLINE : undefined}
     >
-      <span>{isAndAlso ? "and also" : type === "THEN" ? "Then" : m.label}</span>
+      <span>{isAndAlso ? "And Also" : type === "THEN" ? "Then" : m.label}</span>
       <ChevronDown className="size-2.5 opacity-60" />
     </button>
   );
@@ -794,7 +752,7 @@ function ConditionRowItem({
       {/* Drag handle */}
       <GripVertical className="size-4 flex-shrink-0 cursor-grab text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100" />
 
-      {/* Keyword badge — first THEN shows "Then", later THEN rows show "and also" */}
+      {/* Keyword badge — first THEN shows "Then", later THEN rows show "And Also" */}
       <div className="relative flex-shrink-0">
         <KeywordBadge type={row.type} isAndAlso={isAndAlso} onClick={onSwapToggle} />
         {swapOpen && (
@@ -1993,17 +1951,6 @@ export default function RulesLibraryPage() {
           </Button>
         </PageHeader.Actions>
       </PageHeader>
-
-      {/* Active filter pills — sits above the filter panel */}
-      {hasActiveFilters && (
-        <RuleActiveFilterBar
-          filters={filters}
-          onRemove={(group, value) =>
-            setFilters((f) => ({ ...f, [group]: f[group].filter((v) => v !== value) }))
-          }
-          onClearAll={() => setFilters(EMPTY_RULE_FILTERS)}
-        />
-      )}
 
       {/* Filter panel */}
       <RuleFilterPanel

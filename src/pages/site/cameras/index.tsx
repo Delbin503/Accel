@@ -176,15 +176,19 @@ function FilterPanel({
   onChange,
   search,
   onSearchChange,
+  additionalActiveCount = 0,
+  onClearAll,
 }: {
   filters: CameraFilters;
   onChange: (f: CameraFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  additionalActiveCount?: number;
+  onClearAll?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
-  const activeCount = filterCount + (search ? 1 : 0);
+  const activeCount = filterCount + (search ? 1 : 0) + additionalActiveCount;
 
   function setGroup(group: keyof CameraFilters, values: string[]) {
     onChange({ ...filters, [group]: values });
@@ -197,11 +201,14 @@ function FilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+        >
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -220,23 +227,36 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onClearAll) onClearAll();
+                else {
+                  onChange(EMPTY_FILTERS);
+                  onSearchChange("");
+                }
+              }}
               className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
           )}
-          {open ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          <button
+            type="button"
+            aria-label={open ? "Collapse filters" : "Expand filters"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -895,6 +915,7 @@ type DrawerAsync = "idle" | "loading" | "error";
 
 interface CameraDrawerProps {
   camera: CameraData | null;
+  deployments: DeploymentData[];
   open: boolean;
   /** Async detail-fetch state. "idle" shows content immediately. */
   asyncState?: DrawerAsync;
@@ -914,6 +935,7 @@ interface CameraDrawerProps {
 
 function CameraDrawer({
   camera,
+  deployments,
   open,
   asyncState = "idle",
   onClose,
@@ -956,10 +978,6 @@ function CameraDrawer({
     }
   }, [open, camera?.id]);
 
-  const deployments = React.useMemo(
-    () => (camera ? MOCK_DEPLOYMENTS.filter((d) => d.cameraId === camera.id) : []),
-    [camera]
-  );
   const recordings = React.useMemo(
     () => (camera ? getRecordingsForCamera(camera.id) : []),
     [camera]
@@ -2297,7 +2315,7 @@ export default function CamerasPage({
             value={cfg.getValue(cameras)}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
         ))}
@@ -2309,6 +2327,13 @@ export default function CamerasPage({
         onChange={(f) => { setFilters(f); setPage(1); }}
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
+        additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
+        onClearAll={() => {
+          setSearch("");
+          setFilters(EMPTY_FILTERS);
+          setKpiFilter("all");
+          setPage(1);
+        }}
       />
 
       {/* Count */}
@@ -2486,6 +2511,7 @@ export default function CamerasPage({
       {/* Drawer */}
       <CameraDrawer
         camera={drawerCamera}
+        deployments={deployments.filter((deployment) => deployment.cameraId === drawerCamera?.id)}
         open={drawerId !== null}
         asyncState={drawerAsync}
         onClose={() => setDrawerId(null)}

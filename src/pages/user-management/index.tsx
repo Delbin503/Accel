@@ -260,16 +260,20 @@ function FilterPanel({
   search,
   onSearchChange,
   hideStatus = false,
+  additionalActiveCount = 0,
+  onClearAll,
 }: {
   filters: UserFilters;
   onChange: (f: UserFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
   hideStatus?: boolean;
+  additionalActiveCount?: number;
+  onClearAll?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
-  const activeCount = filterCount + (search ? 1 : 0);
+  const activeCount = filterCount + (search ? 1 : 0) + additionalActiveCount;
   const emptyFilterLabels = hideStatus ? ["All sites"] : ["All statuses", "All sites"];
   const filterGroups = [
     ...(!hideStatus ? [{ key: "status" as const, label: "Status", opts: USER_STATUS_OPTIONS as readonly FilterOption[] }] : []),
@@ -283,11 +287,10 @@ function FilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -306,23 +309,32 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onClearAll) onClearAll();
+                else {
+                  onChange(EMPTY_FILTERS);
+                  onSearchChange("");
+                }
+              }}
               className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
           )}
-          {open ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -1225,9 +1237,9 @@ const SEAT_ROLE_STYLES: Record<"all" | UserRole, { bg: string; text: string; bar
 };
 
 function SeatPill({
-  label, total, assigned, available, price, kind,
+  label, total, assigned, available, kind,
 }: {
-  label: string; total: number; assigned: number; available: number; price?: number;
+  label: string; total: number; assigned: number; available: number;
   kind: "all" | UserRole; billingCycle?: string;
 }) {
   const cfg = SEAT_ROLE_STYLES[kind];
@@ -1258,9 +1270,6 @@ function SeatPill({
           </div>
           <div className="min-w-0">
             <p className="text-base font-bold text-foreground">Total {label}</p>
-            {kind !== "owner" && price !== undefined && (
-              <p className="text-2xs text-muted-foreground">${price}/mo</p>
-            )}
           </div>
         </div>
         <div className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
@@ -1303,9 +1312,9 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <SeatPill kind="all"   label="Total Seats" total={totalAll} assigned={assignedAll} available={availableAll} billingCycle={billingCycle} />
-        <SeatPill kind="owner" label="Owner Seats" total={usage.owner.total} assigned={usage.owner.assigned} available={usage.owner.available} price={usage.owner.price} billingCycle={billingCycle} />
-        <SeatPill kind="admin" label="Admin Seats" total={usage.admin.total} assigned={usage.admin.assigned} available={usage.admin.available} price={usage.admin.price} billingCycle={billingCycle} />
-        <SeatPill kind="user"  label="User Seats"  total={usage.user.total}  assigned={usage.user.assigned}  available={usage.user.available}  price={usage.user.price}  billingCycle={billingCycle} />
+        <SeatPill kind="owner" label="Owner Seats" total={usage.owner.total} assigned={usage.owner.assigned} available={usage.owner.available} billingCycle={billingCycle} />
+        <SeatPill kind="admin" label="Admin Seats" total={usage.admin.total} assigned={usage.admin.assigned} available={usage.admin.available} billingCycle={billingCycle} />
+        <SeatPill kind="user"  label="User Seats"  total={usage.user.total}  assigned={usage.user.assigned}  available={usage.user.available}  billingCycle={billingCycle} />
       </div>
     </div>
   );
@@ -3092,6 +3101,13 @@ export default function UserManagementPage() {
         onChange={(f) => { setFilters(f); setVisibleCount(PAGE_STEP); }}
         search={search}
         onSearchChange={(v) => { setSearch(v); setVisibleCount(PAGE_STEP); }}
+        additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
+        onClearAll={() => {
+          setSearch("");
+          setFilters(EMPTY_FILTERS);
+          setKpiFilter("all");
+          setVisibleCount(PAGE_STEP);
+        }}
       />
 
       {/* Count + sort */}

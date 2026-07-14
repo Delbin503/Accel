@@ -112,17 +112,31 @@ const MODE_OPTS: FilterOption[] = [
   { value: "scheduled",  label: "Scheduled" },
 ];
 
-function FilterPanel({ filters, onChange, search, onSearchChange }: { filters: RecordingFilters; onChange: (f: RecordingFilters) => void; search: string; onSearchChange: (v: string) => void }) {
+function FilterPanel({
+  filters,
+  onChange,
+  search,
+  onSearchChange,
+  additionalActiveCount = 0,
+  onClearAll,
+}: {
+  filters: RecordingFilters;
+  onChange: (f: RecordingFilters) => void;
+  search: string;
+  onSearchChange: (v: string) => void;
+  additionalActiveCount?: number;
+  onClearAll?: () => void;
+}) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
-  const activeCount = filterCount + (search ? 1 : 0);
+  const activeCount = filterCount + (search ? 1 : 0) + additionalActiveCount;
   function setGroup(group: keyof RecordingFilters, values: string[]) { onChange({ ...filters, [group]: values }); }
   const CAMERA_OPTS = MOCK_CAMERAS.map((c) => ({ value: c.id, label: `${c.id} · ${c.name}` }));
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <div className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -134,16 +148,28 @@ function FilterPanel({ filters, onChange, search, onSearchChange }: { filters: R
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
-            <button onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }} className="text-sm text-muted-foreground underline hover:text-primary">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onClearAll) onClearAll();
+                else {
+                  onChange(EMPTY_FILTERS);
+                  onSearchChange("");
+                }
+              }}
+              className="text-sm text-muted-foreground underline hover:text-primary"
+            >
               Clear all
             </button>
           )}
-          {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+          </button>
         </div>
-      </button>
+      </div>
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
@@ -804,7 +830,7 @@ export default function RecordingsPage() {
             value={cfg.getValue(recordings)}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => { setKpiFilter((c) => (c === cfg.key ? "all" : cfg.key)); setPage(1); }} />
         ))}
       </KpiGrid>
@@ -825,7 +851,22 @@ export default function RecordingsPage() {
         }
       />
 
-      <FilterPanel filters={filters} onChange={(f) => { setFilters(f); setPage(1); }} search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} />
+      <FilterPanel
+        filters={filters}
+        onChange={(f) => { setFilters(f); setPage(1); }}
+        search={search}
+        onSearchChange={(v) => { setSearch(v); setPage(1); }}
+        additionalActiveCount={(kpiFilter !== "all" ? 1 : 0) + (datePreset !== "all" ? 1 : 0)}
+        onClearAll={() => {
+          setSearch("");
+          setFilters(EMPTY_FILTERS);
+          setKpiFilter("all");
+          setDatePreset("all");
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-base text-muted-foreground">

@@ -6,7 +6,6 @@ import {
   ChevronUp,
   SlidersHorizontal,
   FolderOpen,
-  X,
   Check,
   ArrowUpRight,
   MapPin,
@@ -151,13 +150,6 @@ function FilterDropdown({
 
 /* ─── Filter panel ───────────────────────────────────────────────────────── */
 
-const STATUS_OPTIONS = [
-  { value: "open", label: "Open" },
-  { value: "in-review", label: "In Review" },
-  { value: "action-taken", label: "Action Taken" },
-  { value: "closed", label: "Closed" },
-] as const;
-
 const SEVERITY_OPTIONS = [
   { value: "critical", label: "Critical", color: "var(--sev-critical)" },
   { value: "medium", label: "Medium", color: "var(--sev-medium)" },
@@ -178,15 +170,19 @@ function FilterPanel({
   onChange,
   search,
   onSearchChange,
+  additionalActiveCount = 0,
+  onClearAll,
 }: {
   filters: CaseFilters;
   onChange: (f: CaseFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  additionalActiveCount?: number;
+  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
-  const activeCount = filterCount + (search ? 1 : 0);
+  const activeCount = filterCount + (search ? 1 : 0) + additionalActiveCount;
 
   function setGroup(group: keyof CaseFilters, values: string[]) {
     onChange({ ...filters, [group]: values });
@@ -194,11 +190,10 @@ function FilterPanel({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -217,27 +212,28 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onChange(EMPTY_FILTERS);
-                onSearchChange("");
+                onClearAll();
               }}
               className="text-sm text-muted-foreground underline hover:text-primary"
             >
               Clear all
             </button>
           )}
-          {open ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+            {open ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -272,59 +268,6 @@ function FilterPanel({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ─── Active filter pills ────────────────────────────────────────────────── */
-
-function ActiveFilterBar({
-  filters,
-  onRemoveFilter,
-  onClearAll,
-}: {
-  filters: CaseFilters;
-  onRemoveFilter: (group: keyof CaseFilters, value: string) => void;
-  onClearAll: () => void;
-}) {
-  const allOptions = {
-    status: STATUS_OPTIONS as readonly { value: string; label: string }[],
-    severity: SEVERITY_OPTIONS as readonly { value: string; label: string }[],
-    site: SITE_OPTIONS as readonly { value: string; label: string }[],
-  };
-
-  const allActive = (Object.keys(filters) as (keyof CaseFilters)[]).flatMap((group) =>
-    (filters[group] as string[]).map((val) => ({
-      group,
-      value: val,
-      label: allOptions[group].find((o) => o.value === val)?.label ?? val,
-    }))
-  );
-
-  if (allActive.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-muted px-3 py-2">
-      {allActive.map(({ group, value, label }) => (
-        <span
-          key={`${group}-${value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary"
-        >
-          {label}
-          <button
-            onClick={() => onRemoveFilter(group, value)}
-            className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white"
-          >
-            <X className="size-2.5" />
-          </button>
-        </span>
-      ))}
-      <button
-        onClick={onClearAll}
-        className="ml-auto text-xs text-muted-foreground underline hover:text-primary"
-      >
-        Clear all
-      </button>
     </div>
   );
 }
@@ -483,10 +426,6 @@ export default function IncidentCasesPage({
     return list;
   }, [cases, kpiFilter, filters, search, sortBy, datePreset, dateFrom, dateTo]);
 
-  function removeFilter(group: keyof CaseFilters, value: string) {
-    setFilters((f) => ({ ...f, [group]: (f[group] as string[]).filter((v) => v !== value) }));
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
@@ -513,7 +452,7 @@ export default function IncidentCasesPage({
             value={cfg.getValue(cases)}
             sub={cfg.sub}
             accent={cfg.accent}
-            active={kpiFilter === cfg.key}
+            active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => setKpiFilter((prev) => (prev === cfg.key ? "all" : cfg.key))}
           />
         ))}
@@ -541,17 +480,20 @@ export default function IncidentCasesPage({
         }
       />
 
-      <ActiveFilterBar
-        filters={filters}
-        onRemoveFilter={removeFilter}
-        onClearAll={() => setFilters(EMPTY_FILTERS)}
-      />
-
       <FilterPanel
         filters={filters}
         onChange={setFilters}
         search={search}
         onSearchChange={setSearch}
+        additionalActiveCount={(kpiFilter !== "all" ? 1 : 0) + (datePreset !== "all" ? 1 : 0)}
+        onClearAll={() => {
+          setFilters(EMPTY_FILTERS);
+          setSearch("");
+          setKpiFilter("all");
+          setDatePreset("all");
+          setDateFrom("");
+          setDateTo("");
+        }}
       />
 
       {/* ── Table header bar ─────────────────────────────────────────────── */}
@@ -591,6 +533,9 @@ export default function IncidentCasesPage({
               setFilters(EMPTY_FILTERS);
               setKpiFilter("all");
               setSearch("");
+              setDatePreset("all");
+              setDateFrom("");
+              setDateTo("");
             }}
           >
             Clear filters

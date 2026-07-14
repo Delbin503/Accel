@@ -165,7 +165,7 @@ export function EscalateModal({
           </p>
         </DialogHeader>
 
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 px-5 pb-5 pt-3">
           {/* Bulk banner */}
           {isBulk && (
             <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary-muted p-3">
