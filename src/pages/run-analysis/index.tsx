@@ -2207,30 +2207,58 @@ function RunConfirmModal({
           </p>
         </DialogHeader>
 
-        <div className="space-y-2.5 px-5 py-4">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5 text-sm">
-            <span className="text-muted-foreground">Clip length</span>
-            <span className="font-semibold text-foreground">{minutes} min</span>
+        <div className="space-y-4 px-5 py-5">
+          {/* Hero — what this run costs */}
+          <div
+            className={cn(
+              "flex flex-col items-center gap-1 rounded-xl border py-5 text-center",
+              tokenCost > 0
+                ? "border-primary/25 bg-primary/[0.06]"
+                : "border-success/25 bg-success/[0.06]"
+            )}
+          >
+            <span className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Tokens to be consumed
+            </span>
+            {tokenCost > 0 ? (
+              <span className="flex items-center gap-2 font-mono text-3xl font-bold text-primary">
+                <CoinIcon className="size-6" />
+                {tokenCost.toLocaleString()}
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 text-2xl font-bold text-success">
+                <CheckCircle2 className="size-6" />
+                Free
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {tokenCost > 0
+                ? <>Balance after this run: <span className="font-semibold text-foreground">{(tokenBalance - tokenCost).toLocaleString()}</span> tokens</>
+                : "Covered entirely by your free trial"}
+            </span>
           </div>
-          {freeCover > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5 text-sm">
-              <span className="text-muted-foreground">From free trial</span>
-              <span className="font-semibold text-foreground">{freeCover} min</span>
+
+          {/* Breakdown */}
+          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+            <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+              <span className="text-muted-foreground">Clip length</span>
+              <span className="font-semibold text-foreground">{minutes} min</span>
             </div>
-          )}
-          <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/[0.06] px-3 py-2.5 text-sm">
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <CoinIcon className="size-4" /> Tokens to be consumed
-            </span>
-            <span className="font-mono font-bold text-primary">
-              {tokenCost > 0 ? `${tokenCost} tokens` : "0 · free"}
-            </span>
+            {freeCover > 0 && (
+              <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                <span className="text-muted-foreground">From free trial</span>
+                <span className="font-semibold text-success">{freeCover} min</span>
+              </div>
+            )}
+            {paidMinutes > 0 && (
+              <div className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                <span className="text-muted-foreground">Billed to tokens</span>
+                <span className="font-semibold text-foreground">
+                  {paidMinutes} min · {tokenCost.toLocaleString()} tokens
+                </span>
+              </div>
+            )}
           </div>
-          {tokenCost > 0 && (
-            <p className="px-1 text-2xs text-muted-foreground">
-              {paidMinutes} min billed · balance after: {(tokenBalance - tokenCost).toLocaleString()} tokens
-            </p>
-          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
