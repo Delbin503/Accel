@@ -1225,10 +1225,10 @@ const SEAT_ROLE_STYLES: Record<"all" | UserRole, { bg: string; text: string; bar
 };
 
 function SeatPill({
-  label, total, assigned, available, price, kind, billingCycle,
+  label, total, assigned, available, price, kind,
 }: {
   label: string; total: number; assigned: number; available: number; price?: number;
-  kind: "all" | UserRole; billingCycle: string;
+  kind: "all" | UserRole; billingCycle?: string;
 }) {
   const cfg = SEAT_ROLE_STYLES[kind];
   const Icon = cfg.icon;
@@ -1258,7 +1258,9 @@ function SeatPill({
           </div>
           <div className="min-w-0">
             <p className="text-base font-bold text-foreground">Total {label}</p>
-            {price !== undefined && <p className="text-2xs text-muted-foreground">${price}/mo · {billingCycle}</p>}
+            {kind !== "owner" && price !== undefined && (
+              <p className="text-2xs text-muted-foreground">${price}/mo</p>
+            )}
           </div>
         </div>
         <div className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
@@ -1275,7 +1277,7 @@ function SeatPill({
             <span className={cn("font-mono font-semibold", available === 0 ? "text-sev-critical" : "text-success")}>{available}</span>
           </div>
         </div>
-        {kind !== "all" && available === 0 && (
+        {kind !== "all" && kind !== "owner" && available === 0 && (
           <p className="mt-2 flex items-start gap-1 text-xs text-warning">
             <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
             No available seats — purchasing required to add a user.
