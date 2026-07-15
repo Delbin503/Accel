@@ -708,6 +708,14 @@ export default function DetectionFeedPage({
 
   const pendingCount = visibleEvents.filter((e) => e.status === "pending").length;
 
+  const hasActiveFilters =
+    kpiFilter !== "all" ||
+    search.trim().length > 0 ||
+    filters.severity.length > 0 ||
+    filters.type.length > 0 ||
+    filters.site.length > 0 ||
+    filters.model.length > 0;
+
   const drawerEvent = drawerEventId
     ? (allEvents.find((e) => e.id === drawerEventId) ?? null)
     : null;
@@ -922,6 +930,18 @@ export default function DetectionFeedPage({
         <p className="text-[13px] text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setKpiFilter("all");
+                setSearch("");
+              }}
+              className="ml-2 text-muted-foreground underline hover:text-primary"
+            >
+              Clear filters
+            </button>
+          )}
         </p>
         <select className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground focus:border-primary focus:outline-none">
           <option>Newest first</option>

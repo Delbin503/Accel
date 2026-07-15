@@ -568,6 +568,20 @@ export default function DetectionFeedPage() {
 
   const pendingCount = visibleEvents.filter((e) => e.status === "pending").length;
 
+  const hasActiveFilters =
+    kpiFilter !== "all" ||
+    search.trim().length > 0 ||
+    filters.severity.length > 0 ||
+    filters.type.length > 0 ||
+    filters.site.length > 0 ||
+    filters.model.length > 0;
+
+  const clearFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setKpiFilter("all");
+    setSearch("");
+  };
+
   const drawerEvent = drawerEventId
     ? (allEvents.find((e) => e.id === drawerEventId) ?? null)
     : null;
@@ -782,6 +796,14 @@ export default function DetectionFeedPage() {
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="ml-2 text-muted-foreground underline hover:text-primary"
+            >
+              Clear filters
+            </button>
+          )}
         </p>
         <Select defaultValue="newest">
           <SelectTrigger className="w-auto text-sm">
@@ -803,15 +825,7 @@ export default function DetectionFeedPage() {
           icon={Search}
           title="No events match the current filters"
           action={
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFilters(EMPTY_FILTERS);
-                setKpiFilter("all");
-                setSearch("");
-              }}
-            >
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
               Clear filters
             </Button>
           }
