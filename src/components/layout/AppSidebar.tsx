@@ -228,12 +228,69 @@ function NavLeaf({ item }: { item: NavItem }) {
 
 function NavParent({ item }: { item: NavItem }) {
   const location = useLocation();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   const isAnyChildActive =
     item.children?.some(
       (c) => location.pathname === c.href || location.pathname.startsWith(c.href + "/")
     ) ?? false;
 
   const [open, setOpen] = React.useState(isAnyChildActive);
+
+  // Collapsed (icon) mode hides the inline submenu, so surface the children in
+  // a hover/click flyout — otherwise they're unreachable.
+  if (isCollapsed) {
+    return (
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              isActive={isAnyChildActive}
+              className={cn(
+                "relative rounded-md transition-colors",
+                isAnyChildActive &&
+                  "border-l-2 border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+              )}
+            >
+              <item.icon
+                className={cn(
+                  "size-4 shrink-0",
+                  isAnyChildActive ? "text-primary" : "text-muted-foreground"
+                )}
+              />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent side="right" align="start" className="min-w-44">
+            <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {item.label}
+            </div>
+            {item.children?.map((child) => {
+              const childActive =
+                location.pathname === child.href ||
+                location.pathname.startsWith(child.href + "/");
+
+              return (
+                <DropdownMenuItem key={child.href} asChild className="gap-2 px-2 py-1.5 text-base">
+                  <NavLink to={child.href}>
+                    <child.icon
+                      className={cn(
+                        "size-4",
+                        childActive ? "text-primary" : "text-muted-foreground"
+                      )}
+                    />
+                    <span className={cn(childActive && "text-primary")}>{child.label}</span>
+                  </NavLink>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    );
+  }
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="group/collapsible">
@@ -278,7 +335,15 @@ function NavParent({ item }: { item: NavItem }) {
                       childActive && "text-primary"
                     )}
                   >
-                    <NavLink to={child.href}>{child.label}</NavLink>
+                    <NavLink to={child.href}>
+                      <child.icon
+                        className={cn(
+                          "size-4 shrink-0",
+                          childActive ? "text-primary" : "text-muted-foreground"
+                        )}
+                      />
+                      <span>{child.label}</span>
+                    </NavLink>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               );
