@@ -81,7 +81,7 @@ const ROW_META: Record<RowType, RowMeta> = {
   AND:    { label: "AND",    bgClass: "bg-warning/15",   textClass: "text-warning",  borderClass: "border-warning/40" },
   OR:     { label: "OR",     bgClass: "bg-sev-critical/15",  textClass: "text-sev-critical", borderClass: "border-sev-critical/40" },
   THEN:   { label: "THEN",   bgClass: "bg-purple/15",        textClass: "text-purple",       borderClass: "border-purple/40" },
-  During: { label: "During", bgClass: "",                    textClass: "",                  borderClass: "", teal: true },
+  During: { label: "DURING", bgClass: "",                    textClass: "",                  borderClass: "", teal: true },
   FOR:    { label: "FOR",    bgClass: "bg-info/15",          textClass: "text-info",         borderClass: "border-info/40" },
 };
 
@@ -128,7 +128,7 @@ function buildSummary(rows: ConditionRow[]): React.ReactNode {
         )}
         style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
       >
-        {row.type === "THEN" ? (i === firstThenIdx ? "Then" : "and also") : m.label}
+        {row.type === "THEN" ? (i === firstThenIdx ? "THEN" : "AND ALSO") : m.label}
       </span>
     );
 
@@ -529,12 +529,12 @@ function KeywordBadge({ type, isAndAlso, onClick }: { type: RowType; isAndAlso?:
     <button
       onClick={onClick}
       className={cn(
-        "flex w-[80px] flex-shrink-0 items-center justify-between gap-1 rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-opacity hover:opacity-80",
+        "flex min-w-[80px] flex-shrink-0 items-center justify-between gap-1 whitespace-nowrap rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-opacity hover:opacity-80",
         m.teal ? "" : cn(m.bgClass, m.textClass, m.borderClass)
       )}
       style={m.teal ? TEAL_INLINE : undefined}
     >
-      <span>{isAndAlso ? "and also" : type === "THEN" ? "Then" : m.label}</span>
+      <span>{isAndAlso ? "AND ALSO" : m.label}</span>
       <ChevronDown className="size-2.5 opacity-60" />
     </button>
   );
@@ -1712,6 +1712,7 @@ export default function RulesLibraryPage() {
       // Sync edits back to module-level mock so other pages see the change.
       const idx = MOCK_RULES.findIndex((r) => r.id === editingRule.id);
       if (idx >= 0) MOCK_RULES[idx] = { ...editingRule, ...data } as RuleData;
+      toast.success(`Rule "${data.name}" updated`);
     } else {
       const n = new Date();
       const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1727,6 +1728,7 @@ export default function RulesLibraryPage() {
       // Mutate module-level mock so the Model Management page picks the new rule up
       // when we navigate back to it.
       MOCK_RULES.unshift(newRule);
+      toast.success(`Rule "${data.name}" created`);
     }
     // If we arrived here from Model Management's +Add Rule button, bounce back to the
     // model editor we came from so the new rule lands directly in its Rule Library panel.
