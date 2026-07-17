@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -227,22 +228,42 @@ function HeroView({
               <TruncatedText text={`${camera.areaName} · ${camera.stream.resolution} · ${camera.stream.frameRate}fps · accel-vms v4.2.1 active`} className="text-xs text-muted-foreground" />
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPaused((v) => !v)}
-                className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
-                {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              </button>
-              <button onClick={() => setMuted((v) => !v)}
-                className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
-                {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-              </button>
-              <button title="Snapshot"
-                className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
-                <Camera className="size-3.5" />
-              </button>
-              <button title="Fullscreen"
-                className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
-                <Maximize2 className="size-3.5" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setPaused((v) => !v)}
+                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                    {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{paused ? "Play" : "Pause"}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setMuted((v) => !v)}
+                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                    {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{muted ? "Unmute" : "Mute"}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                    <Camera className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Snapshot</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                    <Maximize2 className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Fullscreen</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
