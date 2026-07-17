@@ -2,17 +2,21 @@ import * as React from "react";
 import { toast } from "sonner";
 import {
   CreditCard, Download, CheckCircle2, AlertCircle, Clock, Crown, ShieldCheck, CircleUser,
-  Plus, ArrowUpRight, ChevronDown, X, FileText, Building2, Sparkles, Zap, Rocket, Check,
-  ArrowUp, ArrowDown, CalendarClock, Bell, AlertTriangle, Trash2, Star, Filter, RefreshCw,
-  Mail, Globe, RotateCcw,
+  Plus, ArrowUpRight, ChevronDown, ChevronRight, X, FileText, Building2, Sparkles, Zap, Rocket, Check,
+  ArrowUp, ArrowDown, CalendarClock, AlertTriangle, Trash2, Star, Filter, RefreshCw,
+  Mail, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
@@ -72,17 +76,8 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
 
 const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string; chip: string }> = {
   starter:      { bg: "bg-info/10",       border: "border-info/40",       text: "text-info",       chip: "bg-info/15 text-info"           },
-  professional: { bg: "bg-secondary/10",  border: "border-secondary/40",  text: "text-secondary",  chip: "bg-secondary/15 text-secondary"  },
+  professional: { bg: "bg-purple/10",     border: "border-purple/40",     text: "text-purple",     chip: "bg-purple/15 text-purple"        },
   enterprise:   { bg: "bg-success/10",    border: "border-success/40",    text: "text-success",    chip: "bg-success/15 text-success"      },
-};
-
-const STATUS_STYLES = {
-  active:        { bg: "bg-success/15",          text: "text-success",          icon: CheckCircle2, label: "Active"         },
-  trial:         { bg: "bg-info/15",             text: "text-info",             icon: Sparkles,     label: "Trial"          },
-  "past-due":    { bg: "bg-warning/15",          text: "text-warning",          icon: Clock,        label: "Past Due"       },
-  cancelled:     { bg: "bg-muted",               text: "text-muted-foreground", icon: X,            label: "Cancelled"      },
-  cancelling:    { bg: "bg-warning/15",          text: "text-warning",          icon: CalendarClock,label: "Cancelling"     },
-  payment_failed:{ bg: "bg-sev-critical/15",     text: "text-sev-critical",     icon: AlertCircle,  label: "Payment Failed" },
 };
 
 const INVOICE_STATUS = {
@@ -95,33 +90,49 @@ const TIER_ORDER: PlanTier[] = ["starter", "professional", "enterprise"];
 
 function tierRank(t: PlanTier): number { return TIER_ORDER.indexOf(t); }
 
+/* ── Derived subscription status → StatusBadge tone + renewal urgency ────── */
+
+const RENEWAL_SOON_DAYS = 14;
+
+type SubTone = "success" | "warning" | "info" | "critical" | "neutral";
+
+function renewalDays(sub: SiteSubscription): number {
+  return daysBetween(BILLING_TODAY, sub.cancellingAt ?? sub.renewsAt);
+}
+
+function subStatusBadge(sub: SiteSubscription): { tone: SubTone; label: string } {
+  switch (sub.status) {
+    case "payment_failed": return { tone: "critical", label: "Payment Failed" };
+    case "cancelling":     return { tone: "warning",  label: "Cancelling" };
+    case "cancelled":      return { tone: "neutral",  label: "Cancelled" };
+    case "trial":          return { tone: "info",     label: "Trial" };
+    case "past-due":       return { tone: "warning",  label: "Past Due" };
+    default:               return { tone: "success",  label: "Active" };
+  }
+}
+
+function isDueSoon(sub: SiteSubscription): boolean {
+  if (sub.status !== "active" && sub.status !== "trial") return false;
+  const d = renewalDays(sub);
+  return d >= 0 && d <= RENEWAL_SOON_DAYS;
+}
+
 /* ── Section card ─────────────────────────────────────────────────────────── */
 
-function SectionCard({ title, description, action, children }: {
+function SectionCard({ title, description, action, children, className, bodyClassName }: {
   title: string; description?: string; action?: React.ReactNode; children: React.ReactNode;
+  className?: string; bodyClassName?: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+    <div className={cn("flex flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-md font-bold text-foreground">{title}</h2>
           {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
       </div>
-      <div className="px-5 py-4">{children}</div>
-    </div>
-  );
-}
-
-/* ── KPI summary tile ─────────────────────────────────────────────────────── */
-
-function KpiTile({ label, value, sub, txt }: { label: string; value: React.ReactNode; sub: string; txt: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-background p-3">
-      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 text-2xl font-bold leading-none", txt)}>{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+      <div className={cn("flex-1 px-5 py-4", bodyClassName)}>{children}</div>
     </div>
   );
 }
@@ -143,10 +154,11 @@ function UsageBar({ used, total, label }: { used: number; total: number | "unlim
     );
   }
   const pct = total > 0 ? (used / total) * 100 : 0;
-  const isOverage = pct >= 100;
-  const isWarning = pct >= 80 && !isOverage;
-  const barClass = isOverage ? "bg-sev-critical" : isWarning ? "bg-warning" : "bg-success";
-  const textClass = isOverage ? "text-sev-critical" : isWarning ? "text-warning" : "text-foreground";
+  const isOverage = used > total;
+  const isFull = used === total && total > 0;
+  const isWarning = pct >= 80 && !isOverage && !isFull;
+  const barClass = isOverage ? "bg-sev-critical" : isFull || isWarning ? "bg-warning" : "bg-success";
+  const textClass = isOverage ? "text-sev-critical" : isFull || isWarning ? "text-warning" : "text-foreground";
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-2xs">
@@ -154,183 +166,273 @@ function UsageBar({ used, total, label }: { used: number; total: number | "unlim
         <span className={cn("font-mono font-bold", textClass)}>
           {used} / {total}
           {isOverage && <span className="ml-1 text-3xs text-sev-critical">(+{used - total} over)</span>}
+          {isFull && <span className="ml-1 text-3xs text-warning">(at limit)</span>}
         </span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full transition-all", barClass)} style={{ width: `${Math.min(108, pct)}%` }} />
+        <div className={cn("h-full rounded-full transition-all", barClass)} style={{ width: `${Math.min(100, pct)}%` }} />
       </div>
     </div>
   );
 }
 
-/* ── Cancellation grace banner ────────────────────────────────────────────── */
+/* ── Site Subscriptions table ─────────────────────────────────────────────── */
 
-function CancellationGraceBanner({ sub, onUndo }: { sub: SiteSubscription; onUndo: () => void }) {
-  const days = daysBetween(BILLING_TODAY, sub.cancellingAt ?? sub.renewsAt);
+function DueSoonChip({ days }: { days: number }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/[0.06] px-4 py-3">
-      <CalendarClock className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-      <div className="min-w-0 flex-1 text-base">
-        <span className="font-semibold text-foreground">
-          Your {PLANS[sub.planTier].name} subscription for {sub.siteName} ends in{" "}
-          <span className="text-warning">{days} day{days !== 1 ? "s" : ""}</span>
-        </span>
-        <span className="ml-1 text-muted-foreground">— access becomes read-only after {sub.renewsDisplay.split(" (")[0]}.</span>
-      </div>
-      <Button size="sm" variant="outline" onClick={onUndo} className="flex-shrink-0 gap-1.5 border-warning/40 text-warning hover:bg-warning/10">
-        <RotateCcw className="size-3.5" />
-        Undo cancellation
-      </Button>
-    </div>
+    <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-warning">
+      <CalendarClock className="size-2.5" /> Due in {days}d
+    </span>
   );
 }
 
-/* ── Failed payment banner ────────────────────────────────────────────────── */
-
-function FailedPaymentBanner({ sub, graceDays, onRetry }: { sub: SiteSubscription; graceDays: number; onRetry: () => void }) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-sev-critical/40 bg-sev-critical/[0.06] px-4 py-3">
-      <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
-      <div className="min-w-0 flex-1 text-base">
-        <span className="font-semibold text-sev-critical">Payment failed</span>
-        <span className="ml-1 text-foreground">for {sub.siteName} —</span>
-        <span className="ml-1 text-muted-foreground">you have {graceDays} day{graceDays !== 1 ? "s" : ""} to update your card before access is restricted.</span>
-      </div>
-      <Button size="sm" variant="outline" onClick={onRetry} className="flex-shrink-0 gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10">
-        <RefreshCw className="size-3.5" />
-        Retry payment
-      </Button>
-    </div>
-  );
-}
-
-/* ── Renewal reminder banner ──────────────────────────────────────────────── */
-
-function RenewalReminderBanner({ sub, onDismiss, onUpdatePayment }: {
-  sub: SiteSubscription; onDismiss: () => void; onUpdatePayment: () => void;
+function SiteSubscriptionsTable({ subs, onOpen }: {
+  subs: SiteSubscription[];
+  onOpen: (sub: SiteSubscription) => void;
 }) {
-  const plan = PLANS[sub.planTier];
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-info/40 bg-info/[0.06] px-4 py-3">
-      <Bell className="mt-0.5 size-4 flex-shrink-0 text-info" />
-      <div className="min-w-0 flex-1 text-base">
-        <span className="font-semibold text-foreground">{plan.name}</span>
-        <span className="ml-1 text-muted-foreground">for</span>
-        <span className="ml-1 font-semibold text-foreground">{sub.siteName}</span>
-        <span className="ml-1 text-muted-foreground">renews on</span>
-        <span className="ml-1 font-semibold text-foreground">{sub.renewsDisplay.split(" (")[0]}</span>
-        <span className="ml-1 text-muted-foreground">for</span>
-        <span className="ml-1 font-semibold text-info">${sub.monthlyCost.toLocaleString()}</span>
-        {" — "}
-        <button onClick={onUpdatePayment} className="font-semibold text-primary underline hover:text-primary/80">
-          Update payment method
-        </button>
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/30">
+            <tr className="border-b border-border text-left">
+              {["SITE", "PLAN", "STATUS", "SEATS", "CAMERAS", "RENEWAL", "COST", ""].map((h, i) => (
+                <th
+                  key={h || `col-${i}`}
+                  className={cn(
+                    "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
+                    h === "COST" && "text-right"
+                  )}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {subs.map((s) => {
+              const plan = PLANS[s.planTier];
+              const color = PLAN_COLORS[s.planTier];
+              const Icon = PLAN_ICONS[s.planTier];
+              const badge = subStatusBadge(s);
+              const usage = USAGE_DATA[s.id];
+              const totalSeats = s.seats.owner + s.seats.admin + s.seats.user;
+              const dueSoon = isDueSoon(s);
+              const days = renewalDays(s);
+              const isCancelled = s.status === "cancelled";
+              return (
+                <tr
+                  key={s.id}
+                  onClick={() => onOpen(s)}
+                  className={cn(
+                    "group cursor-pointer text-base transition-colors hover:bg-muted/20",
+                    isCancelled && "opacity-60"
+                  )}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={cn("flex size-8 flex-shrink-0 items-center justify-center rounded-md border", color.border, color.bg)}>
+                        <Icon className={cn("size-3.5", color.text)} />
+                      </div>
+                      <TruncatedText text={s.siteName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <p className={cn("text-sm font-semibold", color.text)}>{plan.name}</p>
+                    <p className="text-2xs text-muted-foreground">{s.billingCycle === "annual" ? "Annual" : "Monthly"}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col items-start gap-1">
+                      <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>
+                      {dueSoon && <DueSoonChip days={days} />}
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 font-mono text-sm">
+                    <span className="text-foreground">{usage ? usage.usedSeats : totalSeats}</span>
+                    <span className="text-muted-foreground"> / {totalSeats}</span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 font-mono text-sm">
+                    <span className="text-foreground">{usage ? usage.usedCameras : 0}</span>
+                    <span className="text-muted-foreground"> / {typeof plan.cameraLimit === "number" ? plan.cameraLimit : "∞"}</span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <p className={cn("text-sm", dueSoon ? "font-semibold text-warning" : "text-muted-foreground")}>
+                      {s.renewsDisplay.split(" (")[0]}
+                    </p>
+                    {dueSoon && <p className="text-2xs text-warning">in {days} day{days !== 1 ? "s" : ""}</p>}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <span className={cn("font-mono text-sm font-bold", color.text)}>${s.monthlyCost.toLocaleString()}</span>
+                    <span className="text-2xs text-muted-foreground">/mo</span>
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      <button onClick={onDismiss} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
-        <X className="size-3.5" />
-      </button>
     </div>
   );
 }
 
-/* ── Site Subscription Card ───────────────────────────────────────────────── */
+/* ── Site Subscription detail drawer ──────────────────────────────────────── */
 
-function SubscriptionCard({ sub, onChangePlan, onManageSeats }: {
-  sub: SiteSubscription;
+function SubscriptionDrawer({ sub, open, onClose, onChangePlan, onManageSeats, onCancel, onReactivate }: {
+  sub: SiteSubscription | null;
+  open: boolean;
+  onClose: () => void;
   onChangePlan: () => void;
   onManageSeats: () => void;
+  onCancel: () => void;
+  onReactivate: () => void;
 }) {
-  const plan = PLANS[sub.planTier];
-  const color = PLAN_COLORS[sub.planTier];
-  const status = STATUS_STYLES[sub.status] ?? STATUS_STYLES.active;
-  const PlanIcon = PLAN_ICONS[sub.planTier];
-  const totalSeats = sub.seats.owner + sub.seats.admin + sub.seats.user;
-  const usage = USAGE_DATA[sub.id];
-  const isCancelled = sub.status === "cancelled";
-  const isCancelling = sub.status === "cancelling";
-
   return (
-    <div className={cn(
-      "overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/30",
-      isCancelled ? "opacity-60 border-border" : isCancelling ? "border-warning/40" : "border-border"
-    )}>
-      {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5">
-        <div className={cn("flex size-8 flex-shrink-0 items-center justify-center rounded-md border", color.border, color.bg)}>
-          <PlanIcon className={cn("size-3.5", color.text)} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <TruncatedText text={sub.siteName} className="text-base font-bold text-foreground" />
-            <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px text-3xs font-bold uppercase tracking-wider", status.bg, status.text)}>
-              <status.icon className="size-2.5" />
-              {status.label}
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            <span className={cn("font-semibold", color.text)}>{plan.name}</span>
-            {" · "}{sub.billingCycle === "annual" ? "Annual" : "Monthly"}
-            {" · "}Renews {sub.renewsDisplay.split(" (")[0]}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className={cn("font-mono text-md font-bold leading-none", color.text)}>${sub.monthlyCost.toLocaleString()}</p>
-          <p className="mt-0.5 text-2xs text-muted-foreground">/month</p>
-        </div>
-      </div>
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="right" showCloseButton={false} className="flex w-[min(560px,92vw)] max-w-[95vw] flex-col gap-0 p-0">
+        {sub ? (
+          (() => {
+            const plan = PLANS[sub.planTier];
+            const color = PLAN_COLORS[sub.planTier];
+            const Icon = PLAN_ICONS[sub.planTier];
+            const badge = subStatusBadge(sub);
+            const usage = USAGE_DATA[sub.id];
+            const totalSeats = sub.seats.owner + sub.seats.admin + sub.seats.user;
+            const isCancelled = sub.status === "cancelled";
+            const dueSoon = isDueSoon(sub);
+            const days = renewalDays(sub);
+            const planAccent: KpiAccent = sub.planTier === "starter" ? "info" : sub.planTier === "professional" ? "purple" : "success";
+            const roles = [
+              { key: "owner" as const, count: sub.seats.owner },
+              { key: "admin" as const, count: sub.seats.admin },
+              { key: "user" as const, count: sub.seats.user },
+            ];
+            return (
+              <>
+                <SheetHeader className="border-b border-border bg-card px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className={cn("flex size-11 flex-shrink-0 items-center justify-center rounded-lg border", color.border, color.bg)}>
+                        <Icon className={cn("size-5", color.text)} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                          <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>
+                          {dueSoon && <DueSoonChip days={days} />}
+                        </div>
+                        <SheetTitle className="min-w-0 text-lg font-bold">
+                          <TruncatedText text={sub.siteName} />
+                        </SheetTitle>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          <span className={cn("font-semibold", color.text)}>{plan.name}</span>
+                          {" · "}{sub.billingCycle === "annual" ? "Annual" : "Monthly"}
+                          {" · "}Renews {sub.renewsDisplay.split(" (")[0]}
+                        </p>
+                      </div>
+                    </div>
+                    <button onClick={onClose} className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                </SheetHeader>
 
-      {/* Usage bars — uniform across every card: seats, cameras, NVRs */}
-      {usage && !isCancelled && (
-        <div className="grid grid-cols-3 gap-3 border-t border-border/60 bg-background/20 px-3 py-2.5">
-          <UsageBar used={usage.usedSeats} total={totalSeats} label="Seats" />
-          <UsageBar used={usage.usedCameras} total={plan.cameraLimit} label="Cameras" />
-          <UsageBar used={usage.usedNvrs} total={plan.nvrLimit} label="NVRs" />
-        </div>
-      )}
+                <div className="flex-1 space-y-6 overflow-y-auto p-5">
+                  {/* Overview */}
+                  <div>
+                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Overview</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <KpiCard compact label="Monthly Cost" value={`$${sub.monthlyCost.toLocaleString()}`} sub="Billed per month" accent={planAccent} />
+                      <KpiCard compact label="Billing" value={sub.billingCycle === "annual" ? "Annual" : "Monthly"} sub={`Started ${sub.startedDisplay}`} accent="info" />
+                      <KpiCard compact label="Renews" value={sub.renewsDisplay.split(" (")[0]} sub={dueSoon ? `In ${days} day${days !== 1 ? "s" : ""}` : "On schedule"} accent={dueSoon ? "warning" : "muted"} />
+                    </div>
+                  </div>
 
-      {/* Actions row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-background/30 px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2 text-2xs text-muted-foreground">
-          <span>{typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} cam limit` : "Unlim cams"}</span>
-          <span className="opacity-40">·</span>
-          <span>{typeof plan.nvrLimit === "number" ? `${plan.nvrLimit} NVR limit` : "Unlim NVRs"}</span>
-          <span className="opacity-40">·</span>
-          <span><strong className="text-foreground">{totalSeats}</strong>{typeof plan.userLimit === "number" ? ` / ${plan.userLimit}` : ""} users</span>
-          {sub.seats.owner > 0 && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-success/15 px-1 py-0.5 text-success">
-              <Crown className="size-2.5" /> {sub.seats.owner}
-            </span>
-          )}
-          {sub.seats.admin > 0 && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-info/15 px-1 py-0.5 text-info">
-              <ShieldCheck className="size-2.5" /> {sub.seats.admin}
-            </span>
-          )}
-          {sub.seats.user > 0 && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-warning/15 px-1 py-0.5 text-warning">
-              <CircleUser className="size-2.5" /> {sub.seats.user}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {!isCancelled && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onManageSeats}>
-              Add Seats
-            </Button>
-          )}
-          {isCancelled ? (
-            <Button size="sm" className="h-7 text-xs" onClick={onChangePlan}>
-              Reactivate
-            </Button>
-          ) : (
-            <Button size="sm" className="h-7 gap-1 text-xs" onClick={onChangePlan}>
-              <ArrowUp className="size-3" />
-              Change Plan
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+                  {/* Usage */}
+                  {usage && !isCancelled && (
+                    <div>
+                      <p className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Usage</p>
+                      <div className="grid grid-cols-1 gap-3.5 rounded-lg border border-border bg-card p-4">
+                        <UsageBar used={usage.usedSeats} total={totalSeats} label="Seats" />
+                        <UsageBar used={usage.usedCameras} total={plan.cameraLimit} label="Cameras" />
+                        <UsageBar used={usage.usedNvrs} total={plan.nvrLimit} label="NVRs" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seats by role */}
+                  <div>
+                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Seats by Role</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {roles.map(({ key, count }) => (
+                        <KpiCard
+                          key={key}
+                          compact
+                          label={`${key.charAt(0).toUpperCase()}${key.slice(1)}${count === 1 ? "" : "s"}`}
+                          value={count}
+                          accent={key === "owner" ? "success" : key === "admin" ? "info" : "warning"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Plan limits */}
+                  <div>
+                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Plan Limits</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg border border-border bg-card p-4">
+                      {([
+                        ["Cameras", typeof plan.cameraLimit === "number" ? `${plan.cameraLimit} per site` : "Unlimited"],
+                        ["NVRs", typeof plan.nvrLimit === "number" ? `${plan.nvrLimit}` : "Unlimited"],
+                        ["Users", typeof plan.userLimit === "number" ? `${plan.userLimit}` : "Unlimited"],
+                        ["Retention", `${plan.retentionDays} days`],
+                      ] as [string, string][]).map(([label, value]) => (
+                        <div key={label} className="flex flex-col gap-0.5">
+                          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+                          <span className="text-base font-medium text-foreground">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-3.5">
+                  {isCancelled ? (
+                    <Button onClick={onReactivate} className="gap-1.5">
+                      <RotateCcw className="size-3.5" /> Reactivate
+                    </Button>
+                  ) : (
+                    <>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button className="gap-1.5">
+                            Update <ChevronDown className="size-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="top" className="w-44">
+                          <DropdownMenuItem onClick={onChangePlan} className="gap-2">
+                            <ArrowUp className="size-3.5 text-muted-foreground" /> Change Plan
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={onManageSeats} className="gap-2">
+                            <Plus className="size-3.5 text-muted-foreground" /> Add Seats
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Button variant="ghost" onClick={onCancel} className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        <X className="size-3.5" /> Cancel Plan
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
+            );
+          })()
+        ) : (
+          <div className="p-6 text-base text-muted-foreground">No subscription selected.</div>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -372,7 +474,7 @@ function ChangePlanModal({ open, current, onClose, onConfirm, onCancelPlan }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">
             {step === "pick" ? "Change Plan" : "Confirm Plan Change"}
@@ -573,21 +675,24 @@ function ChangePlanModal({ open, current, onClose, onConfirm, onCancelPlan }: {
 
 function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
   open: boolean;
-  sites: { id: string; name: string }[];
+  sites: { id: string; name: string; currentPlan?: string }[];
   onClose: () => void;
   onConfirm: (siteId: string, planTier: PlanTier, cycle: "monthly" | "annual") => void;
 }) {
-  const [siteId, setSiteId] = React.useState<string>(sites[0]?.id ?? "");
+  const firstAvailable = sites.find((s) => !s.currentPlan)?.id ?? "";
+  const [siteId, setSiteId] = React.useState<string>(firstAvailable);
   const [planTier, setPlanTier] = React.useState<PlanTier>("professional");
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
 
   React.useEffect(() => {
-    if (open) { setSiteId(sites[0]?.id ?? ""); setPlanTier("professional"); setCycle("annual"); }
+    if (open) { setSiteId(sites.find((s) => !s.currentPlan)?.id ?? ""); setPlanTier("professional"); setCycle("annual"); }
   }, [open, sites]);
+
+  const hasSelectable = sites.some((s) => !s.currentPlan);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add Subscription</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">Each site requires its own subscription. Pick a site and choose a plan.</p>
@@ -595,27 +700,29 @@ function AddSubscriptionModal({ open, sites, onClose, onConfirm }: {
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
-            {sites.length === 0 ? (
-              <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
-                All sites already have a subscription.
-              </div>
-            ) : (
-              <div className="space-y-1.5">
+            <Select value={siteId} onValueChange={setSiteId}>
+              <SelectTrigger className="h-10 w-full text-base">
+                <SelectValue placeholder="Select a site" />
+              </SelectTrigger>
+              <SelectContent>
                 {sites.map((s) => (
-                  <button key={s.id} onClick={() => setSiteId(s.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-left text-base transition-colors",
-                      siteId === s.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                    )}>
-                    <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-                      siteId === s.id ? "border-primary" : "border-muted-foreground/40")}>
-                      {siteId === s.id && <span className="size-2 rounded-full bg-primary" />}
-                    </div>
-                    <Building2 className="size-3.5 text-muted-foreground" />
-                    <span className="text-foreground">{s.name}</span>
-                  </button>
+                  <SelectItem key={s.id} value={s.id} disabled={!!s.currentPlan}>
+                    <span className="flex w-full items-center gap-2">
+                      <Building2 className="size-3.5 flex-shrink-0 text-muted-foreground" />
+                      <span className="font-medium text-foreground">{s.name}</span>
+                      <span className="font-mono text-2xs uppercase text-muted-foreground/70">{s.id}</span>
+                      {s.currentPlan && (
+                        <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-2xs font-semibold text-muted-foreground">
+                          {s.currentPlan}
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
                 ))}
-              </div>
+              </SelectContent>
+            </Select>
+            {!hasSelectable && (
+              <p className="mt-1.5 text-2xs text-muted-foreground">Every site already has an active subscription.</p>
             )}
           </div>
           <div className="flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
@@ -678,7 +785,7 @@ function CancelSubscriptionModal({ open, sub, onClose, onConfirm }: {
   if (!sub) return null;
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold text-destructive">Cancel Subscription</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -733,7 +840,7 @@ function ManageSeatsModal({ open, sub, onClose, onSave }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Manage Seats</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -878,7 +985,7 @@ function AddCardModal({ open, onClose, onSave }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Add Payment Method</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -942,7 +1049,7 @@ function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base font-bold">Retry Payment</DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -1130,7 +1237,7 @@ interface BillingDetails {
   country: string;
 }
 
-function BillingDetailsSection() {
+function BillingDetailsSection({ className }: { className?: string }) {
   const [editing, setEditing] = React.useState(false);
   const [details, setDetails] = React.useState<BillingDetails>({
     email: "billing@acmecorp.com",
@@ -1168,6 +1275,7 @@ function BillingDetailsSection() {
     <SectionCard
       title="Billing Details"
       description="Applied to all future invoice PDFs across this account."
+      className={className}
       action={
         !editing ? (
           <Button size="sm" variant="outline" onClick={() => { setDraft(details); setEditing(true); }}>
@@ -1265,6 +1373,84 @@ function BillingDetailsSection() {
   );
 }
 
+/* ── Invoices table ───────────────────────────────────────────────────────── */
+
+const INVOICE_TONE: Record<Invoice["status"], "success" | "warning" | "critical"> = {
+  paid: "success",
+  pending: "warning",
+  failed: "critical",
+};
+
+function InvoicesTable({ invoices, onOpen, onRetry }: {
+  invoices: Invoice[];
+  onOpen: (inv: Invoice) => void;
+  onRetry: (inv: Invoice) => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/30">
+            <tr className="border-b border-border text-left">
+              {["ISSUED", "INVOICE", "SITES", "STATUS", "AMOUNT", ""].map((h, i) => (
+                <th
+                  key={h || `col-${i}`}
+                  className={cn(
+                    "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
+                    h === "AMOUNT" && "text-right"
+                  )}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {invoices.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-sm italic text-muted-foreground">
+                  No invoices match the current filters.
+                </td>
+              </tr>
+            ) : invoices.map((inv) => (
+              <tr
+                key={inv.id}
+                onClick={() => onOpen(inv)}
+                className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+              >
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{inv.issuedDisplay}</td>
+                <td className="whitespace-nowrap px-4 py-3">
+                  <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{inv.id}</span>
+                </td>
+                <td className="px-4 py-3">
+                  <TruncatedText text={inv.siteNames?.join(" · ") ?? "—"} className="text-sm text-muted-foreground" />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <StatusBadge tone={INVOICE_TONE[inv.status]}>{INVOICE_STATUS[inv.status].label}</StatusBadge>
+                    {inv.status === "failed" && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onRetry(inv); }}
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-sev-critical hover:bg-sev-critical/10"
+                      >
+                        <RefreshCw className="size-2.5" /> Retry
+                      </button>
+                    )}
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-right font-mono text-sm font-bold text-foreground">${inv.amount.toLocaleString()}</td>
+                <td className="px-3 py-3 text-right">
+                  <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 /* ── Invoice filter bar ───────────────────────────────────────────────────── */
 
 type InvoiceStatusFilter = "all" | "paid" | "failed" | "pending";
@@ -1355,31 +1541,35 @@ function InvoiceFilterBar({ statusFilter, onStatusChange, siteFilter, onSiteChan
 
 /* ── Tabs ─────────────────────────────────────────────────────────────────── */
 
-type TabKey = "overview" | "invoices";
+type TabKey = "overview" | "subscriptions" | "invoices";
 
-function TabSwitcher({ value, onChange, counts }: { value: TabKey; onChange: (k: TabKey) => void; counts: { invoices: number } }) {
+function TabSwitcher({ value, onChange, counts }: {
+  value: TabKey;
+  onChange: (k: TabKey) => void;
+  counts: { subscriptions: number; invoices: number };
+}) {
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "overview", label: "Overview" },
+    { key: "subscriptions", label: "Site Subscriptions", count: counts.subscriptions },
     { key: "invoices", label: "Invoices", count: counts.invoices },
   ];
   return (
-    <div className="flex items-center gap-1 border-b border-border">
+    <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
       {tabs.map((t) => {
         const active = value === t.key;
         return (
           <button key={t.key} onClick={() => onChange(t.key)}
             className={cn(
-              "relative inline-flex items-center gap-2 px-3 py-2.5 text-base font-semibold transition-colors",
-              active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}>
             {t.label}
             {t.count !== undefined && (
               <span className={cn("inline-flex items-center justify-center rounded-full px-1.5 py-px text-2xs font-bold",
-                active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground")}>
                 {t.count}
               </span>
             )}
-            {active && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
           </button>
         );
       })}
@@ -1394,7 +1584,6 @@ export default function BillingPage() {
   const changePlanStore = useSubscriptionsStore((s) => s.changePlan);
   const changeCycleStore = useSubscriptionsStore((s) => s.changeBillingCycle);
   const cancelStore = useSubscriptionsStore((s) => s.cancel);
-  const undoCancelStore = useSubscriptionsStore((s) => s.undoCancel);
   const reactivateStore = useSubscriptionsStore((s) => s.reactivate);
   const updateSeatsStore = useSubscriptionsStore((s) => s.updateSeats);
   const addStore = useSubscriptionsStore((s) => s.add);
@@ -1406,8 +1595,8 @@ export default function BillingPage() {
   const [cards, setCards] = React.useState<SavedCard[]>(INITIAL_CARDS);
   const [addCardOpen, setAddCardOpen] = React.useState(false);
 
-  /* ── Renewal reminder dismissals ──────────────────────────────────────── */
-  const [dismissedRenewals, setDismissedRenewals] = React.useState<string[]>([]);
+  /* ── Subscription detail drawer ───────────────────────────────────────── */
+  const [drawerSub, setDrawerSub] = React.useState<SiteSubscription | null>(null);
 
   /* ── Modal state ──────────────────────────────────────────────────────── */
   const [changePlanSub, setChangePlanSub] = React.useState<SiteSubscription | null>(null);
@@ -1428,20 +1617,7 @@ export default function BillingPage() {
   const totalUsers = MOCK_USERS.length;
   const totalCameras = Object.values(USAGE_DATA).reduce((s, d) => s + d.usedCameras, 0);
   const totalNvrs = activeSubs.reduce((s, x) => s + (USAGE_DATA[x.id]?.usedNvrs ?? 0), 0);
-  const sitesWithoutSub = sites.filter((s) => !subs.some((x) => x.siteId === s.id && x.status !== "cancelled"));
-
-  /* ── Renewal reminders (within 14 days) ──────────────────────────────── */
-  const renewingSoon = activeSubs.filter((s) => {
-    if (dismissedRenewals.includes(s.id)) return false;
-    const days = daysBetween(BILLING_TODAY, s.renewsAt);
-    return days >= 0 && days <= 14;
-  });
-
-  /* ── Cancelling subs ──────────────────────────────────────────────────── */
-  const cancellingSubs = subs.filter((s) => s.status === "cancelling");
-
-  /* ── Payment failed subs ──────────────────────────────────────────────── */
-  const failedSubs = subs.filter((s) => s.status === "payment_failed");
+  const sitesWithoutSub = sites.filter((s) => !subs.some((x) => x.status !== "cancelled" && (x.siteId === s.id || x.siteName === s.name)));
 
   /* ── Filtered invoices ────────────────────────────────────────────────── */
   const filteredInvoices = React.useMemo(() => {
@@ -1545,27 +1721,6 @@ export default function BillingPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Banners (above the header so payment issues surface first) ───── */}
-      {(renewingSoon.length > 0 || cancellingSubs.length > 0 || failedSubs.length > 0) && (
-        <div className="flex flex-col gap-2">
-          {failedSubs.map((s) => (
-            <FailedPaymentBanner key={s.id} sub={s} graceDays={7} onRetry={() => setRetryInvoice(MOCK_INVOICES.find((i) => i.status === "failed") ?? null)} />
-          ))}
-          {cancellingSubs.map((s) => (
-            <CancellationGraceBanner key={s.id} sub={s} onUndo={() => {
-              undoCancelStore(s.id);
-              toast.success(`Cancellation reversed for ${s.siteName}`);
-            }} />
-          ))}
-          {renewingSoon.map((s) => (
-            <RenewalReminderBanner key={s.id} sub={s}
-              onDismiss={() => setDismissedRenewals((d) => [...d, s.id])}
-              onUpdatePayment={() => setAddCardOpen(true)}
-            />
-          ))}
-        </div>
-      )}
-
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>
@@ -1573,88 +1728,56 @@ export default function BillingPage() {
             One subscription per site. Manage plans, seats, payment methods, and invoices.
           </PageHeader.Description>
         </PageHeader.Content>
+        <PageHeader.Actions>
+          <TabSwitcher value={tab} onChange={setTab} counts={{ subscriptions: activeSubs.length, invoices: MOCK_INVOICES.length }} />
+        </PageHeader.Actions>
       </PageHeader>
 
-      <TabSwitcher value={tab} onChange={setTab} counts={{ invoices: MOCK_INVOICES.length }} />
-
       {tab === "overview" && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px]">
-          <div className="flex flex-col gap-4">
-            {/* Multi-site spend summary */}
-            <SectionCard title="Workspace summary" description="Aggregated across all active site subscriptions.">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <KpiTile label="Active Sites" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} txt="text-foreground" />
-                <KpiTile label="Total Seats" value={totalSeats} sub={`${totalUsers} users active`} txt="text-info" />
-                <KpiTile label="Total Cameras" value={totalCameras} sub="Across all sites" txt="text-warning" />
-                <KpiTile label="Total NVRs" value={totalNvrs} sub="Across all sites" txt="text-secondary" />
-              </div>
-            </SectionCard>
+        <div className="flex flex-col gap-4">
+          {/* KPI strip */}
+          <KpiGrid cols={4}>
+            <KpiCard label="Active Sites" value={activeSubs.length} sub={`${subs.length - activeSubs.length} cancelled`} accent="primary" />
+            <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users active`} accent="info" />
+            <KpiCard label="Total Cameras" value={totalCameras} sub="Across all sites" accent="warning" />
+            <KpiCard label="Total NVRs" value={totalNvrs} sub="Across all sites" accent="secondary" />
+          </KpiGrid>
 
-            {/* Subscriptions */}
-            <SectionCard
-              title="Site Subscriptions"
-              description="Each site has its own plan and renewal."
-              action={
-                <Button onClick={() => setAddOpen(true)} className="gap-1.5">
-                  <Plus className="size-3.5" /> Add Subscription
-                </Button>
-              }
-            >
-              {subs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
-                  <Building2 className="size-8 opacity-30" />
-                  <p className="text-base">No active subscriptions.</p>
-                  <Button onClick={() => setAddOpen(true)} className="gap-1.5">
-                    <Plus className="size-3.5" /> Subscribe a site
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
+            {/* Payment Information — methods + billing details */}
+            <div className="flex flex-col gap-4">
+              <SectionCard
+                title="Payment Methods"
+                description="Cards used for all charges on this account."
+                action={
+                  <Button size="sm" variant="outline" onClick={() => setAddCardOpen(true)} className="gap-1.5">
+                    <Plus className="size-3.5" /> Add card
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {subs.map((s) => (
-                    <SubscriptionCard
-                      key={s.id}
-                      sub={s}
-                      onChangePlan={() => (s.status === "cancelled" ? reactivateStore(s.id) : setChangePlanSub(s))}
-                      onManageSeats={() => setSeatsSub(s)}
+                }
+              >
+                <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+                  {cards.map((card) => (
+                    <PaymentCardRow
+                      key={card.id}
+                      card={card}
+                      onSetDefault={() => setDefaultCard(card.id)}
+                      onRemove={() => removeCard(card.id)}
+                      canRemove={cards.length > 1}
                     />
                   ))}
-                  {sitesWithoutSub.length > 0 && (
-                    <p className="pt-1 text-xs text-muted-foreground">
-                      {sitesWithoutSub.length} site{sitesWithoutSub.length === 1 ? "" : "s"} not yet subscribed —{" "}
-                      <button onClick={() => setAddOpen(true)} className="text-primary underline hover:text-primary/80">add a subscription</button>
-                    </p>
-                  )}
                 </div>
-              )}
-            </SectionCard>
+              </SectionCard>
 
-          </div>
+              <BillingDetailsSection className="flex-1" />
+            </div>
 
-          {/* Right column */}
-          <div className="flex flex-col gap-4">
-            {/* Payment Methods wallet */}
-            <SectionCard title="Payment Methods" description="Used for all charges on this account."
-              action={
-                <Button size="sm" variant="outline" onClick={() => setAddCardOpen(true)} className="gap-1.5">
-                  <Plus className="size-3.5" /> Add card
-                </Button>
-              }
+            {/* Next Invoice — matches the left column height */}
+            <SectionCard
+              title="Next Invoice"
+              description={`Charges ${ORG_LICENSE_INFO.nextInvoiceDate}.`}
+              className="lg:h-full"
+              bodyClassName="flex flex-col"
             >
-              <div className="space-y-2">
-                {cards.map((card) => (
-                  <PaymentCardRow
-                    key={card.id}
-                    card={card}
-                    onSetDefault={() => setDefaultCard(card.id)}
-                    onRemove={() => removeCard(card.id)}
-                    canRemove={cards.length > 1}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
-            {/* Next Invoice */}
-            <SectionCard title="Next Invoice" description={`Charges ${ORG_LICENSE_INFO.nextInvoiceDate}.`}>
               <div className="space-y-2">
                 {activeSubs.map((s) => {
                   const color = PLAN_COLORS[s.planTier];
@@ -1679,61 +1802,60 @@ export default function BillingPage() {
                   );
                 })}
               </div>
-              <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
+              <div className="mt-auto flex items-baseline justify-between border-t border-border pt-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
                 <span className="font-mono text-2xl font-bold text-success">${totalMonthly.toLocaleString()}</span>
               </div>
             </SectionCard>
-
-            {/* Billing Details */}
-            <BillingDetailsSection />
           </div>
         </div>
       )}
 
+      {tab === "subscriptions" && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h2 className="text-md font-bold text-foreground">Site Subscriptions</h2>
+            <Button onClick={() => setAddOpen(true)} className="gap-1.5">
+              <Plus className="size-3.5" /> Add Subscription
+            </Button>
+          </div>
+
+          {subs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
+              <Building2 className="size-8 opacity-30" />
+              <p className="text-base">No active subscriptions.</p>
+              <Button onClick={() => setAddOpen(true)} className="gap-1.5">
+                <Plus className="size-3.5" /> Subscribe a site
+              </Button>
+            </div>
+          ) : (
+            <>
+              <SiteSubscriptionsTable subs={subs} onOpen={setDrawerSub} />
+              {sitesWithoutSub.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {sitesWithoutSub.length} site{sitesWithoutSub.length === 1 ? "" : "s"} not yet subscribed —{" "}
+                  <button onClick={() => setAddOpen(true)} className="text-primary underline hover:text-primary/80">add a subscription</button>
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {tab === "invoices" && (
-        <SectionCard title="Invoices" description="Past invoices across all sites and subscriptions.">
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0">
+            <h2 className="text-md font-bold text-foreground">Invoices</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">Past invoices across all sites and subscriptions. Select a row for full details.</p>
+          </div>
           <InvoiceFilterBar
             statusFilter={invoiceStatusFilter}
             onStatusChange={setInvoiceStatusFilter}
             siteFilter={invoiceSiteFilter}
             onSiteChange={setInvoiceSiteFilter}
           />
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className="grid grid-cols-[140px_120px_1fr_130px_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <p>Issued</p>
-              <p>Invoice</p>
-              <p>Sites</p>
-              <p>Status</p>
-              <p className="text-right">Amount</p>
-            </div>
-            {filteredInvoices.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm italic text-muted-foreground">No invoices match the current filters.</p>
-            ) : filteredInvoices.map((inv) => {
-              const s = INVOICE_STATUS[inv.status];
-              return (
-                <button key={inv.id} onClick={() => setActiveInvoice(inv)}
-                  className="grid w-full grid-cols-[140px_120px_1fr_130px_auto] items-center gap-3 border-b border-border/60 px-4 py-3 text-left text-sm last:border-b-0 hover:bg-muted/20">
-                  <p className="text-foreground">{inv.issuedDisplay}</p>
-                  <p className="font-mono text-primary">{inv.id}</p>
-                  <TruncatedText text={inv.siteNames?.join(" · ") ?? "—"} className="text-muted-foreground" />
-                  <div className="flex items-center gap-2">
-                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
-                      <s.icon className="size-2.5" /> {s.label}
-                    </span>
-                    {inv.status === "failed" && (
-                      <button onClick={(e) => { e.stopPropagation(); setRetryInvoice(inv); }}
-                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-sev-critical hover:bg-sev-critical/10">
-                        <RefreshCw className="size-2.5" /> Retry
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-right font-mono font-bold text-foreground">${inv.amount.toLocaleString()}</p>
-                </button>
-              );
-            })}
-          </div>
-        </SectionCard>
+          <InvoicesTable invoices={filteredInvoices} onOpen={setActiveInvoice} onRetry={setRetryInvoice} />
+        </div>
       )}
 
       {/* Modals */}
@@ -1746,8 +1868,25 @@ export default function BillingPage() {
       />
       <CancelSubscriptionModal open={cancelSub !== null} sub={cancelSub} onClose={() => setCancelSub(null)} onConfirm={confirmCancel} />
       <ManageSeatsModal open={seatsSub !== null} sub={seatsSub} onClose={() => setSeatsSub(null)} onSave={saveSeats} />
-      <AddSubscriptionModal open={addOpen} sites={sitesWithoutSub.map((s) => ({ id: s.id, name: s.name }))} onClose={() => setAddOpen(false)} onConfirm={confirmAddSubscription} />
+      <AddSubscriptionModal
+        open={addOpen}
+        sites={sites.map((s) => {
+          const active = subs.find((x) => x.status !== "cancelled" && (x.siteId === s.id || x.siteName === s.name));
+          return { id: s.id, name: s.name, currentPlan: active ? PLANS[active.planTier].name : undefined };
+        })}
+        onClose={() => setAddOpen(false)}
+        onConfirm={confirmAddSubscription}
+      />
       <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
+      <SubscriptionDrawer
+        sub={drawerSub}
+        open={drawerSub !== null}
+        onClose={() => setDrawerSub(null)}
+        onChangePlan={() => { if (drawerSub) setChangePlanSub(drawerSub); setDrawerSub(null); }}
+        onManageSeats={() => { if (drawerSub) setSeatsSub(drawerSub); setDrawerSub(null); }}
+        onCancel={() => { if (drawerSub) setCancelSub(drawerSub); setDrawerSub(null); }}
+        onReactivate={() => { if (drawerSub) reactivateStore(drawerSub.id); setDrawerSub(null); }}
+      />
       <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
       <RetryPaymentModal
         open={retryInvoice !== null}

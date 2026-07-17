@@ -57,7 +57,13 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
-import { PLANS, type PlanTier, SEAT_PRICING, MOCK_SEATS } from "@/mocks/licenses";
+import { SEAT_PRICING, MOCK_SEATS } from "@/mocks/licenses";
+import {
+  CLOUD_PLANS,
+  getCloudPlan,
+  CLOUD_PLAN_TO_TIER,
+  type CloudPlanId,
+} from "@/mocks/cloudPlans";
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import type { UserRole } from "@/types/users";
@@ -72,17 +78,17 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 type WizardStep = "account" | "plan" | "site" | "team";
 type PlanSubStep = "pick" | "payment" | "review";
 
-const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
-  starter: Sparkles,
-  professional: Zap,
-  enterprise: Rocket,
+const PLAN_ICONS: Record<CloudPlanId, React.ElementType> = {
+  "starter-cloud": Sparkles,
+  "standard-cloud": Zap,
+  "professional-cloud": Rocket,
 };
 
-/* Distinct icon colours per tier — mirrors OnboardingSubscription PLAN_COLORS. */
-const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string }> = {
-  starter: { bg: "bg-info/10", border: "border-info/40", text: "text-info" },
-  professional: { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary" },
-  enterprise: { bg: "bg-success/10", border: "border-success/40", text: "text-success" },
+/* Distinct icon colours per cloud tier — the highlighted tier wears the brand accent. */
+const PLAN_COLORS: Record<CloudPlanId, { bg: string; border: string; text: string }> = {
+  "starter-cloud": { bg: "bg-info/10", border: "border-info/40", text: "text-info" },
+  "standard-cloud": { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary" },
+  "professional-cloud": { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary" },
 };
 
 const COUNTRY_CODES: { code: string; name: string }[] = [
@@ -269,7 +275,7 @@ export default function SignUpPage({
   const [otpSending, setOtpSending] = React.useState(false);
 
   /* Plan + payment */
-  const [picked, setPicked] = React.useState<PlanTier>("professional");
+  const [picked, setPicked] = React.useState<CloudPlanId>("professional-cloud");
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
@@ -299,7 +305,7 @@ export default function SignUpPage({
 
   const [error, setError] = React.useState<string | null>(null);
 
-  const plan = PLANS[picked];
+  const plan = getCloudPlan(picked);
   const monthlyPerSeat = SEAT_PRICING.user.pricePerMonth;
   const includedFullSeats = 2;
   const additionalSeats = invites.filter((i) => i.role === "user").length;
@@ -474,7 +480,7 @@ export default function SignUpPage({
         id: `SUB-${now.getFullYear()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
         siteId: site.id,
         siteName: site.name,
-        planTier: picked,
+        planTier: CLOUD_PLAN_TO_TIER[picked],
         status: "active",
         billingCycle: cycle,
         seats,
@@ -797,75 +803,124 @@ export default function SignUpPage({
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {(["starter", "professional", "enterprise"] as PlanTier[]).map(
-            (tier) => {
-              const p = PLANS[tier];
-              const Icon = PLAN_ICONS[tier];
-              const color = PLAN_COLORS[tier];
-              const monthly =
-                cycle === "annual"
-                  ? Math.round(p.pricePerYear / 12)
-                  : p.pricePerMonth;
-              const selected = picked === tier;
-              return (
-                <button
-                  key={tier}
-                  onClick={() => setPicked(tier)}
-                  className={cn(
-                    "relative flex flex-col gap-2.5 rounded-lg border-2 bg-card/40 p-4 text-left backdrop-blur-sm transition-all",
-                    selected
-                      ? "border-primary"
-                      : "border-border/60 hover:border-primary/30"
-                  )}
-                >
-                  {p.highlight && (
-                    <span className="absolute right-3 top-3 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary-foreground">
-                      Most Popular
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className={cn(
-                        "flex size-8 items-center justify-center rounded-lg border",
-                        color.border,
-                        color.bg
-                      )}
-                    >
-                      <Icon className={cn("size-3.5", color.text)} />
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-foreground">
-                        {p.name}
-                      </p>
-                      <p className="text-2xs text-muted-foreground">
-                        {p.tagline}
-                      </p>
-                    </div>
+        <div className="mt-5 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+          {CLOUD_PLANS.map((p) => {
+            const Icon = PLAN_ICONS[p.id];
+            const color = PLAN_COLORS[p.id];
+            const selected = picked === p.id;
+            const monthly =
+              cycle === "annual"
+                ? Math.round(p.pricePerYear / 12)
+                : p.pricePerMonth;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setPicked(p.id)}
+                aria-pressed={selected}
+                className={cn(
+                  "relative flex flex-col rounded-xl border-2 bg-card/40 p-5 text-left backdrop-blur-sm transition-all",
+                  selected
+                    ? "border-primary ring-1 ring-primary"
+                    : "border-border/60 hover:border-primary/40"
+                )}
+              >
+                {p.highlight && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-secondary px-2.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary-foreground shadow-sm">
+                    Most Popular
+                  </span>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex size-9 flex-shrink-0 items-center justify-center rounded-lg border",
+                      color.border,
+                      color.bg
+                    )}
+                  >
+                    <Icon className={cn("size-4", color.text)} />
                   </div>
-                  <p className="font-mono">
-                    <span className="text-2xl font-bold text-foreground">
-                      ${monthly}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      / month
-                    </span>
+                  <div className="min-w-0">
+                    <p className="text-md font-bold text-foreground">{p.name}</p>
+                    <p className="truncate text-2xs text-muted-foreground">{p.tagline}</p>
+                  </div>
+                  {selected && (
+                    <CheckCircle2 className="ml-auto size-4 flex-shrink-0 text-primary" />
+                  )}
+                </div>
+
+                <div className="mt-4 flex min-h-[3.25rem] flex-col justify-end">
+                  {p.free ? (
+                    <>
+                      <p className="font-mono text-3xl font-bold leading-none text-foreground">Free</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {p.trialDays}-day trial
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="leading-none">
+                        <span className="align-top text-sm font-semibold text-muted-foreground">S$</span>
+                        <span className="font-mono text-3xl font-bold text-foreground">
+                          {monthly.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground"> / mo</span>
+                      </p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {cycle === "annual"
+                          ? `S$${p.pricePerYear.toLocaleString()} billed yearly`
+                          : "per site, billed monthly"}
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="my-4 border-t border-border/60" />
+
+                <ul className="flex flex-1 flex-col gap-1.5 text-sm text-muted-foreground">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <Check
+                        className={cn("mt-0.5 size-3 flex-shrink-0", color.text)}
+                        strokeWidth={3}
+                      />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {p.footnote && (
+                  <p className="mt-3 border-t border-border/60 pt-3 text-3xs leading-relaxed text-muted-foreground">
+                    {p.footnote}
                   </p>
-                  <ul className="space-y-1 text-xs text-muted-foreground">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5">
-                        <Check
-                          className="mt-0.5 size-3 flex-shrink-0 text-success"
-                          strokeWidth={3}
-                        />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              );
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/40 px-5 py-3.5 backdrop-blur-sm">
+          <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground">
+            <Building2 className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-foreground">Enterprise Cloud</p>
+            <p className="text-2xs text-muted-foreground">
+              Custom sites, retention and SLAs for regulated or 24/7 operations. For Enterprise plans, contact our support.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="h-9 flex-shrink-0 gap-1.5 text-sm"
+            onClick={() =>
+              toast.message("Enterprise enquiry", {
+                description: "Our team will reach out within 1 business day.",
+              })
             }
-          )}
+          >
+            <Mail className="size-3.5" />
+            Contact support
+          </Button>
         </div>
         <div className="mt-6 flex items-center justify-end gap-2">
           <Button variant="ghost" onClick={skipPlan} className="h-10 text-base">
@@ -1040,18 +1095,22 @@ export default function SignUpPage({
             </div>
             <div className="space-y-1.5 border-t border-border/60 pt-2.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
-              <Line label={`Plan (${plan.name})`} value={`$${monthlyPerSite}/mo`} />
+              <Line
+                label={`Plan (${plan.name})`}
+                value={plan.free ? "Free" : `S$${monthlyPerSite.toLocaleString()}/mo`}
+                success={plan.free}
+              />
               {additionalSeats > 0 && (
                 <Line
                   label={`${additionalSeats} additional seat${additionalSeats === 1 ? "" : "s"}`}
-                  value={`$${additionalSeats * monthlyPerSeat}/mo`}
+                  value={`S$${(additionalSeats * monthlyPerSeat).toLocaleString()}/mo`}
                 />
               )}
             </div>
             <div className="mt-2.5 flex justify-between border-t border-border/60 pt-2.5 text-base font-semibold">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-mono text-foreground">
-                $
+                S$
                 {(
                   monthlyPerSite + additionalSeats * monthlyPerSeat
                 ).toLocaleString()}
@@ -1135,24 +1194,28 @@ export default function SignUpPage({
             </p>
             <div className="space-y-2.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
-              <Line label={`${plan.name} plan`} value={`$${monthlyPerSite}`} />
+              <Line
+                label={`${plan.name} plan`}
+                value={plan.free ? "Free" : `S$${monthlyPerSite.toLocaleString()}`}
+                success={plan.free}
+              />
               {additionalSeats > 0 && (
                 <Line
                   label={`${additionalSeats} additional seat${additionalSeats === 1 ? "" : "s"}`}
-                  value={`$${additionalSeats * monthlyPerSeat}`}
+                  value={`S$${(additionalSeats * monthlyPerSeat).toLocaleString()}`}
                 />
               )}
               <div className="flex justify-between border-t border-border/60 pt-2.5">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-mono text-foreground">
-                  ${totalDue.toLocaleString()}
+                  S${totalDue.toLocaleString()}
                 </span>
               </div>
-              <Line label="Tax (0%)" value="$0.00" />
+              <Line label="Tax (0%)" value="S$0.00" />
               <div className="flex justify-between border-t border-border/60 pt-2.5 text-base font-bold">
                 <span className="text-foreground">Total due today</span>
                 <span className="font-mono text-foreground">
-                  ${totalDue.toLocaleString()}
+                  S${totalDue.toLocaleString()}
                 </span>
               </div>
             </div>
