@@ -2189,12 +2189,13 @@ function UploadStep({
         paidMinutes={bill?.paidMinutes ?? 0}
         tokenCost={bill?.tokenCost ?? 0}
         tokenBalance={tokenBalance}
+        freeMinutesRemaining={freeMinutesRemaining}
       />
     </div>
   );
 }
 
-/* ── Run confirmation modal — pick run method (free vs tokens) & confirm ──── */
+/* ── Run confirmation modal — review usage & confirm ────────────────────── */
 
 function RunConfirmModal({
   open,
@@ -2205,6 +2206,7 @@ function RunConfirmModal({
   paidMinutes,
   tokenCost,
   tokenBalance,
+  freeMinutesRemaining,
 }: {
   open: boolean;
   onClose: () => void;
@@ -2214,6 +2216,7 @@ function RunConfirmModal({
   paidMinutes: number;
   tokenCost: number;
   tokenBalance: number;
+  freeMinutesRemaining: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -2279,8 +2282,8 @@ function RunConfirmModal({
                   {paidMinutes} Min · {tokenCost.toLocaleString()} Tokens
                 </span>
               </div>
-            )}
-          </div>
+            </dl>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
