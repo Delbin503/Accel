@@ -177,14 +177,12 @@ function FilterPanel({
   search,
   onSearchChange,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: CameraFilters;
   onChange: (f: CameraFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
   additionalActiveCount?: number;
-  onClearAll?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
@@ -229,21 +227,6 @@ function FilterPanel({
           )}
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onClearAll) onClearAll();
-                else {
-                  onChange(EMPTY_FILTERS);
-                  onSearchChange("");
-                }
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button
             type="button"
             aria-label={open ? "Collapse filters" : "Expand filters"}
@@ -2328,12 +2311,6 @@ export default function CamerasPage({
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
         additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
-        onClearAll={() => {
-          setSearch("");
-          setFilters(EMPTY_FILTERS);
-          setKpiFilter("all");
-          setPage(1);
-        }}
       />
 
       {/* Count */}
@@ -2345,7 +2322,7 @@ export default function CamerasPage({
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
             className="ml-2 text-muted-foreground underline hover:text-primary"
           >
-            Clear filters
+            Clear all
           </button>
         )}
       </p>

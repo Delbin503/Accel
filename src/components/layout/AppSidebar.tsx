@@ -9,6 +9,7 @@ import {
   Film,
   AlertTriangle,
   MapPin,
+  Building2,
   Brain,
   BookOpen,
   FolderOpen,
@@ -52,6 +53,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -126,7 +128,7 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/site",
         icon: MapPin,
         children: [
-          { label: "Site Management", href: "/site/overview", icon: MapPin },
+          { label: "Site Management", href: "/site/overview", icon: Building2 },
           { label: "Cameras", href: "/site/cameras", icon: Video },
           { label: "NVR Devices", href: "/site/nvr", icon: HardDrive },
         ],
@@ -238,8 +240,9 @@ function NavParent({ item }: { item: NavItem }) {
 
   const [open, setOpen] = React.useState(isAnyChildActive);
 
-  // Collapsed (icon) mode hides the inline submenu, so surface the children in
-  // a hover/click flyout — otherwise they're unreachable.
+  // Collapsed (icon) mode: show a single, centered parent icon that opens a
+  // dropdown flyout of the child items — the inline submenu can't render when
+  // there's no room for labels.
   if (isCollapsed) {
     return (
       <SidebarMenuItem>
@@ -248,9 +251,9 @@ function NavParent({ item }: { item: NavItem }) {
             <SidebarMenuButton
               isActive={isAnyChildActive}
               className={cn(
-                "relative rounded-md transition-colors",
+                "justify-center rounded-md transition-colors",
                 isAnyChildActive &&
-                  "border-l-2 border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                  "bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
               )}
             >
               <item.icon
@@ -259,33 +262,47 @@ function NavParent({ item }: { item: NavItem }) {
                   isAnyChildActive ? "text-primary" : "text-muted-foreground"
                 )}
               />
-              <span>{item.label}</span>
+              <span className="sr-only">{item.label}</span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent side="right" align="start" className="min-w-44">
-            <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {item.label}
-            </div>
-            {item.children?.map((child) => {
-              const childActive =
-                location.pathname === child.href ||
-                location.pathname.startsWith(child.href + "/");
+          <DropdownMenuContent
+            side="bottom"
+            align="start"
+            sideOffset={6}
+            className="min-w-48 overflow-hidden border-primary/40 bg-popover p-0"
+          >
+            {/* Orange overlay wash mirrors the expanded-mode submenu grouping. */}
+            <div className="flex flex-col gap-0.5 bg-primary/[0.06] p-1">
+              <DropdownMenuLabel className="text-muted-foreground">{item.label}</DropdownMenuLabel>
+              {item.children?.map((child) => {
+                const childActive =
+                  location.pathname === child.href ||
+                  location.pathname.startsWith(child.href + "/");
 
-              return (
-                <DropdownMenuItem key={child.href} asChild className="gap-2 px-2 py-1.5 text-base">
-                  <NavLink to={child.href}>
-                    <child.icon
-                      className={cn(
-                        "size-4",
-                        childActive ? "text-primary" : "text-muted-foreground"
-                      )}
-                    />
-                    <span className={cn(childActive && "text-primary")}>{child.label}</span>
-                  </NavLink>
-                </DropdownMenuItem>
-              );
-            })}
+                return (
+                  <DropdownMenuItem
+                    key={child.href}
+                    asChild
+                    className={cn(
+                      "gap-2",
+                      childActive &&
+                        "bg-primary-muted text-primary focus:bg-primary-muted focus:text-primary"
+                    )}
+                  >
+                    <NavLink to={child.href}>
+                      <child.icon
+                        className={cn(
+                          "size-4 shrink-0",
+                          childActive ? "text-primary" : "text-muted-foreground"
+                        )}
+                      />
+                      <span>{child.label}</span>
+                    </NavLink>
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
@@ -320,7 +337,7 @@ function NavParent({ item }: { item: NavItem }) {
         </CollapsibleTrigger>
 
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          <SidebarMenuSub>
+          <SidebarMenuSub className="my-1 gap-0.5 rounded-md border-primary/50 bg-primary/[0.06] py-1.5">
             {item.children?.map((child) => {
               const childActive =
                 location.pathname === child.href ||

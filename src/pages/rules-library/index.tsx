@@ -377,18 +377,6 @@ function RuleFilterPanel({
           )}
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onChange(EMPTY_RULE_FILTERS);
-                onSearchChange("");
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -1972,7 +1960,7 @@ export default function RulesLibraryPage() {
               onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>

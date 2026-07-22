@@ -62,7 +62,7 @@ const PHASES: Phase[] = [
       { name: "Dashboard", slug: "PRD_Dashboard" },
       { name: "Site · Overview", slug: "PRD_Site_Management" },
       { name: "Device Health", slug: "PRD_Device_Health" },
-      { name: "Billing / Subscription" },
+      { name: "Billing / Subscription", slug: "PRD_Billing" },
     ],
   },
 ];

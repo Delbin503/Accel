@@ -151,14 +151,6 @@ function FilterPanel({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_DISMISSED_FILTERS); onSearchChange(""); }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           {open
             ? <ChevronUp className="size-4 text-muted-foreground" />
             : <ChevronDown className="size-4 text-muted-foreground" />

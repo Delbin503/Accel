@@ -261,7 +261,6 @@ function FilterPanel({
   onSearchChange,
   hideStatus = false,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: UserFilters;
   onChange: (f: UserFilters) => void;
@@ -269,7 +268,6 @@ function FilterPanel({
   onSearchChange: (v: string) => void;
   hideStatus?: boolean;
   additionalActiveCount?: number;
-  onClearAll?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
@@ -311,21 +309,6 @@ function FilterPanel({
           )}
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onClearAll) onClearAll();
-                else {
-                  onChange(EMPTY_FILTERS);
-                  onSearchChange("");
-                }
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -2555,7 +2538,7 @@ function DeletedUsersPage({
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>
@@ -3102,12 +3085,6 @@ export default function UserManagementPage() {
         search={search}
         onSearchChange={(v) => { setSearch(v); setVisibleCount(PAGE_STEP); }}
         additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
-        onClearAll={() => {
-          setSearch("");
-          setFilters(EMPTY_FILTERS);
-          setKpiFilter("all");
-          setVisibleCount(PAGE_STEP);
-        }}
       />
 
       {/* Count + sort */}
@@ -3120,7 +3097,7 @@ export default function UserManagementPage() {
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>

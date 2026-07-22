@@ -330,14 +330,6 @@ function FilterPanel({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onChange(EMPTY_FILTERS); onSearchChange(""); }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           {open ? (
             <ChevronUp className="size-4 text-muted-foreground" />
           ) : (
@@ -522,7 +514,7 @@ export default function DeviceHealthPage({
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>

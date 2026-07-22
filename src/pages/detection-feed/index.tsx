@@ -210,7 +210,6 @@ function FilterPanel({
   dateFrom,
   dateTo,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: Filters;
   onChange: (f: Filters) => void;
@@ -220,7 +219,6 @@ function FilterPanel({
   dateFrom: string;
   dateTo: string;
   additionalActiveCount?: number;
-  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
@@ -265,17 +263,6 @@ function FilterPanel({
           </span>
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClearAll();
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -517,10 +504,15 @@ export default function DetectionFeedPage() {
     filters.site.length > 0 ||
     filters.model.length > 0;
 
+  const dateActive = datePreset !== "all" || dateFrom !== "" || dateTo !== "";
+
   const clearFilters = () => {
     setFilters(EMPTY_FILTERS);
     setKpiFilter("all");
     setSearch("");
+    setDatePreset("all");
+    setDateFrom("");
+    setDateTo("");
   };
 
   const drawerEvent = drawerEventId
@@ -700,11 +692,6 @@ export default function DetectionFeedPage() {
         onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
         onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); }}
         onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
-        onClear={
-          datePreset !== "all" || dateFrom || dateTo
-            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }
-            : undefined
-        }
       />
 
       {/* ── Filter panel ─────────────────────────────────────────────────── */}
@@ -717,14 +704,6 @@ export default function DetectionFeedPage() {
         dateFrom={dateFrom}
         dateTo={dateTo}
         additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
-        onClearAll={() => {
-          setFilters(EMPTY_FILTERS);
-          setSearch("");
-          setKpiFilter("all");
-          setDatePreset("all");
-          setDateFrom("");
-          setDateTo("");
-        }}
       />
 
       {/* ── Feed header ──────────────────────────────────────────────────── */}
@@ -732,12 +711,12 @@ export default function DetectionFeedPage() {
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
-          {hasActiveFilters && (
+          {(hasActiveFilters || dateActive) && (
             <button
               onClick={clearFilters}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>

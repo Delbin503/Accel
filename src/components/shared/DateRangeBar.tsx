@@ -78,7 +78,6 @@ export function DateRangeBar({
   onCustomApply,
   onCustomReset,
   showingLabel,
-  onClear,
   label = "Date Range",
   className,
 }: DateRangeBarProps) {
@@ -204,18 +203,6 @@ export function DateRangeBar({
         <span className="ml-auto text-xs text-muted-foreground">
           {showingLabel}
         </span>
-      )}
-      {onClear && (
-        <button
-          type="button"
-          onClick={onClear}
-          className={cn(
-            "text-xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline",
-            !showingLabel && "ml-auto"
-          )}
-        >
-          Clear
-        </button>
       )}
     </div>
   );

@@ -138,7 +138,8 @@ export const MOCK_SUBSCRIPTIONS: SiteSubscription[] = [
     startedDisplay: "15 Mar 2025",
     renewsAt: "2027-03-15",
     renewsDisplay: "15 Mar 2027",
-    monthlyCost: 999 + (1 * 50 + 4 * 25 + 12 * 10),
+    // Owner seat is included free with every plan; admin/user seats are paid add-ons.
+    monthlyCost: 999 + (4 * 25 + 12 * 10),
   },
   {
     id: "SUB-2026-002",
@@ -152,7 +153,7 @@ export const MOCK_SUBSCRIPTIONS: SiteSubscription[] = [
     startedDisplay: "22 Jun 2025",
     renewsAt: "2026-06-22",
     renewsDisplay: "22 Jun 2026",
-    monthlyCost: 399 + (1 * 50 + 2 * 25 + 8 * 10),
+    monthlyCost: 399 + (2 * 25 + 8 * 10),
   },
   {
     id: "SUB-2026-003",
@@ -166,7 +167,7 @@ export const MOCK_SUBSCRIPTIONS: SiteSubscription[] = [
     startedDisplay: "10 Jan 2026",
     renewsAt: "2026-07-10",
     renewsDisplay: "10 Jul 2026",
-    monthlyCost: 999 + (0 * 50 + 3 * 25 + 6 * 10),
+    monthlyCost: 999 + (3 * 25 + 6 * 10),
   },
   {
     id: "SUB-2026-004",
@@ -180,7 +181,64 @@ export const MOCK_SUBSCRIPTIONS: SiteSubscription[] = [
     startedDisplay: "20 May 2026",
     renewsAt: "2026-06-19",
     renewsDisplay: "19 Jun 2026 (Trial)",
-    monthlyCost: 149 + (0 * 50 + 1 * 25 + 2 * 10),
+    monthlyCost: 149 + (1 * 25 + 2 * 10),
+  },
+  {
+    id: "SUB-2026-005",
+    siteId: "tuas-megaport",
+    siteName: "Tuas Megaport",
+    planTier: "professional",
+    status: "payment_failed",
+    billingCycle: "monthly",
+    seats: { owner: 1, admin: 3, user: 10 },
+    startedAt: "2025-11-01",
+    startedDisplay: "01 Nov 2025",
+    renewsAt: "2026-06-01",
+    renewsDisplay: "01 Jun 2026",
+    monthlyCost: 399 + (3 * 25 + 10 * 10),
+  },
+  {
+    id: "SUB-2026-006",
+    siteId: "woodlands-checkpoint",
+    siteName: "Woodlands Checkpoint",
+    planTier: "starter",
+    status: "past-due",
+    billingCycle: "monthly",
+    seats: { owner: 1, admin: 1, user: 4 },
+    startedAt: "2026-02-15",
+    startedDisplay: "15 Feb 2026",
+    renewsAt: "2026-06-15",
+    renewsDisplay: "15 Jun 2026",
+    monthlyCost: 149 + (1 * 25 + 4 * 10),
+  },
+  {
+    id: "SUB-2026-007",
+    siteId: "jurong-depot",
+    siteName: "Jurong Depot",
+    planTier: "enterprise",
+    status: "cancelling",
+    billingCycle: "annual",
+    seats: { owner: 1, admin: 5, user: 15 },
+    startedAt: "2025-08-01",
+    startedDisplay: "01 Aug 2025",
+    renewsAt: "2026-08-01",
+    renewsDisplay: "01 Aug 2026",
+    cancellingAt: "2026-08-01",
+    monthlyCost: 999 + (5 * 25 + 15 * 10),
+  },
+  {
+    id: "SUB-2025-008",
+    siteId: "changi-t4",
+    siteName: "Changi T4",
+    planTier: "professional",
+    status: "cancelled",
+    billingCycle: "monthly",
+    seats: { owner: 1, admin: 2, user: 6 },
+    startedAt: "2025-05-01",
+    startedDisplay: "01 May 2025",
+    renewsAt: "2026-05-01",
+    renewsDisplay: "01 May 2026",
+    monthlyCost: 399 + (2 * 25 + 6 * 10),
   },
 ];
 
@@ -249,27 +307,83 @@ export const ORG_LICENSE_INFO = {
   contractEndDate: "—",
 };
 
-/* ── Invoices (now span multiple subscriptions) ────────────────────────── */
+/* ── Account subscription — one account = one subscription ─────────────────
+   The account holds a single plan; the plan determines how many sites can be
+   created under it. Seats are pooled at the account level, not per-site.     */
+
+export const ACCOUNT_SUBSCRIPTION = {
+  planTier: "enterprise" as PlanTier,
+  planName: "Enterprise",
+  billingCycle: "annual" as "monthly" | "annual",
+  seats: { owner: 1, admin: 8, user: 30 },
+  startedDisplay: "15 Mar 2025",
+  renewsDisplay: "15 Mar 2027",
+  nextInvoiceDate: "01 Jul 2026",
+  paymentMethod: "Visa ending 4242",
+  sites: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta", "Tuas Megaport", "Woodlands Checkpoint", "Jurong Depot"],
+};
+
+// Account monthly subtotal = enterprise base ($999) + admin×$25 + user×$10 (owner seat is included free).
+export function accountMonthly(seats: { admin: number; user: number }): number {
+  return PLANS.enterprise.pricePerMonth + seats.admin * SEAT_PRICING.admin.pricePerMonth + seats.user * SEAT_PRICING.user.pricePerMonth;
+}
+
+/* ── Invoices — one invoice per month for the whole account ────────────── */
 
 export interface Invoice {
   id: string;
   issuedDisplay: string;
-  amount: number;
-  status: "paid" | "pending" | "failed";
   periodDisplay: string;
-  /** Sites this invoice covers (sums per-site subscription billing). */
-  siteNames?: string[];
+  dueDisplay: string;
+  status: "paid" | "pending" | "failed";
+  paymentMethod: string;
+  planName: string;
+  planTier: PlanTier;
+  billingCycle: "monthly" | "annual";
+  /** Account seats billed this month. */
+  seats: { owner: number; admin: number; user: number };
+  /** Sites covered by this account invoice. */
+  sites: string[];
+  /** Pre-tax subtotal (plan base + seat add-ons). */
+  amount: number;
 }
 
-export const MOCK_INVOICES: Invoice[] = [
-  { id: "INV-2026-006", issuedDisplay: "01 Jun 2026", amount: 2280, status: "failed",  periodDisplay: "Jun 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta"] },
-  { id: "INV-2026-005", issuedDisplay: "01 May 2026", amount: 2230, status: "paid",    periodDisplay: "May 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta"] },
-  { id: "INV-2026-004", issuedDisplay: "01 Apr 2026", amount: 2080, status: "paid",    periodDisplay: "Apr 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
-  { id: "INV-2026-003", issuedDisplay: "01 Mar 2026", amount: 1980, status: "paid",    periodDisplay: "Mar 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
-  { id: "INV-2026-002", issuedDisplay: "01 Feb 2026", amount: 1980, status: "paid",    periodDisplay: "Feb 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
-  { id: "INV-2026-001", issuedDisplay: "01 Jan 2026", amount: 1980, status: "paid",    periodDisplay: "Jan 2026", siteNames: ["Astra HQ", "FedEx Changi", "Sembawang Naval"] },
-  { id: "INV-2025-012", issuedDisplay: "01 Dec 2025", amount: 1480, status: "paid",    periodDisplay: "Dec 2025", siteNames: ["Astra HQ", "FedEx Changi"] },
+interface MonthlyInvoiceSeed {
+  id: string;
+  issued: string;
+  period: string;
+  due: string;
+  status: Invoice["status"];
+  seats: { owner: number; admin: number; user: number };
+  sites: string[];
+}
+
+const A = ACCOUNT_SUBSCRIPTION.sites;
+
+const MONTHLY_INVOICES: MonthlyInvoiceSeed[] = [
+  { id: "INV-2026-006", issued: "01 Jun 2026", period: "Jun 2026", due: "15 Jun 2026", status: "failed", seats: { owner: 1, admin: 8, user: 30 }, sites: A },
+  { id: "INV-2026-005", issued: "01 May 2026", period: "May 2026", due: "15 May 2026", status: "paid",   seats: { owner: 1, admin: 8, user: 30 }, sites: A },
+  { id: "INV-2026-004", issued: "01 Apr 2026", period: "Apr 2026", due: "15 Apr 2026", status: "paid",   seats: { owner: 1, admin: 6, user: 24 }, sites: A.slice(0, 5) },
+  { id: "INV-2026-003", issued: "01 Mar 2026", period: "Mar 2026", due: "15 Mar 2026", status: "paid",   seats: { owner: 1, admin: 6, user: 24 }, sites: A.slice(0, 5) },
+  { id: "INV-2026-002", issued: "01 Feb 2026", period: "Feb 2026", due: "15 Feb 2026", status: "paid",   seats: { owner: 1, admin: 5, user: 18 }, sites: A.slice(0, 4) },
+  { id: "INV-2026-001", issued: "01 Jan 2026", period: "Jan 2026", due: "15 Jan 2026", status: "paid",   seats: { owner: 1, admin: 5, user: 18 }, sites: A.slice(0, 4) },
+  { id: "INV-2025-012", issued: "01 Dec 2025", period: "Dec 2025", due: "15 Dec 2025", status: "paid",   seats: { owner: 1, admin: 4, user: 12 }, sites: A.slice(0, 3) },
 ];
+
+export const MOCK_INVOICES: Invoice[] = MONTHLY_INVOICES.map((m) => ({
+  id: m.id,
+  issuedDisplay: m.issued,
+  periodDisplay: m.period,
+  dueDisplay: m.due,
+  status: m.status,
+  paymentMethod: ACCOUNT_SUBSCRIPTION.paymentMethod,
+  planName: ACCOUNT_SUBSCRIPTION.planName,
+  planTier: ACCOUNT_SUBSCRIPTION.planTier,
+  billingCycle: ACCOUNT_SUBSCRIPTION.billingCycle,
+  seats: m.seats,
+  sites: m.sites,
+  amount: accountMonthly(m.seats),
+}));
 
 /* ── Helper: get a plan by tier ─────────────────────────────────────────── */
 

@@ -118,14 +118,12 @@ function FilterPanel({
   search,
   onSearchChange,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: RecordingFilters;
   onChange: (f: RecordingFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
   additionalActiveCount?: number;
-  onClearAll?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((s, arr) => s + arr.length, 0);
@@ -150,21 +148,6 @@ function FilterPanel({
           )}
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onClearAll) onClearAll();
-                else {
-                  onChange(EMPTY_FILTERS);
-                  onSearchChange("");
-                }
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
           </button>
@@ -844,11 +827,6 @@ export default function RecordingsPage() {
         onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
         onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); setPage(1); }}
         onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
-        onClear={
-          datePreset !== "all" || dateFrom || dateTo
-            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }
-            : undefined
-        }
       />
 
       <FilterPanel
@@ -857,15 +835,6 @@ export default function RecordingsPage() {
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
         additionalActiveCount={(kpiFilter !== "all" ? 1 : 0) + (datePreset !== "all" ? 1 : 0)}
-        onClearAll={() => {
-          setSearch("");
-          setFilters(EMPTY_FILTERS);
-          setKpiFilter("all");
-          setDatePreset("all");
-          setDateFrom("");
-          setDateTo("");
-          setPage(1);
-        }}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -875,7 +844,7 @@ export default function RecordingsPage() {
           {hasFilters && (
             <button onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
               className="ml-2 text-muted-foreground underline hover:text-primary">
-              Clear filters
+              Clear all
             </button>
           )}
         </p>

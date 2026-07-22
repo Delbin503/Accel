@@ -68,6 +68,6 @@ export const useSubscriptionsStore = create<SubscriptionsState>()(
           ),
         })),
     }),
-    { name: "accel-subscriptions" }
+    { name: "accel-subscriptions-v2" }
   )
 );

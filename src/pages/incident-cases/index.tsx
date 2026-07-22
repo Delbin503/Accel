@@ -171,14 +171,12 @@ function FilterPanel({
   search,
   onSearchChange,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: CaseFilters;
   onChange: (f: CaseFilters) => void;
   search: string;
   onSearchChange: (v: string) => void;
   additionalActiveCount?: number;
-  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
@@ -214,17 +212,6 @@ function FilterPanel({
           )}
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClearAll();
-              }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -359,6 +346,24 @@ export default function IncidentCasesPage({
   const [datePreset, setDatePreset] = React.useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
+
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    kpiFilter !== "all" ||
+    datePreset !== "all" ||
+    dateFrom !== "" ||
+    dateTo !== "" ||
+    Object.values(filters).some((arr) => arr.length > 0);
+
+  const clearAll = () => {
+    setFilters(EMPTY_FILTERS);
+    setSearch("");
+    setKpiFilter("all");
+    setDatePreset("all");
+    setDateFrom("");
+    setDateTo("");
+  };
+
   const [drawerCaseId, setDrawerCaseId] = React.useState<string | null>(
     (location.state as { openCaseId?: string } | null)?.openCaseId ?? null
   );
@@ -473,11 +478,6 @@ export default function IncidentCasesPage({
         onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
         onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); }}
         onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }}
-        onClear={
-          datePreset !== "all" || dateFrom || dateTo
-            ? () => { setDatePreset("all"); setDateFrom(""); setDateTo(""); }
-            : undefined
-        }
       />
 
       <FilterPanel
@@ -486,14 +486,6 @@ export default function IncidentCasesPage({
         search={search}
         onSearchChange={setSearch}
         additionalActiveCount={(kpiFilter !== "all" ? 1 : 0) + (datePreset !== "all" ? 1 : 0)}
-        onClearAll={() => {
-          setFilters(EMPTY_FILTERS);
-          setSearch("");
-          setKpiFilter("all");
-          setDatePreset("all");
-          setDateFrom("");
-          setDateTo("");
-        }}
       />
 
       {/* ── Table header bar ─────────────────────────────────────────────── */}
@@ -501,6 +493,14 @@ export default function IncidentCasesPage({
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong> case
           {filtered.length !== 1 ? "s" : ""} match current filters
+          {hasActiveFilters && (
+            <button
+              onClick={clearAll}
+              className="ml-2 text-muted-foreground underline hover:text-primary"
+            >
+              Clear all
+            </button>
+          )}
         </p>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
           <SelectTrigger className="w-auto text-sm">

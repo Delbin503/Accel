@@ -3243,7 +3243,9 @@ function HistoryTab({
     (vlmFilter !== "all" ? 1 : 0) +
     (verdictFilter !== "all" ? 1 : 0) +
     (search ? 1 : 0);
-  const hasActiveFilters = activeFilterCount > 0;
+  const dateActive = datePreset !== "all" || dateFrom !== "" || dateTo !== "";
+  const hasActiveFilters =
+    activeFilterCount > 0 || kpiFilter !== "all" || dateActive;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
   const deleteTarget = pastAnalyses.find((a) => a.id === pendingDeleteId);
@@ -3254,6 +3256,11 @@ function HistoryTab({
     setModelFilter("all");
     setVlmFilter("all");
     setVerdictFilter("all");
+    setKpiFilter("all");
+    setDatePreset("all");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
   }
 
   function getScoreTone(score: number) {
@@ -3366,14 +3373,6 @@ function HistoryTab({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {activeFilterCount > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); clearFilters(); }}
-              className="text-sm text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           {filterOpen ? (
             <ChevronUp className="size-4 text-muted-foreground" />
           ) : (
@@ -3485,7 +3484,7 @@ function HistoryTab({
             onClick={clearFilters}
             className="ml-2 text-muted-foreground underline hover:text-primary"
           >
-            Clear filters
+            Clear all
           </button>
         )}
       </p>
