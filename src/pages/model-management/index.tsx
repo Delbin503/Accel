@@ -1318,6 +1318,7 @@ function ModelDetailPanel({
   onSave,
   onDelete,
   onEditingChange,
+  startInEdit = false,
 }: {
   model: ModelData;
   allRules: RuleData[];
@@ -1325,6 +1326,7 @@ function ModelDetailPanel({
   onSave: (id: string, draft: EditDraft) => void;
   onDelete: (id: string) => void;
   onEditingChange?: (editing: boolean) => void;
+  startInEdit?: boolean;
 }) {
   const allTagsForModels = React.useMemo(() => {
     const set = new Set<string>(MODEL_TAGS);
@@ -1332,7 +1334,7 @@ function ModelDetailPanel({
     return Array.from(set).sort();
   }, [allModels]);
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(startInEdit);
   const [draft, setDraft] = React.useState<EditDraft>(() => modelToDraft(model));
   const [showAddStep, setShowAddStep] = React.useState(false);
   const [editStepId, setEditStepId] = React.useState<string | null>(null);
@@ -1355,7 +1357,13 @@ function ModelDetailPanel({
 
   const dragPayload = React.useRef<DragPayload | null>(null);
 
+  // Reset edit state only when switching to a *different* model — not on the
+  // initial mount, so a panel opened via startInEdit (returning from +Add Rule)
+  // stays in edit mode.
+  const mountedIdRef = React.useRef(model.id);
   React.useEffect(() => {
+    if (mountedIdRef.current === model.id) return;
+    mountedIdRef.current = model.id;
     setDraft(modelToDraft(model));
     setIsEditing(false);
     setRuleSearch("");
@@ -2043,8 +2051,13 @@ function ModelDetailPanel({
 
 /* ── Main page ───────────────────────────────────────────────────────────── */
 
-export default function ModelManagementPage() {
-  const [models, setModels] = React.useState<ModelData[]>(MOCK_MODELS);
+export default function ModelManagementPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
+  const isEmptyState = forcedState === "empty";
+  const [models, setModels] = React.useState<ModelData[]>(isEmptyState ? [] : MOCK_MODELS);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
   const [tagFilter, setTagFilter] = React.useState<string[]>([]);
@@ -2052,6 +2065,9 @@ export default function ModelManagementPage() {
   const [showCreate, setShowCreate] = React.useState(false);
   // Hide the model list while a model is being edited (restored on Save/Cancel).
   const [editing, setEditing] = React.useState(false);
+  // Model id that should open directly in edit mode (set when returning from
+  // the Rule Library's "+Add Rule" flow via /models?model=<id>&edit=1).
+  const [openEditForId, setOpenEditForId] = React.useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
@@ -2059,7 +2075,10 @@ export default function ModelManagementPage() {
   // and apply any edits made to an extracted rule on the Rule Library builder page.
   React.useEffect(() => {
     const m = searchParams.get("model");
-    if (m) setSelectedId(m);
+    if (m) {
+      setSelectedId(m);
+      if (searchParams.get("edit")) setOpenEditForId(m);
+    }
 
     const result = (location.state as {
       extractedResult?: { modelId: string; ruleId: string; patch: Partial<ExtractedRule> };
@@ -2277,9 +2296,22 @@ export default function ModelManagementPage() {
 
         <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
               <AlignLeft className="size-8 opacity-20" />
-              <p className="text-sm">No models match your search.</p>
+              {models.length === 0 ? (
+                <>
+                  <p className="text-sm font-medium text-foreground">No models yet</p>
+                  <p className="text-sm">
+                    Create your first detection model to add verification steps and rules.
+                  </p>
+                  <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
+                    <Plus className="size-4" />
+                    Add New Model
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm">No models match your search.</p>
+              )}
             </div>
           ) : (
             filtered.map((m) => (
@@ -2305,6 +2337,7 @@ export default function ModelManagementPage() {
             onSave={handleSave}
             onDelete={handleDelete}
             onEditingChange={setEditing}
+            startInEdit={openEditForId === selectedModel.id}
           />
         ) : (
           <EmptyDetailState />

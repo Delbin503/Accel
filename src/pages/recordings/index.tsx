@@ -672,7 +672,12 @@ const DATE_PRESETS: { key: DatePreset; label: string }[] = [
 
 const NOW_REF = new Date("2026-05-25T10:15:00").getTime();
 
-export default function RecordingsPage() {
+export default function RecordingsPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
+  const isEmptyState = forcedState === "empty";
   const navigate = useNavigate();
   const location = useLocation();
   React.useEffect(() => {
@@ -692,7 +697,9 @@ export default function RecordingsPage() {
   const [dateTo, setDateTo] = React.useState("");
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
-  const [recordings, setRecordings] = React.useState<RecordingDisplay[]>(() => [...MOCK_RECORDINGS]);
+  const [recordings, setRecordings] = React.useState<RecordingDisplay[]>(() =>
+    isEmptyState ? [] : [...MOCK_RECORDINGS]
+  );
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
   const [openEvent, setOpenEvent] = React.useState<DetectionEvent | null>(null);
@@ -872,7 +879,14 @@ export default function RecordingsPage() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Film className="size-10 opacity-20" />
-          <p className="text-sm">No recordings match the current filters.</p>
+          {recordings.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">No recordings found</p>
+              <p className="text-sm">Recordings appear here once cameras with attached NVRs capture footage.</p>
+            </>
+          ) : (
+            <p className="text-sm">No recordings match the current filters.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

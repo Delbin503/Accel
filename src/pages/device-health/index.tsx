@@ -464,15 +464,17 @@ export default function DeviceHealthPage({
             Operational status of every camera and NVR on the workspace — live heartbeat, disk usage, and last sync.
           </PageHeader.Description>
         </PageHeader.Content>
-        <PageHeader.Actions>
-          <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 md:flex">
-            <HeartPulse className={cn("size-4", scoreClass)} />
-            <div className="flex items-baseline gap-1.5">
-              <span className={cn("text-lg font-bold leading-none", scoreClass)}>{healthScore}%</span>
-              <span className="text-2xs uppercase tracking-wider text-muted-foreground">Health Score</span>
+        {forcedState !== "loading" && (
+          <PageHeader.Actions>
+            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 md:flex">
+              <HeartPulse className={cn("size-4", scoreClass)} />
+              <div className="flex items-baseline gap-1.5">
+                <span className={cn("text-lg font-bold leading-none", scoreClass)}>{healthScore}%</span>
+                <span className="text-2xs uppercase tracking-wider text-muted-foreground">Health Score</span>
+              </div>
             </div>
-          </div>
-        </PageHeader.Actions>
+          </PageHeader.Actions>
+        )}
       </PageHeader>
 
       {forcedState === "loading" ? (

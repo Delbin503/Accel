@@ -1285,6 +1285,10 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
   const assignedAll  = (["owner", "admin", "user"] as UserRole[]).reduce((s, r) => s + usage[r].assigned, 0);
   const availableAll = Math.max(0, totalAll - assignedAll);
 
+  const userTotal     = usage.admin.total + usage.user.total;
+  const userAssigned  = usage.admin.assigned + usage.user.assigned;
+  const userAvailable = Math.max(0, userTotal - userAssigned);
+
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -1293,11 +1297,10 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
         </div>
         <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2">
         <SeatPill kind="all"   label="Total Seats" total={totalAll} assigned={assignedAll} available={availableAll} billingCycle={billingCycle} />
         <SeatPill kind="owner" label="Owner Seats" total={usage.owner.total} assigned={usage.owner.assigned} available={usage.owner.available} billingCycle={billingCycle} />
-        <SeatPill kind="admin" label="Admin Seats" total={usage.admin.total} assigned={usage.admin.assigned} available={usage.admin.available} billingCycle={billingCycle} />
-        <SeatPill kind="user"  label="User Seats"  total={usage.user.total}  assigned={usage.user.assigned}  available={usage.user.available}  billingCycle={billingCycle} />
+        <SeatPill kind="user"  label="User Seats"  total={userTotal}  assigned={userAssigned}  available={userAvailable}  billingCycle={billingCycle} />
       </div>
     </div>
   );
@@ -2715,17 +2718,26 @@ function DeletedUsersPage({
   );
 }
 
-export default function UserManagementPage() {
+export default function UserManagementPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const isDeletedUsersPage = location.pathname.endsWith("/deleted");
-  const [users, setUsers] = React.useState<UserData[]>(MOCK_USERS);
+  const isEmptyState = forcedState === "empty";
+  const [users, setUsers] = React.useState<UserData[]>(isEmptyState ? [] : MOCK_USERS);
   const [deletedUsers, setDeletedUsers] = React.useState<DeletedUserData[]>([]);
-  const [seatTotals, setSeatTotals] = React.useState<Record<UserRole, number>>({
-    owner: 1, // exactly one Owner per workspace — always 1/1 (100%)
-    admin: MOCK_SEATS.admin.total,
-    user:  MOCK_SEATS.user.total,
-  });
+  const [seatTotals, setSeatTotals] = React.useState<Record<UserRole, number>>(
+    isEmptyState
+      ? { owner: 0, admin: 0, user: 0 }
+      : {
+          owner: 1, // exactly one Owner per workspace — always 1/1 (100%)
+          admin: MOCK_SEATS.admin.total,
+          user: MOCK_SEATS.user.total,
+        }
+  );
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
@@ -3130,14 +3142,27 @@ export default function UserManagementPage() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <UsersIcon className="size-10 opacity-20" />
-          <p className="text-sm">No users match the current filters.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-          >
-            Clear filters
-          </Button>
+          {users.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">No team members yet</p>
+              <p className="text-sm">Invite people to give them access to this workspace.</p>
+              <Button size="sm" className="gap-1.5" onClick={() => setDialog({ kind: "invite", userIds: [] })}>
+                <UserPlus className="size-4" />
+                Invite Users
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm">No users match the current filters.</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
+              >
+                Clear filters
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">

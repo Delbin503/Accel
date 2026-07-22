@@ -1,12 +1,11 @@
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import SiteOverviewPage from "@/pages/site/overview";
-import { SiteTableSkeleton, ErrorState, EmptyState, type ForcedState } from "./shared";
+import { SiteTableSkeleton, ErrorState, type ForcedState } from "./shared";
 
 /* Header shown for the non-populated states so they read like the real page. */
-function StateHeader() {
+function StateHeader({ loading = false }: { loading?: boolean }) {
   return (
     <PageHeader>
       <PageHeader.Content>
@@ -15,12 +14,14 @@ function StateHeader() {
           Manage all sites — upload floor plans, draw areas, and place cameras.
         </PageHeader.Description>
       </PageHeader.Content>
-      <PageHeader.Actions>
-        <Button className="gap-1.5" disabled>
-          <Plus className="size-3.5" />
-          Add Site
-        </Button>
-      </PageHeader.Actions>
+      {!loading && (
+        <PageHeader.Actions>
+          <Button className="gap-1.5" disabled>
+            <Plus className="size-3.5" />
+            Add Site
+          </Button>
+        </PageHeader.Actions>
+      )}
     </PageHeader>
   );
 }
@@ -34,15 +35,16 @@ export default function RealSiteManagement({
 }) {
   // Populated state is the real, fully-working page (KPIs, site table, create
   // wizard, floor-plan / area drawing, detail drawer).
-  if (forced === "normal") return <SiteOverviewPage />;
+  // Empty state keeps the full page scaffold (KPIs, filters, table header) with
+  // zeroed data instead of hiding everything behind a splash.
+  // key forces a remount so the empty/populated data initializer re-runs on toggle.
+  if (forced === "normal" || forced === "empty")
+    return <SiteOverviewPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
     <div className="flex flex-col gap-5">
-      <StateHeader />
+      <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <SiteTableSkeleton />}
-      {forced === "empty" && (
-        <EmptyState onAdd={() => toast.message("Switch to “Populated” to use the full Add Site wizard.")} />
-      )}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}
     </div>
   );

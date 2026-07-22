@@ -1188,33 +1188,21 @@ function FloorPlanTab({
       <div className="flex flex-col gap-3">
         {site.floorPlan && (
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-            <div className="flex items-center gap-1 rounded-md border border-border bg-background p-0.5">
-              {([
-                { key: "select",    label: "Select",  icon: MousePointer2 },
-                { key: "draw-area", label: "Area",    icon: Shapes },
-              ] as { key: Tool; label: string; icon: React.ElementType }[]).map((t) => {
-                const Icon = t.icon;
-                const active = tool === t.key;
-                return (
-                  <button key={t.key} onClick={() => { setTool(t.key); if (t.key === "draw-area") setDrafting({ points: [], color: AREA_PALETTE[site.areas.length % AREA_PALETTE.length] }); }}
-                    className={cn("inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold transition-colors",
-                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                    <Icon className="size-3.5" />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mx-1 h-5 w-px bg-border" />
             <button onClick={() => setShowAreas(!showAreas)}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                showAreas ? "text-foreground" : "text-muted-foreground/60")}>
+              aria-pressed={showAreas}
+              className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                showAreas
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {showAreas ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
               Areas
             </button>
             <button onClick={() => setShowCameras(!showCameras)}
-              className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                showCameras ? "text-foreground" : "text-muted-foreground/60")}>
+              aria-pressed={showCameras}
+              className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                showCameras
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {showCameras ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
               Cameras
             </button>

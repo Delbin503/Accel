@@ -1,23 +1,19 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  CreditCard, Download, CheckCircle2, AlertCircle, Clock, Crown, ShieldCheck, CircleUser,
-  Plus, ArrowUpRight, ChevronDown, ChevronRight, X, FileText, Building2, Sparkles, Zap, Rocket, Check,
-  ArrowUp, ArrowDown, CalendarClock, AlertTriangle, Trash2, Star, RefreshCw,
-  Mail, Globe, RotateCcw, Users, Video, HardDrive, SlidersHorizontal, ChevronUp,
+  CreditCard, Download, CheckCircle2, AlertCircle, Clock,
+  Plus, ChevronDown, ChevronRight, X, Building2, Sparkles, Zap, Rocket, Check,
+  AlertTriangle, Trash2, Star, RefreshCw,
+  Mail, Globe, SlidersHorizontal, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
@@ -318,14 +314,14 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
   const Icon = s.icon;
   const PlanIcon = PLAN_ICONS[invoice.planTier];
   const planColor = PLAN_COLORS[invoice.planTier];
+  const invoiceUserSeats = invoice.seats.admin + invoice.seats.user;
+  const invoiceUserSeatAmount =
+    invoice.seats.admin * SEAT_PRICING.admin.pricePerMonth + invoice.seats.user * SEAT_PRICING.user.pricePerMonth;
   const lineItems: { label: string; note: string; amount: number }[] = [
     { label: `${invoice.planName} plan`, note: `${invoice.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: PLANS[invoice.planTier].pricePerMonth },
-    ...([
-      ["Admin seats (Add On)", invoice.seats.admin, SEAT_PRICING.admin.pricePerMonth],
-      ["User seats (Add On)", invoice.seats.user, SEAT_PRICING.user.pricePerMonth],
-    ] as [string, number, number][])
-      .filter(([, n]) => n > 0)
-      .map(([label, n, price]) => ({ label, note: `${n} × $${price}/mo`, amount: n * price })),
+    ...(invoiceUserSeats > 0
+      ? [{ label: "User seats (Add On)", note: `${invoiceUserSeats} seats`, amount: invoiceUserSeatAmount }]
+      : []),
   ];
   const subtotal = invoice.amount;
   const taxes = Math.round(subtotal * 0.07);
@@ -349,7 +345,7 @@ function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
                   <Icon className="size-3" /> {s.label}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{invoice.planName} · {invoice.sites.length} site{invoice.sites.length !== 1 ? "s" : ""}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{invoice.planName}</p>
             </div>
           </div>
           <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -805,8 +801,7 @@ export default function BillingPage() {
   const acctMonthly = accountMonthly(acct.seats);
   const acctLines: { label: string; note: string; amount: number }[] = [
     { label: `${acct.planName} plan`, note: `${acct.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: PLANS[acct.planTier].pricePerMonth },
-    { label: "Admin seats (Add On)", note: `${acct.seats.admin} × $${SEAT_PRICING.admin.pricePerMonth}/mo`, amount: acct.seats.admin * SEAT_PRICING.admin.pricePerMonth },
-    { label: "User seats (Add On)", note: `${acct.seats.user} × $${SEAT_PRICING.user.pricePerMonth}/mo`, amount: acct.seats.user * SEAT_PRICING.user.pricePerMonth },
+    { label: "User seats (Add On)", note: `${acct.seats.admin + acct.seats.user} seats`, amount: acct.seats.admin * SEAT_PRICING.admin.pricePerMonth + acct.seats.user * SEAT_PRICING.user.pricePerMonth },
   ];
   const nextInvoice: Invoice = {
     id: "INV-2026-007",

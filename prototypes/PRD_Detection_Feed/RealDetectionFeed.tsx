@@ -795,17 +795,19 @@ export default function DetectionFeedPage({
             AI-flagged events across all sites. Triage, dismiss, or escalate to a case.
           </PageHeader.Description>
         </PageHeader.Content>
-        <PageHeader.Actions>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-[13px]"
-            onClick={() => navigate("/detection-feed/dismissed")}
-          >
-            <Trash2 className="size-3.5" />
-            Dismissed ({dismissedIds.size + MOCK_DISMISSED.length})
-          </Button>
-        </PageHeader.Actions>
+        {forced !== "loading" && (
+          <PageHeader.Actions>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-[13px]"
+              onClick={() => navigate("/detection-feed/dismissed")}
+            >
+              <Trash2 className="size-3.5" />
+              Dismissed ({dismissedIds.size + MOCK_DISMISSED.length})
+            </Button>
+          </PageHeader.Actions>
+        )}
       </PageHeader>
 
       {/* ── KPI cards ───────────────────────────────────────────────────── */}

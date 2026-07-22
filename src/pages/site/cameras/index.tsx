@@ -2129,13 +2129,18 @@ function ConfirmModal({
 
 export default function CamerasPage({
   drawerAsync = "idle",
+  forcedState = "normal",
 }: {
   /** Prototype hook — forces the camera drawer's detail-fetch state. */
   drawerAsync?: DrawerAsync;
+  /** Prototype hook — forces the page's empty dev-state. */
+  forcedState?: "normal" | "empty";
 } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const cameras = useCamerasStore((s) => s.cameras);
+  const isEmptyState = forcedState === "empty";
+  const storeCameras = useCamerasStore((s) => s.cameras);
+  const cameras = isEmptyState ? [] : storeCameras;
   const addCamera = useCamerasStore((s) => s.addCamera);
   const updateCamera = useCamerasStore((s) => s.updateCamera);
   const deleteCameraFromStore = useCamerasStore((s) => s.deleteCamera);
@@ -2331,14 +2336,27 @@ export default function CamerasPage({
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Video className="size-10 opacity-20" />
-          <p className="text-sm">No cameras match the current filters.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-          >
-            Clear filters
-          </Button>
+          {cameras.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">No cameras yet</p>
+              <p className="text-sm">Add a camera to start streaming RTSP feeds and linking NVRs.</p>
+              <Button size="sm" className="gap-1.5" onClick={() => setModal({ kind: "add" })}>
+                <Plus className="size-4" />
+                Add Camera
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm">No cameras match the current filters.</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
+              >
+                Clear filters
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">

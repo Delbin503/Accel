@@ -1831,19 +1831,21 @@ function SelectStep({
             Test models against uploaded footage with VLM-powered reasoning before deployment.
           </p>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-2 pt-1">
-          <RunQuotaButton
-            freeSecondsRemaining={freeSecondsRemaining}
-            freeTrialMinutes={freeTrialMinutes}
-            tokenBalance={tokenBalance}
-            totalTokensPurchased={totalTokensPurchased}
-            onOpenPurchase={onOpenPurchase}
-          />
-          <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
-            <FileText className="size-3.5" />
-            History
-          </Button>
-        </div>
+        {!isLoading && (
+          <div className="flex flex-shrink-0 items-center gap-2 pt-1">
+            <RunQuotaButton
+              freeSecondsRemaining={freeSecondsRemaining}
+              freeTrialMinutes={freeTrialMinutes}
+              tokenBalance={tokenBalance}
+              totalTokensPurchased={totalTokensPurchased}
+              onOpenPurchase={onOpenPurchase}
+            />
+            <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
+              <FileText className="size-3.5" />
+              History
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 min-h-[520px] gap-4">

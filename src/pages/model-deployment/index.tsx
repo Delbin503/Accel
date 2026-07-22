@@ -1392,22 +1392,24 @@ export default function ModelDeploymentPage({
             Deploy validated AI models to cameras across sites — the final stage of the validation pipeline.
           </PageHeader.Description>
         </PageHeader.Content>
-        <PageHeader.Actions>
-          <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
-            <button onClick={() => setTab("deploy")}
-              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-              <Plus className="size-3.5" />
-              Deploy
-            </button>
-            <button onClick={() => setTab("history")}
-              className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-              <FileText className="size-3.5" />
-              Models
-            </button>
-          </div>
-        </PageHeader.Actions>
+        {forcedState !== "loading" && (
+          <PageHeader.Actions>
+            <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
+              <button onClick={() => setTab("deploy")}
+                className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
+                  tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <Plus className="size-3.5" />
+                Deploy
+              </button>
+              <button onClick={() => setTab("history")}
+                className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
+                  tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <FileText className="size-3.5" />
+                Models
+              </button>
+            </div>
+          </PageHeader.Actions>
+        )}
       </PageHeader>
 
       {tab === "deploy" ? (

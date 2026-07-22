@@ -509,9 +509,9 @@ function SwapPopover({
   return (
     <div
       ref={ref}
-      className="absolute left-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden rounded-xl border border-border bg-card py-1.5 shadow-2xl"
+      className="absolute left-0 top-full z-50 mt-1 max-h-[min(60vh,22rem)] min-w-[280px] overflow-y-auto rounded-xl border border-border bg-card py-1.5 shadow-2xl"
     >
-      <p className="px-3 pb-1 pt-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="sticky top-0 bg-card px-3 pb-1 pt-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Change Row Type
       </p>
       {SWAP_OPTIONS.map(({ type, desc }) => {
@@ -1386,7 +1386,7 @@ function RuleBuilder({
                   Define the trigger, conditions, duration and actions for this rule.
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={addCondition} className="gap-1.5">
+              <Button size="sm" onClick={addCondition} className="gap-1.5">
                 <Plus className="size-3.5" />
                 Add Condition
               </Button>
@@ -1530,7 +1530,12 @@ function DeleteModal({
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 
-export default function RulesLibraryPage() {
+export default function RulesLibraryPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
+  const isEmptyState = forcedState === "empty";
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1540,7 +1545,7 @@ export default function RulesLibraryPage() {
   const [view, setView] = React.useState<"list" | "builder" | "templates">(initialView);
   const [builderMode, setBuilderMode] = React.useState<"create" | "edit">("create");
   const [editingRule, setEditingRule] = React.useState<RuleData | null>(null);
-  const [rules, setRules] = React.useState<RuleData[]>(MOCK_RULES);
+  const [rules, setRules] = React.useState<RuleData[]>(isEmptyState ? [] : MOCK_RULES);
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<RuleFilters>(EMPTY_RULE_FILTERS);
   const [sortBy, setSortBy] = React.useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest");
@@ -1681,7 +1686,7 @@ export default function RulesLibraryPage() {
     if (cameFromModel.current && builderMode === "create") {
       cameFromModel.current = false;
       const target = returnModelId.current
-        ? `/models?model=${returnModelId.current}`
+        ? `/models?model=${returnModelId.current}&edit=1`
         : "/models";
       navigate(target, { replace: true });
       return;
@@ -1981,13 +1986,27 @@ export default function RulesLibraryPage() {
 
       {/* Table or empty */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
-          <BookOpen className="size-10 opacity-20" />
-          <p className="text-sm">No rules match the current filters.</p>
-          <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}>
-            Clear filters
-          </Button>
-        </div>
+        rules.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+            <BookOpen className="size-10 opacity-20" />
+            <p className="text-base font-semibold text-foreground">No rules yet</p>
+            <p className="max-w-sm text-center text-sm">
+              Create your first detection rule to start monitoring alert conditions.
+            </p>
+            <Button size="sm" onClick={openCreate} className="gap-1.5">
+              <Plus className="size-4" />
+              Add Rule
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+            <BookOpen className="size-10 opacity-20" />
+            <p className="text-sm">No rules match the current filters.</p>
+            <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}>
+              Clear filters
+            </Button>
+          </div>
+        )
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">

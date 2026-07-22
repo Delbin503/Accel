@@ -259,12 +259,19 @@ function FilterPanel({
   );
 }
 
-export default function SiteOverviewPage() {
+export default function SiteOverviewPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
   const navigate = useNavigate();
   const params = useParams<{ siteId?: string }>();
   const location = useLocation();
-  const { sites, addSite } = useSitesStore();
-  const cameras = useCamerasStore((s) => s.cameras);
+  const isEmptyState = forcedState === "empty";
+  const { sites: storeSites, addSite } = useSitesStore();
+  const storeCameras = useCamerasStore((s) => s.cameras);
+  const sites = isEmptyState ? [] : storeSites;
+  const cameras = isEmptyState ? [] : storeCameras;
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<SiteFilters>(EMPTY_FILTERS);
   const [wizardOpen, setWizardOpen] = React.useState(false);
@@ -371,11 +378,24 @@ export default function SiteOverviewPage() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <MapPin className="size-10 opacity-20" />
-          <p className="text-sm">No sites match the current search.</p>
-          <Button variant="outline" onClick={() => setWizardOpen(true)} className="gap-1.5">
-            <Plus className="size-3.5" />
-            Create a site
-          </Button>
+          {sites.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">No sites yet</p>
+              <p className="text-sm">Add a site to upload floor plans, draw areas, and place cameras.</p>
+              <Button onClick={() => setWizardOpen(true)} className="gap-1.5">
+                <Plus className="size-3.5" />
+                Add Site
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm">No sites match the current search.</p>
+              <Button variant="outline" onClick={() => setWizardOpen(true)} className="gap-1.5">
+                <Plus className="size-3.5" />
+                Create a site
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">

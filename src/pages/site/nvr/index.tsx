@@ -2421,11 +2421,16 @@ function DeleteNvrModal({
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-export default function NvrDevicesPage() {
+export default function NvrDevicesPage({
+  forcedState = "normal",
+}: {
+  forcedState?: "normal" | "empty";
+} = {}) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const updateCameraInStore = useCamerasStore((s) => s.updateCamera);
-  const [nvrs, setNvrs] = React.useState<NvrData[]>(() => [...MOCK_NVRS]);
+  const isEmptyState = forcedState === "empty";
+  const [nvrs, setNvrs] = React.useState<NvrData[]>(() => (isEmptyState ? [] : [...MOCK_NVRS]));
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<NvrFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
@@ -2644,14 +2649,27 @@ export default function NvrDevicesPage() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <HardDrive className="size-10 opacity-20" />
-          <p className="text-sm">No NVRs match the current filters.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-          >
-            Clear filters
-          </Button>
+          {nvrs.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">No NVR devices yet</p>
+              <p className="text-sm">Add a Network Video Recorder to start storing camera footage.</p>
+              <Button size="sm" className="gap-1.5" onClick={() => setModal({ kind: "add" })}>
+                <Plus className="size-4" />
+                Add NVR
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm">No NVRs match the current filters.</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
+              >
+                Clear filters
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
