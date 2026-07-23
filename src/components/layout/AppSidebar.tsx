@@ -6,6 +6,7 @@ import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import {
   LayoutDashboard,
   Video,
+  Cctv,
   Film,
   AlertTriangle,
   MapPin,
@@ -128,7 +129,7 @@ const NAV_GROUPS: NavGroup[] = [
         icon: MapPin,
         children: [
           { label: "Site Management", href: "/site/overview", icon: Building2 },
-          { label: "Cameras", href: "/site/cameras", icon: Video },
+          { label: "Cameras", href: "/site/cameras", icon: Cctv },
           { label: "NVR Devices", href: "/site/nvr", icon: HardDrive },
         ],
       },
@@ -209,9 +210,9 @@ function NavLeaf({ item }: { item: NavItem }) {
         isActive={isActive}
         tooltip={isCollapsed ? item.label : undefined}
         className={cn(
-          "relative rounded-md transition-colors",
+          "relative rounded-md border-l-2 border-transparent transition-colors",
           isActive &&
-            "border-l-2 border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+            "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
         )}
       >
         <NavLink to={item.href} end={item.href === "/"}>
@@ -251,9 +252,9 @@ function NavParent({ item }: { item: NavItem }) {
             isActive={isAnyChildActive}
             tooltip={item.label}
             className={cn(
-              "relative justify-center rounded-md transition-colors",
+              "relative justify-center rounded-md border-l-2 border-transparent transition-colors",
               isAnyChildActive &&
-                "border-l-2 border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
             )}
           >
             <item.icon
@@ -310,9 +311,9 @@ function NavParent({ item }: { item: NavItem }) {
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             className={cn(
-              "relative rounded-md transition-colors",
+              "relative rounded-md border-l-2 border-transparent transition-colors",
               isAnyChildActive &&
-                "border-l-2 border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
             )}
           >
             <item.icon

@@ -744,10 +744,10 @@ export default function SignUpPage({
                 description: `A new code was sent to ${email}.`,
               })
             }
-            className="block w-full text-center text-sm text-muted-foreground hover:text-primary"
+            className="group block w-full text-center text-sm text-muted-foreground"
           >
             Didn't get it?{" "}
-            <span className="font-semibold underline">Resend code</span>
+            <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
           </button>
         </form>
       </WizardShell>

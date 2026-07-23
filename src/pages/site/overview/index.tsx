@@ -21,12 +21,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { CreateSiteWizard } from "./CreateSiteWizard";
 import { SiteDetailDrawer } from "./SiteDetailDrawer";
 import { SITE_ACCENT_COLORS } from "@/mocks/sites";
+import { PLANS, ACCOUNT_SUBSCRIPTION } from "@/mocks/licenses";
 import type { SiteData } from "@/types/sites";
 import type { CameraData } from "@/types/cameras";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
@@ -299,6 +301,9 @@ export default function SiteOverviewPage({
   const hasFilters = !!(search || filters.status.length > 0 || filters.floorPlan.length > 0);
 
   const totalSites    = sites.length;
+  const siteLimit     = PLANS[ACCOUNT_SUBSCRIPTION.planTier].siteLimit;
+  const sitesRemaining = siteLimit === "unlimited" ? null : Math.max(0, siteLimit - totalSites);
+  const atSiteLimit    = sitesRemaining === 0;
   const totalAreas    = sites.reduce((s, x) => s + x.areas.length, 0);
   const sitesWithPlan = sites.filter((s) => !!s.floorPlan).length;
   const totalCameras  = cameras.length;
@@ -341,7 +346,36 @@ export default function SiteOverviewPage({
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <Button className="gap-1.5" onClick={() => setWizardOpen(true)}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  "inline-flex cursor-default items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm",
+                  atSiteLimit
+                    ? "border-sev-critical/30 bg-sev-critical/10 text-sev-critical"
+                    : "border-border bg-card text-muted-foreground"
+                )}
+              >
+                {siteLimit === "unlimited" ? (
+                  <>
+                    <strong className="text-foreground">{totalSites}</strong> sites · Unlimited
+                  </>
+                ) : (
+                  <>
+                    <strong className={cn(atSiteLimit ? "text-sev-critical" : "text-foreground")}>
+                      {sitesRemaining}
+                    </strong>{" "}
+                    of {siteLimit} sites left
+                  </>
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              On the {ACCOUNT_SUBSCRIPTION.planName} plan
+              {ACCOUNT_SUBSCRIPTION.billingCycle === "annual" ? " · Annual" : " · Monthly"}
+            </TooltipContent>
+          </Tooltip>
+          <Button className="gap-1.5" onClick={() => setWizardOpen(true)} disabled={atSiteLimit}>
             <Plus className="size-3.5" />
             Add Site
           </Button>

@@ -171,7 +171,7 @@ const KPI_CONFIGS: {
   { key: "all",       label: "Total Users",     sub: "All registered accounts",        accent: "primary",      getValue: (i) => i.length },
   { key: "owners",    label: "Owner",           sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
   { key: "admins",    label: "Admins",          sub: "Can grant any permission",       accent: "info",         getValue: (i) => i.filter((u) => u.role === "admin").length },
-  { key: "users",     label: "Users",           sub: "Site-scoped daily users",        accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
+  { key: "users",     label: "Members",         sub: "Site-scoped daily members",      accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
   { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "sev-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
 ];
 
@@ -1220,10 +1220,11 @@ const SEAT_ROLE_STYLES: Record<"all" | UserRole, { bg: string; text: string; bar
 };
 
 function SeatPill({
-  label, total, assigned, available, kind,
+  label, total, assigned, available, kind, breakdown,
 }: {
   label: string; total: number; assigned: number; available: number;
   kind: "all" | UserRole; billingCycle?: string;
+  breakdown?: { label: string; value: number }[];
 }) {
   const cfg = SEAT_ROLE_STYLES[kind];
   const Icon = cfg.icon;
@@ -1264,6 +1265,12 @@ function SeatPill({
             <span className="text-muted-foreground">Assigned</span>
             <span className={cn("font-mono font-semibold", cfg.text)}>{assigned}</span>
           </div>
+          {breakdown && breakdown.map((b) => (
+            <div key={b.label} className="flex items-center justify-between pl-3 text-xs">
+              <span className="text-muted-foreground/70">{b.label}</span>
+              <span className="font-mono font-medium text-muted-foreground">{b.value}</span>
+            </div>
+          ))}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Available</span>
             <span className={cn("font-mono font-semibold", available === 0 ? "text-sev-critical" : "text-success")}>{available}</span>
@@ -1300,7 +1307,18 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
       <div className="grid grid-cols-3 gap-2">
         <SeatPill kind="all"   label="Total Seats" total={totalAll} assigned={assignedAll} available={availableAll} billingCycle={billingCycle} />
         <SeatPill kind="owner" label="Owner Seats" total={usage.owner.total} assigned={usage.owner.assigned} available={usage.owner.available} billingCycle={billingCycle} />
-        <SeatPill kind="user"  label="User Seats"  total={userTotal}  assigned={userAssigned}  available={userAvailable}  billingCycle={billingCycle} />
+        <SeatPill
+          kind="user"
+          label="User Seats"
+          total={userTotal}
+          assigned={userAssigned}
+          available={userAvailable}
+          billingCycle={billingCycle}
+          breakdown={[
+            { label: "Admins", value: usage.admin.assigned },
+            { label: "Members", value: usage.user.assigned },
+          ]}
+        />
       </div>
     </div>
   );

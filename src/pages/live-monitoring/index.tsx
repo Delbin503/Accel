@@ -306,8 +306,8 @@ function HeroView({
                         {siteData.siteName}
                       </p>
                     </div>
-                    <span className="text-2xs text-muted-foreground">
-                      <AlertTriangle className="mr-0.5 inline size-2.5" />{group.cams.filter((c) => c.status !== "online").length} · {group.cams.length}
+                    <span className="inline-flex items-center gap-0.5 text-2xs text-muted-foreground">
+                      <AlertTriangle className="size-2.5" />{group.cams.filter((c) => c.status !== "online").length} · {group.cams.length}
                     </span>
                   </summary>
                   <div className="mt-1 grid grid-cols-2 gap-1.5">

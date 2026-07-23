@@ -606,7 +606,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr className="border-b border-border text-left">
-              {["ISSUED", "INVOICE", "PERIOD", "SITES", "STATUS", "AMOUNT", ""].map((h, i) => (
+              {["ISSUED", "INVOICE", "PERIOD", "SUBSCRIPTION PLAN", "STATUS", "AMOUNT", ""].map((h, i) => (
                 <th
                   key={h || `col-${i}`}
                   className={cn(
@@ -645,7 +645,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
                     <div className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
                       <PlanIcon className={cn("size-3", color.text)} />
                     </div>
-                    <span className="text-sm text-muted-foreground">{inv.sites.length} site{inv.sites.length !== 1 ? "s" : ""}</span>
+                    <span className="text-sm font-medium text-foreground">{inv.planName}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3">

@@ -640,7 +640,7 @@ function VideoUploader({
           <div className="absolute right-3 top-3 rounded border border-border bg-card/80 px-2 py-0.5 text-2xs text-muted-foreground backdrop-blur-sm">
             {file.name} · {file.size}
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
               <Play className="size-5 text-white" />
             </div>

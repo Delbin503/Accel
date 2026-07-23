@@ -15,7 +15,7 @@ export const USER_SITES: { value: string; label: string }[] = [
 export const USER_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: "owner", label: "Owner" },
   { value: "admin", label: "Admin" },
-  { value: "user",  label: "User" },
+  { value: "user",  label: "Member" },
 ];
 
 export const USER_STATUS_OPTIONS: { value: UserStatus; label: string }[] = [
@@ -376,7 +376,7 @@ export const MOCK_USERS: UserData[] = [
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   owner: "Owner",
   admin: "Admin",
-  user:  "User",
+  user:  "Member",
 };
 
 export const USER_ROLE_DESCRIPTIONS: Record<UserRole, string> = {

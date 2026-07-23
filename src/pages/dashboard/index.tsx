@@ -396,7 +396,7 @@ export default function DashboardPage() {
       {showAlertBanner && worstHealth && (
         <div
           className={cn(
-            "flex items-start gap-3 rounded-xl border px-4 py-3",
+            "flex items-center gap-3 rounded-xl border px-4 py-3",
             systemStatus === "critical"
               ? "border-sev-critical/40 bg-sev-critical/[0.06]"
               : "border-warning/40 bg-warning/[0.06]"
@@ -404,7 +404,7 @@ export default function DashboardPage() {
         >
           <TriangleAlert
             className={cn(
-              "mt-0.5 size-4 flex-shrink-0",
+              "size-4 flex-shrink-0",
               systemStatus === "critical" ? "text-sev-critical" : "text-warning"
             )}
           />

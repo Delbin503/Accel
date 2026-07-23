@@ -12,6 +12,7 @@ export interface Plan {
   tagline: string;
   pricePerMonth: number;          // per site
   pricePerYear: number;           // per site, with annual discount
+  siteLimit: number | "unlimited"; // max sites creatable under this plan
   cameraLimit: number | "unlimited";
   nvrLimit: number | "unlimited";
   userLimit: number | "unlimited";
@@ -28,6 +29,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     tagline: "For small teams getting started",
     pricePerMonth: 149,
     pricePerYear: 1_490, // ~17% off
+    siteLimit: 2,
     cameraLimit: 5,
     nvrLimit: 1,
     userLimit: 10,
@@ -54,6 +56,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     tagline: "For growing operations",
     pricePerMonth: 399,
     pricePerYear: 3_990,
+    siteLimit: 5,
     cameraLimit: 25,
     nvrLimit: 3,
     userLimit: 50,
@@ -83,6 +86,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     tagline: "For large deployments at scale",
     pricePerMonth: 999,
     pricePerYear: 9_990,
+    siteLimit: 10,
     cameraLimit: "unlimited",
     nvrLimit: "unlimited",
     userLimit: "unlimited",
