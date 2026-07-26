@@ -252,9 +252,9 @@ function NavParent({ item }: { item: NavItem }) {
             isActive={isAnyChildActive}
             tooltip={item.label}
             className={cn(
-              "relative justify-center rounded-md border-l-2 border-transparent transition-colors",
+              "rounded-md transition-colors",
               isAnyChildActive &&
-                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                "bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
             )}
           >
             <item.icon
@@ -268,20 +268,20 @@ function NavParent({ item }: { item: NavItem }) {
         </SidebarMenuItem>
 
         {open && (
-          <div className="my-0.5 flex flex-col items-center gap-1 rounded-md border border-primary/30 bg-primary/[0.06] p-1">
+          <div className="my-0.5 flex flex-col gap-1 rounded-md border border-primary/30 bg-primary/[0.06] py-1">
             {item.children?.map((child) => {
               const childActive =
                 location.pathname === child.href ||
                 location.pathname.startsWith(child.href + "/");
 
               return (
-                <SidebarMenuItem key={child.href} className="w-full">
+                <SidebarMenuItem key={child.href}>
                   <SidebarMenuButton
                     asChild
                     isActive={childActive}
                     tooltip={child.label}
                     className={cn(
-                      "justify-center rounded-md transition-colors",
+                      "rounded-md transition-colors",
                       childActive &&
                         "bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
                     )}
