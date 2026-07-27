@@ -1224,7 +1224,7 @@ function SeatPill({
 }: {
   label: string; total: number; assigned: number; available: number;
   kind: "all" | UserRole; billingCycle?: string;
-  breakdown?: { label: string; value: number }[];
+  breakdown?: { label: string; value: number; icon?: React.ComponentType<{ className?: string }>; iconClass?: string }[];
 }) {
   const cfg = SEAT_ROLE_STYLES[kind];
   const Icon = cfg.icon;
@@ -1266,8 +1266,11 @@ function SeatPill({
             <span className={cn("font-mono font-semibold", cfg.text)}>{assigned}</span>
           </div>
           {breakdown && breakdown.map((b) => (
-            <div key={b.label} className="flex items-center justify-between pl-3 text-xs">
-              <span className="text-muted-foreground/70">{b.label}</span>
+            <div key={b.label} className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-muted-foreground/70">
+                {b.icon && <b.icon className={cn("size-3", b.iconClass)} />}
+                {b.label}
+              </span>
               <span className="font-mono font-medium text-muted-foreground">{b.value}</span>
             </div>
           ))}
@@ -1315,8 +1318,8 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
           available={userAvailable}
           billingCycle={billingCycle}
           breakdown={[
-            { label: "Admins", value: usage.admin.assigned },
-            { label: "Members", value: usage.user.assigned },
+            { label: "Admins", value: usage.admin.assigned, icon: ShieldCheck, iconClass: "text-info" },
+            { label: "Members", value: usage.user.assigned, icon: CircleUser, iconClass: "text-warning" },
           ]}
         />
       </div>

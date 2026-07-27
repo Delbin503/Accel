@@ -309,7 +309,6 @@ function FilterPanel({
   dateFrom,
   dateTo,
   additionalActiveCount = 0,
-  onClearAll,
 }: {
   filters: Filters;
   onChange: (f: Filters) => void;
@@ -319,7 +318,6 @@ function FilterPanel({
   dateFrom: string;
   dateTo: string;
   additionalActiveCount?: number;
-  onClearAll: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const filterCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0);
@@ -364,17 +362,6 @@ function FilterPanel({
           </span>
         </button>
         <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClearAll();
-              }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
-            >
-              Clear all
-            </button>
-          )}
           <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -852,14 +839,6 @@ export default function DetectionFeedPage({
         dateFrom={dateFrom}
         dateTo={dateTo}
         additionalActiveCount={kpiFilter !== "all" ? 1 : 0}
-        onClearAll={() => {
-          setFilters(EMPTY_FILTERS);
-          setSearch("");
-          setKpiFilter("all");
-          setDatePreset("all");
-          setDateFrom("");
-          setDateTo("");
-        }}
       />
 
       {/* ── Feed header ──────────────────────────────────────────────────── */}
@@ -867,16 +846,19 @@ export default function DetectionFeedPage({
         <p className="text-[13px] text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
-          {hasActiveFilters && (
+          {(hasActiveFilters || datePreset !== "all") && (
             <button
               onClick={() => {
                 setFilters(EMPTY_FILTERS);
                 setKpiFilter("all");
                 setSearch("");
+                setDatePreset("all");
+                setDateFrom("");
+                setDateTo("");
               }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
-              Clear filters
+              Clear all
             </button>
           )}
         </p>
