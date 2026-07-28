@@ -196,6 +196,35 @@ The current billing page covers plan selection, seat management, and invoice his
 
 ---
 
+## 11. Subscription Cancellation & Resubscription
+
+**Problem:** The billing page had no way to cancel the account subscription, and once a subscription was cancelled there was no path back — the owner could not re-select a plan or resubscribe from within the page.
+
+**Solution:** Add an end-to-end cancel → cancelling → cancelled → resubscribe lifecycle on the account-level current-plan banner, with a purchase confirmation that requires a payment method.
+
+**Cancel (from active):**
+- The current-plan banner shows a `destructive` **"Cancel subscription"** button
+- Clicking it opens a confirmation dialog summarising what is lost when access ends (detection & recording stop, team members lose dashboard access, recordings retained 30 days then deleted)
+- Confirming schedules cancellation at the end of the current billing cycle and moves the account to the `cancelling` state
+
+**Cancelling state:**
+- The banner switches to a warning treatment with a **"Cancelling"** badge, replaces "Renews" with **"Ends"**, and shows a scheduled-cancellation note
+- Two actions are offered: **"Resume subscription"** (reverts to `active`) and **"End now"** (transitions immediately to `cancelled` for demo/testing without waiting for cycle end)
+
+**No active plan (cancelled) state:**
+- The empty state reuses the **same banner-card layout** as the current-plan banner — icon + "SUBSCRIPTION / No active plan · Cancelled" on the left, and a **"View plans"** button on the right
+- Payment Methods and Billing Details remain visible so the owner can prepare a card before resubscribing
+- **"View plans"** reveals the available-plans list on demand (toggles to "Hide plans"); the list shows all tiers (Starter / Professional / Enterprise) with the most-popular tier highlighted and the previously-held plan tagged **"Previous"**
+
+**Resubscribe — payment method required:**
+- Selecting a plan opens a **"Confirm subscription"** modal (does not activate immediately)
+- The modal shows a plan summary (name, billing cycle, price) and a **Payment method** picker listing the owner's saved cards (default pre-selected) plus an "Add a new card" affordance
+- **"Confirm & subscribe"** is disabled until a payment method is selected
+- On confirm, the account returns to `active` on the chosen plan and a toast confirms which card was billed
+- The current-plan banner, KPI summary, and Next Invoice all recompute for the newly selected plan
+
+---
+
 ## Access Control
 
 All billing features are restricted to the **Owner** role only. Admins and standard users have no access to the billing page, payment methods, plan management, or invoice downloads.

@@ -5,6 +5,7 @@ import {
   Plus, ChevronDown, ChevronRight, X, Building2, Sparkles, Zap, Rocket, Check,
   AlertTriangle, Trash2, Star, RefreshCw,
   Mail, Globe, SlidersHorizontal, ChevronUp,
+  XCircle, RotateCcw, Ban, ArrowRight, LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
-  PLANS, MOCK_INVOICES, SEAT_PRICING, ACCOUNT_SUBSCRIPTION, accountMonthly,
+  PLANS, MOCK_INVOICES, SEAT_PRICING, ACCOUNT_SUBSCRIPTION,
   type Invoice, type PlanTier,
 } from "@/mocks/licenses";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
@@ -297,6 +299,99 @@ function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <RefreshCw className="size-3.5" /> Retry ${total.toLocaleString()}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Purchase / confirm plan modal ────────────────────────────────────────── */
+
+function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onConfirm }: {
+  tier: PlanTier | null;
+  cycle: "monthly" | "annual";
+  cards: SavedCard[];
+  onClose: () => void;
+  onAddCard: () => void;
+  onConfirm: (cardId: string) => void;
+}) {
+  const [selected, setSelected] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (tier) setSelected(cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "");
+  }, [tier, cards]);
+
+  if (!tier) return null;
+  const plan = PLANS[tier];
+  const color = PLAN_COLORS[tier];
+  const Icon = PLAN_ICONS[tier];
+  const price = cycle === "annual" ? plan.pricePerYear : plan.pricePerMonth;
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Confirm subscription</DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Review your plan and choose a payment method to activate your account.
+          </p>
+        </DialogHeader>
+        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+          {/* Plan summary */}
+          <div className={cn("flex items-center gap-3 rounded-lg border p-3", color.border, color.bg)}>
+            <div className={cn("flex size-10 flex-shrink-0 items-center justify-center rounded-lg border bg-background/40", color.border)}>
+              <Icon className={cn("size-5", color.text)} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-md font-bold text-foreground">{plan.name} plan</p>
+              <p className="text-2xs text-muted-foreground">{cycle === "annual" ? "Annual" : "Monthly"} billing · incl. owner seat</p>
+            </div>
+            <div className="text-right">
+              <p className={cn("font-mono text-lg font-bold", color.text)}>${price.toLocaleString()}</p>
+              <p className="text-2xs text-muted-foreground">/{cycle === "annual" ? "yr" : "mo"}</p>
+            </div>
+          </div>
+
+          {/* Payment method */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
+            {cards.length === 0 && (
+              <p className="rounded-lg border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">
+                No cards on file. Add one to continue.
+              </p>
+            )}
+            {cards.map((card) => (
+              <button key={card.id} onClick={() => setSelected(card.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
+                  selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                )}>
+                <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
+                  selected === card.id ? "border-primary" : "border-muted-foreground/40")}>
+                  {selected === card.id && <span className="size-2 rounded-full bg-primary" />}
+                </div>
+                <CreditCard className={cn("size-4 flex-shrink-0", brandColors[card.brand] ?? "text-secondary")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold text-foreground">{card.brand} ···· {card.last4}</p>
+                  <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
+                </div>
+                {card.isDefault && (
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                )}
+              </button>
+            ))}
+            <button onClick={onAddCard}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+              <Plus className="size-3.5" /> Add a new card
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
+            <Check className="size-3.5" /> Confirm & subscribe
           </Button>
         </div>
       </DialogContent>
@@ -739,6 +834,68 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
   );
 }
 
+/* ── Plan card (available plans / resubscribe) ────────────────────────────── */
+
+function PlanCard({ tier, cycle, previous, onSelect }: {
+  tier: PlanTier;
+  cycle: "monthly" | "annual";
+  previous: boolean;
+  onSelect: () => void;
+}) {
+  const plan = PLANS[tier];
+  const color = PLAN_COLORS[tier];
+  const Icon = PLAN_ICONS[tier];
+  const price = cycle === "annual" ? plan.pricePerYear : plan.pricePerMonth;
+  return (
+    <div className={cn(
+      "relative flex flex-col rounded-xl border bg-card p-5 transition-colors",
+      plan.highlight ? "border-primary/50" : "border-border"
+    )}>
+      {plan.highlight && (
+        <span className="absolute -top-2.5 left-5 rounded-full bg-primary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary-foreground">
+          Most popular
+        </span>
+      )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className={cn("flex size-9 flex-shrink-0 items-center justify-center rounded-lg border", color.border, color.bg)}>
+            <Icon className={cn("size-4", color.text)} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-md font-bold text-foreground">{plan.name}</p>
+            <p className="text-2xs text-muted-foreground">{plan.tagline}</p>
+          </div>
+        </div>
+        {previous && (
+          <span className="flex-shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Previous
+          </span>
+        )}
+      </div>
+      <div className="mt-4 flex items-baseline gap-1">
+        <span className="font-mono text-3xl font-bold text-foreground">${price.toLocaleString()}</span>
+        <span className="text-sm text-muted-foreground">/{cycle === "annual" ? "yr" : "mo"} base</span>
+      </div>
+      <ul className="mt-4 flex-1 space-y-1.5">
+        {plan.features.slice(0, 5).map((f) => (
+          <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+            <Check className={cn("mt-0.5 size-3.5 flex-shrink-0", color.text)} />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      <Button
+        onClick={onSelect}
+        variant={plan.highlight ? "default" : "outline"}
+        className="mt-5 w-full gap-1.5"
+      >
+        {previous ? "Resubscribe" : "Switch"} to {plan.name}
+        <ArrowRight className="size-3.5" />
+      </Button>
+    </div>
+  );
+}
+
 /* ── Tabs ─────────────────────────────────────────────────────────────────── */
 
 type TabKey = "overview" | "invoices";
@@ -776,6 +933,13 @@ export default function BillingPage() {
 
   const [tab, setTab] = React.useState<TabKey>("overview");
 
+  /* ── Account subscription lifecycle (active → cancelling → cancelled) ─── */
+  const [accountStatus, setAccountStatus] = React.useState<"active" | "cancelling" | "cancelled">("active");
+  const [planTier, setPlanTier] = React.useState<PlanTier>(ACCOUNT_SUBSCRIPTION.planTier);
+  const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [showPlans, setShowPlans] = React.useState(false);
+  const [purchaseTier, setPurchaseTier] = React.useState<PlanTier | null>(null);
+
   /* ── Multi-card wallet state ──────────────────────────────────────────── */
   const [cards, setCards] = React.useState<SavedCard[]>(INITIAL_CARDS);
   const [addCardOpen, setAddCardOpen] = React.useState(false);
@@ -798,9 +962,13 @@ export default function BillingPage() {
 
   /* ── Account subscription + upcoming invoice ──────────────────────────── */
   const acct = ACCOUNT_SUBSCRIPTION;
-  const acctMonthly = accountMonthly(acct.seats);
+  const activePlan = PLANS[planTier];
+  const acctMonthly =
+    activePlan.pricePerMonth +
+    acct.seats.admin * SEAT_PRICING.admin.pricePerMonth +
+    acct.seats.user * SEAT_PRICING.user.pricePerMonth;
   const acctLines: { label: string; note: string; amount: number }[] = [
-    { label: `${acct.planName} plan`, note: `${acct.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: PLANS[acct.planTier].pricePerMonth },
+    { label: `${activePlan.name} plan`, note: `${acct.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: activePlan.pricePerMonth },
     { label: "User seats (Add On)", note: `${acct.seats.admin + acct.seats.user} seats`, amount: acct.seats.admin * SEAT_PRICING.admin.pricePerMonth + acct.seats.user * SEAT_PRICING.user.pricePerMonth },
   ];
   const nextInvoice: Invoice = {
@@ -810,15 +978,16 @@ export default function BillingPage() {
     dueDisplay: acct.nextInvoiceDate,
     status: "pending",
     paymentMethod: acct.paymentMethod,
-    planName: acct.planName,
-    planTier: acct.planTier,
+    planName: activePlan.name,
+    planTier: planTier,
     billingCycle: acct.billingCycle,
     seats: acct.seats,
     sites: acct.sites,
     amount: acctMonthly,
   };
-  const AcctIcon = PLAN_ICONS[acct.planTier];
-  const acctColor = PLAN_COLORS[acct.planTier];
+  const AcctIcon = PLAN_ICONS[planTier];
+  const acctColor = PLAN_COLORS[planTier];
+  const cancelling = accountStatus === "cancelling";
 
   /* ── Filtered invoices ────────────────────────────────────────────────── */
   const filteredInvoices = React.useMemo(() => {
@@ -869,6 +1038,64 @@ export default function BillingPage() {
     });
   }
 
+  function cancelSubscription() {
+    setAccountStatus("cancelling");
+    setCancelOpen(false);
+    toast.success("Subscription cancelled", {
+      description: `Your ${activePlan.name} plan stays active until ${acct.renewsDisplay}. Resume anytime before then.`,
+    });
+  }
+
+  function resumeSubscription() {
+    setAccountStatus("active");
+    toast.success("Subscription resumed", { description: `Your ${activePlan.name} plan will renew as normal.` });
+  }
+
+  function endSubscriptionNow() {
+    setAccountStatus("cancelled");
+    setShowPlans(false);
+    toast.message("Subscription ended", { description: "View plans to reactivate your account." });
+  }
+
+  function confirmPurchase(cardId: string) {
+    if (!purchaseTier) return;
+    const tier = purchaseTier;
+    const card = cards.find((c) => c.id === cardId);
+    setPlanTier(tier);
+    setAccountStatus("active");
+    setPurchaseTier(null);
+    setShowPlans(false);
+    toast.success(`Subscribed to ${PLANS[tier].name}`, {
+      description: card
+        ? `Billed to ${card.brand} ···· ${card.last4}. Your account is active again.`
+        : "Your account is active again.",
+    });
+  }
+
+  const paymentMethodsCard = (
+    <SectionCard
+      title="Payment Methods"
+      description="Cards used for all charges on this account."
+      action={
+        <Button size="sm" variant="outline" onClick={() => setAddCardOpen(true)} className="gap-1.5">
+          <Plus className="size-3.5" /> Add card
+        </Button>
+      }
+    >
+      <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+        {cards.map((card) => (
+          <PaymentCardRow
+            key={card.id}
+            card={card}
+            onSetDefault={() => setDefaultCard(card.id)}
+            onRemove={() => removeCard(card.id)}
+            canRemove={cards.length > 1}
+          />
+        ))}
+      </div>
+    </SectionCard>
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
@@ -884,37 +1111,129 @@ export default function BillingPage() {
         <TabSwitcher value={tab} onChange={setTab} />
       </div>
 
-      {tab === "overview" && (
+      {tab === "overview" && accountStatus === "cancelled" && (
         <div className="flex flex-col gap-4">
-          {/* Current plan banner */}
-          <div className={cn("flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4", acctColor.border, acctColor.bg)}>
+          {/* No active plan — same banner layout as the current-plan banner */}
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] p-4">
             <div className="flex items-center gap-3">
-              <div className={cn("flex size-11 flex-shrink-0 items-center justify-center rounded-lg border bg-background/40", acctColor.border)}>
-                <AcctIcon className={cn("size-5", acctColor.text)} />
+              <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg border border-sev-critical/40 bg-background/40">
+                <Ban className="size-5 text-sev-critical" />
               </div>
               <div className="min-w-0">
-                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Current Plan</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Subscription</p>
                 <p className="text-lg font-bold text-foreground">
-                  {acct.planName}
+                  No active plan
+                  <span className="ml-1.5 text-sm font-medium text-muted-foreground">· Cancelled</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="hidden max-w-xs text-sm text-muted-foreground sm:block">
+                Choose a plan to restore full access across your sites.
+              </p>
+              <Button size="sm" onClick={() => setShowPlans((v) => !v)} className="gap-1.5">
+                <LayoutGrid className="size-3.5" /> {showPlans ? "Hide plans" : "View plans"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Available plans — revealed on demand */}
+          {showPlans && (
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-md font-bold text-foreground">Available plans</h3>
+                <p className="text-sm text-muted-foreground">Billed {acct.billingCycle === "annual" ? "annually" : "monthly"}</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {(["starter", "professional", "enterprise"] as PlanTier[]).map((tier) => (
+                  <PlanCard
+                    key={tier}
+                    tier={tier}
+                    cycle={acct.billingCycle}
+                    previous={tier === planTier}
+                    onSelect={() => setPurchaseTier(tier)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Payment method stays available for when they resubscribe */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
+            {paymentMethodsCard}
+            <BillingDetailsSection className="lg:h-full" />
+          </div>
+        </div>
+      )}
+
+      {tab === "overview" && accountStatus !== "cancelled" && (
+        <div className="flex flex-col gap-4">
+          {/* Current plan banner */}
+          <div className={cn(
+            "flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4",
+            cancelling ? "border-warning/40 bg-warning/[0.06]" : cn(acctColor.border, acctColor.bg)
+          )}>
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "flex size-11 flex-shrink-0 items-center justify-center rounded-lg border bg-background/40",
+                cancelling ? "border-warning/40" : acctColor.border
+              )}>
+                <AcctIcon className={cn("size-5", cancelling ? "text-warning" : acctColor.text)} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Current Plan</p>
+                  {cancelling && <StatusBadge tone="warning">Cancelling</StatusBadge>}
+                </div>
+                <p className="text-lg font-bold text-foreground">
+                  {activePlan.name}
                   <span className="ml-1.5 text-sm font-medium text-muted-foreground">· {acct.billingCycle === "annual" ? "Annual" : "Monthly"}</span>
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <div>
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Monthly</p>
-                <p className={cn("font-mono text-lg font-bold", acctColor.text)}>${acctMonthly.toLocaleString()}</p>
+                <p className={cn("font-mono text-lg font-bold", cancelling ? "text-warning" : acctColor.text)}>${acctMonthly.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Renews</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{cancelling ? "Ends" : "Renews"}</p>
                 <p className="text-sm font-semibold text-foreground">{acct.renewsDisplay}</p>
               </div>
+              {cancelling ? (
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={resumeSubscription} className="gap-1.5">
+                    <RotateCcw className="size-3.5" /> Resume subscription
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={endSubscriptionNow} className="gap-1.5 text-muted-foreground hover:text-sev-critical">
+                    End now
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCancelOpen(true)}
+                  className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+                >
+                  <XCircle className="size-3.5" /> Cancel subscription
+                </Button>
+              )}
             </div>
           </div>
 
+          {cancelling && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm">
+              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
+              <p className="text-muted-foreground">
+                Your subscription is scheduled to cancel on <strong className="text-foreground">{acct.renewsDisplay}</strong>. You'll keep full access until then — resume anytime to stay on the {activePlan.name} plan.
+              </p>
+            </div>
+          )}
+
           {/* KPI strip */}
           <KpiGrid cols={4}>
-            <KpiCard label="Active Sites" value={activeSubs.length} sub={`On ${acct.planName} plan`} accent="primary" />
+            <KpiCard label="Active Sites" value={activeSubs.length} sub={`On ${activePlan.name} plan`} accent="primary" />
             <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users assigned`} accent="info" />
             <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${activeSubs.length} sites`} accent="warning" />
             <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${activeSubs.length} sites`} accent="purple" />
@@ -923,28 +1242,7 @@ export default function BillingPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
             {/* Payment Information — methods + billing details */}
             <div className="flex flex-col gap-4">
-              <SectionCard
-                title="Payment Methods"
-                description="Cards used for all charges on this account."
-                action={
-                  <Button size="sm" variant="outline" onClick={() => setAddCardOpen(true)} className="gap-1.5">
-                    <Plus className="size-3.5" /> Add card
-                  </Button>
-                }
-              >
-                <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-                  {cards.map((card) => (
-                    <PaymentCardRow
-                      key={card.id}
-                      card={card}
-                      onSetDefault={() => setDefaultCard(card.id)}
-                      onRemove={() => removeCard(card.id)}
-                      canRemove={cards.length > 1}
-                    />
-                  ))}
-                </div>
-              </SectionCard>
-
+              {paymentMethodsCard}
               <BillingDetailsSection className="flex-1" />
             </div>
 
@@ -963,7 +1261,7 @@ export default function BillingPage() {
                   <AcctIcon className={cn("size-4", acctColor.text)} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{acct.planName} plan</p>
+                  <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{activePlan.name} plan</p>
                   <p className="text-2xs text-muted-foreground">{acct.billingCycle === "annual" ? "Annual" : "Monthly"} · {acct.sites.length} sites</p>
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
@@ -1031,6 +1329,42 @@ export default function BillingPage() {
       )}
 
       {/* Modals */}
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        destructive
+        title="Cancel subscription?"
+        description={`Your ${activePlan.name} plan stays active until ${acct.renewsDisplay}. After that, access to all ${acct.sites.length} sites will be suspended.`}
+        confirmLabel="Cancel subscription"
+        cancelLabel="Keep plan"
+        onConfirm={cancelSubscription}
+      >
+        <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
+          <p className="mb-2 font-semibold text-foreground">What happens when it ends</p>
+          <ul className="space-y-1.5 text-muted-foreground">
+            {[
+              "Live detection and recording stop across all sites",
+              "Team members lose access to dashboards",
+              "Recordings are retained for 30 days, then deleted",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-2">
+                <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </ConfirmDialog>
+
+      <PurchasePlanModal
+        tier={purchaseTier}
+        cycle={acct.billingCycle}
+        cards={cards}
+        onClose={() => setPurchaseTier(null)}
+        onAddCard={() => setAddCardOpen(true)}
+        onConfirm={confirmPurchase}
+      />
+
       <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
       <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
       <RetryPaymentModal
