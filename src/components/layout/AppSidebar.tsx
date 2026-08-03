@@ -29,6 +29,7 @@ import {
   CreditCard,
   Info,
   ShieldCheck,
+  Crown,
   CircleUser,
   Eye,
 } from "lucide-react";
@@ -64,6 +65,7 @@ import {
 } from "@/components/ui/collapsible";
 import { NotificationsDrawer } from "@/components/shared/NotificationsDrawer";
 import type { UserRole } from "@/stores/useAuthStore";
+import sigmawaveLogo from "@/assets/sigmawave-logo.svg";
 
 /* ─── Role badge (mirrors User Management's RoleBadge) ────────────────── */
 
@@ -75,6 +77,7 @@ const PROFILE_ROLE_STYLES: Record<
     classes: string;
   }
 > = {
+  owner:    { label: "Owner",    icon: Crown,       classes: "bg-success/15 border-success/30 text-success" },
   admin:    { label: "Admin",    icon: ShieldCheck, classes: "bg-info/15 border-info/30 text-info" },
   operator: { label: "Operator", icon: CircleUser,  classes: "bg-warning/15 border-warning/30 text-warning" },
   viewer:   { label: "Viewer",   icon: Eye,         classes: "bg-success/15 border-success/30 text-success" },
@@ -419,7 +422,9 @@ function UserProfile({ onBell }: { onBell: () => void }) {
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-                  <p className="truncate text-xs capitalize text-primary">{user.role}</p>
+                  <div className="mt-1">
+                    <ProfileRoleBadge role={user.role} />
+                  </div>
                 </div>
 
                 <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
@@ -505,11 +510,11 @@ function SigmawaveFooter() {
 
   return (
     <div className="px-4 pb-3 pt-1 text-center">
-      <p className="text-2xs leading-relaxed text-muted-foreground/60">
-        Powered By © Sigmawave
-        <br />
-        Version 1.01
-      </p>
+      <div className="flex items-center justify-center gap-1.5">
+        <p className="text-2xs text-muted-foreground/60">Powered by</p>
+        <img src={sigmawaveLogo} alt="Sigmawave" className="h-3 w-auto" />
+      </div>
+      <p className="mt-1 text-2xs leading-relaxed text-muted-foreground/60">Version 1.01</p>
     </div>
   );
 }

@@ -45,12 +45,6 @@ import type { CameraData, CameraStatus } from "@/types/cameras";
 type Tool = "select" | "draw-area";
 type Tab = "overview" | "floor-plan";
 
-const STATUS_STYLES = {
-  active:   { bg: "bg-success/15 border-success/30",        text: "text-success",          dot: "bg-success",          label: "Active"   },
-  setup:    { bg: "bg-warning/15 border-warning/30",        text: "text-warning",          dot: "bg-warning",          label: "Setup"    },
-  inactive: { bg: "bg-muted border-border",                 text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Inactive" },
-};
-
 const CAMERA_STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: string; label: string; icon: React.ElementType; markerFill: string }> = {
   online:              { bg: "bg-success/15 border-success/30",            text: "text-success",          dot: "bg-success",          label: "Online",  icon: Wifi,    markerFill: "#22C55E" },
   offline:             { bg: "bg-muted border-border",                     text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline", icon: WifiOff, markerFill: "#9CA3AF" },
@@ -651,7 +645,6 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   }, [pendingCameraId, site, placeCamera]);
 
   if (!site) return null;
-  const s = STATUS_STYLES[site.status];
   const siteCameras = cameras.filter((c) => c.siteId === site.id);
   const onlineCount = siteCameras.filter((c) => c.status === "online").length;
   const placedCount = Object.keys(site.cameraPlacements).filter((cid) => siteCameras.some((c) => c.id === cid)).length;
@@ -733,16 +726,10 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
-        {/* Header — mirrors EventDrawer: status chip on top, big title, meta line below */}
+        {/* Header — site title with identifying metadata. */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
-                  <span className={cn("size-1.5 rounded-full", s.dot, site.status === "active" && "animate-pulse")} />
-                  {s.label}
-                </span>
-              </div>
               <SheetTitle className="text-lg font-bold leading-snug">{site.name}</SheetTitle>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {site.id} · {site.address || "No address yet"} · {site.timezone}
@@ -944,10 +931,6 @@ function OverviewTab({
           {([
             ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
             ["Name",           <span>{site.name}</span>],
-            ["Status",         <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", STATUS_STYLES[site.status].bg, STATUS_STYLES[site.status].text)}>
-              <span className={cn("size-1.5 rounded-full", STATUS_STYLES[site.status].dot)} />
-              {STATUS_STYLES[site.status].label}
-            </span>],
             ["Address",        <span>{site.address || "—"}</span>],
             ["Timezone",       <span>{site.timezone}</span>],
             ["Operating Hours",

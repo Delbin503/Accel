@@ -68,7 +68,6 @@ import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { AuthStepBar, type AuthStepKey } from "@/components/shared/AuthStepBar";
 import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
@@ -119,6 +118,7 @@ interface InviteRow {
   id: string;
   email: string;
   role: InviteRole;
+  departments: string[];
 }
 
 /* Same role colour palette used in User Management. */
@@ -327,7 +327,7 @@ export default function SignUpPage({
     setError(null);
     if (firstName.trim().length < 1) return setError("Enter your first name.");
     if (lastName.trim().length < 1) return setError("Enter your last name.");
-    if (departments.length === 0) return setError("Select at least one department.");
+    if (departments.length === 0) return setError("Enter at least one department.");
     if (!email.includes("@")) return setError("Enter a valid email address.");
     if (password.length < 8)
       return setError("Password must be at least 8 characters.");
@@ -494,11 +494,12 @@ export default function SignUpPage({
     setStep("team");
   }
 
-  function sendInvites(emails: string[], role: InviteRole) {
+  function sendInvites(emails: string[], role: InviteRole, departments: string[]) {
     const rows: InviteRow[] = emails.map((email) => ({
       id: `inv-${Math.random().toString(36).slice(2, 6)}`,
       email,
       role,
+      departments,
     }));
     setInvites((curr) => [...curr, ...rows]);
     setInviteOpen(false);
@@ -583,9 +584,9 @@ export default function SignUpPage({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Department
             </label>
-            <DepartmentSelect
-              value={departments}
-              onChange={setDepartments}
+            <Input
+              value={departments.join(", ")}
+              onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
               placeholder="e.g. Security Operations"
             />
           </div>
@@ -1792,17 +1793,19 @@ function InviteUsersModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onInvite: (emails: string[], role: InviteRole) => void;
+  onInvite: (emails: string[], role: InviteRole, departments: string[]) => void;
   siteName: string;
   currentInvites: InviteRow[];
 }) {
   const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<InviteRole>("user");
+  const [departments, setDepartments] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (open) {
       setEmails("");
       setRole("user");
+      setDepartments([]);
     }
   }, [open]);
 
@@ -1828,7 +1831,7 @@ function InviteUsersModal({
   const noSeats = seatsLeft === 0;
 
   const canSubmit =
-    parsed.valid.length > 0 && parsed.invalid.length === 0 && !overSeat;
+    parsed.valid.length > 0 && parsed.invalid.length === 0 && departments.length > 0 && !overSeat;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1906,6 +1909,17 @@ function InviteUsersModal({
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Additional sites can be added later from the Sites page.
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department
+            </label>
+            <Input
+              value={departments.join(", ")}
+              onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
+              placeholder="e.g. Security Operations"
+            />
           </div>
 
           {/* Emails */}
@@ -2014,7 +2028,7 @@ function InviteUsersModal({
           <Button
             size="sm"
             disabled={!canSubmit}
-            onClick={() => onInvite(parsed.valid, role)}
+            onClick={() => onInvite(parsed.valid, role, departments)}
             className="gap-1.5"
           >
             <Mail className="size-3.5" />

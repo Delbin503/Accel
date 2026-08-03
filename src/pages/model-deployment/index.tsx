@@ -1107,7 +1107,7 @@ function ModelDeploymentsDrawer({
 
   function runAction(label: string) {
     toast.success(`${label} · ${selected.size} camera${selected.size === 1 ? "" : "s"}`, {
-      description: `Action queued for ${selected.size} deployment${selected.size === 1 ? "" : "s"} of ${model.modelName}.`,
+      description: `${label} immediately for ${selected.size} deployment${selected.size === 1 ? "" : "s"} of ${model.modelName}.`,
     });
     setSelected(new Set());
   }

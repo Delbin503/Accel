@@ -49,7 +49,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
@@ -107,6 +106,7 @@ interface Member {
   id: string;
   email: string;
   role: MemberRole;
+  departments: string[];
 }
 
 const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -342,7 +342,7 @@ export default function OnPremSetupPage({
     if (ownerLastName.trim().length < 1) return setError("Enter the owner's last name.");
     if (!MEMBER_EMAIL_RE.test(ownerEmail.trim()))
       return setError("Enter a valid owner email address.");
-    if (ownerDepartments.length === 0) return setError("Select at least one department.");
+    if (ownerDepartments.length === 0) return setError("Enter at least one department.");
     if (ownerOrg.trim().length < 2) return setError("Enter the organization name.");
     setStep("site");
   }
@@ -359,11 +359,12 @@ export default function OnPremSetupPage({
     setMemberModalOpen(true);
   }
 
-  function sendInvites(emails: string[], role: MemberRole) {
+  function sendInvites(emails: string[], role: MemberRole, departments: string[]) {
     const rows: Member[] = emails.map((email) => ({
       id: `mbr-${Math.random().toString(36).slice(2, 6)}`,
       email,
       role,
+      departments,
     }));
     setMembers((curr) => [...curr, ...rows]);
     setMemberModalOpen(false);
@@ -548,9 +549,9 @@ export default function OnPremSetupPage({
 
           <div>
             <Label>Department</Label>
-            <DepartmentSelect
-              value={ownerDepartments}
-              onChange={setOwnerDepartments}
+            <Input
+              value={ownerDepartments.join(", ")}
+              onChange={(e) => setOwnerDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
               placeholder="Security Operations"
             />
           </div>
@@ -877,17 +878,19 @@ function MemberModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onInvite: (emails: string[], role: MemberRole) => void;
+  onInvite: (emails: string[], role: MemberRole, departments: string[]) => void;
   siteName: string;
   currentMembers: Member[];
 }) {
   const [emails, setEmails] = React.useState("");
   const [role, setRole] = React.useState<MemberRole>("user");
+  const [departments, setDepartments] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (open) {
       setEmails("");
       setRole("user");
+      setDepartments([]);
     }
   }, [open]);
 
@@ -911,7 +914,7 @@ function MemberModal({
   const noSeats = seatsLeft === 0;
 
   const canSubmit =
-    parsed.valid.length > 0 && parsed.invalid.length === 0 && !overSeat;
+    parsed.valid.length > 0 && parsed.invalid.length === 0 && departments.length > 0 && !overSeat;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -989,6 +992,17 @@ function MemberModal({
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Additional sites can be added later from the Sites page.
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Department
+            </label>
+            <Input
+              value={departments.join(", ")}
+              onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
+              placeholder="e.g. Security Operations"
+            />
           </div>
 
           {/* Emails */}
@@ -1074,7 +1088,7 @@ function MemberModal({
           <Button
             size="sm"
             disabled={!canSubmit}
-            onClick={() => onInvite(parsed.valid, role)}
+            onClick={() => onInvite(parsed.valid, role, departments)}
             className="gap-1.5"
           >
             <Mail className="size-3.5" />

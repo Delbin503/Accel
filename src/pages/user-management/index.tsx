@@ -26,7 +26,6 @@ import {
   AlertTriangle,
   RotateCcw,
   CheckCircle2,
-  CheckSquare,
   Calendar,
   Ban,
   Clock,
@@ -54,7 +53,6 @@ import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
 import { DEPARTMENTS } from "@/mocks/departments";
 
 const DEPARTMENT_OPTIONS: { value: string; label: string }[] = DEPARTMENTS.map((d) => ({
@@ -137,23 +135,6 @@ function Avatar({ user, size = 36 }: { user: UserData; size?: number }) {
     >
       {initials || "?"}
     </div>
-  );
-}
-
-/* ── Checkbox ────────────────────────────────────────────────────────────── */
-
-function Checkbox({ checked, indeterminate, onChange }: { checked: boolean; indeterminate?: boolean; onChange: () => void }) {
-  return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onChange(); }}
-      className={cn(
-        "flex size-4 flex-shrink-0 items-center justify-center rounded border transition-colors",
-        checked || indeterminate ? "border-primary bg-primary" : "border-muted-foreground/40 hover:border-primary/60"
-      )}
-    >
-      {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-      {!checked && indeterminate && <span className="h-px w-2 bg-primary-foreground" />}
-    </button>
   );
 }
 
@@ -1117,9 +1098,10 @@ function InviteUsersModal({
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Department
             </label>
-            <DepartmentSelect
-              value={departments}
-              onChange={setDepartments}
+            <Input
+              value={departments.join(", ")}
+              onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
+              placeholder="e.g. Security Operations"
               className={errors.departments ? "border-sev-critical/60" : undefined}
             />
             {errors.departments && <p className="mt-1 text-xs text-sev-critical">{errors.departments}</p>}
@@ -1901,7 +1883,11 @@ function EditUserModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Department
             </label>
-            <DepartmentSelect value={departments} onChange={setDepartments} />
+            <Input
+              value={departments.join(", ")}
+              onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
+              placeholder="e.g. Security Operations"
+            />
           </div>
           <p className="text-xs text-muted-foreground">
             Email and User ID cannot be changed after creation.
@@ -2318,95 +2304,6 @@ function ResetConfirmModal({
   );
 }
 
-/* ── Bulk action bar ─────────────────────────────────────────────────────── */
-
-function BulkActionBar({
-  count,
-  onClear,
-  onChangeRole,
-  onSuspend,
-  onManageSite,
-}: {
-  count: number;
-  onClear: () => void;
-  onChangeRole: () => void;
-  onSuspend: () => void;
-  onManageSite: () => void;
-}) {
-  if (count === 0) return null;
-  return (
-    <div className="fixed inset-x-6 bottom-6 z-40 mx-auto flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
-      <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <CheckSquare className="size-3.5" />
-        </div>
-        <span className="text-base font-semibold text-foreground">
-          {count} user{count > 1 ? "s" : ""} selected
-        </span>
-      </div>
-      <div className="ml-auto flex flex-wrap items-center gap-1.5">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-sm text-muted-foreground" onClick={onClear}>
-          <X className="size-3.5" />
-          Clear selection
-        </Button>
-        <div className="mx-1 h-4 w-px bg-border" />
-        <Button variant="outline" size="sm" className="gap-1.5 text-sm" onClick={onChangeRole}>
-          <Shield className="size-3.5" />
-          Change Role
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5 text-sm" onClick={onManageSite}>
-          <MapPin className="size-3.5" />
-          Manage Site
-        </Button>
-        <Button size="sm" className="gap-1.5 text-sm" onClick={onSuspend}>
-          <ShieldOff className="size-3.5" />
-          Suspend User
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function DeletedUsersBulkActionBar({
-  count,
-  onClear,
-  onRestore,
-}: {
-  count: number;
-  onClear: () => void;
-  onRestore: () => void;
-}) {
-  if (count === 0) return null;
-  return (
-    <div className="fixed inset-x-6 bottom-6 z-40 mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-success bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--success)/0.22)]">
-      <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-success text-success-foreground">
-          <CheckSquare className="size-3.5" />
-        </div>
-        <span className="text-base font-semibold text-foreground">
-          {count} deleted user{count > 1 ? "s" : ""} selected
-        </span>
-      </div>
-      <div className="ml-auto flex flex-wrap items-center gap-1.5">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-sm text-muted-foreground" onClick={onClear}>
-          <X className="size-3.5" />
-          Clear selection
-        </Button>
-        <div className="mx-1 h-4 w-px bg-border" />
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 border-success/40 text-sm text-success hover:bg-success/10"
-          onClick={onRestore}
-        >
-          <RotateCcw className="size-3.5" />
-          Restore Users
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 /* ── Toast ───────────────────────────────────────────────────────────────── */
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
@@ -2448,18 +2345,15 @@ function DeletedUsersPage({
   users,
   onBack,
   onRestore,
-  onBulkRestore,
 }: {
   users: DeletedUserData[];
   onBack: () => void;
   onRestore: (user: DeletedUserData) => void;
-  onBulkRestore: (users: DeletedUserData[]) => void;
 }) {
   const PAGE_STEP = 20;
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
@@ -2489,45 +2383,6 @@ function DeletedUsersPage({
   const hasMore = visibleCount < filtered.length;
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
   const drawerUser = drawerId ? users.find((u) => u.id === drawerId) ?? null : null;
-  const allPageSelected = visibleItems.length > 0 && visibleItems.every((u) => selectedIds.has(u.id));
-  const somePageSelected = !allPageSelected && visibleItems.some((u) => selectedIds.has(u.id));
-  const selectedUsers = React.useMemo(
-    () => users.filter((u) => selectedIds.has(u.id)),
-    [users, selectedIds]
-  );
-
-  React.useEffect(() => {
-    setSelectedIds((curr) => {
-      const validIds = new Set(users.map((u) => u.id));
-      const next = new Set([...curr].filter((id) => validIds.has(id)));
-      return next.size === curr.size ? curr : next;
-    });
-  }, [users]);
-
-  function togglePageAll() {
-    setSelectedIds((curr) => {
-      const next = new Set(curr);
-      if (allPageSelected) visibleItems.forEach((u) => next.delete(u.id));
-      else visibleItems.forEach((u) => next.add(u.id));
-      return next;
-    });
-  }
-
-  function toggleRow(id: string) {
-    setSelectedIds((curr) => {
-      const next = new Set(curr);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function handleBulkRestore() {
-    if (selectedUsers.length === 0) return;
-    onBulkRestore(selectedUsers);
-    setSelectedIds(new Set());
-    setDrawerId(null);
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
@@ -2611,13 +2466,6 @@ function DeletedUsersPage({
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  <th className="w-[44px] px-4 py-2.5">
-                    <Checkbox
-                      checked={allPageSelected}
-                      indeterminate={somePageSelected}
-                      onChange={togglePageAll}
-                    />
-                  </th>
                   {["USER ID", "USER", "ROLE", "SITES", "DELETED ON", "ACTION"].map((h) => (
                     <th
                       key={h}
@@ -2629,20 +2477,12 @@ function DeletedUsersPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {visibleItems.map((u) => {
-                  const isSel = selectedIds.has(u.id);
-                  return (
+                {visibleItems.map((u) => (
                   <tr
                     key={u.id}
                     onClick={() => setDrawerId(u.id)}
-                    className={cn(
-                      "group cursor-pointer text-base transition-colors hover:bg-muted/20",
-                      isSel && "bg-success/[0.04]"
-                    )}
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox checked={isSel} onChange={() => toggleRow(u.id)} />
-                    </td>
                     <td className="px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{u.id}</span>
                     </td>
@@ -2687,8 +2527,7 @@ function DeletedUsersPage({
                       </Popover>
                     </td>
                   </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>
@@ -2730,11 +2569,6 @@ function DeletedUsersPage({
         onResetPassword={() => undefined}
         onReset2FA={() => undefined}
       />
-      <DeletedUsersBulkActionBar
-        count={selectedIds.size}
-        onClear={() => setSelectedIds(new Set())}
-        onRestore={handleBulkRestore}
-      />
     </div>
   );
 }
@@ -2763,7 +2597,6 @@ export default function UserManagementPage({
   const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const PAGE_STEP = 20;
   const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
   const [sort, setSort] = React.useState<SortKey>("newest");
@@ -2820,25 +2653,6 @@ export default function UserManagementPage({
     .filter((u): u is UserData => !!u);
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpiFilter !== "all");
 
-  const allPageSelected = visibleItems.length > 0 && visibleItems.every((u) => selectedIds.has(u.id));
-  const somePageSelected = !allPageSelected && visibleItems.some((u) => selectedIds.has(u.id));
-
-  function togglePageAll() {
-    setSelectedIds((curr) => {
-      const next = new Set(curr);
-      if (allPageSelected) visibleItems.forEach((u) => next.delete(u.id));
-      else visibleItems.forEach((u) => next.add(u.id));
-      return next;
-    });
-  }
-  function toggleRow(id: string) {
-    setSelectedIds((curr) => {
-      const next = new Set(curr);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
   function handleKpiClick(key: KpiFilter) {
     setKpiFilter((current) => (current === key ? "all" : key));
     setVisibleCount(PAGE_STEP);
@@ -2860,7 +2674,6 @@ export default function UserManagementPage({
       })
     );
     closeDialog();
-    setSelectedIds(new Set());
     setToast({
       kind: "success",
       message:
@@ -2892,7 +2705,6 @@ export default function UserManagementPage({
       })
     );
     closeDialog();
-    setSelectedIds(new Set());
     setToast({ kind: "success", message: ids.length > 1 ? `Site access updated for ${ids.length} users` : "Site access updated" });
   }
 
@@ -2904,7 +2716,6 @@ export default function UserManagementPage({
       )
     );
     closeDialog();
-    setSelectedIds(new Set());
     setToast({
       kind: "success",
       message:
@@ -2922,7 +2733,6 @@ export default function UserManagementPage({
       )
     );
     closeDialog();
-    setSelectedIds(new Set());
     setToast({
       kind: "success",
       message:
@@ -2962,7 +2772,6 @@ export default function UserManagementPage({
     setUsers((curr) => curr.filter((u) => !ids.includes(u.id)));
     closeDialog();
     setDrawerId(null);
-    setSelectedIds(new Set());
     setToast({
       kind: "success",
       message:
@@ -2980,21 +2789,6 @@ export default function UserManagementPage({
       ...curr,
     ]);
     setToast({ kind: "success", message: `${user.fullName} restored to User Management.` });
-  }
-
-  function handleRestoreDeletedUsers(restoredUsers: DeletedUserData[]) {
-    if (restoredUsers.length === 0) return;
-    const restoredIds = new Set(restoredUsers.map((u) => u.id));
-    const activeUsers = restoredUsers.map((user) => {
-      const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, deleteReason: _deleteReason, ...restoredUser } = user;
-      return { ...restoredUser, status: "active" as UserStatus, suspension: undefined };
-    });
-    setDeletedUsers((curr) => curr.filter((u) => !restoredIds.has(u.id)));
-    setUsers((curr) => [...activeUsers, ...curr]);
-    setToast({
-      kind: "success",
-      message: `${restoredUsers.length} deleted user${restoredUsers.length > 1 ? "s" : ""} restored to User Management.`,
-    });
   }
 
   function handleResetPassword() {
@@ -3053,7 +2847,6 @@ export default function UserManagementPage({
         users={deletedUsers}
         onBack={() => navigate("/users")}
         onRestore={handleRestoreDeletedUser}
-        onBulkRestore={handleRestoreDeletedUsers}
       />
     );
   }
@@ -3074,7 +2867,6 @@ export default function UserManagementPage({
             className="gap-1.5"
             onClick={() => {
               setDrawerId(null);
-              setSelectedIds(new Set());
               navigate("/users/deleted");
             }}
           >
@@ -3191,13 +2983,6 @@ export default function UserManagementPage({
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  <th className="w-[44px] px-4 py-2.5">
-                    <Checkbox
-                      checked={allPageSelected}
-                      indeterminate={somePageSelected}
-                      onChange={togglePageAll}
-                    />
-                  </th>
                   {["USER ID", "USER", "ROLE", "STATUS", "SITES", "LAST ACTIVE", "ACTION"].map((h) => (
                     <th
                       key={h}
@@ -3209,20 +2994,12 @@ export default function UserManagementPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {visibleItems.map((u) => {
-                  const isSel = selectedIds.has(u.id);
-                  return (
-                    <tr
-                      key={u.id}
-                      onClick={() => setDrawerId(u.id)}
-                      className={cn(
-                        "group cursor-pointer text-base transition-colors hover:bg-muted/20",
-                        isSel && "bg-primary/[0.04]"
-                      )}
-                    >
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox checked={isSel} onChange={() => toggleRow(u.id)} />
-                      </td>
+                {visibleItems.map((u) => (
+                  <tr
+                    key={u.id}
+                    onClick={() => setDrawerId(u.id)}
+                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                  >
                       <td className="px-4 py-3">
                         <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                           {u.id}
@@ -3300,8 +3077,7 @@ export default function UserManagementPage({
                         </Popover>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>
@@ -3406,15 +3182,6 @@ export default function UserManagementPage({
             The user's current 2FA enrolment will be removed. They will be prompted to re-enrol on next sign-in.
           </>
         }
-      />
-
-      {/* Bulk action bar */}
-      <BulkActionBar
-        count={selectedIds.size}
-        onClear={() => setSelectedIds(new Set())}
-        onChangeRole={() => openDialog("change-role", [...selectedIds])}
-        onSuspend={() => openDialog("suspend", [...selectedIds])}
-        onManageSite={() => openDialog("manage-site", [...selectedIds])}
       />
 
     </div>

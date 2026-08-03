@@ -34,12 +34,6 @@ import type { CameraData } from "@/types/cameras";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 
-const STATUS_STYLES = {
-  active:   { bg: "bg-success/15 border-success/30",        text: "text-success",          dot: "bg-success",          label: "Active"   },
-  setup:    { bg: "bg-warning/15 border-warning/30",        text: "text-warning",          dot: "bg-warning",          label: "Setup"    },
-  inactive: { bg: "bg-muted border-border",                 text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Inactive" },
-};
-
 function SiteMiniThumb({ site }: { site: SiteData }) {
   if (site.floorPlan?.imageUrl) {
     return (
@@ -437,7 +431,7 @@ export default function SiteOverviewPage({
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  {["SITE ID", "SITE", "STATUS", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
+                  {["SITE ID", "SITE", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
                     <th key={h}
                       className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
@@ -447,7 +441,6 @@ export default function SiteOverviewPage({
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filtered.map((site) => {
-                  const s = STATUS_STYLES[site.status];
                   const siteCams = cameras.filter((c) => c.siteId === site.id);
                   return (
                     <tr key={site.id}
@@ -475,12 +468,6 @@ export default function SiteOverviewPage({
                             </TruncatedText>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
-                          <span className={cn("size-1.5 rounded-full", s.dot, site.status === "active" && "animate-pulse")} />
-                          {s.label}
-                        </span>
                       </td>
                       <td className="px-4 py-3">
                         {site.floorPlan ? (

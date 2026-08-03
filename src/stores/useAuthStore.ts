@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type UserRole = "admin" | "operator" | "viewer";
+export type UserRole = "owner" | "admin" | "operator" | "viewer";
 
 export interface AuthUser {
   id: string;
@@ -40,7 +40,7 @@ const DEFAULT_USER: AuthUser = {
   id: "usr-001",
   name: "Delbin Arkar",
   initials: "DA",
-  role: "admin",
+  role: "owner",
   email: "delbin@accel.ai",
   notificationCount: 4,
   orgName: "Accel TRMS",
@@ -87,6 +87,18 @@ export const useAuthStore = create<AuthState>()(
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       setUser: (user) => set({ user }),
     }),
-    { name: "accel-auth" }
+    {
+      name: "accel-auth",
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<AuthState>;
+        if (state.user?.id !== DEFAULT_USER.id) return state;
+
+        return {
+          ...state,
+          user: { ...state.user, role: "owner" },
+        };
+      },
+    }
   )
 );
