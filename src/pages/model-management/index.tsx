@@ -2135,6 +2135,7 @@ export default function ModelManagementPage({
       steps: [],
       sequenceIds: [],
       attachedRuleIds: [],
+      defaultConfidence: 85,
       extractedRules: [],
       createdAt: n.toISOString(),
       createdAtDisplay: display,

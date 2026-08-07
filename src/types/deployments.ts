@@ -27,6 +27,8 @@ export interface DeploymentData {
   stoppedAtDisplay: string | null;
   /** Count of DetectionEvents this deployment has produced (display only). */
   eventCount: number;
+  /** Confidence threshold (%) this deployment runs inference at. */
+  confidence: number;
   /** Optional failure reason when status === "failed". */
   failureReason?: string;
 }

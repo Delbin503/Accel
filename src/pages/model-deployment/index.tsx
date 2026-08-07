@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
@@ -369,6 +370,82 @@ function CheckboxBox({ checked }: { checked: boolean }) {
   );
 }
 
+/* ─── Confidence threshold ───────────────────────────────────────────────── */
+
+/** Fallback when no model is picked, or a model predates `defaultConfidence`. */
+const DEFAULT_CONFIDENCE = 85;
+const CONFIDENCE_MIN = 50;
+const CONFIDENCE_MAX = 99;
+
+/** Below this, the model fires on weak matches; above it, it starts missing real events. */
+function confidenceAdvice(value: number): { tone: "low" | "ok" | "high"; note: string } {
+  if (value < 70) return { tone: "low", note: "Low threshold — expect more false positives." };
+  if (value > 95) return { tone: "high", note: "Very strict — real events may be missed." };
+  return { tone: "ok", note: "Balanced detection sensitivity." };
+}
+
+/**
+ * Conf score control for the summary bar. Native range input rather than a new
+ * primitive — shadcn has no Slider in `components/ui/` and this is the only
+ * slider in the app so far.
+ */
+function ConfidenceField({
+  value,
+  onChange,
+  modelDefault,
+  disabled,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  modelDefault: number | null;
+  disabled: boolean;
+}) {
+  const isTuned = modelDefault !== null && value !== modelDefault;
+  const advice = confidenceAdvice(value);
+
+  return (
+    <div className="ml-auto flex-shrink-0 border-l border-border pl-5">
+      <div className="mb-0.5 flex items-center gap-1.5">
+        <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">Conf</span>
+        {isTuned && (
+          <button
+            type="button"
+            onClick={() => onChange(modelDefault)}
+            className="text-3xs text-muted-foreground underline hover:text-foreground"
+          >
+            reset
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2.5">
+        <span
+          className={cn(
+            "w-10 flex-shrink-0 text-base font-semibold tabular-nums",
+            disabled ? "text-muted-foreground/60"
+              : advice.tone === "ok" ? "text-foreground"
+              : advice.tone === "low" ? "text-warning"
+              : "text-info"
+          )}
+        >
+          {disabled ? "-" : `${value}%`}
+        </span>
+        <input
+          type="range"
+          min={CONFIDENCE_MIN}
+          max={CONFIDENCE_MAX}
+          step={1}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(Number(e.target.value))}
+          aria-label="Confidence threshold"
+          title={disabled ? "Pick a model first" : advice.note}
+          className="h-1 w-24 flex-shrink-0 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ─── Summary bar (sticky bottom of wizard) ──────────────────────────────── */
 
 function SummaryBar({
@@ -376,6 +453,8 @@ function SummaryBar({
   site,
   selectedAreas,
   selectedCameras,
+  confidence,
+  onConfidenceChange,
   canDeploy,
   onDeploy,
 }: {
@@ -383,24 +462,36 @@ function SummaryBar({
   site: SiteSummary | null;
   selectedAreas: AreaSummary[];
   selectedCameras: CameraData[];
+  confidence: number;
+  onConfidenceChange: (next: number) => void;
   canDeploy: boolean;
   onDeploy: () => void;
 }) {
+  // Wraps rather than a rigid grid — at narrow widths the Conf control and the
+  // deploy button drop to a second row instead of crushing the summary fields.
   return (
-    <div className="grid grid-cols-[2fr_2fr_1fr_1fr_auto] items-center gap-5 rounded-xl border border-border bg-card px-5 py-3.5">
-      <SummaryField label="Model" value={model?.name ?? null} placeholder="-" />
-      <SummaryField label="Site" value={site?.siteName ?? null} placeholder="-" />
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border bg-card px-5 py-3.5">
+      <SummaryField label="Model" value={model?.name ?? null} placeholder="-" className="min-w-[104px] flex-[1.4]" />
+      <SummaryField label="Site" value={site?.siteName ?? null} placeholder="-" className="min-w-[104px] flex-[1.4]" />
       <SummaryField
         label="Areas"
         value={selectedAreas.length > 0 ? selectedAreas.map((a) => a.areaName).join(", ") : null}
         count={selectedAreas.length}
         placeholder="-"
+        className="min-w-[76px] flex-1"
       />
       <SummaryField
         label="Cameras"
         value={selectedCameras.length > 0 ? `${selectedCameras.length} selected` : null}
         count={selectedCameras.length}
         placeholder="-"
+        className="min-w-[86px] flex-1"
+      />
+      <ConfidenceField
+        value={confidence}
+        onChange={onConfidenceChange}
+        modelDefault={model?.defaultConfidence ?? null}
+        disabled={!model}
       />
       <Button size="lg" onClick={onDeploy} disabled={!canDeploy} className="gap-2">
         <Rocket className="size-4" />
@@ -415,19 +506,21 @@ function SummaryField({
   value,
   count,
   placeholder,
+  className,
 }: {
   label: string;
   value: string | null;
   count?: number;
   placeholder: string;
+  className?: string;
 }) {
   return (
-    <div className="min-w-0">
-      <div className="mb-0.5 flex items-center gap-1.5">
-        <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
+    <div className={cn("min-w-0", className)}>
+      <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
+        <span className="truncate font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
         {count !== undefined && (
           <span className={cn(
-            "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-bold tabular-nums",
+            "inline-flex h-4 min-w-4 flex-shrink-0 items-center justify-center rounded-full px-1 text-3xs font-bold tabular-nums",
             count > 0 ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
           )}>
             {count}
@@ -546,6 +639,8 @@ function DeployWizard({
   const [cameraIds, setCameraIds] = React.useState<string[]>([]);
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  /** Conf threshold for this deploy — seeded from the model, tunable in the summary bar. */
+  const [confidence, setConfidence] = React.useState(DEFAULT_CONFIDENCE);
 
   // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
   // location.state.prefill = { siteId, areaId, cameraId, ... }
@@ -603,7 +698,11 @@ function DeployWizard({
   /* — Handlers (resetting downstream selection on upstream change) — */
 
   function pickModel(id: string) {
-    setModelId(id === modelId ? null : id);
+    const next = id === modelId ? null : id;
+    setModelId(next);
+    // Re-seed the Conf score from the newly picked model, dropping any tuning
+    // the user applied to the previous one.
+    setConfidence(MOCK_MODELS.find((m) => m.id === next)?.defaultConfidence ?? DEFAULT_CONFIDENCE);
   }
   function pickSite(id: string) {
     if (id === siteId) {
@@ -663,6 +762,7 @@ function DeployWizard({
       stoppedAt: null,
       stoppedAtDisplay: null,
       eventCount: 0,
+      confidence,
     }));
     onCommit(records);
     // Reset for next deploy
@@ -670,6 +770,7 @@ function DeployWizard({
     setSiteId(null);
     setAreaIds([]);
     setCameraIds([]);
+    setConfidence(DEFAULT_CONFIDENCE);
     setConfirmOpen(false);
   }
 
@@ -767,6 +868,8 @@ function DeployWizard({
         site={selectedSite}
         selectedAreas={selectedAreas}
         selectedCameras={selectedCameras}
+        confidence={confidence}
+        onConfidenceChange={setConfidence}
         canDeploy={canDeploy}
         onDeploy={() => setConfirmOpen(true)}
       />
@@ -789,6 +892,21 @@ function DeployWizard({
               <KvRow label="Site" value={selectedSite.siteName} />
               <KvRow label="Areas" value={`${selectedAreas.length} (${selectedAreas.map((a) => a.areaName).join(", ")})`} />
               <KvRow label="Cameras" value={`${selectedCameras.length} selected`} />
+              <KvRow
+                label="Conf score"
+                value={
+                  confidence === selectedModel.defaultConfidence
+                    ? `${confidence}% (model default)`
+                    : `${confidence}% (default ${selectedModel.defaultConfidence}%)`
+                }
+              />
+              {confidenceAdvice(confidence).tone !== "ok" && (
+                <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-muted-foreground">
+                  <AlertTriangle className="size-3.5 flex-shrink-0 text-warning" />
+                  {confidenceAdvice(confidence).note} Applies to all {selectedCameras.length} camera
+                  {selectedCameras.length === 1 ? "" : "s"} in this deployment.
+                </div>
+              )}
               {selectedCameras.some((c) => c.status !== "online") && (
                 <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-muted-foreground">
                   <AlertTriangle className="size-3.5 flex-shrink-0 text-warning" />
@@ -1064,6 +1182,7 @@ function ModelDeploymentsDrawer({
   const [areaFilter, setAreaFilter] = React.useState<string[]>([]);
   const [cameraSearch, setCameraSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
+  const [removeOpen, setRemoveOpen] = React.useState(false);
 
   /* Reset selection when filters change */
   const rows = React.useMemo(() => {
@@ -1110,6 +1229,19 @@ function ModelDeploymentsDrawer({
       description: `${label} immediately for ${selected.size} deployment${selected.size === 1 ? "" : "s"} of ${model.modelName}.`,
     });
     setSelected(new Set());
+  }
+
+  /* Rows behind the current selection — drives the confirm dialog summary. */
+  const selectedRows = React.useMemo(
+    () => model.deployments.filter((d) => selected.has(d.id)),
+    [model.deployments, selected]
+  );
+  const selectedEvents = selectedRows.reduce((sum, d) => sum + d.eventCount, 0);
+  const activeSelectedCount = selectedRows.filter((d) => d.status === "active").length;
+
+  function confirmRemove() {
+    setRemoveOpen(false);
+    runAction("Removed model from");
   }
 
   const selectedCount = selected.size;
@@ -1278,7 +1410,7 @@ function ModelDeploymentsDrawer({
                 <Square className="size-3" />
                 Stop
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => runAction("Removed model from")} className="gap-1.5">
+              <Button size="sm" variant="destructive" onClick={() => setRemoveOpen(true)} className="gap-1.5">
                 <Trash2 className="size-3" />
                 Remove
               </Button>
@@ -1286,6 +1418,50 @@ function ModelDeploymentsDrawer({
           </div>
         )}
       </aside>
+
+      {/* Destructive confirm — removing the model from the selected cameras */}
+      <ConfirmDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        destructive
+        title={`Remove ${model.modelName} from ${selectedCount} camera${selectedCount === 1 ? "" : "s"}?`}
+        description="This stops inference on the selected cameras and deletes their deployment records. It cannot be undone."
+        confirmLabel={`Remove ${selectedCount} Camera${selectedCount === 1 ? "" : "s"}`}
+        cancelLabel="Cancel"
+        onConfirm={confirmRemove}
+      >
+        <div className="space-y-3">
+          <div className="rounded-[var(--radius)] border border-border bg-muted/30 p-3">
+            <ul className="max-h-40 space-y-1.5 overflow-auto">
+              {selectedRows.map((d) => (
+                <li key={d.id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate text-foreground">{d.cameraName}</span>
+                  <span className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
+            <div className="space-y-1 text-sm text-foreground">
+              {activeSelectedCount > 0 && (
+                <p>
+                  <strong>{activeSelectedCount}</strong> of these deployment
+                  {activeSelectedCount === 1 ? " is" : "s are"} still <strong>active</strong> — detection stops immediately.
+                </p>
+              )}
+              <p>
+                <strong>{selectedEvents.toLocaleString()}</strong> recorded event
+                {selectedEvents === 1 ? "" : "s"} will no longer be attributed to this model.
+              </p>
+              <p className="text-muted-foreground">
+                Cameras stay online. Redeploy from the Deploy tab to restore coverage.
+              </p>
+            </div>
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

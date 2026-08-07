@@ -22,6 +22,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 47,
+    confidence: 85,
   },
   {
     id: "DEP_002",
@@ -41,6 +42,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 31,
+    confidence: 85,
   },
   {
     id: "DEP_003",
@@ -60,6 +62,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 124,
+    confidence: 90,
   },
   {
     id: "DEP_004",
@@ -79,6 +82,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 89,
+    confidence: 90,
   },
   {
     id: "DEP_005",
@@ -98,6 +102,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 0,
+    confidence: 80,
   },
   {
     id: "DEP_006",
@@ -117,6 +122,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: "2026-05-18T16:23:00",
     stoppedAtDisplay: "18 May 2026, 16:23",
     eventCount: 412,
+    confidence: 85,
   },
   {
     id: "DEP_007",
@@ -136,6 +142,7 @@ export const MOCK_DEPLOYMENTS: DeploymentData[] = [
     stoppedAt: null,
     stoppedAtDisplay: null,
     eventCount: 0,
+    confidence: 80,
     failureReason: "Model resolution (1920x1080) exceeds camera capability (1280x720). Re-validate against a compatible footage clip.",
   },
 ];

@@ -40,6 +40,11 @@ export interface ModelData {
   modelFile?: string;
   /** Uploaded manifest file name (.json). */
   manifestFile?: string;
+  /**
+   * Confidence threshold (%) the model was trained/tuned at. Seeds the Conf
+   * score in the deployment wizard, where it can be tuned per deployment.
+   */
+  defaultConfidence: number;
   createdAt: string;
   createdAtDisplay: string;
 }
