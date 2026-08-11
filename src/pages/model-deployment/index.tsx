@@ -39,7 +39,8 @@ import {
   nextDeploymentId,
 } from "@/mocks/deployments";
 import type { ModelData } from "@/types/modelManagement";
-import type { CameraData } from "@/types/cameras";
+import type { CameraData, BoundaryZone } from "@/types/cameras";
+import { DrawZoneModal } from "@/components/shared/DrawZoneModal";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import type {
   DeploymentData,
@@ -377,6 +378,11 @@ const DEFAULT_CONFIDENCE = 85;
 const CONFIDENCE_MIN = 50;
 const CONFIDENCE_MAX = 99;
 
+/** Stored as a percent, shown as a 0.000 score (85 → "0.850"). */
+function formatConfidence(value: number) {
+  return (value / 100).toFixed(3);
+}
+
 /** Below this, the model fires on weak matches; above it, it starts missing real events. */
 function confidenceAdvice(value: number): { tone: "low" | "ok" | "high"; note: string } {
   if (value < 70) return { tone: "low", note: "Low threshold — expect more false positives." };
@@ -405,29 +411,35 @@ function ConfidenceField({
 
   return (
     <div className="ml-auto flex-shrink-0 border-l border-border pl-5">
-      <div className="mb-0.5 flex items-center gap-1.5">
-        <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">Conf</span>
-        {isTuned && (
-          <button
-            type="button"
-            onClick={() => onChange(modelDefault)}
-            className="text-3xs text-muted-foreground underline hover:text-foreground"
-          >
-            reset
-          </button>
-        )}
+      {/* Label row mirrors the value row's widths so `reset` sits flush over the
+          right end of the slider. */}
+      <div className="mb-0.5 flex items-center gap-2.5">
+        <span className="w-12 flex-shrink-0 font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">
+          Conf
+        </span>
+        <span className="flex w-24 flex-shrink-0 justify-end">
+          {isTuned && (
+            <button
+              type="button"
+              onClick={() => onChange(modelDefault)}
+              className="text-3xs text-muted-foreground underline hover:text-foreground"
+            >
+              reset
+            </button>
+          )}
+        </span>
       </div>
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            "w-10 flex-shrink-0 text-base font-semibold tabular-nums",
+            "w-12 flex-shrink-0 text-base font-semibold tabular-nums",
             disabled ? "text-muted-foreground/60"
               : advice.tone === "ok" ? "text-foreground"
               : advice.tone === "low" ? "text-warning"
               : "text-info"
           )}
         >
-          {disabled ? "-" : `${value}%`}
+          {disabled ? "-" : formatConfidence(value)}
         </span>
         <input
           type="range"
@@ -641,6 +653,9 @@ function DeployWizard({
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   /** Conf threshold for this deploy — seeded from the model, tunable in the summary bar. */
   const [confidence, setConfidence] = React.useState(DEFAULT_CONFIDENCE);
+  /* "Ready to Deploy" opens the zone step first; Next advances to the confirm modal. */
+  const [zoneStepOpen, setZoneStepOpen] = React.useState(false);
+  const [zones, setZones] = React.useState<BoundaryZone[]>([]);
 
   // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
   // location.state.prefill = { siteId, areaId, cameraId, ... }
@@ -763,6 +778,7 @@ function DeployWizard({
       stoppedAtDisplay: null,
       eventCount: 0,
       confidence,
+      zones,
     }));
     onCommit(records);
     // Reset for next deploy
@@ -771,6 +787,7 @@ function DeployWizard({
     setAreaIds([]);
     setCameraIds([]);
     setConfidence(DEFAULT_CONFIDENCE);
+    setZones([]);
     setConfirmOpen(false);
   }
 
@@ -871,7 +888,41 @@ function DeployWizard({
         confidence={confidence}
         onConfidenceChange={setConfidence}
         canDeploy={canDeploy}
-        onDeploy={() => setConfirmOpen(true)}
+        onDeploy={() => setZoneStepOpen(true)}
+      />
+
+      {/* Step 1 — draw the detection zones this deployment should watch */}
+      <DrawZoneModal
+        open={zoneStepOpen}
+        cameraName={
+          selectedCameras.length === 1
+            ? selectedCameras[0].name
+            : `${selectedCameras.length} cameras`
+        }
+        title="Set Detection Zones"
+        subtitle={
+          <>
+            Draw the areas <strong className="text-foreground">{selectedModel?.name}</strong> should
+            watch. Zones apply to all {selectedCameras.length} selected camera
+            {selectedCameras.length === 1 ? "" : "s"}.
+          </>
+        }
+        existingZones={zones}
+        onClose={() => setZoneStepOpen(false)}
+        onSave={(label, box) =>
+          setZones((z) => [...z, { id: `zone-${z.length + 1}-${Math.random().toString(36).slice(2, 5)}`, label, box }])
+        }
+        onUpdateZone={(zoneId, label) =>
+          setZones((z) => z.map((x) => (x.id === zoneId ? { ...x, label } : x)))
+        }
+        onRemoveZone={(zoneId) => setZones((z) => z.filter((x) => x.id !== zoneId))}
+        onUpdateZoneBox={(zoneId, box) =>
+          setZones((z) => z.map((x) => (x.id === zoneId ? { ...x, box } : x)))
+        }
+        primaryAction={{
+          label: "Next",
+          onClick: () => { setZoneStepOpen(false); setConfirmOpen(true); },
+        }}
       />
 
       {/* Confirm modal */}
@@ -896,8 +947,16 @@ function DeployWizard({
                 label="Conf score"
                 value={
                   confidence === selectedModel.defaultConfidence
-                    ? `${confidence}% (model default)`
-                    : `${confidence}% (default ${selectedModel.defaultConfidence}%)`
+                    ? `${formatConfidence(confidence)} (model default)`
+                    : `${formatConfidence(confidence)} (default ${formatConfidence(selectedModel.defaultConfidence)})`
+                }
+              />
+              <KvRow
+                label="Detection zones"
+                value={
+                  zones.length === 0
+                    ? "Whole frame (no zones drawn)"
+                    : `${zones.length} — ${zones.map((z) => z.label).join(", ")}`
                 }
               />
               {confidenceAdvice(confidence).tone !== "ok" && (

@@ -1,5 +1,7 @@
 /* Deployment types — mirrors PRD § 4.6 (Deployment row) */
 
+import type { BoundaryZone } from "@/types/cameras";
+
 export type DeploymentStatus =
   | "active"
   | "paused"
@@ -29,6 +31,8 @@ export interface DeploymentData {
   eventCount: number;
   /** Confidence threshold (%) this deployment runs inference at. */
   confidence: number;
+  /** Detection zones drawn during deployment. Empty = watch the whole frame. */
+  zones: BoundaryZone[];
   /** Optional failure reason when status === "failed". */
   failureReason?: string;
 }
