@@ -922,6 +922,12 @@ function DeployWizard({
         primaryAction={{
           label: "Next",
           onClick: () => { setZoneStepOpen(false); setConfirmOpen(true); },
+          disabled: zones.length === 0,
+        }}
+        skipAction={{
+          // Skipping deploys against the whole frame rather than a drawn zone.
+          label: "Skip",
+          onClick: () => { setZones([]); setZoneStepOpen(false); setConfirmOpen(true); },
         }}
       />
 

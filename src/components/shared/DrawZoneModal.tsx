@@ -24,6 +24,7 @@ export function DrawZoneModal({
   title,
   subtitle,
   primaryAction,
+  skipAction,
 }: {
   open: boolean;
   cameraName: string;
@@ -40,6 +41,8 @@ export function DrawZoneModal({
   subtitle?: React.ReactNode;
   /** Renders a footer with a confirming action (e.g. "Next" in the deploy wizard). */
   primaryAction?: { label: string; onClick: () => void; disabled?: boolean };
+  /** Optional bypass shown in the footer while no zones have been drawn. */
+  skipAction?: { label: string; onClick: () => void };
 }) {
   const [label, setLabel] = React.useState("");
   // null = no draft, else a draft new zone the user is drawing/positioning
@@ -407,6 +410,13 @@ export function DrawZoneModal({
               <Button variant="ghost" size="sm" onClick={onClose}>
                 Back
               </Button>
+              {/* Only offered while nothing is drawn — once zones exist, skipping
+                  would silently throw them away. */}
+              {skipAction && existingZones.length === 0 && (
+                <Button variant="outline" size="sm" onClick={skipAction.onClick}>
+                  {skipAction.label}
+                </Button>
+              )}
               <Button
                 size="sm"
                 onClick={primaryAction.onClick}
