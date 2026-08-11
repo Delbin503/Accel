@@ -23,7 +23,6 @@ import {
   Clock,
   Play,
   Link2,
-  Cpu,
   Radio,
   FileVideo,
   Layers,
@@ -320,30 +319,6 @@ function StatCard({
 
 // Status colors mirror the Model Deployment History KPI cards exactly:
 //   active=success  paused=warning  pending=info  stopped=muted  failed=sev-critical
-const DEPLOY_STATUS_STYLES: Record<DeploymentData["status"], { bg: string; text: string; dot: string; label: string }> = {
-  active:           { bg: "bg-success/15 border-success/30",           text: "text-success",          dot: "bg-success",          label: "Active" },
-  paused:           { bg: "bg-warning/15 border-warning/30",           text: "text-warning",          dot: "bg-warning",          label: "Paused" },
-  "pending-camera": { bg: "bg-info/15 border-info/30",                 text: "text-info",             dot: "bg-info",             label: "Pending" },
-  stopped:          { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Stopped" },
-  failed:           { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
-};
-
-function DeployStatusPill({ status }: { status: DeploymentData["status"] }) {
-  const s = DEPLOY_STATUS_STYLES[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
-        s.bg,
-        s.text
-      )}
-    >
-      <span className={cn("size-1.5 flex-shrink-0 rounded-full", s.dot)} />
-      {s.label}
-    </span>
-  );
-}
-
 /* ── Draw zone modal ─────────────────────────────────────────────────────── */
 
 function DrawZoneModal({
@@ -906,8 +881,6 @@ interface CameraDrawerProps {
   onOpenNvr: (nvrId: string) => void;
   onEdit: () => void;
   onDelete: () => void;
-  onUndeploy: (deploymentId: string) => void;
-  onDeployNewModel: () => void;
   onLinkNvrRequest: (cameraId: string) => void;
   onUnlinkNvr: (cameraId: string) => void;
   onZoneAdd: (cameraId: string, label: string, box?: [number, number, number, number]) => void;
@@ -925,8 +898,6 @@ function CameraDrawer({
   onOpenNvr,
   onEdit,
   onDelete,
-  onUndeploy,
-  onDeployNewModel,
   onLinkNvrRequest,
   onUnlinkNvr,
   onZoneAdd,
@@ -1255,92 +1226,6 @@ function CameraDrawer({
                     <Link2 className="size-3.5" />
                     Link NVR
                   </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Deployed Models */}
-            <div>
-              <SectionTitle
-                aside={
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={onDeployNewModel}>
-                    <Plus className="size-3.5" />
-                    Deploy Model
-                  </Button>
-                }
-              >
-                Deployed Models ({deployments.length})
-              </SectionTitle>
-              {deployments.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
-                  <Cpu className="mx-auto size-7 text-muted-foreground/40" />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    No models deployed to this camera yet.
-                  </p>
-                  <Button variant="ghost" size="sm" className="mt-2 gap-1.5" onClick={onDeployNewModel}>
-                    <Plus className="size-3.5" />
-                    Deploy a model
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {deployments.map((d) => (
-                    <div
-                      key={d.id}
-                      className="w-full rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-primary/20 hover:bg-muted/30"
-                    >
-                      {/* Top row: icon + name/id + pills */}
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-purple/30 bg-purple-soft">
-                            <Cpu className="size-4 text-purple" />
-                          </div>
-                          <div className="min-w-0">
-                            <TruncatedText
-                              text={d.modelName}
-                              className="text-base font-bold text-foreground"
-                            />
-                            <p className="font-mono text-xs text-muted-foreground">{d.id}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-shrink-0 items-center gap-1.5">
-                          <DeployStatusPill status={d.status} />
-                          <span className="rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">
-                            {d.eventCount} events
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Meta row: deployed date + actor + last validation */}
-                      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="size-2.5" />
-                          <strong className="text-foreground">Deployed</strong> {d.deployedAtDisplay}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          by <strong className="text-foreground">{d.deployedBy}</strong>
-                        </span>
-                        {d.lastValidationRunId && (
-                          <span className="inline-flex items-center gap-1 font-mono">
-                            Validation: <span className="text-success">{d.lastValidationRunId}</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Action footer */}
-                      <div className="flex items-center justify-end border-t border-border/60 pt-2.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                          onClick={() => onUndeploy(d.id)}
-                        >
-                          <Unlink className="size-3.5" />
-                          Undeploy
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
@@ -2516,28 +2401,12 @@ export default function CamerasPage({
         }}
         onEdit={() => drawerCamera && setModal({ kind: "edit", cameraId: drawerCamera.id })}
         onDelete={() => drawerCamera && setModal({ kind: "delete", cameraId: drawerCamera.id })}
-        onUndeploy={(deploymentId) => setModal({ kind: "undeploy", deploymentId })}
         onLinkNvrRequest={(cameraId) => setLinkNvrCameraId(cameraId)}
         onUnlinkNvr={(cameraId) => {
           const target = cameras.find((c) => c.id === cameraId);
           if (!target) return;
           updateCamera(cameraId, { nvrId: null, nvrName: null, channel: null });
           toast.success(`Unlinked ${target.id} from ${target.nvrName ?? "NVR"}`);
-        }}
-        onDeployNewModel={() => {
-          if (!drawerCamera) return;
-          navigate("/deployment", {
-            state: {
-              prefill: {
-                siteId:   drawerCamera.siteId,
-                siteName: drawerCamera.siteName,
-                areaId:   drawerCamera.areaId,
-                areaName: drawerCamera.areaName,
-                cameraId: drawerCamera.id,
-                cameraName: drawerCamera.name,
-              },
-            },
-          });
         }}
         onZoneAdd={(cameraId, label, box) => {
           const target = cameras.find((c) => c.id === cameraId);

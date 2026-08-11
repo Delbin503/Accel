@@ -37,7 +37,10 @@ import {
   Crosshair,
   Scan,
   Radar,
+  LoaderCircle,
+  FileCheck2,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -627,6 +630,9 @@ function CreateModelModal({
 
 /* ── Add step modal ──────────────────────────────────────────────────────── */
 
+/** How long the simulated model/manifest upload runs before the step commits. */
+const UPLOAD_MS = 5000;
+
 function AddStepModal({
   initial,
   onConfirm,
@@ -648,6 +654,33 @@ function AddStepModal({
     manifestFile?: string;
   }>({});
 
+  /* Simulated upload — the prototype has no backend, so Confirm holds the modal
+     in an uploading state for UPLOAD_MS before the step is committed. */
+  const [uploading, setUploading] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+
+  // The parent passes `onConfirm` as an inline arrow, and the progress tick
+  // re-renders every 80ms — depending on it directly would restart the timer on
+  // every tick and the upload would never finish. Read it from a ref instead.
+  const commitRef = React.useRef<() => void>(() => {});
+  React.useEffect(() => {
+    commitRef.current = () =>
+      onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() });
+  });
+
+  React.useEffect(() => {
+    if (!uploading) return;
+    const started = Date.now();
+    const tick = window.setInterval(() => {
+      setProgress(Math.min(100, ((Date.now() - started) / UPLOAD_MS) * 100));
+    }, 80);
+    const done = window.setTimeout(() => commitRef.current(), UPLOAD_MS);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(done);
+    };
+  }, [uploading]);
+
   function submit() {
     const next: {
       actionLabel?: string;
@@ -660,20 +693,66 @@ function AddStepModal({
     if (!modelFile.trim()) next.modelFile = "Upload a model file.";
     if (!manifestFile.trim()) next.manifestFile = "Upload a manifest file.";
     setErrors(next);
-    if (Object.keys(next).length === 0)
-      onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() });
+    if (Object.keys(next).length === 0) setUploading(true);
   }
 
+  const pct = Math.round(progress);
+
   return (
-    <Dialog open onOpenChange={(v) => !v && onCancel()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
+    <Dialog open onOpenChange={(v) => !v && !uploading && onCancel()}>
+      <DialogContent
+        className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0"
+        // Don't let Esc / outside-click abandon an upload mid-flight.
+        onEscapeKeyDown={(e) => uploading && e.preventDefault()}
+        onInteractOutside={(e) => uploading && e.preventDefault()}
+      >
         <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">{isEdit ? "Edit Step" : "Add New Step"}</DialogTitle>
+          <DialogTitle className="text-base font-bold">
+            {uploading ? "Uploading model" : isEdit ? "Edit Step" : "Add New Step"}
+          </DialogTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Define what the AI should verify at this step, then upload its model and manifest.
+            {uploading
+              ? "Validating the model bundle and manifest. This can take a moment."
+              : "Define what the AI should verify at this step, then upload its model and manifest."}
           </p>
         </DialogHeader>
 
+        {uploading ? (
+          <div className="flex-1 space-y-4 px-5 py-6" data-upload-progress={pct}>
+            <div className="flex items-center gap-2.5">
+              <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary" />
+              <span className="text-base font-semibold text-foreground">{label}</span>
+              <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
+                {pct}%
+              </span>
+            </div>
+
+            <Progress value={progress} />
+
+            <ul className="space-y-1.5">
+              {[modelFile.trim(), manifestFile.trim()].map((f, i) => {
+                // Manifest is small, so mark it done first; the model bundle trails.
+                // Compared against the *displayed* percent so a row never reads
+                // "Uploading…" while the header already shows 100%.
+                const doneAt = i === 0 ? 100 : 55;
+                const done = pct >= doneAt;
+                return (
+                  <li key={f} className="flex items-center gap-2 text-sm">
+                    {done ? (
+                      <FileCheck2 className="size-3.5 flex-shrink-0 text-success" />
+                    ) : (
+                      <LoaderCircle className="size-3.5 flex-shrink-0 animate-spin text-muted-foreground" />
+                    )}
+                    <span className="min-w-0 truncate font-mono text-muted-foreground">{f}</span>
+                    <span className={cn("ml-auto flex-shrink-0 text-2xs", done ? "text-success" : "text-muted-foreground")}>
+                      {done ? "Verified" : "Uploading…"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : (
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -751,13 +830,15 @@ function AddStepModal({
             )}
           </div>
         </div>
+        )}
 
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={uploading}>
             Cancel
           </Button>
-          <Button size="sm" onClick={submit}>
-            Confirm
+          <Button size="sm" onClick={submit} disabled={uploading} className="gap-1.5">
+            {uploading && <LoaderCircle className="size-3.5 animate-spin" />}
+            {uploading ? "Uploading…" : "Confirm"}
           </Button>
         </div>
       </DialogContent>

@@ -1236,7 +1236,6 @@ function ModelDeploymentsDrawer({
     () => model.deployments.filter((d) => selected.has(d.id)),
     [model.deployments, selected]
   );
-  const selectedEvents = selectedRows.reduce((sum, d) => sum + d.eventCount, 0);
   const activeSelectedCount = selectedRows.filter((d) => d.status === "active").length;
 
   function confirmRemove() {
@@ -1431,8 +1430,12 @@ function ModelDeploymentsDrawer({
         onConfirm={confirmRemove}
       >
         <div className="space-y-3">
-          <div className="rounded-[var(--radius)] border border-border bg-muted/30 p-3">
-            <ul className="max-h-40 space-y-1.5 overflow-auto">
+          <div className="rounded-[var(--radius)] border border-border bg-muted/30">
+            <p className="border-b border-border px-3 py-2 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60">
+              Affected cameras ({selectedCount})
+            </p>
+            {/* Capped so a 50-camera selection can't push the footer off-screen. */}
+            <ul className="max-h-44 space-y-1.5 overflow-auto p-3">
               {selectedRows.map((d) => (
                 <li key={d.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="min-w-0 truncate text-foreground">{d.cameraName}</span>
@@ -1451,10 +1454,6 @@ function ModelDeploymentsDrawer({
                   {activeSelectedCount === 1 ? " is" : "s are"} still <strong>active</strong> — detection stops immediately.
                 </p>
               )}
-              <p>
-                <strong>{selectedEvents.toLocaleString()}</strong> recorded event
-                {selectedEvents === 1 ? "" : "s"} will no longer be attributed to this model.
-              </p>
               <p className="text-muted-foreground">
                 Cameras stay online. Redeploy from the Deploy tab to restore coverage.
               </p>
