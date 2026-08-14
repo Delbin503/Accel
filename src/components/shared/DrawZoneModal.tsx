@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Check, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, ChevronRight, CopyCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ export function DrawZoneModal({
   subtitle,
   primaryAction,
   skipAction,
+  cameraPicker,
+  applyToAll,
 }: {
   open: boolean;
   cameraName: string;
@@ -43,6 +45,14 @@ export function DrawZoneModal({
   primaryAction?: { label: string; onClick: () => void; disabled?: boolean };
   /** Optional bypass shown in the footer while no zones have been drawn. */
   skipAction?: { label: string; onClick: () => void };
+  /** Switches which camera's zones are being edited. Hidden for a single camera. */
+  cameraPicker?: {
+    cameras: { id: string; name: string; zoneCount: number }[];
+    activeId: string;
+    onChange: (cameraId: string) => void;
+  };
+  /** Copies the active camera's zones onto every other selected camera. */
+  applyToAll?: { onClick: () => void; disabled?: boolean };
 }) {
   const [label, setLabel] = React.useState("");
   // null = no draft, else a draft new zone the user is drawing/positioning
@@ -187,6 +197,30 @@ export function DrawZoneModal({
           </p>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-5">
+          {/* Camera switcher — zones are stored per camera */}
+          {cameraPicker && cameraPicker.cameras.length > 1 && (
+            <div className="mb-3 flex items-center gap-2.5">
+              <label
+                htmlFor="zone-camera-picker"
+                className="flex-shrink-0 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60"
+              >
+                Camera
+              </label>
+              <select
+                id="zone-camera-picker"
+                value={cameraPicker.activeId}
+                onChange={(e) => cameraPicker.onChange(e.target.value)}
+                className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                {cameraPicker.cameras.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} — {c.zoneCount} zone{c.zoneCount === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Camera canvas — bigger so zones are easier to manipulate */}
           <div
             ref={containerRef}
@@ -278,6 +312,27 @@ export function DrawZoneModal({
               </div>
             )}
           </div>
+
+          {/* Copy this camera's zones to the rest of the selection */}
+          {applyToAll && cameraPicker && cameraPicker.cameras.length > 1 && (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+              <p className="min-w-0 text-sm text-muted-foreground">
+                Reuse this layout on the other{" "}
+                <strong className="text-foreground">{cameraPicker.cameras.length - 1}</strong> camera
+                {cameraPicker.cameras.length - 1 === 1 ? "" : "s"}.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={applyToAll.onClick}
+                disabled={applyToAll.disabled}
+                className="flex-shrink-0 gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+              >
+                <CopyCheck className="size-3.5" />
+                Apply to all cameras
+              </Button>
+            </div>
+          )}
 
           {/* Both editor cards always render when applicable so user can draw AND edit names simultaneously */}
           <div className="mt-4 space-y-3">

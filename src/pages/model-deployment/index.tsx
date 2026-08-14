@@ -655,7 +655,9 @@ function DeployWizard({
   const [confidence, setConfidence] = React.useState(DEFAULT_CONFIDENCE);
   /* "Ready to Deploy" opens the zone step first; Next advances to the confirm modal. */
   const [zoneStepOpen, setZoneStepOpen] = React.useState(false);
-  const [zones, setZones] = React.useState<BoundaryZone[]>([]);
+  /* Zones are per-camera; the picker in the zone step switches which one is edited. */
+  const [zonesByCamera, setZonesByCamera] = React.useState<Record<string, BoundaryZone[]>>({});
+  const [activeZoneCameraId, setActiveZoneCameraId] = React.useState<string | null>(null);
 
   // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
   // location.state.prefill = { siteId, areaId, cameraId, ... }
@@ -745,6 +747,42 @@ function DeployWizard({
     setCameraIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   }
 
+  /* — Detection-zone step — */
+
+  const activeZoneCamera = selectedCameras.find((c) => c.id === activeZoneCameraId) ?? null;
+  const activeZones = activeZoneCameraId ? zonesByCamera[activeZoneCameraId] ?? [] : [];
+  const camerasWithZones = selectedCameras.filter((c) => (zonesByCamera[c.id] ?? []).length > 0).length;
+
+  function openZoneStep() {
+    // Default to the first selected camera, or keep the previous one if still selected.
+    setActiveZoneCameraId((cur) =>
+      cur && selectedCameras.some((c) => c.id === cur) ? cur : selectedCameras[0]?.id ?? null
+    );
+    setZoneStepOpen(true);
+  }
+
+  function patchActiveZones(fn: (zones: BoundaryZone[]) => BoundaryZone[]) {
+    if (!activeZoneCameraId) return;
+    setZonesByCamera((m) => ({ ...m, [activeZoneCameraId]: fn(m[activeZoneCameraId] ?? []) }));
+  }
+
+  function applyZonesToAllCameras() {
+    if (!activeZoneCameraId) return;
+    const source = zonesByCamera[activeZoneCameraId] ?? [];
+    setZonesByCamera(() =>
+      Object.fromEntries(
+        selectedCameras.map((c) => [
+          c.id,
+          // Fresh ids per camera so later edits on one don't collide with another.
+          source.map((z, i) => ({ ...z, id: `${c.id}-z${i + 1}` })),
+        ])
+      )
+    );
+    toast.success(`Zones applied to ${selectedCameras.length} cameras`, {
+      description: `${source.length} zone${source.length === 1 ? "" : "s"} copied from ${activeZoneCamera?.name}.`,
+    });
+  }
+
   function commitDeploy() {
     if (!canDeploy || !selectedModel || !selectedSite) return;
     // Simulated edge failure — surfaced as a toast, not a page state.
@@ -778,7 +816,7 @@ function DeployWizard({
       stoppedAtDisplay: null,
       eventCount: 0,
       confidence,
-      zones,
+      zones: zonesByCamera[cam.id] ?? [],
     }));
     onCommit(records);
     // Reset for next deploy
@@ -787,7 +825,8 @@ function DeployWizard({
     setAreaIds([]);
     setCameraIds([]);
     setConfidence(DEFAULT_CONFIDENCE);
-    setZones([]);
+    setZonesByCamera({});
+    setActiveZoneCameraId(null);
     setConfirmOpen(false);
   }
 
@@ -888,46 +927,56 @@ function DeployWizard({
         confidence={confidence}
         onConfidenceChange={setConfidence}
         canDeploy={canDeploy}
-        onDeploy={() => setZoneStepOpen(true)}
+        onDeploy={openZoneStep}
       />
 
       {/* Step 1 — draw the detection zones this deployment should watch */}
       <DrawZoneModal
         open={zoneStepOpen}
-        cameraName={
-          selectedCameras.length === 1
-            ? selectedCameras[0].name
-            : `${selectedCameras.length} cameras`
-        }
+        cameraName={activeZoneCamera?.name ?? ""}
         title="Set Detection Zones"
         subtitle={
           <>
             Draw the areas <strong className="text-foreground">{selectedModel?.name}</strong> should
-            watch. Zones apply to all {selectedCameras.length} selected camera
-            {selectedCameras.length === 1 ? "" : "s"}.
+            watch on <strong className="text-foreground">{activeZoneCamera?.name}</strong>. Each
+            camera keeps its own zones.
           </>
         }
-        existingZones={zones}
+        existingZones={activeZones}
         onClose={() => setZoneStepOpen(false)}
         onSave={(label, box) =>
-          setZones((z) => [...z, { id: `zone-${z.length + 1}-${Math.random().toString(36).slice(2, 5)}`, label, box }])
+          patchActiveZones((z) => [
+            ...z,
+            { id: `zone-${z.length + 1}-${Math.random().toString(36).slice(2, 5)}`, label, box },
+          ])
         }
         onUpdateZone={(zoneId, label) =>
-          setZones((z) => z.map((x) => (x.id === zoneId ? { ...x, label } : x)))
+          patchActiveZones((z) => z.map((x) => (x.id === zoneId ? { ...x, label } : x)))
         }
-        onRemoveZone={(zoneId) => setZones((z) => z.filter((x) => x.id !== zoneId))}
+        onRemoveZone={(zoneId) => patchActiveZones((z) => z.filter((x) => x.id !== zoneId))}
         onUpdateZoneBox={(zoneId, box) =>
-          setZones((z) => z.map((x) => (x.id === zoneId ? { ...x, box } : x)))
+          patchActiveZones((z) => z.map((x) => (x.id === zoneId ? { ...x, box } : x)))
         }
+        cameraPicker={{
+          cameras: selectedCameras.map((c) => ({
+            id: c.id,
+            name: c.name,
+            zoneCount: (zonesByCamera[c.id] ?? []).length,
+          })),
+          activeId: activeZoneCameraId ?? "",
+          onChange: setActiveZoneCameraId,
+        }}
+        applyToAll={{ onClick: applyZonesToAllCameras, disabled: activeZones.length === 0 }}
         primaryAction={{
           label: "Next",
           onClick: () => { setZoneStepOpen(false); setConfirmOpen(true); },
-          disabled: zones.length === 0,
+          // At least one camera must have zones; the rest can stay whole-frame.
+          disabled: camerasWithZones === 0,
         }}
         skipAction={{
           // Skipping deploys against the whole frame rather than a drawn zone.
           label: "Skip",
-          onClick: () => { setZones([]); setZoneStepOpen(false); setConfirmOpen(true); },
+          onClick: () => { setZonesByCamera({}); setZoneStepOpen(false); setConfirmOpen(true); },
         }}
       />
 
@@ -960,9 +1009,11 @@ function DeployWizard({
               <KvRow
                 label="Detection zones"
                 value={
-                  zones.length === 0
+                  camerasWithZones === 0
                     ? "Whole frame (no zones drawn)"
-                    : `${zones.length} — ${zones.map((z) => z.label).join(", ")}`
+                    : camerasWithZones === selectedCameras.length
+                      ? `${selectedCameras.length} camera${selectedCameras.length === 1 ? "" : "s"} zoned`
+                      : `${camerasWithZones} of ${selectedCameras.length} cameras zoned — rest use whole frame`
                 }
               />
               {confidenceAdvice(confidence).tone !== "ok" && (

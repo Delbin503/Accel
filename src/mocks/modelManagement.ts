@@ -6,9 +6,10 @@ function ms(
   label: string,
   actionLabel: string,
   modelFile: string,
-  manifestFile: string
+  manifestFile: string,
+  batchSize = 8
 ): ModelStep {
-  return { id, order, label, actionLabel, modelFile, manifestFile };
+  return { id, order, label, actionLabel, modelFile, manifestFile, batchSize };
 }
 
 export const MOCK_MODELS: ModelData[] = [

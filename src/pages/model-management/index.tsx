@@ -633,6 +633,11 @@ function CreateModelModal({
 /** How long the simulated model/manifest upload runs before the step commits. */
 const UPLOAD_MS = 5000;
 
+/** Frames per inference batch when the user doesn't set one. */
+const DEFAULT_BATCH_SIZE = 8;
+const BATCH_SIZE_MIN = 1;
+const BATCH_SIZE_MAX = 64;
+
 function AddStepModal({
   initial,
   onConfirm,
@@ -647,11 +652,13 @@ function AddStepModal({
   const [label, setLabel] = React.useState(initial?.label ?? "Model_12");
   const [modelFile, setModelFile] = React.useState(initial?.modelFile ?? "");
   const [manifestFile, setManifestFile] = React.useState(initial?.manifestFile ?? "");
+  const [batchSize, setBatchSize] = React.useState(String(initial?.batchSize ?? DEFAULT_BATCH_SIZE));
   const [errors, setErrors] = React.useState<{
     actionLabel?: string;
     label?: string;
     modelFile?: string;
     manifestFile?: string;
+    batchSize?: string;
   }>({});
 
   /* Simulated upload — the prototype has no backend, so Confirm holds the modal
@@ -665,7 +672,13 @@ function AddStepModal({
   const commitRef = React.useRef<() => void>(() => {});
   React.useEffect(() => {
     commitRef.current = () =>
-      onConfirm({ label, actionLabel, modelFile: modelFile.trim(), manifestFile: manifestFile.trim() });
+      onConfirm({
+        label,
+        actionLabel,
+        modelFile: modelFile.trim(),
+        manifestFile: manifestFile.trim(),
+        batchSize: Number(batchSize),
+      });
   });
 
   React.useEffect(() => {
@@ -687,11 +700,16 @@ function AddStepModal({
       label?: string;
       modelFile?: string;
       manifestFile?: string;
+      batchSize?: string;
     } = {};
     if (!actionLabel.trim()) next.actionLabel = "Action label is required.";
     if (!label.trim()) next.label = "Model title is required.";
     if (!modelFile.trim()) next.modelFile = "Upload a model file.";
     if (!manifestFile.trim()) next.manifestFile = "Upload a manifest file.";
+    const batch = Number(batchSize);
+    if (!batchSize.trim() || !Number.isInteger(batch) || batch < BATCH_SIZE_MIN || batch > BATCH_SIZE_MAX) {
+      next.batchSize = `Enter a whole number between ${BATCH_SIZE_MIN} and ${BATCH_SIZE_MAX}.`;
+    }
     setErrors(next);
     if (Object.keys(next).length === 0) setUploading(true);
   }
@@ -827,6 +845,34 @@ function AddStepModal({
             />
             {errors.manifestFile && (
               <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-base font-semibold text-foreground">
+              Batch Size
+            </label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={BATCH_SIZE_MIN}
+              max={BATCH_SIZE_MAX}
+              value={batchSize}
+              onChange={(e) => {
+                setBatchSize(e.target.value);
+                if (errors.batchSize) setErrors((p) => ({ ...p, batchSize: undefined }));
+              }}
+              placeholder={String(DEFAULT_BATCH_SIZE)}
+              className="h-10 text-base"
+              aria-invalid={!!errors.batchSize}
+            />
+            {errors.batchSize ? (
+              <p className="mt-1 text-xs text-sev-critical">{errors.batchSize}</p>
+            ) : (
+              <p className="mt-1 text-2xs text-muted-foreground">
+                Frames processed per inference pass ({BATCH_SIZE_MIN}–{BATCH_SIZE_MAX}). Higher uses
+                more GPU memory.
+              </p>
             )}
           </div>
         </div>
@@ -1021,7 +1067,9 @@ function SequenceItem({
       </span>
       <div className="min-w-0 flex-1">
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
-        <p className="font-mono text-xs text-muted-foreground">{step.modelFile}</p>
+        <p className="font-mono text-xs text-muted-foreground">
+          {step.modelFile} · batch {step.batchSize}
+        </p>
       </div>
       <FileTypeBadge fileName={step.modelFile} />
       {editable && (
@@ -1738,7 +1786,9 @@ function ModelDetailPanel({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAddStep(true)}
-                  className="gap-1.5"
+                  // Primary-tinted so the panel's main "add" action is findable
+                  // without competing with Save Changes.
+                  className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
                 >
                   <Plus className="size-3" />
                   Add Step
@@ -1865,7 +1915,7 @@ function ModelDetailPanel({
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/rules?new=true&model=${model.id}`)}
-                    className="gap-1.5"
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
                   >
                     <Plus className="size-3" />
                     Add Rule

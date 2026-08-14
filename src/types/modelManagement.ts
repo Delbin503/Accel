@@ -7,6 +7,8 @@ export interface ModelStep {
   actionLabel: string;
   modelFile: string;        // CV model file (e.g. helmet.onnx)
   manifestFile: string;     // .json manifest
+  /** Frames per inference batch for this step. */
+  batchSize: number;
 }
 
 /**
