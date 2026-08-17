@@ -27,6 +27,8 @@ import {
   CheckCircle2,
   MapPin,
   CircleDot,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -52,6 +54,26 @@ const STATUS_STYLES: Record<NvrStatus, { bg: string; text: string; dot: string; 
   offline:  { bg: "bg-muted border-border",            text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline" },
   degraded: { bg: "bg-warning/15 border-warning/30",   text: "text-warning",          dot: "bg-warning",          label: "Degraded" },
 };
+
+/** Masked credential with a reveal toggle — kept hidden by default so the drawer
+    can be shown on shared screens without exposing the recorder password. */
+function RevealValue({ value }: { value: string }) {
+  const [shown, setShown] = React.useState(false);
+  if (!value) return <span className="font-mono text-xs">—</span>;
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className="font-mono text-xs">{shown ? value : "•".repeat(Math.min(value.length, 12))}</span>
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-label={shown ? "Hide password" : "Show password"}
+        className="text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {shown ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+      </button>
+    </span>
+  );
+}
 
 function StatusPill({ status }: { status: NvrStatus }) {
   const s = STATUS_STYLES[status];
@@ -595,6 +617,8 @@ function NvrDrawer({
                     ["Area",          nvr.areaName],
                     ["IP Address",    <span className="font-mono text-xs">{nvr.ipAddress}</span>],
                     ["HTTP Port",     <span className="font-mono text-xs">{nvr.httpPort}</span>],
+                    ["Username",      <span className="font-mono text-xs">{nvr.username || "—"}</span>],
+                    ["Password",      <RevealValue value={nvr.password} />],
                     ["Channels",      <span className="font-semibold">{nvr.channelsInUse} / {nvr.channelCount} in use</span>],
                     ["Cleanup",       <span className="capitalize">{nvr.cleanupSchedule.replace(/-/g, " ")}</span>],
                   ] as [string, React.ReactNode][]
@@ -1699,6 +1723,9 @@ interface AddNvrFields {
   siteId: string;
   areaId: string;
   ipAddress: string;
+  /** Credentials the recorder is polled with. */
+  username: string;
+  password: string;
   /** String-typed in form to keep "empty placeholder" UX; parsed on submit. */
   httpPort: string;
   totalStorageGb: string;
@@ -1880,6 +1907,8 @@ function AddNvrModal({
     siteId: "",
     areaId: "",
     ipAddress: "",
+    username: "",
+    password: "",
     httpPort: "",
     totalStorageGb: "",
     channelCount: "",
@@ -1891,9 +1920,10 @@ function AddNvrModal({
 
   const [fields, setFields] = React.useState<AddNvrFields>(blank);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = React.useState(false);
 
   React.useEffect(() => {
-    if (open) { setFields(blank()); setErrors({}); }
+    if (open) { setFields(blank()); setErrors({}); setShowPassword(false); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -1936,14 +1966,6 @@ function AddNvrModal({
           </p>
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-          {/* Auto-generated ID preview */}
-          <div className="rounded-lg border border-border bg-background p-3">
-            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-              NVR ID (auto-generated)
-            </p>
-            <p className="mt-1 font-mono text-md font-bold text-primary">{fields.id}</p>
-          </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
@@ -2024,6 +2046,45 @@ function AddNvrModal({
                 placeholder="80"
                 className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Username</label>
+              <input
+                value={fields.username}
+                onChange={(e) => set("username", e.target.value)}
+                placeholder="admin"
+                autoComplete="off"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.username && "border-sev-critical"
+                )}
+              />
+              {errors.username && <p className="mt-1 text-xs text-sev-critical">{errors.username}</p>}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={fields.password}
+                  onChange={(e) => set("password", e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  className={cn(
+                    "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                    errors.password && "border-sev-critical"
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-sev-critical">{errors.password}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
@@ -2117,6 +2178,8 @@ function AddNvrModal({
 
 interface NvrFormFields {
   name: string;
+  username: string;
+  password: string;
   siteId: string;
   areaId: string;
   ipAddress: string;
@@ -2131,6 +2194,8 @@ interface NvrFormFields {
 function buildNvrFormFields(nvr: NvrData): NvrFormFields {
   return {
     name: nvr.name,
+    username: nvr.username,
+    password: nvr.password,
     siteId: nvr.siteId,
     areaId: nvr.areaId,
     ipAddress: nvr.ipAddress,
@@ -2159,11 +2224,12 @@ function EditNvrModal({
   onConfirm: (fields: NvrFormFields) => void;
 }) {
   const [fields, setFields] = React.useState<NvrFormFields>({
-    name: "", siteId: "", areaId: "", ipAddress: "", httpPort: "", totalStorageGb: "", retentionDays: "", cleanupSchedule: "",
+    name: "", username: "", password: "", siteId: "", areaId: "", ipAddress: "", httpPort: "", totalStorageGb: "", retentionDays: "", cleanupSchedule: "",
     cleanupAgeDays: "", cleanupChannels: [],
   });
   const [initialFields, setInitialFields] = React.useState<NvrFormFields | null>(null);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [showEditPassword, setShowEditPassword] = React.useState(false);
 
   React.useEffect(() => {
     if (open && nvr) {
@@ -2190,6 +2256,8 @@ function EditNvrModal({
     if (!fields.siteId) next.siteId = "Select a site.";
     if (!fields.areaId) next.areaId = "Select an area.";
     if (!fields.ipAddress.trim()) next.ipAddress = "IP address is required.";
+    if (!fields.username.trim()) next.username = "Username is required.";
+    if (!fields.password) next.password = "Password is required.";
     if (!(Number(fields.totalStorageGb) > 0)) next.totalStorageGb = "Total storage is required.";
     if (fields.cleanupSchedule === "") next.cleanupSchedule = "Select a cleanup schedule.";
     if (fields.cleanupSchedule === "auto-age" && !fields.cleanupAgeDays)
@@ -2301,6 +2369,45 @@ function EditNvrModal({
                 placeholder="80"
                 className="h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Username</label>
+              <input
+                value={fields.username}
+                onChange={(e) => set("username", e.target.value)}
+                placeholder="admin"
+                autoComplete="off"
+                className={cn(
+                  "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                  errors.username && "border-sev-critical"
+                )}
+              />
+              {errors.username && <p className="mt-1 text-xs text-sev-critical">{errors.username}</p>}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</label>
+              <div className="relative">
+                <input
+                  type={showEditPassword ? "text" : "password"}
+                  value={fields.password}
+                  onChange={(e) => set("password", e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  className={cn(
+                    "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                    errors.password && "border-sev-critical"
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword((v) => !v)}
+                  aria-label={showEditPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showEditPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-sev-critical">{errors.password}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
@@ -2862,6 +2969,8 @@ export default function NvrDevicesPage({
             areaName: area?.label ?? fields.areaId,
             status: "online",
             ipAddress: fields.ipAddress.trim(),
+            username: fields.username.trim(),
+            password: fields.password,
             httpPort,
             totalStorageGb: totalStorage,
             usedStorageGb: 0,
@@ -2896,6 +3005,8 @@ export default function NvrDevicesPage({
             areaId: fields.areaId,
             areaName: area?.label ?? n.areaName,
             ipAddress: fields.ipAddress.trim(),
+            username: fields.username.trim(),
+            password: fields.password,
             httpPort: Number(fields.httpPort) || n.httpPort,
             totalStorageGb: Number(fields.totalStorageGb) || n.totalStorageGb,
             retentionDays: Number(fields.retentionDays) || n.retentionDays,

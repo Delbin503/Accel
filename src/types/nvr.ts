@@ -21,6 +21,9 @@ export interface NvrData {
   status: NvrStatus;
   ipAddress: string;
   httpPort: number;
+  /** Credentials the recorder is polled with. */
+  username: string;
+  password: string;
   totalStorageGb: number;
   usedStorageGb: number;
   retentionDays: number;
