@@ -507,7 +507,7 @@ function UserProfile({ onBell }: { onBell: () => void }) {
         onOpenChange={setSignOutOpen}
         destructive
         title="Sign out?"
-        description={`You'll be signed out of ${user.orgName ?? "this workspace"} on this device and returned to the sign-in screen.`}
+        description="You'll be signed out on this device and returned to the sign-in screen."
         confirmLabel="Sign Out"
         cancelLabel="Stay signed in"
         onConfirm={confirmSignOut}
