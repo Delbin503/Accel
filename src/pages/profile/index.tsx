@@ -13,7 +13,6 @@ import {
   Crown,
   ShieldCheck,
   CircleUser,
-  Check,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -21,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
+import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { MOCK_USERS } from "@/mocks/users";
@@ -63,23 +62,25 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
   const [confirm, setConfirm] = React.useState("");
   const [showCurrent, setShowCurrent] = React.useState(false);
   const [showNext, setShowNext] = React.useState(false);
+  const [showConfirm, setShowConfirm] = React.useState(false);
   const [errors, setErrors] = React.useState<{ current?: string; next?: string; confirm?: string }>({});
 
   React.useEffect(() => {
-    if (open) { setCurrent(""); setNext(""); setConfirm(""); setShowCurrent(false); setShowNext(false); setErrors({}); }
+    if (open) {
+      setCurrent(""); setNext(""); setConfirm("");
+      setShowCurrent(false); setShowNext(false); setShowConfirm(false);
+      setErrors({});
+    }
   }, [open]);
 
-  const lengthOk = next.length >= 12;
-  const mixedCase = /[a-z]/.test(next) && /[A-Z]/.test(next);
-  const hasNumber = /\d/.test(next);
-  const hasSymbol = /[^A-Za-z0-9]/.test(next);
   const matches = next.length > 0 && next === confirm;
-  const requirementsOk = lengthOk && mixedCase && hasNumber && hasSymbol;
 
   function submit() {
     const nextErrors: { current?: string; next?: string; confirm?: string } = {};
     if (current.length === 0) nextErrors.current = "Enter your current password.";
-    if (!requirementsOk) nextErrors.next = "New password doesn't meet the requirements.";
+    if (next.length < 8) nextErrors.next = "Use at least 8 characters.";
+    else if (!isStrongPassword(next))
+      nextErrors.next = "Choose a stronger password (mix upper/lowercase, numbers, or symbols).";
     if (!matches) nextErrors.confirm = "Passwords don't match.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -107,31 +108,24 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
             <div className="relative">
-              <Input type={showNext ? "text" : "password"} value={next} aria-invalid={!!errors.next} onChange={(e) => { setNext(e.target.value); if (errors.next) setErrors((p) => ({ ...p, next: undefined })); }} className="h-9 pr-9 text-base" />
+              <Input type={showNext ? "text" : "password"} value={next} aria-invalid={!!errors.next} placeholder="At least 8 characters" onChange={(e) => { setNext(e.target.value); if (errors.next) setErrors((p) => ({ ...p, next: undefined })); }} className="h-9 pr-9 text-base" />
               <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showNext ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
+            {/* Same strength meter the sign-up flow uses, instead of a rules checklist. */}
+            <PasswordStrengthBar className="mt-1.5" password={next} />
             {errors.next && <p className="mt-1 text-xs text-sev-critical">{errors.next}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
-            <Input type="password" value={confirm} aria-invalid={!!errors.confirm} onChange={(e) => { setConfirm(e.target.value); if (errors.confirm) setErrors((p) => ({ ...p, confirm: undefined })); }} className="h-9 text-base" />
+            <div className="relative">
+              <Input type={showConfirm ? "text" : "password"} value={confirm} aria-invalid={!!errors.confirm} placeholder="Re-type your password" onChange={(e) => { setConfirm(e.target.value); if (errors.confirm) setErrors((p) => ({ ...p, confirm: undefined })); }} className="h-9 pr-9 text-base" />
+              <button type="button" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                {showConfirm ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </button>
+            </div>
             {errors.confirm && <p className="mt-1 text-xs text-sev-critical">{errors.confirm}</p>}
-          </div>
-          <div className="space-y-1 rounded-lg border border-border bg-background px-3 py-2.5">
-            {([
-              ["At least 12 characters", lengthOk],
-              ["Mixed upper and lowercase letters", mixedCase],
-              ["At least one number", hasNumber],
-              ["At least one symbol", hasSymbol],
-              ["Passwords match", matches],
-            ] as [string, boolean][]).map(([label, ok]) => (
-              <div key={label} className="flex items-center gap-1.5 text-xs">
-                <Check className={cn("size-3", ok ? "text-success" : "text-muted-foreground/40")} />
-                <span className={ok ? "text-foreground" : "text-muted-foreground"}>{label}</span>
-              </div>
-            ))}
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -207,23 +201,25 @@ export default function ProfilePage() {
   const authUser = useAuthStore((s) => s.user);
   const seedUser = React.useMemo(() => MOCK_USERS.find((u) => u.isCurrentUser) ?? MOCK_USERS[0], []);
 
-  const [fullName, setFullName] = React.useState(authUser?.name ?? seedUser.fullName);
-  const [displayName, setDisplayName] = React.useState(seedUser.displayName);
+  const [firstName, setFirstName] = React.useState(seedUser.firstName);
+  const [lastName, setLastName] = React.useState(seedUser.lastName);
   const [email] = React.useState(authUser?.email ?? seedUser.email);
   const [phone, setPhone] = React.useState(seedUser.phone ?? "");
-  const [departments, setDepartments] = React.useState<string[]>(seedUser.departments);
+  // Free-text, matching the Department input in User Management.
+  const [department, setDepartment] = React.useState(seedUser.departments.join(", "));
   const [twoFactor, setTwoFactor] = React.useState(seedUser.twoFactorEnabled);
   const [pwdOpen, setPwdOpen] = React.useState(false);
   const [twoFAOpen, setTwoFAOpen] = React.useState(false);
 
   const role: UserRole = seedUser.role;
-  const initials = fullName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  const fullName = [firstName, lastName].filter(Boolean).join(" ");
+  const initials = [firstName, lastName].filter(Boolean).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
   const dirty =
-    fullName !== seedUser.fullName ||
-    displayName !== seedUser.displayName ||
+    firstName !== seedUser.firstName ||
+    lastName !== seedUser.lastName ||
     phone !== (seedUser.phone ?? "") ||
-    departments.join("|") !== seedUser.departments.join("|");
+    department !== seedUser.departments.join(", ");
 
   function saveChanges() {
     toast.success("Profile updated", { description: "Your changes have been saved." });
@@ -277,16 +273,26 @@ export default function ProfilePage() {
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
-              Full Name
+              First Name
             </label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-9 text-base" />
+            <Input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g. Delbin"
+              className="h-9 text-base"
+            />
           </div>
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
-              Display Name
+              Last Name
             </label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-9 text-base" />
+            <Input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="e.g. Arkar"
+              className="h-9 text-base"
+            />
           </div>
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -308,7 +314,12 @@ export default function ProfilePage() {
               <Building2 className="size-3" />
               Department
             </label>
-            <DepartmentSelect value={departments} onChange={setDepartments} placeholder="Security Operations" />
+            <Input
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="e.g. Security Operations"
+              className="h-9 text-base"
+            />
           </div>
         </div>
       </SectionCard>
@@ -329,10 +340,10 @@ export default function ProfilePage() {
           </div>
           <div className="rounded-lg border border-border bg-background p-3.5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Site Access ({seedUser.sitePermissions.length})
+              Site Permissions ({seedUser.sitePermissions.length})
             </p>
             {seedUser.sitePermissions.length === 0 ? (
-              <p className="text-sm italic text-muted-foreground">No site access granted.</p>
+              <p className="text-sm italic text-muted-foreground">No site permissions granted.</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {seedUser.sitePermissions.map((p) => (
