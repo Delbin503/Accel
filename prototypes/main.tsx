@@ -58,7 +58,7 @@ const PHASES: Phase[] = [
           { label: "Invite Signup", slug: "PRD_Invite_Signup" },
         ],
       },
-      { name: "Profile Settings" },
+      { name: "Profile Settings", slug: "PRD_Profile_Settings" },
       { name: "Dashboard", slug: "PRD_Dashboard" },
       { name: "Site · Overview", slug: "PRD_Site_Management" },
       { name: "Device Health", slug: "PRD_Device_Health" },
