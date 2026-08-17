@@ -9,13 +9,18 @@ import {
   Monitor,
   Save,
   AlertTriangle,
-  CheckCircle2,
   Volume2,
+  Trash2,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/ThemeProvider";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { MOCK_USERS } from "@/mocks/users";
 
 function SectionCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -26,6 +31,80 @@ function SectionCard({ title, description, children }: { title: string; descript
       </div>
       <div className="px-5 py-4">{children}</div>
     </div>
+  );
+}
+
+/** Typed-confirmation gate — the owner's delete is irreversible and unrecoverable. */
+const DELETE_PHRASE = "DELETE";
+
+/* Mounted only while open (see the call site), so the typed confirmation starts
+   empty on every open without needing a reset effect. */
+function DeleteAccountModal({
+  onClose,
+  orgName,
+}: {
+  onClose: () => void;
+  orgName: string;
+}) {
+  const [typed, setTyped] = React.useState("");
+
+  const canDelete = typed.trim() === DELETE_PHRASE;
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="w-[520px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-bold">
+            <Trash2 className="size-4 text-sev-critical" />
+            Delete account
+          </DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            This permanently deletes <strong className="text-foreground">{orgName}</strong> and
+            everything in it. It cannot be undone.
+          </p>
+        </DialogHeader>
+        <div className="space-y-3 px-5 py-4">
+          <div className="flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+            <ul className="space-y-1 text-sm text-foreground">
+              <li>All sites, cameras and NVR links are removed.</li>
+              <li>Deployed models stop and their detection history is deleted.</li>
+              <li>Every member loses access immediately.</li>
+              <li>Active subscriptions are cancelled without refund.</li>
+            </ul>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Type <span className="font-mono text-foreground">{DELETE_PHRASE}</span> to confirm
+            </label>
+            <Input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={DELETE_PHRASE}
+              autoComplete="off"
+              className="h-9 font-mono text-base"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button
+            variant="destructive"
+            disabled={!canDelete}
+            onClick={() => {
+              onClose();
+              toast.success("Account scheduled for deletion", {
+                description: "You have 30 days to cancel before data is erased.",
+              });
+            }}
+            className="gap-1.5"
+          >
+            <Trash2 className="size-3.5" />
+            Delete account
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -68,6 +147,16 @@ function PrefRow({
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const authUser = useAuthStore((s) => s.user);
+
+  /* Danger Zone is role-gated: only an owner can actually delete the account. */
+  const isOwner = authUser?.role === "owner";
+  const owner = React.useMemo(() => MOCK_USERS.find((u) => u.role === "owner"), []);
+  const ownerName = owner?.fullName ?? "your organization owner";
+  const ownerEmail = owner?.email ?? "owner@your-org.com";
+  const orgName = authUser?.orgName ?? "this workspace";
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [requestSent, setRequestSent] = React.useState(false);
 
   const [notifEmailIncidents, setNotifEmailIncidents] = React.useState(true);
   const [notifEmailWeekly, setNotifEmailWeekly] = React.useState(true);
@@ -164,18 +253,54 @@ export default function SettingsPage() {
               Sign out everywhere
             </Button>
           </div>
+          {/* Owners delete the account outright; everyone else can only ask them to. */}
           <div className="flex items-start gap-3 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3.5 py-3">
-            <CheckCircle2 className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+            <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
             <div className="min-w-0 flex-1">
-              <p className="text-base font-semibold text-foreground">Delete account</p>
+              <p className="text-base font-semibold text-foreground">
+                {isOwner ? "Delete account" : "Request account deletion"}
+              </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Account deletion is permanent. Contact your organization owner to begin the off-boarding process.
+                {isOwner ? (
+                  <>
+                    Permanently deletes the workspace, its sites and every member's access. This
+                    cannot be undone.
+                  </>
+                ) : (
+                  <>
+                    Only the organization owner can delete an account. We'll email{" "}
+                    <strong className="text-foreground">{ownerEmail}</strong> to start the
+                    off-boarding process.
+                  </>
+                )}
               </p>
             </div>
-            <Button variant="outline" disabled>Contact Owner</Button>
+            {isOwner ? (
+              <Button variant="destructive" onClick={() => setDeleteOpen(true)} className="gap-1.5">
+                <Trash2 className="size-3.5" />
+                Delete account
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={requestSent}
+                onClick={() => {
+                  setRequestSent(true);
+                  toast.success("Deletion request sent", {
+                    description: `${ownerName} has been emailed at ${ownerEmail}.`,
+                  });
+                }}
+                className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+              >
+                <Send className="size-3.5" />
+                {requestSent ? "Request sent" : "Request deletion"}
+              </Button>
+            )}
           </div>
         </div>
       </SectionCard>
+
+      {deleteOpen && <DeleteAccountModal onClose={() => setDeleteOpen(false)} orgName={orgName} />}
     </div>
   );
 }

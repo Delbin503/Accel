@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNotificationsStore } from "@/stores/useNotificationsStore";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   LayoutDashboard,
   Video,
@@ -380,6 +381,7 @@ function UserProfile({ onBell }: { onBell: () => void }) {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [signOutOpen, setSignOutOpen] = React.useState(false);
 
   if (!user) return null;
 
@@ -387,7 +389,8 @@ function UserProfile({ onBell }: { onBell: () => void }) {
     navigate(path);
   }
 
-  function handleSignOut() {
+  function confirmSignOut() {
+    setSignOutOpen(false);
     signOut();
     navigate("/signin", { replace: true });
   }
@@ -468,7 +471,7 @@ function UserProfile({ onBell }: { onBell: () => void }) {
           <DropdownMenuSeparator className="my-0" />
           <div className="p-1">
             <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base text-sev-critical focus:text-sev-critical"
-              onClick={handleSignOut}>
+              onClick={() => setSignOutOpen(true)}>
               <LogOut className="size-4" />
               Sign Out
             </DropdownMenuItem>
@@ -498,6 +501,17 @@ function UserProfile({ onBell }: { onBell: () => void }) {
           )}
         </button>
       </div>
+
+      <ConfirmDialog
+        open={signOutOpen}
+        onOpenChange={setSignOutOpen}
+        destructive
+        title="Sign out?"
+        description={`You'll be signed out of ${user.orgName ?? "this workspace"} on this device and returned to the sign-in screen.`}
+        confirmLabel="Sign Out"
+        cancelLabel="Stay signed in"
+        onConfirm={confirmSignOut}
+      />
     </div>
   );
 }
