@@ -511,6 +511,7 @@ function UserProfile({ onBell }: { onBell: () => void }) {
         confirmLabel="Sign Out"
         cancelLabel="Stay signed in"
         onConfirm={confirmSignOut}
+        className="w-[560px] max-w-[95vw]"
       />
     </div>
   );

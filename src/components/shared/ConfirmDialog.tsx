@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * Canonical confirm / destructive-action modal. Replaces the 9 hand-rolled
@@ -28,6 +29,8 @@ export interface ConfirmDialogProps {
   onConfirm: () => void;
   /** Extra content between description and footer (e.g. an affected-items list). */
   children?: React.ReactNode;
+  /** Overrides the default width — pass the app's `w-[560px]` to match page modals. */
+  className?: string;
 }
 
 function ConfirmDialog({
@@ -41,10 +44,11 @@ function ConfirmDialog({
   loading = false,
   onConfirm,
   children,
+  className,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className={cn("max-w-md", className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
