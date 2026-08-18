@@ -21,13 +21,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="x-apple-disable-message-reformatting" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="supported-color-schemes" content="dark" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
     <title>Welcome to Accel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#111010; }
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#F2F1EF; }
       table { border-collapse: collapse; }
       img { border:0; line-height:100%; outline:none; text-decoration:none; }
       a { text-decoration:none; }
@@ -36,42 +37,64 @@
         .px { padding-left:28px !important; padding-right:28px !important; }
         .btn-a { display:block !important; }
       }
+
+      /* ── Dark mode — honoring clients (Apple Mail, iOS, Outlook macOS) ── */
+      @media (prefers-color-scheme: dark) {
+        .page      { background-color:#111010 !important; }
+        .card      { background-color:#191614 !important; }
+        .t-head    { color:#FFFFFF !important; }
+        .t-strong  { color:#FFFFFF !important; }
+        .t-body    { color:#B8B3AF !important; }
+        .t-muted   { color:#8A857F !important; }
+        .hairline  { border-color:#2E2A28 !important; }
+        .kv        { background-color:#201C1A !important; border-color:#34302E !important; }
+        .kv-label  { color:#8A857F !important; }
+        .kv-value  { color:#FFFFFF !important; }
+        .kv-sub    { color:#B8B3AF !important; }
+        .logo-light { display:none !important; }
+        .logo-dark  { display:block !important; max-height:none !important; overflow:visible !important; }
+        .foot-link { color:#B8B3AF !important; }
+      }
+      /* ── Force-inverting clients (Outlook.com) — pin the light palette ── */
+      [data-ogsc] .page     { background-color:#F2F1EF !important; }
+      [data-ogsc] .card     { background-color:#FFFFFF !important; }
+      [data-ogsc] .t-head   { color:#141414 !important; }
+      [data-ogsc] .t-strong { color:#141414 !important; }
+      [data-ogsc] .t-body   { color:#57534E !important; }
+      [data-ogsc] .t-muted  { color:#78716C !important; }
+      [data-ogsc] .hairline { border-color:#E7E5E1 !important; }
+      [data-ogsc] .kv       { background-color:#FAF9F8 !important; border-color:#E7E5E1 !important; }
+      [data-ogsc] .kv-value { color:#141414 !important; }
+      [data-ogsc] .foot-link{ color:#78716C !important; }
     </style>
   </head>
-  <body style="margin:0; padding:0; background-color:#111010; font-family:'Manrope','Helvetica Neue',Arial,sans-serif;">
-    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#111010;">
+  <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Manrope','Helvetica Neue',Arial,sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF;">
       Your Accel account is ready. Welcome to {{orgName}}.
     </div>
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111010;">
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2F1EF;">
       <tr>
         <td align="center" style="padding:40px 16px;">
-          <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" bgcolor="#17120F" style="width:600px; max-width:600px; background-color:#17120F; background-image:linear-gradient(158deg,#2A1A10 0%,#1A1411 42%,#100E0D 100%); border-radius:16px; overflow:hidden;">
+          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:16px; overflow:hidden;">
 
             <tr>
               <td class="px" style="padding:36px 44px 8px 44px;">
-                <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-                  <td valign="middle" style="font-size:0; line-height:0;">
-                    <svg width="34" height="31" viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;">
-                      <path d="M23 2 L41 38 L31 38 L22.5 20.5 L14 38 L5 38 Z" fill="#FE5C01"/>
-                      <path d="M4 38 C 12 28 22 25.5 34 29 C 24 27.5 15 31 11 38 Z" fill="#FE5C01"/>
-                    </svg>
-                  </td>
-                  <td style="padding-left:9px; font-size:22px; font-weight:800; font-style:italic; color:#ffffff; letter-spacing:-0.5px;">Accel</td>
-                </tr></table>
+                <div class="logo-light"><svg width="110" height="45" viewBox="10 5 110 45" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
+                <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="110" height="45" viewBox="10 5 110 45" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
               </td>
             </tr>
 
             <tr>
               <td class="px" style="padding:24px 44px 0 44px;">
-                <h1 style="margin:0; font-size:26px; line-height:1.3; font-weight:700; color:#ffffff;">Welcome to Accel, {{firstName}}</h1>
+                <h1 class="t-head" style="margin:0; font-size:26px; line-height:1.3; font-weight:700; color:#141414;">Welcome to Accel, {{firstName}}</h1>
               </td>
             </tr>
 
             <tr>
-              <td class="px" style="padding:20px 44px 0 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+              <td class="px t-body" style="padding:20px 44px 0 44px; font-size:15px; line-height:1.7; color:#57534E;">
                 <p style="margin:0;">
-                  Your account is all set. You've joined <strong style="color:#ffffff;">{{orgName}}</strong>
+                  Your account is all set. You've joined <strong class="t-strong" style="color:#141414;">{{orgName}}</strong>
                   and you're ready to start monitoring.
                 </p>
               </td>
@@ -79,17 +102,17 @@
 
             <tr>
               <td class="px" style="padding:24px 44px 0 44px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#171514; border:1px solid #34302E; border-radius:12px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="kv" style="background-color:#FAF9F8; border:1px solid #E7E5E1; border-radius:12px;">
                   <tr>
                     <td style="padding:16px 20px; font-size:14px; line-height:1.5;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="padding:5px 0; color:#8A857F; width:120px;">Your role</td>
-                          <td style="padding:5px 0; color:#ffffff; font-weight:600;">{{role}}</td>
+                          <td class="kv-label" style="padding:5px 0; color:#78716C; width:120px;">Your role</td>
+                          <td class="kv-value" style="padding:5px 0; color:#141414; font-weight:600;">{{role}}</td>
                         </tr>
                         <tr>
-                          <td style="padding:5px 0; color:#8A857F;">Site access</td>
-                          <td style="padding:5px 0; color:#ffffff; font-weight:600;">{{siteList}}</td>
+                          <td class="kv-label" style="padding:5px 0; color:#78716C;">Site access</td>
+                          <td class="kv-value" style="padding:5px 0; color:#141414; font-weight:600;">{{siteList}}</td>
                         </tr>
                       </table>
                     </td>
@@ -115,7 +138,7 @@
             </tr>
 
             <tr>
-              <td class="px" style="padding:28px 44px 0 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+              <td class="px t-body" style="padding:28px 44px 0 44px; font-size:15px; line-height:1.7; color:#57534E;">
                 <p style="margin:0;">
                   Use the dashboard to explore live monitoring, the detection feed, and your assigned
                   sites. If you have any questions, our support team is here to help.
@@ -124,17 +147,17 @@
             </tr>
 
             <tr>
-              <td class="px" style="padding:24px 44px 4px 44px; font-size:15px; line-height:1.7; color:#B8B3AF;">
+              <td class="px t-body" style="padding:24px 44px 4px 44px; font-size:15px; line-height:1.7; color:#57534E;">
                 <p style="margin:0;">Thanks,</p>
-                <p style="margin:0; color:#ffffff; font-weight:600;">Sigmawave Team</p>
+                <p class="t-head" style="margin:0; color:#141414; font-weight:600;">Sigmawave Team</p>
               </td>
             </tr>
 
             <tr>
               <td class="px" style="padding:28px 44px 36px 44px;">
-                <div style="border-top:1px solid #2E2A28; padding-top:18px; font-size:12px; line-height:1.6; color:#6E6A67;">
-                  <p style="margin:0 0 4px 0;">Need help? Contact <a href="mailto:{{supportEmail}}" style="color:#8A857F; text-decoration:underline;">{{supportEmail}}</a>.</p>
-                  <p style="margin:0; color:#565350;">&copy; Accel — Threat &amp; Risk Monitoring</p>
+                <div class="hairline t-muted" style="border-top:1px solid #E7E5E1; padding-top:18px; font-size:12px; line-height:1.6; color:#78716C;">
+                  <p style="margin:0 0 4px 0;">Need help? Contact <a href="mailto:{{supportEmail}}" class="foot-link" style="color:#78716C; text-decoration:underline;">{{supportEmail}}</a>.</p>
+                  <p class="t-muted" style="margin:0; color:#A8A29E;">&copy; Accel — Threat &amp; Risk Monitoring</p>
                 </div>
               </td>
             </tr>

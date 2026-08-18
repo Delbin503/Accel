@@ -1,0 +1,26 @@
+Accel — Your account has been deleted
+
+Dear {{firstName}},
+
+This is a confirmation that your Accel account has been deleted from the
+{{orgName}} workspace. Your access has been revoked and your personal account
+data has been removed.
+
+Deletion details
+----------------
+Account:      {{email}}
+Deleted on:   {{deletedAt}}
+Actioned by:  {{deletedBy}}
+
+You'll no longer receive notifications or be able to sign in with this email.
+Records that Accel is required to retain for security or legal reasons may be
+kept in line with our data-retention policy.
+
+If you didn't expect this, or believe your account was deleted in error,
+contact our support team as soon as possible.
+
+Thanks,
+Sigmawave Team
+
+Need help? Contact {{supportEmail}}
+© Accel — Threat & Risk Monitoring

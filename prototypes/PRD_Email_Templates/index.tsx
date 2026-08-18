@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Mail, Clock, Users, Tag, FileCode2 } from "lucide-react";
+import { Mail, Clock, Users, Tag, FileCode2, Sun, Moon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,8 @@ import twoFaHtml from "./templates/2fa-changed.html?raw";
 import welcomeHtml from "./templates/welcome.html?raw";
 import roleChangedHtml from "./templates/role-changed.html?raw";
 import ownershipHtml from "./templates/ownership-transfer.html?raw";
+import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
+import accountDeletedHtml from "./templates/account-deleted.html?raw";
 
 interface Template {
   id: string;
@@ -145,7 +147,51 @@ const TEMPLATES: Template[] = [
     file: "templates/ownership-transfer.html",
     html: ownershipHtml,
   },
+  {
+    id: "account-deletion-request",
+    name: "Account Deletion Request",
+    subject: "Account deletion requested",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent:
+      "When a member requests account deletion. Sent to the Owner to review, since deletion is role-gated.",
+    audience: "The workspace Owner who must action the request.",
+    mergeTags: ["{{ownerName}}", "{{orgName}}", "{{requesterName}}", "{{requesterEmail}}", "{{requesterRole}}", "{{requestedAt}}", "{{reviewUrl}}", "{{supportEmail}}"],
+    file: "templates/account-deletion-request.html",
+    html: accountDeletionRequestHtml,
+  },
+  {
+    id: "account-deleted",
+    name: "Account Deleted",
+    subject: "Your Accel account has been deleted",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent: "After an account is deleted — confirming access and personal data have been removed.",
+    audience: "The user whose account was deleted.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{email}}", "{{deletedAt}}", "{{deletedBy}}", "{{supportEmail}}"],
+    file: "templates/account-deleted.html",
+    html: accountDeletedHtml,
+  },
 ];
+
+/**
+ * Force a color scheme in the preview iframe. The email itself is driven by the
+ * recipient client's `prefers-color-scheme`, which an iframe can't be told to
+ * fake — so for the preview we rewrite the media query to always match (dark)
+ * or never match (light). The saved template file keeps the real media query.
+ */
+function applyPreviewScheme(html: string, scheme: "light" | "dark"): string {
+  const replacement =
+    scheme === "dark"
+      ? "@media all and (min-width:0px)"
+      : "@media not all";
+  return html
+    .replace(/@media\s*\(prefers-color-scheme:\s*dark\)/g, replacement)
+    .replace(
+      /<meta name="color-scheme"[^>]*>/,
+      `<meta name="color-scheme" content="${scheme} only" />`
+    );
+}
 
 const PRIORITY_STYLES: Record<Template["priority"], string> = {
   P1: "bg-sev-critical/15 text-sev-critical",
@@ -167,7 +213,9 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
 
 function App() {
   const [id, setId] = React.useState(TEMPLATES[0].id);
+  const [scheme, setScheme] = React.useState<"light" | "dark">("light");
   const tpl = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
+  const previewHtml = React.useMemo(() => applyPreviewScheme(tpl.html, scheme), [tpl.html, scheme]);
 
   return (
     <ThemeProvider defaultTheme="dark">
@@ -251,20 +299,42 @@ function App() {
           <main className="overflow-hidden rounded-xl border border-border bg-card">
             {/* Mock mail-client header */}
             <div className="border-b border-border px-5 py-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-foreground">{tpl.subject}</p>
-                <span className="text-2xs text-muted-foreground">Inbox preview</span>
+                <div className="flex items-center gap-3">
+                  {/* Light / dark preview toggle — rewrites the template's
+                      prefers-color-scheme query so both palettes are viewable. */}
+                  <div className="flex items-center rounded-md border border-border p-0.5">
+                    {(["light", "dark"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setScheme(s)}
+                        className={cn(
+                          "flex items-center gap-1 rounded px-2 py-1 text-2xs font-semibold capitalize transition-colors",
+                          scheme === s
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {s === "light" ? <Sun className="size-3" /> : <Moon className="size-3" />}
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-2xs text-muted-foreground">Inbox preview</span>
+                </div>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 From <span className="text-foreground">Accel &lt;no-reply@accel.com&gt;</span>
               </p>
             </div>
-            <div className="bg-[#0b0b0b] p-4 sm:p-8">
+            <div className={cn("p-4 sm:p-8", scheme === "dark" ? "bg-[#0b0b0b]" : "bg-[#e9e8e5]")}>
               <iframe
-                key={tpl.id}
+                key={`${tpl.id}-${scheme}`}
                 title={tpl.name}
-                srcDoc={tpl.html}
-                className="mx-auto block h-[760px] w-full max-w-[640px] rounded-lg border border-border bg-white"
+                srcDoc={previewHtml}
+                className="mx-auto block h-[760px] w-full max-w-[640px] rounded-lg border border-border"
               />
             </div>
           </main>

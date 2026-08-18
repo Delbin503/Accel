@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!--
+  Accel — User Invitation (transactional, P1) · LIGHT REDESIGN SAMPLE
+
+  Proposed replacement for templates/invitation.html. Light-only palette and a
+  modular layout (hook + early CTA, hero panel, assignment grid, benefit list,
+  tinted callout, brand rule, full footer) modelled on the reference email.
+
+  This is the canonical base — once approved, the other 8 templates adopt this
+  shell. Nothing else in templates/ has been changed.
+
+  Changes from the dark version
+  -----------------------------
+  · Light palette; forced-dark inversion is actively resisted (see [data-ogsc]).
+  · Logo is now pure HTML (bgcolor cell + text), NOT inline <svg>. Gmail strips
+    <svg>, so the old logo rendered as nothing for most recipients.
+  · No CSS gradient — Outlook Windows drops linear-gradient; flat fills only.
+  · Body type raised 15px → 16px; Gmail Android up-scales anything smaller and
+    breaks the column widths.
+
+  Hosted assets required before sending
+  -------------------------------------
+  Both must be absolute https URLs on a CDN — email cannot use relative paths.
+  Placeholders below point at cdn.accel.com and 404 until the real files land.
+
+  · hero-device@2x.png    584x392 (serves at 292px wide). The laptop/product
+                          shot. If it 404s or images are blocked, the band still
+                          reads: white alt text on orange.
+  · hero-circuit-600.png  600px wide circuit texture. Pure decoration — Outlook
+                          Windows drops background-image and falls back to the
+                          flat #FE5C01, which is the intended result.
+
+  Merge tags
+  ----------
+  {{orgName}}       e.g. "Astra Corp"
+  {{inviteeName}}   e.g. "Mark Simpson"
+  {{siteName}}      e.g. "Astra HQ"       — assigned site(s)
+  {{roleName}}      e.g. "Site Operator"  — NEW, needed by the assignment grid
+  {{acceptUrl}}     the one-time invitation link
+  {{supportEmail}}  e.g. "support@accel.com"
+-->
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Light only. Declaring just "light" stops Apple Mail / Outlook macOS
+         from synthesising a dark variant of this email. -->
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>You've been invited to Accel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
+    <style>
+      :root { color-scheme: light; supported-color-schemes: light; }
+      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#F2F1EF; }
+      table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+      img { border:0; line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
+      a { text-decoration:none; }
+
+      @media only screen and (max-width:620px) {
+        .container { width:100% !important; }
+        .px        { padding-left:24px !important; padding-right:24px !important; }
+        .btn-a     { display:block !important; }
+        /* Assignment grid: 3-across on desktop, stacked on phones. */
+        .stack     { display:block !important; width:100% !important; padding:0 0 12px 0 !important; }
+        .h1        { font-size:26px !important; line-height:34px !important; }
+
+        /* Hero band: two columns side-by-side on desktop, stacked on phones.
+           The device shot goes full-width underneath the copy and scales with
+           the viewport instead of being clipped at a fixed 292px. */
+        /* box-sizing is required: width:100% + padding on a content-box cell
+           overflows the card. Safe to use here — Outlook never reads @media. */
+        .band-col     { display:block !important; width:100% !important; box-sizing:border-box !important; }
+        .band-col-txt { padding:26px 24px 20px 24px !important; }
+        .band-img-cell{ padding:0 !important; text-align:center !important; }
+        .band-img     { width:100% !important; max-width:100% !important; height:auto !important; margin:0 auto !important; }
+        .band-h       { font-size:24px !important; line-height:31px !important; }
+      }
+
+      /* Very narrow phones — keep the headline from swallowing the band. */
+      @media only screen and (max-width:400px) {
+        .band-h { font-size:21px !important; line-height:28px !important; }
+        .band-s { font-size:13px !important; line-height:20px !important; }
+      }
+
+      /* Outlook.com and some Gmail builds force-invert regardless of the
+         color-scheme meta above. These attribute hooks are the only way to
+         claw the light palette back. */
+      [data-ogsc] .page      { background-color:#F2F1EF !important; }
+      [data-ogsc] .card      { background-color:#FFFFFF !important; }
+      [data-ogsc] .t-head    { color:#141414 !important; }
+      [data-ogsc] .t-body    { color:#57534E !important; }
+      [data-ogsc] .t-muted   { color:#78716C !important; }
+      [data-ogsc] .hairline  { border-color:#E7E5E1 !important; }
+      [data-ogsc] .panel     { background-color:#FFF4EC !important; }
+      [data-ogsc] .panel-t   { color:#9A4A12 !important; }
+      [data-ogsc] .hero      { background-color:#FBFAF9 !important; }
+      /* The band is already dark-on-orange — inversion would wreck it. Pin it. */
+      [data-ogsc] .band      { background-color:#FE5C01 !important; }
+      [data-ogsc] .band-t    { color:#FFFFFF !important; }
+      [data-ogsc] .band-h    { color:#FFFFFF !important; }
+      [data-ogsc] .band-s    { color:#FFE4D3 !important; }
+    </style>
+  </head>
+
+  <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Manrope','Helvetica Neue',Arial,sans-serif;">
+
+    <!-- Inbox preview text -->
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF; opacity:0;">
+      {{orgName}} invited you to join {{siteName}} on Accel — accept to get started.
+      &#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;
+    </div>
+
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F2F1EF;">
+      <tr>
+        <td align="center" style="padding:32px 16px 40px 16px;">
+
+          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:14px; overflow:hidden;">
+
+            <!-- ── Header bar ─────────────────────────────────────────────── -->
+            <tr>
+              <td class="px hairline" style="padding:22px 40px; border-bottom:1px solid #E7E5E1;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <!-- Logo lockup: pure HTML, no <svg> (Gmail strips SVG) and
+                         no image (renders even with images blocked). Swap the
+                         mark cell for a hosted PNG once the CDN asset exists. -->
+                    <td valign="middle">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td valign="middle" bgcolor="#FE5C01" width="30" height="30" align="center" style="width:30px; height:30px; background-color:#FE5C01; border-radius:7px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:17px; line-height:30px; font-weight:800; font-style:italic; color:#FFFFFF; text-align:center;">A</td>
+                          <td valign="middle" class="t-head" style="padding-left:10px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:20px; line-height:30px; font-weight:800; font-style:italic; color:#141414; letter-spacing:-0.4px;">Accel</td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td valign="middle" align="right" class="t-muted" style="font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:600; color:#78716C; letter-spacing:0.3px; text-transform:uppercase;">
+                      Threat &amp; Risk Monitoring
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Hook + primary CTA (above the fold) ────────────────────── -->
+            <tr>
+              <td class="px" style="padding:36px 40px 0 40px;">
+                <h1 class="h1 t-head" style="margin:0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:30px; line-height:38px; font-weight:800; color:#141414; letter-spacing:-0.6px; mso-line-height-rule:exactly;">
+                  You're invited to <span style="color:#FE5C01;">{{orgName}}</span>
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td class="px t-body" style="padding:14px 40px 0 40px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:26px; color:#57534E; mso-line-height-rule:exactly;">
+                Your account is ready to activate. Accept below to start monitoring
+                {{siteName}} on Accel.
+              </td>
+            </tr>
+            <tr>
+              <td class="px" align="left" style="padding:24px 40px 0 40px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" bgcolor="#FE5C01" style="border-radius:8px;">
+                      <!--[if mso]>
+                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{acceptUrl}}" style="height:48px;v-text-anchor:middle;width:230px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                        <w:anchorlock/>
+                        <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:bold;">Accept invitation</center>
+                      </v:roundrect>
+                      <![endif]-->
+                      <!--[if !mso]><!-- -->
+                      <a class="btn-a" href="{{acceptUrl}}" style="display:inline-block; padding:0 36px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:48px; font-weight:700; color:#FFFFFF; text-decoration:none; border-radius:8px;">Accept invitation</a>
+                      <!--<![endif]-->
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Brand hero band (full-bleed) ───────────────────────────────
+                 Rebuilt from the Accel banner rather than dropped in as one flat
+                 image: the orange is a real bgcolor, the logo and headline are
+                 live text, and only the device shot is an <img>. That means it
+                 reflows on a phone, stays readable when images are blocked, and
+                 the headline is selectable and translatable.
+
+                 Circuit texture is a background-image — Outlook Windows drops it
+                 and lands on the flat orange, which is the intended fallback.
+            -->
+            <!-- Spacer: a white gap above the band. margin on a <td> is dropped
+                 by Outlook, so the gap has to be its own row. -->
+            <tr><td height="32" style="height:32px; line-height:32px; font-size:0;">&nbsp;</td></tr>
+            <tr>
+              <td class="band" bgcolor="#FE5C01" background="https://cdn.accel.com/email/hero-circuit-600.png" style="background-color:#FE5C01; background-image:url('https://cdn.accel.com/email/hero-circuit-600.png'); background-position:center; background-repeat:no-repeat; background-size:cover;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <!-- Copy column -->
+                    <td class="band-col band-col-txt" width="300" valign="middle" style="width:300px; padding:30px 10px 30px 36px;">
+                      <!-- Reversed logo lockup — same pure-HTML approach as the header -->
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td valign="middle" bgcolor="#FFFFFF" width="24" height="24" align="center" style="width:24px; height:24px; background-color:#FFFFFF; border-radius:6px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:800; font-style:italic; color:#FE5C01; text-align:center;">A</td>
+                          <td valign="middle" class="band-t" style="padding-left:8px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:17px; line-height:24px; font-weight:800; font-style:italic; color:#FFFFFF; letter-spacing:-0.3px;">Accel</td>
+                        </tr>
+                      </table>
+                      <div class="band-h band-t" style="padding-top:16px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:22px; line-height:29px; font-weight:800; color:#FFFFFF; letter-spacing:-0.4px; mso-line-height-rule:exactly;">
+                        Build the Intelligence That Moves the Physical World
+                      </div>
+                      <div class="band-s" style="padding-top:12px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:400; color:#FFE4D3; mso-line-height-rule:exactly;">
+                        Start with unlimited 3D synthetic data. End with validated,
+                        deployment-ready AI.
+                      </div>
+                    </td>
+
+                    <!-- Device column — bottom-aligned so the laptop sits on the band edge -->
+                    <td class="band-col band-img-cell" width="300" valign="bottom" align="right" style="width:300px; padding:22px 0 0 0; font-size:0; line-height:0;">
+                      <!-- alt is styled white so the blocked-image fallback is
+                           legible against the orange rather than near-black. -->
+                      <img class="band-img" src="https://cdn.accel.com/email/hero-device@2x.png" width="292" alt="Accel scene builder — a 3D synthetic environment open in the editor" style="display:block; width:292px; max-width:292px; height:auto; border:0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:18px; color:#FFFFFF;" />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Body ───────────────────────────────────────────────────── -->
+            <tr>
+              <td class="px t-body" style="padding:32px 40px 0 40px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:26px; color:#57534E; mso-line-height-rule:exactly;">
+                <p style="margin:0 0 16px 0;">Hi {{inviteeName}},</p>
+                <p style="margin:0;">
+                  <strong class="t-head" style="color:#141414; font-weight:700;">{{orgName}}</strong> has invited you to join
+                  <strong class="t-head" style="color:#141414; font-weight:700;">{{siteName}}</strong> on Accel.
+                  Here's what you've been assigned:
+                </p>
+              </td>
+            </tr>
+
+            <!-- ── Assignment grid (3-across, stacks on mobile) ───────────── -->
+            <tr>
+              <td class="px" style="padding:22px 40px 0 40px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="stack" width="33.33%" valign="top" style="padding-right:10px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="hairline" style="border:1px solid #E7E5E1; border-radius:10px;">
+                        <tr>
+                          <td style="padding:16px 14px;">
+                            <div class="t-muted" style="font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:15px; font-weight:700; color:#78716C; letter-spacing:0.6px; text-transform:uppercase;">Organization</div>
+                            <div class="t-head" style="padding-top:7px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:21px; font-weight:700; color:#141414;">{{orgName}}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td class="stack" width="33.33%" valign="top" style="padding:0 5px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="hairline" style="border:1px solid #E7E5E1; border-radius:10px;">
+                        <tr>
+                          <td style="padding:16px 14px;">
+                            <div class="t-muted" style="font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:15px; font-weight:700; color:#78716C; letter-spacing:0.6px; text-transform:uppercase;">Site</div>
+                            <div class="t-head" style="padding-top:7px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:21px; font-weight:700; color:#141414;">{{siteName}}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td class="stack" width="33.33%" valign="top" style="padding-left:10px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="hairline" style="border:1px solid #E7E5E1; border-radius:10px;">
+                        <tr>
+                          <td style="padding:16px 14px;">
+                            <div class="t-muted" style="font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:15px; font-weight:700; color:#78716C; letter-spacing:0.6px; text-transform:uppercase;">Role</div>
+                            <div class="t-head" style="padding-top:7px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:21px; font-weight:700; color:#141414;">{{roleName}}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Benefit list ───────────────────────────────────────────── -->
+            <tr>
+              <td class="px t-body" style="padding:28px 40px 0 40px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:26px; color:#57534E; mso-line-height-rule:exactly;">
+                <p style="margin:0 0 12px 0;">Once you're in, you'll be able to:</p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="18" valign="top" style="width:18px; padding:0 0 9px 0; font-size:16px; line-height:26px; color:#FE5C01; font-weight:700;">&bull;</td>
+                    <td valign="top" style="padding:0 0 9px 0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:24px; color:#57534E;">Monitor live camera feeds and detection events across {{siteName}}</td>
+                  </tr>
+                  <tr>
+                    <td width="18" valign="top" style="width:18px; padding:0 0 9px 0; font-size:16px; line-height:26px; color:#FE5C01; font-weight:700;">&bull;</td>
+                    <td valign="top" style="padding:0 0 9px 0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:24px; color:#57534E;">Triage incidents and track them through to resolution</td>
+                  </tr>
+                  <tr>
+                    <td width="18" valign="top" style="width:18px; padding:0 0 9px 0; font-size:16px; line-height:26px; color:#FE5C01; font-weight:700;">&bull;</td>
+                    <td valign="top" style="padding:0 0 9px 0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:24px; color:#57534E;">Review recordings and export evidence for reporting</td>
+                  </tr>
+                  <tr>
+                    <td width="18" valign="top" style="width:18px; padding:0; font-size:16px; line-height:26px; color:#FE5C01; font-weight:700;">&bull;</td>
+                    <td valign="top" style="padding:0; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:24px; color:#57534E;">Configure alert rules and notification preferences for your sites</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Secondary CTA ──────────────────────────────────────────── -->
+            <tr>
+              <td class="px" align="left" style="padding:28px 40px 0 40px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" bgcolor="#FE5C01" style="border-radius:8px;">
+                      <!--[if mso]>
+                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{acceptUrl}}" style="height:48px;v-text-anchor:middle;width:230px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                        <w:anchorlock/>
+                        <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:bold;">Accept invitation</center>
+                      </v:roundrect>
+                      <![endif]-->
+                      <!--[if !mso]><!-- -->
+                      <a class="btn-a" href="{{acceptUrl}}" style="display:inline-block; padding:0 36px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:48px; font-weight:700; color:#FFFFFF; text-decoration:none; border-radius:8px;">Accept invitation</a>
+                      <!--<![endif]-->
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px t-muted" style="padding:14px 40px 0 40px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:19px; color:#78716C;">
+                Button not working? Paste this into your browser:<br />
+                <a href="{{acceptUrl}}" style="color:#C2540A; text-decoration:underline; word-break:break-all;">{{acceptUrl}}</a>
+              </td>
+            </tr>
+
+            <!-- ── Callout ────────────────────────────────────────────────── -->
+            <tr>
+              <td class="px" style="padding:28px 40px 0 40px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="panel" bgcolor="#FFF4EC" style="background-color:#FFF4EC; border-radius:10px;">
+                  <tr>
+                    <td class="panel-t" style="padding:16px 18px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:22px; color:#9A4A12;">
+                      <strong style="font-weight:700;">New to Accel?</strong> You'll be asked to create a
+                      password with this email address to finish setting up. If you weren't
+                      expecting this invitation, you can safely ignore it.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Sign-off ───────────────────────────────────────────────── -->
+            <tr>
+              <td class="px t-body" style="padding:28px 40px 0 40px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:26px; color:#57534E;">
+                <p style="margin:0;">Thanks,</p>
+                <p class="t-head" style="margin:0; font-weight:700; color:#141414;">Sigmawave Team</p>
+              </td>
+            </tr>
+
+            <!-- ── Brand accent rule ──────────────────────────────────────── -->
+            <tr>
+              <td style="padding:32px 0 0 0; font-size:0; line-height:0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="50%" height="4" bgcolor="#FE5C01" style="height:4px; line-height:4px; font-size:0; background-color:#FE5C01;">&nbsp;</td>
+                    <td width="30%" height="4" bgcolor="#FF8A3D" style="height:4px; line-height:4px; font-size:0; background-color:#FF8A3D;">&nbsp;</td>
+                    <td width="20%" height="4" bgcolor="#FFC79E" style="height:4px; line-height:4px; font-size:0; background-color:#FFC79E;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── Footer ─────────────────────────────────────────────────── -->
+            <tr>
+              <td class="px hero" bgcolor="#FBFAF9" style="padding:26px 40px 30px 40px; background-color:#FBFAF9;">
+                <div class="t-head" style="font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:15px; line-height:20px; font-weight:800; font-style:italic; color:#141414; letter-spacing:-0.3px;">Accel</div>
+                <div class="t-muted" style="padding-top:10px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:19px; color:#78716C;">
+                  Need help? Contact <a href="mailto:{{supportEmail}}" style="color:#78716C; text-decoration:underline;">{{supportEmail}}</a>.
+                </div>
+                <div class="t-muted" style="padding-top:12px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:19px; color:#78716C;">
+                  You received this because {{orgName}} invited you to their Accel workspace.
+                  This is a one-time transactional message, not a subscription.
+                </div>
+                <div class="t-muted" style="padding-top:12px; font-family:'Manrope','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:19px; color:#A8A29E;">
+                  &copy; Accel — Threat &amp; Risk Monitoring<br />
+                  Sigmawave Pte. Ltd.
+                </div>
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

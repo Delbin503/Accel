@@ -1,0 +1,29 @@
+Accel — Account deletion requested
+
+Dear {{ownerName}},
+
+A member of the {{orgName}} workspace has requested that their Accel account
+be deleted. Because account deletion is restricted to Owners, this request
+needs your review before it can proceed.
+
+Request details
+---------------
+Member:        {{requesterName}}
+Email:         {{requesterEmail}}
+Role:          {{requesterRole}}
+Requested on:  {{requestedAt}}
+
+Warning: Deleting this account permanently removes the member's access and
+personal data. This action cannot be undone once you confirm it.
+
+Review the request:
+{{reviewUrl}}
+
+If you don't recognise this request or believe it was made in error, don't
+action it — contact our support team and leave the account untouched.
+
+Thanks,
+Sigmawave Team
+
+Need help? Contact {{supportEmail}}
+© Accel — Threat & Risk Monitoring

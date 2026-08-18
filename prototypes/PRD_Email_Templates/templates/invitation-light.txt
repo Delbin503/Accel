@@ -1,0 +1,38 @@
+You're invited to {{orgName}}
+
+Hi {{inviteeName}},
+
+{{orgName}} has invited you to join {{siteName}} on Accel. Your account
+is ready to activate.
+
+Here's what you've been assigned:
+
+  Organization:  {{orgName}}
+  Site:          {{siteName}}
+  Role:          {{roleName}}
+
+Once you're in, you'll be able to:
+
+  - Monitor live camera feeds and detection events across {{siteName}}
+  - Triage incidents and track them through to resolution
+  - Review recordings and export evidence for reporting
+  - Configure alert rules and notification preferences for your sites
+
+Accept your invitation:
+{{acceptUrl}}
+
+New to Accel? You'll be asked to create a password with this email
+address to finish setting up. If you weren't expecting this invitation,
+you can safely ignore it.
+
+Thanks,
+Sigmawave Team
+
+--
+Need help? Contact {{supportEmail}}
+
+You received this because {{orgName}} invited you to their Accel
+workspace. This is a one-time transactional message, not a subscription.
+
+(c) Accel - Threat & Risk Monitoring
+Sigmawave Pte. Ltd.
