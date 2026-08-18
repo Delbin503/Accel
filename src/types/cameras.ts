@@ -37,6 +37,9 @@ export interface CameraData {
   status: CameraStatus;
   ipAddress: string;
   rtspPort: number;
+  /** Credentials the camera stream is authenticated with. */
+  username: string;
+  password: string;
   rtspUrl: string;
   stream: VideoStreamSpec;
   recording: RecordingConfig;

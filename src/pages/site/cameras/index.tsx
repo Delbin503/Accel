@@ -28,6 +28,8 @@ import {
   Layers,
   Unlink,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,6 +57,26 @@ const STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: strin
   offline:             { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline" },
   "connection-failed": { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
 };
+
+/** Masked credential with a reveal toggle — kept hidden by default so the drawer
+    can be shown on shared screens without exposing the camera password. */
+function RevealValue({ value }: { value: string }) {
+  const [shown, setShown] = React.useState(false);
+  if (!value) return <span className="font-mono text-xs">—</span>;
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className="font-mono text-xs">{shown ? value : "•".repeat(Math.min(value.length, 12))}</span>
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-label={shown ? "Hide password" : "Show password"}
+        className="text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {shown ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+      </button>
+    </span>
+  );
+}
 
 function StatusPill({ status }: { status: CameraStatus }) {
   const s = STATUS_STYLES[status];
@@ -750,6 +772,8 @@ function CameraDrawer({
                     ["Area Name",       camera.areaName],
                     ["IP Address",      <span className="font-mono text-xs">{camera.ipAddress}</span>],
                     ["RTSP Port",       <span className="font-mono text-xs">{camera.rtspPort}</span>],
+                    ["Username",        <span className="font-mono text-xs">{camera.username || "—"}</span>],
+                    ["Password",        <RevealValue value={camera.password} />],
                     ["Active Since",    camera.activeAtDisplay],
                     ["Events (24h)",    <span className="font-semibold">{camera.recentEventCount}</span>],
                     ["Active Models",   <span className="font-semibold">{deployments.filter((d) => d.status === "active").length}</span>],
@@ -1022,6 +1046,9 @@ interface CameraFormFields {
   siteId: string;
   areaId: string;
   ipAddress: string;
+  /** Credentials the camera stream is authenticated with. */
+  username: string;
+  password: string;
   /** String-typed in the form so empty inputs render as placeholders; parsed on submit. */
   rtspPort: string;
   rtspUrl: string;          // full RTSP URL the user provides (or auto-built from IP:port)
@@ -1052,6 +1079,8 @@ function emptyForm(takenIds: string[]): CameraFormFields {
     siteId: "",
     areaId: "",
     ipAddress: "",
+    username: "",
+    password: "",
     rtspPort: "",
     resolution: "",
     frameRate: "",
@@ -1079,6 +1108,8 @@ function fromCamera(c: CameraData): CameraFormFields {
     siteId: c.siteId,
     areaId: c.areaId,
     ipAddress: c.ipAddress,
+    username: c.username,
+    password: c.password,
     rtspPort: String(c.rtspPort),
     rtspUrl: c.rtspUrl,
     resolution: c.stream.resolution,
@@ -1165,12 +1196,14 @@ function CameraFormModal({
   onSubmit: (fields: CameraFormFields) => void;
 }) {
   const [fields, setFields] = React.useState<CameraFormFields>(() => emptyForm(takenIds));
-  const [errors, setErrors] = React.useState<{ name?: string; ipAddress?: string; siteId?: string; areaId?: string }>({});
+  const [errors, setErrors] = React.useState<{ name?: string; ipAddress?: string; siteId?: string; areaId?: string; username?: string; password?: string }>({});
+  const [showPassword, setShowPassword] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
       setFields(initial ?? emptyForm(takenIds));
       setErrors({});
+      setShowPassword(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
@@ -1234,9 +1267,11 @@ function CameraFormModal({
     mode === "add" || (initial != null && JSON.stringify(fields) !== JSON.stringify(initial));
 
   function handleSubmit() {
-    const next: { name?: string; ipAddress?: string; siteId?: string; areaId?: string } = {};
+    const next: { name?: string; ipAddress?: string; siteId?: string; areaId?: string; username?: string; password?: string } = {};
     if (!fields.name.trim()) next.name = "Camera name is required.";
     if (!fields.ipAddress.trim()) next.ipAddress = "IP address is required.";
+    if (!fields.username.trim()) next.username = "Username is required.";
+    if (!fields.password) next.password = "Password is required.";
     if (!fields.siteId) next.siteId = "Select a site.";
     if (!fields.areaId) next.areaId = "Select an area.";
     setErrors(next);
@@ -1314,6 +1349,39 @@ function CameraFormModal({
                 type="number"
                 mono
               />
+            </FormField>
+            <FormField label="Username">
+              <TextInput
+                value={fields.username}
+                onChange={(v) => set("username", v)}
+                placeholder="admin"
+                mono
+                invalid={!!errors.username}
+              />
+            </FormField>
+            <FormField label="Password">
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={fields.password}
+                  onChange={(e) => set("password", e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.password || undefined}
+                  className={cn(
+                    "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                    errors.password && "border-sev-critical"
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </button>
+              </div>
             </FormField>
             <FormField label="Resolution">
               <FormSelect
@@ -1627,6 +1695,8 @@ export default function CamerasPage({
     return {
       id: fields.id.trim(),
       name: fields.name.trim(),
+      username: fields.username.trim(),
+      password: fields.password,
       siteId: fields.siteId,
       siteName: site?.label ?? fields.siteId,
       areaId: fields.areaId,

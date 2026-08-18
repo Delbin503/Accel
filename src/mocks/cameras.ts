@@ -38,6 +38,8 @@ function camera(seed: CameraSeed): CameraData {
     siteName: seed.siteName,
     areaId: seed.areaId,
     areaName: seed.areaName,
+    username: "admin",
+    password: "cam-admin-2026",
     status: seed.status,
     ipAddress: seed.ip,
     rtspPort: seed.rtspPort ?? 554,
