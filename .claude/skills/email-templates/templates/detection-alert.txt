@@ -1,0 +1,22 @@
+CRITICAL DETECTION - Warehouse B / CAM-04
+
+A critical detection was recorded on CAM-04 at Warehouse B. The clip has
+been retained and an incident case was opened automatically.
+
+Severity:     Critical
+Site:         Warehouse B
+Camera:       CAM-04 (Loading Dock)
+Detected at:  2026-08-06 14:32 UTC+07
+Incident:     inc_8f21c
+
+View the incident:
+https://app.example.com/incidents/inc_8f21c
+
+--
+You're receiving this because you subscribe to critical alerts for
+Warehouse B.
+
+Notification preferences: https://app.example.com/settings/notifications
+Help: https://app.example.com/help
+
+Accel TRMS, 1 Example Road, Singapore 049483

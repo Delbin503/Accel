@@ -38,8 +38,8 @@
     
       /* ── Dark mode — honoring clients (Apple Mail, iOS, Outlook macOS) ── */
       @media (prefers-color-scheme: dark) {
-        .page      { background-color:#111010 !important; }
-        .card      { background-color:#191614 !important; }
+        .page      { background-color:#111010 !important; background-image:none !important; }
+        .card      { background-color:#191614 !important; background-image:none !important; }
         .t-head    { color:#FFFFFF !important; }
         .t-strong  { color:#FFFFFF !important; }
         .t-body    { color:#B8B3AF !important; }
@@ -71,10 +71,10 @@
       Two-factor authentication was {{action}} on your Accel account.
     </div>
 
-    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2F1EF;">
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" bgcolor="#F2F1EF" background="https://cdn.accel.com/email/auth-bg-tile.gif" style="background-color:#F2F1EF; background-image:url('https://cdn.accel.com/email/auth-bg-tile.gif'); background-repeat:repeat;">
       <tr>
         <td align="center" style="padding:40px 16px;">
-          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:16px; overflow:hidden;">
+          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; background-image:linear-gradient(180deg,#FFF3E8 0%,#FFFFFF 260px); border-radius:16px; overflow:hidden;">
 
             <tr>
               <td class="px" style="padding:36px 44px 8px 44px;">
