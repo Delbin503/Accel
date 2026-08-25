@@ -29,6 +29,7 @@ import {
   CircleDot,
   Eye,
   EyeOff,
+  RefreshCw,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,6 +47,7 @@ import { storageBandFor } from "@/types/nvr";
 import type { NvrData, NvrStatus, StorageBand, NvrChannel } from "@/types/nvr";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { SyncProgressModal } from "@/components/shared/SyncProgressModal";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 
@@ -366,7 +368,11 @@ function buildChannelRows(nvr: NvrData): ChannelRow[] {
     const cam = ch.cameraId ? MOCK_CAMERAS.find((c) => c.id === ch.cameraId) : null;
     return {
       ...ch,
-      cameraStatus: cam ? (cam.status === "online" ? "live" : "offline") : undefined,
+      cameraStatus: cam
+        ? (cam.status === "online" ? "live" : "offline")
+        : ch.nvrManaged
+        ? (ch.nvrRecording ? "live" : "offline")
+        : undefined,
       cameraArea: cam?.areaName,
       cameraSite: cam?.siteName,
       storageGb: channelStorageGb(nvr.id, ch),
@@ -442,12 +448,13 @@ interface NvrDrawerProps {
   onDelete: () => void;
   onCleanup: () => void;
   onExportAll: () => void;
+  onManualSync: () => void;
   onLinkCamera: (channel: number) => void;
   onUnlink: (channel: number) => void;
 }
 
 function NvrDrawer({
-  nvr, open, onClose, onOpenCamera, onEdit, onDelete, onCleanup, onExportAll, onLinkCamera, onUnlink,
+  nvr, open, onClose, onOpenCamera, onEdit, onDelete, onCleanup, onExportAll, onManualSync, onLinkCamera, onUnlink,
 }: NvrDrawerProps) {
   const [tab, setTab] = React.useState<DrawerTab>("overview");
   const [channelSearch, setChannelSearch] = React.useState("");
@@ -760,7 +767,7 @@ function NvrDrawer({
                             )}
                           </td>
                           <td className="px-3 py-2.5">
-                            <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId} />
+                            <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId || !!ch.nvrManaged} />
                           </td>
                           <td className="px-3 py-2.5 text-muted-foreground">
                             {ch.cameraArea ? (
@@ -840,6 +847,10 @@ function NvrDrawer({
                               <Video className="size-3" />
                               <span className="font-mono">{ch.cameraId}</span>
                             </button>
+                          ) : ch.nvrManaged ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-2 py-1 text-xs font-semibold text-warning">
+                              In use on NVR
+                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-md border border-success/30 bg-success/10 px-2 py-1 text-xs font-semibold text-success">
                               Available
@@ -850,7 +861,7 @@ function NvrDrawer({
                           )}
                         </td>
                         <td className="px-3 py-2.5">
-                          <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId} />
+                          <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId || !!ch.nvrManaged} />
                         </td>
                         <td className="px-3 py-2.5 text-muted-foreground">
                           {ch.cameraArea ? (
@@ -866,7 +877,7 @@ function NvrDrawer({
                           )}
                         </td>
                         <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
-                          {cam?.ipAddress ?? "—"}
+                          {cam?.ipAddress ?? ch.nvrIpAddress ?? "—"}
                         </td>
                         <td className="px-3 py-2.5 text-muted-foreground">
                           {ch.linkedAtDisplay ? (
@@ -888,6 +899,8 @@ function NvrDrawer({
                             >
                               <Unlink className="size-3.5" />
                             </button>
+                          ) : ch.nvrManaged ? (
+                            <span className="text-xs text-muted-foreground/70">NVR managed</span>
                           ) : (
                             <button
                               onClick={() => onLinkCamera(ch.channel)}
@@ -917,6 +930,10 @@ function NvrDrawer({
           <Button variant="outline" size="sm" className="gap-1.5" onClick={onExportAll}>
             <Download className="size-3.5" />
             Export Recordings
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={onManualSync}>
+            <RefreshCw className="size-3.5" />
+            Manual Sync
           </Button>
           <Button
             variant="outline"
@@ -1409,6 +1426,16 @@ function CleanupRunningModal({
     </Dialog>
   );
 }
+
+/* ── Manual Sync stages ──────────────────────────────────────────────────── */
+
+const SYNC_STAGES = [
+  "Connecting to NVR…",
+  "Reading channel list…",
+  "Reconciling recording index…",
+  "Updating storage stats…",
+  "Finalising…",
+];
 
 /* ── Clean Up Completed modal ────────────────────────────────────────────── */
 
@@ -2547,6 +2574,7 @@ export default function NvrDevicesPage({
     | { kind: "cleanup" }
     | { kind: "cleanup-running"; methodLabel: string; totalToProcess: number; freed: number; previous: number; processed: number }
     | { kind: "cleanup-done"; previous: number; freed: number; current: number; total: number; processed: { processed: number; outOf: number } }
+    | { kind: "sync-running" }
     | { kind: "export" }
     | { kind: "edit" }
     | { kind: "add" }
@@ -2556,6 +2584,12 @@ export default function NvrDevicesPage({
     | null
   >(null);
   const cleanupTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => () => {
+    if (cleanupTimerRef.current) clearTimeout(cleanupTimerRef.current);
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+  }, []);
   const pageSize = 10;
 
   React.useEffect(() => {
@@ -2653,6 +2687,38 @@ export default function NvrDevicesPage({
     }
     setModal(null);
     toast.success("Cleanup cancelled — no recordings were removed");
+  }
+
+  function handleManualSync() {
+    if (!drawerNvr) return;
+    // Drop any in-flight sync timer so its completion can't close this run's modal.
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    setModal({ kind: "sync-running" });
+
+    // Progress is animated inside the modal; commit the refreshed timestamps
+    // once the simulated sync finishes.
+    syncTimerRef.current = setTimeout(() => {
+      const now = new Date();
+      setNvrs((curr) => curr.map((n) => n.id === drawerNvr.id ? {
+        ...n,
+        lastSeenAt: now.toISOString(),
+        lastSeenDisplay: "Just now",
+        activeAt: now.toISOString(),
+        activeAtDisplay: now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+      } : n));
+      setModal(null);
+      syncTimerRef.current = null;
+      toast.success(`${drawerNvr.name} synced`);
+    }, 2600);
+  }
+
+  function handleSyncCancel() {
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = null;
+    }
+    setModal(null);
+    toast.success("Sync cancelled — no changes were applied");
   }
 
   function handleLink(channel: number, cameraId: string) {
@@ -2921,6 +2987,7 @@ export default function NvrDevicesPage({
         onDelete={() => setModal({ kind: "delete" })}
         onCleanup={() => setModal({ kind: "cleanup" })}
         onExportAll={() => setModal({ kind: "export" })}
+        onManualSync={handleManualSync}
         onLinkCamera={(channel) => setModal({ kind: "link", channel })}
         onUnlink={(channel) => setModal({ kind: "unlink", channel })}
       />
@@ -2938,6 +3005,14 @@ export default function NvrDevicesPage({
           methodLabel={modal.methodLabel}
           totalToProcess={modal.totalToProcess}
           onCancel={handleCleanupCancel}
+        />
+      )}
+      {modal?.kind === "sync-running" && (
+        <SyncProgressModal
+          title="Syncing NVR…"
+          deviceLabel={drawerNvr?.name ?? "NVR"}
+          stages={SYNC_STAGES}
+          onCancel={handleSyncCancel}
         />
       )}
       <AddNvrModal

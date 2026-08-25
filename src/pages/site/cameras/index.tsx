@@ -48,6 +48,7 @@ import type { CameraData, CameraStatus } from "@/types/cameras";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { RecordingCard } from "@/components/shared/RecordingCard";
+import { SyncProgressModal } from "@/components/shared/SyncProgressModal";
 import type { DeploymentData } from "@/types/deployments";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -423,6 +424,7 @@ function LinkNvrModal({
       nvrIp: n.ipAddress,
       channel: ch.channel,
       cameraId: ch.cameraId,
+      nvrManaged: !!ch.nvrManaged,
     }))
   );
   const q = search.trim().toLowerCase();
@@ -466,7 +468,7 @@ function LinkNvrModal({
           ) : (
             <ul className="space-y-1">
               {filtered.map((r) => {
-                const inUse = !!r.cameraId;
+                const inUse = !!r.cameraId || r.nvrManaged;
                 const selected = selection?.nvrId === r.nvrId && selection?.channel === r.channel;
                 return (
                   <li key={`${r.nvrId}-${r.channel}`}>
@@ -491,7 +493,7 @@ function LinkNvrModal({
                         <TruncatedText text={`${r.nvrModel} · ${r.nvrIp}`} className="mt-0.5 text-2xs text-muted-foreground" />
                       </div>
                       {inUse ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">In use · {r.cameraId}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">{r.cameraId ? `In use · ${r.cameraId}` : "In use on NVR"}</span>
                       ) : (
                         <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">Available</span>
                       )}
@@ -526,6 +528,7 @@ interface CameraDrawerProps {
   onOpenNvr: (nvrId: string) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onNvrSync: () => void;
   onLinkNvrRequest: (cameraId: string) => void;
   onUnlinkNvr: (cameraId: string) => void;
 }
@@ -539,6 +542,7 @@ function CameraDrawer({
   onOpenNvr,
   onEdit,
   onDelete,
+  onNvrSync,
   onLinkNvrRequest,
   onUnlinkNvr,
 }: CameraDrawerProps) {
@@ -1017,6 +1021,12 @@ function CameraDrawer({
               <Pencil className="size-3.5" />
               Edit Camera
             </Button>
+            {camera.nvrId && (
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={onNvrSync}>
+                <RefreshCw className="size-3.5" />
+                NVR Sync
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -1032,6 +1042,16 @@ function CameraDrawer({
     </Sheet>
   );
 }
+
+/* ── NVR Sync stages ─────────────────────────────────────────────────────── */
+
+const CAMERA_SYNC_STAGES = [
+  "Connecting to NVR…",
+  "Verifying channel link…",
+  "Reconciling recording index…",
+  "Refreshing stream status…",
+  "Finalising…",
+];
 
 /* ── Camera form modal (Add + Edit) ──────────────────────────────────────── */
 
@@ -1230,7 +1250,7 @@ function CameraFormModal({
     if (!selectedNvr) return [] as number[];
     const ownChannel = mode === "edit" && initial?.nvrId === selectedNvr.id ? initial.channel : null;
     return selectedNvr.channels
-      .filter((c) => !c.cameraId || c.channel === ownChannel)
+      .filter((c) => (!c.cameraId && !c.nvrManaged) || c.channel === ownChannel)
       .map((c) => c.channel);
   }, [selectedNvr, mode, initial]);
 
@@ -1651,8 +1671,10 @@ export default function CamerasPage({
     | { kind: "edit"; cameraId: string }
     | { kind: "delete"; cameraId: string }
     | { kind: "undeploy"; deploymentId: string }
+    | { kind: "nvr-sync"; cameraId: string }
     | null
   >(null);
+  const syncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageSize = 10;
 
   const filtered = React.useMemo(() => {
@@ -1755,9 +1777,29 @@ export default function CamerasPage({
     setModal(null);
     toast.success("Model undeployed from camera");
   }
+  function handleNvrSync() {
+    if (!drawerCamera) return;
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    setModal({ kind: "nvr-sync", cameraId: drawerCamera.id });
+    // Simulated sync — commit a success toast once the animated progress finishes.
+    syncTimerRef.current = setTimeout(() => {
+      setModal(null);
+      syncTimerRef.current = null;
+      toast.success(`${drawerCamera.name} synced with ${drawerCamera.nvrName ?? "NVR"}`);
+    }, 2600);
+  }
+  function handleSyncCancel() {
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = null;
+    }
+    setModal(null);
+    toast.success("Sync cancelled — no changes were applied");
+  }
 
   const editingCamera = modal?.kind === "edit" ? cameras.find((c) => c.id === modal.cameraId) : null;
   const deletingCamera = modal?.kind === "delete" ? cameras.find((c) => c.id === modal.cameraId) : null;
+  const syncingCamera = modal?.kind === "nvr-sync" ? cameras.find((c) => c.id === modal.cameraId) : null;
   const undeployingDep = modal?.kind === "undeploy" ? deployments.find((d) => d.id === modal.deploymentId) : null;
 
   // Sync the global MOCK_DEPLOYMENTS so the deployments shown in the drawer reflect local state
@@ -2005,6 +2047,7 @@ export default function CamerasPage({
         }}
         onEdit={() => drawerCamera && setModal({ kind: "edit", cameraId: drawerCamera.id })}
         onDelete={() => drawerCamera && setModal({ kind: "delete", cameraId: drawerCamera.id })}
+        onNvrSync={handleNvrSync}
         onLinkNvrRequest={(cameraId) => setLinkNvrCameraId(cameraId)}
         onUnlinkNvr={(cameraId) => {
           const target = cameras.find((c) => c.id === cameraId);
@@ -2057,6 +2100,14 @@ export default function CamerasPage({
           </>
         }
       />
+      {modal?.kind === "nvr-sync" && (
+        <SyncProgressModal
+          title="Syncing with NVR…"
+          deviceLabel={syncingCamera?.name ?? "Camera"}
+          stages={CAMERA_SYNC_STAGES}
+          onCancel={handleSyncCancel}
+        />
+      )}
       <ConfirmModal
         open={modal?.kind === "undeploy"}
         title="Undeploy Model"

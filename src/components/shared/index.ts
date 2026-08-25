@@ -16,6 +16,8 @@ export { Toolbar, ToolbarSearch } from "./Toolbar";
 export type { ToolbarSearchProps } from "./Toolbar";
 export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
+export { SyncProgressModal } from "./SyncProgressModal";
+export type { SyncProgressModalProps } from "./SyncProgressModal";
 export { DataTable } from "./DataTable";
 export type { DataTableColumn, DataTableProps } from "./DataTable";
 
