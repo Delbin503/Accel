@@ -11,11 +11,8 @@ import {
   Video,
   Check,
   X,
-  Pencil,
   RotateCw,
   MousePointer2,
-  Eye,
-  EyeOff,
   Save,
   Wifi,
   WifiOff,
@@ -43,7 +40,7 @@ import type { AreaShape, SiteData } from "@/types/sites";
 import type { CameraData, CameraStatus } from "@/types/cameras";
 
 type Tool = "select" | "draw-area";
-type Tab = "overview" | "floor-plan";
+
 
 const CAMERA_STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: string; label: string; icon: React.ElementType; markerFill: string }> = {
   online:              { bg: "bg-success/15 border-success/30",            text: "text-success",          dot: "bg-success",          label: "Online",  icon: Wifi,    markerFill: "#22C55E" },
@@ -167,7 +164,7 @@ function RotationHandle({ cx, cy, rotation, onChange }: { cx: number; cy: number
 
 function FloorPlanCanvas({
   site, siteCameras, tool, drafting, onSetDrafting, selected, onSelect, onCommitArea,
-  onMovePlacement, onRotatePlacement, showAreas, showCameras,
+  onMovePlacement, onRotatePlacement,
   onAreaEdit, onAreaDelete,
 }: {
   site: SiteData;
@@ -180,8 +177,6 @@ function FloorPlanCanvas({
   onCommitArea: (points: [number, number][], color: string) => void;
   onMovePlacement: (cameraId: string, x: number, y: number) => void;
   onRotatePlacement: (cameraId: string, deg: number) => void;
-  showAreas: boolean;
-  showCameras: boolean;
   onAreaEdit: (id: string) => void;
   onAreaDelete: (id: string) => void;
 }) {
@@ -268,7 +263,7 @@ function FloorPlanCanvas({
         onMouseLeave={() => { setHover(null); setDraggingCam(null); }}
       >
         {/* Areas */}
-        {showAreas && site.areas.filter((a) => a.points.length >= 3).map((a) => {
+        {site.areas.filter((a) => a.points.length >= 3).map((a) => {
           const isSel = selected?.type === "area" && selected.id === a.id;
           const cx = a.points.reduce((s, p) => s + p[0], 0) / a.points.length * 100;
           const cy = a.points.reduce((s, p) => s + p[1], 0) / a.points.length * 100;
@@ -349,7 +344,7 @@ function FloorPlanCanvas({
         )}
 
         {/* Cameras */}
-        {showCameras && siteCameras.map((c) => {
+        {siteCameras.map((c) => {
           const p = site.cameraPlacements[c.id];
           if (!p) return null;
           const isSel = selected?.type === "camera" && selected.id === c.id;
@@ -598,12 +593,10 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   const cameras = useCamerasStore((s) => s.cameras);
   const site = siteId ? sites.find((s) => s.id === siteId) ?? null : null;
 
-  const [tab, setTab] = React.useState<Tab>("overview");
+  const [floorPlanOpen, setFloorPlanOpen] = React.useState(false);
   const [tool, setTool] = React.useState<Tool>("select");
   const [drafting, setDrafting] = React.useState<{ points: [number, number][]; color: string } | null>(null);
   const [selected, setSelected] = React.useState<{ type: "area" | "camera"; id: string } | null>(null);
-  const [showAreas, setShowAreas] = React.useState(true);
-  const [showCameras, setShowCameras] = React.useState(true);
   const [editAreaTarget, setEditAreaTarget] = React.useState<AreaShape | null>(null);
   const [editSiteOpen, setEditSiteOpen] = React.useState(false);
   const [deleteSiteOpen, setDeleteSiteOpen] = React.useState(false);
@@ -613,12 +606,10 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
     if (open && initialEdit) setEditSiteOpen(true);
   }, [open, initialEdit, siteId]);
   const [pendingCameraId, setPendingCameraId] = React.useState<string | null>(null);
-  const [renamingId, setRenamingId] = React.useState<string | null>(null);
-  const [renameValue, setRenameValue] = React.useState("");
 
   React.useEffect(() => {
     if (open) {
-      setTab("overview");
+      setFloorPlanOpen(false);
       setTool("select");
       setDrafting(null);
       setSelected(null);
@@ -656,10 +647,11 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
       setSelected(null);
     } else {
       const id = uid("area");
-      addArea(site!.id, { id, name: `Area ${site!.areas.length + 1}`, color, points });
+      const name = `Area ${site!.areas.length + 1}`;
+      addArea(site!.id, { id, name, color, points });
       setSelected({ type: "area", id });
-      setRenamingId(id);
-      setRenameValue(`Area ${site!.areas.length + 1}`);
+      // Inline renaming is gone — send the user straight to Edit Area to name it.
+      setEditAreaTarget({ id, name, color, points });
     }
     setTool("select");
   }
@@ -676,7 +668,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   }
 
   function startNewArea() {
-    setTab("floor-plan");
+    setFloorPlanOpen(true);
     setTool("draw-area");
     setDrafting({ points: [], color: AREA_PALETTE[site!.areas.length % AREA_PALETTE.length] });
     toast.message("Drawing mode", { description: "Click points on the floor plan · double-click to close." });
@@ -685,30 +677,18 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   function startPlaceCamera(cameraId: string) {
     if (!site!.floorPlan) { toast.error("Upload a floor plan first"); return; }
     setPendingCameraId(cameraId);
-    setTab("floor-plan");
+    setFloorPlanOpen(true);
   }
 
   function selectArea(id: string) {
     setSelected({ type: "area", id });
     const a = site!.areas.find((x) => x.id === id);
     if (a && a.points.length === 0 && site!.floorPlan) {
-      setTab("floor-plan");
+      setFloorPlanOpen(true);
       setTool("draw-area");
       setDrafting({ points: [], color: a.color });
       toast.message(`Draw the shape for "${a.name}"`, { description: "Click to add points · double-click to close." });
     }
-  }
-
-  function startRename(area: AreaShape) {
-    setRenamingId(area.id);
-    setRenameValue(area.name);
-  }
-  function commitRename() {
-    if (renamingId && renameValue.trim()) {
-      updateArea(site!.id, renamingId, { name: renameValue.trim() });
-    }
-    setRenamingId(null);
-    setRenameValue("");
   }
 
   function confirmDeleteSite() {
@@ -717,11 +697,6 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
     onClose();
     toast.success(`${site!.name} deleted`);
   }
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "overview",   label: "Overview" },
-    { key: "floor-plan", label: "Floor Plan" },
-  ];
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -739,68 +714,54 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
               <X className="size-4" />
             </button>
           </div>
-          <div className="mt-3 flex items-center gap-1 border-t border-border">
-            {tabs.map((t) => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={cn("relative inline-flex items-center gap-2 px-3 py-2.5 text-base font-semibold transition-colors",
-                  tab === t.key ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                {t.label}
-                {tab === t.key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-              </button>
-            ))}
-          </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-5">
-          {tab === "overview" ? (
-            <OverviewTab site={site} siteCameras={siteCameras} onlineCount={onlineCount} placedCount={placedCount}
-              onGoFloorPlan={() => setTab("floor-plan")} />
-          ) : (
-            <FloorPlanTab
-              site={site}
-              siteCameras={siteCameras}
-              unplacedCameras={siteCameras.filter((c) => !site.cameraPlacements[c.id])}
-              tool={tool}
-              setTool={setTool}
-              drafting={drafting}
-              setDrafting={setDrafting}
-              pendingCameraId={pendingCameraId}
-              setPendingCameraId={setPendingCameraId}
-              selected={selected}
-              setSelected={setSelected}
-              showAreas={showAreas}
-              setShowAreas={setShowAreas}
-              showCameras={showCameras}
-              setShowCameras={setShowCameras}
-              renamingId={renamingId}
-              renameValue={renameValue}
-              setRenameValue={setRenameValue}
-              onCommitRename={commitRename}
-              onCancelRename={() => { setRenamingId(null); setRenameValue(""); }}
-              onStartRename={startRename}
-              onStartNewArea={startNewArea}
-              onPlaceCamera={startPlaceCamera}
-              onCommitArea={commitArea}
-              onMovePlacement={(id, x, y) => updatePlacement(site.id, id, { x, y })}
-              onRotatePlacement={(id, deg) => updatePlacement(site.id, id, { rotation: deg })}
-              onUpdatePlacement={(id, patch) => updatePlacement(site.id, id, patch)}
-              onSelectArea={selectArea}
-              onEditArea={(a) => setEditAreaTarget(a)}
-              onDeleteArea={(id) => {
-                deleteArea(site.id, id);
-                toast.success("Area deleted");
-                if (selected?.type === "area" && selected.id === id) setSelected(null);
-              }}
-              onRemovePlacement={(id) => {
-                removePlacement(site.id, id);
-                toast.success("Camera removed from plan");
-                if (selected?.type === "camera" && selected.id === id) setSelected(null);
-              }}
-              onFloorPlanUpload={handleFloorPlanUpload}
-              onSampleFloorPlan={handleSampleFloorPlan}
-            />
-          )}
+          <OverviewTab site={site} siteCameras={siteCameras} onlineCount={onlineCount} placedCount={placedCount}
+            onGoFloorPlan={() => setFloorPlanOpen(true)} />
         </div>
+
+        {/* Floor plan lives in its own modal so the editor gets the full width
+            it needs instead of being squeezed into the drawer. */}
+        <FloorPlanModal
+          open={floorPlanOpen}
+          onClose={() => {
+            setFloorPlanOpen(false);
+            setTool("select");
+            setDrafting(null);
+            setPendingCameraId(null);
+          }}
+          site={site}
+          siteCameras={siteCameras}
+          unplacedCameras={siteCameras.filter((c) => !site.cameraPlacements[c.id])}
+          tool={tool}
+          setTool={setTool}
+          drafting={drafting}
+          setDrafting={setDrafting}
+          pendingCameraId={pendingCameraId}
+          setPendingCameraId={setPendingCameraId}
+          selected={selected}
+          setSelected={setSelected}
+          onStartNewArea={startNewArea}
+          onPlaceCamera={startPlaceCamera}
+          onCommitArea={commitArea}
+          onMovePlacement={(id, x, y) => updatePlacement(site.id, id, { x, y })}
+          onRotatePlacement={(id, deg) => updatePlacement(site.id, id, { rotation: deg })}
+          onSelectArea={selectArea}
+          onEditArea={(a) => setEditAreaTarget(a)}
+          onDeleteArea={(id) => {
+            deleteArea(site.id, id);
+            toast.success("Area deleted");
+            if (selected?.type === "area" && selected.id === id) setSelected(null);
+          }}
+          onRemovePlacement={(id) => {
+            removePlacement(site.id, id);
+            toast.success("Camera removed from plan");
+            if (selected?.type === "camera" && selected.id === id) setSelected(null);
+          }}
+          onFloorPlanUpload={handleFloorPlanUpload}
+          onSampleFloorPlan={handleSampleFloorPlan}
+        />
 
         <EditAreaModal area={editAreaTarget} open={!!editAreaTarget} onClose={() => setEditAreaTarget(null)}
           onSave={(patch) => { if (editAreaTarget) updateArea(site.id, editAreaTarget.id, patch); setEditAreaTarget(null); toast.success("Area updated"); }} />
@@ -1122,17 +1083,18 @@ function SiteSectionTitle({ children, aside }: { children: React.ReactNode; asid
   );
 }
 
-/* ── Floor Plan Tab ──────────────────────────────────────────────────── */
+/* ── Floor Plan Modal ────────────────────────────────────────────────── */
 
-function FloorPlanTab({
+function FloorPlanModal({
+  open, onClose,
   site, siteCameras, unplacedCameras, tool, setTool, drafting, setDrafting,
   pendingCameraId, setPendingCameraId, selected, setSelected,
-  showAreas, setShowAreas, showCameras, setShowCameras,
-  renamingId, renameValue, setRenameValue, onCommitRename, onCancelRename,
-  onStartRename, onStartNewArea, onPlaceCamera, onCommitArea,
-  onMovePlacement, onRotatePlacement, onUpdatePlacement, onSelectArea, onEditArea, onDeleteArea, onRemovePlacement,
+  onStartNewArea, onPlaceCamera, onCommitArea,
+  onMovePlacement, onRotatePlacement, onSelectArea, onEditArea, onDeleteArea, onRemovePlacement,
   onFloorPlanUpload, onSampleFloorPlan,
 }: {
+  open: boolean;
+  onClose: () => void;
   site: SiteData;
   siteCameras: CameraData[];
   unplacedCameras: CameraData[];
@@ -1144,17 +1106,11 @@ function FloorPlanTab({
   setPendingCameraId: (id: string | null) => void;
   selected: { type: "area" | "camera"; id: string } | null;
   setSelected: (sel: { type: "area" | "camera"; id: string } | null) => void;
-  showAreas: boolean; setShowAreas: (v: boolean) => void;
-  showCameras: boolean; setShowCameras: (v: boolean) => void;
-  renamingId: string | null; renameValue: string; setRenameValue: (v: string) => void;
-  onCommitRename: () => void; onCancelRename: () => void;
-  onStartRename: (a: AreaShape) => void;
   onStartNewArea: () => void;
   onPlaceCamera: (cameraId: string) => void;
   onCommitArea: (points: [number, number][], color: string) => void;
   onMovePlacement: (id: string, x: number, y: number) => void;
   onRotatePlacement: (id: string, deg: number) => void;
-  onUpdatePlacement: (id: string, patch: Partial<{ fovAngle: number; range: number }>) => void;
   onSelectArea: (id: string) => void;
   onEditArea: (a: AreaShape) => void;
   onDeleteArea: (id: string) => void;
@@ -1163,47 +1119,36 @@ function FloorPlanTab({
   onSampleFloorPlan: () => void;
 }) {
   const placedCameras = siteCameras.filter((c) => !!site.cameraPlacements[c.id]);
-  const selCam = selected?.type === "camera" ? siteCameras.find((c) => c.id === selected.id) : undefined;
-  const selPlacement = selCam ? site.cameraPlacements[selCam.id] : undefined;
+  const [panelTab, setPanelTab] = React.useState<"areas" | "cameras">("areas");
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
-        {site.floorPlan && (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="flex max-h-[92vh] w-[1320px] max-w-[97vw] flex-col overflow-hidden p-0 sm:max-w-[97vw]">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold">Floor Plan · {site.name}</DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Drag a camera to reposition it, then drag its orange handle to set which way it faces.
+          </p>
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 overflow-hidden p-5">
+          <div className="flex min-h-0 flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        {tool === "draw-area" && drafting && drafting.points.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
-            <button onClick={() => setShowAreas(!showAreas)}
-              aria-pressed={showAreas}
-              className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
-                showAreas
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")}>
-              {showAreas ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-              Areas
-            </button>
-            <button onClick={() => setShowCameras(!showCameras)}
-              aria-pressed={showCameras}
-              className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
-                showCameras
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")}>
-              {showCameras ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-              Cameras
-            </button>
-            {tool === "draw-area" && drafting && drafting.points.length > 0 && (
-              <div className="ml-auto flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">{drafting.points.length} point{drafting.points.length === 1 ? "" : "s"}</span>
-                <Button variant="outline" onClick={() => setDrafting({ points: drafting.points.slice(0, -1), color: drafting.color })}>Undo</Button>
-                <Button onClick={() => { if (drafting.points.length >= 3) onCommitArea(drafting.points, drafting.color); }}
-                  disabled={drafting.points.length < 3} className="gap-1.5">
-                  <Check className="size-3.5" />
-                  Finish ({drafting.points.length})
-                </Button>
-                <Button variant="ghost" onClick={() => { setDrafting(null); setTool("select"); }} className="gap-1.5">
-                  <X className="size-3.5" />
-                  Cancel
-                </Button>
-              </div>
-            )}
+            <span className="mr-auto text-xs text-muted-foreground">
+              {drafting.points.length} point{drafting.points.length === 1 ? "" : "s"} placed
+            </span>
+            <Button variant="outline" onClick={() => setDrafting({ points: drafting.points.slice(0, -1), color: drafting.color })}>Undo</Button>
+            <Button onClick={() => { if (drafting.points.length >= 3) onCommitArea(drafting.points, drafting.color); }}
+              disabled={drafting.points.length < 3} className="gap-1.5">
+              <Check className="size-3.5" />
+              Finish ({drafting.points.length})
+            </Button>
+            <Button variant="ghost" onClick={() => { setDrafting(null); setTool("select"); }} className="gap-1.5">
+              <X className="size-3.5" />
+              Cancel
+            </Button>
           </div>
         )}
 
@@ -1220,65 +1165,9 @@ function FloorPlanTab({
               onCommitArea={onCommitArea}
               onMovePlacement={onMovePlacement}
               onRotatePlacement={onRotatePlacement}
-              showAreas={showAreas}
-              showCameras={showCameras}
               onAreaEdit={(id) => { const a = site.areas.find((x) => x.id === id); if (a) onEditArea(a); }}
               onAreaDelete={onDeleteArea}
             />
-            {/* Camera control panel — rotation + FOV + coverage range */}
-            {selCam && selPlacement && (
-              <div className="space-y-2 rounded-xl border border-border bg-card px-3 py-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-7 items-center justify-center rounded-full bg-secondary/15 text-secondary">
-                    <Video className="size-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <TruncatedText text={selCam.name} className="text-sm font-semibold text-foreground" />
-                    <TruncatedText title={`${selCam.id} · ${CAMERA_STATUS_STYLES[selCam.status].label}`} className="text-2xs text-muted-foreground"><span className="font-mono">{selCam.id}</span> · {CAMERA_STATUS_STYLES[selCam.status].label}</TruncatedText>
-                  </div>
-                  <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-                    onClick={() => onRemovePlacement(selCam.id)}>
-                    <Trash2 className="size-3" />
-                    Remove from plan
-                  </Button>
-                </div>
-                <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-2.5">
-                  {/* Rotation */}
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><RotateCw className="size-3" /> Facing</span>
-                      <span className="font-mono text-foreground">{selPlacement.rotation}°</span>
-                    </div>
-                    <input type="range" min={0} max={360} step={5}
-                      value={selPlacement.rotation}
-                      onChange={(e) => onRotatePlacement(selCam.id, Number(e.target.value))}
-                      className="w-full accent-primary" />
-                  </div>
-                  {/* FOV angle */}
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <span>FOV angle</span>
-                      <span className="font-mono text-foreground">{selPlacement.fovAngle ?? 90}°</span>
-                    </div>
-                    <input type="range" min={30} max={180} step={5}
-                      value={selPlacement.fovAngle ?? 90}
-                      onChange={(e) => onUpdatePlacement(selCam.id, { fovAngle: Number(e.target.value) })}
-                      className="w-full accent-secondary" />
-                  </div>
-                  {/* Range */}
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <span>Coverage</span>
-                      <span className="font-mono text-foreground">{Math.round(((selPlacement.range ?? 14) / 14) * 100)}%</span>
-                    </div>
-                    <input type="range" min={6} max={40} step={1}
-                      value={selPlacement.range ?? 14}
-                      onChange={(e) => onUpdatePlacement(selCam.id, { range: Number(e.target.value) })}
-                      className="w-full accent-info" />
-                  </div>
-                </div>
-              </div>
-            )}
             {pendingCameraId && (
               <div className="rounded-md border border-info/30 bg-info/[0.06] px-3 py-2 text-xs text-muted-foreground">
                 Placing camera at the centre of the plan… drag it to the right spot, then rotate using the orange handle.
@@ -1291,61 +1180,65 @@ function FloorPlanTab({
         )}
       </div>
 
-      {/* Side-by-side Areas + Cameras panels below the map */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
-            <div className="flex items-center gap-2">
-              <Shapes className="size-3.5 text-primary" />
-              <p className="text-sm font-bold text-foreground">Areas</p>
-              <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-bold text-muted-foreground">{site.areas.length}</span>
-            </div>
+      {/* Areas / Cameras — tabbed side panel */}
+      <div className="flex max-h-[60vh] w-full flex-col overflow-hidden rounded-xl border border-border bg-card lg:max-h-full lg:w-[380px] lg:flex-shrink-0">
+        {/* Tabs — same pattern as the NVR / Cameras detail drawers. */}
+        <div className="flex items-center gap-1 border-b border-border px-2">
+          {[
+            { key: "areas"   as const, label: "Areas",   icon: Shapes, badge: site.areas.length },
+            { key: "cameras" as const, label: "Cameras", icon: Video,  badge: siteCameras.length },
+          ].map(({ key, label, icon: Icon, badge }) => (
+            <button
+              key={key}
+              onClick={() => setPanelTab(key)}
+              className={cn(
+                "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                panelTab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="size-3.5" />
+              {label}
+              <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
+                {badge}
+              </span>
+              {panelTab === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+            </button>
+          ))}
+        </div>
+
+        {panelTab === "areas" ? (
+        <>
+          <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2">
+            <span className="text-2xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{site.areas.filter((a) => a.points.length >= 3).length}</span> drawn
+              {" · "}
+              <span className="font-semibold text-warning">{site.areas.filter((a) => a.points.length === 0).length}</span> pending
+            </span>
             <Button onClick={onStartNewArea} className="gap-1.5">
               <Plus className="size-3.5" />
               Add Area
             </Button>
           </div>
-          <div className="max-h-[260px] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {site.areas.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm italic text-muted-foreground">No areas yet.</p>
             ) : (
               site.areas.map((a) => {
                 const isSel = selected?.type === "area" && selected.id === a.id;
-                const camCount = siteCameras.filter((c) => c.areaId === a.id).length;
                 return (
                   <div key={a.id}
                     className={cn("group flex items-center gap-2.5 border-b border-border/60 px-3.5 py-2 last:border-b-0 transition-colors",
                       isSel ? "bg-primary/5" : "hover:bg-muted/40")}>
                     <button onClick={() => onSelectArea(a.id)} className="flex flex-1 items-center gap-2.5 text-left">
                       <span className="size-3 flex-shrink-0 rounded" style={{ background: a.color }} />
-                      {renamingId === a.id ? (
-                        <input
-                          autoFocus
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={onCommitRename}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") onCommitRename();
-                            if (e.key === "Escape") onCancelRename();
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-7 flex-1 rounded border border-primary bg-background px-2 text-sm focus:outline-none"
-                        />
-                      ) : (
-                        <TruncatedText text={a.name} className="text-sm font-semibold text-foreground" />
-                      )}
+                      <TruncatedText text={a.name} className="text-sm font-semibold text-foreground" />
                       <span className="ml-auto inline-flex items-center gap-2 text-2xs text-muted-foreground">
                         {a.points.length === 0
                           ? <span className="inline-flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 font-semibold text-warning">Not drawn</span>
-                          : <><CircleDot className="size-2.5 text-success" /> {camCount} cam{camCount === 1 ? "" : "s"}</>}
+                          : <CircleDot className="size-2.5 text-success" />}
                       </span>
                     </button>
                     <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button onClick={() => onStartRename(a)}
-                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-                        title="Rename">
-                        <Pencil className="size-3" />
-                      </button>
                       <button onClick={() => onEditArea(a)}
                         className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                         title="Edit color">
@@ -1362,81 +1255,86 @@ function FloorPlanTab({
               })
             )}
           </div>
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
-            <div className="flex items-center gap-2">
-              <Video className="size-3.5 text-primary" />
-              <p className="text-sm font-bold text-foreground">Cameras on Plan</p>
-              <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-bold text-muted-foreground">{placedCameras.length}</span>
-            </div>
+        </>
+        ) : (
+        <>
+          <div className="flex items-center justify-end gap-2 border-b border-border px-3.5 py-2">
+            <span className="text-2xs text-muted-foreground">
+              <span className="font-semibold text-success">{placedCameras.length}</span> on plan · <span className="font-semibold text-warning">{unplacedCameras.length}</span> unplaced
+            </span>
           </div>
-          <div className="max-h-[180px] overflow-y-auto">
-            {placedCameras.length === 0 ? (
-              <p className="px-4 py-4 text-center text-sm italic text-muted-foreground">
-                {site.floorPlan ? "No cameras placed yet." : "Upload a floor plan first."}
-              </p>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {siteCameras.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm italic text-muted-foreground">No cameras for this site.</p>
             ) : (
-              placedCameras.map((c) => {
-                const isSel = selected?.type === "camera" && selected.id === c.id;
-                const area = site.areas.find((a) => a.id === c.areaId);
-                const cs = CAMERA_STATUS_STYLES[c.status];
-                return (
-                  <div key={c.id}
-                    className={cn("group flex items-center gap-2.5 border-b border-border/60 px-3.5 py-2 last:border-b-0 transition-colors",
-                      isSel ? "bg-primary/5" : "hover:bg-muted/40")}>
-                    <button onClick={() => setSelected({ type: "camera", id: c.id })} className="flex flex-1 items-center gap-2.5 text-left">
-                      <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded-full", cs.bg)}>
-                        <Video className={cn("size-3", cs.text)} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <TruncatedText text={c.name} className="text-sm font-semibold text-foreground" />
-                        <TruncatedText
-                          title={`${area ? area.name : "Unassigned"} · ${c.id}`}
-                          className="text-2xs text-muted-foreground"
-                        >
-                          {area ? area.name : "Unassigned"} · <span className="font-mono">{c.id}</span>
-                        </TruncatedText>
+              [...siteCameras]
+                .sort((a, b) => Number(!!site.cameraPlacements[a.id]) - Number(!!site.cameraPlacements[b.id]))
+                .map((c) => {
+                  const placement = site.cameraPlacements[c.id];
+                  const placed = !!placement;
+                  const isSel = selected?.type === "camera" && selected.id === c.id;
+                  const area = site.areas.find((a) => a.id === c.areaId);
+                  const cs = CAMERA_STATUS_STYLES[c.status];
+                  return (
+                    <div key={c.id} className={cn("border-b border-border/60 last:border-b-0 transition-colors", isSel && "bg-primary/5")}>
+                      <div className={cn("flex items-center gap-2.5 px-3.5 py-2", !isSel && "hover:bg-muted/40")}>
+                        <button onClick={() => setSelected({ type: "camera", id: c.id })} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+                          <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded-full", cs.bg)}>
+                            <Video className={cn("size-3", cs.text)} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <TruncatedText text={c.name} className="text-sm font-semibold text-foreground" />
+                            <TruncatedText title={`${area ? area.name : "Unassigned"} · ${c.id}`} className="text-2xs text-muted-foreground">
+                              {area ? area.name : "Unassigned"} · <span className="font-mono">{c.id}</span>
+                            </TruncatedText>
+                          </div>
+                        </button>
+                        {placed ? (
+                          <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-2xs font-semibold text-success">
+                            <CircleDot className="size-2.5" /> On plan
+                          </span>
+                        ) : (
+                          <Button onClick={() => onPlaceCamera(c.id)} disabled={!site.floorPlan} className="flex-shrink-0 gap-1.5">
+                            <Plus className="size-3" />
+                            Place
+                          </Button>
+                        )}
                       </div>
-                    </button>
-                  </div>
-                );
-              })
+
+                      {/* Inline adjustment controls for the selected, placed camera */}
+                      {isSel && placed && placement && (
+                        <div className="space-y-2 border-t border-border/60 bg-background/40 px-3.5 py-2.5">
+                          <p className="flex items-start gap-1.5 text-2xs leading-relaxed text-muted-foreground">
+                            <RotateCw className="mt-px size-3 flex-shrink-0 text-primary" />
+                            <span>
+                              Facing <span className="font-mono text-foreground">{placement.rotation}°</span> — drag the orange
+                              handle on the plan to change it.
+                            </span>
+                          </p>
+                          <div className="flex justify-end">
+                            <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+                              onClick={() => onRemovePlacement(c.id)}>
+                              <Trash2 className="size-3" />
+                              Remove from plan
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
             )}
           </div>
-        </div>
-
-        {unplacedCameras.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-warning/30 bg-warning/[0.06]">
-            <div className="flex items-center justify-between gap-2 border-b border-warning/20 px-3.5 py-2.5">
-              <div className="flex items-center gap-2">
-                <Video className="size-3.5 text-warning" />
-                <p className="text-sm font-bold text-foreground">Unplaced</p>
-                <span className="rounded-full bg-warning/15 px-1.5 py-px text-2xs font-bold text-warning">{unplacedCameras.length}</span>
-              </div>
-            </div>
-            <div className="max-h-[160px] overflow-y-auto">
-              {unplacedCameras.map((c) => {
-                const cs = CAMERA_STATUS_STYLES[c.status];
-                return (
-                  <div key={c.id} className="flex items-center gap-2.5 border-b border-warning/10 px-3.5 py-2 last:border-b-0">
-                    <span className={cn("size-1.5 flex-shrink-0 rounded-full", cs.dot)} />
-                    <div className="min-w-0 flex-1">
-                      <TruncatedText text={c.name} className="text-sm font-semibold text-foreground" />
-                      <TruncatedText title={`${c.id} · ${cs.label}`} className="text-2xs text-muted-foreground"><span className="font-mono">{c.id}</span> · {cs.label}</TruncatedText>
-                    </div>
-                    <Button onClick={() => onPlaceCamera(c.id)} disabled={!site.floorPlan} className="gap-1.5">
-                      <Plus className="size-3" />
-                      Place
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        </>
         )}
       </div>
-    </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end border-t border-border px-5 py-3.5">
+          <Button onClick={onClose}>Done</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
