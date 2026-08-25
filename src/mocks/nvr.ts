@@ -15,16 +15,32 @@ export const NVR_CHANNEL_MAP: Record<string, { nvrId: string; channel: number }>
   // Cam-32 intentionally unlinked
 };
 
+/* Channels with a camera wired straight into the NVR (managed by the recorder,
+   not registered as a standalone Camera in the app). */
+export const NVR_MANAGED_CHANNELS: Record<string, { channel: number; ip: string; recording: boolean }[]> = {
+  "NVR-001": [
+    { channel: 4, ip: "192.168.0.63", recording: false },
+    { channel: 5, ip: "192.168.0.62", recording: true },
+  ],
+  "NVR-002": [{ channel: 4, ip: "192.168.1.71", recording: true }],
+  "NVR-003": [{ channel: 4, ip: "192.168.2.44", recording: true }],
+};
+
 function genChannels(nvrId: string, total: number): NvrData["channels"] {
+  const managed = NVR_MANAGED_CHANNELS[nvrId] ?? [];
   const rows: NvrData["channels"] = [];
   for (let i = 1; i <= total; i++) {
     const camEntry = Object.entries(NVR_CHANNEL_MAP).find(
       ([, v]) => v.nvrId === nvrId && v.channel === i
     );
+    const managedEntry = !camEntry ? managed.find((m) => m.channel === i) : undefined;
     rows.push({
       channel: i,
       cameraId: camEntry?.[0] ?? null,
       cameraName: camEntry?.[0] ?? null,
+      nvrManaged: !!managedEntry,
+      nvrIpAddress: managedEntry?.ip,
+      nvrRecording: managedEntry?.recording,
     });
   }
   return rows;
@@ -49,7 +65,7 @@ export const MOCK_NVRS: NvrData[] = [
     retentionDays: 30,
     cleanupSchedule: "auto-age",
     channels: genChannels("NVR-001", 16),
-    channelsInUse: 3,
+    channelsInUse: 5,
     channelCount: 16,
     lastSeenAt: "2026-05-25T10:14:00",
     lastSeenDisplay: "25 May 2026, 10:14",
@@ -74,7 +90,7 @@ export const MOCK_NVRS: NvrData[] = [
     retentionDays: 90,
     cleanupSchedule: "auto-age",
     channels: genChannels("NVR-002", 16),
-    channelsInUse: 3,
+    channelsInUse: 4,
     channelCount: 16,
     lastSeenAt: "2026-05-25T10:12:00",
     lastSeenDisplay: "25 May 2026, 10:12",
@@ -99,7 +115,7 @@ export const MOCK_NVRS: NvrData[] = [
     retentionDays: 14,
     cleanupSchedule: "auto-channel",
     channels: genChannels("NVR-003", 8),
-    channelsInUse: 3,
+    channelsInUse: 4,
     channelCount: 8,
     lastSeenAt: "2026-05-25T10:11:00",
     lastSeenDisplay: "25 May 2026, 10:11",

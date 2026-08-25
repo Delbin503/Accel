@@ -66,6 +66,7 @@ import {
 } from "@/mocks/cloudPlans";
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
+import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
@@ -507,6 +508,8 @@ export default function SignUpPage({
       `Invited ${rows.length} ${rows.length === 1 ? "person" : "people"} as ${USER_ROLE_LABELS[role]}`
     );
   }
+  const [showComplete, setShowComplete] = React.useState(false);
+
   function finish() {
     setHasCreatedSite(true);
     setHasActiveSubscription(true);
@@ -514,6 +517,11 @@ export default function SignUpPage({
     toast.success(`Welcome to Accel, ${fullName.split(" ")[0] || "there"}! 🎉`, {
       description: "Your workspace is ready.",
     });
+    setShowComplete(true);
+  }
+
+  function enterDashboard() {
+    setShowComplete(false);
     navigate("/", { replace: true });
   }
 
@@ -1530,6 +1538,12 @@ export default function SignUpPage({
           onInvite={sendInvites}
           siteName={siteName}
           currentInvites={invites}
+        />
+
+        <SetupCompleteModal
+          open={showComplete}
+          onEnter={enterDashboard}
+          workspaceName={siteName || undefined}
         />
       </WizardShell>
     );

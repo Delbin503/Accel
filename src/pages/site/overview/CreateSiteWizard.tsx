@@ -498,13 +498,10 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 </Button>
               </>
             ) : (
-              <>
-                <Button variant="outline" onClick={() => create(false)}>Create & Close</Button>
-                <Button onClick={() => create(true)} className="gap-1.5">
-                  <Check className="size-3.5" />
-                  Create & Open Editor
-                </Button>
-              </>
+              <Button onClick={() => create(false)} className="gap-1.5">
+                <Check className="size-3.5" />
+                Create & Close
+              </Button>
             )}
           </div>
         </div>

@@ -54,6 +54,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
 import { OnPremStepBar, type OnPremStepKey } from "@/components/shared/OnPremStepBar";
+import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import { MOCK_SEATS } from "@/mocks/licenses";
 import type { UserRole } from "@/types/users";
@@ -283,6 +284,9 @@ export default function OnPremSetupPage({
   const [members, setMembers] = React.useState<Member[]>([]);
   const [memberModalOpen, setMemberModalOpen] = React.useState(false);
 
+  /* Setup-complete modal — shown after finishSetup, before navigating home. */
+  const [showComplete, setShowComplete] = React.useState(false);
+
   function pickLicenseFile() {
     // Demo dropzone: simulate a chosen file, then auto-validate.
     const name = `entitlement-account.lic`;
@@ -407,7 +411,7 @@ export default function OnPremSetupPage({
       id: "usr-onprem-001",
       name: ownerFullName || "Super Admin",
       initials,
-      role: "admin",
+      role: "owner",
       email: ownerEmail.trim() || bootstrapUsername,
       username: ownerEmail.trim() || bootstrapUsername,
       notificationCount: 0,
@@ -424,6 +428,11 @@ export default function OnPremSetupPage({
     toast.success("Setup complete", {
       description: `${siteName.trim()} is now ready. Members can sign in with their codes.`,
     });
+    setShowComplete(true);
+  }
+
+  function enterDashboard() {
+    setShowComplete(false);
     navigate("/", { replace: true });
   }
 
@@ -862,6 +871,12 @@ export default function OnPremSetupPage({
         onInvite={sendInvites}
         siteName={siteName || "Sembawang Naval Base"}
         currentMembers={members}
+      />
+
+      <SetupCompleteModal
+        open={showComplete}
+        onEnter={enterDashboard}
+        workspaceName={siteName || undefined}
       />
     </WizardShell>
   );

@@ -8,6 +8,12 @@ export interface NvrChannel {
   channel: number;
   cameraId: string | null;
   cameraName: string | null;
+  /** Camera plugged directly into the NVR channel but not registered as a managed Camera. */
+  nvrManaged?: boolean;
+  /** IP the NVR reports for an NVR-managed channel. */
+  nvrIpAddress?: string;
+  /** Whether the NVR-managed channel is actively recording. */
+  nvrRecording?: boolean;
 }
 
 export interface NvrData {
