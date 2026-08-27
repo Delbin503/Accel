@@ -1,11 +1,49 @@
 <!DOCTYPE html>
 <!--
-  Accel — User Invitation (transactional, P1).
+  Accel — User Invitation (transactional, P1). LIGHT + DARK.
 
-  Sent when an admin invites someone from the User Management panel.
-  Faithful build of the Accel invitation design (Figma node 3468:1489):
-  dark card, Accel orange, Manrope type. This is the base template every
-  other Accel email is modelled on.
+  Sent when an admin invites someone from the User Management panel. The
+  invitee may or may not already have an Accel account, so the copy covers
+  both paths. {{inviteeName}} personalises the greeting.
+
+  SHELL — mirrors the canonical account-deletion-request.html, built from
+  Figma node 5809:211284 ("Terra HSD · Platform", file rcYvUHskp6PxqJEvauMxFY).
+  Every template in this folder shares this structure exactly:
+
+    1. browser bar     "View this email in your browser"  #F9FAFB, 12px pad
+    2. header          centred Accel wordmark, 32px top / 24px bottom
+    3. hero heading    30px, #1F2937, CENTRED, -1px tracking
+    4. greeting        16px bold #111111
+    5. body copy       14px / 24px line-height, #4B4B4B
+    6. detail card     #F4F4F6, 12px radius, 24px pad, inline "Label: value"
+    7. notice block    bold 14px #111111 header + body copy
+    8. CTA             LEFT-aligned, #FE5C01, 8px radius, 12px/28px pad
+    9. brand panel     200px tall, 16px radius, tiled texture + wordmark
+   10. sign-off        body copy, "Thanks," / bold "Sigmawave Team"
+   11. footer          #F6F5F4, social row, disclaimer, orange pipe-links
+
+  Deliberate deviations from the Figma frame
+  ------------------------------------------
+  · Footer type is 12px, not the design's 11px/10px. Anything under 12px is
+    blocked by this project's email standard (Gmail Android up-scales it and
+    breaks the column widths). Everything else matches the frame.
+  · The design is light-only; the dark palette below is our own extension so
+    the mail does not get force-inverted into something unreadable.
+  · Figma renders the brand panel with an opaque texture over a brown→orange
+    gradient. That texture is byte-identical to assets/auth-bg-tile.gif, so
+    the panel just reuses it — the gradient never shows and is dropped.
+
+  Theming
+  -------
+  · Light palette is the DEFAULT — it is what Outlook Windows and every
+    non-honoring client renders.
+  · @media (prefers-color-scheme: dark) supplies the dark palette for honoring
+    clients (Apple Mail, iOS, Outlook macOS).
+  · [data-ogsc] hooks pin the light palette on force-inverting clients
+    (Outlook.com, some Gmail Android builds).
+  · Logo is a light/dark inline-SVG wordmark pair swapped by color scheme
+    (host as PNGs before sending — Gmail strips inline SVG).
+  · The orange CTA and footer links stay #FE5C01 in both modes by design.
 
   Merge tags
   ----------
@@ -13,6 +51,7 @@
   {{inviteeName}}   e.g. "Mark Simpson"
   {{siteName}}      e.g. "Astra HQ"      — assigned site(s)
   {{acceptUrl}}     the one-time invitation link
+  {{webviewUrl}}    hosted browser version of this email
   {{supportEmail}}  e.g. "support@accel.com"
 -->
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -25,139 +64,208 @@
     <meta name="supported-color-schemes" content="light dark" />
     <title>You've been invited to Accel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root { color-scheme: light dark; supported-color-schemes: light dark; }
-      body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #F2F1EF; }
-      table { border-collapse: collapse; }
-      img { border: 0; line-height: 100%; outline: none; text-decoration: none; }
-      a { text-decoration: none; }
-      @media only screen and (max-width: 620px) {
-        .container { width: 100% !important; }
-        .px { padding-left: 28px !important; padding-right: 28px !important; }
-        .btn-a { display: block !important; }
+      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#F2F1EF; }
+      table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+      img { border:0; line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
+      a { text-decoration:none; }
+
+      @media only screen and (max-width:620px) {
+        .container { width:100% !important; }
+        .px        { padding-left:20px !important; padding-right:20px !important; }
+        .px-foot   { padding-left:24px !important; padding-right:24px !important; }
+        .h1        { font-size:24px !important; line-height:32px !important; }
+        .btn-a     { display:block !important; text-align:center !important; }
       }
-    
+
       /* ── Dark mode — honoring clients (Apple Mail, iOS, Outlook macOS) ── */
       @media (prefers-color-scheme: dark) {
-        .page      { background-color:#111010 !important; background-image:none !important; }
-        .card      { background-color:#191614 !important; background-image:none !important; }
+        .page      { background-color:#111010 !important; }
+        .card      { background-color:#191614 !important; }
+        .bar       { background-color:#1C1917 !important; }
+        .bar-t     { color:#8A857F !important; }
         .t-head    { color:#FFFFFF !important; }
         .t-strong  { color:#FFFFFF !important; }
         .t-body    { color:#B8B3AF !important; }
         .t-muted   { color:#8A857F !important; }
-        .hairline  { border-color:#2E2A28 !important; }
-        .kv        { background-color:#201C1A !important; border-color:#34302E !important; }
+        .kv        { background-color:#201C1A !important; }
         .kv-label  { color:#8A857F !important; }
         .kv-value  { color:#FFFFFF !important; }
-        .kv-sub    { color:#B8B3AF !important; }
+        .panel     { background-color:#201C1A !important; background-image:none !important; }
+        .foot      { background-color:#17130F !important; }
+        .soc path  { stroke:#B8B3AF !important; }
         .logo-light { display:none !important; }
         .logo-dark  { display:block !important; max-height:none !important; overflow:visible !important; }
-        .foot-link { color:#B8B3AF !important; }
       }
+
       /* ── Force-inverting clients (Outlook.com) — pin the light palette ── */
       [data-ogsc] .page     { background-color:#F2F1EF !important; }
       [data-ogsc] .card     { background-color:#FFFFFF !important; }
-      [data-ogsc] .t-head   { color:#141414 !important; }
-      [data-ogsc] .t-strong { color:#141414 !important; }
-      [data-ogsc] .t-body   { color:#57534E !important; }
-      [data-ogsc] .t-muted  { color:#78716C !important; }
-      [data-ogsc] .hairline { border-color:#E7E5E1 !important; }
-      [data-ogsc] .kv       { background-color:#FAF9F8 !important; border-color:#E7E5E1 !important; }
-      [data-ogsc] .kv-value { color:#141414 !important; }
-      [data-ogsc] .foot-link{ color:#78716C !important; }
+      [data-ogsc] .bar      { background-color:#F9FAFB !important; }
+      [data-ogsc] .bar-t    { color:#9CA3AF !important; }
+      [data-ogsc] .t-head   { color:#1F2937 !important; }
+      [data-ogsc] .t-strong { color:#111111 !important; }
+      [data-ogsc] .t-body   { color:#4B4B4B !important; }
+      [data-ogsc] .t-muted  { color:#4B4B4B !important; }
+      [data-ogsc] .kv       { background-color:#F4F4F6 !important; }
+      [data-ogsc] .kv-label { color:#4B4B4B !important; }
+      [data-ogsc] .kv-value { color:#4B4B4B !important; }
+      [data-ogsc] .foot     { background-color:#F6F5F4 !important; }
+      [data-ogsc] .soc path { stroke:#4B4B4B !important; }
     </style>
   </head>
-  <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Manrope','Helvetica Neue',Arial,sans-serif;">
-    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF;">
+  <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF; opacity:0;">
       {{orgName}} invited you to join {{siteName}} on Accel. Accept your invitation to get started.
+      &#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;
     </div>
 
-    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" bgcolor="#F2F1EF" background="https://cdn.accel.com/email/auth-bg-tile.gif" style="background-color:#F2F1EF; background-image:url('https://cdn.accel.com/email/auth-bg-tile.gif'); background-repeat:repeat;">
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F2F1EF" style="background-color:#F2F1EF;">
       <tr>
         <td align="center" style="padding:40px 16px;">
-          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; background-image:linear-gradient(180deg,#FFF3E8 0%,#FFFFFF 260px); border-radius:16px; overflow:hidden;">
+          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
 
-            <!-- Logo -->
+            <!-- 1 · Browser bar -->
             <tr>
-              <td class="px" style="padding:36px 44px 8px 44px;">
-                <div class="logo-light"><svg width="110" height="45" viewBox="10 5 110 45" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
-                <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="110" height="45" viewBox="10 5 110 45" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
+              <td class="bar" align="center" bgcolor="#F9FAFB" style="padding:12px 24px; background-color:#F9FAFB;">
+                <a class="bar-t" href="{{webviewUrl}}" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#9CA3AF; text-decoration:none;">View this email in your browser</a>
               </td>
             </tr>
 
-            <!-- Heading -->
+            <!-- 2 · Header — centred wordmark (inline SVG; host as PNG before sending) -->
             <tr>
-              <td class="px" style="padding:24px 44px 0 44px;">
-                <h1 class="t-head" style="margin:0; font-size:26px; line-height:1.3; font-weight:700; color:#141414;">
-                  You've been invited to {{orgName}}
-                </h1>
+              <td align="center" style="padding:32px 32px 24px 32px;">
+                <div class="logo-light"><svg width="100" height="38" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
+                <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="100" height="38" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
               </td>
             </tr>
 
-            <!-- Body -->
+            <!-- 3 · Hero heading — centred -->
             <tr>
-              <td class="px t-body" style="padding:20px 44px 0 44px; font-size:15px; line-height:1.7; color:#57534E;">
-                <p style="margin:0 0 16px 0;">Dear {{inviteeName}},</p>
-                <p style="margin:0 0 16px 0;">
-                  <strong class="t-strong" style="color:#141414;">{{orgName}}</strong> has invited you to join
-                  <strong class="t-strong" style="color:#141414;">{{siteName}}</strong> on Accel.
-                </p>
+              <td class="px" align="center" style="padding:0 32px 24px 32px;">
+                <h1 class="h1 t-head" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:30px; line-height:38px; font-weight:500; color:#1F2937; letter-spacing:-1px; text-align:center; mso-line-height-rule:exactly;">You've been invited to {{orgName}}</h1>
+              </td>
+            </tr>
+
+            <!-- 4 · Greeting -->
+            <tr>
+              <td class="px" style="padding:0 32px;">
+                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:24px; font-weight:700; color:#111111;">Dear {{inviteeName}},</p>
+              </td>
+            </tr>
+
+            <!-- 5 · Body copy -->
+            <tr>
+              <td class="px t-body" style="padding:16px 32px 0 32px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
                 <p style="margin:0;">
-                  If you already have an Accel account with this email, you'll be added to the
-                  organization automatically when you click below:
+                  {{orgName}} has invited you to join {{siteName}} on Accel. If you already have an Accel
+                  account with this email, you'll be added to the organization automatically when you
+                  click below:
                 </p>
               </td>
             </tr>
 
-            <!-- CTA -->
+            <!-- 6 · Detail card -->
             <tr>
-              <td class="px" align="center" style="padding:28px 44px 0 44px;">
-                <!--[if mso]>
-                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{acceptUrl}}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
-                  <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:bold;">Accept Invitation</center>
-                </v:roundrect>
-                <![endif]-->
-                <!--[if !mso]><!-- -->
-                <a class="btn-a" href="{{acceptUrl}}" style="background-color:#FE5C01; color:#ffffff; display:inline-block; font-size:15px; font-weight:700; line-height:48px; text-align:center; text-decoration:none; padding:0 34px; border-radius:8px;">
-                  Accept Invitation
-                </a>
-                <!--<![endif]-->
+              <td class="px" style="padding:24px 32px 0 32px;">
+                <table role="presentation" class="kv" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F4F4F6" style="background-color:#F4F4F6; border-radius:12px;">
+                  <tr>
+                    <td style="padding:24px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; mso-line-height-rule:exactly;">
+                      <p class="kv-label" style="margin:0; color:#4B4B4B;">Organization: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{orgName}}</span></p>
+                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Site: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{siteName}}</span></p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
-            <!-- Body cont. -->
+            <!-- 7 · Notice block — bold header + body -->
             <tr>
-              <td class="px t-body" style="padding:28px 44px 0 44px; font-size:15px; line-height:1.7; color:#57534E;">
-                <p style="margin:0 0 16px 0;">
+              <td class="px" style="padding:24px 32px 0 32px;">
+                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">New to Accel? &#128274;</p>
+                <p class="t-body" style="margin:16px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
                   If you're new to Accel, you'll need to create an account using this email to complete
-                  the invitation and join the team.
-                </p>
-                <p style="margin:0;">
-                  If you didn't expect this invitation, feel free to ignore this email. If you have any
-                  questions or need assistance, feel free to contact our support team.
+                  the invitation and join the team. If you didn't expect this invitation, feel free to
+                  ignore this email. If you have any questions or need assistance, feel free to contact
+                  our support team.
                 </p>
               </td>
             </tr>
 
-            <!-- Sign-off -->
+            <!-- 8 · CTA — left-aligned -->
             <tr>
-              <td class="px t-body" style="padding:24px 44px 4px 44px; font-size:15px; line-height:1.7; color:#57534E;">
-                <p style="margin:0;">Thanks,</p>
-                <p class="t-head" style="margin:0; color:#141414; font-weight:600;">Sigmawave Team</p>
+              <td class="px" align="left" style="padding:24px 32px 0 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td align="center" bgcolor="#FE5C01" style="border-radius:8px;">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{acceptUrl}}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;">Accept Invitation</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a class="btn-a" href="{{acceptUrl}}" style="display:inline-block; padding:12px 28px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Accept Invitation</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr></table>
               </td>
             </tr>
 
-            <!-- Footer -->
+            <!-- 9 · Brand panel — tiled texture behind the wordmark -->
             <tr>
-              <td class="px" style="padding:28px 44px 36px 44px;">
-                <div class="hairline t-muted" style="border-top:1px solid #E7E5E1; padding-top:18px; font-size:12px; line-height:1.6; color:#78716C;">
-                  <p style="margin:0 0 4px 0;">
-                    Need help? Contact <a href="mailto:{{supportEmail}}" class="foot-link" style="color:#78716C; text-decoration:underline;">{{supportEmail}}</a>.
-                  </p>
-                  <p class="t-muted" style="margin:0; color:#A8A29E;">&copy; Accel — Threat &amp; Risk Monitoring</p>
-                </div>
+              <td class="px" style="padding:24px 32px;">
+                <table role="presentation" class="panel" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1F0EE" background="https://cdn.accel.com/email/auth-bg-tile.gif" style="background-color:#F1F0EE; background-image:url('https://cdn.accel.com/email/auth-bg-tile.gif'); background-repeat:repeat; border-radius:16px;">
+                  <tr>
+                    <td align="center" height="200" style="height:200px; padding:24px;">
+                      <div class="logo-light"><svg width="150" height="57" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
+                      <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="150" height="57" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 10 · Sign-off -->
+            <tr>
+              <td class="px" style="padding:0 32px 40px 32px;">
+                <p class="t-body" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">Thanks,</p>
+                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:700; color:#111111;">Sigmawave Team</p>
+              </td>
+            </tr>
+
+            <!-- 11 · Footer -->
+            <tr>
+              <td class="px-foot foot" bgcolor="#F6F5F4" style="padding:40px 48px 64px 48px; background-color:#F6F5F4;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <!-- Social row -->
+                  <tr>
+                    <td style="padding:0 0 24px 0;">
+                      <a href="https://twitter.com/sigmawaveai" aria-label="Twitter" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M15.0005 5.54939C15.9756 4.57435 16.5006 2.99928 16.5006 2.99928C16.5006 2.99928 15.0755 3.89932 14.2504 3.89932C12.0002 1.79922 8.32495 3.5993 9 6.74945C6.4498 6.82445 3.89959 5.6994 2.24946 3.74931C0.37431 7.19947 2.24946 11.6247 5.99976 12.7497C4.79966 13.7998 3.14953 14.3248 1.4994 14.2498C7.94992 18.525 16.2006 13.0497 15.0005 5.54939Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/></svg></a><a href="https://www.facebook.com/sigmawave.ai" aria-label="Facebook" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M11.2502 1.4994H13.5V4.49964H11.2502C11.0513 4.49964 10.8605 4.57866 10.7199 4.71933C10.5792 4.85999 10.5002 5.05077 10.5002 5.2497V7.49988H13.5L12.7501 10.5001H10.5002V16.5006H7.50044V10.5001H5.2506V7.49988H7.50044V5.2497C7.50044 4.25506 7.8955 3.30116 8.59871 2.59784C9.30192 1.89452 10.2557 1.4994 11.2502 1.4994Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/></svg></a><a href="https://www.instagram.com/sigmawave.ai" aria-label="Instagram" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M13.1253 4.87467H13.1328M5.2497 1.4994H12.7503C14.8215 1.4994 16.5006 3.17847 16.5006 5.2497V12.7503C16.5006 14.8215 14.8215 16.5006 12.7503 16.5006H5.2497C3.17847 16.5006 1.4994 14.8215 1.4994 12.7503V5.2497C1.4994 3.17847 3.17847 1.4994 5.2497 1.4994ZM12 8.52769C12.0926 9.15192 11.986 9.78945 11.6953 10.3496C11.4047 10.9097 10.9448 11.364 10.3811 11.6477C9.81742 11.9314 9.17863 12.0302 8.55558 11.9299C7.93254 11.8297 7.35697 11.5355 6.91074 11.0893C6.46452 10.643 6.17035 10.0675 6.0701 9.44442C5.96984 8.82138 6.06859 8.18258 6.35231 7.6189C6.63603 7.05521 7.09027 6.59534 7.65041 6.30469C8.21055 6.01404 8.84808 5.90742 9.47232 5.99999C10.1091 6.09441 10.6986 6.39111 11.1537 6.84628C11.6089 7.30145 11.9056 7.89094 12 8.52769Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/></svg></a><a href="https://www.linkedin.com/company/sigmawave-ai" aria-label="LinkedIn" style="display:inline-block; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M15.1825 7.31766C14.3385 6.47372 13.1938 5.99959 12.0002 5.99959C10.8067 5.99959 9.66199 6.47372 8.818 7.31766C7.97402 8.16161 7.49988 9.30625 7.49988 10.4998V15.75H10.5001V10.4998C10.5001 10.1019 10.6582 9.72039 10.9395 9.43907C11.2208 9.15776 11.6024 8.99972 12.0002 8.99972C12.3981 8.99972 12.7797 9.15776 13.061 9.43907C13.3423 9.72039 13.5004 10.1019 13.5004 10.4998V15.75H16.5006V10.4998C16.5006 9.30625 16.0265 8.16161 15.1825 7.31766Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/><path d="M4.49964 6.74962H1.4994V15.75H4.49964V6.74962Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/><path d="M2.99952 4.49953C3.82801 4.49953 4.49964 3.82793 4.49964 2.99946C4.49964 2.171 3.82801 1.4994 2.99952 1.4994C2.17103 1.4994 1.4994 2.171 1.4994 2.99946C1.4994 3.82793 2.17103 4.49953 2.99952 4.49953Z" stroke="#4B4B4B" stroke-width="2" stroke-linecap="round"/></svg></a>
+                    </td>
+                  </tr>
+                  <!-- Disclaimer -->
+                  <tr>
+                    <td class="t-muted" style="padding:0 0 12px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B;">
+                      You are receiving this email because this is an important message regarding your
+                      account and apps you are using. You are not allowed to unsubscribe from this type
+                      of message.
+                    </td>
+                  </tr>
+                  <!-- Copyright -->
+                  <tr>
+                    <td class="t-muted" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#4B4B4B;">
+                      &copy; 2026 Sigmawave AI. All Rights Reserved.
+                    </td>
+                  </tr>
+                  <!-- Legal links -->
+                  <tr>
+                    <td style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500;">
+                      <a href="https://accel.com/privacy" style="color:#FE5C01; text-decoration:none;">Privacy Policy</a><span style="color:#FE5C01;">&nbsp;|&nbsp;</span><a href="https://accel.com/terms" style="color:#FE5C01; text-decoration:none;">Terms &amp; Conditions</a><span style="color:#FE5C01;">&nbsp;|&nbsp;</span><a href="mailto:{{supportEmail}}" style="color:#FE5C01; text-decoration:none;">Contact Us</a>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 

@@ -1,5 +1,7 @@
 Accel — Your account has been deleted
 
+View this email in your browser: {{webviewUrl}}
+
 Dear {{firstName}},
 
 This is a confirmation that your Accel account has been deleted from the
@@ -12,15 +14,30 @@ Account:      {{email}}
 Deleted on:   {{deletedAt}}
 Actioned by:  {{deletedBy}}
 
+Wasn't you?
+-----------
+If you didn't expect this, or believe your account was deleted in error,
+contact our support team as soon as possible.
+
 You'll no longer receive notifications or be able to sign in with this email.
 Records that Accel is required to retain for security or legal reasons may be
 kept in line with our data-retention policy.
 
-If you didn't expect this, or believe your account was deleted in error,
-contact our support team as soon as possible.
-
 Thanks,
 Sigmawave Team
 
-Need help? Contact {{supportEmail}}
-© Accel — Threat & Risk Monitoring
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+Twitter: https://twitter.com/sigmawaveai
+Facebook: https://www.facebook.com/sigmawave.ai
+Instagram: https://www.instagram.com/sigmawave.ai
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

@@ -1,5 +1,7 @@
 Accel — Account deletion requested
 
+View this email in your browser: {{webviewUrl}}
+
 Dear {{ownerName}},
 
 A member of the {{orgName}} workspace has requested that their Accel account
@@ -13,17 +15,30 @@ Email:         {{requesterEmail}}
 Role:          {{requesterRole}}
 Requested on:  {{requestedAt}}
 
-Warning: Deleting this account permanently removes the member's access and
-personal data. This action cannot be undone once you confirm it.
+This action cannot be undone
+----------------------------
+Deleting this account permanently removes the member's access and personal
+data. If you don't recognise this request or believe it was made in error,
+don't action it — contact our support team and leave the account untouched.
 
 Review the request:
 {{reviewUrl}}
 
-If you don't recognise this request or believe it was made in error, don't
-action it — contact our support team and leave the account untouched.
-
 Thanks,
 Sigmawave Team
 
-Need help? Contact {{supportEmail}}
-© Accel — Threat & Risk Monitoring
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+Twitter: https://twitter.com/sigmawaveai
+Facebook: https://www.facebook.com/sigmawave.ai
+Instagram: https://www.instagram.com/sigmawave.ai
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.
