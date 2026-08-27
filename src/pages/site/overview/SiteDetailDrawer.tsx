@@ -22,6 +22,7 @@ import {
   CircleDot,
   HardDrive,
   ChevronDown,
+  Info,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -31,9 +32,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { CoachMark } from "@/components/custom/coach-mark";
+import { GuideGifModal } from "@/components/custom/guide-gif-modal";
+import {
+  renderDrawAreaFrame, DRAW_AREA_FRAME_COUNT,
+  renderPlaceCameraFrame, PLACE_CAMERA_FRAME_COUNT,
+} from "./FloorPlanGuide";
 import { cn } from "@/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
+import { useOnboardingStore } from "@/stores/useOnboardingStore";
 import { AREA_PALETTE, generatedFloorPlan } from "@/mocks/sites";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import type { AreaShape, SiteData } from "@/types/sites";
@@ -165,7 +174,7 @@ function RotationHandle({ cx, cy, rotation, onChange }: { cx: number; cy: number
 function FloorPlanCanvas({
   site, siteCameras, tool, drafting, onSetDrafting, selected, onSelect, onCommitArea,
   onMovePlacement, onRotatePlacement,
-  onAreaEdit, onAreaDelete,
+  onAreaEdit, onAreaDelete, onDeleteFloorPlan,
 }: {
   site: SiteData;
   siteCameras: CameraData[];
@@ -179,6 +188,7 @@ function FloorPlanCanvas({
   onRotatePlacement: (cameraId: string, deg: number) => void;
   onAreaEdit: (id: string) => void;
   onAreaDelete: (id: string) => void;
+  onDeleteFloorPlan: () => void;
 }) {
   const svgRef = React.useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = React.useState<{ x: number; y: number } | null>(null);
@@ -248,7 +258,16 @@ function FloorPlanCanvas({
       style={{ aspectRatio: aspect }}
     >
       {site.floorPlan && (
-        <img src={site.floorPlan.imageUrl ?? undefined} alt="" className="absolute inset-0 size-full object-contain opacity-80" draggable={false} />
+        <>
+          <img src={site.floorPlan.imageUrl ?? undefined} alt="" className="absolute inset-0 size-full object-contain opacity-80" draggable={false} />
+          <button
+            onClick={onDeleteFloorPlan}
+            title="Remove floor plan"
+            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-7 items-center justify-center rounded-md bg-black/65 text-white/90 backdrop-blur-sm transition-colors hover:bg-sev-critical hover:text-white"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </>
       )}
 
       <svg
@@ -389,7 +408,9 @@ function FloorPlanCanvas({
 
 /* ── Empty floor plan ────────────────────────────────────────────────── */
 
-function FloorPlanEmpty({ onUpload, onUseSample }: { onUpload: (url: string, name: string) => void; onUseSample: () => void }) {
+function FloorPlanEmpty({
+  onUpload, onUseSample, highlightUpload = false,
+}: { onUpload: (url: string, name: string) => void; onUseSample: () => void; highlightUpload?: boolean }) {
   const fileRef = React.useRef<HTMLInputElement | null>(null);
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -409,10 +430,12 @@ function FloorPlanEmpty({ onUpload, onUseSample }: { onUpload: (url: string, nam
         Upload a plan to draw area polygons and place cameras directly on it.
       </p>
       <div className="mt-2 flex items-center gap-2">
-        <Button onClick={() => fileRef.current?.click()} className="gap-1.5">
-          <UploadCloud className="size-3.5" />
-          Upload
-        </Button>
+        <CoachMark active={highlightUpload} message="Start here — upload your floor plan to begin mapping this site.">
+          <Button onClick={() => fileRef.current?.click()} className="gap-1.5">
+            <UploadCloud className="size-3.5" />
+            Upload
+          </Button>
+        </CoachMark>
         <Button variant="outline" onClick={onUseSample} className="gap-1.5">
           <ImageIcon className="size-3.5" />
           Use Sample
@@ -666,6 +689,10 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
     if (site!.status === "setup") updateSite(site!.id, { status: "active" });
     toast.success("Sample floor plan applied");
   }
+  function handleDeleteFloorPlan() {
+    setFloorPlan(site!.id, null);
+    toast.success("Floor plan removed");
+  }
 
   function startNewArea() {
     setFloorPlanOpen(true);
@@ -761,6 +788,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
           }}
           onFloorPlanUpload={handleFloorPlanUpload}
           onSampleFloorPlan={handleSampleFloorPlan}
+          onDeleteFloorPlan={handleDeleteFloorPlan}
         />
 
         <EditAreaModal area={editAreaTarget} open={!!editAreaTarget} onClose={() => setEditAreaTarget(null)}
@@ -1091,7 +1119,7 @@ function FloorPlanModal({
   pendingCameraId, setPendingCameraId, selected, setSelected,
   onStartNewArea, onPlaceCamera, onCommitArea,
   onMovePlacement, onRotatePlacement, onSelectArea, onEditArea, onDeleteArea, onRemovePlacement,
-  onFloorPlanUpload, onSampleFloorPlan,
+  onFloorPlanUpload, onSampleFloorPlan, onDeleteFloorPlan,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1117,11 +1145,54 @@ function FloorPlanModal({
   onRemovePlacement: (id: string) => void;
   onFloorPlanUpload: (url: string, name: string) => void;
   onSampleFloorPlan: () => void;
+  onDeleteFloorPlan: () => void;
 }) {
   const placedCameras = siteCameras.filter((c) => !!site.cameraPlacements[c.id]);
   const [panelTab, setPanelTab] = React.useState<"areas" | "cameras">("areas");
+  const [deleteFloorPlanOpen, setDeleteFloorPlanOpen] = React.useState(false);
+
+  // First-run guided tour: only for a freshly-created site (no area drawn yet,
+  // no cameras placed) that hasn't seen the guide. Each step rings the target
+  // control in orange with a coach-mark tooltip; "add-area" and "place-camera"
+  // additionally pop a short looping demo of the gesture before the user tries it.
+  const { floorPlanGuideSeen, dismissFloorPlanGuide } = useOnboardingStore();
+  const hasDrawnArea = site.areas.some((a) => a.points.length >= 3);
+  // Frozen at mount so drawing the first area (the step the guide itself asks
+  // for) doesn't retroactively disqualify the site and kill the rest of the tour.
+  const [looksNew] = React.useState(() => placedCameras.length === 0 && !hasDrawnArea);
+  const guideActive = !floorPlanGuideSeen && looksNew;
+
+  type GuideStep = "upload" | "add-area" | "cameras-tab" | "place-camera" | null;
+  const guideStep: GuideStep = !guideActive
+    ? null
+    : !site.floorPlan
+    ? "upload"
+    : !hasDrawnArea
+    ? "add-area"
+    : panelTab !== "cameras"
+    ? "cameras-tab"
+    : "place-camera";
+
+  const [showDrawAreaDemo, setShowDrawAreaDemo] = React.useState(false);
+  const [showPlaceCameraDemo, setShowPlaceCameraDemo] = React.useState(false);
+  const firstUnplacedId = unplacedCameras[0]?.id;
+
+  function handleStartNewArea() {
+    onStartNewArea();
+    if (guideStep === "add-area") setShowDrawAreaDemo(true);
+  }
+  function handlePlaceCamera(cameraId: string) {
+    onPlaceCamera(cameraId);
+    if (guideStep === "place-camera") setShowPlaceCameraDemo(true);
+  }
+
+  // Tour is done once a camera lands on the plan — persist so it doesn't return.
+  React.useEffect(() => {
+    if (guideActive && placedCameras.length > 0) dismissFloorPlanGuide();
+  }, [guideActive, placedCameras.length, dismissFloorPlanGuide]);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[92vh] w-[1320px] max-w-[97vw] flex-col overflow-hidden p-0 sm:max-w-[97vw]">
         <DialogHeader className="border-b border-border px-5 py-4">
@@ -1131,8 +1202,8 @@ function FloorPlanModal({
           </p>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-hidden p-5">
-          <div className="flex min-h-0 flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-5">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         {tool === "draw-area" && drafting && drafting.points.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
@@ -1167,6 +1238,7 @@ function FloorPlanModal({
               onRotatePlacement={onRotatePlacement}
               onAreaEdit={(id) => { const a = site.areas.find((x) => x.id === id); if (a) onEditArea(a); }}
               onAreaDelete={onDeleteArea}
+              onDeleteFloorPlan={() => setDeleteFloorPlanOpen(true)}
             />
             {pendingCameraId && (
               <div className="rounded-md border border-info/30 bg-info/[0.06] px-3 py-2 text-xs text-muted-foreground">
@@ -1176,7 +1248,7 @@ function FloorPlanModal({
             )}
           </>
         ) : (
-          <FloorPlanEmpty onUpload={onFloorPlanUpload} onUseSample={onSampleFloorPlan} />
+          <FloorPlanEmpty onUpload={onFloorPlanUpload} onUseSample={onSampleFloorPlan} highlightUpload={guideStep === "upload"} />
         )}
       </div>
 
@@ -1188,36 +1260,48 @@ function FloorPlanModal({
             { key: "areas"   as const, label: "Areas",   icon: Shapes, badge: site.areas.length },
             { key: "cameras" as const, label: "Cameras", icon: Video,  badge: siteCameras.length },
           ].map(({ key, label, icon: Icon, badge }) => (
-            <button
+            <CoachMark
               key={key}
-              onClick={() => setPanelTab(key)}
-              className={cn(
-                "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
-                panelTab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
+              active={guideStep === "cameras-tab" && key === "cameras"}
+              message="Now switch to the Cameras tab to start placing your cameras."
             >
-              <Icon className="size-3.5" />
-              {label}
-              <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
-                {badge}
-              </span>
-              {panelTab === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-            </button>
+              <button
+                onClick={() => setPanelTab(key)}
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                  panelTab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="size-3.5" />
+                {label}
+                <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
+                  {badge}
+                </span>
+                {panelTab === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+              </button>
+            </CoachMark>
           ))}
         </div>
 
         {panelTab === "areas" ? (
         <>
           <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2">
-            <span className="text-2xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
               <span className="font-semibold text-foreground">{site.areas.filter((a) => a.points.length >= 3).length}</span> drawn
               {" · "}
               <span className="font-semibold text-warning">{site.areas.filter((a) => a.points.length === 0).length}</span> pending
+              <button onClick={() => setShowDrawAreaDemo(true)}
+                className="flex size-4 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                title="How to draw an area">
+                <Info className="size-3" />
+              </button>
             </span>
-            <Button onClick={onStartNewArea} className="gap-1.5">
-              <Plus className="size-3.5" />
-              Add Area
-            </Button>
+            <CoachMark active={guideStep === "add-area"} message="Click Add Area, then click around the map to outline a space.">
+              <Button onClick={handleStartNewArea} className="gap-1.5">
+                <Plus className="size-3.5" />
+                Add Area
+              </Button>
+            </CoachMark>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {site.areas.length === 0 ? (
@@ -1258,9 +1342,14 @@ function FloorPlanModal({
         </>
         ) : (
         <>
-          <div className="flex items-center justify-end gap-2 border-b border-border px-3.5 py-2">
-            <span className="text-2xs text-muted-foreground">
+          <div className="flex items-center justify-start gap-2 border-b border-border px-3.5 py-2">
+            <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
               <span className="font-semibold text-success">{placedCameras.length}</span> on plan · <span className="font-semibold text-warning">{unplacedCameras.length}</span> unplaced
+              <button onClick={() => setShowPlaceCameraDemo(true)}
+                className="flex size-4 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                title="How to place a camera">
+                <Info className="size-3" />
+              </button>
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1294,10 +1383,16 @@ function FloorPlanModal({
                             <CircleDot className="size-2.5" /> On plan
                           </span>
                         ) : (
-                          <Button onClick={() => onPlaceCamera(c.id)} disabled={!site.floorPlan} className="flex-shrink-0 gap-1.5">
-                            <Plus className="size-3" />
-                            Place
-                          </Button>
+                          <CoachMark
+                            active={guideStep === "place-camera" && c.id === firstUnplacedId}
+                            message="Place it, then drag it into position and use the orange handle to rotate it."
+                            side="left"
+                          >
+                            <Button onClick={() => handlePlaceCamera(c.id)} disabled={!site.floorPlan} className="flex-shrink-0 gap-1.5">
+                              <Plus className="size-3" />
+                              Place
+                            </Button>
+                          </CoachMark>
                         )}
                       </div>
 
@@ -1336,5 +1431,34 @@ function FloorPlanModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    <GuideGifModal
+      open={showDrawAreaDemo}
+      onClose={() => setShowDrawAreaDemo(false)}
+      title="Drawing an area"
+      description="Click around the map to drop a point per corner, then hit Finish to close the shape. Double-click also closes it."
+      frameCount={DRAW_AREA_FRAME_COUNT}
+      renderFrame={renderDrawAreaFrame}
+      ctaLabel="Got it, let's draw"
+    />
+    <GuideGifModal
+      open={showPlaceCameraDemo}
+      onClose={() => setShowPlaceCameraDemo(false)}
+      title="Placing a camera"
+      description="Drag the camera icon to where it sits on-site, then drag its orange handle to set which way it's facing."
+      frameCount={PLACE_CAMERA_FRAME_COUNT}
+      renderFrame={renderPlaceCameraFrame}
+      ctaLabel="Got it, let's place it"
+    />
+    <ConfirmDialog
+      open={deleteFloorPlanOpen}
+      onOpenChange={setDeleteFloorPlanOpen}
+      title="Remove floor plan?"
+      description="The image will be removed from this site. Areas and camera positions stay saved, but you'll need to re-upload a plan to see them on the map again."
+      confirmLabel="Remove"
+      destructive
+      onConfirm={() => { onDeleteFloorPlan(); setDeleteFloorPlanOpen(false); }}
+    />
+    </>
   );
 }
