@@ -18,19 +18,15 @@ import {
   Video,
   HardDrive,
   CircleDot,
-  Link2,
   Maximize2,
   SkipBack,
   SkipForward,
   Trash2,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -39,13 +35,8 @@ import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
-import { ASSIGNEES } from "@/mocks/incidentCases";
-import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { RecordingCard, RecordingModeChip } from "@/components/shared/RecordingCard";
-import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
-import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
-import type { DetectionEvent, Severity } from "@/types/detection";
-import type { CaseAssignee } from "@/types/incidents";
+import type { DetectionEvent } from "@/types/detection";
 
 /* ── KPI strip ───────────────────────────────────────────────────────────── */
 
@@ -316,173 +307,17 @@ function FauxPlayer({ rec, periods, currentSec, onSeek, isPlaying, onPlayToggle 
   );
 }
 
-/* ── Create Case modal ───────────────────────────────────────────────────── */
-
-function CreateCaseModal({ open, recording, selectedEvents, onClose, onConfirm }: {
-  open: boolean; recording: RecordingDisplay | null; selectedEvents: DetectionEvent[];
-  onClose: () => void;
-  onConfirm: (data: { title: string; severity: Severity; assignee: CaseAssignee; notes: string }) => void;
-}) {
-  const [title, setTitle] = React.useState("");
-  const [severity, setSeverity] = React.useState<Severity>("medium");
-  const [assignee, setAssignee] = React.useState<CaseAssignee>(ASSIGNEES[0]);
-  const [notes, setNotes] = React.useState("");
-  const [errors, setErrors] = React.useState<{ title?: string; events?: string }>({});
-
-  React.useEffect(() => {
-    if (open && recording) {
-      setTitle(`Incidents from ${recording.cameraName} · ${recording.dateLabel}`);
-      const order: Severity[] = ["low", "medium", "critical"];
-      const max = selectedEvents.reduce<Severity>(
-        (acc, e) => (order.indexOf(e.severity) > order.indexOf(acc) ? e.severity : acc),
-        "low"
-      );
-      setSeverity(selectedEvents.length > 0 ? max : "medium");
-      setNotes("");
-      setAssignee(ASSIGNEES[0]);
-      setErrors({});
-    }
-  }, [open, recording, selectedEvents]);
-
-  if (!recording) return null;
-
-  function handleConfirm() {
-    const next: { title?: string; events?: string } = {};
-    if (!title.trim()) next.title = "Case title is required.";
-    if (selectedEvents.length === 0) next.events = "Select at least one incident to link.";
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
-    onConfirm({ title: title.trim(), severity, assignee, notes });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Create Incident Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            From recording <span className="font-mono text-foreground">{recording.id}</span> ·{" "}
-            <strong className="text-foreground">{selectedEvents.length}</strong> incident{selectedEvents.length === 1 ? "" : "s"} will be linked
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Case Title</label>
-            <Input value={title} onChange={(e) => { setTitle(e.target.value); if (errors.title) setErrors((p) => ({ ...p, title: undefined })); }} aria-invalid={!!errors.title} className="h-9 text-base" />
-            {errors.title && <p className="mt-1 text-xs text-sev-critical">{errors.title}</p>}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Severity</label>
-              <div className="flex gap-1.5">
-                {(["low", "medium", "critical"] as Severity[]).map((sv) => (
-                  <button key={sv} onClick={() => setSeverity(sv)} className={cn(
-                    "flex-1 rounded-md border px-2 py-1.5 text-xs font-bold uppercase transition-colors",
-                    severity === sv
-                      ? sv === "critical" ? "border-sev-critical/60 bg-sev-critical/10 text-sev-critical"
-                        : sv === "medium" ? "border-warning/60 bg-warning/10 text-warning"
-                        : "border-info/60 bg-info/10 text-info"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  )}>
-                    {sv}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assign To</label>
-              <Select value={assignee.id} onValueChange={(v) => { const a = ASSIGNEES.find((x) => x.id === v); if (a) setAssignee(a); }}>
-                <SelectTrigger className="h-9 w-full text-base">
-                  <SelectValue placeholder="Select assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ASSIGNEES.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.id})</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {/* SLA target — auto-set by severity (mirrors Detection Feed escalate modal) */}
-          <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              SLA Target <span className="text-muted-foreground/60">(auto-set by severity)</span>
-            </p>
-            <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
-              {(() => {
-                const sla =
-                  severity === "critical" ? { ack: "15 min", action: "1 hour",  resolve: "4 hours" } :
-                  severity === "medium"   ? { ack: "1 hour", action: "4 hours", resolve: "1 day"   } :
-                                            { ack: "4 hours",action: "1 day",   resolve: "3 days"  };
-                return (
-                  <>
-                    <div>
-                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Acknowledge</p>
-                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.ack}</p>
-                    </div>
-                    <div>
-                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Initial Action</p>
-                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.action}</p>
-                    </div>
-                    <div>
-                      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Resolution</p>
-                      <p className="mt-1 font-mono text-base font-bold text-foreground">{sla.resolve}</p>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-          <div className={cn("rounded-lg border border-border bg-background p-3", errors.events && "border-sev-critical")}>
-            <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Linked Incidents ({selectedEvents.length})
-            </p>
-            {selectedEvents.length === 0 ? (
-              <p className="text-sm italic text-muted-foreground">Select at least one detected incident from the timeline.</p>
-            ) : (
-              <ul className="space-y-1">
-                {selectedEvents.map((e) => (
-                  <li key={e.id} className="flex items-center gap-2 text-sm">
-                    <SeverityBadge severity={e.severity} />
-                    <span className="font-mono text-xs text-muted-foreground">{e.id}</span>
-                    <TruncatedText text={e.typeLabel} className="text-foreground" />
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">{e.time}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {errors.events && <p className="-mt-2 text-xs text-sev-critical">{errors.events}</p>}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add context for the investigator…"
-              className="w-full text-base" />
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleConfirm} className="gap-1.5">
-            <Check className="size-3.5" />
-            Create Case
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 /* ── Recording Drawer ────────────────────────────────────────────────────── */
 
-function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, onDeleteRecording }: {
+function RecordingDrawer({ recording, open, onClose, onDeleteRecording }: {
   recording: RecordingDisplay | null; open: boolean; onClose: () => void;
-  onCreateCase: (rec: RecordingDisplay, events: DetectionEvent[]) => void;
-  onOpenEvent: (event: DetectionEvent) => void;
   onDeleteRecording: (id: string) => void;
 }) {
   const [currentSec, setCurrentSec] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [selectedEventIds, setSelectedEventIds] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
-    if (open) { setCurrentSec(0); setIsPlaying(false); setSelectedEventIds(new Set()); }
+    if (open) { setCurrentSec(0); setIsPlaying(false); }
   }, [open, recording?.id]);
 
   React.useEffect(() => {
@@ -500,17 +335,6 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
   const periods = periodsForRecording(recording);
   const camera = MOCK_CAMERAS.find((c) => c.id === recording.cameraId);
   const nvr = MOCK_NVRS.find((n) => n.id === recording.nvrId);
-  const selectedEvents = periods.filter((p) => selectedEventIds.has(p.event.id)).map((p) => p.event);
-
-  function toggleEvent(id: string) {
-    setSelectedEventIds((curr) => {
-      const next = new Set(curr);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-  function selectAll() { setSelectedEventIds(new Set(periods.map((p) => p.event.id))); }
-  function clearSel()  { setSelectedEventIds(new Set()); }
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -573,74 +397,10 @@ function RecordingDrawer({ recording, open, onClose, onCreateCase, onOpenEvent, 
               ))}
             </div>
           </div>
-
-          <div>
-            <div className="mb-2.5 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Detected Incidents ({periods.length})
-              </span>
-              {periods.length > 0 && (
-                <button onClick={selectedEventIds.size === periods.length ? clearSel : selectAll} className="text-xs text-primary hover:underline">
-                  {selectedEventIds.size === periods.length ? "Unselect all" : "Select all"}
-                </button>
-              )}
-            </div>
-            {periods.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-                <CircleDot className="mx-auto mb-2 size-6 opacity-30" />
-                No incidents detected during this recording window.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {periods.map((p) => {
-                  const checked = selectedEventIds.has(p.event.id);
-                  return (
-                    <div key={p.event.id} className={cn("group rounded-xl border bg-card p-3.5 transition-colors", checked ? "border-primary/60 bg-primary/[0.04]" : "border-border hover:border-primary/30 hover:bg-muted/20")}
-                      style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${p.event.severity})` }}>
-                      <div className="flex items-start gap-3">
-                        <button onClick={() => toggleEvent(p.event.id)} className={cn("mt-0.5 flex size-4 flex-shrink-0 items-center justify-center rounded border transition-colors", checked ? "border-primary bg-primary" : "border-muted-foreground/40 hover:border-primary/60")}>
-                          {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-                        </button>
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                            <SeverityBadge severity={p.event.severity} />
-                            <span className="text-base font-semibold text-foreground">{p.event.typeLabel}</span>
-                            <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{p.event.useCaseId}</span>
-                            {p.event.caseId && (
-                              <span className="rounded border border-success/30 bg-success/10 px-1.5 py-px text-2xs font-semibold text-success">In case</span>
-                            )}
-                          </div>
-                          <p className="mb-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                            {parseEventText(p.event.summary)}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1"><Clock className="size-2.5" />{p.event.time}</span>
-                            <span className="inline-flex items-center gap-1 font-mono"><CircleDot className="size-2.5 text-sev-critical" />@ {fmtClock(p.offsetSec)}</span>
-                            <button onClick={() => setCurrentSec(p.offsetSec)} className="text-xs text-primary hover:underline">Jump to mark</button>
-                          </div>
-                        </div>
-                        <Button variant="outline" className="gap-1.5" onClick={() => onOpenEvent(p.event)}>
-                          View
-                          <ChevronRight className="size-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
 
-        <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
-          <Button className="gap-1.5" disabled={selectedEventIds.size === 0} onClick={() => onCreateCase(recording, selectedEvents)}>
-            <Link2 className="size-3.5" />
-            Create Case
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground">{selectedEventIds.size}</strong> of {periods.length} selected
-          </p>
-          <Button variant="outline" className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-5 py-3.5">
+          <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
             onClick={() => onDeleteRecording(recording.id)}>
             <Trash2 className="size-3.5" />
             Delete Recording
@@ -688,7 +448,6 @@ export default function RecordingsPage({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, location.pathname]);
-  const { createCase } = useIncidentCasesStore();
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<RecordingFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
@@ -702,8 +461,6 @@ export default function RecordingsPage({
   );
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
-  const [openEvent, setOpenEvent] = React.useState<DetectionEvent | null>(null);
-  const [createCaseFor, setCreateCaseFor] = React.useState<{ rec: RecordingDisplay; events: DetectionEvent[] } | null>(null);
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
@@ -757,10 +514,6 @@ export default function RecordingsPage({
   const drawerRecording = drawerId ? recordings.find((r) => r.id === drawerId) ?? null : null;
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpiFilter !== "all" || datePreset !== "all");
 
-  function handleCreateCase(rec: RecordingDisplay, events: DetectionEvent[]) {
-    setCreateCaseFor({ rec, events });
-  }
-
   function handleBulkDelete(ids: string[]) {
     const count = ids.length;
     setRecordings((curr) => curr.filter((r) => !ids.includes(r.id)));
@@ -782,25 +535,6 @@ export default function RecordingsPage({
     });
   }
 
-  function commitCreateCase(data: { title: string; severity: Severity; assignee: CaseAssignee; notes: string }) {
-    if (!createCaseFor) return;
-    const cam = MOCK_CAMERAS.find((c) => c.id === createCaseFor.rec.cameraId);
-    const caseId = createCase({
-      title: data.title,
-      severity: data.severity,
-      site: cam?.siteId ?? createCaseFor.rec.siteName.toLowerCase(),
-      siteDisplay: createCaseFor.rec.siteName,
-      assignedTo: data.assignee,
-      incidentIds: createCaseFor.events.map((e) => e.id),
-      notes: data.notes,
-    });
-    setCreateCaseFor(null);
-    setDrawerId(null);
-    toast.success(`Case ${caseId} created`, {
-      description: `${createCaseFor.events.length} incidents linked from recording ${createCaseFor.rec.id}.`,
-      action: { label: "Open", onClick: () => navigate("/incidents", { state: { openCaseId: caseId } }) },
-    });
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -930,16 +664,8 @@ export default function RecordingsPage({
       )}
 
       <RecordingDrawer recording={drawerRecording} open={drawerId !== null} onClose={() => setDrawerId(null)}
-        onCreateCase={handleCreateCase} onOpenEvent={(e) => setOpenEvent(e)}
         onDeleteRecording={handleDeleteRecording} />
 
-      <EventDrawer event={openEvent} open={openEvent !== null}
-        onClose={() => setOpenEvent(null)}
-        onEscalate={() => setOpenEvent(null)} onDismiss={() => setOpenEvent(null)} />
-
-      <CreateCaseModal open={createCaseFor !== null} recording={createCaseFor?.rec ?? null}
-        selectedEvents={createCaseFor?.events ?? []}
-        onClose={() => setCreateCaseFor(null)} onConfirm={commitCreateCase} />
 
       {/* Floating selection bar — mirrors Detection Feed */}
       {selectedIds.size > 0 && (
