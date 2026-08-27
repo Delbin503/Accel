@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -33,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { CoachMark } from "@/components/custom/coach-mark";
 import { GuideGifModal } from "@/components/custom/guide-gif-modal";
 import {
@@ -49,6 +51,9 @@ import type { AreaShape, SiteData } from "@/types/sites";
 import type { CameraData, CameraStatus } from "@/types/cameras";
 
 type Tool = "select" | "draw-area";
+
+/** Press duration that promotes a camera click into a drag-to-move gesture. */
+const HOLD_TO_MOVE_MS = 220;
 
 
 const CAMERA_STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: string; label: string; icon: React.ElementType; markerFill: string }> = {
@@ -155,16 +160,26 @@ function RotationHandle({ cx, cy, rotation, onChange }: { cx: number; cy: number
   }
 
   return (
-    <g pointerEvents="all">
-      <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#DD7224" strokeOpacity={0.35} strokeWidth={0.3} strokeDasharray="0.6 0.6" />
-      <line x1={cx} y1={cy} x2={hx} y2={hy} stroke="#DD7224" strokeWidth={0.3} strokeOpacity={0.8} />
+    <g>
+      {/*
+        Guides are decoration only. They MUST stay pointer-events:none — a
+        `fill="none"` circle still hit-tests across its whole disc once pointer
+        events are enabled on it, which would blanket the camera body (and the
+        handle's own hit area) in an invisible shield and make the marker
+        impossible to grab.
+      */}
+      <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#DD7224" strokeOpacity={0.35} strokeWidth={0.3} strokeDasharray="0.6 0.6" pointerEvents="none" />
+      <line x1={cx} y1={cy} x2={hx} y2={hy} stroke="#DD7224" strokeWidth={0.3} strokeOpacity={0.8} pointerEvents="none" />
+      {/* Invisible grab target — generous next to the 1.6-unit dot it fronts. */}
       <circle
         ref={handleRef}
-        cx={hx} cy={hy} r={1.6}
-        fill="#DD7224" stroke="#fff" strokeWidth={0.35}
+        cx={hx} cy={hy} r={3.2}
+        fill="transparent"
+        pointerEvents="all"
         onMouseDown={onMouseDown}
         style={{ cursor: "grab" }}
       />
+      <circle cx={hx} cy={hy} r={1.6} fill="#DD7224" stroke="#fff" strokeWidth={0.35} pointerEvents="none" />
     </g>
   );
 }
@@ -194,6 +209,39 @@ function FloorPlanCanvas({
   const [hover, setHover] = React.useState<{ x: number; y: number } | null>(null);
   const [draggingCam, setDraggingCam] = React.useState<string | null>(null);
   const [areaMenu, setAreaMenu] = React.useState<{ id: string; x: number; y: number } | null>(null);
+
+  /*
+   * Camera interaction is click-to-select, hold-to-move. A plain click only
+   * selects the marker and reveals its rotation handle, so aiming a camera
+   * never risks nudging it out of position; moving is opt-in via a press that
+   * outlives HOLD_TO_MOVE_MS.
+   */
+  const holdTimer = React.useRef<number | null>(null);
+
+  const clearHold = React.useCallback(() => {
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  }, []);
+
+  // A timer outliving the component would fire setState after unmount.
+  React.useEffect(() => clearHold, [clearHold]);
+
+  function endCameraGesture() {
+    clearHold();
+    setDraggingCam(null);
+  }
+
+  function beginCameraPress(cameraId: string) {
+    onSelect({ type: "camera", id: cameraId });
+    setAreaMenu(null);
+    clearHold();
+    holdTimer.current = window.setTimeout(() => {
+      holdTimer.current = null;
+      setDraggingCam(cameraId);
+    }, HOLD_TO_MOVE_MS);
+  }
 
   function getNormalizedPoint(e: React.MouseEvent<SVGElement>): [number, number] {
     const svg = svgRef.current;
@@ -260,12 +308,17 @@ function FloorPlanCanvas({
       {site.floorPlan && (
         <>
           <img src={site.floorPlan.imageUrl ?? undefined} alt="" className="absolute inset-0 size-full object-contain opacity-80" draggable={false} />
+          {/* Overlay icon button — same size/shape/hover as the other
+              on-image actions in the app (see live-monitoring tile actions):
+              translucent dark chip, tinted critical on hover, never a solid
+              fill. */}
           <button
+            type="button"
             onClick={onDeleteFloorPlan}
             title="Remove floor plan"
-            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-7 items-center justify-center rounded-md bg-black/65 text-white/90 backdrop-blur-sm transition-colors hover:bg-sev-critical hover:text-white"
+            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm transition-colors hover:bg-sev-critical/80"
           >
-            <Trash2 className="size-3.5" />
+            <Trash2 className="size-3" />
           </button>
         </>
       )}
@@ -278,8 +331,8 @@ function FloorPlanCanvas({
         onClick={handleSvgClick}
         onDoubleClick={handleSvgDoubleClick}
         onMouseMove={handleMouseMove}
-        onMouseUp={() => setDraggingCam(null)}
-        onMouseLeave={() => { setHover(null); setDraggingCam(null); }}
+        onMouseUp={endCameraGesture}
+        onMouseLeave={() => { setHover(null); endCameraGesture(); }}
       >
         {/* Areas */}
         {site.areas.filter((a) => a.points.length >= 3).map((a) => {
@@ -370,9 +423,9 @@ function FloorPlanCanvas({
           const cs = CAMERA_STATUS_STYLES[c.status];
           return (
             <g key={c.id}
-              style={{ cursor: tool === "select" ? "grab" : "inherit" }}
+              style={{ cursor: tool !== "select" ? "inherit" : draggingCam === c.id ? "grabbing" : "pointer" }}
               onClick={(e) => { if (tool === "select") { e.stopPropagation(); onSelect({ type: "camera", id: c.id }); setAreaMenu(null); } }}
-              onMouseDown={(e) => { if (tool === "select") { e.stopPropagation(); setDraggingCam(c.id); onSelect({ type: "camera", id: c.id }); } }}
+              onMouseDown={(e) => { if (tool === "select") { e.stopPropagation(); beginCameraPress(c.id); } }}
             >
               <CameraMarker
                 cx={p.x * 100} cy={p.y * 100}
@@ -400,7 +453,9 @@ function FloorPlanCanvas({
 
       <div className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-2xs font-semibold text-white/90 backdrop-blur-sm">
         {tool === "draw-area" && <><Shapes className="size-3" /> Click to add points · Double-click to close shape</>}
-        {tool === "select"    && <><MousePointer2 className="size-3" /> Click an area for Edit/Delete · Drag cameras · Rotate via the orange handle</>}
+        {tool === "select"    && (draggingCam
+          ? <><MousePointer2 className="size-3" /> Moving camera — release to drop it</>
+          : <><MousePointer2 className="size-3" /> Click an area for Edit/Delete · Click a camera, then drag its orange handle to aim · Hold a camera to move it</>)}
       </div>
     </div>
   );
@@ -1150,6 +1205,15 @@ function FloorPlanModal({
   const placedCameras = siteCameras.filter((c) => !!site.cameraPlacements[c.id]);
   const [panelTab, setPanelTab] = React.useState<"areas" | "cameras">("areas");
   const [deleteFloorPlanOpen, setDeleteFloorPlanOpen] = React.useState(false);
+  const navigate = useNavigate();
+
+  // Cameras are managed on their own page; the editor only positions ones that
+  // already exist. Close the editor on the way out so returning here doesn't
+  // land the user behind a stale modal.
+  function handleAddCameras() {
+    onClose();
+    navigate("/site/cameras");
+  }
 
   // First-run guided tour: only for a freshly-created site (no area drawn yet,
   // no cameras placed) that hasn't seen the guide. Each step rings the target
@@ -1354,7 +1418,18 @@ function FloorPlanModal({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {siteCameras.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm italic text-muted-foreground">No cameras for this site.</p>
+              <EmptyState
+                icon={Video}
+                title="No cameras for this site"
+                description="Add a camera to this site first — it'll then show up here, ready to place on the plan."
+                action={
+                  <Button onClick={handleAddCameras} className="gap-1.5">
+                    <Plus className="size-3.5" />
+                    Add cameras
+                  </Button>
+                }
+                className="py-10"
+              />
             ) : (
               [...siteCameras]
                 .sort((a, b) => Number(!!site.cameraPlacements[a.id]) - Number(!!site.cameraPlacements[b.id]))
