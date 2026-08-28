@@ -30,6 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -459,6 +460,15 @@ export default function RecordingsPage({
   );
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
+  /*
+   * Delete confirmation. `open` is tracked separately from the staged target so
+   * the target (and its copy) survives the dialog's exit animation — clearing
+   * it on confirm would flash "Delete 0 recordings?" on the way out. `label` is
+   * snapshotted at request time for the same reason: the recording is gone from
+   * state by the time the dialog finishes closing.
+   */
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string | null }>({ ids: [], label: null });
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
@@ -508,20 +518,38 @@ export default function RecordingsPage({
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
   const drawerRecording = drawerId ? recordings.find((r) => r.id === drawerId) ?? null : null;
+  const deleteCount = deleteTarget.ids.length;
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || kpiFilter !== "all" || datePreset !== "all");
 
-  function handleBulkDelete(ids: string[]) {
-    const count = ids.length;
-    setRecordings((curr) => curr.filter((r) => !ids.includes(r.id)));
-    setSelectedIds(new Set());
-    toast.success(`${count} recording${count === 1 ? "" : "s"} deleted`);
+  /*
+   * Deleting is irreversible, so both paths — the drawer's single "Delete
+   * Recording" and the selection bar's bulk delete — stage their ids here and
+   * let the confirm step commit them. One funnel keeps the copy and the
+   * guard identical for either entry point.
+   */
+  function requestDelete(ids: string[]) {
+    if (ids.length === 0) return;
+    const only = ids.length === 1 ? recordings.find((r) => r.id === ids[0]) : undefined;
+    setDeleteTarget({
+      ids,
+      label: ids.length === 1 ? `${only?.id ?? ids[0]}${only ? ` from ${only.cameraName}` : ""}` : null,
+    });
+    setDeleteOpen(true);
   }
-  function handleDeleteRecording(id: string) {
-    const rec = recordings.find((r) => r.id === id);
-    setRecordings((curr) => curr.filter((r) => r.id !== id));
-    setSelectedIds((curr) => { const next = new Set(curr); next.delete(id); return next; });
-    if (drawerId === id) setDrawerId(null);
-    toast.success(`Recording ${rec?.id ?? id} deleted`);
+  function confirmDelete() {
+    const { ids } = deleteTarget;
+    if (ids.length === 0) return;
+    setRecordings((curr) => curr.filter((r) => !ids.includes(r.id)));
+    setSelectedIds((curr) => {
+      const next = new Set(curr);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    if (drawerId && ids.includes(drawerId)) setDrawerId(null);
+    setDeleteOpen(false);
+    toast.success(
+      ids.length === 1 ? `Recording ${ids[0]} deleted` : `${ids.length} recordings deleted`
+    );
   }
   function toggleRecording(id: string) {
     setSelectedIds((curr) => {
@@ -658,7 +686,7 @@ export default function RecordingsPage({
       )}
 
       <RecordingDrawer recording={drawerRecording} open={drawerId !== null} onClose={() => setDrawerId(null)}
-        onDeleteRecording={handleDeleteRecording} />
+        onDeleteRecording={(id) => requestDelete([id])} />
 
 
       {/* Floating selection bar — mirrors Detection Feed */}
@@ -680,13 +708,27 @@ export default function RecordingsPage({
             </Button>
             <div className="mx-1 h-4 w-px bg-border" />
             <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-              onClick={() => handleBulkDelete([...selectedIds])}>
+              onClick={() => requestDelete([...selectedIds])}>
               <Trash2 className="size-3.5" />
               Delete {selectedIds.size}
             </Button>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={deleteCount === 1 ? "Delete this recording?" : `Delete ${deleteCount} recordings?`}
+        description={
+          deleteTarget.label
+            ? `${deleteTarget.label} will be removed, along with its footage. This can't be undone.`
+            : `${deleteCount} recordings will be removed, along with their footage. This can't be undone.`
+        }
+        confirmLabel={deleteCount === 1 ? "Delete recording" : `Delete ${deleteCount} recordings`}
+        destructive
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
