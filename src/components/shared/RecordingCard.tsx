@@ -1,4 +1,4 @@
-import { Play, MapPin, CircleDot, AlertTriangle, Check } from "lucide-react";
+import { Play, MapPin, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import type { RecordingDisplay } from "@/mocks/recordings";
@@ -23,7 +23,10 @@ export function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) 
 /* ── Recording card ──────────────────────────────────────────────────────────
    Shared between the Recordings page (variant="page") and the Cameras detail
    drawer (variant="drawer"). Same thumbnail + structure; only the title,
-   location, and footer metrics differ by context. ────────────────────────── */
+   location, and footer metric differ by context.
+
+   The card deliberately carries no event/detection counts — recordings are
+   presented as footage, and incident triage lives in Detection Feed. ─────── */
 
 export interface RecordingCardProps {
   recording: RecordingDisplay;
@@ -32,8 +35,6 @@ export interface RecordingCardProps {
   selected?: boolean;
   onToggle?: () => void;
   onOpen?: () => void;
-  /** Page-only: number of period detections to surface as a "detected" badge. */
-  detectedCount?: number;
   className?: string;
 }
 
@@ -43,7 +44,6 @@ export function RecordingCard({
   selected = false,
   onToggle,
   onOpen,
-  detectedCount = 0,
   className,
 }: RecordingCardProps) {
   const isDrawer = variant === "drawer";
@@ -102,24 +102,10 @@ export function RecordingCard({
             <MapPin className="size-2.5" />
             {isDrawer ? r.areaName : `${r.areaName} · ${r.siteName}`}
           </p>
-          <div className="flex items-center justify-between border-t border-border/60 pt-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-2xs font-semibold text-success">
-              <CircleDot className="size-2.5" />
-              {r.eventCount} events
+          <div className="flex items-center justify-end border-t border-border/60 pt-2">
+            <span className="font-mono text-2xs text-muted-foreground">
+              {isDrawer ? r.durationDisplay : r.dateLabel}
             </span>
-            {isDrawer ? (
-              <span className="font-mono text-2xs text-muted-foreground">{r.durationDisplay}</span>
-            ) : (
-              <>
-                {detectedCount > 0 && (
-                  <span className="inline-flex items-center gap-1 text-2xs text-sev-critical">
-                    <AlertTriangle className="size-2.5" />
-                    {detectedCount} detected
-                  </span>
-                )}
-                <span className="font-mono text-2xs text-muted-foreground">{r.dateLabel}</span>
-              </>
-            )}
           </div>
         </div>
       </button>

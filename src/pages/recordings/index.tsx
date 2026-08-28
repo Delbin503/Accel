@@ -42,7 +42,7 @@ import type { DetectionEvent } from "@/types/detection";
 
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 
-type KpiFilter = "all" | "today" | "high-events" | "continuous";
+type KpiFilter = "all" | "today" | "continuous";
 
 const KPI_CONFIGS: {
   key: KpiFilter; label: string; sub: string; accent: KpiAccent;
@@ -50,7 +50,6 @@ const KPI_CONFIGS: {
 }[] = [
   { key: "all",         label: "Total Recordings", sub: "Across all cameras",  accent: "primary", getValue: (items) => items.length },
   { key: "today",       label: "Today",            sub: "Recorded today",      accent: "success", getValue: (items) => items.filter((r) => r.dateLabel === "Today").length },
-  { key: "high-events", label: "With Events",      sub: "≥ 5 detections each", accent: "warning", getValue: (items) => items.filter((r) => r.eventCount >= 5).length },
   { key: "continuous",  label: "Continuous",       sub: "24/7 recording mode", accent: "info",    getValue: (items) => items.filter((r) => r.mode === "continuous").length },
 ];
 
@@ -413,12 +412,11 @@ function RecordingDrawer({ recording, open, onClose, onDeleteRecording }: {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-type SortKey = "newest" | "oldest" | "duration-desc" | "events-desc";
+type SortKey = "newest" | "oldest" | "duration-desc";
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "newest",        label: "Newest First" },
   { key: "oldest",        label: "Oldest First" },
   { key: "duration-desc", label: "Longest Duration" },
-  { key: "events-desc",   label: "Most Events" },
 ];
 
 type DatePreset = "all" | "today" | "yesterday" | "week" | "month" | "custom";
@@ -467,7 +465,6 @@ export default function RecordingsPage({
   const filtered = React.useMemo(() => {
     let list = recordings.filter((r) => {
       if (kpiFilter === "today" && r.dateLabel !== "Today") return false;
-      if (kpiFilter === "high-events" && r.eventCount < 5) return false;
       if (kpiFilter === "continuous" && r.mode !== "continuous") return false;
       if (filters.site.length > 0) {
         const cam = MOCK_CAMERAS.find((c) => c.id === r.cameraId);
@@ -503,7 +500,6 @@ export default function RecordingsPage({
     list = [...list].sort((a, b) => {
       if (sort === "oldest")        return new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
       if (sort === "duration-desc") return b.durationSeconds - a.durationSeconds;
-      if (sort === "events-desc")   return b.eventCount - a.eventCount;
       return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
     });
     return list;
@@ -542,12 +538,12 @@ export default function RecordingsPage({
         <PageHeader.Content>
           <PageHeader.Title>Recordings</PageHeader.Title>
           <PageHeader.Description>
-            Browse all camera recordings — replay footage, link incidents and escalate to incident cases.
+            Browse all camera recordings — filter by site, camera or date, and replay the footage.
           </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 
-      <KpiGrid cols={4}>
+      <KpiGrid cols={3}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard key={cfg.key}
             label={cfg.label}
@@ -625,7 +621,6 @@ export default function RecordingsPage({
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {pageItems.map((r) => {
-            const periodCount = periodsForRecording(r).length;
             const isSelected = selectedIds.has(r.id);
             return (
               <RecordingCard
@@ -635,7 +630,6 @@ export default function RecordingsPage({
                 selected={isSelected}
                 onToggle={() => toggleRecording(r.id)}
                 onOpen={() => setDrawerId(r.id)}
-                detectedCount={periodCount}
               />
             );
           })}
