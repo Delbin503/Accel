@@ -470,10 +470,10 @@ function DeleteRecordingsModal({
                     {count} selected recordings will be deleted immediately.
                   </p>
                 ) : (
-                  <>
-                    <p className="mt-1 font-mono text-sm text-muted-foreground">{single.id}</p>
-                    <p className="mt-0.5 text-base text-muted-foreground">{single.detail}</p>
-                  </>
+                  <p className="mt-1 text-base text-muted-foreground">
+                    <span className="font-mono text-sm">{single.id}</span>
+                    {single.detail && ` (${single.detail})`}
+                  </p>
                 )}
               </div>
             </div>
