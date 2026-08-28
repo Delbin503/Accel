@@ -30,7 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -431,6 +431,71 @@ const DATE_PRESETS: { key: DatePreset; label: string }[] = [
 
 const NOW_REF = new Date("2026-05-25T10:15:00").getTime();
 
+/* ── Delete Recording modal ──────────────────────────────────────────────────
+   Mirrors the app's other destructive-delete modals (Delete NVR, Delete User,
+   Delete Camera): 560px shell, bordered header with the "cannot be undone"
+   subtitle, a destructive callout naming the target, the consequence line, and
+   a bordered footer. `single` is snapshotted by the caller at request time so
+   the copy holds steady while the dialog animates out. ──────────────────── */
+
+function DeleteRecordingsModal({
+  open, count, single, onClose, onConfirm,
+}: {
+  open: boolean;
+  count: number;
+  single: { id: string; detail: string } | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (count === 0) return null;
+  const isBulk = count > 1;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-bold text-destructive">
+            {isBulk ? `Delete Recordings (${count})` : "Delete Recording"}
+          </DialogTitle>
+          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
+        </DialogHeader>
+        <div className="px-5 py-4">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-foreground">You are about to remove:</p>
+                {isBulk || !single ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {count} selected recordings will be deleted immediately.
+                  </p>
+                ) : (
+                  <>
+                    <p className="mt-1 font-mono text-sm text-muted-foreground">{single.id}</p>
+                    <p className="mt-0.5 text-base text-muted-foreground">{single.detail}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {isBulk
+              ? "The footage for these recordings cannot be recovered once deleted."
+              : "The footage for this recording cannot be recovered once deleted."}
+          </p>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
+            <Trash2 className="size-3.5" />
+            Delete {isBulk ? `${count} Recordings` : "Recording"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function RecordingsPage({
   forcedState = "normal",
 }: {
@@ -463,12 +528,15 @@ export default function RecordingsPage({
   /*
    * Delete confirmation. `open` is tracked separately from the staged target so
    * the target (and its copy) survives the dialog's exit animation — clearing
-   * it on confirm would flash "Delete 0 recordings?" on the way out. `label` is
+   * it on confirm would flash "Delete 0 Recordings" on the way out. `single` is
    * snapshotted at request time for the same reason: the recording is gone from
    * state by the time the dialog finishes closing.
    */
   const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string | null }>({ ids: [], label: null });
+  const [deleteTarget, setDeleteTarget] = React.useState<{
+    ids: string[];
+    single: { id: string; detail: string } | null;
+  }>({ ids: [], single: null });
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
@@ -532,7 +600,7 @@ export default function RecordingsPage({
     const only = ids.length === 1 ? recordings.find((r) => r.id === ids[0]) : undefined;
     setDeleteTarget({
       ids,
-      label: ids.length === 1 ? `${only?.id ?? ids[0]}${only ? ` from ${only.cameraName}` : ""}` : null,
+      single: only ? { id: only.id, detail: `${only.cameraName} · ${only.dateLabel}` } : null,
     });
     setDeleteOpen(true);
   }
@@ -716,17 +784,11 @@ export default function RecordingsPage({
         </div>
       )}
 
-      <ConfirmDialog
+      <DeleteRecordingsModal
         open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title={deleteCount === 1 ? "Delete this recording?" : `Delete ${deleteCount} recordings?`}
-        description={
-          deleteTarget.label
-            ? `${deleteTarget.label} will be removed, along with its footage. This can't be undone.`
-            : `${deleteCount} recordings will be removed, along with their footage. This can't be undone.`
-        }
-        confirmLabel={deleteCount === 1 ? "Delete recording" : `Delete ${deleteCount} recordings`}
-        destructive
+        count={deleteCount}
+        single={deleteTarget.single}
+        onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
       />
     </div>
