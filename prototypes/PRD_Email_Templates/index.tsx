@@ -217,6 +217,41 @@ function App() {
   const tpl = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
   const previewHtml = React.useMemo(() => applyPreviewScheme(tpl.html, scheme), [tpl.html, scheme]);
 
+  /*
+   * Size the preview frame to its own content instead of a fixed height, so a
+   * long email is fully visible and the page scrolls it — a nested iframe
+   * scrollbar hides the footer and is easy to miss entirely. srcDoc is
+   * same-origin, so the inner document is measurable; the ResizeObserver picks
+   * up late reflows once the webfont lands.
+   */
+  const frameRef = React.useRef<HTMLIFrameElement | null>(null);
+  const [frameHeight, setFrameHeight] = React.useState(900);
+
+  React.useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    let observer: ResizeObserver | null = null;
+
+    function measure() {
+      const root = frame?.contentDocument?.documentElement;
+      if (!root) return;
+      setFrameHeight(root.scrollHeight);
+      if (!observer) {
+        observer = new ResizeObserver(() => {
+          const h = frame?.contentDocument?.documentElement?.scrollHeight;
+          if (h) setFrameHeight(h);
+        });
+        observer.observe(root);
+      }
+    }
+
+    frame.addEventListener("load", measure);
+    return () => {
+      frame.removeEventListener("load", measure);
+      observer?.disconnect();
+    };
+  }, [previewHtml]);
+
   return (
     <ThemeProvider defaultTheme="dark">
       <div className="min-h-screen w-full bg-background text-foreground">
@@ -331,10 +366,13 @@ function App() {
             </div>
             <div className={cn("p-4 sm:p-8", scheme === "dark" ? "bg-[#0b0b0b]" : "bg-[#e9e8e5]")}>
               <iframe
+                ref={frameRef}
                 key={`${tpl.id}-${scheme}`}
                 title={tpl.name}
                 srcDoc={previewHtml}
-                className="mx-auto block h-[760px] w-full max-w-[640px] rounded-lg border border-border"
+                scrolling="no"
+                style={{ height: frameHeight }}
+                className="mx-auto block w-full max-w-[640px] rounded-lg border border-border"
               />
             </div>
           </main>
