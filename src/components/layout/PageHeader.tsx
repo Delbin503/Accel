@@ -40,8 +40,10 @@ function PageHeaderTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
+    // 24px/bold. At the previous 18px/semibold the page title sat only 5px
+    // above body copy, so no screen had an obvious entry point.
     <h1
-      className={cn("text-xl font-semibold tracking-tight text-foreground", className)}
+      className={cn("text-3xl font-bold tracking-[-0.02em] text-foreground", className)}
       {...props}
     >
       {children}

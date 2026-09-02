@@ -151,26 +151,26 @@
    Light mode tokens  (applied when <html class="light">)
    ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --background:             hsl(0 0% 97%);
-  --foreground:             hsl(0 0% 10%);
+  --background:             hsl(214 20% 97%);
+  --foreground:             hsl(215 25% 11%);
   --card:                   hsl(0 0% 100%);
-  --card-foreground:        hsl(0 0% 10%);
+  --card-foreground:        hsl(215 25% 11%);
   --popover:                hsl(0 0% 100%);
-  --popover-foreground:     hsl(0 0% 10%);
+  --popover-foreground:     hsl(215 25% 11%);
   --primary:                hsl(20 95% 55%);
   --primary-foreground:     hsl(0 0% 100%);
   --primary-hover:          hsl(20 95% 48%);   /* ~7 pts darker — hover state    */
   --primary-active:         hsl(20 95% 40%);   /* ~15 pts darker — pressed state  */
   --primary-muted:          hsl(20 95% 55% / 0.08); /* subtle tint on light surfaces */
-  --secondary:              hsl(0 0% 92%);
-  --secondary-foreground:   hsl(0 0% 15%);
-  --muted:                  hsl(0 0% 92%);
-  --muted-foreground:       hsl(0 0% 40%);
+  --secondary:              hsl(214 16% 92%);
+  --secondary-foreground:   hsl(215 20% 16%);
+  --muted:                  hsl(214 16% 92%);
+  --muted-foreground:       hsl(215 12% 42%);
   --accent:                 hsl(20 95% 95%);
   --accent-foreground:      hsl(20 80% 30%);
   --destructive:            hsl(0 84% 60%);
-  --border:                 hsl(0 0% 85%);
-  --input:                  hsl(0 0% 85%);
+  --border:                 hsl(214 15% 86%);
+  --input:                  hsl(214 15% 86%);
   --ring:                   hsl(20 95% 55%);
   --radius:                 0.5rem;
 
@@ -200,13 +200,13 @@
   --chart-5: hsl(40 96% 50%);
 
   /* Sidebar */
-  --sidebar:                    hsl(0 0% 96%);
-  --sidebar-foreground:         hsl(0 0% 10%);
+  --sidebar:                    hsl(214 20% 96%);
+  --sidebar-foreground:         hsl(215 25% 11%);
   --sidebar-primary:            hsl(20 95% 55%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent:             hsl(0 0% 90%);
-  --sidebar-accent-foreground:  hsl(0 0% 15%);
-  --sidebar-border:             hsl(0 0% 85%);
+  --sidebar-accent:             hsl(214 16% 90%);
+  --sidebar-accent-foreground:  hsl(215 20% 16%);
+  --sidebar-border:             hsl(214 15% 86%);
   --sidebar-ring:               hsl(20 95% 55%);
 }
 
@@ -214,26 +214,26 @@
    Dark mode tokens  (applied when <html class="dark"> — the default)
    ───────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background:             hsl(0 0% 7%);
-  --foreground:             hsl(0 0% 95%);
-  --card:                   hsl(0 0% 9%);
-  --card-foreground:        hsl(0 0% 95%);
-  --popover:                hsl(0 0% 9%);
-  --popover-foreground:     hsl(0 0% 95%);
+  --background:             hsl(218 18% 7%);
+  --foreground:             hsl(210 20% 95%);
+  --card:                   hsl(218 16% 10%);
+  --card-foreground:        hsl(210 20% 95%);
+  --popover:                hsl(218 16% 10%);
+  --popover-foreground:     hsl(210 20% 95%);
   --primary:                hsl(20 95% 55%);
   --primary-foreground:     hsl(0 0% 100%);
   --primary-hover:          hsl(20 95% 48%);   /* same as light — hue/sat unchanged */
   --primary-active:         hsl(20 95% 40%);   /* same as light — hue/sat unchanged */
   --primary-muted:          hsl(20 95% 55% / 0.12); /* slightly more visible on dark surfaces */
-  --secondary:              hsl(0 0% 13%);
-  --secondary-foreground:   hsl(0 0% 95%);
-  --muted:                  hsl(0 0% 13%);
-  --muted-foreground:       hsl(0 0% 60%);
+  --secondary:              hsl(218 14% 14%);
+  --secondary-foreground:   hsl(210 20% 95%);
+  --muted:                  hsl(218 14% 14%);
+  --muted-foreground:       hsl(216 12% 62%);
   --accent:                 hsl(20 80% 12%);
   --accent-foreground:      hsl(20 95% 75%);
   --destructive:            hsl(0 70% 55%);
-  --border:                 hsl(0 0% 15%);
-  --input:                  hsl(0 0% 15%);
+  --border:                 hsl(218 14% 17%);
+  --input:                  hsl(218 14% 17%);
   --ring:                   hsl(20 95% 55%);
 
   /* Severity tokens — same hues, dark mode unchanged */
@@ -262,13 +262,13 @@
   --chart-5: hsl(40 96% 50%);
 
   /* Sidebar — 1% lighter than card so it reads as a separate surface */
-  --sidebar:                    hsl(0 0% 8%);
-  --sidebar-foreground:         hsl(0 0% 95%);
+  --sidebar:                    hsl(218 17% 9%);
+  --sidebar-foreground:         hsl(210 20% 95%);
   --sidebar-primary:            hsl(20 95% 55%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent:             hsl(0 0% 13%);
-  --sidebar-accent-foreground:  hsl(0 0% 95%);
-  --sidebar-border:             hsl(0 0% 13%);
+  --sidebar-accent:             hsl(218 14% 14%);
+  --sidebar-accent-foreground:  hsl(210 20% 95%);
+  --sidebar-border:             hsl(218 14% 14%);
   --sidebar-ring:               hsl(20 95% 55%);
 }
 

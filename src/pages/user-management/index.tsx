@@ -51,7 +51,7 @@ import {
 } from "@/mocks/users";
 import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { DEPARTMENTS } from "@/mocks/departments";
 
@@ -60,45 +60,66 @@ const DEPARTMENT_OPTIONS: { value: string; label: string }[] = DEPARTMENTS.map((
   label: d,
 }));
 
-/* ── Role badge ──────────────────────────────────────────────────────────── */
+/* ── Clearance ladder ────────────────────────────────────────────────────────
+   Roles are ordered — Owner outranks Admin outranks Member — so they render as
+   a three-step bar in a single hue rather than three differently-coloured
+   pills. Scanning the table then reads permission *height*, and the only
+   saturated colour on the page stays the brand orange. Colour is never the
+   sole carrier: the step count and the label both say the same thing.
+   ──────────────────────────────────────────────────────────────────────── */
 
-const ROLE_STYLES: Record<UserRole, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
-  owner: { bg: "bg-success/15 border-success/30", text: "text-success", icon: Crown },
-  admin: { bg: "bg-info/15 border-info/30",       text: "text-info",    icon: ShieldCheck },
-  user:  { bg: "bg-warning/15 border-warning/30", text: "text-warning", icon: CircleUser },
-};
+const ROLE_RANK: Record<UserRole, number> = { owner: 3, admin: 2, user: 1 };
 
-function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boolean }) {
-  const s = ROLE_STYLES[role];
-  const Icon = s.icon;
+function ClearanceLadder({ rank }: { rank: number }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
-        s.bg,
-        s.text
-      )}
-    >
-      {withIcon && <Icon className="size-3" />}
-      {USER_ROLE_LABELS[role]}
+    <span aria-hidden className="inline-flex items-end gap-[2px]">
+      {[1, 2, 3].map((step) => (
+        <span
+          key={step}
+          className={cn(
+            "w-[3px] rounded-[1px] transition-colors",
+            step === 1 ? "h-1.5" : step === 2 ? "h-2.5" : "h-3.5",
+            step <= rank ? "bg-primary" : "bg-foreground/12"
+          )}
+        />
+      ))}
+    </span>
+  );
+}
+
+/* The ladder gives the rank and the label names it — a role icon alongside
+   would be a third encoding of the same fact, so there isn't one. */
+function RoleBadge({ role }: { role: UserRole }) {
+  return (
+    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+      <ClearanceLadder rank={ROLE_RANK[role]} />
+      <span className="font-mono text-2xs font-semibold uppercase tracking-[0.12em] text-foreground">
+        {USER_ROLE_LABELS[role]}
+      </span>
     </span>
   );
 }
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 
+/* Status is a live state, so it gets a lit dot and a plain label — the filled
+   pills it replaces competed with the clearance ladder for attention. Only
+   `suspended` keeps a tinted ground, because it is the one row an owner needs
+   to spot without reading. */
 const STATUS_STYLES: Record<UserStatus, { bg: string; text: string; dot: string }> = {
-  active:    { bg: "bg-success/15 border-success/30",           text: "text-success",      dot: "bg-success" },
-  pending:   { bg: "bg-info/15 border-info/30",                 text: "text-info",         dot: "bg-info" },
-  suspended: { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical" },
+  active:    { bg: "",                                          text: "text-foreground",   dot: "bg-success" },
+  pending:   { bg: "",                                          text: "text-muted-foreground", dot: "bg-warning" },
+  suspended: { bg: "bg-sev-critical/10 border-sev-critical/25", text: "text-sev-critical", dot: "bg-sev-critical" },
 };
 
 function StatusPill({ status }: { status: UserStatus }) {
   const s = STATUS_STYLES[status];
+  const tinted = status === "suspended";
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-2xs font-semibold uppercase tracking-[0.12em]",
+        tinted && "rounded-full border px-2 py-0.5",
         s.bg,
         s.text
       )}
@@ -140,21 +161,7 @@ function Avatar({ user, size = 36 }: { user: UserData; size?: number }) {
 
 /* ── KPI cards ───────────────────────────────────────────────────────────── */
 
-type KpiFilter = "all" | "owners" | "admins" | "users" | "suspended";
-
-const KPI_CONFIGS: {
-  key: KpiFilter;
-  label: string;
-  sub: string;
-  accent: KpiAccent;
-  getValue: (items: UserData[]) => number;
-}[] = [
-  { key: "all",       label: "Total Users",     sub: "All registered accounts",        accent: "primary",      getValue: (i) => i.length },
-  { key: "owners",    label: "Owner",           sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
-  { key: "admins",    label: "Admins",          sub: "Can grant any permission",       accent: "info",         getValue: (i) => i.filter((u) => u.role === "admin").length },
-  { key: "users",     label: "Members",         sub: "Site-scoped daily members",      accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
-  { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "sev-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
-];
+type KpiFilter = "all" | "owners" | "admins" | "users" | "active" | "pending" | "suspended";
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
 
@@ -365,16 +372,12 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   );
 }
 
-function StatCard({ label, value, valueClass, sub }: { label: string; value: React.ReactNode; valueClass?: string; sub?: React.ReactNode }) {
-  // Derive accent from valueClass so the shared accent bar matches the value tint.
-  const accent: KpiAccent =
-    valueClass?.includes("text-success")      ? "success" :
-    valueClass?.includes("text-info")         ? "info" :
-    valueClass?.includes("text-sev-critical") ? "sev-critical" :
-    valueClass?.includes("text-warning")      ? "warning" :
-    valueClass?.includes("text-purple")       ? "purple" :
-    "primary";
-  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
+function StatCard({ label, value, sub }: { label: string; value: React.ReactNode; valueClass?: string; sub?: React.ReactNode }) {
+  // These three read as one group, so they share one accent. Deriving a
+  // different hue per card from its value tint gave the drawer a run of
+  // green/orange/blue bars that competed with the clearance ladder for the
+  // eye without encoding anything the numbers don't already say.
+  return <KpiCard compact label={label} value={value} sub={sub} accent="primary" />;
 }
 
 const ACTIVITY_CHIP_STYLES: Record<string, string> = {
@@ -1019,7 +1022,7 @@ function InviteUsersModal({
                     )}
                   >
                     <div className="mb-0.5 flex items-center justify-between gap-1">
-                      <RoleBadge role={r} withIcon={false} />
+                      <RoleBadge role={r} />
                       <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
                         {s.available} left
                       </span>
@@ -1269,6 +1272,126 @@ function SeatPill({
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+/* ── Roster summary ──────────────────────────────────────────────────────────
+   Replaces the seat-usage strip *and* the five KPI cards this page used to
+   stack above the table. Those two bands printed the same counts twice in two
+   different visual languages, and neither was the thing an owner opens this
+   page to see. Here capacity is stated once as the focal number, composition
+   once as a single stacked bar, and every count doubles as its own filter.
+
+   The SeatStrip below is left alone — the sign-up and on-prem licence flows
+   still render it, where the per-tier price breakdown is the point.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/** Filter chip carrying one count. Pressed state is the filter's own state. */
+function RosterChip({
+  label, count, active, onClick, ladder, dot,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+  ladder?: number;
+  dot?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "group inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 outline-none transition-colors duration-[var(--duration-fast)] ease-standard",
+        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+        active
+          ? "border-primary/50 bg-primary/10"
+          : "border-border bg-background hover:border-primary/30 hover:bg-muted/40"
+      )}
+    >
+      {ladder !== undefined && <ClearanceLadder rank={ladder} />}
+      {dot && <span className={cn("size-1.5 shrink-0 rounded-full", dot)} />}
+      <span className="font-mono text-2xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </span>
+      <span className={cn("font-mono text-md font-bold tabular-nums", active ? "text-primary" : "text-foreground")}>
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function RosterSummary({
+  users, usage, kpiFilter, onFilter,
+}: {
+  users: UserData[];
+  usage: Record<UserRole, SeatUsage>;
+  kpiFilter: KpiFilter;
+  onFilter: (key: KpiFilter) => void;
+}) {
+  const roles: UserRole[] = ["owner", "admin", "user"];
+  const licensed = roles.reduce((n, r) => n + usage[r].total, 0);
+  const assigned = roles.reduce((n, r) => n + usage[r].assigned, 0);
+  const pct = licensed > 0 ? Math.round((assigned / licensed) * 100) : 0;
+
+  const count = (r: UserRole) => users.filter((u) => u.role === r).length;
+  const byStatus = (s: UserStatus) => users.filter((u) => u.status === s).length;
+
+  // Filled portion splits by clearance, stepping down the one hue rather than
+  // introducing a colour per tier.
+  const segments = [
+    { role: "owner" as UserRole, n: count("owner"), cls: "bg-primary" },
+    { role: "admin" as UserRole, n: count("admin"), cls: "bg-primary/60" },
+    { role: "user"  as UserRole, n: count("user"),  cls: "bg-primary/30" },
+  ];
+
+  return (
+    <section className="rounded-xl border border-border bg-card">
+      <div className="flex flex-col gap-5 p-4 xl:flex-row xl:items-center xl:justify-between xl:gap-8">
+        {/* Capacity — number, meter and caption as one block, so the meter is
+            read against the figure it belongs to rather than stretched across
+            the panel where 14% would be a stub in an empty track. */}
+        <div className="shrink-0">
+          <p className="font-mono text-3xs uppercase tracking-[0.24em] text-muted-foreground">
+            Seats in use
+          </p>
+          <div className="mt-1.5 flex items-baseline gap-1.5">
+            <span className="text-4xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">
+              {assigned}
+            </span>
+            <span className="font-mono text-md text-muted-foreground">/ {licensed}</span>
+          </div>
+          {/* One stacked bar in place of three separate meters. */}
+          <div className="mt-3 flex h-1.5 w-[220px] max-w-full overflow-hidden rounded-full bg-muted">
+            {segments.map((seg) =>
+              seg.n > 0 ? (
+                <div
+                  key={seg.role}
+                  className={seg.cls}
+                  style={{ width: `${(seg.n / Math.max(licensed, 1)) * 100}%` }}
+                  title={`${USER_ROLE_LABELS[seg.role]}: ${seg.n}`}
+                />
+              ) : null
+            )}
+          </div>
+          <p className="mt-2 font-mono text-2xs text-muted-foreground">
+            {pct}% of licence · {Math.max(0, licensed - assigned)} available
+          </p>
+        </div>
+
+        {/* Counts, each one a filter */}
+        <div className="flex flex-wrap items-center gap-1.5 xl:justify-end">
+          <RosterChip label="Owner"  count={count("owner")} ladder={3} active={kpiFilter === "owners"} onClick={() => onFilter("owners")} />
+          <RosterChip label="Admin"  count={count("admin")} ladder={2} active={kpiFilter === "admins"} onClick={() => onFilter("admins")} />
+          <RosterChip label="Member" count={count("user")}  ladder={1} active={kpiFilter === "users"}  onClick={() => onFilter("users")} />
+          <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
+          <RosterChip label="Active"    count={byStatus("active")}    dot="bg-success"      active={kpiFilter === "active"}    onClick={() => onFilter("active")} />
+          <RosterChip label="Pending"   count={byStatus("pending")}   dot="bg-warning"      active={kpiFilter === "pending"}   onClick={() => onFilter("pending")} />
+          <RosterChip label="Suspended" count={byStatus("suspended")} dot="bg-sev-critical" active={kpiFilter === "suspended"} onClick={() => onFilter("suspended")} />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -2464,12 +2587,12 @@ function DeletedUsersPage({
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted/30">
+              <thead className="border-b border-border bg-muted/40">
                 <tr className="border-b border-border text-left">
                   {["USER ID", "USER", "ROLE", "SITES", "DELETED ON", "ACTION"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="whitespace-nowrap px-4 py-3 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
                     >
                       {h}
                     </th>
@@ -2481,7 +2604,7 @@ function DeletedUsersPage({
                   <tr
                     key={u.id}
                     onClick={() => setDrawerId(u.id)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted/50"
                   >
                     <td className="px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{u.id}</span>
@@ -2624,6 +2747,8 @@ export default function UserManagementPage({
       if (kpiFilter === "owners" && u.role !== "owner") return false;
       if (kpiFilter === "admins" && u.role !== "admin") return false;
       if (kpiFilter === "users" && u.role !== "user") return false;
+      if (kpiFilter === "active" && u.status !== "active") return false;
+      if (kpiFilter === "pending" && u.status !== "pending") return false;
       if (kpiFilter === "suspended" && u.status !== "suspended") return false;
       if (filters.role.length > 0 && !filters.role.includes(u.role)) return false;
       if (filters.status.length > 0 && !filters.status.includes(u.status)) return false;
@@ -2885,23 +3010,13 @@ export default function UserManagementPage({
         </PageHeader.Actions>
       </PageHeader>
 
-      {/* Seat usage strip */}
-      <SeatStrip usage={seatUsage} billingCycle={ORG_LICENSE_INFO.billingCycle} />
-
-      {/* KPI cards */}
-      <KpiGrid cols={5}>
-        {KPI_CONFIGS.map((cfg) => (
-          <KpiCard
-            key={cfg.key}
-            label={cfg.label}
-            value={cfg.getValue(users)}
-            sub={cfg.sub}
-            accent={cfg.accent}
-            active={cfg.key !== "all" && kpiFilter === cfg.key}
-            onClick={() => handleKpiClick(cfg.key)}
-          />
-        ))}
-      </KpiGrid>
+      {/* Capacity + composition + counts, in one strip */}
+      <RosterSummary
+        users={users}
+        usage={seatUsage}
+        kpiFilter={kpiFilter}
+        onFilter={handleKpiClick}
+      />
 
       {/* Filter panel */}
       <FilterPanel
@@ -2981,12 +3096,12 @@ export default function UserManagementPage({
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted/30">
+              <thead className="border-b border-border bg-muted/40">
                 <tr className="border-b border-border text-left">
                   {["USER ID", "USER", "ROLE", "STATUS", "SITES", "LAST ACTIVE", "ACTION"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="whitespace-nowrap px-4 py-3 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
                     >
                       {h}
                     </th>
@@ -2998,7 +3113,7 @@ export default function UserManagementPage({
                   <tr
                     key={u.id}
                     onClick={() => setDrawerId(u.id)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                    className="group cursor-pointer text-base transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted/50"
                   >
                       <td className="px-4 py-3">
                         <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">

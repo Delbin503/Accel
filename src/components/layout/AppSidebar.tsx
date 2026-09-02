@@ -187,13 +187,32 @@ function AccelLogo() {
         isCollapsed ? "justify-center px-0" : "px-2"
       )}
     >
-      <AccelMark className="size-8 shrink-0" />
+      <AccelMark className="size-7 shrink-0" />
       {!isCollapsed && (
-        <span className="text-lg font-bold tracking-tight text-foreground">Accel</span>
+        <span className="flex min-w-0 flex-col leading-none">
+          <span className="text-lg font-extrabold tracking-tight text-foreground">Accel</span>
+          {/* Mono micro-cap descriptor — names the instrument, not the app. */}
+          <span className="mt-1 font-mono text-3xs uppercase tracking-[0.28em] text-muted-foreground">
+            TRMS
+          </span>
+        </span>
       )}
     </div>
   );
 }
+
+/* ─── Nav item styling ──────────────────────────────────────────────────────
+   The active row is carried by a solid orange edge marker plus a lifted
+   surface, not by orange text on an orange tint — at 17 nav items the tinted
+   treatment made the current page shout instead of simply reading as current.
+   ──────────────────────────────────────────────────────────────────────── */
+
+const NAV_ITEM =
+  "relative rounded-md pl-3 transition-colors duration-[var(--duration-fast)] ease-standard";
+const NAV_ITEM_ACTIVE =
+  "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+const NAV_EDGE =
+  "absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-primary";
 
 /* ─── Single nav item (leaf) ────────────────────────────────────────────── */
 
@@ -213,17 +232,15 @@ function NavLeaf({ item }: { item: NavItem }) {
         asChild
         isActive={isActive}
         tooltip={isCollapsed ? item.label : undefined}
-        className={cn(
-          "relative rounded-md border-l-2 border-transparent transition-colors",
-          isActive &&
-            "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
-        )}
+        className={cn(NAV_ITEM, isActive && NAV_ITEM_ACTIVE)}
       >
         <NavLink to={item.href} end={item.href === "/"}>
+          {/* Edge marker carries the active state so the label can stay calm. */}
+          {isActive && <span aria-hidden className={NAV_EDGE} />}
           <item.icon
             className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
           />
-          <span>{item.label}</span>
+          <span className={cn("truncate", isActive && "font-semibold")}>{item.label}</span>
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -255,12 +272,9 @@ function NavParent({ item }: { item: NavItem }) {
             onClick={() => setOpen((v) => !v)}
             isActive={isAnyChildActive}
             tooltip={item.label}
-            className={cn(
-              "relative rounded-md border-l-2 border-transparent transition-colors",
-              isAnyChildActive &&
-                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
-            )}
+            className={cn(NAV_ITEM, isAnyChildActive && NAV_ITEM_ACTIVE)}
           >
+            {isAnyChildActive && <span aria-hidden className={NAV_EDGE} />}
             <item.icon
               className={cn(
                 "size-4 shrink-0",
@@ -272,7 +286,7 @@ function NavParent({ item }: { item: NavItem }) {
         </SidebarMenuItem>
 
         {open && (
-          <div className="-mx-1 my-0.5 flex flex-col items-center gap-1 rounded-lg border border-primary/40 px-1 py-1">
+          <div className="-mx-1 my-0.5 flex flex-col items-center gap-1 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-1 py-1">
             {item.children?.map((child) => {
               const childActive =
                 location.pathname === child.href ||
@@ -314,19 +328,16 @@ function NavParent({ item }: { item: NavItem }) {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
-            className={cn(
-              "relative rounded-md border-l-2 border-transparent transition-colors",
-              isAnyChildActive &&
-                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
-            )}
+            className={cn(NAV_ITEM, isAnyChildActive && NAV_ITEM_ACTIVE)}
           >
+            {isAnyChildActive && <span aria-hidden className={NAV_EDGE} />}
             <item.icon
               className={cn(
                 "size-4 shrink-0",
                 isAnyChildActive ? "text-primary" : "text-muted-foreground"
               )}
             />
-            <span>{item.label}</span>
+            <span className={cn("truncate", isAnyChildActive && "font-semibold")}>{item.label}</span>
             <ChevronDown
               className={cn(
                 "ml-auto size-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
@@ -337,7 +348,9 @@ function NavParent({ item }: { item: NavItem }) {
         </CollapsibleTrigger>
 
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          <SidebarMenuSub className="my-1 gap-0.5 rounded-md border-primary/50 bg-primary/[0.06] py-1.5">
+          {/* Children hang off a hairline guide — the tree metaphor, quieter
+              than the orange-tinted box it replaces. */}
+          <SidebarMenuSub className="my-0.5 gap-0.5 border-sidebar-border py-0.5">
             {item.children?.map((child) => {
               const childActive =
                 location.pathname === child.href ||
@@ -542,14 +555,16 @@ export function AppSidebar() {
   return (
     <>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="pb-1 pt-3">
+        <SidebarHeader className="border-b border-sidebar-border pb-3 pt-3">
           <AccelLogo />
         </SidebarHeader>
 
         <SidebarContent className="gap-0 overflow-x-hidden">
           {NAV_GROUPS.map((group) => (
-            <SidebarGroup key={group.label} className="py-2">
-              <SidebarGroupLabel className="mb-1 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <SidebarGroup key={group.label} className="py-2.5">
+              {/* Mono micro-caps: the group label reads as a rack label rather
+                  than a heading, which keeps the nav items themselves dominant. */}
+              <SidebarGroupLabel className="mb-1.5 h-auto px-2 font-mono text-3xs font-medium uppercase tracking-[0.24em] text-muted-foreground/60">
                 {group.label}
               </SidebarGroupLabel>
 
