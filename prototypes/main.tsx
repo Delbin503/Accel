@@ -40,7 +40,7 @@ const PHASES: Phase[] = [
     priority: "P0",
     modules: [
       { name: "Run Analysis", slug: "PRD_Run_Analysis" },
-      { name: "System Configuration" },
+      { name: "System Configuration", slug: "PRD_System_Configuration" },
       { name: "Site · NVR Devices", slug: "PRD_NVR_Devices" },
       { name: "Recordings", slug: "PRD_Recordings" },
       { name: "Activity Logs" },
