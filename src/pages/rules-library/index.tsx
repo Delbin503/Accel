@@ -11,16 +11,13 @@ import {
   Edit2,
   MoreHorizontal,
   BookOpen,
-  GripVertical,
   ArrowLeft,
   ArrowUpDown,
   Calendar,
   Check,
   SlidersHorizontal,
   Bookmark,
-  Clock,
   LayoutTemplate,
-  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,149 +37,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { TimeSelect } from "@/components/shared/TimeSelect";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import {
   MOCK_RULES,
   ALL_TAGS,
-  ZONES_LIST,
-  CONDITIONS_LIST,
-  ACTIONS_LIST,
-  SCHEDULES_LIST,
-  OPERATORS_LIST,
-  UNITS_LIST,
-  TEMPLATES,
 } from "@/mocks/rulesLibrary";
-import { MOCK_MODELS } from "@/mocks/modelManagement";
-import type { RuleData, ConditionRow, RowType, RuleSeverity } from "@/types/rules";
-
-/* Detection models available as WHEN suggestions — selectable by name, with
- * their model ID shown alongside. Free-typed classes/variables are also allowed. */
-const MODEL_OPTIONS: string[] = MOCK_MODELS.map((m) => m.name);
-const MODEL_ID_BY_NAME: Record<string, string> = Object.fromEntries(
-  MOCK_MODELS.map((m) => [m.name, m.id])
-);
-
-/* ── Utility ─────────────────────────────────────────────────────────────── */
-
-let _idCtr = 0;
-function genId() {
-  return `row-${++_idCtr}-${Math.random().toString(36).slice(2, 5)}`;
-}
-
-/* ── Row style registry ──────────────────────────────────────────────────── */
-
-interface RowMeta {
-  label: string;
-  bgClass: string;
-  textClass: string;
-  borderClass: string;
-  teal?: boolean;
-}
-
-const ROW_META: Record<RowType, RowMeta> = {
-  WHEN:   { label: "WHEN",   bgClass: "bg-success/15",       textClass: "text-success",      borderClass: "border-success/40" },
-  IN:     { label: "IN",     bgClass: "bg-primary/15",       textClass: "text-primary",      borderClass: "border-primary/40" },
-  AND:    { label: "AND",    bgClass: "bg-warning/15",   textClass: "text-warning",  borderClass: "border-warning/40" },
-  OR:     { label: "OR",     bgClass: "bg-sev-critical/15",  textClass: "text-sev-critical", borderClass: "border-sev-critical/40" },
-  THEN:   { label: "THEN",   bgClass: "bg-purple/15",        textClass: "text-purple",       borderClass: "border-purple/40" },
-  During: { label: "DURING", bgClass: "",                    textClass: "",                  borderClass: "", teal: true },
-  FOR:    { label: "FOR",    bgClass: "bg-info/15",          textClass: "text-info",         borderClass: "border-info/40" },
-};
-
-const TEAL_INLINE = {
-  background: "rgba(20,184,166,0.15)",
-  color: "#14b8a6",
-  borderColor: "rgba(20,184,166,0.4)",
-} as const;
-
-const SWAP_OPTIONS: { type: RowType; desc: string }[] = [
-  { type: "FOR",    desc: "Duration — more than X seconds/minutes" },
-  { type: "AND",    desc: "Additional condition" },
-  { type: "THEN",   desc: "Action to take" },
-  { type: "OR",     desc: "Alternative condition" },
-  { type: "During", desc: "Schedule window" },
-  { type: "WHEN",   desc: "Pick which model/detection triggers the rule" },
-  { type: "IN",     desc: "Pick which zone/area it applies to" },
-];
-
-/* ── Plain-English summary ───────────────────────────────────────────────── */
-
-function buildSummary(rows: ConditionRow[]): React.ReactNode {
-  if (rows.length === 0) {
-    return (
-      <span className="italic text-muted-foreground">
-        Add a condition or action to see the rule summary…
-      </span>
-    );
-  }
-
-  const nodes: React.ReactNode[] = [];
-  const firstThenIdx = rows.findIndex((r) => r.type === "THEN");
-
-  rows.forEach((row, i) => {
-    const m = ROW_META[row.type];
-    const isLt = row.operator.includes("less");
-
-    nodes.push(
-      <span
-        key={`kw-${i}`}
-        className={cn(
-          "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-xs font-bold",
-          m.teal ? "" : cn(m.bgClass, m.textClass)
-        )}
-        style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
-      >
-        {row.type === "THEN" ? (i === firstThenIdx ? "THEN" : "AND ALSO") : m.label}
-      </span>
-    );
-
-    if (row.field) {
-      nodes.push(
-        <span key={`f-${i}`} className="mx-0.5 font-semibold text-foreground">
-          {row.field}
-        </span>
-      );
-    }
-
-    if (row.type === "WHEN") {
-      nodes.push(
-        <span key={`s-${i}`} className="mx-0.5 text-muted-foreground">
-          is detected
-        </span>
-      );
-    }
-
-    if ((row.type === "AND" || row.type === "OR" || row.type === "FOR") && row.operator) {
-      nodes.push(
-        <span
-          key={`op-${i}`}
-          className={cn(
-            "mx-0.5 inline-flex items-center rounded px-1.5 py-px font-mono text-xs font-bold",
-            isLt ? "bg-sev-critical/15 text-sev-critical" : "bg-info/15 text-info"
-          )}
-        >
-          › {row.operator}
-        </span>
-      );
-    }
-
-    if ((row.type === "AND" || row.type === "OR" || row.type === "FOR") && row.value) {
-      nodes.push(
-        <span key={`v-${i}`} className="mx-0.5 font-semibold text-foreground">
-          {row.value}
-          {row.unit ? ` ${row.unit}` : ""}
-        </span>
-      );
-    }
-
-    if (i < rows.length - 1) nodes.push(<span key={`sp-${i}`}> </span>);
-  });
-
-  return <>{nodes}</>;
-}
+import type { RuleData, ConditionRow, RuleSeverity } from "@/types/rules";
+import type { GeneratedRulePayload, RuleConfig } from "@/types/ruleTemplates";
+import {
+  EMPTY_CONFIG,
+  buildPayload,
+  configToRows,
+  inferConfig,
+  missingParameters,
+} from "@/lib/ruleTemplates";
+import { PayloadPreview, RuleTemplateForm } from "./RuleTemplateForm";
 
 /* ── Severity badge ──────────────────────────────────────────────────────── */
 
@@ -476,381 +347,6 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 
 /* ── Keyword badge (builder) ─────────────────────────────────────────────── */
 
-function KeywordBadge({ type, isAndAlso, onClick }: { type: RowType; isAndAlso?: boolean; onClick: () => void }) {
-  const m = ROW_META[type];
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex min-w-[80px] flex-shrink-0 items-center justify-between gap-1 whitespace-nowrap rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-opacity hover:opacity-80",
-        m.teal ? "" : cn(m.bgClass, m.textClass, m.borderClass)
-      )}
-      style={m.teal ? TEAL_INLINE : undefined}
-    >
-      <span>{isAndAlso ? "AND ALSO" : m.label}</span>
-      <ChevronDown className="size-2.5 opacity-60" />
-    </button>
-  );
-}
-
-/* ── Type swap popover ───────────────────────────────────────────────────── */
-
-function SwapPopover({
-  currentType,
-  onSelect,
-  onClose,
-}: {
-  currentType: RowType;
-  onSelect: (t: RowType) => void;
-  onClose: () => void;
-}) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    function close(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [onClose]);
-
-  return (
-    <div
-      ref={ref}
-      className="absolute left-0 top-full z-50 mt-1 max-h-[min(60vh,22rem)] min-w-[280px] overflow-y-auto rounded-xl border border-border bg-card py-1.5 shadow-2xl"
-    >
-      <p className="sticky top-0 bg-card px-3 pb-1 pt-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Change Row Type
-      </p>
-      {SWAP_OPTIONS.map(({ type, desc }) => {
-        const m = ROW_META[type];
-        return (
-          <button
-            key={type}
-            onClick={() => { onSelect(type); onClose(); }}
-            className={cn(
-              "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted",
-              type === currentType && "bg-muted/60"
-            )}
-          >
-            <span
-              className={cn(
-                "w-[68px] flex-shrink-0 rounded px-2 py-px text-center font-mono text-xs font-bold",
-                m.teal ? "" : cn(m.bgClass, m.textClass)
-              )}
-              style={m.teal ? { background: TEAL_INLINE.background, color: TEAL_INLINE.color } : undefined}
-            >
-              {m.label}
-            </span>
-            <span className="text-sm text-muted-foreground">{desc}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ── Operator pill ───────────────────────────────────────────────────────── */
-
-function OperatorPill({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  const isLt = value.includes("less");
-
-  React.useEffect(() => {
-    function close(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "flex items-center gap-1 rounded-md border px-2.5 py-1.5 font-mono text-xs font-bold transition-colors",
-          isLt
-            ? "border-sev-critical/40 bg-sev-critical/15 text-sev-critical"
-            : "border-info/40 bg-info/15 text-info"
-        )}
-      >
-        › {value || "operator"}
-        <ChevronDown className="size-2.5 opacity-60" />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[150px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-xl">
-          {OPERATORS_LIST.map((op) => (
-            <button
-              key={op}
-              onClick={() => { onChange(op); setOpen(false); }}
-              className={cn(
-                "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
-                op === value ? "font-semibold text-foreground" : "text-muted-foreground"
-              )}
-            >
-              {op}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Field search input ──────────────────────────────────────────────────── */
-
-function FieldSearch({
-  value,
-  placeholder,
-  options,
-  onChange,
-  hints,
-  icon: Icon = Search,
-}: {
-  value: string;
-  placeholder: string;
-  options: string[];
-  onChange: (v: string) => void;
-  /** Optional right-aligned hint per option (e.g. a model ID shown beside the name). */
-  hints?: Record<string, string>;
-  /** Leading icon — defaults to a search magnifier. */
-  icon?: React.ElementType;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const filtered = options.filter((o) => o.toLowerCase().includes(value.toLowerCase()));
-
-  React.useEffect(() => {
-    function close(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
-
-  return (
-    <div className="relative min-w-[160px] flex-1" ref={ref}>
-      <div
-        className="flex cursor-text items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary hover:border-muted-foreground/40"
-        onClick={() => { setOpen(true); inputRef.current?.focus(); }}
-      >
-        <Icon className="size-3.5 flex-shrink-0 text-muted-foreground" />
-        <input
-          ref={inputRef}
-          value={value}
-          onChange={(e) => { onChange(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
-        />
-        {value && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onChange(""); }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-3" />
-          </button>
-        )}
-      </div>
-      {open && filtered.length > 0 && (
-        <div className="absolute left-0 top-full z-50 mt-1 max-h-44 min-w-full overflow-y-auto rounded-lg border border-border bg-card py-1 shadow-xl">
-          {filtered.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => { onChange(opt); setOpen(false); }}
-              className={cn(
-                "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-base transition-colors hover:bg-muted",
-                opt === value ? "font-semibold text-foreground" : "text-muted-foreground"
-              )}
-            >
-              <span className="truncate">{opt}</span>
-              {hints?.[opt] && (
-                <span className="flex-shrink-0 rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
-                  {hints[opt]}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Single condition row ────────────────────────────────────────────────── */
-
-const FIELD_OPTIONS: Record<RowType, string[]> = {
-  WHEN:   MODEL_OPTIONS,
-  IN:     ZONES_LIST,
-  AND:    CONDITIONS_LIST,
-  OR:     CONDITIONS_LIST,
-  THEN:   ACTIONS_LIST,
-  During: SCHEDULES_LIST,
-  FOR:    [],
-};
-
-const FIELD_PLACEHOLDER: Record<RowType, string> = {
-  WHEN:   "Select a model or type a class / variable…",
-  IN:     "Select zone",
-  AND:    "Pick condition",
-  OR:     "Pick condition",
-  THEN:   "Pick action",
-  During: "Pick schedule",
-  FOR:    "",
-};
-
-function ConditionRowItem({
-  row,
-  isAndAlso,
-  swapOpen,
-  onSwapToggle,
-  onUpdate,
-  onRemove,
-  isDragging,
-  isOver,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-}: {
-  row: ConditionRow;
-  isAndAlso: boolean;
-  swapOpen: boolean;
-  onSwapToggle: () => void;
-  onUpdate: (id: string, patch: Partial<ConditionRow>) => void;
-  onRemove: (id: string) => void;
-  isDragging: boolean;
-  isOver: boolean;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
-}) {
-  const hasField = row.type !== "FOR";
-  const hasOpValue = row.type === "AND" || row.type === "OR" || row.type === "FOR";
-
-  return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "group relative flex flex-wrap items-center gap-2 rounded-lg py-0.5 transition-all",
-        isDragging && "opacity-40",
-        isOver && "border-t-2 border-primary pt-1"
-      )}
-    >
-      {/* Drag handle */}
-      <GripVertical className="size-4 flex-shrink-0 cursor-grab text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100" />
-
-      {/* Keyword badge — first THEN shows "Then", later THEN rows show "And Also" */}
-      <div className="relative flex-shrink-0">
-        <KeywordBadge type={row.type} isAndAlso={isAndAlso} onClick={onSwapToggle} />
-        {swapOpen && (
-          <SwapPopover
-            currentType={row.type}
-            onSelect={(t) =>
-              onUpdate(row.id, {
-                type: t,
-                field: "",
-                operator: t === "AND" || t === "OR" || t === "FOR" ? "more than" : "",
-                value: t === "AND" || t === "OR" || t === "FOR" ? "3" : "",
-                unit:  t === "AND" || t === "OR" || t === "FOR" ? "Seconds" : "",
-              })
-            }
-            onClose={onSwapToggle}
-          />
-        )}
-      </div>
-
-      {/* Field selector */}
-      {hasField && (
-        <FieldSearch
-          value={row.field}
-          placeholder={FIELD_PLACEHOLDER[row.type]}
-          options={FIELD_OPTIONS[row.type]}
-          hints={row.type === "WHEN" ? MODEL_ID_BY_NAME : undefined}
-          icon={row.type === "WHEN" ? Tag : undefined}
-          onChange={(v) => {
-            // When switching to Custom Hours, seed default times
-            const isCustom = v === "Custom Hours" && row.type === "During";
-            onUpdate(row.id, isCustom
-              ? { field: v, value: row.value || "08:00", unit: row.unit || "18:00" }
-              : { field: v });
-          }}
-        />
-      )}
-
-      {/* Custom Hours time pickers */}
-      {row.type === "During" && row.field === "Custom Hours" && (
-        <div className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1">
-          <Clock className="size-3 text-muted-foreground" />
-          <TimeSelect
-            value={row.value || "08:00"}
-            onChange={(v) => onUpdate(row.id, { value: v })}
-            aria-label="Window start"
-            className="h-7 w-32 border-0 bg-transparent shadow-none"
-          />
-          <span className="text-xs text-muted-foreground">to</span>
-          <TimeSelect
-            value={row.unit || "18:00"}
-            onChange={(v) => onUpdate(row.id, { unit: v })}
-            aria-label="Window end"
-            className="h-7 w-32 border-0 bg-transparent shadow-none"
-          />
-        </div>
-      )}
-
-      {/* Model ID badge — shown when a known detection model is selected */}
-      {row.type === "WHEN" && MODEL_ID_BY_NAME[row.field] && (
-        <span className="flex-shrink-0 rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">
-          {MODEL_ID_BY_NAME[row.field]}
-        </span>
-      )}
-
-      {/* Suffix for WHEN */}
-      {row.type === "WHEN" && (
-        <span className="flex-shrink-0 text-base text-muted-foreground">is detected</span>
-      )}
-
-      {/* Operator + value + unit for AND / OR / FOR */}
-      {hasOpValue && (
-        <>
-          <OperatorPill value={row.operator} onChange={(v) => onUpdate(row.id, { operator: v })} />
-          <input
-            type="number"
-            value={row.value}
-            onChange={(e) => onUpdate(row.id, { value: e.target.value })}
-            className="w-16 rounded-md border border-border bg-background px-2 py-1.5 text-center text-base text-foreground outline-none focus:border-primary"
-          />
-          <Select value={row.unit} onValueChange={(v) => onUpdate(row.id, { unit: v })}>
-            <SelectTrigger className="h-8 w-auto text-sm">
-              <SelectValue placeholder="Unit" />
-            </SelectTrigger>
-            <SelectContent>
-              {UNITS_LIST.map((u) => (
-                <SelectItem key={u} value={u}>{u}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </>
-      )}
-
-      {/* Remove button */}
-      <button
-        onClick={() => onRemove(row.id)}
-        className="ml-auto flex size-7 flex-shrink-0 items-center justify-center rounded opacity-0 text-muted-foreground/40 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
-      >
-        <X className="size-3.5" />
-      </button>
-    </div>
-  );
-}
-
 /* ── Tag input with chips ────────────────────────────────────────────────── */
 
 function TagInput({
@@ -963,129 +459,27 @@ const SEV_OPTS: { sev: RuleSeverity; label: string; active: string; dot: string 
   { sev: "critical", label: "Critical", active: "border-sev-critical/50 bg-sev-critical/10 text-sev-critical", dot: "bg-sev-critical" },
 ];
 
-function TemplatesTabContent({ onLoadTemplate }: { onLoadTemplate: (i: number) => void }) {
-  const [search, setSearch] = React.useState("");
-  const [tagFilter, setTagFilter] = React.useState<string[]>([]);
-  const [tagOpen, setTagOpen] = React.useState(false);
-
-  const allTags = Array.from(new Set(TEMPLATES.flatMap((t) => t.tags))).sort();
-  const filtered = TEMPLATES.map((t, i) => ({ t, i })).filter(({ t }) => {
-    if (search) {
-      const q = search.toLowerCase();
-      if (![t.name, t.description, ...t.tags].join(" ").toLowerCase().includes(q)) return false;
-    }
-    if (tagFilter.length > 0 && !tagFilter.every((tag) => t.tags.includes(tag))) return false;
-    return true;
-  });
-
-  return (
-    <>
-      <div className="space-y-2">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search templates…" className="h-8 pl-8 text-sm" />
-        </div>
-        <Popover open={tagOpen} onOpenChange={setTagOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-between gap-1.5">
-              <span className="inline-flex items-center gap-1.5">
-                Tags
-                {tagFilter.length > 0 && (
-                  <span className="rounded-full bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
-                    {tagFilter.length}
-                  </span>
-                )}
-              </span>
-              <ChevronDown className="size-3.5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="max-h-[240px] w-52 overflow-y-auto p-1.5">
-            {allTags.map((tag) => {
-              const checked = tagFilter.includes(tag);
-              return (
-                <button key={tag}
-                  onClick={() => setTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag])}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-                  <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                    checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
-                    {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-                  </div>
-                  {tag}
-                </button>
-              );
-            })}
-            {tagFilter.length > 0 && (
-              <button onClick={() => setTagFilter([])}
-                className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
-                Clear all
-              </button>
-            )}
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {filtered.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm italic text-muted-foreground">
-          No templates match the current filters.
-        </p>
-      ) : (
-        filtered.map(({ t: tpl, i: idx }) => (
-          <button
-            key={idx}
-            onClick={() => onLoadTemplate(idx)}
-            className="w-full rounded-xl border border-border bg-background p-3.5 text-left transition-all hover:border-primary"
-          >
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-base font-bold text-foreground">{tpl.name}</span>
-              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs font-semibold text-muted-foreground">
-                {tpl.model}
-              </span>
-            </div>
-            <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
-              {tpl.description}
-            </p>
-            <div className="flex flex-wrap items-center gap-1">
-              {tpl.tags.slice(0, 4).map((t) => (
-                <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">
-                  {t}
-                </span>
-              ))}
-              <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
-                {tpl.conditions.length} Rules
-              </span>
-            </div>
-          </button>
-        ))
-      )}
-    </>
-  );
-}
-
 function BuilderSidePanel({
-  rows,
+  payload,
   severity,
   onSeverityChange,
   tab,
   onTabChange,
-  onLoadTemplate,
   showEstimatedRate = false,
 }: {
-  rows: ConditionRow[];
+  payload: GeneratedRulePayload;
   severity: RuleSeverity;
   onSeverityChange: (s: RuleSeverity) => void;
-  tab: "summary" | "template";
-  onTabChange: (t: "summary" | "template") => void;
-  onLoadTemplate: (i: number) => void;
+  tab: "summary" | "payload";
+  onTabChange: (t: "summary" | "payload") => void;
   showEstimatedRate?: boolean;
 }) {
-  const hasSummary = rows.length > 0;
   const BARS = [40, 65, 30, 50, 80, 55, 70];
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex border-b border-border px-4">
-        {(["summary", "template"] as const).map((t) => (
+        {(["summary", "payload"] as const).map((t) => (
           <button
             key={t}
             onClick={() => onTabChange(t)}
@@ -1096,7 +490,7 @@ function BuilderSidePanel({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {t === "summary" ? "Summary" : "Template"}
+            {t === "summary" ? "Summary" : "Payload"}
           </button>
         ))}
       </div>
@@ -1104,12 +498,7 @@ function BuilderSidePanel({
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {tab === "summary" && (
           <>
-            <p className="text-sm font-semibold text-foreground">Rule in Plain English</p>
-            <div className="min-h-[90px] rounded-lg border border-border bg-background p-3.5 text-base leading-relaxed">
-              {buildSummary(rows)}
-            </div>
-
-            {hasSummary && showEstimatedRate && (
+            {showEstimatedRate && (
               <div className="rounded-lg border border-border bg-background p-3.5">
                 <p className="mb-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
                   Estimated trigger rate
@@ -1160,9 +549,7 @@ function BuilderSidePanel({
           </>
         )}
 
-        {tab === "template" && (
-          <TemplatesTabContent onLoadTemplate={onLoadTemplate} />
-        )}
+        {tab === "payload" && <PayloadPreview payload={payload} />}
       </div>
     </div>
   );
@@ -1174,17 +561,17 @@ interface BuilderErrors {
   name?: string;
   description?: string;
   tags?: string;
-  conditions?: string;
+  objectClasses?: string;
 }
 
 interface BuilderState {
   name: string;
   description: string;
   tags: string[];
-  rows: ConditionRow[];
+  /** Included fields + their values — the source of truth for the rule's logic. */
+  config: RuleConfig;
   severity: RuleSeverity;
-  sideTab: "summary" | "template";
-  swapRowId: string | null;
+  sideTab: "summary" | "payload";
   errors: BuilderErrors;
 }
 
@@ -1192,10 +579,9 @@ const EMPTY_BUILDER: BuilderState = {
   name: "",
   description: "",
   tags: [],
-  rows: [],
+  config: { ...EMPTY_CONFIG, fields: [...EMPTY_CONFIG.fields], params: { ...EMPTY_CONFIG.params } },
   severity: "critical",
   sideTab: "summary",
-  swapRowId: null,
   errors: {},
 };
 
@@ -1204,10 +590,13 @@ function ruleToBuilder(rule: RuleData): BuilderState {
     name: rule.name,
     description: rule.description,
     tags: [...rule.tags],
-    rows: rule.conditions.map((c) => ({ ...c })),
+    // Rules saved before the form was parameterised carry no config — infer one
+    // so the form opens populated rather than blank.
+    config: rule.config
+      ? { ...rule.config, fields: [...rule.config.fields], params: { ...rule.config.params } }
+      : inferConfig(rule),
     severity: rule.severity,
     sideTab: "summary",
-    swapRowId: null,
     errors: {},
   };
 }
@@ -1234,14 +623,37 @@ function RuleBuilder({
   ) => void;
 }) {
   const [s, setS] = React.useState<BuilderState>(() =>
-    mode === "edit" && editingRule ? ruleToBuilder(editingRule) : { ...EMPTY_BUILDER }
+    // Populated in "edit", and in "create" when seeded from a saved template.
+    editingRule ? ruleToBuilder(editingRule) : { ...EMPTY_BUILDER }
   );
-  const [dragIdx, setDragIdx] = React.useState<number | null>(null);
-  const [overIdx, setOverIdx] = React.useState<number | null>(null);
   const [savedRecently, setSavedRecently] = React.useState(false);
 
+  // The WHEN/IN/AND/FOR/THEN projection every other surface renders.
+  const rows = React.useMemo(() => configToRows(s.config, s.name), [s.config, s.name]);
+  const payload = React.useMemo(
+    () =>
+      buildPayload({
+        config: s.config,
+        name: s.name,
+        severity: s.severity,
+        ruleId: editingRule?.id ?? "(assigned on save)",
+      }),
+    [s.config, s.name, s.severity, editingRule]
+  );
+
+  function ruleFields() {
+    return {
+      name: s.name,
+      description: s.description,
+      tags: s.tags,
+      conditions: rows,
+      severity: s.severity,
+      config: s.config,
+    };
+  }
+
   function handleSaveTemplateClick() {
-    onSaveTemplate({ name: s.name, description: s.description, tags: s.tags, conditions: s.rows, severity: s.severity });
+    onSaveTemplate(ruleFields());
     setSavedRecently(true);
     setTimeout(() => setSavedRecently(false), 2000);
   }
@@ -1256,22 +668,12 @@ function RuleBuilder({
     );
   }
 
-  function addCondition() {
-    const isFirst = s.rows.length === 0;
-    clearError("conditions");
-    patch({
-      rows: [
-        ...s.rows,
-        {
-          id: genId(),
-          type: isFirst ? "WHEN" : "AND",
-          field: "",
-          operator: isFirst ? "" : "more than",
-          value: isFirst ? "" : "3",
-          unit: isFirst ? "" : "Seconds",
-        },
-      ],
-    });
+  function handleConfigChange(next: RuleConfig) {
+    setS((prev) => ({
+      ...prev,
+      config: next,
+      errors: { ...prev.errors, objectClasses: undefined },
+    }));
   }
 
   function validate(): BuilderErrors {
@@ -1279,7 +681,12 @@ function RuleBuilder({
     if (!s.name.trim()) errors.name = "Rule name is required.";
     if (!s.description.trim()) errors.description = "Rule description is required.";
     if (s.tags.length === 0) errors.tags = "Add at least one tag.";
-    if (s.rows.length === 0) errors.conditions = "Add at least one condition.";
+    if (
+      s.config.fields.includes("object_class") &&
+      s.config.params.objectClasses.length === 0
+    ) {
+      errors.objectClasses = "Pick at least one object class.";
+    }
     return errors;
   }
 
@@ -1289,42 +696,14 @@ function RuleBuilder({
       patch({ errors });
       return;
     }
-    onConfirm({ name: s.name, description: s.description, tags: s.tags, conditions: s.rows, severity: s.severity });
+    onConfirm(ruleFields());
   }
 
-
-  function updateRow(id: string, p: Partial<ConditionRow>) {
-    patch({ rows: s.rows.map((r) => (r.id === id ? { ...r, ...p } : r)) });
-  }
-
-  function removeRow(id: string) {
-    patch({ rows: s.rows.filter((r) => r.id !== id) });
-  }
-
-  function handleDrop(targetIdx: number) {
-    if (dragIdx === null || dragIdx === targetIdx) {
-      setDragIdx(null);
-      setOverIdx(null);
-      return;
-    }
-    const next = [...s.rows];
-    const [moved] = next.splice(dragIdx, 1);
-    next.splice(targetIdx, 0, moved);
-    patch({ rows: next });
-    setDragIdx(null);
-    setOverIdx(null);
-  }
-
-  function loadTemplate(idx: number) {
-    const tpl = TEMPLATES[idx];
-    patch({
-      rows: tpl.conditions.map((c) => ({ ...c, id: genId() })),
-      severity: tpl.severity,
-      sideTab: "summary",
-    });
-  }
-
-  const canSave = s.name.trim() && s.description.trim() && s.tags.length > 0;
+  const canSave =
+    Boolean(s.name.trim()) &&
+    Boolean(s.description.trim()) &&
+    s.tags.length > 0 &&
+    missingParameters(s.config).length === 0;
 
   return (
     <div className="flex flex-col gap-5 pb-20">
@@ -1384,80 +763,20 @@ function RuleBuilder({
             </div>
           </div>
 
-          <div>
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Rule Conditions</h2>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  Define the trigger, conditions, duration and actions for this rule.
-                </p>
-              </div>
-              <Button size="sm" onClick={addCondition} className="gap-1.5">
-                <Plus className="size-3.5" />
-                Add Condition
-              </Button>
-            </div>
-
-            <div
-              className={cn(
-                "min-h-[320px] rounded-xl border border-border bg-card p-5",
-                s.errors.conditions && "border-sev-critical"
-              )}
-            >
-              {s.rows.length === 0 ? (
-                <button
-                  type="button"
-                  onClick={addCondition}
-                  className="group flex h-full min-h-[260px] w-full flex-col items-center justify-center gap-3 text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <div className="flex size-11 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary">
-                    <Plus className="size-5" />
-                  </div>
-                  <p className="text-base">
-                    Click to add your first condition
-                  </p>
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  {(() => {
-                    const firstThenIdx = s.rows.findIndex((r) => r.type === "THEN");
-                    return s.rows.map((row, idx) => (
-                    <ConditionRowItem
-                      key={row.id}
-                      row={row}
-                      isAndAlso={row.type === "THEN" && idx !== firstThenIdx}
-                      swapOpen={s.swapRowId === row.id}
-                      onSwapToggle={() =>
-                        patch({ swapRowId: s.swapRowId === row.id ? null : row.id })
-                      }
-                      onUpdate={updateRow}
-                      onRemove={removeRow}
-                      isDragging={dragIdx === idx}
-                      isOver={overIdx === idx && dragIdx !== idx}
-                      onDragStart={() => setDragIdx(idx)}
-                      onDragOver={(e) => { e.preventDefault(); setOverIdx(idx); }}
-                      onDrop={() => handleDrop(idx)}
-                      onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
-                    />
-                    ));
-                  })()}
-                </div>
-              )}
-            </div>
-            {s.errors.conditions && (
-              <p className="mt-1 text-xs text-sev-critical">{s.errors.conditions}</p>
-            )}
-          </div>
+          <RuleTemplateForm
+            config={s.config}
+            onChange={handleConfigChange}
+            invalidClasses={!!s.errors.objectClasses}
+          />
         </div>
 
         <div className="sticky top-4">
           <BuilderSidePanel
-            rows={s.rows}
+            payload={payload}
             severity={s.severity}
             onSeverityChange={(sv) => patch({ severity: sv })}
             tab={s.sideTab}
             onTabChange={(t) => patch({ sideTab: t })}
-            onLoadTemplate={loadTemplate}
             showEstimatedRate={mode === "edit"}
           />
         </div>
@@ -1564,6 +883,7 @@ export default function RulesLibraryPage({
     tags: string[];
     severity: RuleSeverity;
     conditions: ConditionRow[];
+    config?: RuleConfig;
     savedAtDisplay: string;
   }
   const [userTemplates, setUserTemplates] = React.useState<UserTemplate[]>([]);
@@ -1715,6 +1035,7 @@ export default function RulesLibraryPage({
       tags: data.tags,
       severity: data.severity,
       conditions: data.conditions,
+      config: data.config,
       savedAtDisplay: display,
     };
     setUserTemplates((curr) => [tpl, ...curr]);
@@ -1730,6 +1051,7 @@ export default function RulesLibraryPage({
       tags: [...tpl.tags],
       severity: tpl.severity,
       conditions: tpl.conditions.map((c) => ({ ...c })),
+      config: tpl.config,
       createdAt: "",
       createdAtDisplay: "",
       createdTimeDisplay: "",
