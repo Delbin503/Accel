@@ -14,7 +14,6 @@ import {
   MapPin,
   Wifi,
   WifiOff,
-  AlertTriangle,
   Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,14 +33,15 @@ import type { NvrData } from "@/types/nvr";
 
 /* ── Health status derivation ────────────────────────────────────────────── */
 
-type HealthStatus = "online" | "offline" | "failed";
+type HealthStatus = "online" | "offline";
 
 /** Fixed "now" so the prototype is deterministic against mock lastSeen timestamps. */
 const NOW = new Date("2026-05-25T10:15:00").getTime();
 const OFFLINE_THRESHOLD_MIN = 24 * 60; // > 24 hr old = offline
 
 function deriveCameraHealth(c: CameraData): HealthStatus {
-  if (c.status === "connection-failed") return "failed";
+  // A camera we cannot reach reads as offline — the page tracks two states only.
+  if (c.status === "connection-failed") return "offline";
   if (c.status === "offline") return "offline";
   const ageMin = (NOW - new Date(c.lastSeenAt).getTime()) / 60000;
   if (ageMin > OFFLINE_THRESHOLD_MIN) return "offline";
@@ -119,7 +119,6 @@ function buildRows(): DeviceRow[] {
 const HEALTH_STYLES: Record<HealthStatus, { bg: string; text: string; dot: string; label: string }> = {
   online:  { bg: "bg-success/15 border-success/30",           text: "text-success",          dot: "bg-success",          label: "Online" },
   offline: { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline" },
-  failed:  { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
 };
 
 function HealthPill({ status }: { status: HealthStatus }) {
@@ -199,7 +198,6 @@ const KPI_CONFIGS: {
   { key: "all",     label: "Total Devices", sub: "Cameras + NVRs",         accent: "primary",      getValue: (i) => i.length },
   { key: "online",  label: "Online",        sub: "Streaming + healthy",    accent: "success",      getValue: (i) => i.filter((d) => d.health === "online").length },
   { key: "offline", label: "Offline",       sub: "Last seen > 24h",        accent: "muted",        getValue: (i) => i.filter((d) => d.health === "offline").length },
-  { key: "failed",  label: "Failed",        sub: "Connection unreachable", accent: "sev-critical", getValue: (i) => i.filter((d) => d.health === "failed").length },
 ];
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
@@ -385,7 +383,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "type",      label: "Type" },
 ];
 
-const HEALTH_RANK: Record<HealthStatus, number> = { failed: 0, offline: 1, online: 2 };
+const HEALTH_RANK: Record<HealthStatus, number> = { offline: 0, online: 1 };
 
 /** Prototype hook — forces the page's data-state (loading / empty / error). */
 export type DeviceHealthForcedState = "normal" | "loading" | "empty" | "error";
@@ -484,7 +482,7 @@ export default function DeviceHealthPage({
       ) : (
         <>
       {/* KPI cards */}
-      <KpiGrid cols={4}>
+      <KpiGrid cols={3}>
         {KPI_CONFIGS.map((cfg) => (
           <KpiCard
             key={cfg.key}
@@ -624,15 +622,11 @@ export default function DeviceHealthPage({
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 text-sm",
-                          d.health === "online" ? "text-success" :
-                          d.health === "failed" ? "text-sev-critical" :
-                          "text-muted-foreground"
+                          d.health === "online" ? "text-success" : "text-muted-foreground"
                         )}
                       >
                         {d.health === "online" ? (
                           <Wifi className="size-3" />
-                        ) : d.health === "failed" ? (
-                          <AlertTriangle className="size-3" />
                         ) : (
                           <WifiOff className="size-3" />
                         )}
