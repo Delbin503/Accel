@@ -1386,6 +1386,9 @@ export default function SignUpPage({
       total: MOCK_SEATS[r].total,
       assigned,
       available: Math.max(0, MOCK_SEATS[r].total - assigned),
+      // Nobody has accepted yet at sign-up, so every invited seat is pending.
+      // The owner seat is the person filling this in — already active.
+      pending: r === "owner" ? 0 : assigned,
       price: MOCK_SEATS[r].pricePerMonth,
       label: MOCK_SEATS[r].label,
     });

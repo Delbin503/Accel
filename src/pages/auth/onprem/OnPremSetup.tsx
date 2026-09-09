@@ -170,6 +170,9 @@ function computeMemberSeatUsage(members: Member[]): Record<UserRole, SeatUsage> 
     total: MOCK_SEATS[r].total,
     assigned,
     available: Math.max(0, MOCK_SEATS[r].total - assigned),
+    // Members added during setup are invited, not activated — the appliance
+    // owner is the only active seat at this point.
+    pending: r === "owner" ? 0 : assigned,
     price: MOCK_SEATS[r].pricePerMonth,
     label: MOCK_SEATS[r].label,
   });

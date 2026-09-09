@@ -22,6 +22,7 @@ const seatUsage: Record<UserRole, SeatUsage> = (["owner", "admin", "user"] as Us
       total,
       assigned,
       available: Math.max(0, total - assigned),
+      pending: MOCK_USERS.filter((u) => u.role === role && u.status === "pending").length,
       price: MOCK_SEATS[role].pricePerMonth,
       label: MOCK_SEATS[role].label,
     };

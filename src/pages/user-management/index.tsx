@@ -1180,7 +1180,7 @@ export function InviteUsersModal({
 
 /* ── Seat usage strip (top of page) ──────────────────────────────────────── */
 
-export interface SeatUsage { role: UserRole; total: number; assigned: number; available: number; price: number; label: string }
+export interface SeatUsage { role: UserRole; total: number; assigned: number; available: number; pending: number; price: number; label: string }
 
 function computeSeatUsage(users: UserData[], totals: Record<UserRole, number>): Record<UserRole, SeatUsage> {
   return (["owner", "admin", "user"] as UserRole[]).reduce((acc, role) => {
@@ -1191,6 +1191,9 @@ function computeSeatUsage(users: UserData[], totals: Record<UserRole, number>): 
       total: totals[role],
       assigned,
       available: Math.max(0, totals[role] - assigned),
+      // An invited user holds their seat from the moment the invite goes out —
+      // it is assigned AND pending until they finish setup.
+      pending: users.filter((u) => u.role === role && u.status === "pending").length,
       price: tier.pricePerMonth,
       label: tier.label,
     };
@@ -1198,19 +1201,22 @@ function computeSeatUsage(users: UserData[], totals: Record<UserRole, number>): 
   }, {} as Record<UserRole, SeatUsage>);
 }
 
-const SEAT_ROLE_STYLES: Record<"all" | UserRole, { bg: string; text: string; barClass: string; icon: React.ComponentType<{ className?: string }> }> = {
-  all:   { bg: "bg-muted-foreground/15 border-border",        text: "text-foreground",   barClass: "bg-muted-foreground/40", icon: UsersIcon },
+const SEAT_ROLE_STYLES: Record<"all" | "pending" | UserRole, { bg: string; text: string; barClass: string; icon: React.ComponentType<{ className?: string }> }> = {
+  all:     { bg: "bg-muted-foreground/15 border-border",      text: "text-foreground",   barClass: "bg-muted-foreground/40", icon: UsersIcon },
+  pending: { bg: "bg-info/15 border-info/30",                 text: "text-info",         barClass: "bg-info",                icon: Clock },
   owner: { bg: "bg-success/15 border-success/30",             text: "text-success",      barClass: "bg-success",             icon: Crown },
   admin: { bg: "bg-info/15 border-info/30",                   text: "text-info",         barClass: "bg-info",                icon: ShieldCheck },
   user:  { bg: "bg-warning/15 border-warning/30",             text: "text-warning",      barClass: "bg-warning",             icon: CircleUser },
 };
 
 function SeatPill({
-  label, total, assigned, available, kind, breakdown,
+  label, total, assigned, available, kind, breakdown, labels,
 }: {
   label: string; total: number; assigned: number; available: number;
-  kind: "all" | UserRole; billingCycle?: string;
+  kind: "all" | "pending" | UserRole; billingCycle?: string;
   breakdown?: { label: string; value: number; icon?: React.ComponentType<{ className?: string }>; iconClass?: string }[];
+  /** Renames the popover rows — the pending tier counts invites, not capacity. */
+  labels?: { title?: string; assigned?: string; available?: string };
 }) {
   const cfg = SEAT_ROLE_STYLES[kind];
   const Icon = cfg.icon;
@@ -1239,7 +1245,7 @@ function SeatPill({
             <Icon className={cn("size-3.5", cfg.text)} />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-bold text-foreground">Total {label}</p>
+            <p className="text-base font-bold text-foreground">{labels?.title ?? `Total ${label}`}</p>
           </div>
         </div>
         <div className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
@@ -1248,7 +1254,7 @@ function SeatPill({
             <span className="font-mono font-semibold text-foreground">{total}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Assigned</span>
+            <span className="text-muted-foreground">{labels?.assigned ?? "Assigned"}</span>
             <span className={cn("font-mono font-semibold", cfg.text)}>{assigned}</span>
           </div>
           {breakdown && breakdown.map((b) => (
@@ -1261,11 +1267,11 @@ function SeatPill({
             </div>
           ))}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Available</span>
+            <span className="text-muted-foreground">{labels?.available ?? "Available"}</span>
             <span className={cn("font-mono font-semibold", available === 0 ? "text-sev-critical" : "text-success")}>{available}</span>
           </div>
         </div>
-        {kind !== "all" && kind !== "owner" && available === 0 && (
+        {kind !== "all" && kind !== "owner" && kind !== "pending" && available === 0 && (
           <p className="mt-2 flex items-start gap-1 text-xs text-warning">
             <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
             No available seats — purchasing required to add a user.
@@ -1285,6 +1291,12 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
   const userAssigned  = usage.admin.assigned + usage.user.assigned;
   const userAvailable = Math.max(0, userTotal - userAssigned);
 
+  /* Seats held by invites that haven't been accepted yet. They are already
+     paid for and unavailable, so they count against capacity — this tier just
+     says how many of the assigned seats nobody is using yet. */
+  const pendingAll   = (["owner", "admin", "user"] as UserRole[]).reduce((s, r) => s + usage[r].pending, 0);
+  const activatedAll = Math.max(0, assignedAll - pendingAll);
+
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -1293,7 +1305,7 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
         </div>
         <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <SeatPill kind="all"   label="Total Seats" total={totalAll} assigned={assignedAll} available={availableAll} billingCycle={billingCycle} />
         <SeatPill kind="owner" label="Owner Seats" total={usage.owner.total} assigned={usage.owner.assigned} available={usage.owner.available} billingCycle={billingCycle} />
         <SeatPill
@@ -1306,6 +1318,19 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
           breakdown={[
             { label: "Admins", value: usage.admin.assigned, icon: ShieldCheck, iconClass: "text-info" },
             { label: "Members", value: usage.user.assigned, icon: CircleUser, iconClass: "text-warning" },
+          ]}
+        />
+        <SeatPill
+          kind="pending"
+          label="Pending Seats"
+          total={totalAll}
+          assigned={pendingAll}
+          available={activatedAll}
+          billingCycle={billingCycle}
+          labels={{ title: "Pending Seats", assigned: "Awaiting setup", available: "Activated" }}
+          breakdown={[
+            { label: "Admins", value: usage.admin.pending, icon: ShieldCheck, iconClass: "text-info" },
+            { label: "Members", value: usage.user.pending, icon: CircleUser, iconClass: "text-warning" },
           ]}
         />
       </div>
