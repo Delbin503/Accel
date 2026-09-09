@@ -31,11 +31,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -58,21 +60,10 @@ import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import { MOCK_SEATS } from "@/mocks/licenses";
 import type { UserRole } from "@/types/users";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 
 /* ── Constants ──────────────────────────────────────────────────────── */
 
-const TIMEZONES = [
-  "Asia/Singapore (SGT · UTC+8)",
-  "Asia/Bangkok (ICT · UTC+7)",
-  "Asia/Jakarta (WIB · UTC+7)",
-  "Asia/Kuala_Lumpur (MYT · UTC+8)",
-  "Asia/Tokyo (JST · UTC+9)",
-  "Asia/Dubai (GST · UTC+4)",
-  "Europe/London (BST · UTC+0)",
-  "America/New_York (EST · UTC-5)",
-  "Australia/Sydney (AEST · UTC+10)",
-  "UTC",
-];
 
 type NetworkMode = "airgapped" | "hybrid" | "connected";
 const NETWORK_MODES: {
@@ -273,7 +264,7 @@ export default function OnPremSetupPage({
   const [siteAddress, setSiteAddress] = React.useState("");
   const [primaryArea, setPrimaryArea] = React.useState("");
   const [siteDescription, setSiteDescription] = React.useState("");
-  const [timezone, setTimezone] = React.useState(TIMEZONES[0]);
+  const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
   const [networkMode, setNetworkMode] = React.useState<NetworkMode>("airgapped");
   const [opFrom, setOpFrom] = React.useState("06:00");
   const [opTo, setOpTo] = React.useState("18:00");
@@ -387,7 +378,7 @@ export default function OnPremSetupPage({
     // Create the single on-prem site.
     const site = makeBlankSite(siteName.trim(), "#DD7224");
     site.address = siteAddress.trim();
-    site.timezone = timezone.split(" ")[0];
+    site.timezone = timezone;
     site.operatingHours = { from: opFrom, to: opTo };
     site.description =
       siteDescription.trim() ||
@@ -645,10 +636,10 @@ export default function OnPremSetupPage({
                 <SelectTrigger className="h-10 w-full text-base">
                   <SelectValue placeholder="Select a time zone" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-72">
                   {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz} value={tz}>
-                      {tz}
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -657,18 +648,18 @@ export default function OnPremSetupPage({
             <div>
               <Label icon={Clock}>Operating Hours</Label>
               <div className="flex items-center gap-1.5">
-                <Input
-                  type="time"
+                <TimeSelect
                   value={opFrom}
-                  onChange={(e) => setOpFrom(e.target.value)}
-                  className="h-10 flex-1 text-base"
+                  onChange={setOpFrom}
+                  aria-label="Opening time"
+                  className="h-10 flex-1"
                 />
                 <span className="text-xs text-muted-foreground">to</span>
-                <Input
-                  type="time"
+                <TimeSelect
                   value={opTo}
-                  onChange={(e) => setOpTo(e.target.value)}
-                  className="h-10 flex-1 text-base"
+                  onChange={setOpTo}
+                  aria-label="Closing time"
+                  className="h-10 flex-1"
                 />
               </div>
             </div>
@@ -884,7 +875,7 @@ export default function OnPremSetupPage({
 
 /* ── Member modal — mirrors the On-Cloud Invite Users modal exactly ── */
 
-function MemberModal({
+export function MemberModal({
   open,
   onClose,
   onInvite,
@@ -932,16 +923,14 @@ function MemberModal({
     parsed.valid.length > 0 && parsed.invalid.length === 0 && departments.length > 0 && !overSeat;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Invitees receive a one-time email link valid for 7 days.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Invite Users"
+          description="Invitees receive a one-time email link valid for 7 days."
+        />
 
-        <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-3.5">
           {/* Seat tiles double as the role selector — pick a tier to invite into. */}
           <div>
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1094,9 +1083,9 @@ function MemberModal({
               </div>
             </div>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -1109,9 +1098,9 @@ function MemberModal({
             <Mail className="size-3.5" />
             Send Invite
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

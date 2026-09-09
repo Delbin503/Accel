@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Info, Layers } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -65,16 +66,14 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Dismiss as False Positive</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Dismiss as False Positive"
+          description={event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
+        />
 
-        <div className="space-y-4 p-5">
+        <ModalBody className="space-y-4">
           {/* Bulk banner */}
           {isBulk && (
             <div className="flex items-start gap-2.5 rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3">
@@ -155,9 +154,9 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
               className="min-h-[60px] w-full resize-y"
             />
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -169,8 +168,8 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
           >
             Dismiss Event
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

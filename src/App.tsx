@@ -42,11 +42,15 @@ import SettingsPage from "@/pages/settings";
 import BillingPage from "@/pages/billing";
 import SystemInfoPage from "@/pages/system-info";
 
+// Dev-only — modal review surface, not linked from the sidebar
+import ModalGalleryPage from "@/pages/dev/modals";
+
 // Auth + Onboarding
 import SignInPage from "@/pages/auth/SignIn";
 import SignInVerifyPage from "@/pages/auth/SignInVerify";
 import SignUpPage from "@/pages/auth/SignUp";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
+import AccountSuspendedPage from "@/pages/auth/AccountSuspended";
 import OnboardingSitePage from "@/pages/auth/OnboardingSite";
 import OnboardingSubscriptionPage from "@/pages/auth/OnboardingSubscription";
 
@@ -68,6 +72,7 @@ function App() {
         <Route path="/signin/verify" element={<SignInVerifyPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/account-suspended" element={<AccountSuspendedPage />} />
       </Route>
 
       {/* On-Premise flow — testable via URL. Kept outside RedirectIfAuthed
@@ -127,6 +132,9 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="system-info" element={<SystemInfoPage />} />
+
+          {/* Dev tools */}
+          <Route path="dev/modals" element={<ModalGalleryPage />} />
         </Route>
       </Route>
 

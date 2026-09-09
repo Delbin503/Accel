@@ -40,11 +40,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import {
   Select,
   SelectContent,
@@ -53,7 +54,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { cn } from "@/lib/utils";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
@@ -223,17 +226,6 @@ function WizardShell({
   );
 }
 
-const TIMEZONES = [
-  "Asia/Singapore",
-  "Asia/Bangkok",
-  "Asia/Tokyo",
-  "Asia/Dubai",
-  "Europe/London",
-  "America/New_York",
-  "America/Los_Angeles",
-  "Australia/Sydney",
-];
-
 export default function SignUpPage({
   initialStep = "account",
 }: {
@@ -294,7 +286,7 @@ export default function SignUpPage({
   /* Site info */
   const [siteName, setSiteName] = React.useState("");
   const [siteAddress, setSiteAddress] = React.useState("");
-  const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
   const [opFrom, setOpFrom] = React.useState("08:00");
   const [opTo, setOpTo] = React.useState("18:00");
   const [siteDescription, setSiteDescription] = React.useState("");
@@ -1326,10 +1318,10 @@ export default function SignUpPage({
                 <SelectTrigger className="h-10 w-full text-base">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-72">
                   {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz} value={tz}>
-                      {tz}
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1340,18 +1332,18 @@ export default function SignUpPage({
                 <Clock className="size-3" /> Operating Hours
               </label>
               <div className="flex items-center gap-1.5">
-                <Input
-                  type="time"
+                <TimeSelect
                   value={opFrom}
-                  onChange={(e) => setOpFrom(e.target.value)}
-                  className="h-10 flex-1 text-base"
+                  onChange={setOpFrom}
+                  aria-label="Opening time"
+                  className="h-10 flex-1"
                 />
                 <span className="text-xs text-muted-foreground">to</span>
-                <Input
-                  type="time"
+                <TimeSelect
                   value={opTo}
-                  onChange={(e) => setOpTo(e.target.value)}
-                  className="h-10 flex-1 text-base"
+                  onChange={setOpTo}
+                  aria-label="Closing time"
+                  className="h-10 flex-1"
                 />
               </div>
             </div>
@@ -1798,7 +1790,7 @@ function Line({
  *   • Seat counts are computed against the freshly-purchased plan's totals
  *     (MOCK_SEATS) minus whatever the user already added in this wizard.
  */
-function InviteUsersModal({
+export function InviteUsersModal({
   open,
   onClose,
   onInvite,
@@ -1848,16 +1840,14 @@ function InviteUsersModal({
     parsed.valid.length > 0 && parsed.invalid.length === 0 && departments.length > 0 && !overSeat;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Invitees receive a one-time email link valid for 7 days.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Invite Users"
+          description="Invitees receive a one-time email link valid for 7 days."
+        />
 
-        <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-3.5">
           {/* Seat tiles double as the role selector — pick a tier to invite into. */}
           <div>
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -2029,9 +2019,9 @@ function InviteUsersModal({
               </div>
             </div>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button
             variant="ghost"
             size="sm"
@@ -2048,8 +2038,8 @@ function InviteUsersModal({
             <Mail className="size-3.5" />
             Send Invite
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

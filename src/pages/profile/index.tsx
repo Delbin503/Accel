@@ -18,7 +18,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
 import { cn } from "@/lib/utils";
@@ -56,7 +62,7 @@ function SectionCard({ title, description, children }: { title: string; descript
   );
 }
 
-function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [current, setCurrent] = React.useState("");
   const [next, setNext] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
@@ -89,12 +95,13 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Change Password</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Change Password"
+          description="You'll stay signed in on this device — other sessions are signed out."
+        />
+        <ModalBody className="space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Password</label>
             <div className="relative">
@@ -127,20 +134,20 @@ function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => 
             </div>
             {errors.confirm && <p className="mt-1 text-xs text-sev-critical">{errors.confirm}</p>}
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} className="gap-1.5">
             <KeyRound className="size-3.5" />
             Update Password
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
-function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () => void; onEnable: () => void }) {
+export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () => void; onEnable: () => void }) {
   const [code, setCode] = React.useState("");
   const [errors, setErrors] = React.useState<{ code?: string }>({});
   React.useEffect(() => { if (open) { setCode(""); setErrors({}); } }, [open]);
@@ -156,15 +163,13 @@ function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () =>
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Enable Two-Factor Authentication</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Scan the QR code with your authenticator app, then enter the 6-digit code.
-          </p>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Enable Two-Factor Authentication"
+          description="Scan the QR code with your authenticator app, then enter the 6-digit code."
+        />
+        <ModalBody className="space-y-4">
           <div className="flex justify-center">
             <div className="flex size-44 items-center justify-center rounded-lg border border-border bg-background p-3">
               <div className="grid size-full grid-cols-12 grid-rows-12 gap-px">
@@ -184,16 +189,16 @@ function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () =>
               className="h-10 text-center font-mono text-xl tracking-[0.5em]" />
             {errors.code && <p className="mt-1 text-xs text-sev-critical">{errors.code}</p>}
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} className="gap-1.5">
             <ShieldCheck className="size-3.5" />
             Enable 2FA
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

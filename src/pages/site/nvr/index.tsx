@@ -32,7 +32,14 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalSubheader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -453,7 +460,7 @@ interface NvrDrawerProps {
   onUnlink: (channel: number) => void;
 }
 
-function NvrDrawer({
+export function NvrDrawer({
   nvr, open, onClose, onOpenCamera, onEdit, onDelete, onCleanup, onExportAll, onManualSync, onLinkCamera, onUnlink,
 }: NvrDrawerProps) {
   const [tab, setTab] = React.useState<DrawerTab>("overview");
@@ -968,7 +975,7 @@ const EXPORT_FORMATS: { value: ExportFormat; label: string; desc: string }[] = [
   { value: "manifest-only",  label: "Manifest only",     desc: "JSON listing — no media payload" },
 ];
 
-function ExportRecordingsModal({
+export function ExportRecordingsModal({
   open, nvr, onClose, onConfirm,
 }: {
   open: boolean;
@@ -1009,15 +1016,13 @@ function ExportRecordingsModal({
   const canSubmit = channels.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Export Recordings</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Download recordings from selected channels on <strong className="text-foreground">{nvr.name}</strong>.
-          </p>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Export Recordings"
+          description={<>Download recordings from selected channels on <strong className="text-foreground">{nvr.name}</strong>.</>}
+        />
+        <ModalBody className="space-y-4">
           {/* Channels */}
           <div>
             <div className="mb-1.5 flex items-center justify-between">
@@ -1142,8 +1147,8 @@ function ExportRecordingsModal({
               </p>
             </div>
           )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
@@ -1154,9 +1159,9 @@ function ExportRecordingsModal({
             <Download className="size-3.5" />
             Export {totalGb > 0 ? `(${totalGb.toFixed(2)} GB)` : ""}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1164,7 +1169,7 @@ function ExportRecordingsModal({
 
 type CleanupMethod = "age" | "channel";
 
-function CleanupStorageModal({
+export function CleanupStorageModal({
   open, nvr, onClose, onConfirm,
 }: {
   open: boolean;
@@ -1187,13 +1192,14 @@ function CleanupStorageModal({
   const canSubmit = method === "age" ? ageDays > 0 : picked.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Clean up Storage</DialogTitle>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Clean up Storage"
+          description="Free space by removing recordings that fall outside the retention window."
+        />
 
-        <div className="space-y-4 px-5 py-4">
+        <ModalBody className="space-y-4">
           {/* Current capacity */}
           <div className="rounded-lg border border-border bg-background p-3.5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1322,9 +1328,9 @@ function CleanupStorageModal({
               )}
             </div>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
@@ -1335,15 +1341,15 @@ function CleanupStorageModal({
             <Sparkles className="size-3.5" />
             Confirm
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Clean Up Running (progress) modal ───────────────────────────────────── */
 
-function CleanupRunningModal({
+export function CleanupRunningModal({
   open, methodLabel, totalToProcess, onCancel,
 }: {
   open: boolean;
@@ -1368,15 +1374,13 @@ function CleanupRunningModal({
   }, [open, totalToProcess]);
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* not dismissible by overlay */ }}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Cleaning Up Storage…</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {methodLabel} · {processed} of {totalToProcess} files processed
-          </p>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-5">
+    <Modal open={open} onOpenChange={() => { /* not dismissible by overlay */ }}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Cleaning Up Storage…"
+          description={<>{methodLabel} · {processed} of {totalToProcess} files processed</>}
+        />
+        <ModalBody className="space-y-4">
           <div className="flex items-center justify-center">
             <div className="relative">
               <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
@@ -1410,8 +1414,8 @@ function CleanupRunningModal({
           <p className="text-center text-xs text-muted-foreground">
             Don't close this window. Cleanup will continue until complete.
           </p>
-        </div>
-        <div className="flex justify-end border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button
             variant="outline"
             size="sm"
@@ -1421,9 +1425,9 @@ function CleanupRunningModal({
             <X className="size-3.5" />
             Cancel Cleanup
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1439,7 +1443,7 @@ const SYNC_STAGES = [
 
 /* ── Clean Up Completed modal ────────────────────────────────────────────── */
 
-function CleanupCompletedModal({
+export function CleanupCompletedModal({
   open, previous, freed, current, total, processed, onClose,
 }: {
   open: boolean;
@@ -1453,23 +1457,15 @@ function CleanupCompletedModal({
   const pct = total === 0 ? 0 : Math.round((current / total) * 100);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="sr-only">Clean Up Completed</DialogTitle>
-          <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-success/15">
-              <CheckCircle2 className="size-6 text-success" />
-            </div>
-            <div>
-              <p className="text-md font-bold text-foreground">Clean Up Completed!</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {processed.processed} of {processed.outOf} files processed
-              </p>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Clean Up Completed"
+          description={`${processed.processed} of ${processed.outOf} files processed`}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <ModalBody className="space-y-3">
           <div>
             <div className="mb-1 flex items-baseline justify-between gap-2">
               <span className="text-sm font-semibold text-muted-foreground">Storage Usage</span>
@@ -1494,18 +1490,18 @@ function CleanupCompletedModal({
               <span className="font-mono font-semibold text-success">{current.toLocaleString()} GB ({pct}%)</span>
             </div>
           </div>
-        </div>
-        <div className="flex justify-end border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button size="sm" onClick={onClose}>Done</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Link Camera modal ───────────────────────────────────────────────────── */
 
-function LinkCameraModal({
+export function LinkCameraModal({
   open, nvr, channel, onClose, onConfirm,
 }: {
   open: boolean;
@@ -1540,15 +1536,13 @@ function LinkCameraModal({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Link Camera to Channel {channel}</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Only cameras at <strong className="text-foreground">{nvr.siteName}</strong> (same site as this NVR) can be linked.
-          </p>
-        </DialogHeader>
-        <div className="flex-shrink-0 space-y-2 border-b border-border px-5 py-3">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={<>Link Camera to Channel {channel}</>}
+          description={<>Only cameras at <strong className="text-foreground">{nvr.siteName}</strong> (same site as this NVR) can be linked.</>}
+        />
+        <ModalSubheader className="space-y-2">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
@@ -1581,8 +1575,8 @@ function LinkCameraModal({
               })}
             </div>
           )}
-        </div>
-        <div className="flex-1 space-y-2 overflow-y-auto px-5 py-4">
+        </ModalSubheader>
+        <ModalBody className="space-y-2">
           {candidates.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
               <Video className="mx-auto size-7 text-muted-foreground/40" />
@@ -1625,22 +1619,22 @@ function LinkCameraModal({
               );
             })
           )}
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!picked} onClick={() => picked && onConfirm(picked)} className="gap-1.5">
             <Link2 className="size-3.5" />
             Link to Channel {channel}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Unlink confirmation modal ───────────────────────────────────────────── */
 
-function UnlinkConfirmModal({
+export function UnlinkConfirmModal({
   open, nvr, channel, onClose, onConfirm, onExportFirst,
 }: {
   open: boolean;
@@ -1661,15 +1655,14 @@ function UnlinkConfirmModal({
   const storageGb = channelStorageGb(nvr.id, ch);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">Unlink Camera</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Confirm before disconnecting this channel.
-          </p>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Unlink Camera"
+          description="Confirm before disconnecting this channel."
+          tone="destructive"
+        />
+        <ModalBody className="space-y-3">
           <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
             <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
               <Video className="size-4 text-info" />
@@ -1716,8 +1709,8 @@ function UnlinkConfirmModal({
               </p>
             </div>
           </button>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           {exportFirst && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { onExportFirst(); onConfirm(); }}>
@@ -1734,9 +1727,9 @@ function UnlinkConfirmModal({
             <Unlink className="size-3.5" />
             Unlink without Export
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1919,7 +1912,7 @@ function CleanupChannelPicker({
   );
 }
 
-function AddNvrModal({
+export function AddNvrModal({
   open, takenIds, onClose, onConfirm,
 }: {
   open: boolean;
@@ -1984,15 +1977,13 @@ function AddNvrModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Add NVR</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Register a new Network Video Recorder. NVR ID is generated automatically.
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Add NVR"
+          description="Register a new Network Video Recorder. NVR ID is generated automatically."
+        />
+        <ModalBody className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">NVR Name</label>
@@ -2188,16 +2179,16 @@ function AddNvrModal({
             New NVRs start with all channels free. Link cameras to channels after creation from the
             <strong className="text-foreground"> Channel Management</strong> tab.
           </div>
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={handleSubmit} className="gap-1.5">
             <Plus className="size-3.5" />
             Add NVR
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -2242,7 +2233,7 @@ function serializeNvrFormFields(fields: NvrFormFields): string {
   });
 }
 
-function EditNvrModal({
+export function EditNvrModal({
   open, nvr, onClose, onConfirm,
 }: {
   open: boolean;
@@ -2301,15 +2292,13 @@ function EditNvrModal({
   const isDirty = initialFields !== null && serializeNvrFormFields(fields) !== serializeNvrFormFields(initialFields);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit NVR</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Update fields for {nvr.id}. Model and channel count cannot be changed after registration.
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Edit NVR"
+          description={<>Update fields for {nvr.id}. Model and channel count cannot be changed after registration.</>}
+        />
+        <ModalBody className="space-y-4">
           {/* Read-only header */}
           <div className="rounded-lg border border-border bg-background p-3">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
@@ -2492,22 +2481,22 @@ function EditNvrModal({
               />
             )}
           </div>
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!isDirty} onClick={handleSubmit} className="gap-1.5">
             <Check className="size-3.5" />
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Delete NVR modal ────────────────────────────────────────────────────── */
 
-function DeleteNvrModal({
+export function DeleteNvrModal({
   open, nvr, onClose, onConfirm,
 }: {
   open: boolean;
@@ -2517,13 +2506,14 @@ function DeleteNvrModal({
 }) {
   if (!nvr) return null;
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">Delete NVR</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        <div className="px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Delete NVR"
+          description="This action cannot be undone."
+          tone="destructive"
+        />
+        <ModalBody>
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
@@ -2538,16 +2528,16 @@ function DeleteNvrModal({
             All <strong className="text-foreground">{nvr.channelsInUse}</strong> linked cameras will lose recording storage immediately.
             Stored recordings ({nvr.usedStorageGb.toLocaleString()} GB) cannot be recovered.
           </p>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
             <Trash2 className="size-3.5" />
             Delete NVR
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

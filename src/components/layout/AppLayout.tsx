@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { NotificationsBell } from "@/components/shared/NotificationsBell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 /* ─── Skip-to-content ───────────────────────────────────────────────────── */
@@ -26,6 +27,7 @@ function TopBar() {
         aria-label="Toggle sidebar"
       />
       <div className="flex-1" />
+      <NotificationsBell />
       <ThemeToggle />
     </header>
   );

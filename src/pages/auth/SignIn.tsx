@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "./AuthLayout";
 import { cn } from "@/lib/utils";
+import { MOCK_USERS } from "@/mocks/users";
 
 export default function SignInPage() {
   const navigate = useNavigate();
@@ -27,6 +28,18 @@ export default function SignInPage() {
     }
     setLoading(true);
     setTimeout(() => {
+      // A suspended account stops here, before the verification step — no point
+      // asking for a code that can't establish a session either way.
+      const account = MOCK_USERS.find(
+        (u) => u.email.toLowerCase() === email.trim().toLowerCase()
+      );
+      if (account?.status === "suspended") {
+        navigate("/account-suspended", {
+          state: { email: account.email, suspension: account.suspension },
+          replace: true,
+        });
+        return;
+      }
       // Email verification step before the session is established.
       navigate("/signin/verify", { state: { email, from: redirectTo } });
     }, 250);

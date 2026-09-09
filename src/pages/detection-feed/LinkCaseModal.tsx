@@ -1,11 +1,12 @@
 import * as React from "react";
 import { FolderOpen, Check, MapPin, User, ArrowUpRight, Search } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -130,18 +131,12 @@ export function LinkCaseModal({
   }, [eligible, query]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Link to Incident Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {eventIds.length > 1
-              ? `Linking ${eventIds.length} selected events`
-              : "Linking 1 event"}{" "}
-            · Showing Open &amp; In Review cases for{" "}
-            <strong className="text-foreground">{eventSiteDisplay}</strong>
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Link to Incident Case"
+          description={<>{eventIds.length > 1 ? `Linking ${eventIds.length} selected events` : "Linking 1 event"}{" "} · Showing Open &amp; In Review cases for{" "} <strong className="text-foreground">{eventSiteDisplay}</strong></>}
+        />
 
         {/* Search — only when there are cases to search */}
         {eligible.length > 0 && (
@@ -159,7 +154,7 @@ export function LinkCaseModal({
         )}
 
         {/* Case list — scrolls internally once it exceeds ~4 cards */}
-        <div className="px-5 py-4">
+        <ModalBody>
           {eligible.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
               <FolderOpen className="size-10 opacity-20" />
@@ -192,9 +187,9 @@ export function LinkCaseModal({
               Cases from other sites are hidden — incidents must share the same site.
             </p>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -205,8 +200,8 @@ export function LinkCaseModal({
           >
             Link to Case
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

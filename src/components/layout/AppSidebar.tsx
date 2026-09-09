@@ -2,7 +2,6 @@ import * as React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   LayoutDashboard,
@@ -24,7 +23,6 @@ import {
   ScrollText,
   ChevronDown,
   ChevronRight,
-  Bell,
   LogOut,
   User,
   CreditCard,
@@ -64,7 +62,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { NotificationsDrawer } from "@/components/shared/NotificationsDrawer";
 import type { UserRole } from "@/stores/useAuthStore";
 import sigmawaveLogo from "@/assets/sigmawave-logo.svg";
 
@@ -374,10 +371,9 @@ function NavParent({ item }: { item: NavItem }) {
 
 /* ─── User profile section ──────────────────────────────────────────────── */
 
-function UserProfile({ onBell }: { onBell: () => void }) {
+function UserProfile() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const unreadCount = useNotificationsStore((s) => s.items.filter((n) => !n.read).length);
   const navigate = useNavigate();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -478,28 +474,6 @@ function UserProfile({ onBell }: { onBell: () => void }) {
           </div>
         </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Bell card — its own button, opens the notifications drawer */}
-        <button
-          type="button"
-          onClick={onBell}
-          aria-label={
-            unreadCount > 0
-              ? `${unreadCount} unread notifications`
-              : "Open notifications"
-          }
-          className={cn(
-            "relative flex shrink-0 items-center justify-center rounded-md border border-transparent bg-card/40 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            isCollapsed ? "size-8" : "size-12"
-          )}
-        >
-          <Bell className="size-4" />
-          {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-destructive-foreground">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </button>
       </div>
 
       <ConfirmDialog
@@ -511,7 +485,6 @@ function UserProfile({ onBell }: { onBell: () => void }) {
         confirmLabel="Sign Out"
         cancelLabel="Stay signed in"
         onConfirm={confirmSignOut}
-        className="w-[560px] max-w-[95vw]"
       />
     </div>
   );
@@ -537,45 +510,39 @@ function SigmawaveFooter() {
 /* ─── Main sidebar component ────────────────────────────────────────────── */
 
 export function AppSidebar() {
-  const [notifOpen, setNotifOpen] = React.useState(false);
-
   return (
-    <>
-      <Sidebar collapsible="icon">
-        <SidebarHeader className="pb-1 pt-3">
-          <AccelLogo />
-        </SidebarHeader>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="pb-1 pt-3">
+        <AccelLogo />
+      </SidebarHeader>
 
-        <SidebarContent className="gap-0 overflow-x-hidden">
-          {NAV_GROUPS.map((group) => (
-            <SidebarGroup key={group.label} className="py-2">
-              <SidebarGroupLabel className="mb-1 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                {group.label}
-              </SidebarGroupLabel>
+      <SidebarContent className="gap-0 overflow-x-hidden">
+        {NAV_GROUPS.map((group) => (
+          <SidebarGroup key={group.label} className="py-2">
+            <SidebarGroupLabel className="mb-1 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              {group.label}
+            </SidebarGroupLabel>
 
-              <SidebarMenu>
-                {group.items.map((item) =>
-                  item.children ? (
-                    <NavParent key={item.href} item={item} />
-                  ) : (
-                    <NavLeaf key={item.href} item={item} />
-                  )
-                )}
-              </SidebarMenu>
-            </SidebarGroup>
-          ))}
-        </SidebarContent>
+            <SidebarMenu>
+              {group.items.map((item) =>
+                item.children ? (
+                  <NavParent key={item.href} item={item} />
+                ) : (
+                  <NavLeaf key={item.href} item={item} />
+                )
+              )}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
 
-        <SidebarFooter className="p-0">
-          <UserProfile onBell={() => setNotifOpen(true)} />
-          <SigmawaveFooter />
-        </SidebarFooter>
+      <SidebarFooter className="p-0">
+        <UserProfile />
+        <SigmawaveFooter />
+      </SidebarFooter>
 
-        <SidebarRail />
-      </Sidebar>
-
-      <NotificationsDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
-    </>
+      <SidebarRail />
+    </Sidebar>
   );
 }
 

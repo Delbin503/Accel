@@ -15,7 +15,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SkeletonList, ErrorState, type ForcedState } from "./shared";
 import { cn } from "@/lib/utils";
@@ -612,33 +618,35 @@ export default function DismissedEventsPage({
       )}
 
       {/* ── Bulk-restore confirmation modal ──────────────────────────────── */}
-      <Dialog open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
-        <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col overflow-hidden p-0">
-          <DialogHeader className="border-b border-border px-5 py-4">
-            <DialogTitle className="text-base font-bold">Restore dismissed events?</DialogTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              You're about to restore <strong className="text-foreground">{selectedIds.size}</strong>{" "}
-              event{selectedIds.size === 1 ? "" : "s"} back to the Detection Feed. They'll re-enter triage and
-              their false-positive feedback will be withdrawn from model retraining.
-            </p>
-          </DialogHeader>
-          <div className="max-h-[40vh] flex-1 space-y-1.5 overflow-y-auto px-5 py-4">
+      <Modal open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
+        <ModalContent size="sm">
+          <ModalHeader
+            title="Restore dismissed events?"
+            description={
+              <>
+                You're about to restore <strong className="text-foreground">{selectedIds.size}</strong>{" "}
+                event{selectedIds.size === 1 ? "" : "s"} back to the Detection Feed. They'll re-enter triage and
+                their false-positive feedback will be withdrawn from model retraining.
+              </>
+            }
+          />
+          <ModalBody className="max-h-[40vh] space-y-1.5">
             {baseItems.filter((d) => selectedIds.has(d.event.id)).map((d) => (
-              <div key={d.event.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-[12px]">
-                <span className="font-mono text-[11px] text-muted-foreground">{d.event.id}</span>
+              <div key={d.event.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <span className="font-mono text-xs text-muted-foreground">{d.event.id}</span>
                 <span className="truncate font-semibold text-foreground">{d.event.typeLabel}</span>
-                <span className="ml-auto whitespace-nowrap text-[11px] text-muted-foreground">{d.event.siteDisplay} · {d.event.camera}</span>
+                <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground">{d.event.siteDisplay} · {d.event.camera}</span>
               </div>
             ))}
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          </ModalBody>
+          <ModalFooter>
             <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>Cancel</Button>
             <Button size="sm" className="gap-1.5" onClick={confirmBulkRestore}>
               <RotateCcw className="size-3.5" /> Restore {selectedIds.size}
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* ── Dismissed event drawer ────────────────────────────────────────── */}
       <DismissedDrawer

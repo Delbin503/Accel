@@ -69,6 +69,40 @@ export interface AnalysisResult {
   clipDurationSeconds: number;
 }
 
+/**
+ * A run-level rollup across every model in the run. Deliberately NOT a
+ * RunStatus: when models disagree there is no single pass/fail that is honest,
+ * and averaging their scores produces a number that describes nothing.
+ */
+export type RunRollupStatus = "passed" | "mixed" | "failed";
+
+/**
+ * One model's execution inside a run. A run may carry 1-3 of these; each keeps
+ * its own score, status and full AnalysisResult so nothing is merged away.
+ */
+export interface ModelRun {
+  modelId: string;
+  modelName: string;
+  vlmId: string;
+  vlmName: string;
+  score: number;
+  status: RunStatus;
+  /** A model can crash mid-pipeline while its siblings complete. */
+  runState: RunState;
+  failure?: RunFailure;
+  result: AnalysisResult;
+}
+
+/** A single finding lifted out of a model run, tagged with its source. */
+export interface UnifiedFinding {
+  id: string;
+  modelId: string;
+  modelName: string;
+  status: StepResultStatus;
+  title: string;
+  timestamp: string;
+}
+
 export interface PastAnalysis {
   id: string;
   name: string;
@@ -98,4 +132,9 @@ export interface PastAnalysis {
   completedAtDisplay?: string;
   /** Who started this run. */
   startedBy?: string;
+  /**
+   * Every model executed in this run. Optional for back-compat: legacy
+   * single-model records omit it and fall back to the flat fields above.
+   */
+  modelRuns?: ModelRun[];
 }

@@ -96,3 +96,12 @@ export function formatCurrency(
 export function formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
   return new Intl.NumberFormat("en-US", options).format(value);
 }
+
+/** 24-hour "HH:mm" → 12-hour "hh:mm AM/PM". Returns the input if unparseable. */
+export function formatTimeOfDay(value: string): string {
+  const [h, m] = value.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return value;
+  const period = h < 12 ? "AM" : "PM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(hour12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}

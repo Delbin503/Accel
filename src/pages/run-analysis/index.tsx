@@ -29,6 +29,8 @@ import {
   MoreVertical,
   FileText,
   ArrowLeft,
+  ArrowRight,
+  Layers,
   Sparkles,
   SlidersHorizontal,
   Shield,
@@ -41,6 +43,7 @@ import {
   Box,
   Camera,
   Clock,
+  Timer,
   Fingerprint,
   Globe,
   Key,
@@ -52,9 +55,16 @@ import {
   CreditCard,
   Minus,
 } from "lucide-react";
+import { formatDuration } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -68,7 +78,7 @@ import { CoinIcon } from "@/components/shared/CoinIcon";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
-import { MOCK_VLMS, MOCK_PAST_ANALYSES } from "@/mocks/runAnalysis";
+import { MOCK_VLMS, MOCK_PAST_ANALYSES, buildFindings } from "@/mocks/runAnalysis";
 import type { ModelData } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity } from "@/types/rules";
 import type {
@@ -84,6 +94,9 @@ import type {
   LogEventLevel,
   AnalysisVerdict,
   RunFailure,
+  ModelRun,
+  RunRollupStatus,
+  UnifiedFinding,
 } from "@/types/runAnalysis";
 
 /* ── Icon registry for model display ─────────────────────────────────────── */
@@ -326,23 +339,44 @@ function ModelSummaryRow({ model }: { model: ModelData }) {
 function ModelChooserCard({
   model,
   selected,
+  order,
+  disabled,
   onClick,
 }: {
   model: ModelData;
   selected: boolean;
+  /** Position in the run (0-based) — surfaced so the order is legible. */
+  order: number;
+  /** True when the per-run cap is reached and this card is not already picked. */
+  disabled: boolean;
   onClick: () => void;
 }) {
   const Icon = getIconComp(model.iconKey);
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
       className={cn(
-        "w-full rounded-xl border p-4 text-left transition-all",
+        "relative w-full rounded-xl border p-4 text-left transition-all",
         selected
           ? "border-primary/60 bg-primary/[0.04]"
-          : "border-border bg-card hover:border-primary/25 hover:bg-muted/30"
+          : disabled
+            ? "cursor-not-allowed border-border bg-card opacity-40"
+            : "border-border bg-card hover:border-primary/25 hover:bg-muted/30"
       )}
     >
+      {/* Selection affordance — a checkbox, since a run now takes several models. */}
+      <span
+        className={cn(
+          "absolute right-3 top-3 flex size-5 items-center justify-center rounded-md border text-2xs font-bold transition-colors",
+          selected
+            ? "border-primary bg-primary text-primary-foreground"
+            : "border-muted-foreground/30 text-transparent"
+        )}
+      >
+        {selected ? order + 1 : ""}
+      </span>
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-start gap-2.5">
           <div
@@ -387,6 +421,75 @@ function ModelChooserCard({
         <span className="text-xs italic text-muted-foreground/40">No tag</span>
       )}
     </button>
+  );
+}
+
+/* ── Selected-models panel (shown once a run carries more than one model) ── */
+
+function SelectedModelsPanel({
+  models,
+  onRemove,
+  onNext,
+}: {
+  models: ModelData[];
+  onRemove: (id: string) => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-shrink-0 border-b border-border px-5 py-4">
+        <h2 className="text-md font-bold text-foreground">Models in this run</h2>
+        <p className="text-sm text-muted-foreground">
+          All {models.length} run against the same clip and report separately
+        </p>
+      </div>
+
+      <div className="flex-1 space-y-2 overflow-y-auto p-4">
+        {models.map((m, i) => {
+          const Icon = getIconComp(m.iconKey);
+          return (
+            <div
+              key={m.id}
+              className="flex items-start gap-2.5 rounded-lg border border-border bg-background p-3"
+            >
+              <span className="mt-0.5 flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-primary text-2xs font-bold text-primary-foreground">
+                {i + 1}
+              </span>
+              <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
+                <Icon className="size-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <TruncatedText text={m.name} className="text-base font-semibold text-foreground" />
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-block rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
+                    {m.id}
+                  </span>
+                  <ModelSummaryRow model={m} />
+                </div>
+              </div>
+              <button
+                onClick={() => onRemove(m.id)}
+                title="Remove from run"
+                className="flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-sev-critical/10 hover:text-sev-critical"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex-shrink-0 space-y-2 border-t border-border p-4">
+        <p className="text-xs text-muted-foreground">
+          Each model is billed its own inference pass, so this run costs
+          {" "}<span className="font-semibold text-foreground">{models.length}×</span> the clip length.
+        </p>
+        <Button className="w-full gap-1.5" onClick={onNext}>
+          Continue to upload
+          <ArrowRight className="size-3.5" />
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -1002,28 +1105,109 @@ function fmtDisplay(d: Date) {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-let _anyCtr = 7;
+/**
+ * Seeded from the highest existing record rather than a hardcoded number, so
+ * adding fixtures can never make a new run collide with one of them — which is
+ * exactly what happened when the multi-model fixtures took ANY_008..011 while
+ * this counter still started at 7.
+ */
+let _anyCtr = MOCK_PAST_ANALYSES.reduce((max, a) => {
+  const n = Number(a.id.replace(/\D/g, ""));
+  return Number.isFinite(n) && n > max ? n : max;
+}, 0);
+
 function nextAnalysisId() {
   _anyCtr += 1;
   return `ANY_${String(_anyCtr).padStart(3, "0")}`;
 }
 
-function buildSyntheticResult(modelSteps: number, modelRules: number): AnalysisResult {
-  const stepsPassed = Math.max(1, Math.floor(modelSteps * 0.6));
+/**
+ * `passRate` lets a multi-model run produce genuinely different outcomes per
+ * model. Without it every model scores identically and the mixed-result case —
+ * the whole reason this view exists — can never be seen.
+ */
+function buildSyntheticResult(modelSteps: number, modelRules: number, passRate = 0.6): AnalysisResult {
+  const steps = Math.max(modelSteps, 1);
+  const stepsPassed = Math.max(0, Math.min(steps, Math.round(steps * passRate)));
   const rulesTriggered = Math.max(1, Math.floor(modelRules * 0.75));
-  const score = Math.round((stepsPassed / Math.max(modelSteps, 1)) * 100);
+  const score = Math.round((stepsPassed / steps) * 100);
   const status: RunStatus = score >= 80 ? "passed" : score >= 60 ? "warning" : "failed";
 
   const baseResult = MOCK_PAST_ANALYSES[0].result;
   return {
     ...baseResult,
     stepsPassed,
-    stepsTotal: Math.max(modelSteps, 1),
+    stepsTotal: steps,
     rulesTriggered,
     rulesTotal: Math.max(modelRules, 1),
     score,
     status,
+    // Spreading baseResult alone left every model in a run reporting the same
+    // finalResults, so the unified findings panel repeated one list N times
+    // instead of showing where the models actually diverged.
+    finalResults: buildFindings(steps, Math.max(modelRules, 1), passRate),
   };
+}
+
+/* ── Multi-model run helpers ─────────────────────────────────────────────── */
+
+/** Every model run in an analysis — falls back to the legacy single-model shape. */
+function modelRunsOf(a: PastAnalysis | null | undefined): ModelRun[] {
+  if (!a) return [];
+  if (a.modelRuns?.length) return a.modelRuns;
+  return [{
+    modelId: a.modelId,
+    modelName: a.modelName,
+    vlmId: a.vlmId,
+    vlmName: a.vlmName,
+    score: a.score,
+    status: a.status,
+    runState: a.runState,
+    failure: a.failure,
+    result: a.result,
+  }];
+}
+
+/**
+ * Roll several model outcomes into one run-level verdict. "warning" counts as
+ * not-passed so a partial result can never be reported as a clean pass.
+ */
+function rollupStatus(runs: ModelRun[]): RunRollupStatus {
+  if (runs.length === 0) return "failed";
+  const passed = runs.filter((r) => r.runState === "completed" && r.status === "passed").length;
+  if (passed === runs.length) return "passed";
+  if (passed === 0) return "failed";
+  return "mixed";
+}
+
+/** Count of models that did not come back clean — the headline number. */
+function failedCount(runs: ModelRun[]): number {
+  return runs.filter((r) => !(r.runState === "completed" && r.status === "passed")).length;
+}
+
+/**
+ * Flatten every model's finalResults into one list. Failures lead, because a
+ * mixed run is a triage task: the reader needs what broke before what held.
+ */
+function unifiedFindings(runs: ModelRun[]): UnifiedFinding[] {
+  const rows: UnifiedFinding[] = [];
+  runs.forEach((mr) => {
+    if (mr.runState !== "completed") return;
+    mr.result.finalResults.forEach((f) => {
+      rows.push({
+        id: `${mr.modelId}-${f.id}`,
+        modelId: mr.modelId,
+        modelName: mr.modelName,
+        status: f.status,
+        title: f.title,
+        timestamp: f.timestamp,
+      });
+    });
+  });
+  return rows.sort((a, b) => {
+    if (a.status !== b.status) return a.status === "failed" ? -1 : 1;
+    return a.timestamp.localeCompare(b.timestamp);
+  });
 }
 
 /* ── Analyzing progress stages ───────────────────────────────────────────── */
@@ -1037,6 +1221,10 @@ const ANALYZING_STAGES: { label: string; pct: number; etaSec: number }[] = [
 ];
 
 /* ── Run Analysis quota & token economics (prototype pricing) ────────────── */
+
+/** A run may carry up to three models; past that the result view stops being scannable. */
+const MAX_MODELS_PER_RUN = 3;
+
 const FREE_TRIAL_MINUTES = 10;
 const TOKENS_PER_MINUTE = 10;
 /* Token credits bought with a card. */
@@ -1145,15 +1333,17 @@ function formatEta(sec: number): string {
   return `~${m}m ${s.toString().padStart(2, "0")}s remaining`;
 }
 
-function AnalysisLoadingScreen({
-  stage,
-  onCancel,
-}: {
-  stage: number;
-  onCancel: () => void;
-}) {
+function AnalysisLoadingScreen({ stage, onCancel }: { stage: number; onCancel: () => void }) {
   const idx = Math.min(stage, ANALYZING_STAGES.length - 1);
   const current = ANALYZING_STAGES[idx];
+  /**
+   * How long the whole run is expected to take.
+   *
+   * Read off the first stage's ETA rather than stored separately: at stage one
+   * nothing has happened yet, so "remaining" and "total" are the same number
+   * there. One source, so the two readouts below can never disagree.
+   */
+  const totalSec = ANALYZING_STAGES[0].etaSec;
 
   return (
     <div className="space-y-5">
@@ -1164,10 +1354,6 @@ function AnalysisLoadingScreen({
             The model is processing your footage. This may take a few seconds.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={onCancel} className="gap-1.5 mt-1">
-          <X className="size-3.5" />
-          Cancel
-        </Button>
       </div>
 
       <Stepper current="result" />
@@ -1195,21 +1381,36 @@ function AnalysisLoadingScreen({
             </div>
           </div>
 
-          {/* Estimated time remaining */}
-          <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
-            <Clock className="size-3 text-muted-foreground" />
-            <span className="font-mono text-xs text-muted-foreground">
-              <strong className="text-foreground">{formatEta(current.etaSec)}</strong>
-            </span>
+          {/* What the whole run costs in time, and what is left of it.
+
+              Two figures rather than one because they answer different
+              questions: the duration is what you would have been told before
+              starting — it does not move — while the remaining figure is the
+              only thing on this screen that reports progress in seconds. Shown
+              side by side so the second reads as a share of the first. */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
+              <Timer className="size-3 text-muted-foreground" />
+              <span className="font-mono text-xs text-muted-foreground">
+                Est. duration{" "}
+                <strong className="text-foreground">{formatDuration(totalSec, "long")}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
+              <Clock className="size-3 text-muted-foreground" />
+              <span className="font-mono text-xs text-muted-foreground">
+                <strong className="text-foreground">{formatEta(current.etaSec)}</strong>
+              </span>
+            </div>
           </div>
 
           <Button variant="outline" size="sm" onClick={onCancel} className="gap-1.5">
             <X className="size-3.5" />
-            Cancel analysis
+            Cancel Analysis
           </Button>
 
           <p className="text-center text-2xs text-muted-foreground/60">
-            This typically takes a few seconds. You can cancel at any time.
+            This typically takes a few seconds. Leaving this page won't stop the run.
           </p>
         </div>
       </div>
@@ -1263,39 +1464,33 @@ function AnalysisFailedScreen({
 
       <Stepper current="result" />
 
-      <div className="rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] px-8 py-12">
-        <div className="mx-auto flex max-w-lg flex-col items-center gap-5 text-center">
-          <div className="flex size-14 items-center justify-center rounded-full border-2 border-sev-critical/40 bg-sev-critical/15">
-            <XCircle className="size-7 text-sev-critical" />
+      <div className="overflow-hidden rounded-xl border border-sev-critical/30 bg-card">
+        <div className="flex items-start gap-3 border-b border-sev-critical/25 bg-sev-critical/[0.06] px-5 py-4">
+          <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-sev-critical/15">
+            <XCircle className="size-5 text-sev-critical" />
           </div>
-
-          <div>
-            <p className="text-lg font-bold text-foreground">Analysis run failed</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-foreground">Analysis run failed</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
               The pipeline did not complete. No results have been generated.
             </p>
           </div>
+          <span className="mt-1 flex-shrink-0 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
+            {failure.code}
+          </span>
+        </div>
 
-          <div className="w-full rounded-lg border border-sev-critical/25 bg-card px-4 py-3 text-left">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Failure
-              </span>
-              <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
-                {failure.code}
-              </span>
-            </div>
-            <p className="text-base font-semibold text-foreground">{failure.reason}</p>
-            {failure.detail && (
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {failure.detail}
-              </p>
-            )}
-          </div>
-
-          <p className="text-2xs text-muted-foreground/60">
+        <div className="px-5 py-4">
+          <p className="text-base font-semibold text-foreground">{failure.reason}</p>
+          {failure.detail && (
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              {failure.detail}
+            </p>
+          )}
+          <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-2xs text-muted-foreground/60">
+            <FileText className="size-3 flex-shrink-0" />
             This failed run has still been logged in your history for traceability.
-          </p>
+          </div>
         </div>
       </div>
     </div>
@@ -1318,7 +1513,7 @@ export default function RunAnalysisPage({
 
   // Flow state
   const [flowStep, setFlowStep] = React.useState<FlowStep>("select");
-  const [selectedModelId, setSelectedModelId] = React.useState<string | null>(null);
+  const [selectedModelIds, setSelectedModelIds] = React.useState<string[]>([]);
   const [analysisName, setAnalysisName] = React.useState("");
   const [uploadedFile, setUploadedFile] = React.useState<{ name: string; size: string; durationSec: number } | null>(null);
   const [selectedVlmId, setSelectedVlmId] = React.useState<string | null>(MOCK_VLMS[0]?.id ?? null);
@@ -1328,7 +1523,7 @@ export default function RunAnalysisPage({
   const [tokenBalance, setTokenBalance] = React.useState(0);
   const [totalTokensPurchased, setTotalTokensPurchased] = React.useState(0);
   const [purchaseOpen, setPurchaseOpen] = React.useState(false);
-  const [currentResult, setCurrentResult] = React.useState<AnalysisResult | null>(null);
+  const [currentModelRuns, setCurrentModelRuns] = React.useState<ModelRun[] | null>(null);
   const [completedToast, setCompletedToast] = React.useState(false);
 
   // Analysis loading flow (Fix #5)
@@ -1336,7 +1531,7 @@ export default function RunAnalysisPage({
   const [analyzingStage, setAnalyzingStage] = React.useState(0);
   const [currentRunId, setCurrentRunId] = React.useState<string | null>(null);
   const [currentFailure, setCurrentFailure] = React.useState<RunFailure | null>(null);
-  const pendingRunRef = React.useRef<{ result: AnalysisResult; newRun: PastAnalysis } | null>(null);
+  const pendingRunRef = React.useRef<{ modelRuns: ModelRun[]; newRun: PastAnalysis } | null>(null);
   const currentRunIdRef = React.useRef<string | null>(null);
 
   // Past analyses (history)
@@ -1348,7 +1543,27 @@ export default function RunAnalysisPage({
   const [tagFilter, setTagFilter] = React.useState<string[]>([]);
 
   const allModels = MOCK_MODELS;
-  const selectedModel = allModels.find((m) => m.id === selectedModelId) ?? null;
+  const selectedModels = React.useMemo(
+    () => selectedModelIds
+      .map((id) => allModels.find((m) => m.id === id))
+      .filter((m): m is ModelData => !!m),
+    [allModels, selectedModelIds]
+  );
+  /** The model whose configuration is shown in the right-hand panel. */
+  const focusedModel = selectedModels[selectedModels.length - 1] ?? null;
+
+  function toggleModel(id: string) {
+    setSelectedModelIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_MODELS_PER_RUN) {
+        toast.message(`Up to ${MAX_MODELS_PER_RUN} models per run`, {
+          description: "Remove one before adding another.",
+        });
+        return prev;
+      }
+      return [...prev, id];
+    });
+  }
 
   const filteredModels = React.useMemo(() => {
     const q = modelSearch.toLowerCase().trim();
@@ -1367,11 +1582,11 @@ export default function RunAnalysisPage({
 
   function resetFlow() {
     setFlowStep("select");
-    setSelectedModelId(null);
+    setSelectedModelIds([]);
     setAnalysisName("");
     setUploadedFile(null);
     setSelectedVlmId(null);
-    setCurrentResult(null);
+    setCurrentModelRuns(null);
     setCompletedToast(false);
     setIsAnalyzing(false);
     setAnalyzingStage(0);
@@ -1416,58 +1631,85 @@ export default function RunAnalysisPage({
   ];
 
   function handleRun() {
-    if (!selectedModel) return;
+    if (selectedModels.length === 0) return;
     if (!analysisName.trim() || !uploadedFile || !selectedVlmId) return;
 
-    // Bill the clip: free-trial minutes first, then token credits for the rest.
-    const bill = billVideo(uploadedFile.durationSec, freeSecondsRemaining);
+    // Every model runs its own inference pass over the clip, so the run is
+    // billed per model rather than per upload.
+    const billableSec = uploadedFile.durationSec * selectedModels.length;
+    const bill = billVideo(billableSec, freeSecondsRemaining);
     if (tokenBalance < bill.tokenCost) { setPurchaseOpen(true); return; }
     if (bill.freeCoverSec > 0) setFreeSecondsRemaining((n) => n - bill.freeCoverSec);
     if (bill.tokenCost > 0) setTokenBalance((n) => n - bill.tokenCost);
 
-    const willFail = Math.random() < FAILURE_PROBABILITY;
-    const result = buildSyntheticResult(
-      Math.max(selectedModel.sequenceIds.length, 1),
-      Math.max(selectedModel.attachedRuleIds.length, 1)
-    );
-
     const vlm = MOCK_VLMS.find((v) => v.id === selectedVlmId)!;
     const now = new Date();
-    const failure = willFail
-      ? FAILURE_LIBRARY[Math.floor(Math.random() * FAILURE_LIBRARY.length)]
-      : undefined;
+
+    // Spread pass rates across the selected models so mixed runs actually occur.
+    const PASS_RATES = [1, 0.4, 0.5, 0.75];
+
+    const modelRuns: ModelRun[] = selectedModels.map((model, i) => {
+      const modelFailed = Math.random() < FAILURE_PROBABILITY;
+      const result = buildSyntheticResult(
+        Math.max(model.sequenceIds.length, 1),
+        Math.max(model.attachedRuleIds.length, 1),
+        PASS_RATES[i % PASS_RATES.length]
+      );
+      return {
+        modelId: model.id,
+        modelName: model.name,
+        vlmId: vlm.id,
+        vlmName: vlm.name,
+        score: result.score,
+        status: result.status,
+        runState: modelFailed ? "failed" : "completed",
+        failure: modelFailed
+          ? FAILURE_LIBRARY[Math.floor(Math.random() * FAILURE_LIBRARY.length)]
+          : undefined,
+        result,
+      };
+    });
+
+    // A run only counts as technically failed when every model crashed; one
+    // crashed model alongside completed siblings is still a readable run.
+    const allCrashed = modelRuns.every((r) => r.runState === "failed");
+    const rollup = rollupStatus(modelRuns);
+    const lead = modelRuns[0];
 
     const newRun: PastAnalysis = {
       id: nextAnalysisId(),
       name: analysisName.trim(),
-      modelId: selectedModel.id,
-      modelName: selectedModel.name,
+      // Flat fields stay populated from the lead model so every existing
+      // history/table consumer keeps working untouched.
+      modelId: lead.modelId,
+      modelName: modelRuns.length > 1 ? `${modelRuns.length} models` : lead.modelName,
       vlmId: vlm.id,
       vlmName: vlm.name,
-      score: result.score,
-      status: result.status,
-      tags: willFail
+      score: lead.score,
+      status: rollup === "passed" ? "passed" : rollup === "failed" ? "failed" : "warning",
+      tags: allCrashed
         ? ["Failed", "Script Error"]
-        : [result.status === "passed" ? "Passed" : result.status === "failed" ? "Failed" : "Warning", "Tested"],
+        : [rollup === "passed" ? "Passed" : rollup === "failed" ? "Failed" : "Mixed", "Tested"],
       createdAt: now.toISOString(),
       createdAtDisplay: fmtDisplay(now),
-      result,
-      runState: willFail ? "failed" : "completed",
-      failure,
+      result: lead.result,
+      runState: allCrashed ? "failed" : "completed",
+      failure: allCrashed ? lead.failure : undefined,
       verdict: "pending",
-      runtimeDisplay: willFail ? "—" : "32s",
+      runtimeDisplay: allCrashed ? "\u2014" : `${28 + modelRuns.length * 6}s`,
       completedAtDisplay: fmtDisplay(now),
       startedBy: "Delbin Arkar",
+      modelRuns,
     };
 
-    pendingRunRef.current = { result, newRun };
+    pendingRunRef.current = { modelRuns, newRun };
     setFlowStep("result");
     setAnalyzingStage(0);
     setCompletedToast(false);
-    setCurrentResult(null);
+    setCurrentModelRuns(null);
     setIsAnalyzing(true);
     toast.message("Analysis started", {
-      description: `${newRun.name} · ${selectedModel.name}`,
+      description: `${newRun.name} \u00b7 ${modelRuns.length} model${modelRuns.length === 1 ? "" : "s"}`,
     });
   }
 
@@ -1510,18 +1752,29 @@ export default function RunAnalysisPage({
 
             if (pending.newRun.runState === "failed") {
               setCurrentFailure(pending.newRun.failure ?? null);
-              setCurrentResult(null);
+              setCurrentModelRuns(null);
               setCompletedToast(false);
               toast.error("Analysis failed", {
                 description: pending.newRun.failure?.reason ?? "Run aborted mid-flow.",
               });
             } else {
-              setCurrentResult(pending.result);
+              setCurrentModelRuns(pending.modelRuns);
               setCurrentFailure(null);
               setCompletedToast(true);
-              toast.success("Analysis completed", {
-                description: `${pending.newRun.name} · score ${pending.newRun.score}`,
-              });
+              const rollup = rollupStatus(pending.modelRuns);
+              const failed = failedCount(pending.modelRuns);
+              const many = pending.modelRuns.length > 1;
+              if (rollup === "passed") {
+                toast.success("Analysis completed", {
+                  description: many
+                    ? `${pending.newRun.name} · all ${pending.modelRuns.length} checks passed`
+                    : `${pending.newRun.name} · score ${pending.modelRuns[0].score}`,
+                });
+              } else {
+                toast.message(rollup === "mixed" ? "Analysis completed — mixed result" : "Analysis completed — checks failed", {
+                  description: `${pending.newRun.name} · ${failed} of ${pending.modelRuns.length} check${pending.modelRuns.length === 1 ? "" : "s"} failed`,
+                });
+              }
             }
             pendingRunRef.current = null;
           }
@@ -1543,9 +1796,11 @@ export default function RunAnalysisPage({
       {tab === "analysis" ? (
         flowStep === "select" ? (
           <SelectStep
-            selectedModelId={selectedModelId}
-            onSelectModel={setSelectedModelId}
-            selectedModel={selectedModel}
+            selectedModelIds={selectedModelIds}
+            onToggleModel={toggleModel}
+            selectedModels={selectedModels}
+            focusedModel={focusedModel}
+            maxModels={MAX_MODELS_PER_RUN}
             allRules={MOCK_RULES}
             modelSearch={modelSearch}
             setModelSearch={setModelSearch}
@@ -1565,7 +1820,7 @@ export default function RunAnalysisPage({
           />
         ) : flowStep === "upload" ? (
           <UploadStep
-            selectedModel={selectedModel!}
+            selectedModels={selectedModels}
             analysisName={analysisName}
             setAnalysisName={setAnalysisName}
             uploadedFile={uploadedFile}
@@ -1581,10 +1836,7 @@ export default function RunAnalysisPage({
             onOpenPurchase={() => setPurchaseOpen(true)}
           />
         ) : isAnalyzing ? (
-          <AnalysisLoadingScreen
-            stage={analyzingStage}
-            onCancel={handleCancelAnalysis}
-          />
+          <AnalysisLoadingScreen stage={analyzingStage} onCancel={handleCancelAnalysis} />
         ) : currentFailure ? (
           <AnalysisFailedScreen
             failure={currentFailure}
@@ -1593,15 +1845,11 @@ export default function RunAnalysisPage({
             onNewAnalysis={resetFlow}
             onShowHistory={() => setTab("history")}
           />
-        ) : !currentResult ? (
-          <AnalysisLoadingScreen
-            stage={analyzingStage}
-            onCancel={handleCancelAnalysis}
-          />
+        ) : !currentModelRuns ? (
+          <AnalysisLoadingScreen stage={analyzingStage} onCancel={handleCancelAnalysis} />
         ) : (
           <ResultStep
-            result={currentResult}
-            modelName={selectedModel?.name ?? ""}
+            modelRuns={currentModelRuns}
             vlmName={MOCK_VLMS.find((v) => v.id === selectedVlmId)?.name ?? ""}
             currentRun={pastAnalyses.find((a) => a.id === currentRunId) ?? null}
             completedToast={completedToast}
@@ -1779,9 +2027,11 @@ function RunQuotaButton({
 }
 
 function SelectStep({
-  selectedModelId,
-  onSelectModel,
-  selectedModel,
+  selectedModelIds,
+  onToggleModel,
+  selectedModels,
+  focusedModel,
+  maxModels,
   allRules,
   modelSearch,
   setModelSearch,
@@ -1799,9 +2049,11 @@ function SelectStep({
   totalTokensPurchased,
   onOpenPurchase,
 }: {
-  selectedModelId: string | null;
-  onSelectModel: (id: string) => void;
-  selectedModel: ModelData | null;
+  selectedModelIds: string[];
+  onToggleModel: (id: string) => void;
+  selectedModels: ModelData[];
+  focusedModel: ModelData | null;
+  maxModels: number;
   allRules: RuleData[];
   modelSearch: string;
   setModelSearch: (v: string) => void;
@@ -1855,13 +2107,18 @@ function SelectStep({
         <div className="flex-shrink-0 border-b border-border px-5 py-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-md font-bold text-foreground">Choose an AI Model</h2>
+              <h2 className="text-md font-bold text-foreground">Choose AI Models</h2>
               <p className="text-sm text-muted-foreground">
-                Select the model you want to run on your footage
+                Pick up to {maxModels} of {totalModels} models to run against the same footage
               </p>
             </div>
-            <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-              {totalModels} Models
+            <span className={cn(
+              "rounded-full border px-2.5 py-1 text-xs font-semibold",
+              selectedModelIds.length > 0
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-muted text-muted-foreground"
+            )}>
+              {selectedModelIds.length} / {maxModels} selected
             </span>
           </div>
 
@@ -1929,8 +2186,10 @@ function SelectStep({
                 <ModelChooserCard
                   key={m.id}
                   model={m}
-                  selected={selectedModelId === m.id}
-                  onClick={() => onSelectModel(m.id)}
+                  selected={selectedModelIds.includes(m.id)}
+                  order={selectedModelIds.indexOf(m.id)}
+                  disabled={!selectedModelIds.includes(m.id) && selectedModelIds.length >= maxModels}
+                  onClick={() => onToggleModel(m.id)}
                 />
               ))}
             </div>
@@ -1947,18 +2206,27 @@ function SelectStep({
             <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
             <div className="mt-auto h-10 w-full animate-pulse rounded-md bg-muted" />
           </div>
-        ) : selectedModel ? (
+        ) : selectedModels.length > 1 ? (
+          <SelectedModelsPanel
+            models={selectedModels}
+            onRemove={onToggleModel}
+            onNext={onNext}
+          />
+        ) : focusedModel ? (
           <ModelConfigurePanel
-            model={selectedModel}
+            model={focusedModel}
             allRules={allRules}
             onNext={onNext}
           />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
             <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
               <Plus className="size-6" />
             </div>
             <p className="text-base">Select a model to configure</p>
+            <p className="text-xs text-muted-foreground/70">
+              Add up to {maxModels} to run them against the same clip in one pass.
+            </p>
           </div>
         )}
       </div>
@@ -1970,7 +2238,7 @@ function SelectStep({
 /* ─── Step 2 ─────────────────────────────────────────────────────────────── */
 
 function UploadStep({
-  selectedModel,
+  selectedModels,
   analysisName,
   setAnalysisName,
   uploadedFile,
@@ -1985,7 +2253,7 @@ function UploadStep({
   totalTokensPurchased,
   onOpenPurchase,
 }: {
-  selectedModel: ModelData;
+  selectedModels: ModelData[];
   analysisName: string;
   setAnalysisName: (v: string) => void;
   uploadedFile: { name: string; size: string; durationSec: number } | null;
@@ -2004,7 +2272,11 @@ function UploadStep({
   const depleted = freeSecondsRemaining <= 0 && tokenBalance <= 0;
 
   // Billing for the uploaded clip: free-trial seconds first, then tokens.
-  const bill = uploadedFile ? billVideo(uploadedFile.durationSec, freeSecondsRemaining) : null;
+  // One inference pass per model, so the clip is billed modelCount times.
+  const modelCount = Math.max(1, selectedModels.length);
+  const bill = uploadedFile
+    ? billVideo(uploadedFile.durationSec * modelCount, freeSecondsRemaining)
+    : null;
 
   const freeLeftLabel =
     freeSecondsRemaining % 60 === 0
@@ -2071,9 +2343,9 @@ function UploadStep({
         {/* Shared heading sits above both columns so their first labels align. */}
         <p className="mb-3 text-md font-bold text-foreground">Analysis Information</p>
 
-        <div className="grid grid-cols-[1fr_420px] gap-5 pb-1">
+        <div className="grid grid-cols-3 gap-5 pb-1">
 
-          {/* ── Left: analysis info + uploader ── */}
+          {/* ── Column 1: analysis info + uploader ── */}
           <div className="space-y-4">
             <div>
               <div className="mb-4">
@@ -2111,49 +2383,52 @@ function UploadStep({
             </div>
           </div>
 
-          {/* ── Right: selected model + VLM picker ── */}
-          <div className="space-y-4">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Selected Model
-              </p>
-              <SelectedModelCard model={selectedModel} allRules={MOCK_RULES} />
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Select VLM Model
-              </p>
-              <div
-                className={cn(
-                  "overflow-hidden rounded-xl border border-border bg-card",
-                  errors.vlm && "border-sev-critical"
-                )}
-              >
-                <div className="border-b border-border bg-muted/20 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-3.5 text-primary" />
-                    <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    AI will describe &amp; reason about the footage
-                  </p>
+          {/* ── Column 2: Select VLM Model — sits before the selected model column ── */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Select VLM Model
+            </p>
+            <div
+              className={cn(
+                "overflow-hidden rounded-xl border border-border bg-card",
+                errors.vlm && "border-sev-critical"
+              )}
+            >
+              <div className="border-b border-border bg-muted/20 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-3.5 text-primary" />
+                  <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
                 </div>
-                <div className="h-[316px] space-y-1.5 overflow-y-auto p-2">
-                  {MOCK_VLMS.map((vlm) => (
-                    <VLMRow
-                      key={vlm.id}
-                      vlm={vlm}
-                      selected={selectedVlmId === vlm.id}
-                      onClick={() => {
-                        setSelectedVlmId(vlm.id);
-                        setErrors((prev) => ({ ...prev, vlm: undefined }));
-                      }}
-                    />
-                  ))}
-                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  AI will describe &amp; reason about the footage
+                </p>
               </div>
-              {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
+              <div className="h-[316px] space-y-1.5 overflow-y-auto p-2">
+                {MOCK_VLMS.map((vlm) => (
+                  <VLMRow
+                    key={vlm.id}
+                    vlm={vlm}
+                    selected={selectedVlmId === vlm.id}
+                    onClick={() => {
+                      setSelectedVlmId(vlm.id);
+                      setErrors((prev) => ({ ...prev, vlm: undefined }));
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
+          </div>
+
+          {/* ── Column 3: selected model(s) ── */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {selectedModels.length > 1 ? `Selected Models (${selectedModels.length})` : "Selected Model"}
+            </p>
+            <div className="space-y-2">
+              {selectedModels.map((m) => (
+                <SelectedModelCard key={m.id} model={m} allRules={MOCK_RULES} />
+              ))}
             </div>
           </div>
         </div>
@@ -2198,7 +2473,7 @@ function UploadStep({
 
 /* ── Run confirmation modal — review usage & confirm ────────────────────── */
 
-function RunConfirmModal({
+export function RunConfirmModal({
   open,
   onClose,
   onConfirm,
@@ -2218,20 +2493,15 @@ function RunConfirmModal({
   tokenBalance: number;
 }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[440px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="flex items-center gap-2 text-base font-bold">
-            <Sparkles className="size-4 text-primary" />
-            Confirm analysis run
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Start the analysis against your uploaded footage. Free-trial minutes
-            are used first, then token credits.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Confirm analysis run"
+          description="Start the analysis against your uploaded footage. Free-trial minutes are used first, then token credits."
+          icon={Sparkles}
+        />
 
-        <div className="space-y-4 px-5 py-5">
+        <ModalBody className="space-y-4">
           {/* Hero — what this run costs */}
           <div
             className={cn(
@@ -2283,9 +2553,9 @@ function RunConfirmModal({
               </div>
             )}
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -2293,15 +2563,15 @@ function RunConfirmModal({
             <Sparkles className="size-3.5" />
             Proceed
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Purchase runs / credits modal ───────────────────────────────────────── */
 
-function PurchaseRunsModal({
+export function PurchaseRunsModal({
   open,
   onClose,
   tokenBalance,
@@ -2419,19 +2689,15 @@ function PurchaseRunsModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="flex items-center gap-2 text-base font-bold">
-            <CoinIcon className="size-4" />
-            Top up Run Analysis
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Buy token credits and pay with a saved payment method.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Top up Run Analysis"
+          description="Buy token credits and pay with a saved payment method."
+          icon={CoinIcon}
+        />
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-5">
           {/* ── Token balance — hero ── */}
           <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-5 py-6 text-center">
             <p className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
@@ -2653,9 +2919,9 @@ function PurchaseRunsModal({
               )}
             </div>
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 justify-end border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button
             className="gap-1.5"
             onClick={handlePay}
@@ -2664,9 +2930,9 @@ function PurchaseRunsModal({
             <CreditCard className="size-3.5" />
             Pay ${chosen.price.toFixed(2)} · Get {chosen.tokens} Tokens
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -2756,9 +3022,239 @@ function RunMetadataBar({
 
 /* ─── Step 3 (result) ────────────────────────────────────────────────────── */
 
+/* ── Multi-model result presentation ─────────────────────────────────────── */
+
+const ROLLUP_STYLES: Record<RunRollupStatus, { label: string; text: string; bg: string; border: string; bar: string }> = {
+  passed: { label: "All checks passed", text: "text-success",      bg: "bg-success/[0.06]",      border: "border-success/30",      bar: "bg-success" },
+  mixed:  { label: "Mixed result",      text: "text-warning",      bg: "bg-warning/[0.06]",      border: "border-warning/30",      bar: "bg-warning" },
+  failed: { label: "Checks failed",     text: "text-sev-critical", bg: "bg-sev-critical/[0.06]", border: "border-sev-critical/30", bar: "bg-sev-critical" },
+};
+
+/** Per-model colour for the segmented bar and the model chips. */
+function modelTone(mr: ModelRun) {
+  if (mr.runState === "failed") return { bar: "bg-muted-foreground/40", text: "text-muted-foreground", dot: "bg-muted-foreground/60" };
+  if (mr.status === "passed")   return { bar: "bg-success",             text: "text-success",          dot: "bg-success" };
+  if (mr.status === "warning")  return { bar: "bg-warning",             text: "text-warning",          dot: "bg-warning" };
+  return { bar: "bg-sev-critical", text: "text-sev-critical", dot: "bg-sev-critical" };
+}
+
+/**
+ * Run-level headline for a multi-model run. Reports a count, never an averaged
+ * score — averaging 92/40/45 into 59 would describe none of the three models.
+ */
+function RunRollupHeader({ modelRuns }: { modelRuns: ModelRun[] }) {
+  const rollup = rollupStatus(modelRuns);
+  const failed = failedCount(modelRuns);
+  const style = ROLLUP_STYLES[rollup];
+
+  return (
+    <div className={cn("rounded-xl border p-4", style.border, style.bg)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          {rollup === "passed" ? (
+            <CheckCircle2 className={cn("size-5", style.text)} />
+          ) : (
+            <AlertTriangle className={cn("size-5", style.text)} />
+          )}
+          <div>
+            <p className={cn("text-md font-bold", style.text)}>{style.label}</p>
+            <p className="text-xs text-muted-foreground">
+              {failed === 0
+                ? `All ${modelRuns.length} model${modelRuns.length === 1 ? "" : "s"} passed`
+                : `${failed} of ${modelRuns.length} check${modelRuns.length === 1 ? "" : "s"} failed`}
+            </p>
+          </div>
+        </div>
+        <span className="font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
+          {modelRuns.length} model{modelRuns.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {/* Segmented bar — one slice per model, so the split is visible at a glance. */}
+      <div className="mt-3 flex gap-1 overflow-hidden rounded-full">
+        {modelRuns.map((mr) => (
+          <div key={mr.modelId} className={cn("h-1.5 flex-1 rounded-full", modelTone(mr).bar)} />
+        ))}
+      </div>
+
+      {/* Per-model chips */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {modelRuns.map((mr) => {
+          const tone = modelTone(mr);
+          const crashed = mr.runState === "failed";
+          return (
+            <span
+              key={mr.modelId}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs"
+            >
+              <span className={cn("size-1.5 rounded-full", tone.dot)} />
+              <span className="font-semibold text-foreground">{mr.modelName}</span>
+              <span className={cn("font-mono", tone.text)}>
+                {crashed ? "error" : mr.score}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** One row of the unified findings table. */
+function UnifiedFindingRow({ finding }: { finding: UnifiedFinding }) {
+  const failed = finding.status === "failed";
+  return (
+    <div className="flex items-start gap-3 px-4 py-2.5">
+      {failed ? (
+        <XCircle className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+      ) : (
+        <CheckCircle2 className="mt-0.5 size-3.5 flex-shrink-0 text-success" />
+      )}
+      <div className="min-w-0 flex-1">
+        <TruncatedText text={finding.title} className="text-sm text-foreground" />
+        <p className="mt-0.5 text-2xs text-muted-foreground">{finding.timestamp}</p>
+      </div>
+      <span className="flex-shrink-0 rounded border border-border bg-muted px-1.5 py-0.5 text-2xs font-semibold text-muted-foreground">
+        {finding.modelName}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The complete, run-wide findings list: every model's results merged into one
+ * table, failures first, each row tagged with the model it came from.
+ */
+function AllFindingsPanel({ modelRuns }: { modelRuns: ModelRun[] }) {
+  const [filter, setFilter] = React.useState<"all" | "failed" | "passed">("all");
+  const [modelFilter, setModelFilter] = React.useState<string | "all">("all");
+
+  const all = React.useMemo(() => unifiedFindings(modelRuns), [modelRuns]);
+  const rows = all.filter((f) => {
+    if (filter !== "all" && f.status !== filter) return false;
+    if (modelFilter !== "all" && f.modelId !== modelFilter) return false;
+    return true;
+  });
+  const failedTotal = all.filter((f) => f.status === "failed").length;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div>
+          <p className="text-base font-bold text-foreground">All findings</p>
+          <p className="text-xs text-muted-foreground">
+            {all.length} result{all.length === 1 ? "" : "s"} across {modelRuns.length} model{modelRuns.length === 1 ? "" : "s"}
+            {failedTotal > 0 && <> · <span className="text-sev-critical">{failedTotal} failed</span></>}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {([
+            { key: "all" as const,    label: "All" },
+            { key: "failed" as const, label: "Failed" },
+            { key: "passed" as const, label: "Passed" },
+          ]).map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={cn(
+                "rounded-md border px-2 py-1 text-xs font-semibold transition-colors",
+                filter === f.key
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+          <Select value={modelFilter} onValueChange={(v) => setModelFilter(v)}>
+            <SelectTrigger className="h-7 w-[150px] text-xs">
+              <SelectValue placeholder="All models" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All models</SelectItem>
+              {modelRuns.map((mr) => (
+                <SelectItem key={mr.modelId} value={mr.modelId}>{mr.modelName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="max-h-[560px] divide-y divide-border/40 overflow-y-auto">
+        {rows.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm italic text-muted-foreground">
+            No findings match this filter.
+          </p>
+        ) : (
+          rows.map((f) => <UnifiedFindingRow key={f.id} finding={f} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One model's section in the "By model" view. Failed models open by default and
+ * passed ones stay collapsed to a summary line — a mixed run is a triage task,
+ * but the pass is still listed rather than hidden.
+ */
+function ModelRunSection({ modelRun, defaultOpen }: { modelRun: ModelRun; defaultOpen: boolean }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  const tone = modelTone(modelRun);
+  const crashed = modelRun.runState === "failed";
+  const r = modelRun.result;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30"
+      >
+        <span className={cn("size-2 flex-shrink-0 rounded-full", tone.dot)} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <TruncatedText text={modelRun.modelName} className="text-base font-bold text-foreground" />
+            {crashed ? (
+              <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
+                Pipeline error
+              </span>
+            ) : (
+              <StatusPill status={modelRun.status} />
+            )}
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {crashed
+              ? modelRun.failure?.reason ?? "Run aborted mid-pipeline"
+              : `Score ${r.score} · ${r.stepsPassed}/${r.stepsTotal} steps · ${r.rulesTriggered}/${r.rulesTotal} rules triggered`}
+          </p>
+        </div>
+        <ChevronDown className={cn("size-4 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="border-t border-border p-4">
+          {crashed ? (
+            <div className="rounded-lg border border-border bg-background p-4">
+              <p className="text-sm font-semibold text-foreground">{modelRun.failure?.reason}</p>
+              {modelRun.failure?.detail && (
+                <p className="mt-1 text-xs text-muted-foreground">{modelRun.failure.detail}</p>
+              )}
+              <p className="mt-2 font-mono text-2xs uppercase tracking-wider text-muted-foreground/60">
+                {modelRun.failure?.code}
+              </p>
+            </div>
+          ) : (
+            <ModelResultBody result={r} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ResultStep({
-  result,
-  modelName,
+  modelRuns,
   vlmName,
   currentRun,
   completedToast,
@@ -2766,8 +3262,7 @@ function ResultStep({
   onGoBack,
   onSetVerdict,
 }: {
-  result: AnalysisResult;
-  modelName: string;
+  modelRuns: ModelRun[];
   vlmName: string;
   currentRun: PastAnalysis | null;
   completedToast: boolean;
@@ -2775,10 +3270,19 @@ function ResultStep({
   onGoBack: () => void;
   onSetVerdict: (verdict: AnalysisVerdict) => void;
 }) {
-  const [vlmOpen, setVlmOpen] = React.useState(true);
+  const [resultView, setResultView] = React.useState<"findings" | "models">("findings");
   const verdict = currentRun?.verdict ?? "pending";
   const verdictDecided = verdict !== "pending";
-  const canApprove = result.status === "passed" || result.status === "warning";
+
+  const isMulti = modelRuns.length > 1;
+  const rollup = rollupStatus(modelRuns);
+  const failed = failedCount(modelRuns);
+  const lead = modelRuns[0];
+  const modelName = isMulti ? `${modelRuns.length} models` : lead.modelName;
+
+  // A clean run approves without ceremony; anything else forces an explicit
+  // acknowledgement of what failed rather than silently disabling the button.
+  const canApprove = rollup !== "failed";
 
   return (
     <div className="space-y-5">
@@ -2813,8 +3317,17 @@ function ResultStep({
               </Button>
               <Button
                 size="sm"
-                onClick={() => onSetVerdict("approved")}
+                onClick={() => {
+                  if (rollup !== "passed") {
+                    const ok = window.confirm(
+                      `${failed} of ${modelRuns.length} check${modelRuns.length === 1 ? "" : "s"} failed. Approve for deployment anyway?`
+                    );
+                    if (!ok) return;
+                  }
+                  onSetVerdict("approved");
+                }}
                 disabled={!canApprove}
+                title={canApprove ? undefined : "Every check failed — nothing to approve"}
                 className="gap-1.5"
               >
                 <CheckCircle2 className="size-3.5" />
@@ -2853,7 +3366,57 @@ function ResultStep({
         startedBy={currentRun?.startedBy}
         runId={currentRun?.id}
       />
+      {isMulti ? (
+        <>
+          <RunRollupHeader modelRuns={modelRuns} />
 
+          {/* View toggle — same underline tab pattern as the detail drawers. */}
+          <div className="flex items-center gap-1 border-b border-border">
+            {[
+              { key: "findings" as const, label: "All findings", icon: FileText },
+              { key: "models"   as const, label: "By model",     icon: Layers },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setResultView(key)}
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                  resultView === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="size-3.5" />
+                {label}
+                {resultView === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+              </button>
+            ))}
+          </div>
+
+          {resultView === "findings" ? (
+            <AllFindingsPanel modelRuns={modelRuns} />
+          ) : (
+            <div className="space-y-3">
+              {modelRuns.map((mr) => (
+                <ModelRunSection key={mr.modelId} modelRun={mr} defaultOpen={mr.status !== "passed" || mr.runState === "failed"} />
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <ModelResultBody result={lead.result} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The per-model detail body: score row, video, step results, rules, activity
+ * log, final results and VLM reasoning. Shared by the single-model result view
+ * and by each expanded model section in a multi-model run.
+ */
+function ModelResultBody({ result }: { result: AnalysisResult }) {
+  const [vlmOpen, setVlmOpen] = React.useState(true);
+  return (
+    <div className="space-y-5">
       {/* Score row */}
       <div className="grid grid-cols-3 gap-4">
         <ScoreHeroCard result={result} />
@@ -2991,6 +3554,7 @@ function ResultStep({
     </div>
   );
 }
+
 
 /* ── VLM Reasoning panel (purple-themed AI section) ──────────────────────── */
 
@@ -3658,49 +4222,67 @@ function HistoryTab({
     </div>
 
     {/* Delete confirmation modal */}
-    <Dialog open={!!deleteTarget} onOpenChange={(v) => !v && setPendingDeleteId(null)}>
-      <DialogContent className="w-[440px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
-            <Trash2 className="size-4" />
-            Delete Analysis
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        {deleteTarget && (
-          <div className="px-5 py-4 text-base text-muted-foreground">
+    <DeleteAnalysisModal
+      target={deleteTarget ?? null}
+      onCancel={() => setPendingDeleteId(null)}
+      onConfirm={() => {
+        if (deleteTarget) onDelete(deleteTarget.id);
+        setPendingDeleteId(null);
+      }}
+    />
+  </div>
+  );
+}
+
+/* ─── Delete-analysis confirm ────────────────────────────────────────────── */
+
+/**
+ * Confirms removing a past run from history. Extracted from the history tab so
+ * it can be mounted standalone (the modal gallery does exactly that).
+ */
+export function DeleteAnalysisModal({
+  target,
+  onCancel,
+  onConfirm,
+}: {
+  target: { id: string; name: string } | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal open={!!target} onOpenChange={(v) => !v && onCancel()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Delete Analysis"
+          description="This action cannot be undone."
+          icon={Trash2}
+          tone="destructive"
+        />
+        {target && (
+          <ModalBody className="text-base text-muted-foreground">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">{deleteTarget.id}</span>{" "}
-            <span className="font-semibold text-foreground">— {deleteTarget.name}</span>? Any
+            <span className="font-semibold text-foreground">{target.id}</span>{" "}
+            <span className="font-semibold text-foreground">— {target.name}</span>? Any
             references to this run from validation history will be removed.
-          </div>
+          </ModalBody>
         )}
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
-          <Button variant="ghost" size="sm" onClick={() => setPendingDeleteId(null)}>
+        <ModalFooter>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => {
-              if (deleteTarget) onDelete(deleteTarget.id);
-              setPendingDeleteId(null);
-            }}
-          >
+          <Button variant="destructive" size="sm" className="gap-1.5" onClick={onConfirm}>
             <Trash2 className="size-3.5" />
             Delete Analysis
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </div>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ─── History detail drawer ──────────────────────────────────────────────── */
 
-function HistoryDetailDrawer({
+export function HistoryDetailDrawer({
   analysis,
   onClose,
 }: {
@@ -3710,6 +4292,9 @@ function HistoryDetailDrawer({
   const [tab, setTab] = React.useState<"result" | "logs">("result");
   const [vlmOpen, setVlmOpen] = React.useState(true);
   const { result } = analysis;
+  // Legacy single-model records fall back to a one-entry list.
+  const runs = modelRunsOf(analysis);
+  const isMulti = runs.length > 1;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50" onClick={onClose}>
@@ -3785,99 +4370,117 @@ function HistoryDetailDrawer({
                 <VerdictBadge verdict={analysis.verdict} verdictAtDisplay={analysis.verdictAtDisplay} />
               )}
 
-              {/* Metadata bar */}
-              <RunMetadataBar
-                runId={analysis.id}
-                modelName={analysis.modelName}
-                vlmName={analysis.vlmName}
-                startedBy={analysis.startedBy}
-                completedAtDisplay={analysis.completedAtDisplay}
-                runtimeDisplay={analysis.runtimeDisplay}
-              />
-
-              {/* Score row */}
-              <div className="grid grid-cols-3 gap-2">
-                <ScoreHeroCard result={result} compact />
-                <MiniScoreCard
-                  label="Steps Passed"
-                  value={`${result.stepsPassed}/${result.stepsTotal}`}
-                  tone="success"
-                  compact
-                  sub={`${Math.round((result.stepsPassed / Math.max(1, result.stepsTotal)) * 100)}% complete`}
-                />
-                <MiniScoreCard
-                  label="Rules Triggered"
-                  value={`${result.rulesTriggered}/${result.rulesTotal}`}
-                  tone="warning"
-                  compact
-                  sub={result.rulesTriggered === 0 ? "No violations" : `${result.rulesTriggered} violation${result.rulesTriggered === 1 ? "" : "s"}`}
-                />
-              </div>
-
-              {/* Video */}
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
-                <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
-                      <Play className="size-4 text-white" />
-                    </div>
+              {isMulti ? (
+                <>
+                  <RunRollupHeader modelRuns={runs} />
+                  <AllFindingsPanel modelRuns={runs} />
+                  <div className="space-y-3">
+                    {runs.map((mr) => (
+                      <ModelRunSection
+                        key={mr.modelId}
+                        modelRun={mr}
+                        defaultOpen={mr.status !== "passed" || mr.runState === "failed"}
+                      />
+                    ))}
                   </div>
+                </>
+              ) : (
+                <>
+                {/* Metadata bar */}
+                <RunMetadataBar
+                  runId={analysis.id}
+                  modelName={analysis.modelName}
+                  vlmName={analysis.vlmName}
+                  startedBy={analysis.startedBy}
+                  completedAtDisplay={analysis.completedAtDisplay}
+                  runtimeDisplay={analysis.runtimeDisplay}
+                />
+
+                {/* Score row */}
+                <div className="grid grid-cols-3 gap-2">
+                  <ScoreHeroCard result={result} compact />
+                  <MiniScoreCard
+                    label="Steps Passed"
+                    value={`${result.stepsPassed}/${result.stepsTotal}`}
+                    tone="success"
+                    compact
+                    sub={`${Math.round((result.stepsPassed / Math.max(1, result.stepsTotal)) * 100)}% complete`}
+                  />
+                  <MiniScoreCard
+                    label="Rules Triggered"
+                    value={`${result.rulesTriggered}/${result.rulesTotal}`}
+                    tone="warning"
+                    compact
+                    sub={result.rulesTriggered === 0 ? "No violations" : `${result.rulesTriggered} violation${result.rulesTriggered === 1 ? "" : "s"}`}
+                  />
                 </div>
-                <div className="border-t border-border bg-card px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="font-mono text-xs">00:51</span>
-                    <div className="relative flex-1">
-                      <div className="h-1 w-full rounded-full bg-muted">
-                        <div className="h-full w-[15%] rounded-full bg-primary" />
+
+                {/* Video */}
+                <div className="overflow-hidden rounded-xl border border-border bg-card">
+                  <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
+                        <Play className="size-4 text-white" />
                       </div>
                     </div>
-                    <span className="font-mono text-xs">32:31</span>
+                  </div>
+                  <div className="border-t border-border bg-card px-3 py-2.5">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="font-mono text-xs">00:51</span>
+                      <div className="relative flex-1">
+                        <div className="h-1 w-full rounded-full bg-muted">
+                          <div className="h-full w-[15%] rounded-full bg-primary" />
+                        </div>
+                      </div>
+                      <span className="font-mono text-xs">32:31</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Step Results */}
-              <div className="rounded-xl border border-border bg-card p-4">
-                <SectionHeader
-                  label="Step Results"
-                  count={result.stepResults.length}
-                  description="outcome of each model step on the uploaded footage"
-                />
-                <div className="space-y-2">
-                  {result.stepResults.map((step, idx) => (
-                    <StepResultRow key={step.stepId} step={step} idx={idx} />
-                  ))}
+                {/* Step Results */}
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <SectionHeader
+                    label="Step Results"
+                    count={result.stepResults.length}
+                    description="outcome of each model step on the uploaded footage"
+                  />
+                  <div className="space-y-2">
+                    {result.stepResults.map((step, idx) => (
+                      <StepResultRow key={step.stepId} step={step} idx={idx} />
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Triggered Rules Summary */}
-              <div className="rounded-xl border border-border bg-card p-4">
-                <SectionHeader
-                  label="Triggered Rules Summary"
-                  count={result.triggeredRules.length}
-                  description="rules that fired with their detection confidence"
-                />
-                <div className="space-y-2">
-                  {result.triggeredRules.map((r) => (
-                    <TriggeredRuleRow key={r.id} rule={r} />
-                  ))}
+                {/* Triggered Rules Summary */}
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <SectionHeader
+                    label="Triggered Rules Summary"
+                    count={result.triggeredRules.length}
+                    description="rules that fired with their detection confidence"
+                  />
+                  <div className="space-y-2">
+                    {result.triggeredRules.map((r) => (
+                      <TriggeredRuleRow key={r.id} rule={r} />
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* VLM Reasoning */}
-              <VLMReasoningPanel
-                reasoning={result.vlmReasoning}
-                clipSeconds={result.clipDurationSeconds}
-                open={vlmOpen}
-                onToggle={() => setVlmOpen((o) => !o)}
-              />
+                {/* VLM Reasoning */}
+                <VLMReasoningPanel
+                  reasoning={result.vlmReasoning}
+                  clipSeconds={result.clipDurationSeconds}
+                  open={vlmOpen}
+                  onToggle={() => setVlmOpen((o) => !o)}
+                />
+                </>
+              )}
             </div>
           ) : (
             <div className="space-y-4">

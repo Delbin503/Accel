@@ -2,7 +2,7 @@ import type { NvrData } from "@/types/nvr";
 
 /* Single source of truth for which channel each camera lives on. */
 export const NVR_CHANNEL_MAP: Record<string, { nvrId: string; channel: number }> = {
-  "Cam-01": { nvrId: "NVR-001", channel: 1 },
+  "Cam-01": { nvrId: "NVR-003", channel: 5 },
   "Cam-04": { nvrId: "NVR-001", channel: 2 },
   "Cam-07": { nvrId: "NVR-001", channel: 3 },
   "Cam-09": { nvrId: "NVR-002", channel: 1 },
@@ -65,7 +65,7 @@ export const MOCK_NVRS: NvrData[] = [
     retentionDays: 30,
     cleanupSchedule: "auto-age",
     channels: genChannels("NVR-001", 16),
-    channelsInUse: 5,
+    channelsInUse: 4,
     channelCount: 16,
     lastSeenAt: "2026-05-25T10:14:00",
     lastSeenDisplay: "25 May 2026, 10:14",
@@ -115,7 +115,7 @@ export const MOCK_NVRS: NvrData[] = [
     retentionDays: 14,
     cleanupSchedule: "auto-channel",
     channels: genChannels("NVR-003", 8),
-    channelsInUse: 4,
+    channelsInUse: 5,
     channelCount: 8,
     lastSeenAt: "2026-05-25T10:11:00",
     lastSeenDisplay: "25 May 2026, 10:11",

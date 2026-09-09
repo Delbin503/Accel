@@ -28,13 +28,20 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { CoachMark } from "@/components/custom/coach-mark";
 import { GuideGifModal } from "@/components/custom/guide-gif-modal";
 import {
@@ -42,6 +49,7 @@ import {
   renderPlaceCameraFrame, PLACE_CAMERA_FRAME_COUNT,
 } from "./FloorPlanGuide";
 import { cn } from "@/lib/utils";
+import { TIMEZONES, DEFAULT_TIMEZONE, timezoneLabel } from "@/lib/timezones";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useOnboardingStore } from "@/stores/useOnboardingStore";
@@ -50,7 +58,7 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 import type { AreaShape, SiteData } from "@/types/sites";
 import type { CameraData, CameraStatus } from "@/types/cameras";
 
-type Tool = "select" | "draw-area";
+export type Tool = "select" | "draw-area";
 
 /** Press duration that promotes a camera click into a drag-to-move gesture. */
 const HOLD_TO_MOVE_MS = 220;
@@ -503,7 +511,7 @@ function FloorPlanEmpty({
 
 /* ── Edit / Delete modals ────────────────────────────────────────────── */
 
-function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null; open: boolean; onClose: () => void; onSave: (patch: Partial<AreaShape>) => void }) {
+export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null; open: boolean; onClose: () => void; onSave: (patch: Partial<AreaShape>) => void }) {
   const [name, setName] = React.useState("");
   const [color, setColor] = React.useState(AREA_PALETTE[0]);
   const [nameErr, setNameErr] = React.useState<string | null>(null);
@@ -515,12 +523,13 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
     onSave({ name: name.trim(), color });
   }
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit Area</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Edit Area"
+          description="Rename the area or change its accent on the floor plan."
+        />
+        <ModalBody className="space-y-3">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (nameErr) setNameErr(null); }} aria-invalid={!!nameErr} className="h-9 text-base" />
@@ -539,50 +548,58 @@ function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape | null
               ))}
             </div>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
             <Save className="size-3.5" />
             Save
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
-const TIMEZONES = [
-  "Asia/Singapore", "Asia/Tokyo", "Asia/Hong_Kong", "Asia/Kuala_Lumpur",
-  "Asia/Bangkok", "Australia/Sydney", "Europe/London", "America/New_York",
-];
+/** Fallback window for sites seeded before operating hours existed. */
+const DEFAULT_OPERATING_HOURS = { from: "08:00", to: "18:00" };
 
-function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null; open: boolean; onClose: () => void; onSave: (patch: Partial<SiteData>) => void }) {
+export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null; open: boolean; onClose: () => void; onSave: (patch: Partial<SiteData>) => void }) {
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
+  const [opFrom, setOpFrom] = React.useState(DEFAULT_OPERATING_HOURS.from);
+  const [opTo, setOpTo] = React.useState(DEFAULT_OPERATING_HOURS.to);
   const [errors, setErrors] = React.useState<{ name?: string; address?: string }>({});
   React.useEffect(() => {
-    if (open && site) { setName(site.name); setAddress(site.address); setDescription(site.description ?? ""); setTimezone(site.timezone); setErrors({}); }
+    if (open && site) {
+      setName(site.name); setAddress(site.address); setDescription(site.description ?? ""); setTimezone(site.timezone);
+      setOpFrom(site.operatingHours?.from ?? DEFAULT_OPERATING_HOURS.from);
+      setOpTo(site.operatingHours?.to ?? DEFAULT_OPERATING_HOURS.to);
+      setErrors({});
+    }
   }, [open, site]);
   if (!site) return null;
-  const dirty = name !== site.name || address !== site.address || description !== (site.description ?? "") || timezone !== site.timezone;
+  const dirty = name !== site.name || address !== site.address || description !== (site.description ?? "") || timezone !== site.timezone
+    || opFrom !== (site.operatingHours?.from ?? DEFAULT_OPERATING_HOURS.from)
+    || opTo !== (site.operatingHours?.to ?? DEFAULT_OPERATING_HOURS.to);
   function handleSave() {
     const next: { name?: string; address?: string } = {};
     if (!name.trim()) next.name = "Site name is required.";
     if (!address.trim()) next.address = "Site address is required.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-    onSave({ name: name.trim(), address: address.trim(), description: description.trim() || undefined, timezone });
+    onSave({ name: name.trim(), address: address.trim(), description: description.trim() || undefined, timezone, operatingHours: { from: opFrom, to: opTo } });
   }
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit Site</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Edit Site"
+          description="Update the site's name, address, timezone and operating hours."
+        />
+        <ModalBody className="space-y-3">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
@@ -601,10 +618,19 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
               <SelectTrigger className="h-9 w-full text-base">
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
-              <SelectContent>
-                {TIMEZONES.map((tz) => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
+              <SelectContent position="popper" className="max-h-72">
+                {TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Operating Hours</label>
+            <div className="flex items-center gap-2">
+              <TimeSelect value={opFrom} onChange={setOpFrom} aria-label="Opening time" className="min-w-0 flex-1" />
+              <span className="text-sm text-muted-foreground">to</span>
+              <TimeSelect value={opTo} onChange={setOpTo} aria-label="Closing time" className="min-w-0 flex-1" />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground/70">Daily window when this site is operational.</p>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (Optional)</label>
@@ -612,30 +638,32 @@ function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData | null;
               placeholder="A short description of this site…"
               className="w-full text-base" />
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
             <Save className="size-3.5" />
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
-function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | null; open: boolean; onClose: () => void; onConfirm: () => void }) {
+export function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | null; open: boolean; onClose: () => void; onConfirm: () => void }) {
   const [confirm, setConfirm] = React.useState("");
   React.useEffect(() => { if (open) setConfirm(""); }, [open]);
   if (!site) return null;
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">Delete {site.name}?</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={<>Delete {site.name}?</>}
+          description="This action cannot be undone."
+          tone="destructive"
+        />
+        <ModalBody className="space-y-3">
           <p className="text-sm text-muted-foreground">
             This will permanently remove the site, its <strong className="text-foreground">{site.areas.length}</strong> area{site.areas.length === 1 ? "" : "s"} and floor plan.
             Cameras assigned to this site will remain in the Cameras module but will be unassigned.
@@ -646,8 +674,8 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
             </label>
             <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-9 text-base" />
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={confirm.trim() !== site.name}
             onClick={onConfirm}
@@ -655,9 +683,9 @@ function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | 
             <Trash2 className="size-3.5" />
             Delete Site
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -976,7 +1004,7 @@ function OverviewTab({
             ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
             ["Name",           <span>{site.name}</span>],
             ["Address",        <span>{site.address || "—"}</span>],
-            ["Timezone",       <span>{site.timezone}</span>],
+            ["Timezone",       <span>{timezoneLabel(site.timezone)}</span>],
             ["Operating Hours",
               site.operatingHours
                 ? <span className="font-mono text-xs">{site.operatingHours.from} – {site.operatingHours.to}</span>
@@ -1168,7 +1196,7 @@ function SiteSectionTitle({ children, aside }: { children: React.ReactNode; asid
 
 /* ── Floor Plan Modal ────────────────────────────────────────────────── */
 
-function FloorPlanModal({
+export function FloorPlanModal({
   open, onClose,
   site, siteCameras, unplacedCameras, tool, setTool, drafting, setDrafting,
   pendingCameraId, setPendingCameraId, selected, setSelected,
@@ -1257,16 +1285,14 @@ function FloorPlanModal({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[92vh] w-[1320px] max-w-[97vw] flex-col overflow-hidden p-0 sm:max-w-[97vw]">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Floor Plan · {site.name}</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Drag a camera to reposition it, then drag its orange handle to set which way it faces.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="full">
+        <ModalHeader
+          title={<>Floor Plan · {site.name}</>}
+          description="Drag a camera to reposition it, then drag its orange handle to set which way it faces."
+        />
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-5">
+        <ModalBody className="flex min-h-0 flex-col gap-4 overflow-hidden">
           <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         {tool === "draw-area" && drafting && drafting.points.length > 0 && (
@@ -1499,13 +1525,13 @@ function FloorPlanModal({
         )}
       </div>
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button onClick={onClose}>Done</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
 
     <GuideGifModal
       open={showDrawAreaDemo}

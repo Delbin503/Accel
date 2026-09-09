@@ -15,12 +15,21 @@ import {
   Shapes,
   AlertTriangle,
 } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalSubheader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { cn } from "@/lib/utils";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { makeBlankSite, generatedFloorPlan, AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";
 
@@ -37,11 +46,6 @@ const STEPS: { key: Step; title: string; subtitle: string }[] = [
   { key: "areas",      title: "Areas",         subtitle: "Add at least one area for this site"        },
   { key: "floor-plan", title: "Floor Plan",    subtitle: "Optional — can upload later"                },
   { key: "review",     title: "Review",        subtitle: "Confirm and create your site"               },
-];
-
-const TIMEZONES = [
-  "Asia/Singapore", "Asia/Tokyo", "Asia/Hong_Kong", "Asia/Kuala_Lumpur",
-  "Asia/Bangkok", "Australia/Sydney", "Europe/London", "America/New_York",
 ];
 
 function StepBadge({ index, current, label }: { index: number; current: number; label: string }) {
@@ -72,7 +76,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   const [step, setStep] = React.useState<Step>("details");
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
   const [opFrom, setOpFrom] = React.useState("08:00");
   const [opTo, setOpTo] = React.useState("18:00");
   const [description, setDescription] = React.useState("");
@@ -88,7 +92,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   React.useEffect(() => {
     if (open) {
       setStep("details");
-      setName(""); setAddress(""); setTimezone("Asia/Singapore"); setDescription("");
+      setName(""); setAddress(""); setTimezone(DEFAULT_TIMEZONE); setDescription("");
       setAccent(accentChoices[0]);
       setAreas([]); setNewAreaName("");
       setFloorPlanUrl(null); setFloorPlanName(""); setFloorPlanLabel("");
@@ -195,14 +199,14 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="pr-8 text-base font-bold text-foreground">Add a New Site</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">{STEPS[stepIdx].subtitle}</p>
-        </div>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Add a New Site"
+          description={STEPS[stepIdx].subtitle}
+        />
 
-        <div className="flex items-center gap-3 border-b border-border bg-background/40 px-5 py-3">
+        <ModalSubheader className="flex items-center gap-3">
           {STEPS.map((s, i) => (
             <React.Fragment key={s.key}>
               <StepBadge index={i} current={stepIdx} label={s.title} />
@@ -211,9 +215,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               )}
             </React.Fragment>
           ))}
-        </div>
+        </ModalSubheader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <ModalBody>
           {step === "details" && (
             <div className="space-y-4">
               <div>
@@ -241,8 +245,8 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   <SelectTrigger className="h-9 w-full text-base">
                     <SelectValue placeholder="Select a timezone" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  <SelectContent position="popper" className="max-h-72">
+                    {TIMEZONES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -252,9 +256,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   Operating Hours
                 </label>
                 <div className="flex items-center gap-2">
-                  <Input type="time" value={opFrom} onChange={(e) => setOpFrom(e.target.value)} className="h-9 w-36 text-base" />
+                  <TimeSelect value={opFrom} onChange={setOpFrom} aria-label="Opening time" className="min-w-0 flex-1" />
                   <span className="text-sm text-muted-foreground">to</span>
-                  <Input type="time" value={opTo} onChange={(e) => setOpTo(e.target.value)} className="h-9 w-36 text-base" />
+                  <TimeSelect value={opTo} onChange={setOpTo} aria-label="Closing time" className="min-w-0 flex-1" />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground/70">Daily window when this site is operational.</p>
               </div>
@@ -475,9 +479,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               </div>
             </div>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex items-center justify-between gap-2 border-t border-border bg-card px-5 py-3.5">
+        <ModalFooter align="between" className="bg-card">
           <div>
             {step !== "details" && (
               <Button variant="ghost" onClick={back} className="gap-1.5">
@@ -504,9 +508,9 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
               </Button>
             )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

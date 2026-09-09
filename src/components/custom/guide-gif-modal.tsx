@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
@@ -33,24 +39,21 @@ export function GuideGifModal({
   }, [open, frameCount, frameDurationMs]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[440px] max-w-[92vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">{title}</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-3 p-5">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader title={title} description={description} />
+        <ModalBody>
           <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-xl border border-border bg-card">
             {renderFrame(frame)}
           </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-        </div>
-        <div className="flex justify-end border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button onClick={onClose} className="gap-1.5">
             <Check className="size-3.5" />
             {ctaLabel}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

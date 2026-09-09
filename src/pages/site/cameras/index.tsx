@@ -30,13 +30,23 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
+  Settings,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalSubheader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -93,6 +103,16 @@ function StatusPill({ status }: { status: CameraStatus }) {
       {s.label}
     </span>
   );
+}
+
+/* ── Network signal strength (deterministic per camera, no field on the model) ── */
+
+function networkSignalPercent(cameraId: string, status: CameraStatus): number {
+  let hash = 0;
+  for (let i = 0; i < cameraId.length; i++) hash = (hash * 31 + cameraId.charCodeAt(i)) >>> 0;
+  if (status === "offline") return 0;
+  const range = status === "online" ? [78, 99] : [4, 22];
+  return range[0] + (hash % (range[1] - range[0] + 1));
 }
 
 /* ── KPI cards ───────────────────────────────────────────────────────────── */
@@ -396,7 +416,7 @@ const RECORDING_DATE_FILTERS: { key: string; label: string }[] = [
 
 /* ── Link NVR modal — pick an NVR + free channel at the camera's site ── */
 
-function LinkNvrModal({
+export function LinkNvrModal({
   open, camera, onClose, onLink,
 }: {
   open: boolean;
@@ -443,22 +463,20 @@ function LinkNvrModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Link NVR Channel</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Choose a channel for <span className="font-mono text-foreground">{camera.id}</span> · {camera.name}
-          </p>
-        </DialogHeader>
-        <div className="border-b border-border px-5 py-3">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Link NVR Channel"
+          description={<>Choose a channel for <span className="font-mono text-foreground">{camera.id}</span> · {camera.name}</>}
+        />
+        <ModalSubheader>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by NVR name, model, IP or channel…" className="h-9 pl-9 text-base" />
           </div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 py-3">
+        </ModalSubheader>
+        <ModalBody>
           {siteNvrs.length === 0 ? (
             <p className="py-8 text-center text-sm italic text-muted-foreground">
               No NVRs registered for this site yet.
@@ -503,16 +521,16 @@ function LinkNvrModal({
               })}
             </ul>
           )}
-        </div>
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={commit} disabled={!selection} className="gap-1.5">
             <Link2 className="size-3.5" />
             Link Channel
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -533,7 +551,7 @@ interface CameraDrawerProps {
   onUnlinkNvr: (cameraId: string) => void;
 }
 
-function CameraDrawer({
+export function CameraDrawer({
   camera,
   deployments,
   open,
@@ -728,7 +746,7 @@ function CameraDrawer({
               />
               <StatCard
                 label="Network"
-                value={camera.status === "online" ? "Strong" : camera.status === "connection-failed" ? "Failed" : "Down"}
+                value={camera.status === "offline" ? "—" : `${networkSignalPercent(camera.id, camera.status)}%`}
                 valueClass={
                   camera.status === "online" ? "text-success"
                   : camera.status === "connection-failed" ? "text-sev-critical"
@@ -1060,7 +1078,7 @@ const DEFAULT_DAYS = [1, 2, 3, 4, 5]; // Mon–Fri
 
 type RecordingMode = "continuous" | "scheduled";
 
-interface CameraFormFields {
+export interface CameraFormFields {
   id: string;
   name: string;
   siteId: string;
@@ -1200,7 +1218,7 @@ function FormSelect({ value, onChange, options, disabled, invalid }: { value: st
   );
 }
 
-function CameraFormModal({
+export function CameraFormModal({
   open,
   mode,
   initial,
@@ -1218,15 +1236,23 @@ function CameraFormModal({
   const [fields, setFields] = React.useState<CameraFormFields>(() => emptyForm(takenIds));
   const [errors, setErrors] = React.useState<{ name?: string; ipAddress?: string; siteId?: string; areaId?: string; username?: string; password?: string }>({});
   const [showPassword, setShowPassword] = React.useState(false);
+  const [linkNvr, setLinkNvr] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
-      setFields(initial ?? emptyForm(takenIds));
+      const next = initial ?? emptyForm(takenIds);
+      setFields(next);
       setErrors({});
       setShowPassword(false);
+      setLinkNvr(!!next.nvrId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
+
+  function toggleLinkNvr(checked: boolean) {
+    setLinkNvr(checked);
+    if (!checked) setFields((curr) => ({ ...curr, nvrId: "", channel: null }));
+  }
 
   function set<K extends keyof CameraFormFields>(key: K, value: CameraFormFields[K]) {
     setFields((curr) => ({ ...curr, [key]: value }));
@@ -1278,7 +1304,22 @@ function CameraFormModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields.nvrId, availableChannels.length]);
 
+  /**
+   * The schedule is only asked for once the camera has somewhere to record to.
+   * See the card below: no NVR, no schedule.
+   */
+  const scheduleShown = linkNvr && !!fields.nvrId;
+
+  /**
+   * A schedule nobody was shown cannot hold up the form.
+   *
+   * This gates Submit, so leaving it unconditional would have left an unlinked
+   * camera stuck behind "select at least one day" for a day-picker that is not
+   * on screen — a disabled-feeling button with no visible reason, which is the
+   * worst kind of validation.
+   */
   const scheduleValid =
+    !scheduleShown ||
     fields.recordingMode === "continuous" ||
     (fields.scheduleDays.length > 0 && fields.scheduleStart < fields.scheduleEnd);
 
@@ -1298,28 +1339,35 @@ function CameraFormModal({
     if (Object.keys(next).length === 0 && scheduleValid) onSubmit(fields);
   }
 
-  const nvrOptions = siteNvrs.length === 0
-    ? [{ value: "", label: "— No NVR at this site —" }]
-    : [{ value: "", label: "— None (unlinked) —" }, ...siteNvrs.map((n) => ({ value: n.id, label: `${n.name} (${n.id})` }))];
+  /* An NVR can only be linked once a site is chosen — NVRs are site-scoped.
+     Before that, saying "no NVR at this site" is just wrong: no site has been
+     picked yet. Three distinct states, each with its own copy. */
+  const noSiteYet = !fields.siteId;
+
+  const nvrOptions = noSiteYet
+    ? [{ value: "", label: "— Select a site first —" }]
+    : siteNvrs.length === 0
+      ? [{ value: "", label: "— No NVR at this site —" }]
+      : [{ value: "", label: "— None (unlinked) —" }, ...siteNvrs.map((n) => ({ value: n.id, label: `${n.name} (${n.id})` }))];
+
+  const nvrHint = noSiteYet
+    ? "Pick the camera's site above to see its NVRs."
+    : siteNvrs.length === 0
+      ? "No NVRs registered at this site."
+      : "Only NVRs at the same site can be linked.";
 
   const channelOptions = availableChannels.length === 0
     ? [{ value: "", label: "— No available channels —" }]
     : availableChannels.map((ch) => ({ value: String(ch), label: `Channel ${ch}` }));
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {mode === "add" ? "Add Camera" : "Edit Camera"}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {mode === "add"
-              ? "Register a new camera. Camera ID is generated automatically."
-              : `Update fields for ${initial?.id}. Camera ID cannot be changed.`}
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={mode === "add" ? "Add Camera" : "Edit Camera"}
+          description={mode === "add" ? "Register a new camera. Camera ID is generated automatically." : `Update fields for ${initial?.id}. Camera ID cannot be changed.`}
+        />
+        <ModalBody className="space-y-4">
           {/* Edit mode shows read-only ID */}
           {mode === "edit" && (
             <FormField label="Camera ID" span={2}>
@@ -1430,14 +1478,6 @@ function CameraFormModal({
                 ]}
               />
             </FormField>
-            <FormField label="Retention (days)" span={2}>
-              <TextInput
-                value={fields.retentionDays}
-                onChange={(v) => set("retentionDays", v)}
-                placeholder="30"
-                type="number"
-              />
-            </FormField>
             <FormField label="RTSP URL" span={2} hint="Full RTSP feed URL. Leave blank to auto-build from IP + port.">
               <TextInput
                 value={fields.rtspUrl}
@@ -1448,145 +1488,177 @@ function CameraFormModal({
             </FormField>
           </div>
 
-          {/* NVR linkage */}
+          {/* NVR LINKAGE, THEN THE SCHEDULE — in that order, and each revealed
+              by the answer above it.
+
+              The schedule used to sit at the top of this card, open, with the
+              NVR checkbox tucked underneath it. That asked people to choose
+              recording days and hours before saying where the footage would be
+              recorded TO — and a camera with no NVR has nowhere to write, so
+              every one of those answers was provisional. Now the toggle comes
+              first, its fields appear when it is on, and the schedule appears
+              once an NVR is actually chosen. */}
           <div className="rounded-lg border border-border bg-background p-3.5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               NVR Linkage
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                label="Link to NVR (Optional)"
-                hint={
-                  siteNvrs.length === 0
-                    ? "No NVRs registered at this site."
-                    : "Only NVRs at the same site can be linked."
-                }
-              >
-                <FormSelect
-                  value={fields.nvrId}
-                  onChange={(v) => set("nvrId", v)}
-                  options={nvrOptions}
-                  disabled={siteNvrs.length === 0}
-                />
-              </FormField>
-              <FormField
-                label="Channel"
-                hint={
-                  fields.nvrId
-                    ? availableChannels.length === 0
-                      ? "All channels are in use on this NVR."
-                      : `${availableChannels.length} of ${selectedNvr?.channelCount ?? 0} channels available.`
-                    : "Pick an NVR first."
-                }
-              >
-                <FormSelect
-                  value={fields.channel != null ? String(fields.channel) : ""}
-                  onChange={(v) => set("channel", v ? Number(v) : null)}
-                  options={channelOptions}
-                  disabled={!fields.nvrId || availableChannels.length === 0}
-                />
-              </FormField>
-            </div>
-          </div>
 
-          {/* Recording schedule */}
-          <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Recording Schedule
-            </p>
+            <label className="flex cursor-pointer items-center gap-2">
+              <Checkbox checked={linkNvr} onCheckedChange={(v) => toggleLinkNvr(v === true)} />
+              <span className="text-sm font-medium text-foreground">Link this camera to an NVR</span>
+            </label>
 
-            <FormField label="Mode" span={2} hint="Continuous records 24/7. Scheduled lets you pick specific days and times.">
-              <FormSelect
-                value={fields.recordingMode}
-                onChange={(v) => set("recordingMode", v as RecordingMode)}
-                options={[
-                  { value: "",           label: "Select recording mode" },
-                  { value: "continuous", label: "Continuous · 24/7 recording" },
-                  { value: "scheduled",  label: "Scheduled · selected days & hours" },
-                ]}
-              />
-            </FormField>
-
-            {fields.recordingMode === "continuous" ? (
-              <div className="mt-3 flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-sm text-info">
-                <Clock className="size-3.5 flex-shrink-0" />
-                Recording continuously — all 7 days, 00:00 to 23:59.
+            {linkNvr && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <FormField label="Link to NVR" hint={nvrHint}>
+                  <FormSelect
+                    value={fields.nvrId}
+                    onChange={(v) => set("nvrId", v)}
+                    options={nvrOptions}
+                    disabled={noSiteYet || siteNvrs.length === 0}
+                  />
+                </FormField>
+                <FormField
+                  label="Channel"
+                  hint={
+                    fields.nvrId
+                      ? availableChannels.length === 0
+                        ? "All channels are in use on this NVR."
+                        : `${availableChannels.length} of ${selectedNvr?.channelCount ?? 0} channels available.`
+                      : "Pick an NVR first."
+                  }
+                >
+                  <FormSelect
+                    value={fields.channel != null ? String(fields.channel) : ""}
+                    onChange={(v) => set("channel", v ? Number(v) : null)}
+                    options={channelOptions}
+                    disabled={!fields.nvrId || availableChannels.length === 0}
+                  />
+                </FormField>
               </div>
-            ) : (
-              <>
-                <div className="mb-3 mt-3">
-                  <p className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                    Days
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {DAY_LABELS.map((label, idx) => {
-                      const selected = fields.scheduleDays.includes(idx);
-                      return (
-                        <button
-                          key={label}
-                          type="button"
-                          onClick={() => toggleDay(idx)}
-                          className={cn(
-                            "h-9 min-w-[44px] rounded-md border px-2.5 text-sm font-semibold transition-colors",
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                          )}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {fields.scheduleDays.length === 0 && (
-                    <p className="mt-1 text-xs text-sev-critical">Select at least one day.</p>
-                  )}
-                </div>
+            )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Start Time">
-                    <input
-                      type="time"
-                      value={fields.scheduleStart}
-                      onChange={(e) => set("scheduleStart", e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </FormField>
-                  <FormField label="End Time">
-                    <input
-                      type="time"
-                      value={fields.scheduleEnd}
-                      min={fields.scheduleStart}
-                      onChange={(e) => set("scheduleEnd", e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </FormField>
+            {/* Retention is a policy on the linked NVR's disk, so it only means
+                anything once an NVR is chosen — it used to sit up in the device
+                grid, where it implied the camera itself kept the footage. */}
+            {scheduleShown && (
+              <div className="mt-3 border-t border-border pt-3">
+                <FormField
+                  label="Retention (days)"
+                  span={2}
+                  hint={
+                    selectedNvr
+                      ? `${selectedNvr.name} keeps footage for ${selectedNvr.retentionDays} days by default.`
+                      : undefined
+                  }
+                >
+                  <TextInput
+                    value={fields.retentionDays}
+                    onChange={(v) => set("retentionDays", v)}
+                    placeholder={String(selectedNvr?.retentionDays ?? 30)}
+                    type="number"
+                  />
+                </FormField>
+              </div>
+            )}
+
+            {scheduleShown && (
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Recording Schedule
+                </p>
+              <FormField label="Mode" span={2} hint="Continuous records 24/7. Scheduled lets you pick specific days and times.">
+                <FormSelect
+                  value={fields.recordingMode}
+                  onChange={(v) => set("recordingMode", v as RecordingMode)}
+                  options={[
+                    { value: "",           label: "Select recording mode" },
+                    { value: "continuous", label: "Continuous · 24/7 recording" },
+                    { value: "scheduled",  label: "Scheduled · selected days & hours" },
+                  ]}
+                />
+              </FormField>
+
+              {fields.recordingMode === "continuous" ? (
+                <div className="mt-3 flex items-center gap-2 rounded-md border border-info/30 bg-info/[0.05] px-3 py-2 text-sm text-info">
+                  <Clock className="size-3.5 flex-shrink-0" />
+                  Recording continuously — all 7 days, 00:00 to 23:59.
                 </div>
-                {fields.scheduleStart >= fields.scheduleEnd && (
-                  <p className="mt-1 text-xs text-sev-critical">End time must be after start time.</p>
-                )}
-              </>
+              ) : (
+                <>
+                  <div className="mb-3 mt-3">
+                    <p className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                      Days
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DAY_LABELS.map((label, idx) => {
+                        const selected = fields.scheduleDays.includes(idx);
+                        return (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={() => toggleDay(idx)}
+                            className={cn(
+                              "h-9 min-w-[44px] rounded-md border px-2.5 text-sm font-semibold transition-colors",
+                              selected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            )}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {fields.scheduleDays.length === 0 && (
+                      <p className="mt-1 text-xs text-sev-critical">Select at least one day.</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Start Time">
+                      <TimeSelect
+                        value={fields.scheduleStart}
+                        onChange={(v) => set("scheduleStart", v)}
+                        aria-label="Recording start time"
+                      />
+                    </FormField>
+                    <FormField label="End Time">
+                      <TimeSelect
+                        value={fields.scheduleEnd}
+                        onChange={(v) => set("scheduleEnd", v)}
+                        aria-label="Recording end time"
+                      />
+                    </FormField>
+                  </div>
+                  {fields.scheduleStart >= fields.scheduleEnd && (
+                    <p className="mt-1 text-xs text-sev-critical">End time must be after start time.</p>
+                  )}
+                </>
+              )}
+              </div>
             )}
           </div>
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={mode === "edit" && !isDirty} onClick={handleSubmit} className="gap-1.5">
             {mode === "add" ? <Plus className="size-3.5" /> : <Check className="size-3.5" />}
             {mode === "add" ? "Add Camera" : "Save Changes"}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Confirm modal ───────────────────────────────────────────────────────── */
 
-function ConfirmModal({
+export function ConfirmModal({
   open,
   title,
   description,
+  detail,
   confirmLabel,
   destructive,
   onClose,
@@ -1594,27 +1666,30 @@ function ConfirmModal({
 }: {
   open: boolean;
   title: string;
-  description: React.ReactNode;
+  /** One-line header summary. */
+  description: string;
+  /** Longer consequence copy, shown in the body callout. */
+  detail: React.ReactNode;
   confirmLabel: string;
   destructive?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className={cn("text-base font-bold", destructive && "text-destructive")}>
-            {title}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={title}
+          description={description}
+          tone={destructive ? "destructive" : "default"}
+        />
+        <ModalBody>
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-            <div className="text-sm leading-snug text-muted-foreground">{description}</div>
+            <div className="text-sm leading-snug text-muted-foreground">{detail}</div>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
@@ -1623,9 +1698,9 @@ function ConfirmModal({
           >
             {confirmLabel}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1978,6 +2053,13 @@ export default function CamerasPage({
                             <Pencil className="size-3.5 text-muted-foreground" />
                             Edit camera
                           </button>
+                          <button
+                            onClick={() => setModal({ kind: "edit", cameraId: c.id })}
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                          >
+                            <Settings className="size-3.5 text-muted-foreground" />
+                            Edit Config
+                          </button>
                           {c.nvrId && (
                             <button
                               onClick={() => navigate(`/site/nvr?nvr=${c.nvrId}`)}
@@ -2088,11 +2170,12 @@ export default function CamerasPage({
       <ConfirmModal
         open={modal?.kind === "delete"}
         title="Delete Camera"
+        description="This action cannot be undone."
         destructive
         confirmLabel="Delete Camera"
         onClose={() => setModal(null)}
         onConfirm={() => deletingCamera && handleDelete(deletingCamera.id)}
-        description={
+        detail={
           <>
             <strong className="text-foreground">{deletingCamera?.name}</strong> ({deletingCamera?.id}) will be removed.
             Any deployed models will be detached and recordings on linked NVR will remain until their retention expires.
@@ -2111,10 +2194,11 @@ export default function CamerasPage({
       <ConfirmModal
         open={modal?.kind === "undeploy"}
         title="Undeploy Model"
+        description="Detection stops on this camera until the model is redeployed."
         confirmLabel="Undeploy"
         onClose={() => setModal(null)}
         onConfirm={() => undeployingDep && handleUndeploy(undeployingDep.id)}
-        description={
+        detail={
           <>
             <strong className="text-foreground">{undeployingDep?.modelName}</strong> will stop running on{" "}
             <strong className="text-foreground">{undeployingDep?.cameraName}</strong>.

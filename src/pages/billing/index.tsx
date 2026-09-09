@@ -9,7 +9,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
@@ -143,7 +149,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
 
 /* ── Add Card modal (reused from payment flow) ────────────────────────────── */
 
-function AddCardModal({ open, onClose, onSave }: {
+export function AddCardModal({ open, onClose, onSave }: {
   open: boolean; onClose: () => void;
   onSave: (last4: string, expiry: string, brand: "Visa" | "Mastercard" | "Amex") => void;
 }) {
@@ -185,15 +191,13 @@ function AddCardModal({ open, onClose, onSave }: {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Add Payment Method</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Card details are encrypted — never stored here.
-          </p>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Add Payment Method"
+          description="Card details are encrypted — never stored here."
+        />
+        <ModalBody className="space-y-3">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
             <Input value={cardName} onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }} placeholder="Delbin Arkar" className="h-9 text-base" aria-invalid={!!errors.cardName} />
@@ -216,21 +220,21 @@ function AddCardModal({ open, onClose, onSave }: {
               {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
             </div>
           </div>
-        </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={handleAdd} className="gap-1.5">
             <CreditCard className="size-3.5" /> Add Card
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Retry payment modal ──────────────────────────────────────────────────── */
 
-function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm }: {
+export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm }: {
   open: boolean;
   invoice: Invoice | null;
   cards: SavedCard[];
@@ -249,15 +253,13 @@ function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm
   const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Retry Payment</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-3 overflow-y-auto p-5">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Retry Payment"
+          description={<>Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.</>}
+        />
+        <ModalBody className="space-y-3">
           <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3 text-sm">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
             <p className="text-muted-foreground">
@@ -294,21 +296,21 @@ function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, onConfirm
             className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
             <Plus className="size-3.5" /> Use a different card / update details
           </button>
-        </div>
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <RefreshCw className="size-3.5" /> Retry ${total.toLocaleString()}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Purchase / confirm plan modal ────────────────────────────────────────── */
 
-function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onConfirm }: {
+export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onConfirm }: {
   tier: PlanTier | null;
   cycle: "monthly" | "annual";
   cards: SavedCard[];
@@ -330,15 +332,13 @@ function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onConfirm }
   const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
 
   return (
-    <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[480px] max-w-[95vw] flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Confirm subscription</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Review your plan and choose a payment method to activate your account.
-          </p>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+    <Modal open onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Confirm subscription"
+          description="Review your plan and choose a payment method to activate your account."
+        />
+        <ModalBody className="space-y-4">
           {/* Plan summary */}
           <div className={cn("flex items-center gap-3 rounded-lg border p-3", color.border, color.bg)}>
             <div className={cn("flex size-10 flex-shrink-0 items-center justify-center rounded-lg border bg-background/40", color.border)}>
@@ -387,21 +387,21 @@ function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onConfirm }
               <Plus className="size-3.5" /> Add a new card
             </button>
           </div>
-        </div>
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <Check className="size-3.5" /> Confirm & subscribe
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Invoice detail drawer ────────────────────────────────────────────────── */
 
-function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
+export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
   invoice: Invoice | null; onRetryPayment: () => void; onClose: () => void;
 }) {
   if (!invoice) return null;
@@ -1338,6 +1338,7 @@ export default function BillingPage() {
         confirmLabel="Cancel subscription"
         cancelLabel="Keep plan"
         onConfirm={cancelSubscription}
+        size="lg"
       >
         <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
           <p className="mb-2 font-semibold text-foreground">What happens when it ends</p>

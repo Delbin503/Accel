@@ -1,25 +1,31 @@
 import * as React from "react";
 import { LoaderCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
  * Canonical confirm / destructive-action modal. Replaces the 9 hand-rolled
  * delete / confirm modals that each rebuilt Dialog + warning + buttons.
+ *
+ * Built on the shared `Modal` shell, so it renders the same header / body /
+ * footer chrome as every page modal instead of raw shadcn defaults.
  */
 export interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: React.ReactNode;
-  description?: React.ReactNode;
+  /** Shown under the title. Required so the header always explains the action. */
+  description: React.ReactNode;
+  /** Optional glyph beside the title (defaults to none). */
+  icon?: LucideIcon;
   confirmLabel?: string;
   cancelLabel?: string;
   /** Destructive styles the confirm button and signals an irreversible action. */
@@ -29,7 +35,8 @@ export interface ConfirmDialogProps {
   onConfirm: () => void;
   /** Extra content between description and footer (e.g. an affected-items list). */
   children?: React.ReactNode;
-  /** Overrides the default width — pass the app's `w-[560px]` to match page modals. */
+  /** Shell width — defaults to the compact confirm size. */
+  size?: "sm" | "lg";
   className?: string;
 }
 
@@ -38,27 +45,39 @@ function ConfirmDialog({
   onOpenChange,
   title,
   description,
+  icon,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   destructive = false,
   loading = false,
   onConfirm,
   children,
+  size = "sm",
   className,
 }: ConfirmDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("max-w-md", className)}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
-        </DialogHeader>
-        {children}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent size={size} className={cn(className)}>
+        <ModalHeader
+          title={title}
+          description={description}
+          icon={icon}
+          tone={destructive ? "destructive" : "default"}
+        />
+        {children ? (
+          <ModalBody className="space-y-3">{children}</ModalBody>
+        ) : null}
+        <ModalFooter>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             {cancelLabel}
           </Button>
           <Button
+            size="sm"
             variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}
             disabled={loading}
@@ -66,9 +85,9 @@ function ConfirmDialog({
             {loading && <LoaderCircle className="animate-spin" />}
             {confirmLabel}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

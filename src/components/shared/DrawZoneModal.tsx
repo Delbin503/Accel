@@ -1,6 +1,12 @@
 import * as React from "react";
 import { Plus, Check, Pencil, Trash2, ChevronRight, CopyCheck } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -180,23 +186,13 @@ export function DrawZoneModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[840px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {title ?? (isEditingInitialZone ? "Edit Detection Zones" : "Add Detection Zone")}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {subtitle ?? (
-              <>
-                {isEditingInitialZone ? "View, draw and edit" : "Draw and configure"} boundary zones on{" "}
-                <strong className="text-foreground">{cameraName}</strong>.
-              </>
-            )}{" "}
-            Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.
-          </p>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto p-5">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="xl">
+        <ModalHeader
+          title={title ?? (isEditingInitialZone ? "Edit Detection Zones" : "Add Detection Zone")}
+          description={<>{subtitle ?? ( <> {isEditingInitialZone ? "View, draw and edit" : "Draw and configure"} boundary zones on{" "} <strong className="text-foreground">{cameraName}</strong>. </> )}{" "} Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.</>}
+        />
+        <ModalBody>
           {/* Camera switcher — zones are stored per camera */}
           {cameraPicker && cameraPicker.cameras.length > 1 && (
             <div className="mb-3 flex items-center gap-2.5">
@@ -453,10 +449,10 @@ export function DrawZoneModal({
               </div>
             )}
           </div>
-        </div>
+        </ModalBody>
 
         {primaryAction && (
-          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border px-5 py-3.5">
+          <ModalFooter align="between" className="gap-3">
             <p className="text-sm text-muted-foreground">
               <strong className="text-foreground">{existingZones.length}</strong> zone
               {existingZones.length === 1 ? "" : "s"} defined
@@ -482,9 +478,9 @@ export function DrawZoneModal({
                 <ChevronRight className="size-3.5" />
               </Button>
             </div>
-          </div>
+          </ModalFooter>
         )}
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   );
 }

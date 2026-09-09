@@ -1,11 +1,12 @@
 import * as React from "react";
 import { CheckCircle2, CircleDot, LoaderCircle, X } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -53,19 +54,14 @@ export function SyncProgressModal({
   const stageIndex = Math.min(stages.length - 1, Math.floor((progress / 100) * stages.length));
 
   return (
-    <Dialog open onOpenChange={() => { /* not dismissible while syncing */ }}>
-      <DialogContent
-        showCloseButton={false}
-        className="max-h-[85vh] w-[560px] max-w-[95vw] p-0"
-      >
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">{title}</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {done ? "Sync complete — applying changes…" : "Keep this window open until the sync finishes."}
-          </p>
-        </DialogHeader>
+    <Modal open onOpenChange={() => { /* not dismissible while syncing */ }}>
+      <ModalContent size="lg" showCloseButton={false}>
+        <ModalHeader
+          title={title}
+          description={done ? "Sync complete — applying changes…" : "Keep this window open until the sync finishes."}
+        />
 
-        <div className="space-y-3 px-5 py-4">
+        <ModalBody className="space-y-3">
           {/* Progress */}
           <div className="rounded-lg border border-border bg-background p-3.5">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -138,9 +134,9 @@ export function SyncProgressModal({
               })}
             </ul>
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button
             variant="outline"
             size="sm"
@@ -150,8 +146,8 @@ export function SyncProgressModal({
             <X className="size-3.5" />
             {cancelLabel}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

@@ -15,7 +15,14 @@ import {
   Trash2,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalSubheader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -150,7 +157,7 @@ const STATUS_OPTIONS: { value: CaseStatus; label: string; desc: string }[] = [
   { value: "closed", label: "Closed", desc: "Case resolved and archived" },
 ];
 
-function ChangeStatusModal({
+export function ChangeStatusModal({
   open,
   currentStatus,
   onClose,
@@ -168,16 +175,14 @@ function ChangeStatusModal({
   }, [open, currentStatus]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Change Case Status</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Select the new status for this incident case.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Change Case Status"
+          description="Select the new status for this incident case."
+        />
 
-        <div className="space-y-2 p-5">
+        <ModalBody className="space-y-2">
           {STATUS_OPTIONS.map((opt) => {
             const s = STATUS_CONFIG[opt.value];
             return (
@@ -217,18 +222,18 @@ function ChangeStatusModal({
               </button>
             );
           })}
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button size="sm" disabled={picked === currentStatus} onClick={() => onConfirm(picked)}>
             Update Status
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -240,7 +245,7 @@ const ROLE_STYLES: Record<NonNullable<CaseAssignee["role"]>, { bg: string; text:
   user:  { bg: "bg-warning/15 border-warning/30",     text: "text-warning",   label: "User"  },
 };
 
-function ReassignModal({
+export function ReassignModal({
   open,
   current,
   onClose,
@@ -276,17 +281,15 @@ function ReassignModal({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Reassign Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Transfer ownership to another team member.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Reassign Case"
+          description="Transfer ownership to another team member."
+        />
 
         {/* Filter bar */}
-        <div className="flex-shrink-0 space-y-2 border-b border-border px-5 py-3">
+        <ModalSubheader className="space-y-2">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -317,9 +320,9 @@ function ReassignModal({
               );
             })}
           </div>
-        </div>
+        </ModalSubheader>
 
-        <div className="flex-1 space-y-1.5 overflow-y-auto p-5">
+        <ModalBody className="space-y-1.5">
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-sm italic text-muted-foreground">
               No members match the current filters.
@@ -358,24 +361,24 @@ function ReassignModal({
               </button>
             );
           })}
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button size="sm" disabled={picked.id === current.id} onClick={() => onConfirm(picked)}>
             Reassign
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Link New Incidents modal ─────────────────────────────────────────────── */
 
-function LinkNewIncidentsModal({
+export function LinkNewIncidentsModal({
   open,
   caseSite,
   alreadyLinked,
@@ -440,16 +443,14 @@ function LinkNewIncidentsModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Link New Incidents</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Select incidents from the same site to add to this case.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Link New Incidents"
+          description="Select incidents from the same site to add to this case."
+        />
 
-        <div className="space-y-3 p-5">
+        <ModalBody className="space-y-3">
           <div className="grid grid-cols-3 gap-2">
             <div className="relative col-span-3 sm:col-span-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -542,9 +543,9 @@ function LinkNewIncidentsModal({
               {selectedIds.size} incident{selectedIds.size > 1 ? "s" : ""} selected
             </p>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -556,9 +557,9 @@ function LinkNewIncidentsModal({
             Link {selectedIds.size > 0 ? selectedIds.size : ""} Incident
             {selectedIds.size !== 1 ? "s" : ""}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -570,7 +571,7 @@ const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
   { value: "low", label: "Low" },
 ];
 
-function EditCaseModal({
+export function EditCaseModal({
   open,
   title: initialTitle,
   severity: initialSeverity,
@@ -611,16 +612,14 @@ function EditCaseModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Update the case title, severity, and notes.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Edit Case"
+          description="Update the case title, severity, and notes."
+        />
 
-        <div className="space-y-4 p-5">
+        <ModalBody className="space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
@@ -675,9 +674,9 @@ function EditCaseModal({
               placeholder="Add case notes..."
             />
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -688,15 +687,15 @@ function EditCaseModal({
           >
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Delete confirmation modal ───────────────────────────────────────────── */
 
-function DeleteCaseModal({
+export function DeleteCaseModal({
   open,
   caseId,
   caseTitle,
@@ -710,14 +709,15 @@ function DeleteCaseModal({
   onConfirm: () => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">Delete Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Delete Case"
+          description="This action cannot be undone."
+          tone="destructive"
+        />
 
-        <div className="px-5 py-5">
+        <ModalBody>
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
@@ -734,9 +734,9 @@ function DeleteCaseModal({
             All linked incident associations will be removed. The original detection events will not
             be affected.
           </p>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -749,9 +749,9 @@ function DeleteCaseModal({
             <Trash2 className="size-3.5" />
             Delete Case
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

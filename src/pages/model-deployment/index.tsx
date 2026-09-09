@@ -24,7 +24,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -70,7 +76,7 @@ const DEP_STATUS: Record<DeploymentStatus, { bg: string; text: string; dot: stri
 
 /* ── Model health (derived from underlying deployments) ─────────────────── */
 
-type ModelHealth = "healthy" | "degraded" | "offline" | "overloaded";
+export type ModelHealth = "healthy" | "degraded" | "offline" | "overloaded";
 
 const MODEL_HEALTH_STYLES: Record<ModelHealth, { bg: string; text: string; dot: string; label: string; border: string }> = {
   healthy:    { bg: "bg-success/15",      text: "text-success",      dot: "bg-success",      border: "border-success/40",      label: "Healthy" },
@@ -630,7 +636,7 @@ function ModelColumnEmpty() {
   );
 }
 
-function DeployWizard({
+export function DeployWizard({
   onCommit,
   forcedState = "normal",
   onRetry,
@@ -981,19 +987,63 @@ function DeployWizard({
       />
 
       {/* Confirm modal */}
-      <Dialog open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
-        <DialogContent className="w-[560px] max-w-[95vw] p-0">
-          <DialogHeader className="border-b border-border px-5 py-4">
-            <DialogTitle className="flex items-center gap-2.5 text-base font-bold">
-              <Rocket className="size-4 text-primary" />
-              Confirm Deployment
-            </DialogTitle>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Creating {selectedCameras.length} deployment record{selectedCameras.length === 1 ? "" : "s"}.
-            </p>
-          </DialogHeader>
+      <DeployConfirmModal
+        open={confirmOpen}
+        model={selectedModel}
+        site={selectedSite}
+        areas={selectedAreas}
+        cameras={selectedCameras}
+        confidence={confidence}
+        camerasWithZones={camerasWithZones}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={commitDeploy}
+      />
+    </div>
+  );
+}
+
+/* ─── Deployment confirm modal ───────────────────────────────────────────── */
+
+/**
+ * Final review before deployment records are written. Extracted from the
+ * wizard so it can be mounted on its own (the modal gallery does exactly that).
+ */
+export function DeployConfirmModal({
+  open,
+  model,
+  site,
+  areas,
+  cameras,
+  confidence,
+  camerasWithZones,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  model: ModelData | null;
+  site: SiteSummary | null;
+  areas: AreaSummary[];
+  cameras: CameraData[];
+  confidence: number;
+  camerasWithZones: number;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const selectedModel = model;
+  const selectedSite = site;
+  const selectedAreas = areas;
+  const selectedCameras = cameras;
+
+  return (
+      <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+        <ModalContent size="lg">
+          <ModalHeader
+            title="Confirm Deployment"
+            description={<>Creating {selectedCameras.length} deployment record{selectedCameras.length === 1 ? "" : "s"}.</>}
+            icon={Rocket}
+          />
           {selectedModel && selectedSite && (
-            <div className="space-y-3 px-5 py-4">
+            <ModalBody className="space-y-3">
               <KvRow label="Model" value={selectedModel.name} />
               <KvRow label="Site" value={selectedSite.siteName} />
               <KvRow label="Areas" value={`${selectedAreas.length} (${selectedAreas.map((a) => a.areaName).join(", ")})`} />
@@ -1029,20 +1079,19 @@ function DeployWizard({
                   Some cameras are offline. Those deployments will queue as "Pending" and auto-resume on reconnect.
                 </div>
               )}
-            </div>
+            </ModalBody>
           )}
-          <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
-            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>
+          <ModalFooter>
+            <Button variant="ghost" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button size="sm" onClick={commitDeploy} className="gap-1.5">
+            <Button size="sm" onClick={onConfirm} className="gap-1.5">
               <Rocket className="size-3.5" />
               Deploy {selectedCameras.length} Camera{selectedCameras.length === 1 ? "" : "s"}
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
   );
 }
 
@@ -1067,7 +1116,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 /* ─── History view ───────────────────────────────────────────────────────── */
 
 
-interface ModelAggregate {
+export interface ModelAggregate {
   modelId: string;
   modelName: string;
   totalCameras: number;
@@ -1285,7 +1334,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: "suc
 
 /* ── Model deployments drawer — cameras using a given model ─────────────── */
 
-function ModelDeploymentsDrawer({
+export function ModelDeploymentsDrawer({
   model,
   onClose,
   onOpenCamera,
@@ -1544,6 +1593,7 @@ function ModelDeploymentsDrawer({
         confirmLabel={`Remove ${selectedCount} Camera${selectedCount === 1 ? "" : "s"}`}
         cancelLabel="Cancel"
         onConfirm={confirmRemove}
+        size="lg"
       >
         <div className="space-y-3">
           <div className="rounded-[var(--radius)] border border-border bg-muted/30">

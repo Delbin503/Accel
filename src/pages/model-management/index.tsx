@@ -44,7 +44,13 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -547,7 +553,7 @@ function UploadDropzone({
 
 const MODEL_FILE_EXTS = ".onnx";
 
-function CreateModelModal({
+export function CreateModelModal({
   onConfirm,
   onCancel,
 }: {
@@ -567,16 +573,14 @@ function CreateModelModal({
   }
 
   return (
-    <Dialog open onOpenChange={(v) => !v && onCancel()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Create Model</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Set basic information — add verification steps and upload model files next.
-          </p>
-        </DialogHeader>
+    <Modal open onOpenChange={(v) => !v && onCancel()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Create Model"
+          description="Set basic information — add verification steps and upload model files next."
+        />
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Model Information
           </p>
@@ -613,18 +617,18 @@ function CreateModelModal({
             />
             {errors.desc && <p className="mt-1 text-xs text-sev-critical">{errors.desc}</p>}
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button size="sm" onClick={submit}>
             Confirm
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -638,7 +642,7 @@ const DEFAULT_BATCH_SIZE = 8;
 const BATCH_SIZE_MIN = 1;
 const BATCH_SIZE_MAX = 64;
 
-function AddStepModal({
+export function AddStepModal({
   initial,
   onConfirm,
   onCancel,
@@ -717,26 +721,24 @@ function AddStepModal({
   const pct = Math.round(progress);
 
   return (
-    <Dialog open onOpenChange={(v) => !v && !uploading && onCancel()}>
-      <DialogContent
-        className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0"
+    <Modal open onOpenChange={(v) => !v && !uploading && onCancel()}>
+      <ModalContent
+        size="lg"
         // Don't let Esc / outside-click abandon an upload mid-flight.
         onEscapeKeyDown={(e) => uploading && e.preventDefault()}
         onInteractOutside={(e) => uploading && e.preventDefault()}
       >
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {uploading ? "Uploading model" : isEdit ? "Edit Step" : "Add New Step"}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {uploading
+        <ModalHeader
+          title={uploading ? "Uploading model" : isEdit ? "Edit Step" : "Add New Step"}
+          description={
+            uploading
               ? "Validating the model bundle and manifest. This can take a moment."
-              : "Define what the AI should verify at this step, then upload its model and manifest."}
-          </p>
-        </DialogHeader>
+              : "Define what the AI should verify at this step, then upload its model and manifest."
+          }
+        />
 
         {uploading ? (
-          <div className="flex-1 space-y-4 px-5 py-6" data-upload-progress={pct}>
+          <ModalBody className="space-y-4" data-upload-progress={pct}>
             <div className="flex items-center gap-2.5">
               <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary" />
               <span className="text-base font-semibold text-foreground">{label}</span>
@@ -769,9 +771,9 @@ function AddStepModal({
                 );
               })}
             </ul>
-          </div>
+          </ModalBody>
         ) : (
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-4">
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
               Action Label
@@ -875,10 +877,10 @@ function AddStepModal({
               </p>
             )}
           </div>
-        </div>
+        </ModalBody>
         )}
 
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={uploading}>
             Cancel
           </Button>
@@ -886,15 +888,15 @@ function AddStepModal({
             {uploading && <LoaderCircle className="size-3.5 animate-spin" />}
             {uploading ? "Uploading…" : "Confirm"}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Delete model modal ──────────────────────────────────────────────────── */
 
-function DeleteModelModal({
+export function DeleteModelModal({
   name,
   onConfirm,
   onCancel,
@@ -904,21 +906,20 @@ function DeleteModelModal({
   onCancel: () => void;
 }) {
   return (
-    <Dialog open onOpenChange={(v) => !v && onCancel()}>
-      <DialogContent className="w-[440px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
-            <Trash2 className="size-4" />
-            Delete Model
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        <div className="px-5 py-4 text-base text-muted-foreground">
+    <Modal open onOpenChange={(v) => !v && onCancel()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Delete Model"
+          description="This action cannot be undone."
+          icon={Trash2}
+          tone="destructive"
+        />
+        <ModalBody className="text-base text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{name}</span>? Any deployments that
           reference this model will need to be updated.
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
@@ -926,9 +927,9 @@ function DeleteModelModal({
             <Trash2 className="size-3.5" />
             Delete Model
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1348,7 +1349,7 @@ function modelToDraft(m: ModelData): EditDraft {
 
 /* ── Extract-rules prompt (after a step's model file is uploaded) ────────── */
 
-function ExtractRulesPrompt({
+export function ExtractRulesPrompt({
   modelFile,
   onConfirm,
   onSkip,
@@ -1360,54 +1361,47 @@ function ExtractRulesPrompt({
   // Closing (x / Esc / overlay) doesn't dismiss outright — it asks to confirm exit.
   const [confirmingExit, setConfirmingExit] = React.useState(false);
   return (
-    <Dialog open onOpenChange={(v) => { if (!v) setConfirmingExit(true); }}>
-      <DialogContent className="w-[460px] max-w-[95vw] p-0">
+    <Modal open onOpenChange={(v) => { if (!v) setConfirmingExit(true); }}>
+      <ModalContent size="sm">
         {confirmingExit ? (
           <>
-            <DialogHeader className="border-b border-border px-5 py-4">
-              <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-warning">
-                <AlertTriangle className="size-4" />
-                End model creation?
-              </DialogTitle>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Exiting now will end model creation without extracting rules. Do you want to continue or exit?
-              </p>
-            </DialogHeader>
-            <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+            <ModalHeader
+              title="End model creation?"
+              description="Exiting now will end model creation without extracting rules. Do you want to continue or exit?"
+              icon={AlertTriangle}
+              tone="warning"
+            />
+            <ModalFooter>
               <Button variant="ghost" size="sm" onClick={() => setConfirmingExit(false)}>
                 Continue
               </Button>
               <Button variant="destructive" size="sm" onClick={onSkip}>
                 Exit
               </Button>
-            </div>
+            </ModalFooter>
           </>
         ) : (
           <>
-            <DialogHeader className="border-b border-border px-5 py-4">
-              <DialogTitle className="flex items-center gap-2.5 text-base font-bold">
-                <Cpu className="size-4 text-purple" />
-                Extract Rules from Model
-              </DialogTitle>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Pull the detection rules embedded in{" "}
-                <span className="font-mono text-foreground">{modelFile}</span>?
-              </p>
-            </DialogHeader>
-            <div className="px-5 py-4 text-sm text-muted-foreground">
+            <ModalHeader
+              title="Extract Rules from Model"
+              description={<>Pull the detection rules embedded in{" "}<span className="font-mono text-foreground">{modelFile}</span>?</>}
+              icon={Cpu}
+              tone="model"
+            />
+            <ModalBody className="text-sm text-muted-foreground">
               Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
               tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
-            </div>
-            <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+            </ModalBody>
+            <ModalFooter>
               <Button size="sm" onClick={onConfirm} className="gap-1.5">
                 <Cpu className="size-3.5" />
                 Extract Rules
               </Button>
-            </div>
+            </ModalFooter>
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   );
 }
 

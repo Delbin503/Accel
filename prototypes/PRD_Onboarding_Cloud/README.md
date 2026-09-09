@@ -19,9 +19,9 @@ Open the printed URL and pick **PRD_Onboarding_Cloud** (served at
 
 ## Dev tester (bottom-right, low opacity, reveals on hover)
 
-- **Screen** — jump to any screen: Sign In · Sign Up · Forgot Pw · Create Site ·
-  Choose Plan · Payment · Done. You can also walk the flow naturally with each
-  page's own buttons.
+- **Screen** — jump to any screen: Sign In · Verify · **Suspended** · Sign Up ·
+  Forgot Pw · Choose Plan · Payment · Create Site · Members. You can also walk
+  the flow naturally with each page's own buttons.
 - **Async** — `Live` (real page) · `Loading` (spinner preview) · `Error` (failure
   preview) for the flow's async actions (sign-in, payment).
 
@@ -31,7 +31,22 @@ Open the printed URL and pick **PRD_Onboarding_Cloud** (served at
 |------|---------|
 | `index.tsx` | Providers + MemoryRouter over the real auth routes + floating tester. |
 | `StateTester.tsx` | **PROTOTYPE-ONLY** screen jumper + async toggle. |
-| `shared.tsx` | Screen list + `Loading` / `Error` / `Done` / not-in-prototype previews. |
+| `shared.tsx` | Screen list + `Loading` / `Error` / `Done` / not-in-prototype previews + the suspended-account demo state. |
+
+## Suspended account
+
+`Suspended` is a sign-in **outcome**, not a wizard step — a user whose account an
+owner has suspended never reaches onboarding. Two ways to see it:
+
+1. Hit the **Suspended** button in the tester, or
+2. Sign in with a suspended user's email (e.g. `kelvin@bluesilo.studio`) on the
+   real Sign In screen — it branches before the Verify step, since there is no
+   point issuing a code that cannot establish a session.
+
+The page reads who suspended the account, the end date, and the reason off router
+state, which the real `SignIn` supplies. The tester jump has no such state, so
+`shared.tsx` passes `SUSPENDED_DEMO_STATE`, built from the first suspended user
+in `@/mocks/users` — the same record User Management shows.
 
 ## Notes / src touch-points
 

@@ -30,7 +30,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { cn } from "@/lib/utils";
 import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
@@ -309,7 +315,7 @@ function FauxPlayer({ rec, periods, currentSec, onSeek, isPlaying, onPlayToggle 
 
 /* ── Recording Drawer ────────────────────────────────────────────────────── */
 
-function RecordingDrawer({ recording, open, onClose, onDeleteRecording }: {
+export function RecordingDrawer({ recording, open, onClose, onDeleteRecording }: {
   recording: RecordingDisplay | null; open: boolean; onClose: () => void;
   onDeleteRecording: (id: string) => void;
 }) {
@@ -438,7 +444,7 @@ const NOW_REF = new Date("2026-05-25T10:15:00").getTime();
    a bordered footer. `single` is snapshotted by the caller at request time so
    the copy holds steady while the dialog animates out. ──────────────────── */
 
-function DeleteRecordingsModal({
+export function DeleteRecordingsModal({
   open, count, single, onClose, onConfirm,
 }: {
   open: boolean;
@@ -451,15 +457,14 @@ function DeleteRecordingsModal({
   const isBulk = count > 1;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">
-            {isBulk ? `Delete Recordings (${count})` : "Delete Recording"}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        <div className="px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={isBulk ? `Delete Recordings (${count})` : "Delete Recording"}
+          description="This action cannot be undone."
+          tone="destructive"
+        />
+        <ModalBody>
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
@@ -483,16 +488,16 @@ function DeleteRecordingsModal({
               ? "The footage for these recordings cannot be recovered once deleted."
               : "The footage for this recording cannot be recovered once deleted."}
           </p>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
             <Trash2 className="size-3.5" />
             Delete {isBulk ? `${count} Recordings` : "Recording"}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

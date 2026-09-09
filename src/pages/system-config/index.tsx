@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
 
 type Section =
@@ -103,32 +104,12 @@ function PrefRow({ icon: Icon, title, description, control }: { icon?: React.Ele
 /* ── General ─────────────────────────────────────────────────────────── */
 
 /* Country/region timezones paired with their GMT offset for the selector. */
-const TIMEZONE_OPTS: { value: string; label: string }[] = [
-  { value: "Pacific/Midway",    label: "(GMT-11:00) Midway Island" },
-  { value: "America/Anchorage", label: "(GMT-09:00) Alaska" },
-  { value: "America/Los_Angeles", label: "(GMT-08:00) Los Angeles" },
-  { value: "America/Denver",    label: "(GMT-07:00) Denver" },
-  { value: "America/Chicago",   label: "(GMT-06:00) Chicago" },
-  { value: "America/New_York",  label: "(GMT-05:00) New York" },
-  { value: "America/Sao_Paulo", label: "(GMT-03:00) São Paulo" },
-  { value: "Europe/London",     label: "(GMT+00:00) London" },
-  { value: "Europe/Paris",      label: "(GMT+01:00) Paris" },
-  { value: "Europe/Istanbul",   label: "(GMT+03:00) Istanbul" },
-  { value: "Asia/Dubai",        label: "(GMT+04:00) Dubai" },
-  { value: "Asia/Karachi",      label: "(GMT+05:00) Karachi" },
-  { value: "Asia/Kolkata",      label: "(GMT+05:30) Kolkata" },
-  { value: "Asia/Bangkok",      label: "(GMT+07:00) Bangkok" },
-  { value: "Asia/Singapore",    label: "(GMT+08:00) Singapore" },
-  { value: "Asia/Tokyo",        label: "(GMT+09:00) Tokyo" },
-  { value: "Australia/Sydney",  label: "(GMT+10:00) Sydney" },
-  { value: "Pacific/Auckland",  label: "(GMT+12:00) Auckland" },
-];
 
 function GeneralSection() {
   const [orgName, setOrgName] = React.useState("Accel TRMS");
   const [orgId] = React.useState("ORG-2026-001");
   const [defaultSite, setDefaultSite] = React.useState("astra");
-  const [defaultTz, setDefaultTz] = React.useState("Asia/Singapore");
+  const [defaultTz, setDefaultTz] = React.useState(DEFAULT_TIMEZONE);
   const [language, setLanguage] = React.useState("en");
   const [maintenanceMode, setMaintenanceMode] = React.useState(false);
 
@@ -167,8 +148,8 @@ function GeneralSection() {
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Timezone</label>
             <Select value={defaultTz} onValueChange={(v) => setDefaultTz(v)}>
               <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIMEZONE_OPTS.map((tz) => (
+              <SelectContent position="popper" className="max-h-72">
+                {TIMEZONES.map((tz) => (
                   <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
                 ))}
               </SelectContent>

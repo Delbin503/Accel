@@ -10,6 +10,7 @@ import SignInPage from "@/pages/auth/SignIn";
 import SignInVerifyPage from "@/pages/auth/SignInVerify";
 import SignUpPage from "@/pages/auth/SignUp";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
+import AccountSuspendedPage from "@/pages/auth/AccountSuspended";
 import { StateTester } from "./StateTester";
 import {
   CLOUD_SCREENS,
@@ -33,7 +34,8 @@ function Shell() {
 
   function goTo(s: CloudScreen) {
     setAsyncMode("idle");
-    navigate(CLOUD_SCREENS.find((x) => x.key === s)!.path);
+    const target = CLOUD_SCREENS.find((x) => x.key === s)!;
+    navigate(target.path, target.state ? { state: target.state } : undefined);
   }
 
   return (
@@ -53,6 +55,8 @@ function Shell() {
           <Route path="/signup/site" element={<SignUpPage key="su-site" initialStep="site" />} />
           <Route path="/signup/team" element={<SignUpPage key="su-team" initialStep="team" />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          {/* Sign-in dead end for a suspended account. */}
+          <Route path="/account-suspended" element={<AccountSuspendedPage />} />
           <Route path="/done" element={<DonePreview />} />
           {/* Real pages navigate("/") on completion. */}
           <Route path="/" element={<DonePreview />} />

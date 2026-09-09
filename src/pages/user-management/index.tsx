@@ -32,7 +32,13 @@ import {
   Plus,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -583,7 +589,7 @@ interface UserDrawerProps {
   onReset2FA: () => void;
 }
 
-function UserDrawer({
+export function UserDrawer({
   user,
   open,
   mode = "active",
@@ -936,7 +942,7 @@ function parseEmails(raw: string): { all: string[]; valid: string[]; invalid: st
   return { all: tokens, valid, invalid, duplicates };
 }
 
-function InviteUsersModal({
+export function InviteUsersModal({
   open,
   onClose,
   onInvite,
@@ -983,17 +989,15 @@ function InviteUsersModal({
                                          `${sites.length} sites selected`;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Invite Users</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Invitees receive a one-time email link valid for 7 days.
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Invite Users"
+          description="Invitees receive a one-time email link valid for 7 days."
+        />
 
         {/* Scrollable body — modal height is fixed; content scrolls inside. */}
-        <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
+        <ModalBody className="space-y-3.5">
           {/* Seat tiles double as the role selector — pick a tier to invite into. */}
           <div>
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1160,17 +1164,17 @@ function InviteUsersModal({
               </div>
             </div>
           )}
-        </div>
+        </ModalBody>
 
-        <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={handleSend} className="gap-1.5">
             <Mail className="size-3.5" />
             Send Invite
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1311,7 +1315,7 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
 
 /* ── Change Role modal ───────────────────────────────────────────────────── */
 
-function ChangeRoleModal({
+export function ChangeRoleModal({
   open,
   users,
   seatUsage,
@@ -1372,31 +1376,28 @@ function ChangeRoleModal({
     onConfirm("owner");
   }
 
+  // The modal swaps between three states, so title/description resolve together
+  // to keep the header contract (always a title *and* a description) intact.
+  const headerTitle = showTransfer
+    ? "Transfer Ownership"
+    : showPurchase
+    ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
+    : isBulk ? `Change Role (${users.length})` : "Change Role";
+  const headerDescription = showTransfer
+    ? "Confirm your identity to transfer the Owner role."
+    : showPurchase
+    ? `No available ${currentTier.label.toLowerCase()} seats — purchase to continue.`
+    : isBulk
+    ? `Set the workspace role for the ${users.length} selected members.`
+    : "Role changes apply immediately on the member's next request.";
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {showTransfer
-              ? "Transfer Ownership"
-              : showPurchase
-              ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
-              : isBulk ? `Change Role (${users.length})` : "Change Role"}
-          </DialogTitle>
-          {showPurchase && !showTransfer && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              No available {currentTier.label.toLowerCase()} seats — purchase to continue.
-            </p>
-          )}
-          {showTransfer && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Confirm your identity to transfer the Owner role.
-            </p>
-          )}
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader title={headerTitle} description={headerDescription} />
 
         {showTransfer ? (
-          <div className="space-y-3 px-5 py-4">
+          <ModalBody className="space-y-3">
             <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] px-3.5 py-3">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
               <div>
@@ -1424,9 +1425,9 @@ function ChangeRoleModal({
                 className="h-9 text-base"
               />
             </div>
-          </div>
+          </ModalBody>
         ) : !showPurchase ? (
-          <div className="space-y-3 px-5 py-4">
+          <ModalBody className="space-y-3">
             {isBulk ? (
               <p className="text-sm text-muted-foreground">
                 Applying to <strong className="text-foreground">{users.length}</strong> selected users.
@@ -1500,9 +1501,9 @@ function ChangeRoleModal({
                 </p>
               </div>
             )}
-          </div>
+          </ModalBody>
         ) : (
-          <div className="space-y-3 px-5 py-4">
+          <ModalBody className="space-y-3">
             <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
               <div>
@@ -1531,10 +1532,10 @@ function ChangeRoleModal({
             <p className="text-xs text-muted-foreground">
               Manage all seats in <strong className="text-foreground">Billing & License</strong>.
             </p>
-          </div>
+          </ModalBody>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           {showTransfer ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => setShowTransfer(false)}>Back</Button>
@@ -1559,15 +1560,15 @@ function ChangeRoleModal({
               </Button>
             </>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Manage Site modal ───────────────────────────────────────────────────── */
 
-function ManageSiteModal({
+export function ManageSiteModal({
   open,
   users,
   onClose,
@@ -1599,14 +1600,17 @@ function ManageSiteModal({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[560px] max-w-[95vw] flex-col overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {isBulk ? `Manage Site (${users.length})` : "Manage Site Access"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex-shrink-0 space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={isBulk ? `Manage Site (${users.length})` : "Manage Site Access"}
+          description={
+            isBulk
+              ? `Choose which sites the ${users.length} selected members can access.`
+              : "Choose which sites this member can access. Changes apply immediately."
+          }
+        />
+        <ModalBody className="space-y-3">
           {isBulk ? (
             <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
@@ -1645,8 +1649,8 @@ function ManageSiteModal({
             <Input value={siteSearch} onChange={(e) => setSiteSearch(e.target.value)}
               placeholder="Search sites…" className="h-9 pl-9 text-base" />
           </div>
-        </div>
-        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-5 pb-3">
+        </ModalBody>
+        <ModalBody className="space-y-1.5">
           {visibleSites.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No sites match "{siteSearch}".</p>
           ) : (
@@ -1674,15 +1678,15 @@ function ManageSiteModal({
               );
             })
           )}
-        </div>
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!isDirty} onClick={() => onConfirm(sites)}>
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1795,7 +1799,7 @@ function PhoneField({
   );
 }
 
-function EditUserModal({
+export function EditUserModal({
   open,
   user,
   onClose,
@@ -1837,12 +1841,13 @@ function EditUserModal({
     departments.join("|") === user.departments.join("|");
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Edit User</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Edit User"
+          description="Email and User ID are fixed after creation."
+        />
+        <ModalBody className="space-y-3">
           <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
             <Avatar user={user} size={32} />
             <div className="min-w-0 flex-1">
@@ -1892,8 +1897,8 @@ function EditUserModal({
           <p className="text-xs text-muted-foreground">
             Email and User ID cannot be changed after creation.
           </p>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
@@ -1910,9 +1915,9 @@ function EditUserModal({
           >
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -1947,7 +1952,7 @@ function fmtInput(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function SuspendUserModal({
+export function SuspendUserModal({
   open,
   users,
   onClose,
@@ -2013,17 +2018,13 @@ function SuspendUserModal({
   const PRESETS: SuspendPreset[] = ["permanent", "7d", "30d", "custom"];
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {isBulk ? `Suspend User (${users.length})` : "Suspend User"}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Sign-in will be blocked for the selected duration. Audit history is preserved.
-          </p>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={isBulk ? `Suspend User (${users.length})` : "Suspend User"}
+          description="Sign-in will be blocked for the selected duration. Audit history is preserved."
+        />
+        <ModalBody className="space-y-4">
           {isBulk ? (
             <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
@@ -2111,8 +2112,8 @@ function SuspendUserModal({
               Suspending blocks sign-in immediately. Active sessions revoke on next refresh.
             </p>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             variant="destructive"
@@ -2124,15 +2125,15 @@ function SuspendUserModal({
             <ShieldOff className="size-3.5" />
             Suspend
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Reinstate confirm (lightweight) ─────────────────────────────────────── */
 
-function ReinstateModal({
+export function ReinstateModal({
   open,
   users,
   onClose,
@@ -2146,14 +2147,13 @@ function ReinstateModal({
   if (users.length === 0) return null;
   const isBulk = users.length > 1;
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">
-            {isBulk ? `Reinstate User (${users.length})` : "Reinstate User"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={isBulk ? `Reinstate User (${users.length})` : "Reinstate User"}
+          description="Sign-in is restored immediately and previous access is reapplied."
+        />
+        <ModalBody className="space-y-3">
           {isBulk ? (
             <p className="text-base text-muted-foreground">
               Reinstating <strong className="text-foreground">{users.length}</strong> selected users.
@@ -2173,22 +2173,22 @@ function ReinstateModal({
               Access will be restored on next sign-in. Existing role and site permissions are unchanged.
             </p>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={onConfirm} className="gap-1.5">
             <RotateCcw className="size-3.5" />
             Reinstate
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Delete User modal ───────────────────────────────────────────────────── */
 
-function DeleteUserModal({
+export function DeleteUserModal({
   open,
   users,
   onClose,
@@ -2209,15 +2209,14 @@ function DeleteUserModal({
   const isBulk = users.length > 1;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold text-destructive">
-            {isBulk ? `Delete Users (${users.length})` : "Delete User"}
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        <div className="px-5 py-5">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title={isBulk ? `Delete Users (${users.length})` : "Delete User"}
+          description="This action cannot be undone."
+          tone="destructive"
+        />
+        <ModalBody>
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
@@ -2253,54 +2252,56 @@ function DeleteUserModal({
               className="w-full"
             />
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" variant="destructive" className="gap-1.5" onClick={() => onConfirm(note)}>
             <Trash2 className="size-3.5" />
             Delete {isBulk ? `${users.length} Users` : "User"}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
 /* ── Reset confirms (password + 2FA) ─────────────────────────────────────── */
 
-function ResetConfirmModal({
+export function ResetConfirmModal({
   open,
   title,
   description,
+  detail,
   confirmLabel,
   onClose,
   onConfirm,
 }: {
   open: boolean;
   title: string;
-  description: React.ReactNode;
+  /** One-line header summary. */
+  description: string;
+  /** Longer consequence copy, shown in the body callout. */
+  detail: React.ReactNode;
   confirmLabel: string;
   onClose: () => void;
   onConfirm: () => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">{title}</DialogTitle>
-        </DialogHeader>
-        <div className="px-5 py-4">
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader title={title} description={description} />
+        <ModalBody>
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-            <div className="text-sm leading-snug text-muted-foreground">{description}</div>
+            <div className="text-sm leading-snug text-muted-foreground">{detail}</div>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={onConfirm}>{confirmLabel}</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -3162,10 +3163,11 @@ export default function UserManagementPage({
       <ResetConfirmModal
         open={dialog.kind === "reset-password"}
         title="Reset Password"
+        description="The current password stops working once the new one is set."
         confirmLabel="Send Reset Email"
         onClose={closeDialog}
         onConfirm={handleResetPassword}
-        description={
+        detail={
           <>
             A password reset email will be sent. The user will be required to set a new password on next sign-in.
           </>
@@ -3174,10 +3176,11 @@ export default function UserManagementPage({
       <ResetConfirmModal
         open={dialog.kind === "reset-2fa"}
         title="Reset Two-Factor Authentication"
+        description="The member re-enrols an authenticator on their next sign-in."
         confirmLabel="Reset 2FA"
         onClose={closeDialog}
         onConfirm={handleReset2FA}
-        description={
+        detail={
           <>
             The user's current 2FA enrolment will be removed. They will be prompted to re-enrol on next sign-in.
           </>

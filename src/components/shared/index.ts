@@ -14,6 +14,15 @@ export { FilterPanel } from "./FilterPanel";
 export type { FilterPanelProps } from "./FilterPanel";
 export { Toolbar, ToolbarSearch } from "./Toolbar";
 export type { ToolbarSearchProps } from "./Toolbar";
+export {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalSubheader,
+  ModalBody,
+  ModalFooter,
+} from "./Modal";
+export type { ModalContentProps, ModalHeaderProps } from "./Modal";
 export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 export { SyncProgressModal } from "./SyncProgressModal";

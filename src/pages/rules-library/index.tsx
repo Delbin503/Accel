@@ -24,7 +24,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -34,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TimeSelect } from "@/components/shared/TimeSelect";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -782,19 +789,18 @@ function ConditionRowItem({
       {row.type === "During" && row.field === "Custom Hours" && (
         <div className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1">
           <Clock className="size-3 text-muted-foreground" />
-          <input
-            type="time"
+          <TimeSelect
             value={row.value || "08:00"}
-            onChange={(e) => onUpdate(row.id, { value: e.target.value })}
-            className="bg-transparent text-sm text-foreground outline-none"
+            onChange={(v) => onUpdate(row.id, { value: v })}
+            aria-label="Window start"
+            className="h-7 w-32 border-0 bg-transparent shadow-none"
           />
           <span className="text-xs text-muted-foreground">to</span>
-          <input
-            type="time"
+          <TimeSelect
             value={row.unit || "18:00"}
-            min={row.value || "00:00"}
-            onChange={(e) => onUpdate(row.id, { unit: e.target.value })}
-            className="bg-transparent text-sm text-foreground outline-none"
+            onChange={(v) => onUpdate(row.id, { unit: v })}
+            aria-label="Window end"
+            className="h-7 w-32 border-0 bg-transparent shadow-none"
           />
         </div>
       )}
@@ -1490,7 +1496,7 @@ function RuleBuilder({
 
 /* ── Delete modal ────────────────────────────────────────────────────────── */
 
-function DeleteModal({
+export function DeleteModal({
   ruleName,
   onConfirm,
   onCancel,
@@ -1500,21 +1506,20 @@ function DeleteModal({
   onCancel: () => void;
 }) {
   return (
-    <Dialog open onOpenChange={(v) => !v && onCancel()}>
-      <DialogContent className="w-[440px] max-w-[95vw] p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-destructive">
-            <Trash2 className="size-4" />
-            Delete Rule
-          </DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">This action cannot be undone.</p>
-        </DialogHeader>
-        <div className="px-5 py-4 text-base text-muted-foreground">
+    <Modal open onOpenChange={(v) => !v && onCancel()}>
+      <ModalContent size="sm">
+        <ModalHeader
+          title="Delete Rule"
+          description="This action cannot be undone."
+          icon={Trash2}
+          tone="destructive"
+        />
+        <ModalBody className="text-base text-muted-foreground">
           Are you sure you want to delete{" "}
           <span className="font-semibold text-foreground">{ruleName}</span>? Any models that
           reference this rule will need to be updated.
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        </ModalBody>
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
@@ -1522,9 +1527,9 @@ function DeleteModal({
             <Trash2 className="size-3.5" />
             Delete Rule
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

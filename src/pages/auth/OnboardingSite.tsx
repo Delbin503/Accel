@@ -13,6 +13,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";
 import { cn } from "@/lib/utils";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { OnboardingProgress } from "./OnboardingProgress";
 
 function uid(prefix: string) {
@@ -27,7 +28,7 @@ export default function OnboardingSitePage() {
 
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [timezone, setTimezone] = React.useState("Asia/Singapore");
+  const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
   const [areas, setAreas] = React.useState<AreaShape[]>([
     { id: uid("area"), name: "Lobby",     color: AREA_PALETTE[0], points: [] },
     { id: uid("area"), name: "Entrance",  color: AREA_PALETTE[1], points: [] },
@@ -158,15 +159,10 @@ export default function OnboardingSitePage() {
                 <SelectTrigger className="h-10 w-full pl-9 text-base">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Asia/Singapore">Asia/Singapore (GMT+8)</SelectItem>
-                  <SelectItem value="Asia/Jakarta">Asia/Jakarta (GMT+7)</SelectItem>
-                  <SelectItem value="Asia/Bangkok">Asia/Bangkok (GMT+7)</SelectItem>
-                  <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (GMT+8)</SelectItem>
-                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (GMT+9)</SelectItem>
-                  <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
-                  <SelectItem value="America/New_York">America/New_York (GMT-5)</SelectItem>
-                  <SelectItem value="America/Los_Angeles">America/Los_Angeles (GMT-8)</SelectItem>
+                <SelectContent position="popper" className="max-h-72">
+                  {TIMEZONES.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

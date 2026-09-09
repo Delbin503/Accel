@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Layers, Search, Check } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -152,20 +153,14 @@ export function EscalateModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[85vh] w-[560px] max-w-[95vw] overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-bold">Escalate to Incident Case</DialogTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {event
-              ? `From event ${event.id}`
-              : isBulk
-              ? `From ${bulkCount} selected events`
-              : "From selected events"}
-          </p>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Escalate to Incident Case"
+          description={event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
+        />
 
-        <div className="space-y-4 px-5 pb-5 pt-3">
+        <ModalBody className="space-y-4">
           {/* Bulk banner */}
           {isBulk && (
             <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary-muted p-3">
@@ -262,17 +257,17 @@ export function EscalateModal({
               className="min-h-[70px] w-full resize-y text-base"
             />
           </div>
-        </div>
+        </ModalBody>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button size="sm" onClick={handleConfirm}>
             Create Case
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
