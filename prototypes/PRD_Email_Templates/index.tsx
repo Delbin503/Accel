@@ -23,6 +23,7 @@ import roleChangedHtml from "./templates/role-changed.html?raw";
 import ownershipHtml from "./templates/ownership-transfer.html?raw";
 import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
 import accountDeletedHtml from "./templates/account-deleted.html?raw";
+import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
 
 interface Template {
   id: string;
@@ -171,6 +172,19 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{email}}", "{{deletedAt}}", "{{deletedBy}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/account-deleted.html",
     html: accountDeletedHtml,
+  },
+  {
+    id: "update-payment-method",
+    name: "Update Payment Method",
+    subject: "Update your payment method",
+    category: "Billing & Subscription",
+    priority: "P1",
+    whenSent:
+      "When a subscription charge is declined, or the card on file has expired — before the automatic retry.",
+    audience: "The workspace Owner / billing contact.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{invoiceId}}", "{{amountDue}}", "{{billingPeriod}}", "{{cardBrand}}", "{{cardLast4}}", "{{declineReason}}", "{{declinedAt}}", "{{retryDate}}", "{{gracePeriodDays}}", "{{billingUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/update-payment-method.html",
+    html: updatePaymentMethodHtml,
   },
 ];
 

@@ -30,6 +30,9 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 7 | **User Invitation** | P1 | Admin invites someone. Faithful build of the Figma reference and the base every other email follows. |
 | 8 | **Role Changed** | P2 | Admin changes a user's role. |
 | 9 | **Ownership Transfer** | P1 | Workspace ownership transferred (to both owners). |
+| 10 | **Account Deletion Request** | P1 | Member requests deletion — sent to the Owner to action. |
+| 11 | **Account Deleted** | P1 | After deletion, confirming access and personal data are gone. |
+| 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
 
 Each template is a **standalone, sendable** `.html` file under `templates/`
 (table layout + inline styles, Outlook VML button where needed, Manrope with

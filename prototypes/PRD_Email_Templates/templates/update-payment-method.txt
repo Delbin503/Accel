@@ -1,0 +1,46 @@
+Accel — Update your payment method
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+The charge for {{orgName}}'s Accel subscription could not be processed —
+{{amountDue}} for {{billingPeriod}}. Monitoring is still running; the invoice
+stays open until a working payment method is on file.
+
+Invoice details
+---------------
+Invoice:         {{invoiceId}}
+Amount due:      {{amountDue}}
+Billing period:  {{billingPeriod}}
+Payment method:  {{cardBrand}} ending {{cardLast4}}
+Declined on:     {{declinedAt}} — {{declineReason}}
+
+What happens next
+-----------------
+We retry the charge on {{retryDate}}. Update the card before then and the retry
+goes through on its own — nothing else to do. If the invoice is still unpaid
+{{gracePeriodDays}} days after that, workspace access is suspended until
+billing is settled. We never ask for card details by email; the link below
+opens your Billing page, where you sign in as usual.
+
+Update payment method: {{billingUrl}}
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+Twitter: https://twitter.com/sigmawaveai
+Facebook: https://www.facebook.com/sigmawave.ai
+Instagram: https://www.instagram.com/sigmawave.ai
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.
