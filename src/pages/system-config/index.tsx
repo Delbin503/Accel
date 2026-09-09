@@ -18,18 +18,18 @@ import {
   Activity,
   Mail,
   Smartphone,
-  MessageSquare,
   KeyRound,
   RefreshCw,
-  MapPin,
   Video,
   Database,
   ChevronDown,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { EmptyState } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
@@ -46,14 +46,14 @@ type Section =
   | "security";
 
 const SECTIONS: { key: Section; label: string; icon: React.ElementType; description: string }[] = [
-  { key: "general",          label: "General",          icon: Building2,       description: "Organization, date & time, number formats" },
+  { key: "general",          label: "General",          icon: Building2,       description: "Organization, date & time" },
   { key: "user-access",      label: "User Access",      icon: Users,           description: "Role permissions matrix" },
   { key: "sla",              label: "SLA & Escalation", icon: Clock,           description: "Response targets per severity" },
   { key: "detection",        label: "Detection Engine", icon: Brain,           description: "Confidence thresholds, models" },
   { key: "camera-defaults",  label: "Camera Defaults",  icon: Video,           description: "RTSP, codec, frame rate, recording" },
   { key: "nvr-defaults",     label: "NVR Defaults",     icon: Database,        description: "Channel cleanup, storage warnings" },
   { key: "notifications",    label: "Notifications",    icon: Bell,            description: "Default delivery channels" },
-  { key: "integrations",     label: "Integrations",     icon: Webhook,         description: "Webhooks, SSO, third-party" },
+  { key: "integrations",     label: "Integrations",     icon: Webhook,         description: "Coming in a later update" },
   { key: "security",         label: "Security",         icon: ShieldCheck,     description: "Auth policy & audit" },
 ];
 
@@ -113,12 +113,10 @@ function GeneralSection() {
   const [language, setLanguage] = React.useState("en");
   const [maintenanceMode, setMaintenanceMode] = React.useState(false);
 
-  /* Date & Time + Numbers & Units (moved here from Localization). */
+  /* Date & Time (moved here from Localization). */
   const [dateFormat, setDateFormat] = React.useState("DD MMM YYYY");
   const [timeFormat, setTimeFormat] = React.useState<"12h" | "24h">("24h");
   const [weekStart, setWeekStart] = React.useState<"sun" | "mon">("mon");
-  const [numberFormat, setNumberFormat] = React.useState("1,234.56");
-  const [units, setUnits] = React.useState<"metric" | "imperial">("metric");
 
   return (
     <div className="flex flex-col gap-4">
@@ -213,36 +211,6 @@ function GeneralSection() {
                       Default
                     </span>
                   )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Numbers & Units" description="How numeric values and measurements are displayed.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Number format</label>
-            <Select value={numberFormat} onValueChange={(v) => setNumberFormat(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1,234.56">1,234.56</SelectItem>
-                <SelectItem value="1.234,56">1.234,56</SelectItem>
-                <SelectItem value="1 234,56">1 234,56</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Measurement units</label>
-            <div className="flex gap-1.5">
-              {(["metric", "imperial"] as const).map((opt) => (
-                <button key={opt} onClick={() => setUnits(opt)}
-                  className={cn(
-                    "flex-1 rounded-md border px-3 py-2 text-sm font-semibold capitalize transition-colors",
-                    units === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
-                  )}>
-                  {opt}
                 </button>
               ))}
             </div>
@@ -680,12 +648,10 @@ function NotificationsSection() {
   const [emailEnabled, setEmailEnabled] = React.useState(true);
   const [pushEnabled, setPushEnabled] = React.useState(true);
   const [smsEnabled, setSmsEnabled] = React.useState(false);
-  const [slackEnabled, setSlackEnabled] = React.useState(false);
   const [emailFrom, setEmailFrom] = React.useState("alerts@accel.ai");
   const [smsProvider, setSmsProvider] = React.useState("twilio");
   const [criticalAll, setCriticalAll] = React.useState(true);
   const [mediumAdminOnly, setMediumAdminOnly] = React.useState(true);
-  const [digestDaily, setDigestDaily] = React.useState(true);
 
   return (
     <div className="flex flex-col gap-4">
@@ -700,9 +666,6 @@ function NotificationsSection() {
           <PrefRow icon={Smartphone} title="SMS"
             description={`Provider: ${smsProvider} · billed per message`}
             control={<Toggle checked={smsEnabled} onChange={setSmsEnabled} />} />
-          <PrefRow icon={MessageSquare} title="Slack"
-            description="Post incident summaries to a Slack channel."
-            control={<Toggle checked={slackEnabled} onChange={setSlackEnabled} />} />
         </div>
       </SectionCard>
 
@@ -714,9 +677,6 @@ function NotificationsSection() {
           <PrefRow title="Medium → admins only"
             description="Medium severity stays within Admins and Owners."
             control={<Toggle checked={mediumAdminOnly} onChange={setMediumAdminOnly} />} />
-          <PrefRow title="Daily digest"
-            description="Send a once-a-day summary of all events to admins."
-            control={<Toggle checked={digestDaily} onChange={setDigestDaily} />} />
         </div>
       </SectionCard>
 
@@ -750,9 +710,7 @@ function CameraDefaultsSection() {
   const [resolution, setResolution] = React.useState("1920x1080");
   const [frameRate, setFrameRate] = React.useState(15);
   const [rtspPort, setRtspPort] = React.useState(554);
-  const [defaultSchedule, setDefaultSchedule] = React.useState<"24x7" | "motion" | "scheduled">("motion");
-  const [autoAssignArea, setAutoAssignArea] = React.useState(true);
-  const [autoConnectNvr, setAutoConnectNvr] = React.useState(true);
+  const [defaultSchedule, setDefaultSchedule] = React.useState<"24x7" | "scheduled">("24x7");
 
   return (
     <div className="flex flex-col gap-4">
@@ -798,7 +756,7 @@ function CameraDefaultsSection() {
 
       <SectionCard title="Recording Schedule" description="Default trigger pattern for newly added cameras.">
         <div className="flex gap-2">
-          {(["24x7", "motion", "scheduled"] as const).map((opt) => (
+          {(["24x7", "scheduled"] as const).map((opt) => (
             <button key={opt} onClick={() => setDefaultSchedule(opt)}
               className={cn(
                 "flex-1 rounded-md border px-3 py-2 text-left transition-colors",
@@ -807,22 +765,10 @@ function CameraDefaultsSection() {
               <p className="text-sm font-semibold capitalize text-foreground">{opt.replace(/-/g, " ")}</p>
               <p className="mt-0.5 text-2xs text-muted-foreground">
                 {opt === "24x7"      && "Continuous recording, all hours"}
-                {opt === "motion"    && "Record on motion or detection events only"}
                 {opt === "scheduled" && "Operating-hours window from the site"}
               </p>
             </button>
           ))}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Auto-provisioning">
-        <div className="space-y-2">
-          <PrefRow icon={MapPin} title="Auto-assign to area"
-            description="Match cameras to areas by IP subnet on first connect."
-            control={<Toggle checked={autoAssignArea} onChange={setAutoAssignArea} />} />
-          <PrefRow icon={Database} title="Auto-connect available NVR channel"
-            description="When a free NVR channel exists at the same site, link the camera automatically."
-            control={<Toggle checked={autoConnectNvr} onChange={setAutoConnectNvr} />} />
         </div>
       </SectionCard>
     </div>
@@ -930,41 +876,13 @@ function NvrDefaultsSection() {
 /* ── Integrations ────────────────────────────────────────────────────── */
 
 function IntegrationsSection() {
-  const integrations = [
-    { id: "slack",     label: "Slack",            status: "connected",    description: "Post incident summaries to #security" },
-    { id: "teams",     label: "Microsoft Teams",  status: "disconnected", description: "Channel notifications for incidents" },
-    { id: "pagerduty", label: "PagerDuty",        status: "connected",    description: "Page on-call during critical events" },
-    { id: "webhook",   label: "Webhooks",         status: "connected",    description: "3 active endpoints" },
-    { id: "sso",       label: "SSO (SAML)",       status: "connected",    description: "Okta · acmecorp.okta.com" },
-    { id: "scim",      label: "SCIM Provisioning",status: "disconnected", description: "Auto-provision users from your IDP" },
-  ];
-
   return (
-    <SectionCard title="Connected Services" description="Third-party tools the system can reach out to.">
-      <div className="space-y-2">
-        {integrations.map((i) => (
-          <div key={i.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Webhook className="size-4 text-primary" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-base font-semibold text-foreground">{i.label}</p>
-              <p className="text-xs text-muted-foreground">{i.description}</p>
-            </div>
-            {i.status === "connected" ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
-                <Check className="size-2.5" strokeWidth={3} />
-                Connected
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-                Disconnected
-              </span>
-            )}
-            <Button variant="outline">{i.status === "connected" ? "Configure" : "Connect"}</Button>
-          </div>
-        ))}
-      </div>
+    <SectionCard title="Integrations">
+      <EmptyState
+        icon={Webhook}
+        title="Integrations are on the way"
+        description="Third-party connections will be available in a later update. Stay tuned."
+      />
     </SectionCard>
   );
 }
@@ -977,6 +895,22 @@ function SecuritySection() {
   const [passwordMinLength, setPasswordMinLength] = React.useState(12);
   const [passwordExpiry, setPasswordExpiry] = React.useState(90);
   const [ipAllowlist, setIpAllowlist] = React.useState(false);
+  const [ipRanges, setIpRanges] = React.useState<string[]>(["10.0.0.0/8"]);
+  const [ipDraft, setIpDraft] = React.useState("");
+
+  /* Accepts a single IPv4 address or a CIDR range (e.g. 10.0.0.0/8). */
+  const IP_PATTERN = /^(\d{1,3}\.){3}\d{1,3}(\/(3[0-2]|[12]?\d))?$/;
+  const draft = ipDraft.trim();
+  const draftValid =
+    IP_PATTERN.test(draft) &&
+    draft.split("/")[0].split(".").every((o) => Number(o) <= 255);
+  const draftDuplicate = ipRanges.includes(draft);
+
+  function addRange() {
+    if (!draftValid || draftDuplicate) return;
+    setIpRanges((prev) => [...prev, draft]);
+    setIpDraft("");
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -985,9 +919,68 @@ function SecuritySection() {
           <PrefRow icon={KeyRound} title="Require Two-Factor Authentication"
             description="All users must enrol in 2FA on their next sign-in."
             control={<Toggle checked={require2FA} onChange={setRequire2FA} />} />
-          <PrefRow icon={ShieldCheck} title="IP Allowlist"
-            description="Restrict sign-in to listed IP ranges only."
-            control={<Toggle checked={ipAllowlist} onChange={setIpAllowlist} />} />
+          <div>
+            <PrefRow icon={ShieldCheck} title="IP Allowlist"
+              description="Restrict sign-in to listed IP ranges only."
+              control={<Toggle checked={ipAllowlist} onChange={setIpAllowlist} />} />
+
+            {ipAllowlist && (
+              <div className="mt-2 rounded-lg border border-border bg-background px-3.5 py-3">
+                <label htmlFor="ip-allowlist-entry" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Allowed IP addresses / ranges
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="ip-allowlist-entry"
+                    value={ipDraft}
+                    onChange={(e) => setIpDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addRange();
+                      }
+                    }}
+                    placeholder="203.0.113.24 or 10.0.0.0/8"
+                    aria-invalid={draft.length > 0 && (!draftValid || draftDuplicate)}
+                    className="h-9 font-mono text-base"
+                  />
+                  <Button variant="outline" onClick={addRange} disabled={!draftValid || draftDuplicate}>
+                    <Plus className="size-4" />
+                    Add
+                  </Button>
+                </div>
+
+                {draft.length > 0 && !draftValid && (
+                  <p className="mt-1 text-xs text-sev-critical">Enter a valid IPv4 address or CIDR range.</p>
+                )}
+                {draftValid && draftDuplicate && (
+                  <p className="mt-1 text-xs text-sev-critical">That range is already on the allowlist.</p>
+                )}
+
+                {ipRanges.length === 0 ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    No ranges added yet — nobody can sign in until you add at least one.
+                  </p>
+                ) : (
+                  <ul className="mt-3 flex flex-wrap gap-1.5">
+                    {ipRanges.map((range) => (
+                      <li key={range}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 font-mono text-xs text-foreground">
+                        {range}
+                        <button
+                          type="button"
+                          onClick={() => setIpRanges((prev) => prev.filter((r) => r !== range))}
+                          aria-label={`Remove ${range}`}
+                          className="text-muted-foreground transition-colors hover:text-foreground">
+                          <X className="size-3" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </SectionCard>
       <SectionCard title="Session & Password" description="Account lifecycle settings.">
