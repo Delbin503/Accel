@@ -1,4 +1,6 @@
 export { ThemeToggle } from "./ThemeToggle";
+export { SystemStatusMenu } from "./SystemStatusMenu";
+export { UserMenu } from "./UserMenu";
 export { TruncatedText } from "./TruncatedText";
 
 // Design-system composites

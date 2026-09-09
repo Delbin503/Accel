@@ -6,6 +6,8 @@ import { ArrowUp } from "lucide-react";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
+import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
+import { UserMenu } from "@/components/shared/UserMenu";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -86,11 +88,14 @@ function App() {
           <div className="flex min-h-screen w-full bg-background">
             <AppSidebar />
             <div className="flex min-w-0 flex-1 flex-col">
-              <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+              <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
                 <div className="flex-1" />
-                <NotificationsBell />
                 <ThemeToggle />
+                <SystemStatusMenu />
+                <NotificationsBell />
+                <div className="mx-1 h-5 w-px shrink-0 bg-border" />
+                <UserMenu />
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
