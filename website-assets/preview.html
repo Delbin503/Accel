@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Accel — module icons</title>
+<style>
+  body { margin:0; font:14px/1.5 system-ui, sans-serif; }
+  section { padding:40px; }
+  .light { background:#f4f6fb; color:#1a1a1a; }
+  .dark  { background:#0d0c0b; color:#e8e6e3; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.08em; opacity:.55; margin:0 0 24px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:28px; }
+  figure { margin:0; text-align:center; }
+  img { width:120px; height:120px; }
+  figcaption { margin-top:10px; font-size:12px; opacity:.7; }
+</style>
+<section class="light">
+  <h2>On light backgrounds</h2>
+  <div class="grid" id="l"></div>
+</section>
+<section class="dark">
+  <h2>On dark backgrounds</h2>
+  <div class="grid" id="d"></div>
+</section>
+<script>
+  const icons = ["live-monitoring","detection-feed","run-analysis","rules-library","model-lifecycle","incident-cases","site-devices"];
+  for (const id of ["l","d"])
+    document.getElementById(id).innerHTML = icons
+      .map(n => `<figure><img src="icons/${n}.svg" alt="${n}"><figcaption>${n}.svg</figcaption></figure>`)
+      .join("");
+</script>

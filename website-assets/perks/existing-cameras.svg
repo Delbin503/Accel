@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-labelledby="t-cams">
+  <title id="t-cams">Existing cameras and recorders connecting into Accel</title>
+  <defs>
+    <linearGradient id="ec-orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9A4D"/><stop offset="1" stop-color="#FE5C01"/>
+    </linearGradient>
+    <linearGradient id="ec-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAEEF5"/>
+    </linearGradient>
+    <radialGradient id="ec-ground">
+      <stop offset="0" stop-color="#B9C4D6" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#B9C4D6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ec-sh" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="7" stdDeviation="11" flood-color="#7C8CA6" flood-opacity=".20"/>
+    </filter>
+  </defs>
+  <style>
+    .ec-float { animation: ec-float 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    .ec-d2 { animation-delay: .5s } .ec-d3 { animation-delay: 1s }
+    .ec-flow { stroke-dasharray: 7 11; animation: ec-flow 1.6s linear infinite; }
+    .ec-f2 { animation-delay: .2s } .ec-f3 { animation-delay: .4s }
+    .ec-hub { animation: ec-hub 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    @keyframes ec-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+    @keyframes ec-flow  { to { stroke-dashoffset: -36 } }
+    @keyframes ec-hub   { 0%,100% { transform: scale(1) } 50% { transform: scale(1.05) } }
+    @media (prefers-reduced-motion: reduce) { .ec-float, .ec-flow, .ec-hub { animation: none } }
+  </style>
+
+  <ellipse cx="200" cy="258" rx="150" ry="22" fill="url(#ec-ground)"/>
+
+  <!-- connection lines -->
+  <g fill="none" stroke="url(#ec-orange)" stroke-width="3.5" stroke-linecap="round" opacity=".9">
+    <path class="ec-flow"        d="M126 78 C 190 78, 196 140, 250 146"/>
+    <path class="ec-flow ec-f2"  d="M126 150 H 248"/>
+    <path class="ec-flow ec-f3"  d="M126 222 C 190 222, 196 160, 250 154"/>
+  </g>
+
+  <!-- dome camera -->
+  <g class="ec-float" filter="url(#ec-sh)">
+    <rect x="52" y="60" width="66" height="12" rx="6" fill="#D6DDE8"/>
+    <path d="M56 62 a29 29 0 0 1 58 0 z" fill="url(#ec-body)" stroke="#DCE2EC" stroke-width="2"/>
+    <circle cx="85" cy="47" r="10" fill="#2B3340"/>
+  </g>
+
+  <!-- bullet camera -->
+  <g class="ec-float ec-d2" filter="url(#ec-sh)">
+    <rect x="46" y="134" width="66" height="32" rx="15" fill="url(#ec-body)" stroke="#DCE2EC" stroke-width="2"/>
+    <rect x="58" y="126" width="26" height="9" rx="4.5" fill="#E4E9F1"/>
+    <circle cx="106" cy="150" r="11" fill="#2B3340"/>
+    <circle cx="103" cy="147" r="3" fill="#8E9AAC"/>
+  </g>
+
+  <!-- NVR box -->
+  <g class="ec-float ec-d3" filter="url(#ec-sh)">
+    <rect x="44" y="200" width="76" height="44" rx="10" fill="url(#ec-body)" stroke="#DCE2EC" stroke-width="2"/>
+    <circle cx="58" cy="214" r="4" fill="#FE5C01"/>
+    <rect x="70" y="211" width="36" height="6" rx="3" fill="#D3DDEB"/>
+    <rect x="58" y="228" width="48" height="6" rx="3" fill="#E3E8F0"/>
+  </g>
+
+  <!-- accel hub -->
+  <g class="ec-hub">
+    <g filter="url(#ec-sh)">
+      <rect x="248" y="98" width="104" height="104" rx="28" fill="#141110"/>
+    </g>
+    <g fill="url(#ec-orange)">
+      <rect x="272" y="122" width="24" height="24" rx="4"/>
+      <rect x="304" y="122" width="24" height="24" rx="4"/>
+      <rect x="272" y="154" width="24" height="24" rx="4"/>
+      <rect x="304" y="154" width="24" height="24" rx="4"/>
+    </g>
+  </g>
+</svg>

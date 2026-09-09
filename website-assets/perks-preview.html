@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>Accel — perks</title>
+<style>
+ body{margin:0;background:#fbfcfe;font:14px/1.55 system-ui,sans-serif;color:#1a1a1a;padding:36px}
+ h1{font-size:26px;margin:0 0 28px}
+ .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+ .card{background:linear-gradient(180deg,#fff, #f7f9fd);border:1px solid #eceff5;border-radius:16px;padding:22px}
+ .t{font-weight:600;margin:0 0 6px;font-size:15px}
+ .d{margin:0;color:#5a6472;font-size:13px;min-height:56px}
+ img{width:100%;height:auto;display:block;margin-top:10px}
+</style>
+<h1>Perks of Accel</h1><div class="grid" id="g"></div>
+<script>
+const p=[["handsfree-monitoring","Handsfree monitoring","Nobody has to sit and stare at a wall of feeds."],
+["explainable-alerts","Every alert explains itself","Written reasoning and confidence numbers on each event."],
+["proven-before-live","Proven before it goes live","Score a model on real footage before deployment."],
+["no-engineer","No engineer required","Build detection rules from visual blocks."],
+["existing-cameras","Keep the cameras you have","Works with your existing cameras and recorders."],
+["one-console","Every site, one console","HQ, warehouse, port terminal — one login."]];
+g.innerHTML=p.map(([f,t,d])=>`<div class="card"><p class="t">${t}</p><p class="d">${d}</p><img src="perks/${f}.svg" alt=""></div>`).join("");
+</script>

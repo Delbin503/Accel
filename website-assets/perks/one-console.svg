@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-labelledby="t-console">
+  <title id="t-console">Several sites reporting into a single live console</title>
+  <defs>
+    <linearGradient id="oc-orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9A4D"/><stop offset="1" stop-color="#FE5C01"/>
+    </linearGradient>
+    <radialGradient id="oc-ground">
+      <stop offset="0" stop-color="#B9C4D6" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#B9C4D6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="oc-sh" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7C8CA6" flood-opacity=".20"/>
+    </filter>
+  </defs>
+  <style>
+    .oc-float { animation: oc-float 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    .oc-tile  { animation: oc-tile 4.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    .oc-t2 { animation-delay: .6s } .oc-t3 { animation-delay: 1.2s } .oc-t4 { animation-delay: 1.8s }
+    .oc-pin  { animation: oc-pin 4.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+    .oc-p2 { animation-delay: .5s } .oc-p3 { animation-delay: 1s }
+    @keyframes oc-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+    @keyframes oc-tile  { 0%,100% { opacity: .5 } 22% { opacity: 1 } }
+    @keyframes oc-pin   { 0%,100% { transform: translateY(0) } 40% { transform: translateY(-8px) } }
+    @media (prefers-reduced-motion: reduce) {
+      .oc-float, .oc-tile, .oc-pin { animation: none }
+      .oc-tile { opacity: .85 }
+    }
+  </style>
+
+  <ellipse cx="200" cy="256" rx="150" ry="24" fill="url(#oc-ground)"/>
+
+  <g class="oc-float">
+    <!-- console -->
+    <g filter="url(#oc-sh)">
+      <rect x="56" y="98" width="288" height="146" rx="20" fill="#141110"/>
+    </g>
+    <rect x="56" y="98" width="288" height="30" rx="20" fill="#1E1B19"/>
+    <rect x="56" y="118" width="288" height="10" fill="#1E1B19"/>
+    <circle cx="76" cy="113" r="4.5" fill="#FE5C01"/>
+    <rect x="90" y="109" width="54" height="8" rx="4" fill="#3A342F"/>
+
+    <!-- live tiles -->
+    <g fill="#2A2522">
+      <rect class="oc-tile"       x="76"  y="142" width="118" height="40" rx="8"/>
+      <rect class="oc-tile oc-t2" x="206" y="142" width="118" height="40" rx="8"/>
+      <rect class="oc-tile oc-t3" x="76"  y="192" width="118" height="40" rx="8"/>
+      <rect class="oc-tile oc-t4" x="206" y="192" width="118" height="40" rx="8"/>
+    </g>
+    <g fill="url(#oc-orange)">
+      <rect class="oc-tile"       x="86"  y="152" width="30" height="6" rx="3"/>
+      <rect class="oc-tile oc-t2" x="216" y="152" width="42" height="6" rx="3"/>
+      <rect class="oc-tile oc-t3" x="86"  y="202" width="38" height="6" rx="3"/>
+      <rect class="oc-tile oc-t4" x="216" y="202" width="26" height="6" rx="3"/>
+    </g>
+
+    <!-- site pins above -->
+    <g class="oc-pin">
+      <path d="M118 32 a17 17 0 0 1 17 17 c0 13 -17 29 -17 29 c0 0 -17 -16 -17 -29 a17 17 0 0 1 17 -17z"
+            fill="#FFFFFF" stroke="#E3E8F0" stroke-width="2"/>
+      <circle cx="118" cy="49" r="7" fill="url(#oc-orange)"/>
+    </g>
+    <g class="oc-pin oc-p2">
+      <path d="M200 18 a17 17 0 0 1 17 17 c0 13 -17 29 -17 29 c0 0 -17 -16 -17 -29 a17 17 0 0 1 17 -17z"
+            fill="#FFFFFF" stroke="#E3E8F0" stroke-width="2"/>
+      <circle cx="200" cy="35" r="7" fill="url(#oc-orange)"/>
+    </g>
+    <g class="oc-pin oc-p3">
+      <path d="M282 32 a17 17 0 0 1 17 17 c0 13 -17 29 -17 29 c0 0 -17 -16 -17 -29 a17 17 0 0 1 17 -17z"
+            fill="#FFFFFF" stroke="#E3E8F0" stroke-width="2"/>
+      <circle cx="282" cy="49" r="7" fill="url(#oc-orange)"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-labelledby="t-audit">
+  <title id="t-audit">An audit report being stamped and filed</title>
+  <defs>
+    <linearGradient id="au-orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9A4D"/><stop offset="1" stop-color="#FE5C01"/>
+    </linearGradient>
+    <radialGradient id="au-ground">
+      <stop offset="0" stop-color="#B9C4D6" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#B9C4D6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="au-sh" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="7" stdDeviation="11" flood-color="#7C8CA6" flood-opacity=".20"/>
+    </filter>
+  </defs>
+  <style>
+    .au-float { animation: au-float 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    /* negative delays start each loop already assembled, so first paint is never empty */
+    .au-stamp { animation: au-stamp 5s cubic-bezier(.2,1.4,.4,1) infinite; animation-delay: -4.1s; transform-box: fill-box; transform-origin: 50% 50%; }
+    .au-row   { animation: au-row 5s ease-out infinite; animation-delay: -4.1s; transform-box: fill-box; transform-origin: 0% 50%; }
+    .au-r2 { animation-delay: -3.85s } .au-r3 { animation-delay: -3.6s } .au-r4 { animation-delay: -3.35s }
+    @keyframes au-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+    @keyframes au-stamp { 0%,55% { transform: scale(2.1) rotate(-14deg); opacity: 0 }
+                          72%,100% { transform: scale(1) rotate(-14deg); opacity: 1 } }
+    @keyframes au-row   { 0%,10% { transform: scaleX(0); opacity: 0 } 40%,100% { transform: scaleX(1); opacity: 1 } }
+    @media (prefers-reduced-motion: reduce) {
+      .au-float, .au-stamp, .au-row { animation: none }
+      .au-stamp { opacity: 1; transform: rotate(-14deg) }
+    }
+  </style>
+
+  <ellipse cx="200" cy="258" rx="140" ry="22" fill="url(#au-ground)"/>
+
+  <g class="au-float">
+    <!-- stacked pages behind -->
+    <g filter="url(#au-sh)">
+      <rect x="108" y="46" width="176" height="212" rx="16" fill="#EDF1F7" stroke="#E0E6EF" stroke-width="2" transform="rotate(-6 196 152)"/>
+      <rect x="104" y="52" width="176" height="212" rx="16" fill="#F6F8FC" stroke="#E3E8F0" stroke-width="2" transform="rotate(-3 192 158)"/>
+      <rect x="100" y="58" width="184" height="204" rx="16" fill="#FFFFFF" stroke="#E3E8F0" stroke-width="2"/>
+    </g>
+
+    <!-- report header -->
+    <rect x="122" y="80" width="76" height="11" rx="5.5" fill="#C6CFDD"/>
+    <rect x="122" y="99" width="48" height="8" rx="4" fill="#E3E8F0"/>
+
+    <!-- log rows -->
+    <g class="au-row">
+      <circle cx="129" cy="136" r="5" fill="#FE5C01"/>
+      <rect x="144" y="131" width="112" height="9" rx="4.5" fill="#D8DFEA"/>
+    </g>
+    <g class="au-row au-r2">
+      <circle cx="129" cy="162" r="5" fill="#C6CFDD"/>
+      <rect x="144" y="157" width="94" height="9" rx="4.5" fill="#E3E8F0"/>
+    </g>
+    <g class="au-row au-r3">
+      <circle cx="129" cy="188" r="5" fill="#C6CFDD"/>
+      <rect x="144" y="183" width="118" height="9" rx="4.5" fill="#E3E8F0"/>
+    </g>
+    <g class="au-row au-r4">
+      <circle cx="129" cy="214" r="5" fill="#C6CFDD"/>
+      <rect x="144" y="209" width="72" height="9" rx="4.5" fill="#E3E8F0"/>
+    </g>
+
+    <!-- approved stamp -->
+    <g class="au-stamp">
+      <circle cx="286" cy="196" r="42" fill="#FFF4EC" stroke="url(#au-orange)" stroke-width="5"/>
+      <circle cx="286" cy="196" r="32" fill="none" stroke="#FFC49A" stroke-width="2"/>
+      <path d="M270 196 l11 12 l22 -25" fill="none" stroke="url(#au-orange)"
+            stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-labelledby="t-handsfree">
+  <title id="t-handsfree">A camera scanning on its own while an alert card arrives</title>
+  <defs>
+    <linearGradient id="hf-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9EDF4"/>
+    </linearGradient>
+    <linearGradient id="hf-orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9A4D"/><stop offset="1" stop-color="#FE5C01"/>
+    </linearGradient>
+    <radialGradient id="hf-ground">
+      <stop offset="0" stop-color="#B9C4D6" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#B9C4D6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="hf-sh" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7C8CA6" flood-opacity=".20"/>
+    </filter>
+  </defs>
+  <style>
+    .hf-float { animation: hf-float 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    .hf-card  { animation: hf-card 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    .hf-wave  { animation: hf-wave 2.4s ease-out infinite; }
+    .hf-w2 { animation-delay: .4s } .hf-w3 { animation-delay: .8s }
+    .hf-dot { animation: hf-dot 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    @keyframes hf-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+    @keyframes hf-card  { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
+    @keyframes hf-wave  { 0% { opacity: 0; stroke-width: 7 } 25% { opacity: .9 } 100% { opacity: 0; stroke-width: 3 } }
+    @keyframes hf-dot   { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.35); opacity: .75 } }
+    @media (prefers-reduced-motion: reduce) {
+      .hf-float, .hf-card, .hf-wave, .hf-dot { animation: none }
+      .hf-wave { opacity: .5 }
+    }
+  </style>
+
+  <ellipse cx="200" cy="252" rx="150" ry="26" fill="url(#hf-ground)"/>
+
+  <!-- scan waves -->
+  <g fill="none" stroke="url(#hf-orange)" stroke-linecap="round">
+    <path class="hf-wave"        d="M207 117 A44 44 0 0 1 207 179"/>
+    <path class="hf-wave hf-w2"  d="M227 97  A72 72 0 0 1 227 199"/>
+    <path class="hf-wave hf-w3"  d="M247 77  A100 100 0 0 1 247 219"/>
+  </g>
+
+  <!-- camera -->
+  <g class="hf-float" filter="url(#hf-sh)">
+    <rect x="98" y="196" width="46" height="12" rx="6" fill="#D6DDE8"/>
+    <rect x="114" y="160" width="14" height="40" rx="6" fill="#C8D1DF"/>
+    <rect x="78" y="118" width="104" height="56" rx="26" fill="url(#hf-body)" stroke="#DCE2EC" stroke-width="2"/>
+    <rect x="94" y="108" width="42" height="14" rx="7" fill="#E4E9F1"/>
+    <circle cx="170" cy="146" r="19" fill="#2B3340"/>
+    <circle cx="170" cy="146" r="11" fill="#39434F"/>
+    <circle cx="165" cy="140" r="4" fill="#8E9AAC" opacity=".85"/>
+    <circle class="hf-dot" cx="104" cy="132" r="5" fill="url(#hf-orange)"/>
+  </g>
+
+  <!-- alert card -->
+  <g class="hf-card" filter="url(#hf-sh)">
+    <rect x="264" y="98" width="112" height="62" rx="16" fill="#FFFFFF" stroke="#E3E8F0" stroke-width="2"/>
+    <rect x="278" y="114" width="28" height="28" rx="9" fill="#FFF1E7"/>
+    <circle class="hf-dot" cx="292" cy="128" r="6" fill="url(#hf-orange)"/>
+    <rect x="316" y="116" width="46" height="7" rx="3.5" fill="#CBD3E0"/>
+    <rect x="316" y="130" width="32" height="7" rx="3.5" fill="#E1E6EE"/>
+  </g>
+</svg>
