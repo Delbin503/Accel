@@ -1088,19 +1088,38 @@ function SequenceItem({
 
 /* ── Rule source badge (Model vs Library) ────────────────────────────────── */
 
-function SourceBadge({ source }: { source: "model" | "library" }) {
+/** Strips the file extension so "chin_strap_verify.onnx" badges as "chin_strap_verify". */
+function modelDisplayName(modelFile: string) {
+  return modelFile.replace(/\.(onnx|pt|pth|engine|trt|tflite)$/i, "");
+}
+
+/**
+ * Model-sourced rules badge with the model they were parsed from; library rules
+ * badge as "Library". `sourceLabel` falls back to "Model" for rules extracted
+ * before the source was recorded.
+ */
+function SourceBadge({
+  source,
+  sourceLabel,
+  title,
+}: {
+  source: "model" | "library";
+  sourceLabel?: string;
+  title?: string;
+}) {
   const isModel = source === "model";
   return (
     <span
+      title={title}
       className={cn(
-        "inline-flex items-center gap-1 rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
+        "inline-flex max-w-[180px] items-center gap-1 rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
         isModel
           ? "border-purple/30 bg-purple/10 text-purple"
           : "border-info/30 bg-info/10 text-info"
       )}
     >
-      {isModel ? <Cpu className="size-2.5" /> : <BookOpen className="size-2.5" />}
-      {isModel ? "Model" : "Library"}
+      {isModel ? <Cpu className="size-2.5 shrink-0" /> : <BookOpen className="size-2.5 shrink-0" />}
+      <span className="truncate">{isModel ? sourceLabel ?? "Model" : "Library"}</span>
     </span>
   );
 }
@@ -1174,7 +1193,11 @@ function ExtractedRuleCard({
       <div className="mb-1.5 pr-12">
         <span className="block text-sm font-semibold text-foreground">{rule.name}</span>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <SourceBadge source="model" />
+          <SourceBadge
+            source="model"
+            sourceLabel={rule.sourceModel ? modelDisplayName(rule.sourceModel) : undefined}
+            title={rule.sourceModel ? `Extracted from ${rule.sourceModel}` : undefined}
+          />
           {rule.severity && <SeverityBadge severity={rule.severity} />}
         </div>
       </div>
@@ -1389,7 +1412,7 @@ export function ExtractRulesPrompt({
               tone="model"
             />
             <ModalBody className="text-sm text-muted-foreground">
-              Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
+              Extracted rules are added to this model's <strong className="text-foreground">Detection Classes</strong>,
               tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
             </ModalBody>
             <ModalFooter>
@@ -1413,6 +1436,7 @@ function extractRulesFromModel(seedId: string, modelFile: string): ExtractedRule
       {
         id: `${seedId}-x1`,
         name: "Extracted policy",
+        sourceModel: modelFile,
         description: `Auto-extracted from ${modelFile}.`,
         tags: ["Object Detection"],
         conditions: ["class = target", "confidence > 85%", "bbox_area > 0.02", "dwell > 1s", "zone = monitored", "not occluded"],
@@ -1420,8 +1444,8 @@ function extractRulesFromModel(seedId: string, modelFile: string): ExtractedRule
     ];
   }
   return [
-    { id: `${seedId}-x1`, name: "Primary detection", description: `Auto-extracted from ${modelFile}.`, tags: ["Object Detection"], conditions: ["class = target", "confidence > 85%"] },
-    { id: `${seedId}-x2`, name: "Secondary check", description: "Context confirmation.", tags: ["Behaviour"], conditions: ["class = context", "state = present"] },
+    { id: `${seedId}-x1`, name: "Primary detection", sourceModel: modelFile, description: `Auto-extracted from ${modelFile}.`, tags: ["Object Detection"], conditions: ["class = target", "confidence > 85%"] },
+    { id: `${seedId}-x2`, name: "Secondary check", sourceModel: modelFile, description: "Context confirmation.", tags: ["Behaviour"], conditions: ["class = context", "state = present"] },
   ];
 }
 
@@ -1924,7 +1948,7 @@ function ModelDetailPanel({
                   <SectionHeader
                     label="Rule Library"
                     count={libraryRules.length}
-                    description="Drag rules → detection rules"
+                    description="Drag rules → detection classes"
                   />
                   <div className="relative mb-2.5">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/50" />
@@ -1968,10 +1992,10 @@ function ModelDetailPanel({
                   )}
                 </div>
 
-                {/* Detection Rules — drop target */}
+                {/* Detection Classes — drop target */}
                 <div>
                   <SectionHeader
-                    label="Detection Rules"
+                    label="Detection Classes"
                     count={draft.extractedRules.length + attachedRules.length}
                     description="Model-extracted + library rules"
                   />
@@ -2054,7 +2078,7 @@ function ModelDetailPanel({
               <p className="text-base font-bold text-foreground">Model Configuration</p>
               <p className="text-xs text-muted-foreground">
                 {sequenceSteps.length} sequence step{sequenceSteps.length !== 1 ? "s" : ""} ·{" "}
-                {draft.extractedRules.length + attachedRules.length} detection rule{draft.extractedRules.length + attachedRules.length !== 1 ? "s" : ""} linked to this model
+                {draft.extractedRules.length + attachedRules.length} detection class{draft.extractedRules.length + attachedRules.length !== 1 ? "es" : ""} linked to this model
               </p>
             </div>
 
@@ -2093,10 +2117,10 @@ function ModelDetailPanel({
                 )}
               </div>
 
-              {/* Detection Rules (view) */}
+              {/* Detection Classes (view) */}
               <div>
                 <SectionHeader
-                  label="Detection Rules"
+                  label="Detection Classes"
                   count={draft.extractedRules.length + attachedRules.length}
                   description="Model-extracted + library rules"
                 />
