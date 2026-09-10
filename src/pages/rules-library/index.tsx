@@ -16,8 +16,6 @@ import {
   Calendar,
   Check,
   SlidersHorizontal,
-  Bookmark,
-  LayoutTemplate,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,16 +42,10 @@ import {
   MOCK_RULES,
   ALL_TAGS,
 } from "@/mocks/rulesLibrary";
-import type { RuleData, ConditionRow, RuleSeverity } from "@/types/rules";
-import type { GeneratedRulePayload, RuleConfig } from "@/types/ruleTemplates";
-import {
-  EMPTY_CONFIG,
-  buildPayload,
-  configToRows,
-  inferConfig,
-  missingParameters,
-} from "@/lib/ruleTemplates";
-import { PayloadPreview, RuleTemplateForm } from "./RuleTemplateForm";
+import type { RuleData, RuleSeverity } from "@/types/rules";
+import type { RuleConfig } from "@/types/ruleTemplates";
+import { configToRows, inferConfig, newConfig } from "@/lib/ruleTemplates";
+import { RuleTemplateForm } from "./RuleTemplateForm";
 
 /* ── Severity badge ──────────────────────────────────────────────────────── */
 
@@ -459,102 +451,6 @@ const SEV_OPTS: { sev: RuleSeverity; label: string; active: string; dot: string 
   { sev: "critical", label: "Critical", active: "border-sev-critical/50 bg-sev-critical/10 text-sev-critical", dot: "bg-sev-critical" },
 ];
 
-function BuilderSidePanel({
-  payload,
-  severity,
-  onSeverityChange,
-  tab,
-  onTabChange,
-  showEstimatedRate = false,
-}: {
-  payload: GeneratedRulePayload;
-  severity: RuleSeverity;
-  onSeverityChange: (s: RuleSeverity) => void;
-  tab: "summary" | "payload";
-  onTabChange: (t: "summary" | "payload") => void;
-  showEstimatedRate?: boolean;
-}) {
-  const BARS = [40, 65, 30, 50, 80, 55, 70];
-
-  return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex border-b border-border px-4">
-        {(["summary", "payload"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => onTabChange(t)}
-            className={cn(
-              "mr-6 border-b-2 pb-3 pt-3.5 text-base font-semibold capitalize transition-colors",
-              tab === t
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {t === "summary" ? "Summary" : "Payload"}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {tab === "summary" && (
-          <>
-            {showEstimatedRate && (
-              <div className="rounded-lg border border-border bg-background p-3.5">
-                <p className="mb-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Estimated trigger rate
-                </p>
-                <div className="font-mono text-2xl font-bold text-foreground">~14</div>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  times in the past 7 days (based on historical data)
-                </p>
-                <div className="flex h-9 items-end gap-0.5">
-                  {BARS.map((h, i) => (
-                    <div key={i} className="flex-1 rounded-sm bg-primary opacity-70" style={{ height: `${h}%` }} />
-                  ))}
-                </div>
-                <div className="mt-1 flex justify-between font-mono text-3xs text-muted-foreground">
-                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d) => <span key={d}>{d}</span>)}
-                </div>
-              </div>
-            )}
-
-            <div className="rounded-lg border border-border bg-background p-3.5">
-              <p className="mb-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-                Severity Score When Fired
-              </p>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Priority of the alert when this rule triggers
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {SEV_OPTS.map(({ sev, label, active, dot }) => {
-                  const isActive = severity === sev;
-                  return (
-                    <button
-                      key={sev}
-                      onClick={() => onSeverityChange(sev)}
-                      className={cn(
-                        "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all",
-                        isActive
-                          ? active
-                          : "border-border bg-muted text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <span className={cn("size-1.5 flex-shrink-0 rounded-full", isActive ? dot : "bg-muted-foreground/40")} />
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
-
-        {tab === "payload" && <PayloadPreview payload={payload} />}
-      </div>
-    </div>
-  );
-}
-
 /* ── Builder state ───────────────────────────────────────────────────────── */
 
 interface BuilderErrors {
@@ -571,7 +467,6 @@ interface BuilderState {
   /** Included fields + their values — the source of truth for the rule's logic. */
   config: RuleConfig;
   severity: RuleSeverity;
-  sideTab: "summary" | "payload";
   errors: BuilderErrors;
 }
 
@@ -579,9 +474,8 @@ const EMPTY_BUILDER: BuilderState = {
   name: "",
   description: "",
   tags: [],
-  config: { ...EMPTY_CONFIG, fields: [...EMPTY_CONFIG.fields], params: { ...EMPTY_CONFIG.params } },
+  config: newConfig(),
   severity: "critical",
-  sideTab: "summary",
   errors: {},
 };
 
@@ -593,11 +487,14 @@ function ruleToBuilder(rule: RuleData): BuilderState {
     // Rules saved before the form was parameterised carry no config — infer one
     // so the form opens populated rather than blank.
     config: rule.config
-      ? { ...rule.config, fields: [...rule.config.fields], params: { ...rule.config.params } }
+      ? {
+          ...rule.config,
+          objectClasses: [...rule.config.objectClasses],
+          perClass: { ...rule.config.perClass },
+        }
       : inferConfig(rule),
     severity: rule.severity,
-    sideTab: "summary",
-    errors: {},
+      errors: {},
   };
 }
 
@@ -606,41 +503,27 @@ function ruleToBuilder(rule: RuleData): BuilderState {
 function RuleBuilder({
   mode,
   editingRule,
+  sourceModel,
   existingTags,
   onBack,
   onConfirm,
-  onSaveTemplate,
 }: {
   mode: "create" | "edit";
   editingRule: RuleData | null;
+  /** Set when the rule was extracted from a model — names the page. */
+  sourceModel: string | null;
   existingTags: readonly string[];
   onBack: () => void;
   onConfirm: (
     data: Omit<RuleData, "id" | "createdAt" | "createdAtDisplay" | "createdTimeDisplay">
   ) => void;
-  onSaveTemplate: (
-    data: Omit<RuleData, "id" | "createdAt" | "createdAtDisplay" | "createdTimeDisplay">
-  ) => void;
 }) {
   const [s, setS] = React.useState<BuilderState>(() =>
-    // Populated in "edit", and in "create" when seeded from a saved template.
     editingRule ? ruleToBuilder(editingRule) : { ...EMPTY_BUILDER }
   );
-  const [savedRecently, setSavedRecently] = React.useState(false);
 
   // The WHEN/IN/AND/FOR/THEN projection every other surface renders.
   const rows = React.useMemo(() => configToRows(s.config, s.name), [s.config, s.name]);
-  const payload = React.useMemo(
-    () =>
-      buildPayload({
-        config: s.config,
-        name: s.name,
-        severity: s.severity,
-        ruleId: editingRule?.id ?? "(assigned on save)",
-      }),
-    [s.config, s.name, s.severity, editingRule]
-  );
-
   function ruleFields() {
     return {
       name: s.name,
@@ -650,12 +533,6 @@ function RuleBuilder({
       severity: s.severity,
       config: s.config,
     };
-  }
-
-  function handleSaveTemplateClick() {
-    onSaveTemplate(ruleFields());
-    setSavedRecently(true);
-    setTimeout(() => setSavedRecently(false), 2000);
   }
 
   function patch(p: Partial<BuilderState>) {
@@ -681,10 +558,7 @@ function RuleBuilder({
     if (!s.name.trim()) errors.name = "Rule name is required.";
     if (!s.description.trim()) errors.description = "Rule description is required.";
     if (s.tags.length === 0) errors.tags = "Add at least one tag.";
-    if (
-      s.config.fields.includes("object_class") &&
-      s.config.params.objectClasses.length === 0
-    ) {
+    if (s.config.objectClasses.length === 0) {
       errors.objectClasses = "Pick at least one object class.";
     }
     return errors;
@@ -699,21 +573,16 @@ function RuleBuilder({
     onConfirm(ruleFields());
   }
 
-  const canSave =
-    Boolean(s.name.trim()) &&
-    Boolean(s.description.trim()) &&
-    s.tags.length > 0 &&
-    missingParameters(s.config).length === 0;
 
   return (
     <div className="flex flex-col gap-5 pb-20">
       <div className="flex items-center gap-3">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          {mode === "create" ? "Create Rule" : "Edit Rule"}
+          {sourceModel ?? (mode === "create" ? "Create Rule" : "Edit Rule")}
         </h1>
       </div>
 
-      <div className="grid grid-cols-[1fr_360px] items-start gap-5">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <div>
             <h2 className="mb-4 text-lg font-bold text-foreground">Rule Information</h2>
@@ -760,26 +629,44 @@ function RuleBuilder({
                 />
                 {s.errors.tags && <p className="mt-1 text-xs text-sev-critical">{s.errors.tags}</p>}
               </div>
+              <div>
+                <label className="mb-1.5 block text-base font-semibold text-foreground">
+                  Severity Score
+                </label>
+                <Select
+                  value={s.severity}
+                  onValueChange={(v) => patch({ severity: v as RuleSeverity })}
+                >
+                  <SelectTrigger className="h-10 w-full text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEV_OPTS.map(({ sev, label, dot }) => (
+                      <SelectItem key={sev} value={sev}>
+                        <span className="flex items-center gap-2">
+                          <span className={cn("size-1.5 rounded-full", dot)} />
+                          {label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Priority of the alert when this rule triggers.
+                </p>
+              </div>
             </div>
           </div>
 
-          <RuleTemplateForm
-            config={s.config}
-            onChange={handleConfigChange}
-            invalidClasses={!!s.errors.objectClasses}
-          />
         </div>
 
-        <div className="sticky top-4">
-          <BuilderSidePanel
-            payload={payload}
-            severity={s.severity}
-            onSeverityChange={(sv) => patch({ severity: sv })}
-            tab={s.sideTab}
-            onTabChange={(t) => patch({ sideTab: t })}
-            showEstimatedRate={mode === "edit"}
-          />
-        </div>
+        <RuleTemplateForm
+          config={s.config}
+          onChange={handleConfigChange}
+          invalidClasses={!!s.errors.objectClasses}
+        />
+
+
       </div>
 
       {/* Sticky footer */}
@@ -788,16 +675,6 @@ function RuleBuilder({
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5">
             <ArrowLeft className="size-3.5" />
             Go Back
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canSave || savedRecently}
-            onClick={handleSaveTemplateClick}
-            className={cn("gap-1.5", savedRecently && "border-success/40 text-success")}
-          >
-            {savedRecently ? <Check className="size-3.5" /> : <Bookmark className="size-3.5" />}
-            {savedRecently ? "Saved" : "Save as Template"}
           </Button>
           <Button
             size="sm"
@@ -865,8 +742,10 @@ export default function RulesLibraryPage({
   const location = useLocation();
   // Set when we arrived here to edit a model's extracted rule — save bounces back to the model.
   const extractedHandoff = React.useRef<{ returnTo: string; modelId: string; ruleId: string } | null>(null);
+  /** Model file an extracted rule came from — titles the builder when set. */
+  const [sourceModel, setSourceModel] = React.useState<string | null>(null);
   const initialView = searchParams.get("new") === "true" ? "builder" : "list";
-  const [view, setView] = React.useState<"list" | "builder" | "templates">(initialView);
+  const [view, setView] = React.useState<"list" | "builder">(initialView);
   const [builderMode, setBuilderMode] = React.useState<"create" | "edit">("create");
   const [editingRule, setEditingRule] = React.useState<RuleData | null>(null);
   const [rules, setRules] = React.useState<RuleData[]>(isEmptyState ? [] : MOCK_RULES);
@@ -874,23 +753,6 @@ export default function RulesLibraryPage({
   const [filters, setFilters] = React.useState<RuleFilters>(EMPTY_RULE_FILTERS);
   const [sortBy, setSortBy] = React.useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest");
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
-
-  // Saved user templates (separate from built-in TEMPLATES mocks)
-  interface UserTemplate {
-    id: string;
-    name: string;
-    description: string;
-    tags: string[];
-    severity: RuleSeverity;
-    conditions: ConditionRow[];
-    config?: RuleConfig;
-    savedAtDisplay: string;
-  }
-  const [userTemplates, setUserTemplates] = React.useState<UserTemplate[]>([]);
-  const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(null);
-  const [templateSearch, setTemplateSearch] = React.useState("");
-  const [templateTagFilter, setTemplateTagFilter] = React.useState<string[]>([]);
-  const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
 
   // Aggregate existing tags for autocomplete (built-in tags + tags from any rule)
   const existingRuleTags = React.useMemo(() => {
@@ -906,9 +768,10 @@ export default function RulesLibraryPage({
   React.useEffect(() => {
     // Opened from Model Management "Edit" on a model-extracted rule → edit it on the full
     // builder page; saving bounces back to the model editor.
-    const handoff = (location.state as { extractedEdit?: { rule: RuleData; modelId: string; ruleId: string; returnTo: string } } | null)?.extractedEdit;
+    const handoff = (location.state as { extractedEdit?: { rule: RuleData; modelId: string; ruleId: string; returnTo: string; sourceModel?: string } } | null)?.extractedEdit;
     if (handoff) {
       extractedHandoff.current = { returnTo: handoff.returnTo, modelId: handoff.modelId, ruleId: handoff.ruleId };
+      setSourceModel(handoff.sourceModel ?? null);
       setEditingRule(handoff.rule);
       setBuilderMode("edit");
       setView("builder");
@@ -1022,50 +885,12 @@ export default function RulesLibraryPage({
   const deleteTarget = rules.find((r) => r.id === deleteId);
   const hasActiveFilters = filters.tags.length > 0 || filters.severity.length > 0;
 
-  function handleSaveTemplate(
-    data: Omit<RuleData, "id" | "createdAt" | "createdAtDisplay" | "createdTimeDisplay">
-  ) {
-    const n = new Date();
-    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const display = `${n.getDate()} ${MONTHS[n.getMonth()]} ${n.getFullYear()}`;
-    const tpl: UserTemplate = {
-      id: `tpl_${Date.now()}`,
-      name: data.name || "Untitled template",
-      description: data.description,
-      tags: data.tags,
-      severity: data.severity,
-      conditions: data.conditions,
-      config: data.config,
-      savedAtDisplay: display,
-    };
-    setUserTemplates((curr) => [tpl, ...curr]);
-    toast.success(`Template "${tpl.name}" saved`);
-  }
-
-  function openTemplateInBuilder(tpl: UserTemplate) {
-    // Hydrate as a draft rule with cleared id so it acts as new
-    const stub: RuleData = {
-      id: "",
-      name: tpl.name,
-      description: tpl.description,
-      tags: [...tpl.tags],
-      severity: tpl.severity,
-      conditions: tpl.conditions.map((c) => ({ ...c })),
-      config: tpl.config,
-      createdAt: "",
-      createdAtDisplay: "",
-      createdTimeDisplay: "",
-    };
-    setEditingRule(stub);
-    setBuilderMode("create");
-    setView("builder");
-  }
-
   if (view === "builder") {
     return (
       <RuleBuilder
         mode={builderMode}
         editingRule={editingRule}
+        sourceModel={sourceModel}
         existingTags={existingRuleTags}
         onBack={() => {
           if (extractedHandoff.current) {
@@ -1077,174 +902,7 @@ export default function RulesLibraryPage({
           }
         }}
         onConfirm={handleConfirm}
-        onSaveTemplate={handleSaveTemplate}
       />
-    );
-  }
-
-  if (view === "templates") {
-    const allTemplateTags = Array.from(new Set(userTemplates.flatMap((t) => t.tags))).sort();
-    const filteredTemplates = userTemplates.filter((tpl) => {
-      if (templateSearch) {
-        const q = templateSearch.toLowerCase();
-        const hay = [tpl.name, tpl.description ?? "", ...tpl.tags].join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      if (templateTagFilter.length > 0) {
-        if (!templateTagFilter.every((t) => tpl.tags.includes(t))) return false;
-      }
-      return true;
-    });
-    return (
-      <div className="flex flex-col gap-4">
-        <PageHeader>
-          <PageHeader.Content>
-            <PageHeader.Title>Saved Rule Templates</PageHeader.Title>
-            <PageHeader.Description>
-              Reusable rule scaffolds you've saved. Click Use Template to start a new rule from one.
-            </PageHeader.Description>
-          </PageHeader.Content>
-          <PageHeader.Actions>
-            <Button variant="outline" size="sm" onClick={() => setView("list")} className="gap-1.5">
-              <ArrowLeft className="size-3.5" />
-              Back to Rules
-            </Button>
-          </PageHeader.Actions>
-        </PageHeader>
-
-        {userTemplates.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={templateSearch} onChange={(e) => setTemplateSearch(e.target.value)}
-                placeholder="Search templates by name, description or tag…"
-                className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
-            </div>
-            <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1.5">
-                  Tags
-                  {templateTagFilter.length > 0 && (
-                    <span className="ml-1 rounded-full bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
-                      {templateTagFilter.length}
-                    </span>
-                  )}
-                  <ChevronDown className="size-3.5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
-                {allTemplateTags.length === 0 ? (
-                  <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">No tags yet</p>
-                ) : (
-                  <>
-                    {allTemplateTags.map((tag) => {
-                      const checked = templateTagFilter.includes(tag);
-                      return (
-                        <button key={tag} onClick={() => {
-                          setTemplateTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag]);
-                        }}
-                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
-                          <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
-                            checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
-                            {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-                          </div>
-                          {tag}
-                        </button>
-                      );
-                    })}
-                    {templateTagFilter.length > 0 && (
-                      <button onClick={() => setTemplateTagFilter([])}
-                        className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
-                        Clear all
-                      </button>
-                    )}
-                  </>
-                )}
-              </PopoverContent>
-            </Popover>
-            <span className="text-xs text-muted-foreground">
-              {filteredTemplates.length} of {userTemplates.length}
-            </span>
-          </div>
-        )}
-
-        {userTemplates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
-            <LayoutTemplate className="size-10 opacity-20" />
-            <p className="text-sm">No templates yet.</p>
-            <p className="max-w-xs text-center text-sm">
-              When creating or editing a rule, click <strong className="text-foreground">Save as Template</strong> to add it here.
-            </p>
-          </div>
-        ) : filteredTemplates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
-            <LayoutTemplate className="size-8 opacity-20" />
-            <p className="text-base">No templates match the current filters.</p>
-            <button onClick={() => { setTemplateSearch(""); setTemplateTagFilter([]); }}
-              className="text-xs underline hover:text-primary">Clear filters</button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTemplates.map((tpl) => (
-              <div key={tpl.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <TruncatedText text={tpl.name} className="text-base font-bold text-foreground" />
-                    <p className="mt-0.5 text-xs text-muted-foreground">Saved {tpl.savedAtDisplay}</p>
-                  </div>
-                  <SeverityBadge severity={tpl.severity} />
-                </div>
-                {tpl.description && (
-                  <TruncatedText text={tpl.description} className="line-clamp-2 text-sm text-muted-foreground" />
-                )}
-                {tpl.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {tpl.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="rounded border border-border bg-muted px-1.5 py-px text-2xs text-muted-foreground">
-                        {t}
-                      </span>
-                    ))}
-                    {tpl.tags.length > 3 && (
-                      <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs text-muted-foreground">
-                        +{tpl.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {tpl.conditions.length} condition{tpl.conditions.length === 1 ? "" : "s"}
-                </p>
-                <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10"
-                    onClick={() => setDeleteTemplateId(tpl.id)}
-                  >
-                    <Trash2 className="size-3.5" />
-                    Delete
-                  </Button>
-                  <Button size="sm" className="gap-1.5" onClick={() => openTemplateInBuilder(tpl)}>
-                    <Edit2 className="size-3.5" />
-                    Use Template
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {deleteTemplateId && (
-          <DeleteModal
-            ruleName={userTemplates.find((t) => t.id === deleteTemplateId)?.name ?? "this template"}
-            onConfirm={() => {
-              setUserTemplates((curr) => curr.filter((t) => t.id !== deleteTemplateId));
-              setDeleteTemplateId(null);
-              toast.success("Template deleted");
-            }}
-            onCancel={() => setDeleteTemplateId(null)}
-          />
-        )}
-      </div>
     );
   }
 
@@ -1258,15 +916,6 @@ export default function RulesLibraryPage({
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <Button variant="outline" size="sm" onClick={() => setView("templates")} className="gap-1.5">
-            <LayoutTemplate className="size-3.5" />
-            View Templates
-            {userTemplates.length > 0 && (
-              <span className="rounded-full bg-primary px-1.5 py-px text-2xs font-semibold text-primary-foreground">
-                {userTemplates.length}
-              </span>
-            )}
-          </Button>
           <Button size="sm" onClick={openCreate} className="gap-1.5">
             <Plus className="size-4" />
             Add Rule

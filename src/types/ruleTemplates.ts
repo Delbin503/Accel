@@ -1,44 +1,22 @@
-import type { RuleSeverity } from "@/types/rules";
+/* The rule form is built around object classes. A rule names the classes it
+   watches, and each class carries its own values for whichever parameters the
+   operator kept on the rule. */
 
-/* The rule form collects a free set of parameters — the operator includes only
-   the fields the rule needs. Which fields are present decides the trigger event
-   and detection type of the payload the Accel backend consumes; the manifest
-   templates below are the lookup table for that derivation, not a picker. */
-
-/** A parameter a template asks the operator to fill in. */
-export type RuleParameterId =
-  | "object_class"
-  | "confidence"
-  | "zone"
-  | "duration"
-  | "count_threshold";
-
-/** A model capability a template depends on. */
-export type RuleRequirement = "tracking" | "zone";
-
-/** Backend detection classification a template defaults to. */
-export type DetectionType = "unauth" | "loiter" | "movement" | "compliance";
-
-export interface RuleTemplateDef {
-  id: string;
-  name: string;
-  /** Engine event the trigger fires on. */
-  event: string;
-  requires: RuleRequirement[];
-  parameters: RuleParameterId[];
-  defaultDetectionType: DetectionType;
-  /** Plain-English gloss shown under the template name in the picker. */
-  description: string;
-}
+/** A per-class parameter the operator fills in. */
+export type RuleParameterId = "confidence" | "duration" | "count_threshold";
 
 export type DurationUnit = "seconds" | "minutes";
 
-/** Values collected by the form. Only the keys the template declares are used. */
-export interface RuleTemplateParams {
-  objectClasses: string[];
+/**
+ * Parameters for one object class. Every class on a rule carries its own set —
+ * both which parameters apply and what they are set to — so a rule watching
+ * seven classes tunes seven independently.
+ */
+export interface ClassParams {
+  /** Parameters present on this class, in display order. */
+  fields: RuleParameterId[];
   /** Percent (0–100) in the form; emitted to the payload as a 0–1 fraction. */
   confidence: number;
-  zoneId: string;
   duration: number;
   durationUnit: DurationUnit;
   countThreshold: number;
@@ -46,33 +24,10 @@ export interface RuleTemplateParams {
 
 /** What a rule stores so the form can be rehydrated for editing. */
 export interface RuleConfig {
-  /**
-   * Parameters included in this rule, in form order. Operators remove a field
-   * they do not need and add it back from the field picker.
-   */
-  fields: RuleParameterId[];
-  params: RuleTemplateParams;
+  /** Object classes the rule watches, in display order. */
+  objectClasses: string[];
+  /** Parameters keyed by object class. */
+  perClass: Record<string, ClassParams>;
   /** Model step the rule belongs to, when authored from Model Management. */
   stepId?: string;
-}
-
-/* ── Backend payload ─────────────────────────────────────────────────────── */
-
-export interface GeneratedRulePayload {
-  ruleId: string;
-  stepId: string;
-  name: string;
-  severity: RuleSeverity;
-  enabled: boolean;
-  ruleTemplateId: string;
-  detectionType: DetectionType;
-  typeLabel: string;
-  trigger: {
-    event: string;
-    object: { type: "class"; classes: string[] };
-  };
-  location?: { type: "zone"; zoneId: string };
-  conditions: { type: string; operator: string; value: number }[];
-  actions: { type: string }[];
-  duration?: { operator: string; value: number; unit: DurationUnit };
 }

@@ -1,74 +1,89 @@
-import {
-  DEFAULT_FIELDS,
-  DEFAULT_TEMPLATE_PARAMS,
-  RULE_ACTION,
-  RULE_TEMPLATES,
-  ZONE_OPTIONS,
-  zoneLabel,
-} from "@/mocks/ruleTemplates";
-import type { ConditionRow, RuleData, RuleSeverity } from "@/types/rules";
-import type {
-  GeneratedRulePayload,
-  RuleConfig,
-  RuleParameterId,
-  RuleTemplateDef,
-} from "@/types/ruleTemplates";
+import { ALL_FIELDS, DEFAULT_CLASS_PARAMS } from "@/mocks/ruleTemplates";
+import type { ConditionRow, RuleData } from "@/types/rules";
+import type { ClassParams, RuleConfig, RuleParameterId } from "@/types/ruleTemplates";
 
 /* ── Config helpers ──────────────────────────────────────────────────────── */
 
-export const EMPTY_CONFIG: RuleConfig = {
-  fields: [...DEFAULT_FIELDS],
-  params: { ...DEFAULT_TEMPLATE_PARAMS },
-};
+/** A fresh config — callers mutate their own, never a shared default. */
+export function newConfig(): RuleConfig {
+  return { objectClasses: [], perClass: {} };
+}
 
-/**
- * Resolves the manifest template whose parameters the rule's field set matches
- * most closely. The operator never picks one — this is what gives the payload
- * its `ruleTemplateId`, trigger `event` and `detectionType`.
- */
-export function resolveTemplate(fields: RuleParameterId[]): RuleTemplateDef {
-  const has = (f: RuleParameterId) => fields.includes(f);
-  let id = "object_detected";
-  if (has("count_threshold")) id = "object_count";
-  else if (has("zone") && has("duration")) id = "object_stays_in_zone";
-  else if (has("zone")) id = "object_enters_zone";
-  return RULE_TEMPLATES.find((t) => t.id === id) ?? RULE_TEMPLATES[0];
+export function newClassParams(): ClassParams {
+  return { ...DEFAULT_CLASS_PARAMS, fields: [...DEFAULT_CLASS_PARAMS.fields] };
+}
+
+/** Values for one class, falling back to the defaults if it has none yet. */
+export function paramsFor(config: RuleConfig, cls: string): ClassParams {
+  return config.perClass[cls] ?? DEFAULT_CLASS_PARAMS;
+}
+
+/** Parameters this class does not carry yet — what its `+` menu offers. */
+export function availableFields(params: ClassParams): RuleParameterId[] {
+  return ALL_FIELDS.filter((f) => !params.fields.includes(f));
+}
+
+/** Keeps a class's parameters in display order after one is added. */
+export function withField(params: ClassParams, field: RuleParameterId): ClassParams {
+  return { ...params, fields: ALL_FIELDS.filter((f) => f === field || params.fields.includes(f)) };
+}
+
+export function withoutField(params: ClassParams, field: RuleParameterId): ClassParams {
+  return { ...params, fields: params.fields.filter((f) => f !== field) };
 }
 
 /**
- * Compiles a rule config into the WHEN/IN/AND/FOR/THEN rows the rule list,
- * model cards and plain-English summary already render. The config stays the
- * source of truth; these rows are the display projection of it.
+ * Compiles a rule config into the WHEN/IN/AND/FOR/THEN rows the rule list and
+ * model cards still render. The config stays the source of truth; these rows
+ * are the display projection of it.
+ *
+ * Per-class values collapse to a range when the classes disagree — the rows are
+ * a summary, not the authoring surface.
  */
 export function configToRows(config: RuleConfig, name: string): ConditionRow[] {
-  const p = config.params;
-  const has = (f: RuleParameterId) => config.fields.includes(f);
+  const classes = config.objectClasses;
   const rows: ConditionRow[] = [];
   let n = 0;
   const row = (r: Omit<ConditionRow, "id">): ConditionRow => ({ id: `cfg-${++n}`, ...r });
 
-  const trigger = has("object_class") && p.objectClasses.length > 0
-    ? p.objectClasses.join(", ")
-    : name || "Detection";
-  rows.push(row({ type: "WHEN", field: trigger, operator: "", value: "", unit: "" }));
+  /** Classes carrying a given parameter. */
+  const carrying = (f: RuleParameterId) => classes.filter((c) => paramsFor(config, c).fields.includes(f));
 
-  if (has("zone")) {
-    rows.push(row({ type: "IN", field: zoneLabel(p.zoneId), operator: "", value: "", unit: "" }));
+  /** "80" when every carrying class agrees, "70–90" when they don't. */
+  function span(f: RuleParameterId, pick: (p: ClassParams) => number): string {
+    const values = carrying(f).map((c) => pick(paramsFor(config, c)));
+    if (values.length === 0) return "";
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return min === max ? String(min) : `${min}–${max}`;
   }
-  if (has("confidence")) {
-    rows.push(row({ type: "AND", field: "Confidence level", operator: "at least", value: String(p.confidence), unit: "%" }));
+
+  rows.push(
+    row({
+      type: "WHEN",
+      field: classes.length > 0 ? classes.join(", ") : name || "Detection",
+      operator: "",
+      value: "",
+      unit: "",
+    })
+  );
+
+  if (carrying("confidence").length > 0) {
+    rows.push(row({ type: "AND", field: "Confidence level", operator: "at least", value: span("confidence", (p) => p.confidence), unit: "%" }));
   }
-  if (has("count_threshold")) {
-    rows.push(row({ type: "AND", field: "Object count", operator: "at least", value: String(p.countThreshold), unit: "objects" }));
+  if (carrying("count_threshold").length > 0) {
+    rows.push(row({ type: "AND", field: "Object count", operator: "at least", value: span("count_threshold", (p) => p.countThreshold), unit: "objects" }));
   }
-  if (has("duration")) {
+  const durationClasses = carrying("duration");
+  if (durationClasses.length > 0) {
+    const anyMinutes = durationClasses.some((c) => paramsFor(config, c).durationUnit === "minutes");
     rows.push(
       row({
         type: "FOR",
         field: "",
         operator: "more than",
-        value: String(p.duration),
-        unit: p.durationUnit === "minutes" ? "Minutes" : "Seconds",
+        value: span("duration", (p) => p.duration),
+        unit: anyMinutes ? "Minutes" : "Seconds",
       })
     );
   }
@@ -77,94 +92,11 @@ export function configToRows(config: RuleConfig, name: string): ConditionRow[] {
 }
 
 /**
- * Best-effort config for a rule authored before the form was parameterised.
- * Reads what it can off the legacy condition rows, and includes only the fields
- * that rule actually used, so editing an old rule opens a populated form.
+ * Config for a rule authored before the form became class-based. Those rules
+ * never recorded object classes, and parameters now hang off classes — so the
+ * form opens empty and the operator picks the classes it watches.
  */
-export function inferConfig(rule: RuleData): RuleConfig {
-  const rows = rule.conditions;
-  const zoneRow = rows.find((r) => r.type === "IN");
-  const confRow = rows.find((r) => r.field.toLowerCase().includes("confidence"));
-  const durRow = rows.find((r) => r.type === "FOR");
-  const countRow = rows.find((r) => r.field.toLowerCase().includes("count"));
-
-  const matchedZone = zoneRow
-    ? ZONE_OPTIONS.find((z) => z.label.toLowerCase() === zoneRow.field.toLowerCase())
-    : undefined;
-
-  // Object class is always offered — legacy rules never recorded one, so it
-  // opens empty for the operator to fill in.
-  const fields: RuleParameterId[] = ["object_class"];
-  if (confRow) fields.push("confidence");
-  if (zoneRow) fields.push("zone");
-  if (countRow) fields.push("count_threshold");
-  if (durRow) fields.push("duration");
-
-  return {
-    fields,
-    params: {
-      objectClasses: [],
-      confidence: confRow ? Number(confRow.value) || DEFAULT_TEMPLATE_PARAMS.confidence : DEFAULT_TEMPLATE_PARAMS.confidence,
-      zoneId: matchedZone?.id ?? DEFAULT_TEMPLATE_PARAMS.zoneId,
-      duration: durRow ? Number(durRow.value) || DEFAULT_TEMPLATE_PARAMS.duration : DEFAULT_TEMPLATE_PARAMS.duration,
-      durationUnit: durRow?.unit.toLowerCase().startsWith("min") ? "minutes" : "seconds",
-      countThreshold: countRow ? Number(countRow.value) || DEFAULT_TEMPLATE_PARAMS.countThreshold : DEFAULT_TEMPLATE_PARAMS.countThreshold,
-    },
-  };
-}
-
-/** Builds the payload the backend receives. Mirrors the Accel BE rule shape. */
-export function buildPayload({
-  config,
-  name,
-  severity,
-  ruleId,
-}: {
-  config: RuleConfig;
-  name: string;
-  severity: RuleSeverity;
-  ruleId: string;
-}): GeneratedRulePayload {
-  const p = config.params;
-  const has = (f: RuleParameterId) => config.fields.includes(f);
-  const template = resolveTemplate(config.fields);
-  const label = name || template.name;
-
-  const payload: GeneratedRulePayload = {
-    ruleId,
-    stepId: config.stepId ?? "—",
-    name: label,
-    severity,
-    enabled: true,
-    ruleTemplateId: template.id,
-    detectionType: template.defaultDetectionType,
-    typeLabel: label,
-    trigger: {
-      event: template.event,
-      object: { type: "class", classes: has("object_class") ? p.objectClasses : [] },
-    },
-    conditions: [],
-    actions: [{ type: RULE_ACTION }],
-  };
-
-  if (has("zone")) payload.location = { type: "zone", zoneId: p.zoneId };
-  if (has("confidence")) {
-    payload.conditions.push({ type: "confidence", operator: ">=", value: Number((p.confidence / 100).toFixed(2)) });
-  }
-  if (has("count_threshold")) {
-    payload.conditions.push({ type: "count", operator: ">=", value: p.countThreshold });
-  }
-  if (has("duration")) {
-    payload.duration = { operator: ">", value: p.duration, unit: p.durationUnit };
-  }
-  return payload;
-}
-
-/** Fields the operator must still fill in before the rule can be saved. */
-export function missingParameters(config: RuleConfig): string[] {
-  const missing: string[] = [];
-  if (config.fields.includes("object_class") && config.params.objectClasses.length === 0) {
-    missing.push("Pick at least one object class.");
-  }
-  return missing;
+export function inferConfig(_rule: RuleData): RuleConfig {
+  void _rule;
+  return newConfig();
 }

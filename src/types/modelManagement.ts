@@ -29,6 +29,8 @@ export interface ExtractedRule {
   sourceModel?: string;
   /** Unset until the user opens the rule on the builder page and picks a severity. */
   severity?: RuleSeverity;
+  /** Object classes the rule watches. Each carries its own parameter values. */
+  objectClasses: string[];
   description: string;
   tags: string[];
   conditions: string[];

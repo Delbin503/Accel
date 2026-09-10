@@ -30,9 +30,9 @@ export const MOCK_MODELS: ModelData[] = [
     attachedRuleIds: ["Rul_001", "Rul_002"],
     // Shape (a): multiple discrete rules extracted from the model file.
     extractedRules: [
-      { id: "ext-001", name: "Helmet present", sourceModel: "unit_strap_check.onnx", description: "Worker must be wearing an approved helmet in the zone.", tags: ["PPE", "Object Detection"], conditions: ["class = helmet", "confidence > 85%"] },
-      { id: "ext-002", name: "Chin strap fastened", sourceModel: "chin_strap_verify.onnx", description: "Helmet chin strap must be fastened.", tags: ["PPE"], conditions: ["class = chin_strap", "state = fastened", "confidence > 80%"] },
-      { id: "ext-003", name: "Bolt group seated", sourceModel: "bolt_group_verify.pt", description: "Bolt group must be seated and closed before handling.", tags: ["Behaviour"], conditions: ["class = bolt_group", "state = closed"] },
+      { id: "ext-001", name: "Helmet present", sourceModel: "unit_strap_check.onnx", objectClasses: ["helmet", "person"], description: "Worker must be wearing an approved helmet in the zone.", tags: ["PPE", "Object Detection"], conditions: ["class = helmet", "confidence > 85%"] },
+      { id: "ext-002", name: "Chin strap fastened", sourceModel: "chin_strap_verify.onnx", objectClasses: ["chin_strap"], description: "Helmet chin strap must be fastened.", tags: ["PPE"], conditions: ["class = chin_strap", "state = fastened", "confidence > 80%"] },
+      { id: "ext-003", name: "Bolt group seated", sourceModel: "bolt_group_verify.pt", objectClasses: ["bolt_group"], description: "Bolt group must be seated and closed before handling.", tags: ["Behaviour"], conditions: ["class = bolt_group", "state = closed"] },
     ],
     modelFile: "sop_compliance.onnx",
     manifestFile: "sop_compliance.manifest.json",
@@ -55,6 +55,7 @@ export const MOCK_MODELS: ModelData[] = [
         id: "ext-010",
         name: "Muzzle safety policy",
         sourceModel: "muzzle_protocol.pt",
+        objectClasses: ["weapon", "person", "MXX-1200"],
         description: "Weapon muzzle must stay within safe direction limits and away from people.",
         tags: ["Object Detection", "Behaviour", "Safety"],
         conditions: [

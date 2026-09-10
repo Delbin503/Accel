@@ -59,6 +59,8 @@ import { MOCK_MODELS, MODEL_TAGS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import type { ModelData, ModelStep, ExtractedRule } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity, ConditionRow } from "@/types/rules";
+import type { RuleConfig } from "@/types/ruleTemplates";
+import { newClassParams, newConfig } from "@/lib/ruleTemplates";
 
 /* ── Counter ─────────────────────────────────────────────────────────────── */
 
@@ -1124,6 +1126,20 @@ function SourceBadge({
   );
 }
 
+/**
+ * How many object classes a detection class watches. Hidden at zero — rules
+ * authored before the form became class-based record none.
+ */
+function ClassCountChip({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
+      <Layers className="size-2.5" />
+      {count} class{count === 1 ? "" : "es"}
+    </span>
+  );
+}
+
 /* ── Attached rule card (from Rule Library) ──────────────────────────────── */
 
 function AttachedRuleCard({
@@ -1149,6 +1165,7 @@ function AttachedRuleCard({
         <span className="block text-sm font-semibold text-foreground">{rule.name}</span>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <SourceBadge source="library" />
+          <ClassCountChip count={rule.config?.objectClasses.length ?? 0} />
           <SeverityBadge severity={rule.severity} />
         </div>
       </div>
@@ -1198,6 +1215,7 @@ function ExtractedRuleCard({
             sourceLabel={rule.sourceModel ? modelDisplayName(rule.sourceModel) : undefined}
             title={rule.sourceModel ? `Extracted from ${rule.sourceModel}` : undefined}
           />
+          <ClassCountChip count={rule.objectClasses.length} />
           {rule.severity && <SeverityBadge severity={rule.severity} />}
         </div>
       </div>
@@ -1214,80 +1232,6 @@ function ExtractedRuleCard({
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-/* ── Rule library card (draggable, shows attached state) ─────────────────── */
-
-function RuleLibraryCard({
-  rule,
-  editable,
-  isDragging,
-  onDragStart,
-  onDragEnd,
-  onAttach,
-  onEdit,
-}: {
-  rule: RuleData;
-  editable: boolean;
-  isDragging: boolean;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  onAttach: () => void;
-  onEdit: () => void;
-}) {
-  return (
-    <div
-      draggable={editable}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "group rounded-lg border bg-background px-3 py-2.5 transition-all",
-        isDragging ? "border-border opacity-40" : "border-border hover:border-primary/25",
-        editable && "cursor-grab active:cursor-grabbing"
-      )}
-    >
-      <div className="mb-1 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {editable && (
-            <GripVertical className="hidden size-3 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
-          )}
-          <span className="text-sm font-semibold text-foreground">{rule.name}</span>
-          <SeverityBadge severity={rule.severity} />
-        </div>
-        {editable && (
-          <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="flex size-5 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
-              title="Edit rule"
-            >
-              <Edit2 className="size-3" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onAttach(); }}
-              className="flex size-5 items-center justify-center rounded border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
-              title="Attach rule"
-            >
-              <Plus className="size-3" />
-            </button>
-          </div>
-        )}
-      </div>
-      <TruncatedText text={rule.description} className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground" />
-      <div className="flex flex-wrap gap-1">
-        {rule.tags.slice(0, 3).map((t) => (
-          <TagChip key={t} label={t} />
-        ))}
-        {rule.tags.length > 3 && (
-          <MoreTagsPopover
-            hiddenTags={rule.tags.slice(3)}
-            allTags={rule.tags}
-            label={`+${rule.tags.length - 3}`}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -1437,6 +1381,7 @@ function extractRulesFromModel(seedId: string, modelFile: string): ExtractedRule
         id: `${seedId}-x1`,
         name: "Extracted policy",
         sourceModel: modelFile,
+        objectClasses: ["person", "MXX-1200", "weapon", "helmet", "chin_strap", "bolt_group", "vehicle"],
         description: `Auto-extracted from ${modelFile}.`,
         tags: ["Object Detection"],
         conditions: ["class = target", "confidence > 85%", "bbox_area > 0.02", "dwell > 1s", "zone = monitored", "not occluded"],
@@ -1444,9 +1389,123 @@ function extractRulesFromModel(seedId: string, modelFile: string): ExtractedRule
     ];
   }
   return [
-    { id: `${seedId}-x1`, name: "Primary detection", sourceModel: modelFile, description: `Auto-extracted from ${modelFile}.`, tags: ["Object Detection"], conditions: ["class = target", "confidence > 85%"] },
-    { id: `${seedId}-x2`, name: "Secondary check", sourceModel: modelFile, description: "Context confirmation.", tags: ["Behaviour"], conditions: ["class = context", "state = present"] },
+    { id: `${seedId}-x1`, name: "Primary detection", sourceModel: modelFile, objectClasses: ["person", "vehicle"], description: `Auto-extracted from ${modelFile}.`, tags: ["Object Detection"], conditions: ["class = target", "confidence > 85%"] },
+    { id: `${seedId}-x2`, name: "Secondary check", sourceModel: modelFile, objectClasses: ["bag"], description: "Context confirmation.", tags: ["Behaviour"], conditions: ["class = context", "state = present"] },
   ];
+}
+
+/** Seeds a per-class config so the builder opens with the rule's classes. */
+function configForClasses(classes: string[]): RuleConfig {
+  const cfg = newConfig();
+  cfg.objectClasses = [...classes];
+  classes.forEach((c) => { cfg.perClass[c] = newClassParams(); });
+  return cfg;
+}
+
+/* ── Add rule from library modal ─────────────────────────────────────────── */
+
+function AddRuleModal({
+  rules,
+  onCancel,
+  onAdd,
+}: {
+  rules: RuleData[];
+  onCancel: () => void;
+  onAdd: (ruleIds: string[]) => void;
+}) {
+  const [search, setSearch] = React.useState("");
+  const [picked, setPicked] = React.useState<string[]>([]);
+
+  const filtered = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rules;
+    return rules.filter((r) =>
+      [r.name, r.description, ...r.tags].join(" ").toLowerCase().includes(q)
+    );
+  }, [rules, search]);
+
+  function toggle(id: string) {
+    setPicked((curr) => (curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id]));
+  }
+
+  return (
+    <Modal open onOpenChange={(v) => !v && onCancel()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Add Rules"
+          description="Pick rules from the library to attach to this model."
+          icon={BookOpen}
+        />
+        <ModalBody className="space-y-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search rules by name, description or tag…"
+              className="h-9 pl-8 text-base"
+            />
+          </div>
+
+          {rules.length === 0 ? (
+            <div className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
+              <BookOpen className="size-7 opacity-20" />
+              <p className="text-sm">Every library rule is already attached.</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
+              <Search className="size-7 opacity-20" />
+              <p className="text-sm">No rules match your search.</p>
+            </div>
+          ) : (
+            <div className="h-[280px] space-y-2 overflow-y-auto pr-1">
+              {filtered.map((rule) => {
+                const checked = picked.includes(rule.id);
+                return (
+                  <button
+                    key={rule.id}
+                    type="button"
+                    onClick={() => toggle(rule.id)}
+                    className={cn(
+                      "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors duration-[var(--duration-fast)] ease-standard",
+                      checked ? "border-primary bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
+                        checked ? "border-primary bg-primary" : "border-muted-foreground/40"
+                      )}
+                    >
+                      {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                        <span className="text-sm font-semibold text-foreground">{rule.name}</span>
+                        <SeverityBadge severity={rule.severity} />
+                        <ClassCountChip count={rule.config?.objectClasses.length ?? 0} />
+                      </div>
+                      <TruncatedText
+                        text={rule.description}
+                        className="line-clamp-2 text-xs leading-relaxed text-muted-foreground"
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button size="sm" disabled={picked.length === 0} onClick={() => onAdd(picked)} className="gap-1.5">
+            <Plus className="size-3.5" />
+            Add {picked.length > 0 ? picked.length : ""} Rule{picked.length === 1 ? "" : "s"}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
 }
 
 /* ── Drag payload ────────────────────────────────────────────────────────── */
@@ -1495,12 +1554,7 @@ function ModelDetailPanel({
   const [seqDragIdx, setSeqDragIdx] = React.useState<number | null>(null);
   const [seqOverIdx, setSeqOverIdx] = React.useState<number | null>(null);
 
-  // Rule drag state
-  const [ruleDragId, setRuleDragId] = React.useState<string | null>(null);
-  const [detectionRulesOver, setDetectionRulesOver] = React.useState(false);
-
-  // Rule library search
-  const [ruleSearch, setRuleSearch] = React.useState("");
+  const [addRuleOpen, setAddRuleOpen] = React.useState(false);
 
   const dragPayload = React.useRef<DragPayload | null>(null);
 
@@ -1513,7 +1567,6 @@ function ModelDetailPanel({
     mountedIdRef.current = model.id;
     setDraft(modelToDraft(model));
     setIsEditing(false);
-    setRuleSearch("");
   }, [model.id]);
 
   // Let the page hide the model list while this panel is in edit mode.
@@ -1530,8 +1583,6 @@ function ModelDetailPanel({
     setPoolDragId(null);
     setSeqDragIdx(null);
     setSeqOverIdx(null);
-    setRuleDragId(null);
-    setDetectionRulesOver(false);
     dragPayload.current = null;
   }
 
@@ -1544,19 +1595,8 @@ function ModelDetailPanel({
 
   const attachedRules = allRules.filter((r) => draft.attachedRuleIds.includes(r.id));
 
-  // Library = unattached rules only (matches Step Pool ↔ Sequence pattern)
-  const libraryRules = React.useMemo(() => {
-    let list = allRules.filter((r) => !draft.attachedRuleIds.includes(r.id));
-    if (ruleSearch.trim()) {
-      const q = ruleSearch.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.name.toLowerCase().includes(q) ||
-          r.description.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [allRules, draft.attachedRuleIds, ruleSearch]);
+  // Rules the Add Rule picker can still offer.
+  const unattachedRules = allRules.filter((r) => !draft.attachedRuleIds.includes(r.id));
 
   /* ── Step drag handlers ── */
 
@@ -1630,41 +1670,6 @@ function ModelDetailPanel({
       patchDraft({ sequenceIds: next });
     }
     resetDrag();
-  }
-
-  /* ── Rule drag handlers ── */
-
-  function handleRuleDragStart(ruleId: string) {
-    dragPayload.current = { type: "rule", ruleId };
-    setActiveDrag(true);
-    setRuleDragId(ruleId);
-  }
-
-  function handleRuleDragEnd() {
-    resetDrag();
-  }
-
-  function handleDetectionDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    if (dragPayload.current?.type === "rule") setDetectionRulesOver(true);
-  }
-
-  function handleDetectionDragLeave(e: React.DragEvent) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDetectionRulesOver(false);
-  }
-
-  function handleDetectionDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDetectionRulesOver(false);
-    const payload = dragPayload.current;
-    if (payload?.type !== "rule") { dragPayload.current = null; return; }
-    const { ruleId } = payload;
-    if (!draft.attachedRuleIds.includes(ruleId)) {
-      patchDraft({ attachedRuleIds: [...draft.attachedRuleIds, ruleId] });
-    }
-    dragPayload.current = null;
-    setActiveDrag(false);
-    setRuleDragId(null);
   }
 
   return (
@@ -1932,7 +1937,7 @@ function ModelDetailPanel({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/rules?new=true&model=${model.id}`)}
+                    onClick={() => setAddRuleOpen(true)}
                     className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
                   >
                     <Plus className="size-3" />
@@ -1941,81 +1946,22 @@ function ModelDetailPanel({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div>
 
-                {/* Rule Library */}
-                <div>
-                  <SectionHeader
-                    label="Rule Library"
-                    count={libraryRules.length}
-                    description="Drag rules → detection classes"
-                  />
-                  <div className="relative mb-2.5">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/50" />
-                    <input
-                      value={ruleSearch}
-                      onChange={(e) => setRuleSearch(e.target.value)}
-                      placeholder="Search rules…"
-                      className="h-8 w-full rounded-lg border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary"
-                    />
-                  </div>
-                  {libraryRules.length === 0 ? (
-                    <div className="flex h-[412px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border text-muted-foreground">
-                      <BookOpen className="size-7 opacity-20" />
-                      <p className="text-center text-sm">
-                        {ruleSearch
-                          ? "No rules match your search"
-                          : allRules.length === 0
-                          ? "No rules in library yet"
-                          : "All rules attached"}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="h-[412px] space-y-2 overflow-y-auto pr-1">
-                      {libraryRules.map((rule) => (
-                        <RuleLibraryCard
-                          key={rule.id}
-                          rule={rule}
-                          editable
-                          isDragging={ruleDragId === rule.id}
-                          onDragStart={() => handleRuleDragStart(rule.id)}
-                          onDragEnd={handleRuleDragEnd}
-                          onEdit={() => navigate(`/rules?edit=${rule.id}`)}
-                          onAttach={() =>
-                            patchDraft({
-                              attachedRuleIds: [...draft.attachedRuleIds, rule.id],
-                            })
-                          }
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Detection Classes — drop target */}
+                {/* Detection Classes */}
                 <div>
                   <SectionHeader
                     label="Detection Classes"
                     count={draft.extractedRules.length + attachedRules.length}
                     description="Model-extracted + library rules"
                   />
-                  <div
-                    onDragOver={handleDetectionDragOver}
-                    onDragLeave={handleDetectionDragLeave}
-                    onDrop={handleDetectionDrop}
-                    className={cn(
-                      "h-[460px] overflow-y-auto rounded-xl border-2 border-dashed pr-1 transition-all",
-                      detectionRulesOver
-                        ? "border-primary/40 bg-primary/[0.03]"
-                        : draft.extractedRules.length + attachedRules.length === 0
-                        ? "border-border"
-                        : "border-transparent"
-                    )}
-                  >
+                  <div className="h-[460px] overflow-y-auto pr-1">
                     {draft.extractedRules.length + attachedRules.length === 0 ? (
-                      <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
                         <BookOpen className="size-7 opacity-20" />
-                        <p className="text-center text-sm">← Drag rules from the library</p>
+                        <p className="text-center text-sm">
+                          Extract from the model, or add rules from the library.
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -2034,13 +1980,20 @@ function ModelDetailPanel({
                                 conditions: [
                                   { id: "c1", type: "WHEN", field: rule.name, operator: "", value: "", unit: "" } as ConditionRow,
                                 ],
+                                config: configForClasses(rule.objectClasses),
                                 createdAt: "",
                                 createdAtDisplay: "",
                                 createdTimeDisplay: "",
                               };
                               navigate("/rules", {
                                 state: {
-                                  extractedEdit: { rule: stub, modelId: model.id, ruleId: rule.id, returnTo: `/models?model=${model.id}` },
+                                  extractedEdit: {
+                                    rule: stub,
+                                    modelId: model.id,
+                                    ruleId: rule.id,
+                                    returnTo: `/models?model=${model.id}`,
+                                    sourceModel: rule.sourceModel,
+                                  },
                                 },
                               });
                             }}
@@ -2180,6 +2133,18 @@ function ModelDetailPanel({
             patchDraft({ extractedRules: [...pulled, ...draft.extractedRules] });
             setExtractStep(null);
             toast.success(`Extracted ${pulled.length} rule${pulled.length === 1 ? "" : "s"} from ${extractStep.modelFile}`);
+          }}
+        />
+      )}
+
+      {addRuleOpen && (
+        <AddRuleModal
+          rules={unattachedRules}
+          onCancel={() => setAddRuleOpen(false)}
+          onAdd={(ids) => {
+            patchDraft({ attachedRuleIds: [...draft.attachedRuleIds, ...ids] });
+            setAddRuleOpen(false);
+            toast.success(`Added ${ids.length} rule${ids.length === 1 ? "" : "s"} to this model`);
           }}
         />
       )}
