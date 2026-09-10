@@ -43,7 +43,7 @@ const PHASES: Phase[] = [
       { name: "System Configuration", slug: "PRD_System_Configuration" },
       { name: "Site · NVR Devices", slug: "PRD_NVR_Devices" },
       { name: "Recordings", slug: "PRD_Recordings" },
-      { name: "Activity Logs" },
+      { name: "Activity Logs", slug: "PRD_Activity_Logs" },
     ],
   },
   {
