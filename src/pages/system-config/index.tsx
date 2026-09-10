@@ -110,7 +110,8 @@ function GeneralSection() {
   const [orgId] = React.useState("ORG-2026-001");
   const [defaultSite, setDefaultSite] = React.useState("astra");
   const [defaultTz, setDefaultTz] = React.useState(DEFAULT_TIMEZONE);
-  const [language, setLanguage] = React.useState("en");
+  // Only English ships today — the picker is shown but locked.
+  const language = "en";
   const [maintenanceMode, setMaintenanceMode] = React.useState(false);
 
   /* Date & Time (moved here from Localization). */
@@ -155,7 +156,7 @@ function GeneralSection() {
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Language</label>
-            <Select value={language} onValueChange={(v) => setLanguage(v)}>
+            <Select value={language} disabled>
               <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">English</SelectItem>
@@ -581,7 +582,6 @@ function SlaSection() {
 
 function DetectionSection() {
   const [globalConfidence, setGlobalConfidence] = React.useState(80);
-  const [fpsTarget, setFpsTarget] = React.useState(15);
   const [duplicateWindow, setDuplicateWindow] = React.useState(30);
   const [enableLowConfidence, setEnableLowConfidence] = React.useState(false);
   const [autoLogAll, setAutoLogAll] = React.useState(true);
@@ -601,15 +601,6 @@ function DetectionSection() {
             <p className="mt-1 text-xs text-muted-foreground">
               Detections below this threshold are discarded unless a rule explicitly lowers it.
             </p>
-          </div>
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Default Inference FPS</span>
-              <span className="font-mono text-foreground">{fpsTarget} fps</span>
-            </label>
-            <input type="range" min={1} max={30} step={1} value={fpsTarget}
-              onChange={(e) => setFpsTarget(Number(e.target.value))}
-              className="w-full accent-primary" />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -646,10 +637,9 @@ function DetectionSection() {
 
 function NotificationsSection() {
   const [emailEnabled, setEmailEnabled] = React.useState(true);
-  const [pushEnabled, setPushEnabled] = React.useState(true);
   const [smsEnabled, setSmsEnabled] = React.useState(false);
-  const [emailFrom, setEmailFrom] = React.useState("alerts@accel.ai");
-  const [smsProvider, setSmsProvider] = React.useState("twilio");
+  const emailFrom = "alerts@accel.ai";
+  const smsProvider = "twilio";
   const [criticalAll, setCriticalAll] = React.useState(true);
   const [mediumAdminOnly, setMediumAdminOnly] = React.useState(true);
 
@@ -660,9 +650,6 @@ function NotificationsSection() {
           <PrefRow icon={Mail} title="Email"
             description={`From: ${emailFrom}`}
             control={<Toggle checked={emailEnabled} onChange={setEmailEnabled} />} />
-          <PrefRow icon={Smartphone} title="Push (Mobile App)"
-            description="Send push notifications to the iOS / Android app."
-            control={<Toggle checked={pushEnabled} onChange={setPushEnabled} />} />
           <PrefRow icon={Smartphone} title="SMS"
             description={`Provider: ${smsProvider} · billed per message`}
             control={<Toggle checked={smsEnabled} onChange={setSmsEnabled} />} />
@@ -680,25 +667,6 @@ function NotificationsSection() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Email Configuration" description="Sender details for outbound mail.">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">From Address</label>
-            <Input value={emailFrom} onChange={(e) => setEmailFrom(e.target.value)} className="h-9 text-base" />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">SMS Provider</label>
-            <Select value={smsProvider} onValueChange={(v) => setSmsProvider(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="twilio">Twilio</SelectItem>
-                <SelectItem value="sns">AWS SNS</SelectItem>
-                <SelectItem value="messagebird">MessageBird</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </SectionCard>
     </div>
   );
 }
