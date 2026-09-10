@@ -22,6 +22,7 @@ import {
   NotInPrototype,
 } from "./shared";
 import "./proto.css";
+import { TesterShell } from "../_shared/TesterShell";
 
 function Shell() {
   const navigate = useNavigate();
@@ -65,9 +66,9 @@ function Shell() {
       )}
 
       {/* PROTOTYPE-ONLY floating tester — low opacity, reveals on hover. */}
-      <div className="fixed top-6 right-6 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+      <TesterShell position="top-6 right-6">
         <StateTester screen={screen} onScreen={goTo} async={asyncMode} onAsync={setAsyncMode} />
-      </div>
+      </TesterShell>
     </div>
   );
 }

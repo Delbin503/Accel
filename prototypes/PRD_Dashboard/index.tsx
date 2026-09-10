@@ -15,6 +15,7 @@ import RealDashboard from "./RealDashboard";
 import { StateTester } from "./StateTester";
 import type { ForcedState, HealthMode, ScaleMode } from "./states";
 import "./proto.css";
+import { TesterShell } from "../_shared/TesterShell";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right, low opacity, reveals on hover. */
 function FloatingTester(props: {
@@ -26,9 +27,9 @@ function FloatingTester(props: {
   onScaleChange: (s: ScaleMode) => void;
 }) {
   return (
-    <div className="fixed top-2 right-16 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+    <TesterShell>
       <StateTester {...props} />
-    </div>
+    </TesterShell>
   );
 }
 

@@ -16,14 +16,15 @@ import RealRunAnalysis from "./RealRunAnalysis";
 import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
+import { TesterShell } from "../_shared/TesterShell";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right (left of the back-to-top
    button), low opacity, reveals on hover. Excluded when promoting to src. */
 function FloatingTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
   return (
-    <div className="fixed top-2 right-16 z-[100] opacity-30 transition-opacity duration-200 hover:opacity-100">
+    <TesterShell>
       <StateTester value={value} onChange={onChange} />
-    </div>
+    </TesterShell>
   );
 }
 
