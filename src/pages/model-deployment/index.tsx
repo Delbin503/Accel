@@ -377,93 +377,6 @@ function CheckboxBox({ checked }: { checked: boolean }) {
   );
 }
 
-/* ─── Confidence threshold ───────────────────────────────────────────────── */
-
-/** Fallback when no model is picked, or a model predates `defaultConfidence`. */
-const DEFAULT_CONFIDENCE = 85;
-const CONFIDENCE_MIN = 50;
-const CONFIDENCE_MAX = 99;
-
-/** Stored as a percent, shown as a 0.000 score (85 → "0.850"). */
-function formatConfidence(value: number) {
-  return (value / 100).toFixed(3);
-}
-
-/** Below this, the model fires on weak matches; above it, it starts missing real events. */
-function confidenceAdvice(value: number): { tone: "low" | "ok" | "high"; note: string } {
-  if (value < 70) return { tone: "low", note: "Low threshold — expect more false positives." };
-  if (value > 95) return { tone: "high", note: "Very strict — real events may be missed." };
-  return { tone: "ok", note: "Balanced detection sensitivity." };
-}
-
-/**
- * Conf score control for the summary bar. Native range input rather than a new
- * primitive — shadcn has no Slider in `components/ui/` and this is the only
- * slider in the app so far.
- */
-function ConfidenceField({
-  value,
-  onChange,
-  modelDefault,
-  disabled,
-}: {
-  value: number;
-  onChange: (next: number) => void;
-  modelDefault: number | null;
-  disabled: boolean;
-}) {
-  const isTuned = modelDefault !== null && value !== modelDefault;
-  const advice = confidenceAdvice(value);
-
-  return (
-    <div className="ml-auto flex-shrink-0 border-l border-border pl-5">
-      {/* Label row mirrors the value row's widths so `reset` sits flush over the
-          right end of the slider. */}
-      <div className="mb-0.5 flex items-center gap-2.5">
-        <span className="w-12 flex-shrink-0 font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">
-          Conf
-        </span>
-        <span className="flex w-24 flex-shrink-0 justify-end">
-          {isTuned && (
-            <button
-              type="button"
-              onClick={() => onChange(modelDefault)}
-              className="text-3xs text-muted-foreground underline hover:text-foreground"
-            >
-              reset
-            </button>
-          )}
-        </span>
-      </div>
-      <div className="flex items-center gap-2.5">
-        <span
-          className={cn(
-            "w-12 flex-shrink-0 text-base font-semibold tabular-nums",
-            disabled ? "text-muted-foreground/60"
-              : advice.tone === "ok" ? "text-foreground"
-              : advice.tone === "low" ? "text-warning"
-              : "text-info"
-          )}
-        >
-          {disabled ? "-" : formatConfidence(value)}
-        </span>
-        <input
-          type="range"
-          min={CONFIDENCE_MIN}
-          max={CONFIDENCE_MAX}
-          step={1}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label="Confidence threshold"
-          title={disabled ? "Pick a model first" : advice.note}
-          className="h-1 w-24 flex-shrink-0 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
-        />
-      </div>
-    </div>
-  );
-}
-
 /* ─── Summary bar (sticky bottom of wizard) ──────────────────────────────── */
 
 function SummaryBar({
@@ -471,8 +384,6 @@ function SummaryBar({
   site,
   selectedAreas,
   selectedCameras,
-  confidence,
-  onConfidenceChange,
   canDeploy,
   onDeploy,
 }: {
@@ -480,13 +391,11 @@ function SummaryBar({
   site: SiteSummary | null;
   selectedAreas: AreaSummary[];
   selectedCameras: CameraData[];
-  confidence: number;
-  onConfidenceChange: (next: number) => void;
   canDeploy: boolean;
   onDeploy: () => void;
 }) {
-  // Wraps rather than a rigid grid — at narrow widths the Conf control and the
-  // deploy button drop to a second row instead of crushing the summary fields.
+  // Wraps rather than a rigid grid — at narrow widths the deploy button drops
+  // to a second row instead of crushing the summary fields.
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border bg-card px-5 py-3.5">
       <SummaryField label="Model" value={model?.name ?? null} placeholder="-" className="min-w-[104px] flex-[1.4]" />
@@ -505,13 +414,7 @@ function SummaryBar({
         placeholder="-"
         className="min-w-[86px] flex-1"
       />
-      <ConfidenceField
-        value={confidence}
-        onChange={onConfidenceChange}
-        modelDefault={model?.defaultConfidence ?? null}
-        disabled={!model}
-      />
-      <Button size="lg" onClick={onDeploy} disabled={!canDeploy} className="gap-2">
+      <Button size="lg" onClick={onDeploy} disabled={!canDeploy} className="ml-auto gap-2">
         <Rocket className="size-4" />
         Ready to Deploy
       </Button>
@@ -657,8 +560,6 @@ export function DeployWizard({
   const [cameraIds, setCameraIds] = React.useState<string[]>([]);
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  /** Conf threshold for this deploy — seeded from the model, tunable in the summary bar. */
-  const [confidence, setConfidence] = React.useState(DEFAULT_CONFIDENCE);
   /* "Ready to Deploy" opens the zone step first; Next advances to the confirm modal. */
   const [zoneStepOpen, setZoneStepOpen] = React.useState(false);
   /* Zones are per-camera; the picker in the zone step switches which one is edited. */
@@ -723,9 +624,6 @@ export function DeployWizard({
   function pickModel(id: string) {
     const next = id === modelId ? null : id;
     setModelId(next);
-    // Re-seed the Conf score from the newly picked model, dropping any tuning
-    // the user applied to the previous one.
-    setConfidence(MOCK_MODELS.find((m) => m.id === next)?.defaultConfidence ?? DEFAULT_CONFIDENCE);
   }
   function pickSite(id: string) {
     if (id === siteId) {
@@ -821,7 +719,7 @@ export function DeployWizard({
       stoppedAt: null,
       stoppedAtDisplay: null,
       eventCount: 0,
-      confidence,
+      confidence: selectedModel.defaultConfidence,
       zones: zonesByCamera[cam.id] ?? [],
     }));
     onCommit(records);
@@ -830,7 +728,6 @@ export function DeployWizard({
     setSiteId(null);
     setAreaIds([]);
     setCameraIds([]);
-    setConfidence(DEFAULT_CONFIDENCE);
     setZonesByCamera({});
     setActiveZoneCameraId(null);
     setConfirmOpen(false);
@@ -930,8 +827,6 @@ export function DeployWizard({
         site={selectedSite}
         selectedAreas={selectedAreas}
         selectedCameras={selectedCameras}
-        confidence={confidence}
-        onConfidenceChange={setConfidence}
         canDeploy={canDeploy}
         onDeploy={openZoneStep}
       />
@@ -993,7 +888,6 @@ export function DeployWizard({
         site={selectedSite}
         areas={selectedAreas}
         cameras={selectedCameras}
-        confidence={confidence}
         camerasWithZones={camerasWithZones}
         onClose={() => setConfirmOpen(false)}
         onConfirm={commitDeploy}
@@ -1014,7 +908,6 @@ export function DeployConfirmModal({
   site,
   areas,
   cameras,
-  confidence,
   camerasWithZones,
   onClose,
   onConfirm,
@@ -1024,7 +917,6 @@ export function DeployConfirmModal({
   site: SiteSummary | null;
   areas: AreaSummary[];
   cameras: CameraData[];
-  confidence: number;
   camerasWithZones: number;
   onClose: () => void;
   onConfirm: () => void;
@@ -1049,14 +941,6 @@ export function DeployConfirmModal({
               <KvRow label="Areas" value={`${selectedAreas.length} (${selectedAreas.map((a) => a.areaName).join(", ")})`} />
               <KvRow label="Cameras" value={`${selectedCameras.length} selected`} />
               <KvRow
-                label="Conf score"
-                value={
-                  confidence === selectedModel.defaultConfidence
-                    ? `${formatConfidence(confidence)} (model default)`
-                    : `${formatConfidence(confidence)} (default ${formatConfidence(selectedModel.defaultConfidence)})`
-                }
-              />
-              <KvRow
                 label="Detection zones"
                 value={
                   camerasWithZones === 0
@@ -1066,13 +950,6 @@ export function DeployConfirmModal({
                       : `${camerasWithZones} of ${selectedCameras.length} cameras zoned — rest use whole frame`
                 }
               />
-              {confidenceAdvice(confidence).tone !== "ok" && (
-                <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-muted-foreground">
-                  <AlertTriangle className="size-3.5 flex-shrink-0 text-warning" />
-                  {confidenceAdvice(confidence).note} Applies to all {selectedCameras.length} camera
-                  {selectedCameras.length === 1 ? "" : "s"} in this deployment.
-                </div>
-              )}
               {selectedCameras.some((c) => c.status !== "online") && (
                 <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-muted-foreground">
                   <AlertTriangle className="size-3.5 flex-shrink-0 text-warning" />

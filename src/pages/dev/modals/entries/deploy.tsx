@@ -99,7 +99,6 @@ export const DEPLOY_ENTRIES: ModalEntry[] = [
         site={site}
         areas={areas}
         cameras={cameras}
-        confidence={85}
         camerasWithZones={1}
         onClose={close}
         onConfirm={close}
