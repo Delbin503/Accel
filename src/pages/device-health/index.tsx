@@ -12,8 +12,6 @@ import {
   HardDrive,
   HeartPulse,
   MapPin,
-  Wifi,
-  WifiOff,
   Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -569,7 +567,7 @@ export default function DeviceHealthPage({
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  {["DEVICE ID", "NAME", "TYPE", "HEALTH", "LOCATION", "IP", "DISK USAGE", "LAST SYNC"].map((h) => (
+                  {["DEVICE ID", "NAME", "TYPE", "STATUS", "LOCATION", "IP", "DISK USAGE", "LAST SYNC"].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
@@ -625,11 +623,6 @@ export default function DeviceHealthPage({
                           d.health === "online" ? "text-success" : "text-muted-foreground"
                         )}
                       >
-                        {d.health === "online" ? (
-                          <Wifi className="size-3" />
-                        ) : (
-                          <WifiOff className="size-3" />
-                        )}
                         {d.lastSeenDisplay}
                       </span>
                     </td>
