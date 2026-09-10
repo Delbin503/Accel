@@ -3,15 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronDown, Cctv, HardDrive, Server } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useSystemStatus, type SystemHealth, type SystemStatusGroup } from "@/hooks/useSystemStatus";
+import {
+  useSystemStatus,
+  SYSTEM_HEALTH_PRESENTATION,
+  type SystemHealth,
+  type SystemStatusGroup,
+} from "@/hooks/useSystemStatus";
 
 /* ─── Health presentation ───────────────────────────────────────────────── */
-
-const HEALTH_STYLES: Record<SystemHealth, { label: string; dot: string; text: string }> = {
-  healthy:  { label: "System Healthy",  dot: "bg-success",      text: "text-success" },
-  degraded: { label: "System Degraded", dot: "bg-warning",      text: "text-warning" },
-  critical: { label: "Attention Needed", dot: "bg-sev-critical", text: "text-sev-critical" },
-};
 
 const OVERALL_COPY: Record<SystemHealth, string> = {
   healthy: "All systems operational",
@@ -24,7 +23,7 @@ function HealthDot({ health, className }: { health: SystemHealth; className?: st
     <span
       className={cn(
         "size-2 shrink-0 rounded-full",
-        HEALTH_STYLES[health].dot,
+        SYSTEM_HEALTH_PRESENTATION[health].dot,
         health === "healthy" && "animate-pulse",
         className
       )}
@@ -78,13 +77,20 @@ function StatusRow({ icon: Icon, label, group, onSelect }: StatusRowProps) {
 
 interface SystemStatusMenuProps {
   className?: string;
+  /**
+   * PROTOTYPE-ONLY escape hatch. The Dashboard prototype's dev Health control
+   * forces a health state; passing it here keeps the top-bar roll-up in step
+   * with the dashboard's own status pill. The app never sets this.
+   */
+  forcedHealth?: SystemHealth;
 }
 
-export function SystemStatusMenu({ className }: SystemStatusMenuProps) {
+export function SystemStatusMenu({ className, forcedHealth }: SystemStatusMenuProps) {
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
-  const status = useSystemStatus();
-  const overall = HEALTH_STYLES[status.overall];
+  const derived = useSystemStatus();
+  const status = forcedHealth ? { ...derived, overall: forcedHealth } : derived;
+  const overall = SYSTEM_HEALTH_PRESENTATION[status.overall];
 
   function go(path: string) {
     setOpen(false);

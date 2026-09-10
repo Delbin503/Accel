@@ -35,6 +35,34 @@ function healthFor(online: number, total: number, degraded: number): SystemHealt
   return "healthy";
 }
 
+/**
+ * Single presentation for system health, shared by the top-bar status menu and
+ * the dashboard status pill so the two can never drift apart.
+ */
+export const SYSTEM_HEALTH_PRESENTATION: Record<
+  SystemHealth,
+  { label: string; dot: string; text: string; pill: string }
+> = {
+  healthy: {
+    label: "System Healthy",
+    dot: "bg-success",
+    text: "text-success",
+    pill: "border-success/40 bg-success/10 text-success",
+  },
+  degraded: {
+    label: "System Degraded",
+    dot: "bg-warning",
+    text: "text-warning",
+    pill: "border-warning/40 bg-warning/10 text-warning",
+  },
+  critical: {
+    label: "Attention Needed",
+    dot: "bg-sev-critical",
+    text: "text-sev-critical",
+    pill: "border-sev-critical/40 bg-sev-critical/10 text-sev-critical",
+  },
+};
+
 const HEALTH_RANK: Record<SystemHealth, number> = { healthy: 0, degraded: 1, critical: 2 };
 
 function worst(...healths: SystemHealth[]): SystemHealth {

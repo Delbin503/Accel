@@ -52,7 +52,7 @@ function App() {
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
                 <div className="flex-1" />
                 <ThemeToggle />
-                <SystemStatusMenu />
+                <SystemStatusMenu forcedHealth={health} />
                 <NotificationsBell />
                 <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                 <UserMenu />

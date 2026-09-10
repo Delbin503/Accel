@@ -32,6 +32,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
+import { useSystemStatus, SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
 
 /* ── Zone severity thresholds (configurable in System Config) ───────── */
 export const ZONE_SEVERITY_THRESHOLDS = {
@@ -371,25 +372,20 @@ export default function DashboardPage() {
     { label: "Network",  value: "18%", pct: 18, tone: "ok",   icon: Network },
     { label: "Uptime",   value: "42d", pct: 92, tone: "ok",   icon: Power },
   ];
-  /* ── System status pill + inline alert banner when unhealthy ─────────── */
+  /* ── System status pill ──────────────────────────────────────────────
+     Same roll-up the top-bar status menu reads (cameras / NVRs / servers), so
+     the header and this pill always agree. The resource metrics above drive
+     the alert banner below, which is a separate concern. */
+  const systemStatus = useSystemStatus().overall;
+  const statusPresentation = SYSTEM_HEALTH_PRESENTATION[systemStatus];
+
+  /* ── Inline alert banner — driven by the resource metrics, not fleet health ── */
   const worstHealth = healthMetrics.find((m) => m.tone === "crit")
     ?? healthMetrics.find((m) => m.tone === "warn");
-  const systemStatus: "healthy" | "degraded" | "critical" =
-    worstHealth?.tone === "crit" ? "critical" :
-    worstHealth?.tone === "warn" ? "degraded" :
-    "healthy";
+  const alertCritical = worstHealth?.tone === "crit";
 
   const [alertAcknowledged, setAlertAcknowledged] = React.useState(false);
-  const showAlertBanner = systemStatus !== "healthy" && !!worstHealth && !alertAcknowledged;
-
-  const statusStyles =
-    systemStatus === "critical" ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" :
-    systemStatus === "degraded" ? "border-warning/40 bg-warning/10 text-warning" :
-                                  "border-success/40 bg-success/10 text-success";
-  const statusLabel =
-    systemStatus === "critical" ? "Critical" :
-    systemStatus === "degraded" ? "Degraded" :
-                                  "Healthy";
+  const showAlertBanner = !!worstHealth && !alertAcknowledged;
 
   return (
     <div className="flex flex-col gap-4">
@@ -397,7 +393,7 @@ export default function DashboardPage() {
         <div
           className={cn(
             "flex items-center gap-3 rounded-xl border px-4 py-3",
-            systemStatus === "critical"
+            alertCritical
               ? "border-sev-critical/40 bg-sev-critical/[0.06]"
               : "border-warning/40 bg-warning/[0.06]"
           )}
@@ -405,14 +401,14 @@ export default function DashboardPage() {
           <TriangleAlert
             className={cn(
               "size-4 flex-shrink-0",
-              systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+              alertCritical ? "text-sev-critical" : "text-warning"
             )}
           />
           <div className="min-w-0 flex-1 text-base">
             <span
               className={cn(
                 "font-semibold",
-                systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+                alertCritical ? "text-sev-critical" : "text-warning"
               )}
             >
               Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
@@ -444,16 +440,17 @@ export default function DashboardPage() {
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
-              statusStyles
+              statusPresentation.pill
             )}
           >
-            <span className={cn(
-              "size-1.5 rounded-full",
-              systemStatus === "critical" ? "bg-sev-critical" :
-              systemStatus === "degraded" ? "bg-warning animate-pulse" :
-                                            "bg-success animate-pulse"
-            )} />
-            System {statusLabel}
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                statusPresentation.dot,
+                systemStatus === "healthy" && "animate-pulse"
+              )}
+            />
+            {statusPresentation.label}
           </span>
         </PageHeader.Actions>
       </PageHeader>

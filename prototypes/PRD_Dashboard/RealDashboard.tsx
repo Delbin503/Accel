@@ -31,6 +31,7 @@ import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
 import { MOCK_NVRS } from "@/mocks/nvr";
+import { SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
 
 /* ── Zone severity thresholds (configurable in System Config) ───────── */
 export const ZONE_SEVERITY_THRESHOLDS = {
@@ -490,14 +491,8 @@ export default function DashboardPage({
   React.useEffect(() => { setAlertAcknowledged(false); }, [forcedHealth]);
   const showAlertBanner = systemStatus !== "healthy" && !!worstHealth && !alertAcknowledged;
 
-  const statusStyles =
-    systemStatus === "critical" ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" :
-    systemStatus === "degraded" ? "border-warning/40 bg-warning/10 text-warning" :
-                                  "border-success/40 bg-success/10 text-success";
-  const statusLabel =
-    systemStatus === "critical" ? "Critical" :
-    systemStatus === "degraded" ? "Degraded" :
-                                  "Healthy";
+  // Same presentation the top-bar status menu uses, so the two always agree.
+  const statusPresentation = SYSTEM_HEALTH_PRESENTATION[systemStatus];
 
   // PROTOTYPE-ONLY: loading & error replace the page; "empty" falls through and
   // renders the full layout with empty data (each section shows its own no-data state).
@@ -570,16 +565,17 @@ export default function DashboardPage({
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
-              statusStyles
+              statusPresentation.pill
             )}
           >
-            <span className={cn(
-              "size-1.5 rounded-full",
-              systemStatus === "critical" ? "bg-sev-critical" :
-              systemStatus === "degraded" ? "bg-warning animate-pulse" :
-                                            "bg-success animate-pulse"
-            )} />
-            System {statusLabel}
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                statusPresentation.dot,
+                systemStatus === "healthy" && "animate-pulse"
+              )}
+            />
+            {statusPresentation.label}
           </span>
         </PageHeader.Actions>
       </PageHeader>
