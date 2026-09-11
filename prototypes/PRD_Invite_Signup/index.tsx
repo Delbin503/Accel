@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { RotateCcw, LayoutDashboard } from "lucide-react";
-import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
+import { AppSidebar, SidebarProvider } from "@/components/layout/AppSidebar";
+import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
@@ -91,12 +92,11 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
+        <AppSidebar collapseTrigger />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+            <ProtoBreadcrumb />
             <div className="flex-1" />
-            <ThemeToggle />
             <SystemStatusMenu />
             <NotificationsBell />
             <div className="mx-1 h-5 w-px shrink-0 bg-border" />
