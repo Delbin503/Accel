@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
@@ -517,7 +517,9 @@ export default function RecordingsPage({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, location.pathname]);
-  const [search, setSearch] = React.useState("");
+  // Seeded from ?q= so the ⌘K palette can hand off a filtered view.
+  const [seedParams] = useSearchParams();
+  const [search, setSearch] = React.useState(() => seedParams.get("q") ?? "");
   const [filters, setFilters] = React.useState<RecordingFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [datePreset, setDatePreset] = React.useState<DatePreset>("all");

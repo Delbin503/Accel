@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
@@ -2374,7 +2374,9 @@ function DeletedUsersPage({
   const PAGE_STEP = 20;
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
-  const [drawerId, setDrawerId] = React.useState<string | null>(null);
+  // Deep link from the ⌘K palette — /users?user=<id> opens that user's drawer.
+  const [searchParams] = useSearchParams();
+  const [drawerId, setDrawerId] = React.useState<string | null>(() => searchParams.get("user"));
   const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
@@ -2618,11 +2620,19 @@ export default function UserManagementPage({
   const [filters, setFilters] = React.useState<UserFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [drawerId, setDrawerId] = React.useState<string | null>(null);
+
+
   const PAGE_STEP = 20;
   const [visibleCount, setVisibleCount] = React.useState(PAGE_STEP);
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
-  const [dialog, setDialog] = React.useState<DialogState>({ kind: null, userIds: [] });
+  // ⌘K quick action "Invite User" arrives as router state.
+  const [dialog, setDialog] = React.useState<DialogState>(() =>
+    (location.state as { openInvite?: boolean } | null)?.openInvite
+      ? { kind: "invite", userIds: [] }
+      : { kind: null, userIds: [] }
+  );
+
   // Adapter so existing setToast(...) call sites route through sonner without a rewrite.
   const setToast = React.useCallback((next: { kind: "success" | "error"; message: string } | null) => {
     if (!next) return;

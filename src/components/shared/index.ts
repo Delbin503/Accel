@@ -1,6 +1,8 @@
 export { ThemeToggle } from "./ThemeToggle";
 export { SystemStatusMenu } from "./SystemStatusMenu";
 export { UserMenu } from "./UserMenu";
+export { CommandPalette } from "./CommandPalette";
+export { GlobalSearchTrigger, QuickActionsTrigger } from "./GlobalSearchTrigger";
 export { TruncatedText } from "./TruncatedText";
 
 // Design-system composites

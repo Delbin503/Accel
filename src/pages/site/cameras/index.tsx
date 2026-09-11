@@ -1748,7 +1748,8 @@ export default function CamerasPage({
     | { kind: "undeploy"; deploymentId: string }
     | { kind: "nvr-sync"; cameraId: string }
     | null
-  >(null);
+    // ⌘K quick action "Add Camera" arrives as router state.
+  >((location.state as { openAddCamera?: boolean } | null)?.openAddCamera ? { kind: "add" } : null);
   const syncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageSize = 10;
 

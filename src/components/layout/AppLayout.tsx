@@ -4,6 +4,11 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
 import { UserMenu } from "@/components/shared/UserMenu";
+import { CommandPalette } from "@/components/shared/CommandPalette";
+import {
+  GlobalSearchTrigger,
+  QuickActionsTrigger,
+} from "@/components/shared/GlobalSearchTrigger";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 /* ─── Skip-to-content ───────────────────────────────────────────────────── */
@@ -28,7 +33,10 @@ function TopBar() {
         className="text-muted-foreground hover:text-foreground"
         aria-label="Toggle sidebar"
       />
-      <div className="flex-1" />
+      <div className="mx-2 flex flex-1 justify-end md:justify-center">
+        <GlobalSearchTrigger />
+      </div>
+      <QuickActionsTrigger />
       <ThemeToggle />
       <SystemStatusMenu />
       <NotificationsBell />
@@ -45,6 +53,7 @@ export function AppLayout() {
     <TooltipProvider delayDuration={200}>
       <SidebarProvider defaultOpen={true}>
         <SkipToContent />
+        <CommandPalette />
 
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar />

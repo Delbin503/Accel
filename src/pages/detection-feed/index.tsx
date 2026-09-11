@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
@@ -409,14 +409,19 @@ export default function DetectionFeedPage() {
   const navigate = useNavigate();
   const { createCase, linkEvents: storeLinkEvents } = useIncidentCasesStore();
 
-  const [datePreset, setDatePreset] = React.useState<DatePreset>("today");
+  // Seeded from the ⌘K palette: ?q=<term>&range=<preset>&event=<id>.
+  const [seedParams] = useSearchParams();
+  const seededRange = seedParams.get("range") as DatePreset | null;
+  const [datePreset, setDatePreset] = React.useState<DatePreset>(seededRange ?? "today");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [filters, setFilters] = React.useState<Filters>(EMPTY_FILTERS);
-  const [search, setSearch] = React.useState("");
+  const [search, setSearch] = React.useState(() => seedParams.get("q") ?? "");
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
-  const [drawerEventId, setDrawerEventId] = React.useState<string | null>(null);
+  const [drawerEventId, setDrawerEventId] = React.useState<string | null>(
+    seedParams.get("event")
+  );
   const [escalateEventId, setEscalateEventId] = React.useState<string | null>(null);
   const [dismissEventId, setDismissEventId] = React.useState<string | null>(null);
   const [dismissedIds, setDismissedIds] = React.useState<Set<string>>(new Set());
