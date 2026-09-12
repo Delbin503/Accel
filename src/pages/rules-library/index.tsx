@@ -44,8 +44,8 @@ import {
 } from "@/mocks/rulesLibrary";
 import type { RuleData, RuleSeverity } from "@/types/rules";
 import type { RuleConfig } from "@/types/ruleTemplates";
-import { configToRows, inferConfig, newConfig } from "@/lib/ruleTemplates";
-import { RuleTemplateForm } from "./RuleTemplateForm";
+import { configFromConditions, configToRows, inferConfig, newConfig } from "@/lib/ruleTemplates";
+import { RuleConditions } from "./RuleConditions";
 
 /* ── Severity badge ──────────────────────────────────────────────────────── */
 
@@ -457,7 +457,7 @@ interface BuilderErrors {
   name?: string;
   description?: string;
   tags?: string;
-  objectClasses?: string;
+  conditions?: string;
 }
 
 interface BuilderState {
@@ -491,6 +491,7 @@ function ruleToBuilder(rule: RuleData): BuilderState {
           ...rule.config,
           objectClasses: [...rule.config.objectClasses],
           perClass: { ...rule.config.perClass },
+          conditions: [...(rule.config.conditions ?? [])],
         }
       : inferConfig(rule),
     severity: rule.severity,
@@ -522,8 +523,12 @@ function RuleBuilder({
     editingRule ? ruleToBuilder(editingRule) : { ...EMPTY_BUILDER }
   );
 
+  // Conditions are the authoring surface; objectClasses/perClass are projected
+  // off them so the rule cards, the summary rows and Model Management keep working.
+  const derivedConfig = React.useMemo(() => configFromConditions(s.config), [s.config]);
+
   // The WHEN/IN/AND/FOR/THEN projection every other surface renders.
-  const rows = React.useMemo(() => configToRows(s.config, s.name), [s.config, s.name]);
+  const rows = React.useMemo(() => configToRows(derivedConfig, s.name), [derivedConfig, s.name]);
   function ruleFields() {
     return {
       name: s.name,
@@ -531,7 +536,7 @@ function RuleBuilder({
       tags: s.tags,
       conditions: rows,
       severity: s.severity,
-      config: s.config,
+      config: derivedConfig,
     };
   }
 
@@ -545,11 +550,11 @@ function RuleBuilder({
     );
   }
 
-  function handleConfigChange(next: RuleConfig) {
+  function handleConditionsChange(next: RuleConfig["conditions"]) {
     setS((prev) => ({
       ...prev,
-      config: next,
-      errors: { ...prev.errors, objectClasses: undefined },
+      config: { ...prev.config, conditions: next },
+      errors: { ...prev.errors, conditions: undefined },
     }));
   }
 
@@ -558,8 +563,8 @@ function RuleBuilder({
     if (!s.name.trim()) errors.name = "Rule name is required.";
     if (!s.description.trim()) errors.description = "Rule description is required.";
     if (s.tags.length === 0) errors.tags = "Add at least one tag.";
-    if (s.config.objectClasses.length === 0) {
-      errors.objectClasses = "Pick at least one object class.";
+    if ((s.config.conditions ?? []).length === 0) {
+      errors.conditions = "Add at least one condition.";
     }
     return errors;
   }
@@ -582,11 +587,12 @@ function RuleBuilder({
         </h1>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <div>
-            <h2 className="mb-4 text-lg font-bold text-foreground">Rule Information</h2>
-            <div className="space-y-4">
+      <div className="flex flex-col gap-6">
+        <div>
+          <h2 className="mb-4 text-lg font-bold text-foreground">Rule Information</h2>
+          <div className="space-y-4">
+            {/* Name and description share a row, as do tags and severity. */}
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Name
@@ -616,6 +622,9 @@ function RuleBuilder({
                   <p className="mt-1 text-xs text-sev-critical">{s.errors.description}</p>
                 )}
               </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
                   Rule Tag(s)
@@ -657,16 +666,13 @@ function RuleBuilder({
               </div>
             </div>
           </div>
-
         </div>
 
-        <RuleTemplateForm
-          config={s.config}
-          onChange={handleConfigChange}
-          invalidClasses={!!s.errors.objectClasses}
+        <RuleConditions
+          conditions={s.config.conditions ?? []}
+          onChange={handleConditionsChange}
+          invalid={!!s.errors.conditions}
         />
-
-
       </div>
 
       {/* Sticky footer */}

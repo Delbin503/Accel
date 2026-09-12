@@ -1,6 +1,13 @@
-import { ALL_FIELDS, DEFAULT_CLASS_PARAMS } from "@/mocks/ruleTemplates";
+import { ALL_FIELDS, DEFAULT_CLASS_PARAMS, EVENT_TEMPLATES } from "@/mocks/ruleTemplates";
 import type { ConditionRow, RuleData } from "@/types/rules";
-import type { ClassParams, RuleConfig, RuleParameterId } from "@/types/ruleTemplates";
+import type {
+  ClassParams,
+  ConditionParamId,
+  EventTemplate,
+  RuleCondition,
+  RuleConfig,
+  RuleParameterId,
+} from "@/types/ruleTemplates";
 
 /* ── Config helpers ──────────────────────────────────────────────────────── */
 
@@ -91,12 +98,107 @@ export function configToRows(config: RuleConfig, name: string): ConditionRow[] {
   return rows;
 }
 
+/** First number in a row value — "80" and "70–90" both yield 80. */
+function firstNumber(value: string): number | null {
+  const m = value.match(/\d+(\.\d+)?/);
+  return m ? Number(m[0]) : null;
+}
+
 /**
- * Config for a rule authored before the form became class-based. Those rules
- * never recorded object classes, and parameters now hang off classes — so the
- * form opens empty and the operator picks the classes it watches.
+ * Config for a rule authored before the builder became condition-based. Those
+ * rules only stored the WHEN/IN/AND/FOR/THEN display rows, so we read the zone,
+ * confidence and duration back out of them and seed a single condition — the
+ * form then opens populated instead of empty.
+ *
+ * Object classes are the one thing those rules never recorded, so that field
+ * starts empty and the operator picks it.
  */
-export function inferConfig(_rule: RuleData): RuleConfig {
-  void _rule;
-  return newConfig();
+export function inferConfig(rule: RuleData): RuleConfig {
+  const rows = rule.conditions ?? [];
+  const zone = rows.find((r) => r.type === "IN")?.field?.trim() || undefined;
+  const confidenceRow = rows.find((r) => /confidence/i.test(r.field));
+  const durationRow = rows.find((r) => r.type === "FOR");
+
+  const template =
+    templateFor(zone ? "object_enters_zone" : "object_detected") ?? EVENT_TEMPLATES[0];
+  const seeded = newCondition(template);
+
+  const confidence = confidenceRow ? firstNumber(confidenceRow.value) : null;
+  const duration = durationRow ? firstNumber(durationRow.value) : null;
+
+  const condition: RuleCondition = {
+    ...seeded,
+    confidence: confidence ?? seeded.confidence,
+    zone,
+    duration: duration ?? seeded.duration,
+    durationUnit: /min/i.test(durationRow?.unit ?? "") ? "minutes" : seeded.durationUnit,
+    parameters: Array.from(
+      new Set<ConditionParamId>([
+        ...seeded.parameters,
+        ...(zone ? (["zone"] as ConditionParamId[]) : []),
+        ...(duration !== null ? (["duration"] as ConditionParamId[]) : []),
+      ])
+    ),
+  };
+
+  return { ...newConfig(), conditions: [condition] };
+}
+
+/* ── Conditions ──────────────────────────────────────────────────────────── */
+
+let conditionSeq = 0;
+
+/** A condition seeded from a template — its declared parameters, default values. */
+export function newCondition(template: EventTemplate): RuleCondition {
+  return {
+    id: `cond-${++conditionSeq}-${Math.random().toString(36).slice(2, 6)}`,
+    templateId: template.id,
+    // Object class and confidence are always carried, whatever the template declares.
+    parameters: Array.from(new Set<ConditionParamId>(["object_class", "confidence", ...template.parameters])),
+    objectClasses: [],
+    confidence: DEFAULT_CLASS_PARAMS.confidence,
+    zone: undefined,
+    duration: DEFAULT_CLASS_PARAMS.duration,
+    durationUnit: DEFAULT_CLASS_PARAMS.durationUnit,
+    countThreshold: DEFAULT_CLASS_PARAMS.countThreshold,
+  };
+}
+
+export function templateFor(templateId: string): EventTemplate | undefined {
+  return EVENT_TEMPLATES.find((t) => t.id === templateId);
+}
+
+/**
+ * Projects the authored conditions back onto `objectClasses` / `perClass`, which
+ * the rule cards, the WHEN/IN/AND summary and Model Management still read.
+ * A class appearing in several conditions takes the strictest values.
+ */
+export function configFromConditions(config: RuleConfig): RuleConfig {
+  const conditions = config.conditions ?? [];
+  if (conditions.length === 0) return config;
+
+  const objectClasses: string[] = [];
+  const perClass: Record<string, ClassParams> = {};
+
+  for (const c of conditions) {
+    for (const cls of c.objectClasses) {
+      if (!objectClasses.includes(cls)) objectClasses.push(cls);
+      const prev = perClass[cls];
+      const fields = new Set<RuleParameterId>(prev?.fields ?? []);
+      if (c.parameters.includes("confidence")) fields.add("confidence");
+      if (c.parameters.includes("duration")) fields.add("duration");
+      if (c.parameters.includes("count_threshold")) fields.add("count_threshold");
+      perClass[cls] = {
+        ...newClassParams(),
+        ...prev,
+        fields: ALL_FIELDS.filter((f) => fields.has(f)),
+        // Strictest wins: highest confidence, longest dwell, lowest count to trip.
+        confidence: Math.max(prev?.confidence ?? 0, c.confidence),
+        duration: Math.max(prev?.duration ?? 0, c.duration),
+        durationUnit: c.durationUnit,
+        countThreshold: Math.min(prev?.countThreshold ?? Number.MAX_SAFE_INTEGER, c.countThreshold),
+      };
+    }
+  }
+  return { ...config, objectClasses, perClass };
 }
