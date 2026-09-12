@@ -1127,7 +1127,7 @@ function SourceBadge({
 }
 
 /**
- * How many object classes a detection class watches. Hidden at zero — rules
+ * How many object classes a detection rule watches. Hidden at zero — rules
  * authored before the form became class-based record none.
  */
 function ClassCountChip({ count }: { count: number }) {
@@ -1356,7 +1356,7 @@ export function ExtractRulesPrompt({
               tone="model"
             />
             <ModalBody className="text-sm text-muted-foreground">
-              Extracted rules are added to this model's <strong className="text-foreground">Detection Classes</strong>,
+              Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
               tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
             </ModalBody>
             <ModalFooter>
@@ -1948,10 +1948,10 @@ function ModelDetailPanel({
 
               <div>
 
-                {/* Detection Classes */}
+                {/* Detection Rules */}
                 <div>
                   <SectionHeader
-                    label="Detection Classes"
+                    label="Detection Rules"
                     count={draft.extractedRules.length + attachedRules.length}
                     description="Model-extracted + library rules"
                   />
@@ -2031,7 +2031,7 @@ function ModelDetailPanel({
               <p className="text-base font-bold text-foreground">Model Configuration</p>
               <p className="text-xs text-muted-foreground">
                 {sequenceSteps.length} sequence step{sequenceSteps.length !== 1 ? "s" : ""} ·{" "}
-                {draft.extractedRules.length + attachedRules.length} detection class{draft.extractedRules.length + attachedRules.length !== 1 ? "es" : ""} linked to this model
+                {draft.extractedRules.length + attachedRules.length} detection rule{draft.extractedRules.length + attachedRules.length !== 1 ? "s" : ""} linked to this model
               </p>
             </div>
 
@@ -2070,10 +2070,10 @@ function ModelDetailPanel({
                 )}
               </div>
 
-              {/* Detection Classes (view) */}
+              {/* Detection Rules (view) */}
               <div>
                 <SectionHeader
-                  label="Detection Classes"
+                  label="Detection Rules"
                   count={draft.extractedRules.length + attachedRules.length}
                   description="Model-extracted + library rules"
                 />

@@ -13,7 +13,7 @@ export interface ModelStep {
 
 /**
  * A rule auto-extracted from a step's uploaded model file on parse. Surfaces in
- * the Detection Classes panel tagged with its source model. Carries the same
+ * the Detection Rules panel tagged with its source model. Carries the same
  * editable fields as a Rule-Library rule so the cards look and behave alike.
  * Two shapes are possible: several discrete rules, or one rule with many
  * conditions.
