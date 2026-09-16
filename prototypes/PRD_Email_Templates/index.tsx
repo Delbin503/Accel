@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Mail, Clock, Users, Tag, FileCode2, Sun, Moon } from "lucide-react";
+import { Mail, Clock, Users, Tag, FileCode2, FileText, Printer, Sun, Moon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,10 +24,17 @@ import ownershipHtml from "./templates/ownership-transfer.html?raw";
 import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
 import accountDeletedHtml from "./templates/account-deleted.html?raw";
 import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
+import incidentCaseReportHtml from "./templates/incident-case-report.html?raw";
 
 interface Template {
   id: string;
   name: string;
+  /**
+   * "email" renders in the inbox chrome. "document" is a print/PDF export —
+   * previewed page-width with no From line and no scheme toggle, since it only
+   * ever renders light on its way to a printer.
+   */
+  kind: "email" | "document";
   subject: string;
   category: string;
   priority: "P1" | "P2" | "P3";
@@ -42,6 +49,7 @@ const TEMPLATES: Template[] = [
   {
     id: "otp-verification",
     name: "Email Verification / OTP Code",
+    kind: "email",
     subject: "Your Accel verification code",
     category: "Account & Authentication",
     priority: "P1",
@@ -55,6 +63,7 @@ const TEMPLATES: Template[] = [
   {
     id: "signin-code",
     name: "Sign-in Verification Code",
+    kind: "email",
     subject: "Your Accel sign-in code",
     category: "Account & Authentication",
     priority: "P1",
@@ -67,6 +76,7 @@ const TEMPLATES: Template[] = [
   {
     id: "password-reset-request",
     name: "Password Reset Request",
+    kind: "email",
     subject: "Reset your Accel password",
     category: "Account & Authentication",
     priority: "P1",
@@ -79,6 +89,7 @@ const TEMPLATES: Template[] = [
   {
     id: "password-changed",
     name: "Password Changed / Reset Confirmation",
+    kind: "email",
     subject: "Your Accel password was changed",
     category: "Account & Authentication",
     priority: "P1",
@@ -91,6 +102,7 @@ const TEMPLATES: Template[] = [
   {
     id: "2fa-changed",
     name: "Two-Factor Authentication Changed",
+    kind: "email",
     subject: "Two-factor authentication was updated",
     category: "Account & Authentication",
     priority: "P2",
@@ -103,6 +115,7 @@ const TEMPLATES: Template[] = [
   {
     id: "welcome",
     name: "Welcome / Account Activated",
+    kind: "email",
     subject: "Welcome to Accel",
     category: "Team & User Management",
     priority: "P1",
@@ -115,6 +128,7 @@ const TEMPLATES: Template[] = [
   {
     id: "invitation",
     name: "User Invitation",
+    kind: "email",
     subject: "You've been invited to Accel",
     category: "Team & User Management",
     priority: "P1",
@@ -127,6 +141,7 @@ const TEMPLATES: Template[] = [
   {
     id: "role-changed",
     name: "Role Changed",
+    kind: "email",
     subject: "Your role in Accel has been updated",
     category: "Team & User Management",
     priority: "P2",
@@ -139,6 +154,7 @@ const TEMPLATES: Template[] = [
   {
     id: "ownership-transfer",
     name: "Ownership Transfer",
+    kind: "email",
     subject: "Ownership of your Accel workspace was transferred",
     category: "Team & User Management",
     priority: "P1",
@@ -151,6 +167,7 @@ const TEMPLATES: Template[] = [
   {
     id: "account-deletion-request",
     name: "Account Deletion Request",
+    kind: "email",
     subject: "Account deletion requested",
     category: "Account & Authentication",
     priority: "P1",
@@ -164,6 +181,7 @@ const TEMPLATES: Template[] = [
   {
     id: "account-deleted",
     name: "Account Deleted",
+    kind: "email",
     subject: "Your Accel account has been deleted",
     category: "Account & Authentication",
     priority: "P1",
@@ -176,6 +194,7 @@ const TEMPLATES: Template[] = [
   {
     id: "update-payment-method",
     name: "Update Payment Method",
+    kind: "email",
     subject: "Update your payment method",
     category: "Billing & Subscription",
     priority: "P1",
@@ -185,6 +204,24 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{invoiceId}}", "{{amountDue}}", "{{billingPeriod}}", "{{cardBrand}}", "{{cardLast4}}", "{{declineReason}}", "{{declinedAt}}", "{{retryDate}}", "{{gracePeriodDays}}", "{{billingUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/update-payment-method.html",
     html: updatePaymentMethodHtml,
+  },
+  {
+    id: "incident-case-report",
+    name: "Incident Case Report",
+    kind: "document",
+    subject: "CASE-2026-0142 — Incident Case Report",
+    category: "Document export",
+    priority: "P1",
+    whenSent:
+      "On demand — Incident Cases → open a case → Export PDF. Opens in a new tab and goes straight to the print dialog.",
+    audience: "Whoever is investigating or auditing the case; carries a reviewer sign-off block for the paper trail.",
+    mergeTags: [
+      "{{caseId}}", "{{caseTitle}}", "{{severity}}", "{{statusLabel}}", "{{siteName}}",
+      "{{assigneeName}}", "{{assigneeId}}", "{{openedAt}}", "{{updatedAt}}",
+      "{{linkedCount}}", "{{caseNotes}}", "{{severityMix}}", "{{activityCount}}", "{{exportedAt}}",
+    ],
+    file: "templates/incident-case-report.html",
+    html: incidentCaseReportHtml,
   },
 ];
 
@@ -229,7 +266,12 @@ function App() {
   const [id, setId] = React.useState(TEMPLATES[0].id);
   const [scheme, setScheme] = React.useState<"light" | "dark">("light");
   const tpl = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
-  const previewHtml = React.useMemo(() => applyPreviewScheme(tpl.html, scheme), [tpl.html, scheme]);
+  const isDoc = tpl.kind === "document";
+  // A print document has one palette — only emails get the scheme rewrite.
+  const previewHtml = React.useMemo(
+    () => (isDoc ? tpl.html : applyPreviewScheme(tpl.html, scheme)),
+    [tpl.html, scheme, isDoc]
+  );
 
   /*
    * Size the preview frame to its own content instead of a fixed height, so a
@@ -280,7 +322,7 @@ function App() {
               <div>
                 <h1 className="text-lg font-bold tracking-tight">Accel · Email Templates</h1>
                 <p className="text-xs text-muted-foreground">
-                  Transactional email designs — switch to preview each one.
+                  Transactional emails and document exports — switch to preview each one.
                 </p>
               </div>
             </div>
@@ -316,10 +358,16 @@ function App() {
             </div>
             <h2 className="mb-4 text-base font-bold text-foreground">{tpl.name}</h2>
 
-            <InfoRow icon={<Mail className="size-3" />} label="Subject line">
+            <InfoRow
+              icon={isDoc ? <FileText className="size-3" /> : <Mail className="size-3" />}
+              label={isDoc ? "Document title" : "Subject line"}
+            >
               {tpl.subject}
             </InfoRow>
-            <InfoRow icon={<Clock className="size-3" />} label="When it's sent">
+            <InfoRow
+              icon={<Clock className="size-3" />}
+              label={isDoc ? "When it's generated" : "When it's sent"}
+            >
               {tpl.whenSent}
             </InfoRow>
             <InfoRow icon={<Users className="size-3" />} label="Audience">
@@ -337,7 +385,7 @@ function App() {
                 ))}
               </div>
             </InfoRow>
-            <InfoRow icon={<FileCode2 className="size-3" />} label="Sendable file">
+            <InfoRow icon={<FileCode2 className="size-3" />} label={isDoc ? "Source file" : "Sendable file"}>
               <code className="font-mono text-xs text-muted-foreground">
                 PRD_Email_Templates/{tpl.file}
               </code>
@@ -346,39 +394,54 @@ function App() {
 
           {/* Preview */}
           <main className="overflow-hidden rounded-xl border border-border bg-card">
-            {/* Mock mail-client header */}
+            {/* Mock mail-client header — a document gets page chrome instead. */}
             <div className="border-b border-border px-5 py-3">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-foreground">{tpl.subject}</p>
                 <div className="flex items-center gap-3">
                   {/* Light / dark preview toggle — rewrites the template's
-                      prefers-color-scheme query so both palettes are viewable. */}
-                  <div className="flex items-center rounded-md border border-border p-0.5">
-                    {(["light", "dark"] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setScheme(s)}
-                        className={cn(
-                          "flex items-center gap-1 rounded px-2 py-1 text-2xs font-semibold capitalize transition-colors",
-                          scheme === s
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {s === "light" ? <Sun className="size-3" /> : <Moon className="size-3" />}
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                  <span className="text-2xs text-muted-foreground">Inbox preview</span>
+                      prefers-color-scheme query so both palettes are viewable.
+                      A print document has one palette, so it is hidden there. */}
+                  {!isDoc && (
+                    <div className="flex items-center rounded-md border border-border p-0.5">
+                      {(["light", "dark"] as const).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setScheme(s)}
+                          className={cn(
+                            "flex items-center gap-1 rounded px-2 py-1 text-2xs font-semibold capitalize transition-colors",
+                            scheme === s
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {s === "light" ? <Sun className="size-3" /> : <Moon className="size-3" />}
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
+                    {isDoc && <Printer className="size-3" />}
+                    {isDoc ? "Print preview · A4" : "Inbox preview"}
+                  </span>
                 </div>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                From <span className="text-foreground">Accel &lt;no-reply@accel.com&gt;</span>
+                {isDoc ? (
+                  <>Generated by <span className="text-foreground">Accel TRMS</span> · opens in the browser print dialog</>
+                ) : (
+                  <>From <span className="text-foreground">Accel &lt;no-reply@accel.com&gt;</span></>
+                )}
               </p>
             </div>
-            <div className={cn("p-4 sm:p-8", scheme === "dark" ? "bg-[#0b0b0b]" : "bg-[#e9e8e5]")}>
+            <div
+              className={cn(
+                "p-4 sm:p-8",
+                isDoc ? "bg-[#d8d7d4]" : scheme === "dark" ? "bg-[#0b0b0b]" : "bg-[#e9e8e5]"
+              )}
+            >
               <iframe
                 ref={frameRef}
                 key={`${tpl.id}-${scheme}`}
@@ -386,7 +449,11 @@ function App() {
                 srcDoc={previewHtml}
                 scrolling="no"
                 style={{ height: frameHeight }}
-                className="mx-auto block w-full max-w-[640px] rounded-lg border border-border"
+                className={cn(
+                  "mx-auto block w-full border border-border",
+                  // A4 content width at 96dpi, so the preview breaks lines where paper will.
+                  isDoc ? "max-w-[794px] bg-white shadow-lg" : "max-w-[640px] rounded-lg"
+                )}
               />
             </div>
           </main>

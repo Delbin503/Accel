@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!--
+  Accel — Incident Case Report (document export, P1). PRINT / PDF.
+
+  NOT an email. This is the document Incident Cases → case drawer → "Export PDF"
+  opens in a new tab and sends straight to the browser's print dialog. It lives
+  in this gallery so the layout can be reviewed alongside the transactional
+  emails, since both are Accel-branded documents that leave the product.
+
+  Source of truth
+  ---------------
+  src/pages/incident-cases/CaseDrawer.tsx → handleExportPDF(). That function
+  builds this same markup from the live case; this file is the standalone
+  reference with {{merge_tags}} in place of real values. Change one, change the
+  other.
+
+  Why this does not follow the email shell
+  ----------------------------------------
+  The transactional templates use table layouts and inline styles because mail
+  clients demand it. This document only ever renders in a browser on its way to
+  a printer, so it uses a normal stylesheet — grid-free flow, real <table> only
+  where the content is tabular, and page-break control that email would ignore.
+
+  Print notes
+  -----------
+  · print-color-adjust: exact — without it browsers strip the severity pills
+    and timeline dots, and the report loses its colour coding on paper.
+  · break-inside / break-after avoid — keeps a heading off the foot of a page
+    and stops table rows and timeline entries splitting across the fold.
+  · Greys are one step darker than the on-screen palette; light greys wash out
+    further once printed.
+  · A4 with 1.6cm margins. A typical case runs 2–3 pages.
+
+  Sample data
+  -----------
+  The body is filled with CASE-2026-0142 from src/mocks/incidentCases.ts, so
+  this file renders as a finished report rather than a page of merge tags — the
+  layout is the thing being reviewed here. Every value below is a substitution
+  point; swap it for the tag in the same row when wiring this up server-side:
+
+    Accel / Threat Response         static brand block, never substituted
+    CASE-2026-0142                  {{caseId}}
+    16 September 2026 at 10:17 am   {{exportedAt}}
+    critical                        {{severity}}
+    Open                            {{statusLabel}}
+    Restricted Zone Access — …      {{caseTitle}}
+    FedEx Changi                    {{siteName}}
+    2                               {{linkedCount}}
+    Sze Hui                         {{assigneeName}}
+    USR-001                         {{assigneeId}}
+    19 May 2026, 11:48              {{openedAt}}
+    19 May 2026, 13:10              {{updatedAt}}
+    Visitor badge tailgating …      {{caseNotes}}
+    2 critical                      {{severityMix}}
+    5                               {{activityCount}}
+
+  Repeating blocks
+  ----------------
+  Two regions repeat per record. They are marked with REPEAT START / REPEAT END
+  comments — render the row once per item and drop every sample row but one:
+
+    · incident rows   one <tr> per linked incident. Per row:
+                      row number     (1-based, not a field on the record)
+                      EVT-2026-…     {{incidentId}}
+                      Restricted …   {{incidentType}}
+                      Server Room 3  {{incidentArea}}
+                      Cam-04         {{incidentCamera}}
+                      19 May 2026    {{incidentDate}}
+                      11:47          {{incidentTime}}
+                      critical       {{incidentSeverity}}
+
+    · activity rows   one <li> per case-activity entry. Per row:
+                      19 May 2026, … {{activityTimestamp}}
+                      0m             {{activityElapsed}}
+                      Case created … {{activityTitle}}
+                      Raised by …    {{activityDescription}}  (omit the div when empty)
+
+  Per-record colours
+  ------------------
+  Severity and status are colour-coded. The exporter resolves these from the
+  case; server-side, substitute the hex pair for the record's own severity:
+    critical  #b91c1c on #fef2f2      open          #1d4ed8 on #eff6ff
+    high      #c2410c on #fff7ed      in-review     #b45309 on #fffbeb
+    medium    #b45309 on #fffbeb      action-taken  #6d28d9 on #f5f3ff
+    low       #15803d on #f0fdf4      closed        #15803d on #f0fdf4
+  Timeline dot, by activity type:
+    created #6d28d9 · acknowledged #15803d · status #1d4ed8 · note #b45309
+    reassign #6d28d9 · link #1d4ed8 · sla #b91c1c · edit #6b7280
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CASE-2026-0142 — Incident Case Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #111827; background: #fff;
+      font-size: 12px; line-height: 1.55;
+      padding: 40px 44px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Masthead ── */
+    .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+      border-bottom: 3px solid #111827; padding-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand svg { width: 26px; height: 26px; color: #ea580c; }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: #6b7280; font-weight: 700; margin-top: 1px; }
+    .doc-type { text-align: right; }
+    .doc-type .kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6b7280; font-weight: 700; }
+    .doc-type .ref { font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .doc-type .when { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+    /* ── Title block ── */
+    .title-block { margin: 22px 0 18px; }
+    .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 3px; font-size: 9px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em;
+      white-space: nowrap; }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+    .subject { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+    /* ── Summary table ── */
+    .facts { width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .facts tr + tr { border-top: 1px solid #e5e7eb; }
+    .facts th, .facts td { padding: 8px 12px; text-align: left; vertical-align: top; font-size: 11px; }
+    .facts th { width: 122px; background: #f9fafb; border-right: 1px solid #e5e7eb;
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; font-weight: 700; }
+
+    /* ── Sections ── */
+    h2 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #374151;
+      font-weight: 800; border-bottom: 1px solid #d1d5db; padding-bottom: 5px; margin: 26px 0 11px; }
+    h2 .count { color: #9ca3af; font-weight: 700; }
+    .notes { border-left: 3px solid #fbbf24; background: #fffbeb; padding: 11px 14px;
+      font-size: 11.5px; color: #78350f; white-space: pre-wrap; }
+    .empty { color: #9ca3af; font-style: italic; font-size: 11px; }
+
+    /* ── Incidents table ── */
+    table.data { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    table.data th { text-align: left; padding: 7px 9px; background: #f3f4f6;
+      border-bottom: 1.5px solid #d1d5db; font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #4b5563; font-weight: 800; }
+    table.data td { padding: 7px 9px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
+      overflow-wrap: anywhere; }
+    table.data tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+    .num { color: #9ca3af; width: 22px; }
+    .mono { font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
+    .nowrap { white-space: nowrap; }
+    .tally { margin-top: 7px; font-size: 10px; color: #6b7280; }
+
+    /* ── Activity timeline ── */
+    ol.timeline { list-style: none; padding-left: 4px; }
+    li.event { position: relative; padding: 0 0 13px 19px; border-left: 1.5px solid #d1d5db; }
+    li.event:last-child { border-left-color: transparent; padding-bottom: 0; }
+    li.event::before { content: ""; position: absolute; left: -5.5px; top: 3px;
+      width: 9px; height: 9px; border-radius: 50%; background: #fff;
+      border: 2px solid var(--dot); }
+    .event-meta { font-size: 9.5px; color: #9ca3af; font-family: ui-monospace, Menlo, monospace; }
+    .event-title { font-size: 11.5px; font-weight: 700; margin-top: 1px; }
+    .event-desc { font-size: 10.5px; color: #4b5563; margin-top: 2px; }
+
+    /* ── Footer ── */
+    .signoff { margin-top: 26px; display: flex; gap: 40px; }
+    .sign { flex: 1; }
+    .sign .line { border-bottom: 1px solid #9ca3af; height: 30px; }
+    .sign .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #6b7280; font-weight: 700; margin-top: 5px; }
+    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e5e7eb;
+      display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; }
+
+    /* Keep a section and its heading together across a page break. */
+    h2, li.event, .signoff { break-inside: avoid; }
+    h2 { break-after: avoid; }
+    tr { break-inside: avoid; }
+    @media print { body { padding: 0; } @page { margin: 1.6cm; } }
+  </style>
+</head>
+<body>
+  <div class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M20.5 11 L28.5 31.5 L12.5 31.5 Z" fill="currentColor" />
+        <path d="M16 33 C 24.5 28.4 30.5 23.8 40 14.6 C 35.6 24 29 29.2 21 34.8 Z" fill="currentColor" />
+        <path d="M30.6 31.2 L37.6 27 L36 34 L29 35.6 Z" fill="currentColor" />
+      </svg>
+      <div>
+        <div class="brand-name">Accel</div>
+        <div class="brand-sub">Threat Response</div>
+      </div>
+    </div>
+    <div class="doc-type">
+      <div class="kind">Incident Case Report</div>
+      <div class="ref">CASE-2026-0142</div>
+      <div class="when">Exported 16 September 2026 at 10:17 am</div>
+    </div>
+  </div>
+
+  <div class="title-block">
+    <div class="pills">
+      <span class="pill" style="color:#b91c1c;background:#fef2f2">critical</span>
+      <span class="pill" style="color:#1d4ed8;background:#eff6ff">Open</span>
+    </div>
+    <h1>Restricted Zone Access — Server Room 3</h1>
+    <div class="subject">FedEx Changi · 2 linked incidents</div>
+  </div>
+
+  <table class="facts">
+    <tr>
+      <th>Case ID</th><td class="mono">CASE-2026-0142</td>
+      <th>Site</th><td>FedEx Changi</td>
+    </tr>
+    <tr>
+      <th>Severity</th><td style="color:#b91c1c;font-weight:700;text-transform:capitalize">critical</td>
+      <th>Status</th><td style="color:#1d4ed8;font-weight:700">Open</td>
+    </tr>
+    <tr>
+      <th>Assigned To</th><td>Sze Hui <span class="mono" style="color:#9ca3af">USR-001</span></td>
+      <th>Linked Incidents</th><td>2</td>
+    </tr>
+    <tr>
+      <th>Opened</th><td>19 May 2026, 11:48</td>
+      <th>Last Updated</th><td>19 May 2026, 13:10</td>
+    </tr>
+  </table>
+
+  <h2>Case Notes</h2>
+  <!-- With no notes, replace this block with:
+       <p class="empty">No notes recorded on this case.</p> -->
+  <div class="notes">Visitor badge tailgating incident confirmed by server room access logs. Person of interest PER-U-7790 has been identified — cross-referencing with HR visitor register. SOP compliance failure at Checkpoint-A2 likely contributed to zone access.</div>
+
+  <h2>Linked Incidents <span class="count">(2)</span></h2>
+  <!-- With no linked incidents, replace the table and tally with:
+       <p class="empty">No incidents are linked to this case.</p> -->
+  <table class="data">
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Event ID</th>
+        <th>Detection</th>
+        <th>Area</th>
+        <th>Camera</th>
+        <th>Date / Time</th>
+        <th>Severity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- REPEAT START · incident rows — two samples below; render one per
+           linked incident. The # column is a 1-based row number, not a field
+           on the record. -->
+      <tr>
+        <td class="num">1</td>
+        <td class="mono">EVT-2026-0519-002</td>
+        <td><strong>Restricted zone entry</strong></td>
+        <td>Server Room 3</td>
+        <td class="mono">Cam-04</td>
+        <td class="nowrap">19 May 2026 11:47</td>
+        <td><span class="pill" style="color:#b91c1c;background:#fef2f2">critical</span></td>
+      </tr>
+      <tr>
+        <td class="num">2</td>
+        <td class="mono">EVT-2026-0519-003</td>
+        <td><strong>Compliance breach — Pat-down SOP</strong></td>
+        <td>Loading Bay A</td>
+        <td class="mono">Cam-01</td>
+        <td class="nowrap">19 May 2026 10:18</td>
+        <td><span class="pill" style="color:#b91c1c;background:#fef2f2">critical</span></td>
+      </tr>
+      <!-- REPEAT END · incident rows -->
+    </tbody>
+  </table>
+  <p class="tally">Severity mix — 2 critical.</p>
+
+  <h2>Case Activity <span class="count">(5)</span></h2>
+  <!-- With no activity, replace the list with:
+       <p class="empty">No activity recorded on this case.</p> -->
+  <ol class="timeline">
+    <!-- REPEAT START · activity rows — five samples below; render one per
+         case-activity entry. --dot takes the hex for that entry's activity
+         type (see the table at the top). Drop .event-desc when the entry has
+         no description. -->
+    <li class="event" style="--dot:#6d28d9">
+      <div class="event-meta">19 May 2026, 11:48 · 0m</div>
+      <div class="event-title">Case created from event EVT-2026-0519-002</div>
+      <div class="event-desc">Raised by system rule "Critical detection auto-escalation". SLA timer started.</div>
+    </li>
+    <li class="event" style="--dot:#15803d">
+      <div class="event-meta">19 May 2026, 11:51 · 3m</div>
+      <div class="event-title">Acknowledged by Sze Hui · within SLA</div>
+      <div class="event-desc">Acknowledge SLA: 3m / 15m target.</div>
+    </li>
+    <li class="event" style="--dot:#1d4ed8">
+      <div class="event-meta">19 May 2026, 12:05 · 17m</div>
+      <div class="event-title">Status &rarr; In Review</div>
+      <div class="event-desc">2 additional events linked as supporting evidence.</div>
+    </li>
+    <li class="event" style="--dot:#b45309">
+      <div class="event-meta">19 May 2026, 12:34 · 46m</div>
+      <div class="event-title">Note added by Sze Hui</div>
+      <div class="event-desc">"Subject identified via badge log cross-reference. Credential belongs to contractor whose access expired 14 May."</div>
+    </li>
+    <li class="event" style="--dot:#b91c1c">
+      <div class="event-meta">19 May 2026, 13:48 · 2h</div>
+      <div class="event-title">Resolution SLA breached</div>
+      <div class="event-desc">Target was 4h. Awaiting site security physical response.</div>
+    </li>
+    <!-- REPEAT END · activity rows -->
+  </ol>
+
+  <div class="signoff">
+    <div class="sign"><div class="line"></div><div class="label">Reviewed by</div></div>
+    <div class="sign"><div class="line"></div><div class="label">Date</div></div>
+  </div>
+
+  <footer>
+    <span>Accel TRMS · CASE-2026-0142 · FedEx Changi</span>
+    <span>Confidential — internal distribution only</span>
+  </footer>
+</body>
+</html>

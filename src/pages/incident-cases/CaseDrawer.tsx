@@ -757,6 +757,42 @@ export function DeleteCaseModal({
 
 /* ── PDF export ──────────────────────────────────────────────────────────── */
 
+/** Print palette — the app's tokens resolved to fixed values for paper. */
+const PRINT_SEVERITY: Record<string, { fg: string; bg: string }> = {
+  critical: { fg: "#b91c1c", bg: "#fef2f2" },
+  high:     { fg: "#c2410c", bg: "#fff7ed" },
+  medium:   { fg: "#b45309", bg: "#fffbeb" },
+  low:      { fg: "#15803d", bg: "#f0fdf4" },
+};
+
+const PRINT_STATUS: Record<string, { fg: string; bg: string }> = {
+  open:           { fg: "#1d4ed8", bg: "#eff6ff" },
+  "in-review":    { fg: "#b45309", bg: "#fffbeb" },
+  "action-taken": { fg: "#6d28d9", bg: "#f5f3ff" },
+  closed:         { fg: "#15803d", bg: "#f0fdf4" },
+};
+
+/** Timeline dot colour per activity kind — mirrors ACTIVITY_DOT on screen. */
+const PRINT_ACTIVITY: Record<ActivityType, string> = {
+  created:      "#6d28d9",
+  acknowledged: "#15803d",
+  status:       "#1d4ed8",
+  note:         "#b45309",
+  reassign:     "#6d28d9",
+  link:         "#1d4ed8",
+  sla:          "#b91c1c",
+  edit:         "#6b7280",
+};
+
+/** Escapes case-authored text — notes and titles land in the report as markup. */
+function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function handleExportPDF(
   c: ReturnType<typeof useIncidentCasesStore.getState>["cases"][0],
   events: DetectionEvent[]
@@ -767,31 +803,48 @@ function handleExportPDF(
     return;
   }
 
+  const sev = PRINT_SEVERITY[c.severity] ?? { fg: "#111827", bg: "#f3f4f6" };
+  const status = PRINT_STATUS[c.status] ?? { fg: "#111827", bg: "#f3f4f6" };
   const statusLabel = STATUS_CONFIG[c.status].label;
-  const sevColour: Record<string, string> = {
-    critical: "#dc2626",
-    high: "#ea580c",
-    medium: "#d97706",
-    low: "#16a34a",
-  };
-  const statusColour: Record<string, string> = {
-    open: "#1d4ed8",
-    "in-review": "#d97706",
-    "action-taken": "#7c3aed",
-    closed: "#16a34a",
-  };
+
+  const exportedAt = new Date().toLocaleString("en-SG", {
+    day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+
+  /* Severity mix across the linked incidents — the report's one summary stat. */
+  const sevCounts = events.reduce<Record<string, number>>((acc, e) => {
+    acc[e.severity] = (acc[e.severity] ?? 0) + 1;
+    return acc;
+  }, {});
+  const sevSummary = ["critical", "high", "medium", "low"]
+    .filter((k) => sevCounts[k])
+    .map((k) => `${sevCounts[k]} ${k}`)
+    .join(" · ");
 
   const evRows = events
-    .map(
-      (e) => `
+    .map((e, i) => {
+      const c2 = PRINT_SEVERITY[e.severity] ?? { fg: "#111827", bg: "#f3f4f6" };
+      return `
       <tr>
-        <td>${e.id}</td>
-        <td>${e.typeLabel}</td>
-        <td>${e.areaDisplay}</td>
-        <td>${e.camera}</td>
-        <td>${e.dateDisplay} ${e.time.slice(0, 5)}</td>
-        <td style="text-transform:capitalize;color:${sevColour[e.severity] ?? "#111"}">${e.severity}</td>
-      </tr>`
+        <td class="num">${i + 1}</td>
+        <td class="mono">${esc(e.id)}</td>
+        <td><strong>${esc(e.typeLabel)}</strong></td>
+        <td>${esc(e.areaDisplay)}</td>
+        <td class="mono">${esc(e.camera)}</td>
+        <td class="nowrap">${esc(e.dateDisplay)} ${esc(e.time.slice(0, 5))}</td>
+        <td><span class="pill" style="color:${c2.fg};background:${c2.bg}">${esc(e.severity)}</span></td>
+      </tr>`;
+    })
+    .join("");
+
+  const activityRows = c.activity
+    .map(
+      (a) => `
+      <li class="event" style="--dot:${PRINT_ACTIVITY[a.type] ?? "#6b7280"}">
+        <div class="event-meta">${esc(a.timestampDisplay)} · ${esc(a.elapsed)}</div>
+        <div class="event-title">${esc(a.title)}</div>
+        ${a.description ? `<div class="event-desc">${esc(a.description)}</div>` : ""}
+      </li>`
     )
     .join("");
 
@@ -802,61 +855,153 @@ function handleExportPDF(
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Incident Case ${c.id}</title>
+  <title>${esc(c.id)} — Incident Case Report</title>
   ${styleOpen}
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; color: #111; padding: 48px; font-size: 14px; line-height: 1.5; }
-    .header { border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 24px; }
-    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
-    .meta-item label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; font-weight: 600; display: block; margin-bottom: 2px; }
-    .meta-item span { font-size: 13px; color: #111; }
-    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin: 24px 0 12px; }
-    .notes { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px; font-size: 13px; color: #92400e; line-height: 1.6; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { text-align: left; padding: 8px 12px; background: #f3f4f6; border: 1px solid #e5e7eb; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 700; }
-    td { padding: 8px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
-    tr:nth-child(even) td { background: #f9fafb; }
-    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; display: flex; justify-content: space-between; }
-    @media print { body { padding: 0; } @page { margin: 2cm; } }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #111827; background: #fff;
+      font-size: 12px; line-height: 1.55;
+      padding: 40px 44px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Masthead ── */
+    .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+      border-bottom: 3px solid #111827; padding-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand svg { width: 26px; height: 26px; color: #ea580c; }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: #6b7280; font-weight: 700; margin-top: 1px; }
+    .doc-type { text-align: right; }
+    .doc-type .kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6b7280; font-weight: 700; }
+    .doc-type .ref { font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .doc-type .when { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+    /* ── Title block ── */
+    .title-block { margin: 22px 0 18px; }
+    .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 3px; font-size: 9px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em;
+      white-space: nowrap; }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+    .subject { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+    /* ── Summary table ── */
+    .facts { width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .facts tr + tr { border-top: 1px solid #e5e7eb; }
+    .facts th, .facts td { padding: 8px 12px; text-align: left; vertical-align: top; font-size: 11px; }
+    .facts th { width: 122px; background: #f9fafb; border-right: 1px solid #e5e7eb;
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; font-weight: 700; }
+
+    /* ── Sections ── */
+    h2 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #374151;
+      font-weight: 800; border-bottom: 1px solid #d1d5db; padding-bottom: 5px; margin: 26px 0 11px; }
+    h2 .count { color: #9ca3af; font-weight: 700; }
+    .notes { border-left: 3px solid #fbbf24; background: #fffbeb; padding: 11px 14px;
+      font-size: 11.5px; color: #78350f; white-space: pre-wrap; }
+    .empty { color: #9ca3af; font-style: italic; font-size: 11px; }
+
+    /* ── Incidents table ── */
+    table.data { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    table.data th { text-align: left; padding: 7px 9px; background: #f3f4f6;
+      border-bottom: 1.5px solid #d1d5db; font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #4b5563; font-weight: 800; }
+    table.data td { padding: 7px 9px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
+      overflow-wrap: anywhere; }
+    table.data tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+    .num { color: #9ca3af; width: 22px; }
+    .mono { font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
+    .nowrap { white-space: nowrap; }
+    .tally { margin-top: 7px; font-size: 10px; color: #6b7280; }
+
+    /* ── Activity timeline ── */
+    ol.timeline { list-style: none; padding-left: 4px; }
+    li.event { position: relative; padding: 0 0 13px 19px; border-left: 1.5px solid #d1d5db; }
+    li.event:last-child { border-left-color: transparent; padding-bottom: 0; }
+    li.event::before { content: ""; position: absolute; left: -5.5px; top: 3px;
+      width: 9px; height: 9px; border-radius: 50%; background: #fff;
+      border: 2px solid var(--dot); }
+    .event-meta { font-size: 9.5px; color: #9ca3af; font-family: ui-monospace, Menlo, monospace; }
+    .event-title { font-size: 11.5px; font-weight: 700; margin-top: 1px; }
+    .event-desc { font-size: 10.5px; color: #4b5563; margin-top: 2px; }
+
+    /* ── Footer ── */
+    .signoff { margin-top: 26px; display: flex; gap: 40px; }
+    .sign { flex: 1; }
+    .sign .line { border-bottom: 1px solid #9ca3af; height: 30px; }
+    .sign .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #6b7280; font-weight: 700; margin-top: 5px; }
+    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e5e7eb;
+      display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; }
+
+    /* Keep a section and its heading together across a page break. */
+    h2, li.event, .signoff { break-inside: avoid; }
+    h2 { break-after: avoid; }
+    tr { break-inside: avoid; }
+    @media print { body { padding: 0; } @page { margin: 1.6cm; } }
   ${styleClose}
 </head>
 <body>
-  <div class="header">
-    <div class="badges">
-      <span class="badge" style="background:#fee2e2;color:${sevColour[c.severity] ?? "#111"}">${c.severity.toUpperCase()}</span>
-      <span class="badge" style="background:#eff6ff;color:${statusColour[c.status] ?? "#111"}">${statusLabel.toUpperCase()}</span>
+  <div class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M20.5 11 L28.5 31.5 L12.5 31.5 Z" fill="currentColor" />
+        <path d="M16 33 C 24.5 28.4 30.5 23.8 40 14.6 C 35.6 24 29 29.2 21 34.8 Z" fill="currentColor" />
+        <path d="M30.6 31.2 L37.6 27 L36 34 L29 35.6 Z" fill="currentColor" />
+      </svg>
+      <div>
+        <div class="brand-name">Accel</div>
+        <div class="brand-sub">Threat Response</div>
+      </div>
     </div>
-    <h1>${c.title}</h1>
-    <div style="font-family:monospace;font-size:13px;color:#6b7280;margin-top:4px">${c.id} · ${c.siteDisplay}</div>
+    <div class="doc-type">
+      <div class="kind">Incident Case Report</div>
+      <div class="ref">${esc(c.id)}</div>
+      <div class="when">Exported ${esc(exportedAt)}</div>
+    </div>
   </div>
 
-  <div class="meta-grid">
-    <div class="meta-item"><label>Assigned To</label><span>${c.assignedTo.name} (${c.assignedTo.id})</span></div>
-    <div class="meta-item"><label>Site</label><span>${c.siteDisplay}</span></div>
-    <div class="meta-item"><label>Created</label><span>${c.createdAtDisplay}</span></div>
-    <div class="meta-item"><label>Last Updated</label><span>${c.updatedAtDisplay}</span></div>
-    <div class="meta-item"><label>Linked Incidents</label><span>${c.incidentIds.length}</span></div>
-    <div class="meta-item"><label>Severity</label><span style="text-transform:capitalize;color:${sevColour[c.severity] ?? "#111"};font-weight:700">${c.severity}</span></div>
+  <div class="title-block">
+    <div class="pills">
+      <span class="pill" style="color:${sev.fg};background:${sev.bg}">${esc(c.severity)}</span>
+      <span class="pill" style="color:${status.fg};background:${status.bg}">${esc(statusLabel)}</span>
+    </div>
+    <h1>${esc(c.title)}</h1>
+    <div class="subject">${esc(c.siteDisplay)} · ${c.incidentIds.length} linked incident${c.incidentIds.length === 1 ? "" : "s"}</div>
   </div>
 
-  ${
-    c.notes
-      ? `<div class="section-title">Case Notes</div>
-  <div class="notes">${c.notes}</div>`
-      : ""
-  }
+  <table class="facts">
+    <tr>
+      <th>Case ID</th><td class="mono">${esc(c.id)}</td>
+      <th>Site</th><td>${esc(c.siteDisplay)}</td>
+    </tr>
+    <tr>
+      <th>Severity</th><td style="color:${sev.fg};font-weight:700;text-transform:capitalize">${esc(c.severity)}</td>
+      <th>Status</th><td style="color:${status.fg};font-weight:700">${esc(statusLabel)}</td>
+    </tr>
+    <tr>
+      <th>Assigned To</th><td>${esc(c.assignedTo.name)} <span class="mono" style="color:#9ca3af">${esc(c.assignedTo.id)}</span></td>
+      <th>Linked Incidents</th><td>${events.length}</td>
+    </tr>
+    <tr>
+      <th>Opened</th><td>${esc(c.createdAtDisplay)}</td>
+      <th>Last Updated</th><td>${esc(c.updatedAtDisplay)}</td>
+    </tr>
+  </table>
 
-  <div class="section-title">Linked Incidents (${events.length})</div>
+  <h2>Case Notes</h2>
+  ${c.notes ? `<div class="notes">${esc(c.notes)}</div>` : `<p class="empty">No notes recorded on this case.</p>`}
+
+  <h2>Linked Incidents <span class="count">(${events.length})</span></h2>
   ${
     events.length > 0
-      ? `<table>
+      ? `<table class="data">
     <thead>
       <tr>
+        <th class="num">#</th>
         <th>Event ID</th>
-        <th>Type</th>
+        <th>Detection</th>
         <th>Area</th>
         <th>Camera</th>
         <th>Date / Time</th>
@@ -864,14 +1009,27 @@ function handleExportPDF(
       </tr>
     </thead>
     <tbody>${evRows}</tbody>
-  </table>`
-      : `<p style="color:#9ca3af;font-size:13px">No incident details available.</p>`
+  </table>
+  ${sevSummary ? `<p class="tally">Severity mix — ${esc(sevSummary)}.</p>` : ""}`
+      : `<p class="empty">No incidents are linked to this case.</p>`
   }
 
-  <div class="footer">
-    <span>Exported from Delbin Accel TRMS</span>
-    <span>${new Date().toLocaleDateString("en-SG", { day: "numeric", month: "long", year: "numeric" })}</span>
+  <h2>Case Activity <span class="count">(${c.activity.length})</span></h2>
+  ${
+    c.activity.length > 0
+      ? `<ol class="timeline">${activityRows}</ol>`
+      : `<p class="empty">No activity recorded on this case.</p>`
+  }
+
+  <div class="signoff">
+    <div class="sign"><div class="line"></div><div class="label">Reviewed by</div></div>
+    <div class="sign"><div class="line"></div><div class="label">Date</div></div>
   </div>
+
+  <footer>
+    <span>Accel TRMS · ${esc(c.id)} · ${esc(c.siteDisplay)}</span>
+    <span>Confidential — internal distribution only</span>
+  </footer>
 
   <script>
     window.onload = function() {
@@ -882,8 +1040,8 @@ function handleExportPDF(
 </body>
 </html>`);
   w.document.close();
-  toast.success("PDF export ready", {
-    description: "Your browser's print dialog has been opened.",
+  toast.success("Incident report ready", {
+    description: `${c.id} opened in your browser's print dialog.`,
   });
 }
 

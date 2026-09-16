@@ -1,6 +1,7 @@
 # PRD · Email Templates (prototype)
 
-A gallery of Accel's transactional **email templates**, built to match the
+A gallery of Accel's transactional **email templates** — plus the **document
+exports** that leave the product — built to match the
 official Accel email design in Figma
 ([node 3468:1489](https://www.figma.com/design/3zuhOHLseacxDg8co2eQZH/Accel--TRMS-?node-id=3468-1489)):
 dark card, Accel orange (`#FE5C01`), Manrope type, `Sigmawave Team` sign-off.
@@ -34,6 +35,25 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 11 | **Account Deleted** | P1 | After deletion, confirming access and personal data are gone. |
 | 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
 
+## Documents
+
+Not emails. Branded documents the product generates on demand, previewed here so
+their layout can be reviewed alongside the templates above.
+
+| # | Document | Priority | When it's generated |
+|---|----------|----------|---------------------|
+| 13 | **Incident Case Report** | P1 | Incident Cases → open a case → **Export PDF**. Opens in a new tab and goes straight to the browser's print dialog. |
+
+`templates/incident-case-report.html` is the standalone reference with
+`{{merge_tags}}`; the live version is built by `handleExportPDF()` in
+`src/pages/incident-cases/CaseDrawer.tsx`. **Change one, change the other.**
+
+It is A4 with 1.6cm margins, uses a normal stylesheet rather than the email
+table shell, and relies on `print-color-adjust: exact` so the severity pills and
+timeline dots survive printing. Two regions repeat per record — the incident
+rows and the activity timeline entries — marked in the file with
+`REPEAT START` / `REPEAT END` comments.
+
 Each template is a **standalone, sendable** `.html` file under `templates/`
 (table layout + inline styles, Outlook VML button where needed, Manrope with
 Arial fallback). Hand them to the backend / mail service and replace the
@@ -54,9 +74,13 @@ All templates share one skeleton so new ones stay consistent:
 
 1. Add a sendable `templates/<name>.html` following the shared shell.
 2. Register it in the `TEMPLATES` array in `index.tsx` (imported via `?raw`) with
-   its subject, priority, when-sent, audience, and merge tags.
+   its `kind`, subject, priority, when-sent, audience, and merge tags.
 
 It appears in the dropdown automatically.
+
+`kind` picks the preview chrome: `"email"` gets the inbox header, the From line
+and the light/dark toggle; `"document"` gets a page-width A4 preview with no From
+line and no toggle, since a print document has one palette.
 
 ## Notes
 
