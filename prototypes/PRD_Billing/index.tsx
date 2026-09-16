@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
-import { AppSidebar, SidebarProvider } from "@/components/layout/AppSidebar";
+import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
@@ -21,10 +21,10 @@ function App() {
           <TooltipProvider delayDuration={200}>
             <SidebarProvider defaultOpen={true}>
               <div className="flex min-h-screen w-full bg-background">
-                <AppSidebar collapseTrigger />
+                <AppSidebar />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                    <ProtoBreadcrumb />
+                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
                     <div className="flex-1" />
                     <SystemStatusMenu />
                     <NotificationsBell />
@@ -32,6 +32,7 @@ function App() {
                     <UserMenu />
                   </header>
                   <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
+                    <ProtoBreadcrumb className="mb-4" />
                     <Routes>
                       <Route path="*" element={<BillingPage />} />
                     </Routes>

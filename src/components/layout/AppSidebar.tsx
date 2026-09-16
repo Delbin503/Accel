@@ -335,37 +335,13 @@ function SigmawaveFooter() {
   );
 }
 
-/* ─── Logo row with the collapse control ────────────────────────────────── */
-
-/* Expanded: logo left, collapse button right. Collapsed: the button sits under
-   the mark, since there is no room beside it. */
-function LogoRow() {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
-
-  return (
-    <div className={cn("flex gap-1", isCollapsed ? "flex-col items-center" : "items-center")}>
-      <div className="min-w-0 flex-1">
-        <AccelLogo />
-      </div>
-      <SidebarTrigger
-        aria-label="Toggle sidebar"
-        className="shrink-0 text-muted-foreground hover:text-foreground"
-      />
-    </div>
-  );
-}
-
 /* ─── Main sidebar component ────────────────────────────────────────────── */
 
-export function AppSidebar({ collapseTrigger = false }: { collapseTrigger?: boolean } = {}) {
+export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="pb-1 pt-3">
-        {/* `collapseTrigger` moves the collapse control out of the top bar and
-            into the sidebar header. Opt-in so surfaces that keep it in the
-            header (the main AppLayout) are unaffected. */}
-        {collapseTrigger ? <LogoRow /> : <AccelLogo />}
+        <AccelLogo />
       </SidebarHeader>
 
       <SidebarContent className="gap-0 overflow-x-hidden">

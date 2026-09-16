@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { RotateCcw, LayoutDashboard } from "lucide-react";
-import { AppSidebar, SidebarProvider } from "@/components/layout/AppSidebar";
+import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
@@ -92,10 +92,10 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar collapseTrigger />
+        <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-            <ProtoBreadcrumb />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
             <div className="flex-1" />
             <SystemStatusMenu />
             <NotificationsBell />
@@ -103,6 +103,7 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
             <UserMenu />
           </header>
           <main className="flex-1 overflow-auto p-6">
+            <ProtoBreadcrumb className="mb-4" />
             <div className="mx-auto max-w-2xl py-10">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary-muted text-primary">
