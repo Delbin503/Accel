@@ -36,6 +36,13 @@ const PHASES: Phase[] = [
     ],
   },
   {
+    phase: "Phase 1.3",
+    priority: "P1",
+    modules: [
+      { name: "Phase 1.3 · Proposals", slug: "PRD_Phase_1_3" },
+    ],
+  },
+  {
     phase: "Phase 2",
     priority: "P0",
     modules: [
