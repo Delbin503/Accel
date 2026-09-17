@@ -1,13 +1,6 @@
 import * as React from "react";
 import { Download, Eye, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -100,13 +93,13 @@ function Slider({
 /* ── Page ────────────────────────────────────────────────────────────────── */
 
 export function VideoEnhancement() {
-  const clips = MOCK_CAMERAS.filter((c) => c.nvrId).slice(0, 5);
-  const [clipId, setClipId] = React.useState(clips[0]?.id ?? "");
+  /* The clip arrives from wherever enhancement was opened — the picker that
+     used to sit here belongs to the Recordings list, not to this editor. */
+  const clip = MOCK_CAMERAS.find((c) => c.nvrId);
   const [enh, setEnh] = React.useState<Enhancement>(NEUTRAL);
   const [preset, setPreset] = React.useState<string>("free");
   const [showOriginal, setShowOriginal] = React.useState(false);
 
-  const clip = clips.find((c) => c.id === clipId) ?? clips[0];
   const dirty = JSON.stringify(enh) !== JSON.stringify(NEUTRAL);
 
   function patch(next: Partial<Enhancement>) {
@@ -187,18 +180,7 @@ export function VideoEnhancement() {
         {/* ── Viewer ── */}
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-            <Select value={clipId} onValueChange={setClipId}>
-              <SelectTrigger className="h-8 w-[240px] text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {clips.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-base font-semibold text-foreground">{clip?.name}</p>
 
             {/* Press-and-hold to see the untouched frame */}
             <Button

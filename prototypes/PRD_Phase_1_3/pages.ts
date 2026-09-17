@@ -1,7 +1,6 @@
-import { Film, Layers, PlayCircle, Settings, Sparkles } from "lucide-react";
+import { Film, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
 import { SyncPlaybackMonitoring } from "./SyncPlaybackMonitoring";
-import { FourTypeRecordings } from "./FourTypeRecordings";
 import { RecordingsByDay } from "./RecordingsByDay";
 import { VideoEnhancement } from "./VideoEnhancement";
 
@@ -51,17 +50,6 @@ export const PAGES = [
       "Picking one opens the player in a pop-up",
     ],
     Component: RecordingsByDay,
-  },
-  {
-    path: "/recordings/by-type",
-    title: "Recordings by Type",
-    subtitle: "Recordings · flat list",
-    icon: Layers,
-    refs: "VMS-VR-001 … 004, VMS-VPB-003",
-    summary:
-      "The same footage as a flat, filterable list — one row per type per camera-day. Starring a clip protects it from the retention sweep.",
-    points: ["Grouped by camera and day", "Motion reports clip counts, not one file", "Starred clips cannot be deleted"],
-    Component: FourTypeRecordings,
   },
   {
     path: "/enhancement",
