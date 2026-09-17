@@ -9,7 +9,10 @@ import {
   FPS_OPTIONS,
   RECORDING_TYPES,
   RESOLUTIONS,
+  REVERT_OPTIONS,
   TONE_CLASSES,
+  TOP_LEVEL_TYPES,
+  childrenOf,
   resolutionRank,
   type RecordingTypeConfig,
   type RecordingTypeDef,
@@ -20,16 +23,19 @@ import {
    System Configuration › Camera Defaults section. Field labels, control
    heights and row chrome copy that page so it drops straight in. */
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ checked, onChange, label, disabled }: {
+  checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors",
+        "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
@@ -41,19 +47,146 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 const FIELD_LABEL = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
-/* ── One recording type ──────────────────────────────────────────────── */
+/* ── Warnings shared by a type and its nested child ──────────────────── */
 
-function TypeRow({ def, config, onChange }: {
+function QualityWarning({ def, config }: { def: RecordingTypeDef; config: RecordingTypeConfig }) {
+  const below = resolutionRank(config.resolution) < resolutionRank(def.minResolution) || config.fps < def.minFps;
+  if (!below) return null;
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-warning">
+      <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
+      {def.label} is specified for at least {def.minResolution} at {def.minFps} fps — this is set below it.
+    </p>
+  );
+}
+
+function Note({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+      <Info className="mt-0.5 size-3 flex-shrink-0" />
+      {children}
+    </p>
+  );
+}
+
+/* ── Quality pair, the only controls motion carries ──────────────────── */
+
+function QualityFields({ def, config, onChange }: {
   def: RecordingTypeDef;
   config: RecordingTypeConfig;
   onChange: (next: Partial<RecordingTypeConfig>) => void;
 }) {
+  return (
+    <>
+      <div>
+        <label className={FIELD_LABEL}>Resolution</label>
+        <Select value={config.resolution} onValueChange={(v) => onChange({ resolution: v })}>
+          <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {RESOLUTIONS.map((r) => (
+              <SelectItem key={r} value={r}>{r}{r === def.minResolution && " · minimum"}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label className={FIELD_LABEL}>Frame Rate</label>
+        <Select value={String(config.fps)} onValueChange={(v) => onChange({ fps: Number(v) })}>
+          <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {FPS_OPTIONS.map((f) => (
+              <SelectItem key={f} value={String(f)}>{f} fps{f === def.minFps && " · minimum"}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </>
+  );
+}
+
+/* ── Motion, nested inside its parent ────────────────────────────────── */
+
+/** Motion is a mode the parent switches into, so it has no window of its own —
+    only quality, and how long to wait before dropping back. */
+function NestedTrigger({ def, config, parentEnabled, onChange }: {
+  def: RecordingTypeDef;
+  config: RecordingTypeConfig;
+  parentEnabled: boolean;
+  onChange: (next: Partial<RecordingTypeConfig>) => void;
+}) {
   const tone = TONE_CLASSES[def.tone];
-  const belowMinRes = resolutionRank(config.resolution) < resolutionRank(def.minResolution);
-  const belowMinFps = config.fps < def.minFps;
+  const active = parentEnabled && config.enabled;
+
+  return (
+    <div className={cn(
+      "rounded-lg border border-border bg-card px-3.5 py-3 transition-opacity",
+      !parentEnabled && "opacity-50"
+    )}>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className={cn("rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider", tone.chip)}>
+              {def.label}
+            </span>
+          </div>
+          <p className={cn("text-xs leading-snug", active ? "text-foreground" : "text-muted-foreground")}>
+            {def.description}
+          </p>
+        </div>
+        <Toggle
+          checked={config.enabled}
+          onChange={(v) => onChange({ enabled: v })}
+          disabled={!parentEnabled}
+          label={`Enable ${def.label} recording`}
+        />
+      </div>
+
+      <div className={cn("mt-3 border-t border-border pt-3", !active && "pointer-events-none opacity-40")}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <QualityFields def={def} config={config} onChange={onChange} />
+          <div>
+            <label className={FIELD_LABEL}>Revert After</label>
+            <Select
+              value={String(config.revertSeconds ?? 50)}
+              onValueChange={(v) => onChange({ revertSeconds: Number(v) })}
+            >
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {REVERT_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={String(s)}>{s} seconds</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-1.5">
+          <QualityWarning def={def} config={config} />
+          <Note>
+            After {config.revertSeconds ?? 50} seconds with no motion, the camera drops back to
+            standby until the next trigger.
+          </Note>
+          {def.note && <Note>{def.note}</Note>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── One scheduled type ──────────────────────────────────────────────── */
+
+function TypeRow({ def, config, configs, onChange, onChangeChild }: {
+  def: RecordingTypeDef;
+  config: RecordingTypeConfig;
+  configs: Record<RecordingTypeId, RecordingTypeConfig>;
+  onChange: (next: Partial<RecordingTypeConfig>) => void;
+  onChangeChild: (id: RecordingTypeId, next: Partial<RecordingTypeConfig>) => void;
+}) {
+  const tone = TONE_CLASSES[def.tone];
   /* An end time at or before the start time means the window runs past
      midnight — legitimate for standby, so it is called out, not blocked. */
   const overnight = !def.alwaysOn && config.endTime <= config.startTime;
+  const children = childrenOf(def.id);
 
   return (
     <div className="rounded-lg border border-border bg-background px-3.5 py-3">
@@ -63,13 +196,12 @@ function TypeRow({ def, config, onChange }: {
             <span className={cn("rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider", tone.chip)}>
               {def.label}
             </span>
-            <span className="font-mono text-2xs text-muted-foreground">{def.ref}</span>
             {def.alwaysOn && (
               <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">24/7</span>
             )}
           </div>
           <p className={cn("text-xs leading-snug", config.enabled ? "text-foreground" : "text-muted-foreground")}>
-            {def.requirement}
+            {def.description}
           </p>
         </div>
         <Toggle checked={config.enabled} onChange={(v) => onChange({ enabled: v })} label={`Enable ${def.label} recording`} />
@@ -99,50 +231,35 @@ function TypeRow({ def, config, onChange }: {
               <TimeSelect value={config.endTime} onChange={(v) => onChange({ endTime: v })} aria-label={`${def.label} end time`} />
             )}
           </div>
-          <div>
-            <label className={FIELD_LABEL}>Resolution</label>
-            <Select value={config.resolution} onValueChange={(v) => onChange({ resolution: v })}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {RESOLUTIONS.map((r) => (
-                  <SelectItem key={r} value={r}>{r}{r === def.minResolution && " · minimum"}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className={FIELD_LABEL}>Frame Rate</label>
-            <Select value={String(config.fps)} onValueChange={(v) => onChange({ fps: Number(v) })}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FPS_OPTIONS.map((f) => (
-                  <SelectItem key={f} value={String(f)}>{f} fps{f === def.minFps && " · minimum"}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <QualityFields def={def} config={config} onChange={onChange} />
         </div>
 
-        {(belowMinRes || belowMinFps || overnight || def.note) && (
-          <div className="mt-3 space-y-1.5">
-            {(belowMinRes || belowMinFps) && (
-              <p className="flex items-start gap-1.5 text-xs text-warning">
-                <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
-                {def.ref} requires at least {def.minResolution} at {def.minFps} fps — this is set below it.
-              </p>
-            )}
-            {overnight && (
-              <p className="flex items-start gap-1.5 text-xs text-info">
-                <Info className="mt-0.5 size-3 flex-shrink-0" />
-                Window runs overnight — {formatTimeOfDay(config.startTime)} through {formatTimeOfDay(config.endTime)} the next day.
-              </p>
-            )}
-            {def.note && (
-              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                <Info className="mt-0.5 size-3 flex-shrink-0" />
-                {def.note}
-              </p>
-            )}
+        <div className="mt-3 space-y-1.5">
+          <QualityWarning def={def} config={config} />
+          {overnight && (
+            <p className="flex items-start gap-1.5 text-xs text-info">
+              <Info className="mt-0.5 size-3 flex-shrink-0" />
+              Window runs overnight — {formatTimeOfDay(config.startTime)} through {formatTimeOfDay(config.endTime)} the next day.
+            </p>
+          )}
+          {def.note && <Note>{def.note}</Note>}
+        </div>
+
+        {/* Modes that run inside this type rather than on their own schedule. */}
+        {children.length > 0 && (
+          <div className="mt-3 space-y-2 border-t border-border pt-3">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Switches into
+            </p>
+            {children.map((child) => (
+              <NestedTrigger
+                key={child.id}
+                def={child}
+                config={configs[child.id]}
+                parentEnabled={config.enabled}
+                onChange={(next) => onChangeChild(child.id, next)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -164,10 +281,14 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
       <div className="space-y-2">
         {RECORDING_TYPES.map((def) => {
           const cfg = configs[def.id];
+          const parent = def.parent ? configs[def.parent] : null;
+          /* A nested type covers its parent's window, and only while the
+             parent is on — so it is drawn against the parent's hours. */
+          const window = parent ?? cfg;
+          const enabled = cfg.enabled && (!parent || parent.enabled);
           const tone = TONE_CLASSES[def.tone];
-          const start = toPct(cfg.startTime);
-          const end = toPct(cfg.endTime);
-          /* A window that wraps past midnight draws as two bars. */
+          const start = toPct(window.startTime);
+          const end = toPct(window.endTime);
           const spans = def.alwaysOn
             ? [{ left: 0, width: 100 }]
             : end > start
@@ -176,20 +297,25 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
 
           return (
             <div key={def.id} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 truncate text-xs text-muted-foreground">{def.label}</span>
+              <span className={cn("w-24 shrink-0 truncate text-xs text-muted-foreground", def.parent && "pl-3")}>
+                {def.label}
+              </span>
               <div className="relative h-4 flex-1 overflow-hidden rounded bg-muted">
-                {cfg.enabled && spans.map((s, i) => (
-                  <div key={i} className={cn("absolute inset-y-0 rounded-sm opacity-80", tone.bar)}
+                {enabled && spans.map((s, i) => (
+                  <div key={i}
+                    className={cn("absolute inset-y-0 rounded-sm", tone.bar, def.parent ? "opacity-50" : "opacity-80")}
                     style={{ left: `${s.left}%`, width: `${s.width}%` }} />
                 ))}
               </div>
               {/* Same 12-hour formatting as the time fields below. */}
               <span className="w-32 shrink-0 text-right font-mono text-2xs text-muted-foreground">
-                {cfg.enabled
-                  ? def.alwaysOn
+                {!enabled
+                  ? "off"
+                  : def.alwaysOn
                     ? "All day"
-                    : `${formatTimeOfDay(cfg.startTime)} – ${formatTimeOfDay(cfg.endTime)}`
-                  : "off"}
+                    : def.parent
+                      ? "when triggered"
+                      : `${formatTimeOfDay(window.startTime)} – ${formatTimeOfDay(window.endTime)}`}
               </span>
             </div>
           );
@@ -215,10 +341,27 @@ export function RecordingSchedule() {
   const [configs, setConfigs] = React.useState(DEFAULT_CONFIG);
 
   function patch(id: RecordingTypeId, next: Partial<RecordingTypeConfig>) {
-    setConfigs((c) => ({ ...c, [id]: { ...c[id], ...next } }));
+    setConfigs((c) => {
+      const updated = { ...c, [id]: { ...c[id], ...next } };
+      /* A nested type records inside its parent's hours, so moving the
+         parent's window moves it too. */
+      if (next.startTime || next.endTime) {
+        childrenOf(id).forEach((child) => {
+          updated[child.id] = {
+            ...updated[child.id],
+            startTime: updated[id].startTime,
+            endTime: updated[id].endTime,
+          };
+        });
+      }
+      return updated;
+    });
   }
 
-  const enabledCount = RECORDING_TYPES.filter((t) => configs[t.id].enabled).length;
+  const enabledCount = RECORDING_TYPES.filter((t) => {
+    const parent = t.parent ? configs[t.parent] : null;
+    return configs[t.id].enabled && (!parent || parent.enabled);
+  }).length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -228,8 +371,15 @@ export function RecordingSchedule() {
         <strong className="text-foreground">{enabledCount} of {RECORDING_TYPES.length} enabled.</strong>
       </p>
       <CoverageStrip configs={configs} />
-      {RECORDING_TYPES.map((def) => (
-        <TypeRow key={def.id} def={def} config={configs[def.id]} onChange={(next) => patch(def.id, next)} />
+      {TOP_LEVEL_TYPES.map((def) => (
+        <TypeRow
+          key={def.id}
+          def={def}
+          config={configs[def.id]}
+          configs={configs}
+          onChange={(next) => patch(def.id, next)}
+          onChangeChild={(id, next) => patch(id, next)}
+        />
       ))}
     </div>
   );

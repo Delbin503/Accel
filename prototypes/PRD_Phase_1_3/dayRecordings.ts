@@ -73,6 +73,8 @@ function buildRecordings(): DayRecording[] {
       RECORDING_TYPES.forEach((t) => {
         const cfg = DEFAULT_CONFIG[t.id];
         if (!cfg.enabled) return;
+        // A nested type only records while its parent is recording.
+        if (t.parent && !DEFAULT_CONFIG[t.parent].enabled) return;
         const mins = windowMinutes(t.id);
         // Motion recording only runs while something moves — a fraction of the window.
         const effective = t.id === "motion" ? Math.round(mins * 0.08) + (c.recentEventCount % 17) : mins;
