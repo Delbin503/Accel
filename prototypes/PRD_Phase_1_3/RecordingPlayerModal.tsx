@@ -1,10 +1,23 @@
 import * as React from "react";
-import { CircleDot, Maximize2, Pause, Play, SkipBack, SkipForward, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  CircleDot,
+  Maximize2,
+  Pause,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Video,
+  Volume2,
+  VolumeX,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { Modal, ModalContent } from "@/components/shared/Modal";
 import { DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { RECORDING_TYPES, TONE_CLASSES } from "./recordingTypes";
+import { IconButton, PlaybackSettingsMenu, ZoomSelector } from "./playbackControls";
+import { LIVE_STATE, zoomTransform, type PlaybackState } from "./playback";
 import { periodsFor, type DayRecording } from "./dayRecordings";
 
 /* The player is a pop-up now, not the first thing in the drawer — a camera-day
@@ -24,6 +37,9 @@ function fmtClock(sec: number): string {
 function PlayerBody({ recording }: { recording: DayRecording }) {
   const [currentSec, setCurrentSec] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
+  /* Same state shape the live tiles use, so the controls behave identically. */
+  const [pb, setPb] = React.useState<PlaybackState>(LIVE_STATE);
+  const [zoomArmed, setZoomArmed] = React.useState(false);
 
   const totalSec = recording.durationMinutes * 60;
 
@@ -37,9 +53,9 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
         }
         return s + 30;
       });
-    }, 500);
+    }, 500 / pb.speed);
     return () => clearInterval(id);
-  }, [isPlaying, totalSec]);
+  }, [isPlaying, totalSec, pb.speed]);
 
   const def = RECORDING_TYPES.find((t) => t.id === recording.type) ?? RECORDING_TYPES[0];
   const tone = TONE_CLASSES[def.tone];
@@ -83,9 +99,14 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
       <div className="overflow-y-auto p-5">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="relative aspect-video w-full overflow-hidden bg-neutral-950">
-            <div className="absolute inset-0"
-              style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }} />
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
+            <div
+              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
+              style={{
+                background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
+                transform: zoomTransform(pb.zoomRect),
+              }}
+            />
+            <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
               <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
               {isPlaying ? "Playing" : "Paused"}
             </span>
@@ -99,77 +120,91 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
                 {isPlaying ? <Pause className="size-6 text-white" /> : <Play className="size-6 text-white" />}
               </span>
             </button>
-            <span className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">
-              {recording.cameraName} · {recording.areaName}
-            </span>
-            <span className="absolute bottom-3 right-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">
-              {fmtClock(currentSec)} / {recording.durationDisplay}
-            </span>
-          </div>
 
-          {/* Timeline */}
-          <div className="border-t border-border px-4 py-3">
-            <div className="mb-1.5 flex items-center justify-between gap-2 text-2xs text-muted-foreground">
-              <span className="font-mono">{recording.startsAtDisplay}</span>
-              <span className="inline-flex items-center gap-1">
-                <CircleDot className="size-3 text-success" />
-                <strong className="text-foreground">{periods.length}</strong> detected period{periods.length === 1 ? "" : "s"}
-                {recording.clipCount > 1 && <> · <strong className="text-foreground">{recording.clipCount}</strong> clips</>}
-              </span>
-              <span className="font-mono">{recording.endsAtDisplay}</span>
-            </div>
-            <div
-              role="slider"
-              tabIndex={0}
-              aria-label="Playback position"
-              aria-valuemin={0}
-              aria-valuemax={totalSec}
-              aria-valuenow={currentSec}
-              aria-valuetext={fmtClock(currentSec)}
-              onClick={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                seekTo((e.clientX - r.left) / r.width);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowLeft") { e.preventDefault(); setCurrentSec((s) => Math.max(0, s - 30)); }
-                if (e.key === "ArrowRight") { e.preventDefault(); setCurrentSec((s) => Math.min(totalSec, s + 30)); }
-              }}
-              className="relative h-4 w-full cursor-pointer"
-            >
-              <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted" />
-              <div className="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary" style={{ width: `${progress}%` }} />
-              {periods.map((p) => (
-                <span key={p.label + p.at} title={p.label}
-                  className={cn("absolute top-1/2 h-3 w-0.5 -translate-y-1/2 rounded-full",
-                    p.tone === "info" && "bg-info",
-                    p.tone === "warning" && "bg-warning",
-                    p.tone === "critical" && "bg-sev-critical")}
-                  style={{ left: `${p.at * 100}%` }} />
-              ))}
-              <span className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-card"
-                style={{ left: `${progress}%` }} />
-            </div>
+            {zoomArmed && (
+              <ZoomSelector
+                onCommit={(rect) => { setPb((c) => ({ ...c, zoomRect: rect })); setZoomArmed(false); }}
+                onCancel={() => setZoomArmed(false)}
+              />
+            )}
 
-            {/* Transport */}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCurrentSec((s) => Math.max(0, s - 30))}>
-                  <SkipBack className="size-3.5" />
-                  −30s
-                </Button>
-                <Button size="sm" className="gap-1.5" onClick={() => setIsPlaying((v) => !v)}>
-                  {isPlaying ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-                  {isPlaying ? "Pause" : "Play"}
-                </Button>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCurrentSec((s) => Math.min(totalSec, s + 30))}>
-                  +30s
-                  <SkipForward className="size-3.5" />
-                </Button>
+            {/* Overlay controls — the same bar the live tiles carry. */}
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-3 pb-2 pt-8">
+              <div className="flex items-center justify-between gap-2 text-3xs text-white/70">
+                <span className="font-mono">{recording.startsAtDisplay}</span>
+                <span className="inline-flex items-center gap-1">
+                  <CircleDot className="size-3 text-success" />
+                  <strong className="text-white">{periods.length}</strong> detected period{periods.length === 1 ? "" : "s"}
+                </span>
+                <span className="font-mono">{recording.endsAtDisplay}</span>
               </div>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Maximize2 className="size-3.5" />
-                Fullscreen
-              </Button>
+
+              <div
+                role="slider"
+                tabIndex={0}
+                aria-label="Playback position"
+                aria-valuemin={0}
+                aria-valuemax={totalSec}
+                aria-valuenow={currentSec}
+                aria-valuetext={fmtClock(currentSec)}
+                onClick={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  seekTo((e.clientX - r.left) / r.width);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") { e.preventDefault(); setCurrentSec((c) => Math.max(0, c - 30)); }
+                  if (e.key === "ArrowRight") { e.preventDefault(); setCurrentSec((c) => Math.min(totalSec, c + 30)); }
+                }}
+                className="group/track relative flex h-4 w-full cursor-pointer items-center"
+              >
+                <div className="absolute inset-x-0 h-1 rounded-full bg-white/25" />
+                <div className="absolute left-0 h-1 rounded-full bg-sev-critical" style={{ width: `${progress}%` }} />
+                {periods.map((p) => (
+                  <span key={p.label + p.at} title={p.label}
+                    className={cn("absolute size-1.5 -translate-x-1/2 rounded-full",
+                      p.tone === "info" && "bg-info",
+                      p.tone === "warning" && "bg-warning",
+                      p.tone === "critical" && "bg-sev-critical")}
+                    style={{ left: `${p.at * 100}%` }} />
+                ))}
+                <span className="absolute size-3 -translate-x-1/2 scale-0 rounded-full bg-sev-critical transition-transform group-hover/track:scale-100"
+                  style={{ left: `${progress}%` }} />
+              </div>
+
+              <div className="flex items-center gap-1">
+                <IconButton label="Back 30 seconds" onClick={() => setCurrentSec((c) => Math.max(0, c - 30))}>
+                  <RotateCcw className="size-4" />
+                </IconButton>
+                <IconButton label={isPlaying ? "Pause" : "Play"} onClick={() => setIsPlaying((v) => !v)}>
+                  {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+                </IconButton>
+                <IconButton label="Forward 30 seconds" onClick={() => setCurrentSec((c) => Math.min(totalSec, c + 30))}>
+                  <RotateCw className="size-4" />
+                </IconButton>
+                <IconButton label={pb.muted ? "Unmute" : "Mute"} onClick={() => setPb((c) => ({ ...c, muted: !c.muted }))}>
+                  {pb.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                </IconButton>
+                <span className="ml-1 font-mono text-3xs text-white/85">
+                  {fmtClock(currentSec)} / {recording.durationDisplay}
+                </span>
+
+                <div className="ml-auto flex items-center gap-0.5">
+                  {pb.speed !== 1 && (
+                    <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
+                  )}
+                  <IconButton
+                    label={pb.zoomRect ? "Reset zoom" : "Zoom to an area"}
+                    active={zoomArmed || !!pb.zoomRect}
+                    onClick={() => (pb.zoomRect ? setPb((c) => ({ ...c, zoomRect: null })) : setZoomArmed(true))}
+                  >
+                    {pb.zoomRect ? <ZoomOut className="size-4" /> : <ZoomIn className="size-4" />}
+                  </IconButton>
+                  <PlaybackSettingsMenu pb={pb} onChange={(next) => setPb((c) => ({ ...c, ...next }))} />
+                  <IconButton label="Fullscreen">
+                    <Maximize2 className="size-4" />
+                  </IconButton>
+                </div>
+              </div>
             </div>
           </div>
         </div>
