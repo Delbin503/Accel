@@ -1,6 +1,8 @@
 import * as React from "react";
+import { Settings } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { BUFFER_SEC, fmtOffset, timestampAt } from "./playback";
+import { BUFFER_SEC, SPEEDS, fmtOffset, timestampAt, type PlaybackState, type ZoomRect } from "./playback";
 
 /* Playback controls shared by a single tile and the synchronised bar. */
 
@@ -165,5 +167,144 @@ export function ChipRow<T extends string | number>({
         ))}
       </div>
     </div>
+  );
+}
+
+/* ── Overlay controls ────────────────────────────────────────────────── */
+
+export function IconButton({ label, onClick, children, compact, disabled, active }: {
+  label: string;
+  onClick?: () => void;
+  children: React.ReactNode;
+  compact?: boolean;
+  disabled?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      className={cn(
+        "inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-40",
+        active ? "bg-white/25 text-white" : "text-white/85 hover:bg-white/15 hover:text-white",
+        compact ? "size-6" : "size-7"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Drag a box over the frame to magnify that area. Armed from the zoom button,
+ * it covers the tile until a region is drawn or the operator presses Escape.
+ */
+export function ZoomSelector({ onCommit, onCancel }: {
+  onCommit: (rect: ZoomRect) => void;
+  onCancel: () => void;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  /* The drag origin lives in a ref: a fast drag can fire move and up before a
+     state update has landed, and the committed box must not be a frame stale. */
+  const startRef = React.useRef<{ x: number; y: number } | null>(null);
+  const [start, setStart] = React.useState<{ x: number; y: number } | null>(null);
+  const [current, setCurrent] = React.useState<{ x: number; y: number } | null>(null);
+
+  function pointAt(e: React.PointerEvent) {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return {
+      x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+      y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
+    };
+  }
+
+  function rectBetween(a: { x: number; y: number }, b: { x: number; y: number }): ZoomRect {
+    return {
+      x: Math.min(a.x, b.x),
+      y: Math.min(a.y, b.y),
+      w: Math.abs(b.x - a.x),
+      h: Math.abs(b.y - a.y),
+    };
+  }
+
+  const box = start && current ? rectBetween(start, current) : null;
+
+  return (
+    <div
+      ref={ref}
+      role="application"
+      aria-label="Drag a box to zoom into that area"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        const p = pointAt(e);
+        startRef.current = p;
+        setStart(p);
+        setCurrent(p);
+      }}
+      onPointerMove={(e) => { if (startRef.current) setCurrent(pointAt(e)); }}
+      onPointerUp={(e) => {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        const origin = startRef.current;
+        const drawn = origin ? rectBetween(origin, pointAt(e)) : null;
+        // A tap rather than a drag means no region was chosen.
+        if (drawn && drawn.w > 0.04 && drawn.h > 0.04) onCommit(drawn);
+        else onCancel();
+        startRef.current = null;
+        setStart(null);
+        setCurrent(null);
+      }}
+      onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
+      className="absolute inset-0 z-30 cursor-crosshair bg-black/30"
+    >
+      {box ? (
+        <div
+          className="absolute border-2 border-primary bg-primary/10"
+          style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.w * 100}%`, height: `${box.h * 100}%` }}
+        />
+      ) : (
+        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-2xs font-semibold uppercase tracking-widest text-white/80">
+          Drag a box to zoom
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ── Playback settings dropdown ──────────────────────────────────────── */
+
+export function PlaybackSettingsMenu({
+  pb,
+  onChange,
+  compact,
+}: {
+  pb: PlaybackState;
+  onChange: (next: Partial<PlaybackState>) => void;
+  compact?: boolean;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Playback settings"
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "inline-flex items-center justify-center rounded-md text-white/85 transition-colors hover:bg-white/15 hover:text-white",
+            compact ? "size-6" : "size-7"
+          )}
+        >
+          <Settings className={compact ? "size-3.5" : "size-4"} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" side="top" className="w-56 p-3" onClick={(e) => e.stopPropagation()}>
+        <ChipRow label="Playback speed" options={SPEEDS} value={pb.speed} onChange={(v) => onChange({ speed: v })} format={(v) => `${v}×`} />
+      </PopoverContent>
+    </Popover>
   );
 }

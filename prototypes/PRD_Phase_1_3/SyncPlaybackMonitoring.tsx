@@ -16,11 +16,12 @@ import {
   RotateCcw,
   RotateCw,
   Search,
-  Settings,
   SlidersHorizontal,
   Volume2,
   VolumeX,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,14 +37,14 @@ import type { CameraData } from "@/types/cameras";
 import {
   BUFFER_SEC,
   LIVE_STATE,
-  QUALITIES,
   SPEEDS,
-  ZOOMS,
   fmtOffset,
   timestampAt,
+  zoomTransform,
   type PlaybackState,
 } from "./playback";
-import { ChipRow, ScrubTrack } from "./playbackControls";
+import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSelector } from "./playbackControls";
+import { FloatingBar } from "./FloatingBar";
 
 /* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal.
 
@@ -81,55 +82,180 @@ function markersFor(id: string) {
 const TILE_GRADIENT =
   "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
 
-/* ── Playback settings dropdown ──────────────────────────────────────── */
+/* ── Visitor analytics ───────────────────────────────────────────────── */
 
-function PlaybackSettingsMenu({
-  pb,
-  onChange,
-  compact,
-}: {
-  pb: PlaybackState;
-  onChange: (next: Partial<PlaybackState>) => void;
-  compact?: boolean;
+/** People already inside when counting started, per the entry-line spec. */
+const BASELINE_INSIDE = 100;
+
+interface VisitorStats {
+  entries: number;
+  exits: number;
+  inside: number;
+  male: number;
+  female: number;
+  adult: number;
+  child: number;
+}
+
+function seedOf(id: string): number {
+  return id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+}
+
+/**
+ * Entry-line counts rolled up from whichever cameras are in view, so the strip
+ * answers for the current site filter rather than the whole estate. Seeded from
+ * the camera id, so a given selection always reports the same numbers.
+ */
+function visitorStats(cameras: CameraData[]): VisitorStats {
+  let entries = 0;
+  let exits = 0;
+  let male = 0;
+  let adult = 0;
+
+  cameras
+    .filter((c) => c.status === "online")
+    .forEach((c) => {
+      const seed = seedOf(c.id);
+      const inCount = 18 + (seed % 44);
+      const outCount = Math.max(0, inCount - 4 + (seed % 9));
+      entries += inCount;
+      exits += outCount;
+      // Gender and age are classified per entry, so both splits total the entries.
+      male += Math.round(inCount * (0.46 + (seed % 13) / 100));
+      adult += Math.round(inCount * (0.66 + (seed % 11) / 100));
+    });
+
+  return {
+    entries,
+    exits,
+    inside: Math.max(0, BASELINE_INSIDE + entries - exits),
+    male,
+    female: entries - male,
+    adult,
+    child: entries - adult,
+  };
+}
+
+/* A split count reads as a fraction inside a KPI card — "168 / 163" looks like
+   168 out of 163, not two categories. These cards name each side, give it its
+   own colour, and show the balance as a bar. */
+
+type StatTone = "primary" | "success" | "warning" | "info" | "purple";
+
+const TONE_VALUE: Record<StatTone, string> = {
+  primary: "text-foreground",
+  success: "text-success",
+  warning: "text-warning",
+  info: "text-info",
+  purple: "text-purple",
+};
+
+const TONE_BAR: Record<StatTone, string> = {
+  primary: "bg-primary",
+  success: "bg-success",
+  warning: "bg-warning",
+  info: "bg-info",
+  purple: "bg-purple",
+};
+
+function StatShell({ label, meta, accent, children }: {
+  label: string;
+  meta?: React.ReactNode;
+  accent: StatTone;
+  children: React.ReactNode;
 }) {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label="Playback settings"
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            "inline-flex items-center justify-center rounded-md text-white/85 transition-colors hover:bg-white/15 hover:text-white",
-            compact ? "size-6" : "size-7"
-          )}
-        >
-          <Settings className={compact ? "size-3.5" : "size-4"} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" side="top" className="w-60 space-y-3 p-3" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-foreground">Annotations</p>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={pb.annotations}
-            aria-label="Detection annotations"
-            onClick={() => onChange({ annotations: !pb.annotations })}
-            className={cn(
-              "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors",
-              pb.annotations ? "border-primary bg-primary" : "border-border bg-muted"
-            )}
-          >
-            <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform",
-              pb.annotations ? "translate-x-[18px]" : "translate-x-0.5")} />
-          </button>
-        </div>
-        <ChipRow label="Playback speed" options={SPEEDS} value={pb.speed} onChange={(v) => onChange({ speed: v })} format={(v) => `${v}×`} />
-        <ChipRow label="Zoom" options={ZOOMS} value={pb.zoom} onChange={(v) => onChange({ zoom: v })} format={(v) => `${v}×`} />
-        <ChipRow label="Quality" options={QUALITIES} value={pb.quality} onChange={(v) => onChange({ quality: v })} format={(v) => v} />
-      </PopoverContent>
-    </Popover>
+    <div className="relative flex min-h-[132px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4">
+      <div className={cn("absolute inset-x-0 top-0 h-0.5", TONE_BAR[accent])} />
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+        {meta && <span className="shrink-0 font-mono text-2xs text-muted-foreground">{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function SingleStat({ label, value, sub, accent }: {
+  label: string; value: number; sub: string; accent: StatTone;
+}) {
+  return (
+    <StatShell label={label} accent={accent}>
+      <p className={cn("text-4xl font-bold leading-none", TONE_VALUE[accent])}>{value}</p>
+      <p className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</p>
+    </StatShell>
+  );
+}
+
+interface StatPart {
+  label: string;
+  value: number;
+  tone: StatTone;
+}
+
+function SplitStat({ label, parts }: { label: string; parts: [StatPart, StatPart] }) {
+  const total = parts[0].value + parts[1].value;
+  const share = (v: number) => (total === 0 ? 50 : (v / total) * 100);
+
+  return (
+    <StatShell label={label} accent={parts[0].tone} meta={`${total} total`}>
+      <div className="flex items-stretch gap-3">
+        {parts.map((part, i) => (
+          <div key={part.label} className={cn("min-w-0 flex-1", i === 1 && "border-l border-border pl-3")}>
+            <p className={cn("flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider", TONE_VALUE[part.tone])}>
+              <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[part.tone])} />
+              {part.label}
+            </p>
+            <p className={cn("mt-0.5 text-2xl font-bold leading-none", TONE_VALUE[part.tone])}>{part.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* The balance, so the split reads without doing the arithmetic. */}
+      <div className="mt-auto flex h-1.5 overflow-hidden rounded-full bg-muted">
+        {parts.map((part) => (
+          <span key={part.label} className={cn("h-full", TONE_BAR[part.tone])} style={{ width: `${share(part.value)}%` }} />
+        ))}
+      </div>
+      <p className="mt-1.5 flex justify-between text-2xs text-muted-foreground">
+        <span>{Math.round(share(parts[0].value))}%</span>
+        <span>{Math.round(share(parts[1].value))}%</span>
+      </p>
+    </StatShell>
+  );
+}
+
+function VisitorKpis({ stats }: { stats: VisitorStats }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <SingleStat
+        label="Visitors Inside"
+        value={stats.inside}
+        sub={`${BASELINE_INSIDE} at start-up + entries − exits`}
+        accent="primary"
+      />
+      <SplitStat
+        label="Visitor Count"
+        parts={[
+          { label: "Entries", value: stats.entries, tone: "success" },
+          { label: "Exits", value: stats.exits, tone: "warning" },
+        ]}
+      />
+      <SplitStat
+        label="Gender Detection"
+        parts={[
+          { label: "Male", value: stats.male, tone: "info" },
+          { label: "Female", value: stats.female, tone: "purple" },
+        ]}
+      />
+      <SplitStat
+        label="Age Group"
+        parts={[
+          { label: "Adult", value: stats.adult, tone: "warning" },
+          { label: "Child", value: stats.child, tone: "info" },
+        ]}
+      />
+    </div>
   );
 }
 
@@ -142,6 +268,8 @@ function TilePlayerBar({
   now,
   compact,
   readOnly,
+  zoomArmed,
+  onArmZoom = () => {},
 }: {
   camera: CameraData;
   pb: PlaybackState;
@@ -150,6 +278,9 @@ function TilePlayerBar({
   compact?: boolean;
   /** In synchronised mode the shared bar drives playback, so per-tile transport is hidden. */
   readOnly?: boolean;
+  /** True while the tile is waiting for the operator to drag a zoom box. */
+  zoomArmed?: boolean;
+  onArmZoom?: () => void;
 }) {
   const live = pb.offsetSec <= 0;
   return (
@@ -170,24 +301,24 @@ function TilePlayerBar({
       />
       <div className="flex items-center gap-1">
         {!readOnly && (
-          <button
-            type="button"
-            aria-label={pb.playing ? "Pause" : "Play"}
-            onClick={() => onChange({ playing: !pb.playing })}
-            className={cn("inline-flex items-center justify-center rounded-md text-white/85 hover:bg-white/15 hover:text-white", compact ? "size-6" : "size-7")}
-          >
-            {pb.playing ? <Pause className={compact ? "size-3.5" : "size-4"} /> : <Play className={compact ? "size-3.5" : "size-4"} />}
-          </button>
-        )}
-        {!readOnly && !compact && (
-          <button
-            type="button"
-            aria-label={pb.muted ? "Unmute" : "Mute"}
-            onClick={() => onChange({ muted: !pb.muted })}
-            className="inline-flex size-7 items-center justify-center rounded-md text-white/85 hover:bg-white/15 hover:text-white"
-          >
-            {pb.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-          </button>
+          <>
+            <IconButton label="Back 30 seconds" compact={compact}
+              onClick={() => onChange({ offsetSec: Math.min(BUFFER_SEC, pb.offsetSec + 30) })}>
+              <RotateCcw className={compact ? "size-3.5" : "size-4"} />
+            </IconButton>
+            <IconButton label={pb.playing ? "Pause" : "Play"} compact={compact}
+              onClick={() => onChange({ playing: !pb.playing })}>
+              {pb.playing ? <Pause className={compact ? "size-3.5" : "size-4"} /> : <Play className={compact ? "size-3.5" : "size-4"} />}
+            </IconButton>
+            <IconButton label="Forward 30 seconds" compact={compact} disabled={live}
+              onClick={() => onChange({ offsetSec: Math.max(0, pb.offsetSec - 30) })}>
+              <RotateCw className={compact ? "size-3.5" : "size-4"} />
+            </IconButton>
+            <IconButton label={pb.muted ? "Unmute" : "Mute"} compact={compact}
+              onClick={() => onChange({ muted: !pb.muted })}>
+              {pb.muted ? <VolumeX className={compact ? "size-3.5" : "size-4"} /> : <Volume2 className={compact ? "size-3.5" : "size-4"} />}
+            </IconButton>
+          </>
         )}
 
         {/* Live tag / how far back this tile is sitting */}
@@ -212,18 +343,20 @@ function TilePlayerBar({
           {pb.speed !== 1 && (
             <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
           )}
-          {pb.zoom !== 1 && (
-            <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.zoom}×</span>
-          )}
+          {/* Zoom selects an area rather than a level — pick the box, get the crop. */}
+          <IconButton
+            label={pb.zoomRect ? "Reset zoom" : "Zoom to an area"}
+            compact={compact}
+            active={zoomArmed || !!pb.zoomRect}
+            onClick={() => (pb.zoomRect ? onChange({ zoomRect: null }) : onArmZoom())}
+          >
+            {pb.zoomRect ? <ZoomOut className={compact ? "size-3.5" : "size-4"} /> : <ZoomIn className={compact ? "size-3.5" : "size-4"} />}
+          </IconButton>
           {!readOnly && <PlaybackSettingsMenu pb={pb} onChange={onChange} compact={compact} />}
           {!compact && (
-            <button
-              type="button"
-              aria-label="Fullscreen"
-              className="inline-flex size-7 items-center justify-center rounded-md text-white/85 hover:bg-white/15 hover:text-white"
-            >
+            <IconButton label="Fullscreen" compact={compact}>
               <Maximize2 className="size-4" />
-            </button>
+            </IconButton>
           )}
         </div>
       </div>
@@ -260,6 +393,7 @@ function CameraTile({
   const isOnline = camera.status === "online";
   const count = detCount(camera.id);
   const compact = size === "sm";
+  const [zoomArmed, setZoomArmed] = React.useState(false);
   const live = pb.offsetSec <= 0;
 
   return (
@@ -276,12 +410,12 @@ function CameraTile({
       <div className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
-            {/* Zoom is a transform on the frame — the crop is what the operator sees. */}
+            {/* Zoom crops to the chosen box — what the operator picked is what fills the tile. */}
             <div
-              className="absolute inset-0 origin-center transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: `scale(${pb.zoom})` }}
+              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
+              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoomRect) }}
             />
-            {pb.annotations && count > 0 && (
+            {count > 0 && !pb.zoomRect && (
               <div
                 className={cn("absolute border-[1.5px]", count > 2 ? "border-warning" : "border-info")}
                 style={{ left: "38%", top: "36%", width: "22%", height: "32%" }}
@@ -346,13 +480,29 @@ function CameraTile({
           {camera.id}
         </span>
 
+        {zoomArmed && (
+          <ZoomSelector
+            onCommit={(rect) => { onPb({ zoomRect: rect }); setZoomArmed(false); }}
+            onCancel={() => setZoomArmed(false)}
+          />
+        )}
+
         {/* Player bar — on hover, or whenever this tile has left the live edge. */}
         {isOnline && (
           <div className={cn(
             "opacity-0 transition-opacity duration-[var(--duration-fast)] ease-standard group-hover:opacity-100 focus-within:opacity-100",
             (!live || syncing) && "opacity-100"
           )}>
-            <TilePlayerBar camera={camera} pb={pb} onChange={onPb} now={now} compact={compact} readOnly={syncing} />
+            <TilePlayerBar
+              camera={camera}
+              pb={pb}
+              onChange={onPb}
+              now={now}
+              compact={compact}
+              readOnly={syncing}
+              zoomArmed={zoomArmed}
+              onArmZoom={() => setZoomArmed(true)}
+            />
           </div>
         )}
       </div>
@@ -387,6 +537,8 @@ function HeroView({
   setPb: (id: string, next: Partial<PlaybackState>) => void;
   now: Date;
 }) {
+  const [zoomArmed, setZoomArmed] = React.useState(false);
+
   const camera = cameras.find((c) => c.id === selectedCameraId) ?? cameras[0];
   if (!camera) return null;
 
@@ -411,9 +563,15 @@ function HeroView({
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="group relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
             <div
-              className="absolute inset-0 origin-center transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: `scale(${pb.zoom})` }}
+              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
+              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoomRect) }}
             />
+            {zoomArmed && (
+              <ZoomSelector
+                onCommit={(rect) => { setPb(camera.id, { zoomRect: rect }); setZoomArmed(false); }}
+                onCancel={() => setZoomArmed(false)}
+              />
+            )}
             <button
               type="button"
               role="checkbox"
@@ -444,7 +602,14 @@ function HeroView({
                 .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
                 .replace(",", " ·")}
             </div>
-            <TilePlayerBar camera={camera} pb={pb} onChange={(n) => setPb(camera.id, n)} now={now} />
+            <TilePlayerBar
+              camera={camera}
+              pb={pb}
+              onChange={(n) => setPb(camera.id, n)}
+              now={now}
+              zoomArmed={zoomArmed}
+              onArmZoom={() => setZoomArmed(true)}
+            />
           </div>
 
           <div className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3">
@@ -618,7 +783,7 @@ function SyncGrid({
             Synchronised playback · {cameras.length} camera{cameras.length === 1 ? "" : "s"}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Every channel moves together — scrubbing, speed and zoom apply to all of them at once.
+            Every channel moves together — scrubbing and speed apply to all of them at once.
           </p>
         </div>
         <span className={cn(
@@ -653,7 +818,7 @@ function SyncGrid({
 function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onClear: () => void; onOpenPlayback: () => void }) {
   if (count === 0) return null;
   return (
-    <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
+    <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       <div className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <CheckSquare className="size-3.5" />
@@ -673,7 +838,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
           Playback settings
         </Button>
       </div>
-    </div>
+    </FloatingBar>
   );
 }
 
@@ -688,7 +853,7 @@ function SyncPlaybackBar({
 }) {
   const live = pb.offsetSec <= 0;
   return (
-    <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto max-w-4xl rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
+    <FloatingBar className="rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       {/* Shared timeline */}
       <div className="flex items-center gap-3">
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">−06:00:00</span>
@@ -755,20 +920,13 @@ function SyncPlaybackBar({
           </Tooltip>
         </div>
 
-        {/* Speed + zoom */}
+        {/* Speed — zoom stays per-tile, since each operator frames their own area. */}
         <div className="flex items-center gap-1.5">
           <label className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Speed</label>
           <Select value={String(pb.speed)} onValueChange={(v) => onChange({ speed: Number(v) })}>
             <SelectTrigger className="h-8 w-auto" aria-label="Playback speed"><SelectValue /></SelectTrigger>
             <SelectContent>
               {SPEEDS.map((s) => <SelectItem key={s} value={String(s)}>{s}×</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <label className="ml-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Zoom</label>
-          <Select value={String(pb.zoom)} onValueChange={(v) => onChange({ zoom: Number(v) })}>
-            <SelectTrigger className="h-8 w-auto" aria-label="Zoom"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {ZOOMS.map((z) => <SelectItem key={z} value={String(z)}>{z}×</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -785,7 +943,7 @@ function SyncPlaybackBar({
           </Button>
         </div>
       </div>
-    </div>
+    </FloatingBar>
   );
 }
 
@@ -905,21 +1063,42 @@ export function SyncPlaybackMonitoring() {
   /* Clearing the selection drops straight back out of playback mode. */
   const inSync = syncMode && checkedCameras.length > 0;
   const onlineCount = filteredCameras.filter((c) => c.status === "online").length;
+  const stats = React.useMemo(() => visitorStats(filteredCameras), [filteredCameras]);
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
-    <div className={cn("flex flex-col gap-4", checkedIds.length > 0 && (inSync ? "pb-40" : "pb-24"))}>
+    <div className={cn("flex flex-col gap-4", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
       <PageHeader>
         <PageHeader.Content>
-          <PageHeader.Title>Synchronised Playback</PageHeader.Title>
+          <PageHeader.Title>Live Monitoring</PageHeader.Title>
           <PageHeader.Description>
-            Live Monitoring with playback control — select cameras from any view and scrub them back
-            together while the feed keeps running.
+            Real-time camera feeds across all sites — select cameras from any view and scrub them
+            back together while the feed keeps running.
           </PageHeader.Description>
         </PageHeader.Content>
+        <PageHeader.Actions>
+          {/* View mode is about the page, not the camera list — it sits with the title. */}
+          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
+            {VIEW_MODES.map((vm) => {
+              const Icon = vm.icon;
+              const active = viewMode === vm.key;
+              return (
+                <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description} disabled={inSync}
+                  className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
+                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                  <Icon className="size-3.5" />
+                  {vm.label}
+                </button>
+              );
+            })}
+          </div>
+        </PageHeader.Actions>
       </PageHeader>
 
-      {/* Toolbar */}
+      {/* Counts answer for what is on screen, so they sit above the filters. */}
+      <VisitorKpis stats={stats} />
+
+      {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <MultiSiteSelector sites={sites.map((s) => ({ id: s.id, name: s.name }))} selected={siteFilter} onChange={setSiteFilter} />
         <div className="relative min-w-[200px] flex-1">
@@ -927,20 +1106,6 @@ export function SyncPlaybackMonitoring() {
           <Input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder={`Search ${filteredCameras.length} cameras…`}
             className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
-        </div>
-        <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
-          {VIEW_MODES.map((vm) => {
-            const Icon = vm.icon;
-            const active = viewMode === vm.key;
-            return (
-              <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description} disabled={inSync}
-                className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                <Icon className="size-3.5" />
-                {vm.label}
-              </button>
-            );
-          })}
         </div>
         {checkedIds.length > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
