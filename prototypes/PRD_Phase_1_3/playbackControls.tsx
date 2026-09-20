@@ -2,7 +2,21 @@ import * as React from "react";
 import { Settings } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { BUFFER_SEC, SPEEDS, fmtOffset, timestampAt, type PlaybackState, type ZoomRect } from "./playback";
+import {
+  BUFFER_SEC,
+  NO_ZOOM,
+  SPEEDS,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  ZOOM_STEP,
+  fmtOffset,
+  panZoom,
+  timestampAt,
+  zoomBy,
+  zoomPercent,
+  type PlaybackState,
+  type ZoomState,
+} from "./playback";
 
 /* Playback controls shared by a single tile and the synchronised bar. */
 
@@ -199,77 +213,130 @@ export function IconButton({ label, onClick, children, compact, disabled, active
 }
 
 /**
- * Drag a box over the frame to magnify that area. Armed from the zoom button,
- * it covers the tile until a region is drawn or the operator presses Escape.
+ * Zoom layer over a frame. Armed from the zoom button, it magnifies on the
+ * scroll wheel under the cursor and on the + / − keys, and reports the level as
+ * a percentage. There is no box to draw, so a 160px sidebar tile zooms exactly
+ * as well as the hero player does.
  */
-export function ZoomSelector({ onCommit, onCancel }: {
-  onCommit: (rect: ZoomRect) => void;
-  onCancel: () => void;
+export function ZoomSurface({ zoom, onChange, onExit, compact }: {
+  zoom: ZoomState;
+  onChange: (next: ZoomState) => void;
+  onExit: () => void;
+  compact?: boolean;
 }) {
   const ref = React.useRef<HTMLDivElement>(null);
-  /* The drag origin lives in a ref: a fast drag can fire move and up before a
-     state update has landed, and the committed box must not be a frame stale. */
-  const startRef = React.useRef<{ x: number; y: number } | null>(null);
-  const [start, setStart] = React.useState<{ x: number; y: number } | null>(null);
-  const [current, setCurrent] = React.useState<{ x: number; y: number } | null>(null);
 
-  function pointAt(e: React.PointerEvent) {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return { x: 0, y: 0 };
-    return {
-      x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
-      y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
-    };
-  }
+  /* The native wheel listener reads the latest zoom through a ref: it is bound
+     once, and rebinding it on every level change would drop notches mid-scroll. */
+  const latest = React.useRef({ zoom, onChange });
+  React.useEffect(() => {
+    latest.current = { zoom, onChange };
+  });
 
-  function rectBetween(a: { x: number; y: number }, b: { x: number; y: number }): ZoomRect {
-    return {
-      x: Math.min(a.x, b.x),
-      y: Math.min(a.y, b.y),
-      w: Math.abs(b.x - a.x),
-      h: Math.abs(b.y - a.y),
-    };
-  }
+  /* React registers `wheel` passively at the root, so preventDefault there is a
+     no-op and the page scrolls out from under the tile. Bind it natively. */
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
 
-  const box = start && current ? rectBetween(start, current) : null;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const focus = {
+        x: (e.clientX - r.left) / r.width,
+        y: (e.clientY - r.top) / r.height,
+      };
+      // Trackpads fire many small deltas and mice one large one — cap a single
+      // event at one notch so both feel the same.
+      const notches = Math.max(-1, Math.min(1, -e.deltaY / 100));
+      latest.current.onChange(zoomBy(latest.current.zoom, notches * ZOOM_STEP * 2, focus));
+    }
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  /* Take focus when armed, so + / − reach the frame and not the page. */
+  React.useEffect(() => {
+    ref.current?.focus({ preventScroll: true });
+  }, []);
+
+  const atMax = zoom.level >= ZOOM_MAX;
+  const atMin = zoom.level <= ZOOM_MIN;
 
   return (
     <div
       ref={ref}
-      role="application"
-      aria-label="Drag a box to zoom into that area"
+      tabIndex={0}
+      role="slider"
+      aria-label="Zoom level"
+      aria-valuemin={Math.round(ZOOM_MIN * 100)}
+      aria-valuemax={Math.round(ZOOM_MAX * 100)}
+      aria-valuenow={Math.round(zoom.level * 100)}
+      aria-valuetext={zoomPercent(zoom)}
       onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        e.currentTarget.setPointerCapture(e.pointerId);
-        const p = pointAt(e);
-        startRef.current = p;
-        setStart(p);
-        setCurrent(p);
+      onPointerDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        const step = e.shiftKey ? ZOOM_STEP * 4 : ZOOM_STEP;
+        switch (e.key) {
+          case "+":
+          case "=":
+            e.preventDefault();
+            onChange(zoomBy(zoom, step));
+            break;
+          case "-":
+          case "_":
+            e.preventDefault();
+            onChange(zoomBy(zoom, -step));
+            break;
+          case "0":
+            e.preventDefault();
+            onChange(NO_ZOOM);
+            break;
+          case "ArrowLeft":
+            e.preventDefault();
+            onChange(panZoom(zoom, -1, 0));
+            break;
+          case "ArrowRight":
+            e.preventDefault();
+            onChange(panZoom(zoom, 1, 0));
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            onChange(panZoom(zoom, 0, -1));
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            onChange(panZoom(zoom, 0, 1));
+            break;
+          case "Escape":
+            // Kept off the Dialog above: Escape leaves zoom mode, it does not
+            // close the pop-up the frame is sitting in.
+            e.preventDefault();
+            e.stopPropagation();
+            onExit();
+            break;
+          default:
+        }
       }}
-      onPointerMove={(e) => { if (startRef.current) setCurrent(pointAt(e)); }}
-      onPointerUp={(e) => {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-        const origin = startRef.current;
-        const drawn = origin ? rectBetween(origin, pointAt(e)) : null;
-        // A tap rather than a drag means no region was chosen.
-        if (drawn && drawn.w > 0.04 && drawn.h > 0.04) onCommit(drawn);
-        else onCancel();
-        startRef.current = null;
-        setStart(null);
-        setCurrent(null);
-      }}
-      onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-      className="absolute inset-0 z-30 cursor-crosshair bg-black/30"
+      className={cn(
+        "absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ring-2 ring-inset ring-primary/70",
+        "focus-visible:outline-none",
+        atMax ? "cursor-zoom-out" : "cursor-zoom-in"
+      )}
     >
-      {box ? (
-        <div
-          className="absolute border-2 border-primary bg-primary/10"
-          style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.w * 100}%`, height: `${box.h * 100}%` }}
-        />
-      ) : (
-        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-2xs font-semibold uppercase tracking-widest text-white/80">
-          Drag a box to zoom
+      {/* The live readout — the percentage the operator is steering. */}
+      <span
+        className={cn(
+          "rounded-md bg-black/75 font-mono font-bold text-white backdrop-blur-sm",
+          compact ? "px-1.5 py-0.5 text-2xs" : "px-2.5 py-1 text-lg"
+        )}
+      >
+        {zoomPercent(zoom)}
+      </span>
+      {!compact && (
+        <span className="rounded bg-black/65 px-2 py-0.5 text-2xs font-semibold text-white/80 backdrop-blur-sm">
+          Scroll or {atMin ? "+" : atMax ? "−" : "+ / −"} to zoom · arrows to pan · Esc to exit
         </span>
       )}
     </div>

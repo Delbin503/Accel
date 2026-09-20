@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
-  Maximize2,
   MapPin,
   PanelsTopLeft,
   Pause,
@@ -20,8 +19,6 @@ import {
   Volume2,
   VolumeX,
   X,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,12 +35,15 @@ import {
   BUFFER_SEC,
   LIVE_STATE,
   SPEEDS,
+  detCount,
   fmtOffset,
+  isZoomed,
   timestampAt,
   zoomTransform,
   type PlaybackState,
 } from "./playback";
-import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSelector } from "./playbackControls";
+import { ScrubTrack, ZoomSurface } from "./playbackControls";
+import { CameraPlayerModal, TILE_GRADIENT, TilePlayerBar } from "./cameraPlayer";
 import { FloatingBar } from "./FloatingBar";
 
 /* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal.
@@ -62,25 +62,6 @@ const VIEW_MODES: { key: ViewMode; label: string; icon: React.ElementType; descr
   { key: "hero", label: "Hero", icon: PanelsTopLeft, description: "Featured camera + sidebar of all cams" },
   { key: "wall", label: "Wall", icon: LayoutGrid, description: "Uniform grid for all cameras" },
 ];
-
-function detCount(id: string): number {
-  const h = id.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
-  return h % 5;
-}
-
-/** Deterministic per-camera event markers so the timeline is not empty. */
-function markersFor(id: string) {
-  const base = id.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
-  const tones = ["info", "warning", "critical"] as const;
-  return Array.from({ length: 3 }, (_, i) => ({
-    at: ((base * (i + 3)) % (BUFFER_SEC - 600)) + 300,
-    tone: tones[(base + i) % 3],
-    label: ["Person detected", "PPE violation", "Unattended object"][(base + i) % 3],
-  }));
-}
-
-const TILE_GRADIENT =
-  "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
 
 /* ── Visitor analytics ───────────────────────────────────────────────── */
 
@@ -242,7 +223,7 @@ function VisitorKpis({ stats }: { stats: VisitorStats }) {
         ]}
       />
       <SplitStat
-        label="Gender Detection"
+        label="Gender"
         parts={[
           { label: "Male", value: stats.male, tone: "info" },
           { label: "Female", value: stats.female, tone: "purple" },
@@ -255,111 +236,6 @@ function VisitorKpis({ stats }: { stats: VisitorStats }) {
           { label: "Child", value: stats.child, tone: "info" },
         ]}
       />
-    </div>
-  );
-}
-
-/* ── Tile player bar (hover) ─────────────────────────────────────────── */
-
-function TilePlayerBar({
-  camera,
-  pb,
-  onChange,
-  now,
-  compact,
-  readOnly,
-  zoomArmed,
-  onArmZoom = () => {},
-}: {
-  camera: CameraData;
-  pb: PlaybackState;
-  onChange: (next: Partial<PlaybackState>) => void;
-  now: Date;
-  compact?: boolean;
-  /** In synchronised mode the shared bar drives playback, so per-tile transport is hidden. */
-  readOnly?: boolean;
-  /** True while the tile is waiting for the operator to drag a zoom box. */
-  zoomArmed?: boolean;
-  onArmZoom?: () => void;
-}) {
-  const live = pb.offsetSec <= 0;
-  return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className={cn(
-        "absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-2 pb-1.5 pt-6",
-        compact ? "gap-0.5" : "gap-1"
-      )}
-    >
-      <ScrubTrack
-        offsetSec={pb.offsetSec}
-        onChange={(v) => onChange({ offsetSec: v })}
-        now={now}
-        markers={markersFor(camera.id)}
-        size={compact ? "sm" : "md"}
-        label={`${camera.id} playback position`}
-      />
-      <div className="flex items-center gap-1">
-        {!readOnly && (
-          <>
-            <IconButton label="Back 30 seconds" compact={compact}
-              onClick={() => onChange({ offsetSec: Math.min(BUFFER_SEC, pb.offsetSec + 30) })}>
-              <RotateCcw className={compact ? "size-3.5" : "size-4"} />
-            </IconButton>
-            <IconButton label={pb.playing ? "Pause" : "Play"} compact={compact}
-              onClick={() => onChange({ playing: !pb.playing })}>
-              {pb.playing ? <Pause className={compact ? "size-3.5" : "size-4"} /> : <Play className={compact ? "size-3.5" : "size-4"} />}
-            </IconButton>
-            <IconButton label="Forward 30 seconds" compact={compact} disabled={live}
-              onClick={() => onChange({ offsetSec: Math.max(0, pb.offsetSec - 30) })}>
-              <RotateCw className={compact ? "size-3.5" : "size-4"} />
-            </IconButton>
-            <IconButton label={pb.muted ? "Unmute" : "Mute"} compact={compact}
-              onClick={() => onChange({ muted: !pb.muted })}>
-              {pb.muted ? <VolumeX className={compact ? "size-3.5" : "size-4"} /> : <Volume2 className={compact ? "size-3.5" : "size-4"} />}
-            </IconButton>
-          </>
-        )}
-
-        {/* Live tag / how far back this tile is sitting */}
-        <button
-          type="button"
-          onClick={() => onChange({ offsetSec: 0, playing: true })}
-          disabled={live}
-          className={cn(
-            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-3xs font-bold uppercase tracking-wider transition-colors",
-            live ? "text-white/90" : "bg-white/15 text-white hover:bg-sev-critical"
-          )}
-        >
-          <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
-          {live ? "Live" : `−${fmtOffset(pb.offsetSec)}`}
-        </button>
-
-        {!live && !compact && (
-          <span className="font-mono text-3xs text-white/70">{timestampAt(now, pb.offsetSec)}</span>
-        )}
-
-        <div className="ml-auto flex items-center gap-0.5">
-          {pb.speed !== 1 && (
-            <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
-          )}
-          {/* Zoom selects an area rather than a level — pick the box, get the crop. */}
-          <IconButton
-            label={pb.zoomRect ? "Reset zoom" : "Zoom to an area"}
-            compact={compact}
-            active={zoomArmed || !!pb.zoomRect}
-            onClick={() => (pb.zoomRect ? onChange({ zoomRect: null }) : onArmZoom())}
-          >
-            {pb.zoomRect ? <ZoomOut className={compact ? "size-3.5" : "size-4"} /> : <ZoomIn className={compact ? "size-3.5" : "size-4"} />}
-          </IconButton>
-          {!readOnly && <PlaybackSettingsMenu pb={pb} onChange={onChange} compact={compact} />}
-          {!compact && (
-            <IconButton label="Fullscreen" compact={compact}>
-              <Maximize2 className="size-4" />
-            </IconButton>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -377,6 +253,7 @@ function CameraTile({
   onPb,
   now,
   syncing,
+  onExpand,
 }: {
   camera: CameraData;
   size?: "sm" | "md" | "lg";
@@ -389,6 +266,8 @@ function CameraTile({
   now: Date;
   /** Driven by the shared synchronised-playback bar. */
   syncing?: boolean;
+  /** Set on tiles too small to zoom inside — swaps zoom for an expand button. */
+  onExpand?: () => void;
 }) {
   const isOnline = camera.status === "online";
   const count = detCount(camera.id);
@@ -410,12 +289,12 @@ function CameraTile({
       <div className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
-            {/* Zoom crops to the chosen box — what the operator picked is what fills the tile. */}
+            {/* Zoom magnifies around the focal point the operator scrolled to. */}
             <div
               className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoomRect) }}
+              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
             />
-            {count > 0 && !pb.zoomRect && (
+            {count > 0 && !isZoomed(pb.zoom) && (
               <div
                 className={cn("absolute border-[1.5px]", count > 2 ? "border-warning" : "border-info")}
                 style={{ left: "38%", top: "36%", width: "22%", height: "32%" }}
@@ -481,9 +360,11 @@ function CameraTile({
         </span>
 
         {zoomArmed && (
-          <ZoomSelector
-            onCommit={(rect) => { onPb({ zoomRect: rect }); setZoomArmed(false); }}
-            onCancel={() => setZoomArmed(false)}
+          <ZoomSurface
+            zoom={pb.zoom}
+            onChange={(z) => onPb({ zoom: z })}
+            onExit={() => setZoomArmed(false)}
+            compact={compact}
           />
         )}
 
@@ -502,6 +383,8 @@ function CameraTile({
               readOnly={syncing}
               zoomArmed={zoomArmed}
               onArmZoom={() => setZoomArmed(true)}
+              onExitZoom={() => setZoomArmed(false)}
+              onExpand={onExpand}
             />
           </div>
         )}
@@ -538,6 +421,9 @@ function HeroView({
   now: Date;
 }) {
   const [zoomArmed, setZoomArmed] = React.useState(false);
+  /* The sidebar tile the operator expanded, if any. Held as an id so a filter
+     that drops the camera closes the pop-up with it. */
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
   const camera = cameras.find((c) => c.id === selectedCameraId) ?? cameras[0];
   if (!camera) return null;
@@ -556,6 +442,7 @@ function HeroView({
   const onlineCount = cameras.filter((c) => c.status === "online").length;
   const offlineCount = cameras.length - onlineCount;
   const multiSite = Object.keys(bySite).length > 1;
+  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
@@ -564,12 +451,13 @@ function HeroView({
           <div className="group relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
             <div
               className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoomRect) }}
+              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
             />
             {zoomArmed && (
-              <ZoomSelector
-                onCommit={(rect) => { setPb(camera.id, { zoomRect: rect }); setZoomArmed(false); }}
-                onCancel={() => setZoomArmed(false)}
+              <ZoomSurface
+                zoom={pb.zoom}
+                onChange={(z) => setPb(camera.id, { zoom: z })}
+                onExit={() => setZoomArmed(false)}
               />
             )}
             <button
@@ -609,6 +497,7 @@ function HeroView({
               now={now}
               zoomArmed={zoomArmed}
               onArmZoom={() => setZoomArmed(true)}
+              onExitZoom={() => setZoomArmed(false)}
             />
           </div>
 
@@ -686,6 +575,7 @@ function HeroView({
                         pb={pbFor(c.id)}
                         onPb={(n) => setPb(c.id, n)}
                         now={now}
+                        onExpand={() => setExpandedId(c.id)}
                       />
                     ))}
                   </div>
@@ -695,6 +585,15 @@ function HeroView({
           ))}
         </div>
       </div>
+
+      <CameraPlayerModal
+        camera={expanded}
+        open={!!expanded}
+        onClose={() => setExpandedId(null)}
+        pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
+        onPb={(n) => expanded && setPb(expanded.id, n)}
+        now={now}
+      />
     </div>
   );
 }
@@ -712,10 +611,15 @@ function WallView({
   setPb: (id: string, next: Partial<PlaybackState>) => void;
   now: Date;
 }) {
+  /* Same story as the hero sidebar: a wall tile is too small to zoom inside,
+     so it expands into the pop-up player instead. */
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+
   const total = cameras.length;
   const perPage = gridSize * gridSize;
   const pageCount = Math.max(1, Math.ceil(total / perPage));
   const pageItems = cameras.slice((page - 1) * perPage, page * perPage);
+  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -753,12 +657,22 @@ function WallView({
             pb={pbFor(c.id)}
             onPb={(n) => setPb(c.id, n)}
             now={now}
+            onExpand={() => setExpandedId(c.id)}
           />
         ))}
         {Array.from({ length: Math.max(0, perPage - pageItems.length) }).map((_, i) => (
           <div key={`empty-${i}`} className="aspect-video rounded-lg border border-dashed border-border bg-muted/20" />
         ))}
       </div>
+
+      <CameraPlayerModal
+        camera={expanded}
+        open={!!expanded}
+        onClose={() => setExpandedId(null)}
+        pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
+        onPb={(n) => expanded && setPb(expanded.id, n)}
+        now={now}
+      />
     </div>
   );
 }

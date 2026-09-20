@@ -16,8 +16,8 @@ import { Modal, ModalContent } from "@/components/shared/Modal";
 import { DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { RECORDING_TYPES, TONE_CLASSES } from "./recordingTypes";
-import { IconButton, PlaybackSettingsMenu, ZoomSelector } from "./playbackControls";
-import { LIVE_STATE, zoomTransform, type PlaybackState } from "./playback";
+import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "./playbackControls";
+import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "./playback";
 import { periodsFor, type DayRecording } from "./dayRecordings";
 
 /* The player is a pop-up now, not the first thing in the drawer — a camera-day
@@ -34,12 +34,17 @@ function fmtClock(sec: number): string {
 
 /* Mounted under a key of the recording id, so picking a different recording
    starts a fresh player instead of resetting one through an effect. */
-function PlayerBody({ recording }: { recording: DayRecording }) {
+function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
+  recording: DayRecording;
+  /* Owned by the modal: Radix reads Escape in the capture phase, so the pop-up
+     itself has to know it is in zoom mode to swallow that first press. */
+  zoomArmed: boolean;
+  setZoomArmed: (v: boolean) => void;
+}) {
   const [currentSec, setCurrentSec] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
   /* Same state shape the live tiles use, so the controls behave identically. */
   const [pb, setPb] = React.useState<PlaybackState>(LIVE_STATE);
-  const [zoomArmed, setZoomArmed] = React.useState(false);
 
   const totalSec = recording.durationMinutes * 60;
 
@@ -103,7 +108,7 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
               className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
               style={{
                 background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
-                transform: zoomTransform(pb.zoomRect),
+                transform: zoomTransform(pb.zoom),
               }}
             />
             <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
@@ -122,9 +127,10 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
             </button>
 
             {zoomArmed && (
-              <ZoomSelector
-                onCommit={(rect) => { setPb((c) => ({ ...c, zoomRect: rect })); setZoomArmed(false); }}
-                onCancel={() => setZoomArmed(false)}
+              <ZoomSurface
+                zoom={pb.zoom}
+                onChange={(z) => setPb((c) => ({ ...c, zoom: z }))}
+                onExit={() => setZoomArmed(false)}
               />
             )}
 
@@ -192,12 +198,22 @@ function PlayerBody({ recording }: { recording: DayRecording }) {
                   {pb.speed !== 1 && (
                     <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
                   )}
+                  {isZoomed(pb.zoom) && (
+                    <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">
+                      {zoomPercent(pb.zoom)}
+                    </span>
+                  )}
+                  {/* Arm zoom, leave zoom mode, reset the frame — in that order. */}
                   <IconButton
-                    label={pb.zoomRect ? "Reset zoom" : "Zoom to an area"}
-                    active={zoomArmed || !!pb.zoomRect}
-                    onClick={() => (pb.zoomRect ? setPb((c) => ({ ...c, zoomRect: null })) : setZoomArmed(true))}
+                    label={zoomArmed ? "Exit zoom mode" : isZoomed(pb.zoom) ? "Reset zoom" : "Zoom — scroll or + / −"}
+                    active={zoomArmed || isZoomed(pb.zoom)}
+                    onClick={() => {
+                      if (zoomArmed) setZoomArmed(false);
+                      else if (isZoomed(pb.zoom)) setPb((c) => ({ ...c, zoom: NO_ZOOM }));
+                      else setZoomArmed(true);
+                    }}
                   >
-                    {pb.zoomRect ? <ZoomOut className="size-4" /> : <ZoomIn className="size-4" />}
+                    {!zoomArmed && isZoomed(pb.zoom) ? <ZoomOut className="size-4" /> : <ZoomIn className="size-4" />}
                   </IconButton>
                   <PlaybackSettingsMenu pb={pb} onChange={(next) => setPb((c) => ({ ...c, ...next }))} />
                   <IconButton label="Fullscreen">
@@ -238,10 +254,38 @@ export function RecordingPlayerModal({ recording, open, onClose }: {
   open: boolean;
   onClose: () => void;
 }) {
+  const [zoomArmed, setZoomArmed] = React.useState(false);
+
   return (
-    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="xl" className="gap-0" aria-describedby={undefined}>
-        {recording && <PlayerBody key={recording.id} recording={recording} />}
+    <Modal
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) {
+          setZoomArmed(false);
+          onClose();
+        }
+      }}
+    >
+      <ModalContent
+        size="xl"
+        className="gap-0"
+        aria-describedby={undefined}
+        // First Escape leaves zoom mode, the next one closes the pop-up.
+        onEscapeKeyDown={(e) => {
+          if (zoomArmed) {
+            e.preventDefault();
+            setZoomArmed(false);
+          }
+        }}
+      >
+        {recording && (
+          <PlayerBody
+            key={recording.id}
+            recording={recording}
+            zoomArmed={zoomArmed}
+            setZoomArmed={setZoomArmed}
+          />
+        )}
       </ModalContent>
     </Modal>
   );
