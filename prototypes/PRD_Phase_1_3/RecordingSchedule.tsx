@@ -275,17 +275,32 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
     return ((h * 60 + m) / (24 * 60)) * 100;
   }
 
+  /* A nested type only records while its parent is on, so it drops out of
+     the strip with the parent as well as with its own switch. */
+  const isOn = (def: (typeof RECORDING_TYPES)[number]) => {
+    const parent = def.parent ? configs[def.parent] : null;
+    return configs[def.id].enabled && (!parent || parent.enabled);
+  };
+  /* Only what will actually record is drawn — a type switched off below
+     leaves the strip rather than sitting there as an empty "off" row. */
+  const shown = RECORDING_TYPES.filter(isOn);
+
   return (
     <div className="rounded-lg border border-border bg-background px-3.5 py-3">
       <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Daily Coverage</p>
+      {shown.length === 0 ? (
+        <p className="py-3 text-center text-xs text-muted-foreground">
+          Every recording type is off — this camera will not record.
+        </p>
+      ) : (
+      <>
       <div className="space-y-2">
-        {RECORDING_TYPES.map((def) => {
+        {shown.map((def) => {
           const cfg = configs[def.id];
           const parent = def.parent ? configs[def.parent] : null;
-          /* A nested type covers its parent's window, and only while the
-             parent is on — so it is drawn against the parent's hours. */
+          /* A nested type covers its parent's window, so it is drawn
+             against the parent's hours. */
           const window = parent ?? cfg;
-          const enabled = cfg.enabled && (!parent || parent.enabled);
           const tone = TONE_CLASSES[def.tone];
           const start = toPct(window.startTime);
           const end = toPct(window.endTime);
@@ -301,7 +316,7 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
                 {def.label}
               </span>
               <div className="relative h-4 flex-1 overflow-hidden rounded bg-muted">
-                {enabled && spans.map((s, i) => (
+                {spans.map((s, i) => (
                   <div key={i}
                     className={cn("absolute inset-y-0 rounded-sm", tone.bar, def.parent ? "opacity-50" : "opacity-80")}
                     style={{ left: `${s.left}%`, width: `${s.width}%` }} />
@@ -309,13 +324,11 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
               </div>
               {/* Same 12-hour formatting as the time fields below. */}
               <span className="w-32 shrink-0 text-right font-mono text-2xs text-muted-foreground">
-                {!enabled
-                  ? "off"
-                  : def.alwaysOn
-                    ? "All day"
-                    : def.parent
-                      ? "when triggered"
-                      : `${formatTimeOfDay(window.startTime)} – ${formatTimeOfDay(window.endTime)}`}
+                {def.alwaysOn
+                  ? "All day"
+                  : def.parent
+                    ? "when triggered"
+                    : `${formatTimeOfDay(window.startTime)} – ${formatTimeOfDay(window.endTime)}`}
               </span>
             </div>
           );
@@ -331,6 +344,8 @@ function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, Recording
         </div>
         <span className="w-32 shrink-0" />
       </div>
+      </>
+      )}
     </div>
   );
 }
