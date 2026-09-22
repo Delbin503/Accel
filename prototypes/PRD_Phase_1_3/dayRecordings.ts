@@ -206,3 +206,70 @@ export function periodsFor(rec: DayRecording): DetectedPeriod[] {
     tone: tones[(seed + i) % 3],
   }));
 }
+
+/* ── Motion clips ────────────────────────────────────────────────────────── */
+
+function hhmmToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function minutesToClock(total: number): string {
+  const m = ((Math.round(total) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
+/**
+ * The individual clips inside a day's motion recording. Motion only fires while
+ * something moves, so one "recording" is really several short bursts spread
+ * across the standby window it runs inside. Each clip is a full DayRecording so
+ * the player opens it exactly like any other recording.
+ *
+ * Deterministic from the recording id: the same day always splits the same way,
+ * and the clips' durations and sizes add back up to the parent's totals.
+ */
+export function motionClipsFor(motion: DayRecording): DayRecording[] {
+  const n = Math.max(1, motion.clipCount);
+  const seed = motion.id.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
+
+  const start = hhmmToMinutes(motion.startsAt);
+  const end = hhmmToMinutes(motion.endsAt);
+  const span = end > start ? end - start : 1440 - start + end;
+
+  // Uneven weights so the clips are not all the same length.
+  const weights = Array.from({ length: n }, (_, i) => 1 + ((seed * (i + 3)) % 5));
+  const weightSum = weights.reduce((a, b) => a + b, 0);
+
+  let minutesLeft = motion.durationMinutes;
+  let mbLeft = motion.fileSizeMb;
+
+  return weights.map((w, i) => {
+    const last = i === n - 1;
+    // The last clip takes the remainder, so the totals always reconcile.
+    const minutes = last ? Math.max(1, minutesLeft) : Math.max(1, Math.round((motion.durationMinutes * w) / weightSum));
+    const mb = last ? Math.max(1, mbLeft) : Math.max(1, Math.round((motion.fileSizeMb * w) / weightSum));
+    minutesLeft -= minutes;
+    mbLeft -= mb;
+
+    // Spread the bursts across the window, nudged off an even grid.
+    const slot = span / n;
+    const jitter = ((seed + i * 37) % 100) / 100;
+    const at = start + slot * i + slot * 0.1 + jitter * Math.max(0, slot * 0.8 - minutes);
+    const clipStart = minutesToClock(at);
+    const clipEnd = minutesToClock(at + minutes);
+
+    return {
+      ...motion,
+      id: `${motion.id}-${String(i + 1).padStart(2, "0")}`,
+      startsAt: clipStart,
+      endsAt: clipEnd,
+      startsAtDisplay: `${clipStart}:00`,
+      endsAtDisplay: `${clipEnd}:00`,
+      durationMinutes: minutes,
+      durationDisplay: fmtDuration(minutes),
+      fileSizeMb: mb,
+      fileSizeDisplay: fmtSize(mb),
+      clipCount: 1,
+    };
+  });
+}

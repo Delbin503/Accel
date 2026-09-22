@@ -32,6 +32,7 @@ import {
   DAYS,
   buildCameraDays,
   fmtSize,
+  motionClipsFor,
   type CameraDay,
   type DayRecording,
 } from "./dayRecordings";
@@ -213,14 +214,27 @@ function InfoGrid({ day }: { day: CameraDay }) {
   );
 }
 
-function RecordingRow({ rec, onPlay }: { rec: DayRecording; onPlay: () => void }) {
+function RecordingRow({ rec, onPlay, nested, label }: {
+  rec: DayRecording;
+  onPlay: () => void;
+  /** A motion clip listed under its standby recording. */
+  nested?: boolean;
+  /** Replaces the id chip — "Clip 3 of 6" reads better than a suffixed id. */
+  label?: string;
+}) {
   return (
     <button
       onClick={onPlay}
-      className="group/row flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-muted/40"
+      className={cn(
+        "group/row flex w-full items-center gap-3 text-left transition-colors hover:bg-muted/40",
+        nested ? "py-2.5 pl-10 pr-3.5" : "px-3.5 py-3"
+      )}
     >
       {/* Thumbnail doubles as the play affordance. */}
-      <span className="relative h-11 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-neutral-900">
+      <span className={cn(
+        "relative shrink-0 overflow-hidden rounded-md border border-border bg-neutral-900",
+        nested ? "h-9 w-16" : "h-11 w-20"
+      )}>
         <span className="absolute inset-0"
           style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }} />
         <span className="absolute inset-0 flex items-center justify-center">
@@ -233,7 +247,7 @@ function RecordingRow({ rec, onPlay }: { rec: DayRecording; onPlay: () => void }
       <span className="min-w-0 flex-1">
         <span className="mb-1 flex flex-wrap items-center gap-1.5">
           <TypeChip type={rec.type} />
-          <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{rec.id}</span>
+          <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{label ?? rec.id}</span>
         </span>
         <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="size-2.5" />
@@ -257,6 +271,64 @@ function RecordingRow({ rec, onPlay }: { rec: DayRecording; onPlay: () => void }
         </span>
       </span>
     </button>
+  );
+}
+
+/**
+ * Standby with its motion clips folded underneath. Motion runs inside the
+ * standby window and fires in bursts, so a busy day can hold a dozen clips —
+ * listing them flat would bury the other recording types. The standby row
+ * carries the count; the chevron opens the clips.
+ */
+function StandbyGroup({ standby, motion, onPlay }: {
+  standby: DayRecording;
+  motion: DayRecording | undefined;
+  onPlay: (rec: DayRecording) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const clips = motion ? motionClipsFor(motion) : [];
+  const tone = TONE_CLASSES[RECORDING_TYPES.find((t) => t.id === "motion")?.tone ?? "warning"];
+
+  return (
+    <div>
+      <div className="flex items-stretch">
+        <div className="min-w-0 flex-1">
+          <RecordingRow rec={standby} onPlay={() => onPlay(standby)} />
+        </div>
+        {clips.length > 0 && (
+          /* A sibling of the play row, not inside it — a button cannot hold a button. */
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={`${open ? "Hide" : "Show"} ${clips.length} motion-based clip${clips.length === 1 ? "" : "s"}`}
+            className="flex shrink-0 items-center gap-1.5 border-l border-border px-3 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+          >
+            <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-semibold", tone.chip)}>
+              <strong>{clips.length}</strong> Motion
+            </span>
+            <ChevronDown className={cn(
+              "size-3.5 transition-transform duration-[var(--duration-fast)] ease-standard",
+              open && "rotate-180"
+            )} />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="divide-y divide-border border-t border-border bg-muted/20">
+          {clips.map((clip, i) => (
+            <RecordingRow
+              key={clip.id}
+              rec={clip}
+              nested
+              label={`Clip ${i + 1} of ${clips.length}`}
+              onPlay={() => onPlay(clip)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -335,9 +407,16 @@ function CameraDayDrawer({ day, open, starred, onClose, onDelete, onToggleStar, 
               </p>
             </div>
             <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {day.recordings.map((rec) => (
-                <RecordingRow key={rec.id} rec={rec} onPlay={() => onPlay(rec)} />
-              ))}
+              {day.recordings.map((rec) => {
+                const motion = day.recordings.find((r) => r.type === "motion");
+                const standby = day.recordings.find((r) => r.type === "standby");
+                // Motion lives under standby; it only stands alone if standby is somehow missing.
+                if (rec.type === "motion" && standby) return null;
+                if (rec.type === "standby") {
+                  return <StandbyGroup key={rec.id} standby={rec} motion={motion} onPlay={onPlay} />;
+                }
+                return <RecordingRow key={rec.id} rec={rec} onPlay={() => onPlay(rec)} />;
+              })}
             </div>
             <p className="mt-2 text-2xs text-muted-foreground">
               Types that are switched off in System Configuration › Recording Schedule produce nothing, so they do not appear here.
