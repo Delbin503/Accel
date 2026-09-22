@@ -1,8 +1,9 @@
-import { Film, PlayCircle, Settings, Sparkles } from "lucide-react";
+import { Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
 import { SyncPlaybackMonitoring } from "./SyncPlaybackMonitoring";
 import { RecordingsByDay } from "./RecordingsByDay";
 import { VideoEnhancement } from "./VideoEnhancement";
+import { CustomDashboard } from "./CustomDashboard";
 
 /* Phase 1.3 proposals.
 
@@ -14,6 +15,22 @@ import { VideoEnhancement } from "./VideoEnhancement";
    matching proposal instead of bouncing back to the index. */
 
 export const PAGES = [
+  {
+    /* "/" is the phase index here, so the dashboard proposal takes /dashboard. */
+    path: "/dashboard",
+    title: "Customizable Dashboard",
+    subtitle: "Dashboard, rebuilt",
+    icon: LayoutDashboard,
+    refs: "No ref yet",
+    summary:
+      "The current dashboard, now arranged by each user. Customize enters edit mode: drag panels to reorder, click one to move or remove it, and drag hidden panels back in from the drawer.",
+    points: [
+      "Visitor counts join as a panel of their own",
+      "Removed panels park in a drawer, never lost",
+      "Cancel reverts, Reset restores the default",
+    ],
+    Component: CustomDashboard,
+  },
   {
     path: "/config",
     title: "System Configuration",
