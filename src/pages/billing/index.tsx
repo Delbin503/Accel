@@ -896,6 +896,54 @@ function PlanCard({ tier, cycle, previous, onSelect }: {
   );
 }
 
+/* ── Billing cycle toggle ─────────────────────────────────────────────────── */
+
+type BillingCycle = "monthly" | "annual";
+
+const ANNUAL_SAVINGS_PCT = Math.max(
+  ...(Object.values(PLANS).map((p) => Math.round((1 - p.pricePerYear / (p.pricePerMonth * 12)) * 100)))
+);
+
+function BillingCycleToggle({ value, onChange }: {
+  value: BillingCycle;
+  onChange: (c: BillingCycle) => void;
+}) {
+  const options: { key: BillingCycle; label: string }[] = [
+    { key: "monthly", label: "Monthly" },
+    { key: "annual", label: "Annually" },
+  ];
+  return (
+    <div role="radiogroup" aria-label="Billing cycle" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+      {options.map((o) => {
+        const active = value === o.key;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(o.key)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            {o.label}
+            {o.key === "annual" && ANNUAL_SAVINGS_PCT > 0 && (
+              <span className={cn(
+                "rounded-full px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
+                active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-success/15 text-success"
+              )}>
+                Save {ANNUAL_SAVINGS_PCT}%
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Tabs ─────────────────────────────────────────────────────────────────── */
 
 type TabKey = "overview" | "invoices";
@@ -937,7 +985,10 @@ export default function BillingPage() {
   const [accountStatus, setAccountStatus] = React.useState<"active" | "cancelling" | "cancelled">("active");
   const [planTier, setPlanTier] = React.useState<PlanTier>(ACCOUNT_SUBSCRIPTION.planTier);
   const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [resumeOpen, setResumeOpen] = React.useState(false);
+  const [endNowOpen, setEndNowOpen] = React.useState(false);
   const [showPlans, setShowPlans] = React.useState(false);
+  const [planCycle, setPlanCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
   const [purchaseTier, setPurchaseTier] = React.useState<PlanTier | null>(null);
 
   /* ── Multi-card wallet state ──────────────────────────────────────────── */
@@ -1048,11 +1099,13 @@ export default function BillingPage() {
 
   function resumeSubscription() {
     setAccountStatus("active");
+    setResumeOpen(false);
     toast.success("Subscription resumed", { description: `Your ${activePlan.name} plan will renew as normal.` });
   }
 
   function endSubscriptionNow() {
     setAccountStatus("cancelled");
+    setEndNowOpen(false);
     setShowPlans(false);
     toast.message("Subscription ended", { description: "View plans to reactivate your account." });
   }
@@ -1140,16 +1193,16 @@ export default function BillingPage() {
           {/* Available plans — revealed on demand */}
           {showPlans && (
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-md font-bold text-foreground">Available plans</h3>
-                <p className="text-sm text-muted-foreground">Billed {acct.billingCycle === "annual" ? "annually" : "monthly"}</p>
+                <BillingCycleToggle value={planCycle} onChange={setPlanCycle} />
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {(["starter", "professional", "enterprise"] as PlanTier[]).map((tier) => (
                   <PlanCard
                     key={tier}
                     tier={tier}
-                    cycle={acct.billingCycle}
+                    cycle={planCycle}
                     previous={tier === planTier}
                     onSelect={() => setPurchaseTier(tier)}
                   />
@@ -1202,10 +1255,10 @@ export default function BillingPage() {
               </div>
               {cancelling ? (
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={resumeSubscription} className="gap-1.5">
+                  <Button size="sm" onClick={() => setResumeOpen(true)} className="gap-1.5">
                     <RotateCcw className="size-3.5" /> Resume subscription
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={endSubscriptionNow} className="gap-1.5 text-muted-foreground hover:text-sev-critical">
+                  <Button size="sm" variant="ghost" onClick={() => setEndNowOpen(true)} className="gap-1.5 text-muted-foreground hover:text-sev-critical">
                     End now
                   </Button>
                 </div>
@@ -1357,9 +1410,65 @@ export default function BillingPage() {
         </div>
       </ConfirmDialog>
 
+      <ConfirmDialog
+        open={resumeOpen}
+        onOpenChange={setResumeOpen}
+        icon={RotateCcw}
+        title="Resume subscription?"
+        description={`Your ${activePlan.name} plan will stay active and renew on ${acct.renewsDisplay} at $${acctMonthly.toLocaleString()}/month.`}
+        confirmLabel="Resume subscription"
+        cancelLabel="Not now"
+        onConfirm={resumeSubscription}
+        size="lg"
+      >
+        <div className="rounded-lg border border-success/30 bg-success/[0.05] p-3 text-sm">
+          <p className="mb-2 font-semibold text-foreground">What stays the same</p>
+          <ul className="space-y-1.5 text-muted-foreground">
+            {[
+              `Live detection and recording continue across all ${acct.sites.length} sites`,
+              "Team members keep access to dashboards",
+              "Seats, cameras and payment method stay unchanged",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-2">
+                <Check className="mt-0.5 size-3.5 flex-shrink-0 text-success" />
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={endNowOpen}
+        onOpenChange={setEndNowOpen}
+        destructive
+        title="End subscription now?"
+        description={`This ends your ${activePlan.name} plan immediately instead of on ${acct.renewsDisplay}. You won't be refunded for the remaining period.`}
+        confirmLabel="End now"
+        cancelLabel="Keep until renewal"
+        onConfirm={endSubscriptionNow}
+        size="lg"
+      >
+        <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
+          <p className="mb-2 font-semibold text-foreground">What happens immediately</p>
+          <ul className="space-y-1.5 text-muted-foreground">
+            {[
+              `Live detection and recording stop across all ${acct.sites.length} sites`,
+              "Team members lose access to dashboards",
+              "Recordings are retained for 30 days, then deleted",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-2">
+                <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </ConfirmDialog>
+
       <PurchasePlanModal
         tier={purchaseTier}
-        cycle={acct.billingCycle}
+        cycle={planCycle}
         cards={cards}
         onClose={() => setPurchaseTier(null)}
         onAddCard={() => setAddCardOpen(true)}
