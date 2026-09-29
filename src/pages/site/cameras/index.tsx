@@ -549,6 +549,8 @@ interface CameraDrawerProps {
   onNvrSync: () => void;
   onLinkNvrRequest: (cameraId: string) => void;
   onUnlinkNvr: (cameraId: string) => void;
+  /** Extra full-width Device Info entries, from columns that define a drawer view. */
+  extraFields?: CameraExtraColumn[];
 }
 
 export function CameraDrawer({
@@ -563,6 +565,7 @@ export function CameraDrawer({
   onNvrSync,
   onLinkNvrRequest,
   onUnlinkNvr,
+  extraFields = [],
 }: CameraDrawerProps) {
   const navigate = useNavigate();
   const [tab, setTab] = React.useState<DrawerTab>("overview");
@@ -809,6 +812,16 @@ export function CameraDrawer({
                     <span className="text-base font-medium text-foreground">{value}</span>
                   </div>
                 ))}
+                {extraFields.map((field) =>
+                  field.drawerCell ? (
+                    <div key={field.header} className="col-span-2 flex flex-col gap-1.5 border-t border-border pt-2.5">
+                      <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        {field.drawerLabel ?? field.header}
+                      </span>
+                      {field.drawerCell(camera)}
+                    </div>
+                  ) : null
+                )}
               </div>
             </div>
 
@@ -1716,6 +1729,9 @@ export function ConfirmModal({
 export interface CameraExtraColumn {
   header: string;
   cell: (camera: CameraData) => React.ReactNode;
+  /** Optional full-width entry at the end of the drawer's Device Info. */
+  drawerLabel?: string;
+  drawerCell?: (camera: CameraData) => React.ReactNode;
 }
 
 export default function CamerasPage({
@@ -2152,6 +2168,7 @@ export default function CamerasPage({
         onDelete={() => drawerCamera && setModal({ kind: "delete", cameraId: drawerCamera.id })}
         onNvrSync={handleNvrSync}
         onLinkNvrRequest={(cameraId) => setLinkNvrCameraId(cameraId)}
+        extraFields={extraColumns}
         onUnlinkNvr={(cameraId) => {
           const target = cameras.find((c) => c.id === cameraId);
           if (!target) return;
