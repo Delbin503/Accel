@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<!--
+  Accel — Weekly Summary (operational, P2). LIGHT + DARK.
+
+  Sent every Monday at 08:00 workspace time to users with the weekly summary
+  switched on. Covers the previous Monday 00:00 to Sunday 23:59: detections,
+  cases and SLA performance, each compared with the week before.
+
+  CANONICAL SHELL — as welcome.html, plus a detections chart, stat tiles, SLA
+  meters and two tables between the body copy and the CTA.
+
+  Content decisions
+  -----------------
+  · The body copy states the week's story in one sentence — what went up, what
+    got better, what slipped — so the numbers below confirm it rather than
+    leaving the reader to work it out.
+  · SLA is shown as met / target with a plain verdict ("On target", "2 pts
+    below target"). A percentage alone doesn't say whether to worry.
+  · The amber callout names where the misses cluster. That's the one thing the
+    reader can act on this week.
+  · The chart is table cells, not an image, so it renders with images blocked
+    and in dark mode. Bar heights are pixel values: round(count / max × 96).
+
+  Sample data
+  -----------
+  Mon 21 – Sun 27 Sep 2026 for Astra Corp, sent Mon 28 Sep. Sites and types
+  sum to the totals, and Sunday (132 detections) matches the comparison in the
+  28 Sep daily digest. Tag map:
+
+    21 – 27 Sep 2026               {{weekRange}}
+    Monday 21 to Sunday 27 …       {{weekRangeLong}}
+    1,056 / ▲ 8% (978)             {{detectionCount}} / {{detectionDelta}} ({{prevDetectionCount}})
+    per-day bars                   {{dailyCounts[7]}}
+    Critical 21 · High 118 …       {{severityMix}}
+    58 / 51 / 14 / 2h 48m          {{casesOpened}} / {{casesClosed}} / {{casesOpen}} / {{medianTimeToClose}}
+    97% · 56 of 58 · 95%           {{ackSlaPct}} · {{ackSlaDetail}} · {{ackSlaTarget}}
+    88% · 45 of 51 · 90%           {{resolveSlaPct}} · {{resolveSlaDetail}} · {{resolveSlaTarget}}
+    6m 40s (7m 55s)                {{meanTimeToAck}} ({{prevMeanTimeToAck}})
+    callout text                   {{slaInsight}}   (omit the block when there is none)
+    View weekly report →           {{reportUrl}}
+    Notification settings →        {{notificationSettingsUrl}}
+
+  Repeating blocks
+  ----------------
+    · day bars     seven columns, Mon–Sun; the busiest day takes the orange fill,
+                   the rest the pale one.
+    · site rows    {{siteName}} {{detections}} {{critical}} {{casesOpened}} {{resolveSlaPct}}
+    · type rows    top five detection types: {{typeName}} {{count}} {{sharePct}}
+-->
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Weekly summary &middot; 21 &ndash; 27 Sep 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background-color:#F2F1EF; }
+      table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+      img { border:0; line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
+      a { text-decoration:none; }
+
+      @media only screen and (max-width:620px) {
+        .container { width:100% !important; }
+        .px        { padding-left:20px !important; padding-right:20px !important; }
+        .px-foot   { padding-left:24px !important; padding-right:24px !important; }
+        .h1        { font-size:24px !important; line-height:32px !important; }
+        .btn-a     { display:block !important; text-align:center !important; }
+      }
+
+      /* ── Dark mode — honoring clients (Apple Mail, iOS, Outlook macOS) ── */
+      @media (prefers-color-scheme: dark) {
+        .page      { background-color:#111010 !important; }
+        .card      { background-color:#191614 !important; }
+        .bar       { background-color:#1C1917 !important; }
+        .bar-t     { color:#8A857F !important; }
+        .t-head    { color:#FFFFFF !important; }
+        .t-strong  { color:#FFFFFF !important; }
+        .t-body    { color:#B8B3AF !important; }
+        .t-muted   { color:#8A857F !important; }
+        .kv        { background-color:#201C1A !important; }
+        .kv-label  { color:#8A857F !important; }
+        .kv-value  { color:#FFFFFF !important; }
+        .panel     { background-color:#201C1A !important; background-image:none !important; }
+        .foot      { background-color:#17130F !important; }
+        .soc path  { fill:#B8B3AF !important; }
+        .logo-light { display:none !important; }
+        .logo-dark  { display:block !important; max-height:none !important; overflow:visible !important; }
+      }
+
+      /* ── Force-inverting clients (Outlook.com) — pin the light palette ── */
+      [data-ogsc] .page     { background-color:#F2F1EF !important; }
+      [data-ogsc] .card     { background-color:#FFFFFF !important; }
+      [data-ogsc] .bar      { background-color:#F9FAFB !important; }
+      [data-ogsc] .bar-t    { color:#9CA3AF !important; }
+      [data-ogsc] .t-head   { color:#1F2937 !important; }
+      [data-ogsc] .t-strong { color:#111111 !important; }
+      [data-ogsc] .t-body   { color:#4B4B4B !important; }
+      [data-ogsc] .t-muted  { color:#4B4B4B !important; }
+      [data-ogsc] .kv       { background-color:#F4F4F6 !important; }
+      [data-ogsc] .kv-label { color:#4B4B4B !important; }
+      [data-ogsc] .kv-value { color:#4B4B4B !important; }
+      [data-ogsc] .foot     { background-color:#F6F5F4 !important; }
+      [data-ogsc] .soc path { fill:#4B4B4B !important; }
+
+      /* ── Operational blocks (tiles, tables, meters, severity) ── */
+      .tile-row  { font-size:0; }
+      @media only screen and (max-width:620px) {
+        .tile      { width:100% !important; display:block !important; box-sizing:border-box !important; }
+        .tile-gap  { display:block !important; width:100% !important; height:12px !important; }
+        .hide-sm   { display:none !important; }
+      }
+      @media (prefers-color-scheme: dark) {
+        .tile      { background-color:#201C1A !important; }
+        .rule      { border-color:#2E2A28 !important; }
+        .track     { background-color:#2E2A28 !important; }
+        .th        { color:#8A857F !important; }
+        .td        { color:#E7E3DF !important; }
+        .sev-crit  { color:#F87171 !important; }
+        .sev-bg    { background-color:#3A1614 !important; }
+        .t-good    { color:#4ADE80 !important; }
+        .t-warn    { color:#FBBF24 !important; }
+        .flag      { background-color:#2A1F12 !important; }
+        .attach    { border-color:#2E2A28 !important; }
+      }
+      [data-ogsc] .tile     { background-color:#F4F4F6 !important; }
+      [data-ogsc] .rule     { border-color:#E7E5E4 !important; }
+      [data-ogsc] .track    { background-color:#ECEAE7 !important; }
+      [data-ogsc] .th       { color:#6B6B6B !important; }
+      [data-ogsc] .td       { color:#1F2937 !important; }
+      [data-ogsc] .sev-crit { color:#B91C1C !important; }
+      [data-ogsc] .sev-bg   { background-color:#FEF2F2 !important; }
+      [data-ogsc] .t-good   { color:#15803D !important; }
+      [data-ogsc] .t-warn   { color:#B45309 !important; }
+      [data-ogsc] .flag     { background-color:#FFFBEB !important; }
+    </style>
+  </head>
+  <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF; opacity:0;">
+      1,056 detections (&#9650; 8%), 58 cases, acknowledgement SLA 97%, resolution SLA 88%.
+      &#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;
+    </div>
+
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F2F1EF" style="background-color:#F2F1EF;">
+      <tr>
+        <td align="center" style="padding:40px 16px;">
+          <table role="presentation" class="container card" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+
+            <!-- 1 · Browser bar -->
+            <tr>
+              <td class="bar" align="center" bgcolor="#F9FAFB" style="padding:12px 24px; background-color:#F9FAFB;">
+                <a class="bar-t" href="{{webviewUrl}}" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#9CA3AF; text-decoration:none;">View this email in your browser</a>
+              </td>
+            </tr>
+
+            <!-- 2 · Header — centred wordmark (inline SVG; host as PNG before sending) -->
+            <tr>
+              <td align="center" style="padding:32px 32px 24px 32px;">
+                <div class="logo-light"><svg width="100" height="38" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
+                <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="100" height="38" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
+              </td>
+            </tr>
+
+            <!-- 3 · Hero heading — centred -->
+            <tr>
+              <td class="px" align="center" style="padding:0 32px 24px 32px;">
+                <h1 class="h1 t-head" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:30px; line-height:38px; font-weight:500; color:#1F2937; letter-spacing:-1px; text-align:center; mso-line-height-rule:exactly;">Your week in review</h1>
+              </td>
+            </tr>
+
+            <!-- 4 · Greeting -->
+            <tr>
+              <td class="px" style="padding:0 32px;">
+                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:16px; line-height:24px; font-weight:700; color:#111111;">Dear Sze Hui,</p>
+              </td>
+            </tr>
+
+            <!-- 5 · Body copy — the week in one sentence -->
+            <tr>
+              <td class="px t-body" style="padding:16px 32px 0 32px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
+                <p style="margin:0;">
+                  Here's <strong class="t-strong" style="font-weight:600; color:#111111;">Astra Corp</strong>'s week, Monday 21 to Sunday 27 September. Detections were
+                  up 8%, cases were acknowledged faster than the week before, and resolution slipped just
+                  under target &mdash; mostly on one site's overnight shift.
+                </p>
+              </td>
+            </tr>
+
+            <!-- 6 · Detections — total, per-day chart, severity mix -->
+            <tr>
+              <td class="px" style="padding:32px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="rule" style="padding:0 0 10px 0; border-bottom:1px solid #E7E5E4;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                        <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">Detections</td>
+                        <td align="right" class="t-muted" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:20px; color:#6B6B6B;">vs 14 &ndash; 20 Sep</td>
+                      </tr></table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <p style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif;"><span class="t-head" style="font-size:36px; line-height:44px; font-weight:600; color:#1F2937; letter-spacing:-1px;">1,056</span>
+                  <span class="t-muted" style="font-size:13px; line-height:20px; color:#6B6B6B;">&nbsp;&#9650; 8% on 978 &middot; busiest day Friday</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">158</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="86" bgcolor="#FDBA8C" style="height:86px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">149</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="81" bgcolor="#FDBA8C" style="height:81px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">171</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="93" bgcolor="#FDBA8C" style="height:93px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">162</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="88" bgcolor="#FDBA8C" style="height:88px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">176</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="96" bgcolor="#FE5C01" style="height:96px; background-color:#FE5C01; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">108</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="59" bgcolor="#FDBA8C" style="height:59px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td><td valign="bottom" align="center" style="padding:0 5px;">
+                        <p class="t-muted" style="margin:0 0 4px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; color:#6B6B6B;">132</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="72" bgcolor="#FDBA8C" style="height:72px; background-color:#FDBA8C; border-radius:4px 4px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                      </td>
+                  </tr>
+                  <tr><td colspan="7" class="rule" style="border-top:1px solid #D6D3D1; font-size:0; line-height:0;">&nbsp;</td></tr>
+                  <tr><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">M</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">T</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">W</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">T</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">F</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">S</td><td align="center" class="t-muted" style="padding:6px 5px 0 5px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:14px; font-weight:600; color:#6B6B6B;">S</td></tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:20px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:999px; overflow:hidden;"><tr><td width="2.0%" bgcolor="#DC2626" style="background-color:#DC2626; height:10px; font-size:0; line-height:0;">&nbsp;</td><td width="11.2%" bgcolor="#EA580C" style="background-color:#EA580C; height:10px; font-size:0; line-height:0;">&nbsp;</td><td width="34.5%" bgcolor="#D97706" style="background-color:#D97706; height:10px; font-size:0; line-height:0;">&nbsp;</td><td width="52.4%" bgcolor="#16A34A" style="background-color:#16A34A; height:10px; font-size:0; line-height:0;">&nbsp;</td></tr></table>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td class="t-body" style="padding:10px 16px 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B; white-space:nowrap;"><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background-color:#DC2626; margin-right:6px;"></span>Critical <strong class="t-strong" style="font-weight:600; color:#111111;">21</strong> <span class="t-muted" style="color:#6B6B6B;">2%</span></td><td class="t-body" style="padding:10px 16px 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B; white-space:nowrap;"><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background-color:#EA580C; margin-right:6px;"></span>High <strong class="t-strong" style="font-weight:600; color:#111111;">118</strong> <span class="t-muted" style="color:#6B6B6B;">11%</span></td><td class="t-body" style="padding:10px 16px 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B; white-space:nowrap;"><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background-color:#D97706; margin-right:6px;"></span>Medium <strong class="t-strong" style="font-weight:600; color:#111111;">364</strong> <span class="t-muted" style="color:#6B6B6B;">34%</span></td><td class="t-body" style="padding:10px 16px 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B; white-space:nowrap;"><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background-color:#16A34A; margin-right:6px;"></span>Low <strong class="t-strong" style="font-weight:600; color:#111111;">553</strong> <span class="t-muted" style="color:#6B6B6B;">52%</span></td></tr></table>
+              </td>
+            </tr>
+
+            <!-- 7 · Cases — 2 × 2 tiles -->
+            <tr>
+              <td class="px" style="padding:32px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="rule" style="padding:0 0 10px 0; border-bottom:1px solid #E7E5E4;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                        <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">Cases</td>
+                        
+                      </tr></table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td style="padding-top:0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td class="tile" width="260" valign="top" bgcolor="#F4F4F6" style="width:260px; background-color:#F4F4F6; border-radius:12px; padding:18px 20px;">
+                        <p class="t-muted" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#6B6B6B;">Opened</p>
+                        <p class="t-head" style="margin:6px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:28px; line-height:34px; font-weight:600; color:#1F2937; letter-spacing:-0.5px;">58</p>
+                        <p class="t-muted" style="margin:4px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#6B6B6B;">&#9650; 5 on the week before</p>
+                      </td>
+                      <td class="tile-gap" width="16" style="width:16px; font-size:0; line-height:0;">&nbsp;</td>
+                      <td class="tile" width="260" valign="top" bgcolor="#F4F4F6" style="width:260px; background-color:#F4F4F6; border-radius:12px; padding:18px 20px;">
+                        <p class="t-muted" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#6B6B6B;">Closed</p>
+                        <p class="t-head" style="margin:6px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:28px; line-height:34px; font-weight:600; color:#1F2937; letter-spacing:-0.5px;">51</p>
+                        <p class="t-muted" style="margin:4px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#6B6B6B;">88% of those opened</p>
+                      </td>
+                    </tr></table>
+                  </td></tr>
+                  <tr><td style="padding-top:12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td class="tile" width="260" valign="top" bgcolor="#F4F4F6" style="width:260px; background-color:#F4F4F6; border-radius:12px; padding:18px 20px;">
+                        <p class="t-muted" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#6B6B6B;">Still open</p>
+                        <p class="t-head" style="margin:6px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:28px; line-height:34px; font-weight:600; color:#1F2937; letter-spacing:-0.5px;">14</p>
+                        <p class="t-warn" style="margin:4px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#B45309;">at Sunday 23:59 &middot; 3 critical</p>
+                      </td>
+                      <td class="tile-gap" width="16" style="width:16px; font-size:0; line-height:0;">&nbsp;</td>
+                      <td class="tile" width="260" valign="top" bgcolor="#F4F4F6" style="width:260px; background-color:#F4F4F6; border-radius:12px; padding:18px 20px;">
+                        <p class="t-muted" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#6B6B6B;">Median time to close</p>
+                        <p class="t-head" style="margin:6px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:28px; line-height:34px; font-weight:600; color:#1F2937; letter-spacing:-0.5px;">2h 48m</p>
+                        <p class="t-good" style="margin:4px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#15803D;">&#9660; 22 min faster</p>
+                      </td>
+                    </tr></table>
+                  </td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 8 · SLA performance — met / target with a verdict -->
+            <tr>
+              <td class="px" style="padding:32px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="rule" style="padding:0 0 10px 0; border-bottom:1px solid #E7E5E4;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                        <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">SLA performance</td>
+                        
+                      </tr></table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#111111;">Acknowledged within 15 min</td>
+                    <td align="right" class="t-good" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:20px; line-height:24px; font-weight:700; color:#15803D;">97%</td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:8px 0 6px 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="97%" bgcolor="#16A34A" style="background-color:#16A34A; height:8px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="t-muted" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#6B6B6B;">56 of 58 cases &middot; target 95%</td>
+                    <td align="right" class="t-good" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:600; color:#15803D; white-space:nowrap;">On target</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:20px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#111111;">Resolved within 4 h</td>
+                    <td align="right" class="t-warn" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:20px; line-height:24px; font-weight:700; color:#B45309;">88%</td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:8px 0 6px 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="88%" bgcolor="#D97706" style="background-color:#D97706; height:8px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="t-muted" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#6B6B6B;">45 of 51 closed cases &middot; target 90%</td>
+                    <td align="right" class="t-warn" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:600; color:#B45309; white-space:nowrap;">2 pts below target</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px t-muted" style="padding:16px 32px 0 32px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:21px; color:#6B6B6B; mso-line-height-rule:exactly;">
+                Mean time to acknowledge <strong class="t-strong" style="font-weight:600; color:#111111;">6m 40s</strong>, down from 7m 55s. 8 SLA misses in total: 2 acknowledgement, 6 resolution.
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <table role="presentation" class="flag" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFBEB" style="background-color:#FFFBEB; border-radius:8px;">
+                  <tr>
+                    <td width="3" bgcolor="#F59E0B" style="width:3px; background-color:#F59E0B; border-radius:8px 0 0 8px; font-size:0; line-height:0;">&nbsp;</td>
+                    <td class="t-body" style="padding:12px 16px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#4B4B4B;"><strong class="t-strong" style="font-weight:600; color:#111111;">4 of the 6 resolution misses were at Sembawang Naval</strong> on the overnight shift, 22:00&ndash;06:00. The other two sites resolved 32 of 34 in time.</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 9 · By site -->
+            <tr>
+              <td class="px" style="padding:32px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="rule" style="padding:0 0 10px 0; border-bottom:1px solid #E7E5E4;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                        <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">By site</td>
+                        
+                      </tr></table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:12px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><th class="th" align="left" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:16px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#6B6B6B;">Site</th><th class="th" align="right" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:16px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#6B6B6B;">Detections</th><th class="th hide-sm" align="right" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:16px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#6B6B6B;">Critical</th><th class="th" align="right" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:16px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#6B6B6B;">Cases</th><th class="th" align="right" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:11px; line-height:16px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#6B6B6B;">Resolved in SLA</th></tr>
+                  <tr><td class="td rule" align="left" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">FedEx Changi</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">486</td><td class="td rule hide-sm" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">11</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">27</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">92%</td></tr>
+                  <tr><td class="td rule" align="left" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">Sembawang Naval</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">374</td><td class="td rule hide-sm" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">8</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">20</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;"><span class="t-warn" style="color:#B45309; font-weight:600;">76%</span></td></tr>
+                  <tr><td class="td rule" align="left" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">Astra HQ</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">196</td><td class="td rule hide-sm" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">2</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;">11</td><td class="td rule" align="right" style="padding:10px 0; border-top:1px solid #E7E5E4; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; color:#1F2937;"><span class="t-good" style="color:#15803D; font-weight:600;">100%</span></td></tr>
+                  <tr><td class="t-strong rule" align="left" style="padding:10px 0 0 0; border-top:1px solid #D6D3D1; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#111111;">All sites</td><td class="t-strong rule" align="right" style="padding:10px 0 0 0; border-top:1px solid #D6D3D1; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#111111;">1,056</td><td class="t-strong rule hide-sm" align="right" style="padding:10px 0 0 0; border-top:1px solid #D6D3D1; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#111111;">21</td><td class="t-strong rule" align="right" style="padding:10px 0 0 0; border-top:1px solid #D6D3D1; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#111111;">58</td><td class="t-strong rule" align="right" style="padding:10px 0 0 0; border-top:1px solid #D6D3D1; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#111111;">88%</td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 10 · Top detection types -->
+            <tr>
+              <td class="px" style="padding:32px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="rule" style="padding:0 0 10px 0; border-bottom:1px solid #E7E5E4;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                        <td class="t-strong" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">Top detection types</td>
+                        
+                      </tr></table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 0 32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="td" style="padding:0 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; color:#1F2937;">Unauthorised access</td>
+                    <td align="right" class="td" style="padding:0 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; font-weight:600; color:#1F2937; white-space:nowrap;">328 <span class="t-muted" style="font-weight:400; color:#6B6B6B;">&middot; 31%</span></td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:6px 0 0 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="100%" bgcolor="#FE5C01" style="background-color:#FE5C01; height:6px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; color:#1F2937;">Loitering</td>
+                    <td align="right" class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; font-weight:600; color:#1F2937; white-space:nowrap;">271 <span class="t-muted" style="font-weight:400; color:#6B6B6B;">&middot; 26%</span></td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:6px 0 0 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="83%" bgcolor="#FE5C01" style="background-color:#FE5C01; height:6px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; color:#1F2937;">Movement</td>
+                    <td align="right" class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; font-weight:600; color:#1F2937; white-space:nowrap;">214 <span class="t-muted" style="font-weight:400; color:#6B6B6B;">&middot; 20%</span></td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:6px 0 0 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="65%" bgcolor="#FE5C01" style="background-color:#FE5C01; height:6px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; color:#1F2937;">Compliance breach</td>
+                    <td align="right" class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; font-weight:600; color:#1F2937; white-space:nowrap;">152 <span class="t-muted" style="font-weight:400; color:#6B6B6B;">&middot; 14%</span></td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:6px 0 0 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="46%" bgcolor="#FE5C01" style="background-color:#FE5C01; height:6px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                  <tr>
+                    <td class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; color:#1F2937;">PPE violation</td>
+                    <td align="right" class="td" style="padding:12px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:18px; font-weight:600; color:#1F2937; white-space:nowrap;">91 <span class="t-muted" style="font-weight:400; color:#6B6B6B;">&middot; 9%</span></td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:6px 0 0 0;"><table role="presentation" class="track" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ECEAE7" style="background-color:#ECEAE7; border-radius:999px; overflow:hidden;"><tr><td width="28%" bgcolor="#FE5C01" style="background-color:#FE5C01; height:6px; font-size:0; line-height:0; border-radius:999px;">&nbsp;</td><td style="font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 11 · CTA — left-aligned -->
+            <tr>
+              <td class="px" align="left" style="padding:32px 32px 0 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td align="center" bgcolor="#FE5C01" style="border-radius:8px;">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{reportUrl}}" style="height:48px;v-text-anchor:middle;width:210px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;">View weekly report</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a class="btn-a" href="{{reportUrl}}" style="display:inline-block; padding:12px 28px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">View weekly report</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr></table>
+              </td>
+            </tr>
+
+            <!-- 12 · Brand panel — tiled texture behind the wordmark -->
+            <tr>
+              <td class="px" style="padding:24px 32px;">
+                <table role="presentation" class="panel" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1F0EE" background="https://cdn.accel.com/email/auth-bg-tile.gif" style="background-color:#F1F0EE; background-image:url('https://cdn.accel.com/email/auth-bg-tile.gif'); background-repeat:repeat; border-radius:16px;">
+                  <tr>
+                    <td align="center" height="200" style="height:200px; padding:24px;">
+                      <div class="logo-light"><svg width="150" height="57" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg></div>
+                      <div class="logo-dark" style="display:none; mso-hide:all; max-height:0; overflow:hidden;"><svg width="150" height="57" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="white"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="white"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="white"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="white"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="white"/></svg></div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- 13 · Sign-off -->
+            <tr>
+              <td class="px" style="padding:0 32px 40px 32px;">
+                <p class="t-body" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">Have a good week,</p>
+                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:700; color:#111111;">Accel Threat Response</p>
+              </td>
+            </tr>
+
+            <!-- 14 · Footer -->
+            <tr>
+              <td class="px-foot foot" bgcolor="#F6F5F4" style="padding:40px 48px 64px 48px; background-color:#F6F5F4;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <!-- Social row -->
+                  <tr>
+                    <td style="padding:0 0 24px 0;">
+                      <a href="https://twitter.com/sigmawaveai" aria-label="Twitter" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4B4B" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.061a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63a9.935 9.935 0 002.46-2.548l-.047-.02z"/></svg></a><a href="https://www.facebook.com/sigmawave.ai" aria-label="Facebook" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4B4B" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a><a href="https://www.instagram.com/sigmawave.ai" aria-label="Instagram" style="display:inline-block; margin:0 16px 0 0; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4B4B" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a><a href="https://www.linkedin.com/company/sigmawave-ai" aria-label="LinkedIn" style="display:inline-block; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4B4B" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" class="soc" style="display:inline-block; vertical-align:middle;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg></a>
+                    </td>
+                  </tr>
+                  <!-- Disclaimer -->
+                  <tr>
+                    <td class="t-muted" style="padding:0 0 12px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; color:#4B4B4B;">
+                      You're receiving the weekly summary because it's switched on for your account. It goes out every Monday at 08:00 SGT &mdash; change or turn it off in <a href="{{notificationSettingsUrl}}" style="color:#FE5C01; text-decoration:none; font-weight:600;">Notification settings</a>.
+                    </td>
+                  </tr>
+                  <!-- Copyright -->
+                  <tr>
+                    <td class="t-muted" style="padding:0 0 8px 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500; color:#4B4B4B;">
+                      &copy; 2026 Sigmawave AI. All Rights Reserved.
+                    </td>
+                  </tr>
+                  <!-- Legal links -->
+                  <tr>
+                    <td style="font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:16px; font-weight:500;">
+                      <a href="https://accel.com/privacy" style="color:#FE5C01; text-decoration:none;">Privacy Policy</a><span style="color:#FE5C01;">&nbsp;|&nbsp;</span><a href="https://accel.com/terms" style="color:#FE5C01; text-decoration:none;">Terms &amp; Conditions</a><span style="color:#FE5C01;">&nbsp;|&nbsp;</span><a href="mailto:{{supportEmail}}" style="color:#FE5C01; text-decoration:none;">Contact Us</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

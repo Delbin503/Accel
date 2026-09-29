@@ -1,0 +1,49 @@
+Accel — Daily activity digest · Mon 28 Sep 2026
+
+View this email in your browser: {{webviewUrl}}
+
+Dear Sze Hui,
+
+Here's how Monday, 28 September went across Astra Corp's 3 sites, midnight
+to midnight SGT. The full report — hourly activity, every critical incident
+and every case — is attached as a PDF.
+
+The day in numbers
+------------------
+Detections:           148   (up 12% vs Sunday, 132)
+Critical incidents:   4     (down 2 vs Sunday)
+Cases opened:         9     (7 cases closed today)
+Acknowledged in SLA:  89%   (8 of 9 · target 95%)
+
+Still open — needs attention (3 critical)
+-----------------------------------------
+CASE-2026-0149 · Restricted zone entry
+  FedEx Changi › Server Room 3 · Open · 4 h resolution target passed at 15:47
+CASE-2026-0150 · Tailgating at access gate
+  FedEx Changi › Checkpoint A2 · In review · target passed at 18:22
+CASE-2026-0152 · Restricted zone entry
+  FedEx Changi › Loading Bay A · Open · resolve by 01:05 · acknowledged after 19 min
+
+By site             Detections  Critical  Cases  Open at 23:59
+FedEx Changi                71         3      4              3
+Sembawang Naval             52         1      3              2
+Astra HQ                    25         0      2              1
+All sites                  148         4      9              6
+
+Attached: Accel-Daily-Report-2026-09-28.pdf (3 pages · 418 KB)
+
+Open dashboard: {{dashboardUrl}}
+
+Thanks,
+Accel Threat Response
+
+--
+You're receiving the daily digest because it's switched on for your account.
+Change the time, the sites it covers, or turn it off in Notification
+settings: {{notificationSettingsUrl}}
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

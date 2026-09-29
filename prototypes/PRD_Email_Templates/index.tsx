@@ -1,10 +1,12 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Mail, Clock, Users, Tag, FileCode2, FileText, Printer, Sun, Moon } from "lucide-react";
+import { Mail, Clock, Users, Tag, FileCode2, FileText, Printer, Sun, Moon, Paperclip, ArrowUpRight } from "lucide-react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -25,6 +27,10 @@ import accountDeletionRequestHtml from "./templates/account-deletion-request.htm
 import accountDeletedHtml from "./templates/account-deleted.html?raw";
 import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
 import incidentCaseReportHtml from "./templates/incident-case-report.html?raw";
+import criticalIncidentHtml from "./templates/critical-incident.html?raw";
+import dailyDigestHtml from "./templates/daily-activity-digest.html?raw";
+import dailyReportHtml from "./templates/daily-activity-report.html?raw";
+import weeklySummaryHtml from "./templates/weekly-summary.html?raw";
 
 interface Template {
   id: string;
@@ -43,6 +49,8 @@ interface Template {
   mergeTags: string[];
   file: string;
   html: string;
+  /** A document template that goes out attached to this email. */
+  attachment?: { templateId: string; fileName: string; meta: string };
 }
 
 const TEMPLATES: Template[] = [
@@ -206,6 +214,85 @@ const TEMPLATES: Template[] = [
     html: updatePaymentMethodHtml,
   },
   {
+    id: "critical-incident",
+    name: "Critical Incident Alert",
+    kind: "email",
+    subject: "[Critical] Restricted zone entry · FedEx Changi",
+    category: "Alerts & Reports",
+    priority: "P1",
+    whenSent:
+      "The moment a detection is classed critical and its case opens. Further critical detections on the same site within 5 minutes fold into one follow-up.",
+    audience: "Everyone on that site's critical-incident rota. The first to acknowledge takes the case.",
+    mergeTags: [
+      "{{firstName}}", "{{siteName}}", "{{areaName}}", "{{cameraName}}", "{{detectionType}}", "{{confidence}}",
+      "{{ruleName}}", "{{detectedAt}}", "{{ackDeadline}}", "{{resolveDeadline}}", "{{caseId}}", "{{eventId}}",
+      "{{escalationContact}}", "{{rotaCount}}", "{{snapshotUrl}}", "{{caseUrl}}", "{{liveViewUrl}}",
+      "{{notificationSettingsUrl}}", "{{webviewUrl}}",
+    ],
+    file: "templates/critical-incident.html",
+    html: criticalIncidentHtml,
+  },
+  {
+    id: "daily-activity-digest",
+    name: "Daily Activity Digest",
+    kind: "email",
+    subject: "Daily activity digest · Mon 28 Sep 2026",
+    category: "Alerts & Reports",
+    priority: "P2",
+    whenSent:
+      "End of every day, 23:59 workspace time, covering midnight to midnight. The Daily Activity Report goes with it as a PDF.",
+    audience: "Users with the daily digest switched on in Notification settings, for the sites they can see.",
+    mergeTags: [
+      "{{firstName}}", "{{orgName}}", "{{siteCount}}", "{{reportDate}}", "{{detectionCount}}", "{{detectionDelta}}",
+      "{{criticalCount}}", "{{casesOpened}}", "{{casesClosed}}", "{{ackSlaPct}}", "{{attachmentName}}",
+      "{{dashboardUrl}}", "{{notificationSettingsUrl}}", "{{webviewUrl}}",
+    ],
+    file: "templates/daily-activity-digest.html",
+    html: dailyDigestHtml,
+    attachment: {
+      templateId: "daily-activity-report",
+      fileName: "Accel-Daily-Report-2026-09-28.pdf",
+      meta: "3 pages · 418 KB",
+    },
+  },
+  {
+    id: "weekly-summary",
+    name: "Weekly Summary",
+    kind: "email",
+    subject: "Weekly summary · 21 – 27 Sep 2026",
+    category: "Alerts & Reports",
+    priority: "P2",
+    whenSent:
+      "Every Monday at 08:00 workspace time, covering the previous Monday to Sunday against the week before.",
+    audience: "Users with the weekly summary switched on in Notification settings.",
+    mergeTags: [
+      "{{firstName}}", "{{orgName}}", "{{weekRange}}", "{{detectionCount}}", "{{detectionDelta}}", "{{dailyCounts}}",
+      "{{severityMix}}", "{{casesOpened}}", "{{casesClosed}}", "{{casesOpen}}", "{{medianTimeToClose}}",
+      "{{ackSlaPct}}", "{{resolveSlaPct}}", "{{meanTimeToAck}}", "{{slaInsight}}", "{{reportUrl}}",
+      "{{notificationSettingsUrl}}", "{{webviewUrl}}",
+    ],
+    file: "templates/weekly-summary.html",
+    html: weeklySummaryHtml,
+  },
+  {
+    id: "daily-activity-report",
+    name: "Daily Activity Report (PDF)",
+    kind: "document",
+    subject: "Daily Activity Report — 28 Sep 2026",
+    category: "Document export",
+    priority: "P2",
+    whenSent:
+      "Rendered to PDF at 23:59 each day and attached to the Daily Activity Digest. Three A4 pages: the day in numbers, the record, the handover.",
+    audience: "Digest recipients, and whoever files the day or takes over the next shift — ends with a supervisor sign-off.",
+    mergeTags: [
+      "{{reportDate}}", "{{generatedAt}}", "{{orgName}}", "{{window}}", "{{detectionCount}}", "{{criticalCount}}",
+      "{{casesOpened}}", "{{casesClosed}}", "{{ackSlaPct}}", "{{meanTimeToAck}}", "{{hourlyCounts}}",
+      "{{severityMix}}", "{{topTypes}}",
+    ],
+    file: "templates/daily-activity-report.html",
+    html: dailyReportHtml,
+  },
+  {
     id: "incident-case-report",
     name: "Incident Case Report",
     kind: "document",
@@ -244,6 +331,8 @@ function applyPreviewScheme(html: string, scheme: "light" | "dark"): string {
     );
 }
 
+const CATEGORIES = [...new Set(TEMPLATES.map((t) => t.category))];
+
 const PRIORITY_STYLES: Record<Template["priority"], string> = {
   P1: "bg-sev-critical/15 text-sev-critical",
   P2: "bg-warning/15 text-warning",
@@ -262,11 +351,16 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
   );
 }
 
+// Jumps between an email and the document it carries.
+const LINK_BUTTON = "inline-flex items-center gap-1 text-left font-medium text-primary hover:underline";
+
 function App() {
   const [id, setId] = React.useState(TEMPLATES[0].id);
   const [scheme, setScheme] = React.useState<"light" | "dark">("light");
   const tpl = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
   const isDoc = tpl.kind === "document";
+  const attachment = tpl.attachment;
+  const attachedTo = TEMPLATES.find((t) => t.attachment?.templateId === tpl.id);
   // A print document has one palette — only emails get the scheme rewrite.
   const previewHtml = React.useMemo(
     () => (isDoc ? tpl.html : applyPreviewScheme(tpl.html, scheme)),
@@ -336,10 +430,15 @@ function App() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEMPLATES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
+                  {CATEGORIES.map((category) => (
+                    <SelectGroup key={category}>
+                      <SelectLabel>{category}</SelectLabel>
+                      {TEMPLATES.filter((t) => t.category === category).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -385,6 +484,23 @@ function App() {
                 ))}
               </div>
             </InfoRow>
+            {attachment && (
+              <InfoRow icon={<Paperclip className="size-3" />} label="Attachment">
+                <button type="button" onClick={() => setId(attachment.templateId)} className={LINK_BUTTON}>
+                  {attachment.fileName}
+                  <ArrowUpRight className="size-3 shrink-0" />
+                </button>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{attachment.meta}</span>
+              </InfoRow>
+            )}
+            {attachedTo && (
+              <InfoRow icon={<Paperclip className="size-3" />} label="Attached to">
+                <button type="button" onClick={() => setId(attachedTo.id)} className={LINK_BUTTON}>
+                  {attachedTo.name}
+                  <ArrowUpRight className="size-3 shrink-0" />
+                </button>
+              </InfoRow>
+            )}
             <InfoRow icon={<FileCode2 className="size-3" />} label={isDoc ? "Source file" : "Sendable file"}>
               <code className="font-mono text-xs text-muted-foreground">
                 PRD_Email_Templates/{tpl.file}
@@ -430,11 +546,31 @@ function App() {
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {isDoc ? (
-                  <>Generated by <span className="text-foreground">Accel TRMS</span> · opens in the browser print dialog</>
+                  <>
+                    Generated by <span className="text-foreground">Accel TRMS</span> ·{" "}
+                    {attachedTo ? `sent as a PDF with the ${attachedTo.name}` : "opens in the browser print dialog"}
+                  </>
                 ) : (
                   <>From <span className="text-foreground">Accel &lt;no-reply@accel.com&gt;</span></>
                 )}
               </p>
+              {/* The attachment as a mail client lists it — opens the document. */}
+              {attachment && (
+                <button
+                  type="button"
+                  onClick={() => setId(attachment.templateId)}
+                  className="mt-2.5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-left transition-colors hover:border-primary/50"
+                >
+                  <span className="flex h-7 w-6 items-center justify-center rounded-sm bg-sev-critical text-3xs font-bold text-primary-foreground">
+                    PDF
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-xs font-semibold text-foreground">{attachment.fileName}</span>
+                    <span className="text-2xs text-muted-foreground">{attachment.meta}</span>
+                  </span>
+                  <ArrowUpRight className="size-3 text-muted-foreground" />
+                </button>
+              )}
             </div>
             <div
               className={cn(

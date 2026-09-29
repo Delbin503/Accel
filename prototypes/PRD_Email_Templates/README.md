@@ -34,6 +34,26 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 10 | **Account Deletion Request** | P1 | Member requests deletion — sent to the Owner to action. |
 | 11 | **Account Deleted** | P1 | After deletion, confirming access and personal data are gone. |
 | 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
+| 14 | **Critical Incident Alert** | P1 | The moment a critical detection opens a case — to that site's critical rota. |
+| 15 | **Daily Activity Digest** | P2 | 23:59 every day, with the Daily Activity Report attached as a PDF. |
+| 16 | **Weekly Summary** | P2 | Every Monday 08:00 — detections, cases and SLA performance for the week before. |
+
+### Alerts & Reports
+
+Operational mail, as opposed to account mail. Three differences from the
+templates above:
+
+- **Sample data, not merge tags, in the body.** A digest full of `{{tags}}`
+  can't be reviewed for layout, so these render a finished example (the same
+  day, Mon 28 Sep 2026, across all three; the numbers reconcile) and list each
+  substitution point in the file's header comment, as the case report does.
+- **Footer disclaimer names the setting.** These can be switched off, so the
+  footer points at Notification settings instead of "you can't unsubscribe".
+- **The alert has no brand panel**, so the button stays above the fold on a
+  phone. The digest and summary keep it.
+
+The critical alert's detection snapshot is an inline SVG stand-in; swap it for
+a hosted `<img src="{{snapshotUrl}}">` before sending, as with the logo.
 
 ## Documents
 
@@ -43,6 +63,11 @@ their layout can be reviewed alongside the templates above.
 | # | Document | Priority | When it's generated |
 |---|----------|----------|---------------------|
 | 13 | **Incident Case Report** | P1 | Incident Cases → open a case → **Export PDF**. Opens in a new tab and goes straight to the browser's print dialog. |
+| 17 | **Daily Activity Report (PDF)** | P2 | Rendered at 23:59 and attached to the Daily Activity Digest. Three A4 pages: the day in numbers, the record, the handover. |
+
+`templates/daily-activity-report.html` shares the case report's masthead,
+tables, pills and print rules so the two exports read as one set. On screen,
+dashed dividers mark where paper breaks between pages.
 
 `templates/incident-case-report.html` is the standalone reference with
 `{{merge_tags}}`; the live version is built by `handleExportPDF()` in
@@ -75,8 +100,11 @@ All templates share one skeleton so new ones stay consistent:
 1. Add a sendable `templates/<name>.html` following the shared shell.
 2. Register it in the `TEMPLATES` array in `index.tsx` (imported via `?raw`) with
    its `kind`, subject, priority, when-sent, audience, and merge tags.
+3. If an email carries a document, give it an `attachment` pointing at that
+   document's id. The gallery then shows the file under the From line and links
+   the two both ways.
 
-It appears in the dropdown automatically.
+It appears in the dropdown automatically, grouped by `category`.
 
 `kind` picks the preview chrome: `"email"` gets the inbox header, the From line
 and the light/dark toggle; `"document"` gets a page-width A4 preview with no From

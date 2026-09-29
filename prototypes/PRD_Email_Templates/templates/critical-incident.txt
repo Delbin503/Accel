@@ -1,0 +1,43 @@
+Accel — [CRITICAL] Restricted zone entry detected · FedEx Changi
+
+View this email in your browser: {{webviewUrl}}
+
+Dear Sze Hui,
+
+Accel detected an unauthorised person entering Server Room 3 at FedEx Changi
+at 11:47 SGT. A case has been opened and the acknowledgement clock is running.
+
+Incident details
+----------------
+Case:       CASE-2026-0149
+Detection:  Restricted zone entry · 94% confidence
+Location:   FedEx Changi › Server Room 3 · Cam-04
+Detected:   28 Sep 2026, 11:47:12 SGT
+Rule:       Restricted zone — authorised personnel only
+Event:      EVT-2026-0928-041
+
+ACKNOWLEDGE BY 12:02 SGT
+------------------------
+Critical incidents have a 15-minute acknowledgement target and a 4-hour
+resolution target (15:47 SGT). If nobody on the rota acknowledges by 12:02,
+the case escalates to the site supervisor, KC Loke.
+
+Review incident: {{caseUrl}}
+Live view of Cam-04: {{liveViewUrl}}
+
+Sent to the 3 people on the FedEx Changi critical rota. The first to
+acknowledge takes the case; the others get a follow-up saying who did.
+
+Sent automatically by
+Accel Threat Response
+
+--
+You're receiving this because you're on the critical-incident rota for
+FedEx Changi. Critical alerts can't be muted while you're on a rota — change
+rotas in Notification settings: {{notificationSettingsUrl}}
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

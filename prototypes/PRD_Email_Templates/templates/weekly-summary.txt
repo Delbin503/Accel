@@ -1,0 +1,61 @@
+Accel — Weekly summary · 21 – 27 Sep 2026
+
+View this email in your browser: {{webviewUrl}}
+
+Dear Sze Hui,
+
+Here's Astra Corp's week, Monday 21 to Sunday 27 September. Detections were
+up 8%, cases were acknowledged faster than the week before, and resolution
+slipped just under target — mostly on one site's overnight shift.
+
+Detections: 1,056 (up 8% on 978 · busiest day Friday)
+-----------------------------------------------------
+Mon 158 · Tue 149 · Wed 171 · Thu 162 · Fri 176 · Sat 108 · Sun 132
+Critical 21 (2%) · High 118 (11%) · Medium 364 (34%) · Low 553 (52%)
+
+Cases
+-----
+Opened:                58   (up 5 on the week before)
+Closed:                51   (88% of those opened)
+Still open:            14   (at Sunday 23:59 · 3 critical)
+Median time to close:  2h 48m (22 min faster)
+
+SLA performance
+---------------
+Acknowledged within 15 min:  97%  56 of 58 cases · target 95% · On target
+Resolved within 4 h:         88%  45 of 51 closed cases · target 90% · 2 pts below target
+Mean time to acknowledge 6m 40s, down from 7m 55s. 8 SLA misses in total:
+2 acknowledgement, 6 resolution.
+
+! 4 of the 6 resolution misses were at Sembawang Naval on the overnight
+  shift, 22:00–06:00. The other two sites resolved 32 of 34 in time.
+
+By site             Detections  Critical  Cases  Resolved in SLA
+FedEx Changi               486        11     27              92%
+Sembawang Naval            374         8     20              76%
+Astra HQ                   196         2     11             100%
+All sites                1,056        21     58              88%
+
+Top detection types
+-------------------
+Unauthorised access  328  31%
+Loitering            271  26%
+Movement             214  20%
+Compliance breach    152  14%
+PPE violation         91   9%
+
+View weekly report: {{reportUrl}}
+
+Have a good week,
+Accel Threat Response
+
+--
+You're receiving the weekly summary because it's switched on for your
+account. It goes out every Monday at 08:00 SGT — change or turn it off in
+Notification settings: {{notificationSettingsUrl}}
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

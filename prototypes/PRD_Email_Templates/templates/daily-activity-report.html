@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<!--
+  Accel — Daily Activity Report (document export, P2). PRINT / PDF.
+
+  NOT an email. This is the PDF attached to the Daily Activity Digest
+  (daily-activity-digest.html). The backend renders this page headless and
+  prints it to A4 at 23:59 workspace time; it lives in this gallery so the
+  layout can be reviewed next to the email it rides on.
+
+  Follows incident-case-report.html
+  ---------------------------------
+  Same masthead, section headings, table and pill styles, and the same print
+  rules, so every Accel document that leaves the product looks like one set:
+  · normal stylesheet, not the email table shell — it only renders in a
+    browser on its way to PDF
+  · print-color-adjust: exact keeps the chart bars, pills and severity colours
+  · break-inside / break-after avoid keeps headings and rows off the fold
+  · A4, 1.6cm margins, page numbers in the bottom margin box
+
+  Page plan (3 pages)
+  -------------------
+    1  The day in numbers — stat strip, detections by hour, severity mix,
+       detection types, by site. Someone who reads only page 1 has the day.
+    2  The record — every critical incident and every case opened today.
+    3  Handover — what carries into tomorrow, system notes, supervisor sign-off.
+  `.page-break` forces pages 2 and 3; on screen it draws a dashed divider so
+  the pagination can be reviewed in the gallery.
+
+  Sample data
+  -----------
+  Monday 28 September 2026 for Astra Corp — the same day as the sample digest,
+  and the numbers reconcile with it and with each other: hours sum to 148,
+  sites sum to the totals, the four critical incidents are the four critical
+  cases. Every value is a substitution point:
+
+    28 SEP 2026 / Monday, 28 September 2026   {{reportDate}} / {{reportDateLong}}
+    Generated … 11:59 pm                      {{generatedAt}}
+    Astra Corp · 3 sites · 00:00–23:59 SGT    {{orgName}} · {{siteCount}} · {{window}}
+    stat strip                                {{detectionCount}} {{criticalCount}} {{casesOpened}}
+                                              {{casesClosed}} {{ackSlaPct}} {{meanTimeToAck}}
+                                              and each one's comparison line
+    hourly bars                               {{hourlyCounts[24]}} — bar height is
+                                              round(count / max × 100)% of the plot
+    severity / types                          {{severityMix}} / {{topTypes}}
+
+  Repeating blocks — REPEAT START / REPEAT END mark each one:
+    · hour bars        24, 00–23. The peak hour takes .bar.peak.
+    · site rows        {{siteName}} {{detections}} {{critical}} {{high}} {{casesOpened}}
+                       {{casesClosed}} {{openAtClose}} {{ackSlaPct}}
+    · type rows        {{typeName}} {{count}} {{sharePct}}
+    · critical rows    {{time}} {{eventId}} {{detectionType}} {{siteName}} {{areaName}}
+                       {{cameraName}} {{caseId}} {{statusLabel}}
+    · case rows        {{caseId}} {{caseTitle}} {{siteName}} {{severity}} {{assigneeName}}
+                       {{ackTime}} {{statusLabel}}  — ack time over 15m takes .late
+    · carry-over rows  {{caseId}} {{caseTitle}} {{siteName}} {{statusLabel}} {{openFor}} {{note}}
+    · system notes     one <li> per note. With none, print "No system events today."
+
+  Per-record colours — as incident-case-report.html:
+    critical  #b91c1c on #fef2f2      open          #1d4ed8 on #eff6ff
+    high      #c2410c on #fff7ed      in-review     #b45309 on #fffbeb
+    medium    #b45309 on #fffbeb      action-taken  #6d28d9 on #f5f3ff
+    low       #15803d on #f0fdf4      closed        #15803d on #f0fdf4
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Daily Activity Report — 28 Sep 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #111827; background: #fff;
+      font-size: 12px; line-height: 1.55;
+      padding: 40px 44px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Masthead ── (as incident-case-report.html) */
+    .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+      border-bottom: 3px solid #111827; padding-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand svg { width: 26px; height: 26px; color: #ea580c; }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: #6b7280; font-weight: 700; margin-top: 1px; }
+    .doc-type { text-align: right; }
+    .doc-type .kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6b7280; font-weight: 700; }
+    .doc-type .ref { font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .doc-type .when { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+    /* ── Title block ── */
+    .title-block { margin: 22px 0 18px; }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+    .subject { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+    /* ── Stat strip ── */
+    .stats { display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .stat { padding: 11px 12px 10px; }
+    .stat + .stat { border-left: 1px solid #e5e7eb; }
+    .stat .label { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700; }
+    .stat .value { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-top: 3px; }
+    .stat .note { font-size: 9.5px; color: #6b7280; margin-top: 1px; }
+    .good { color: #15803d; }
+    .warn { color: #b45309; }
+    .bad  { color: #b91c1c; }
+
+    /* ── Sections ── */
+    h2 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #374151;
+      font-weight: 800; border-bottom: 1px solid #d1d5db; padding-bottom: 5px; margin: 24px 0 11px;
+      display: flex; align-items: baseline; gap: 6px; }
+    h2 .count { color: #9ca3af; font-weight: 700; }
+    h2 .aside { margin-left: auto; font-size: 9.5px; text-transform: none; letter-spacing: 0; font-weight: 500; color: #6b7280; }
+    .empty { color: #9ca3af; font-style: italic; font-size: 11px; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .cols h2 { margin-top: 24px; }
+
+    /* ── Hourly chart ── */
+    .chart { display: grid; grid-template-columns: 22px 1fr; gap: 6px; }
+    .axis { display: flex; flex-direction: column; justify-content: space-between; height: 108px;
+      font-size: 8.5px; color: #9ca3af; text-align: right; font-family: ui-monospace, Menlo, monospace; }
+    .plot { position: relative; height: 108px; display: grid; grid-template-columns: repeat(24, 1fr);
+      align-items: end; gap: 3px; border-bottom: 1.5px solid #d1d5db;
+      background: repeating-linear-gradient(to top, transparent 0 26.5px, #f3f4f6 26.5px 27px); }
+    .bar { position: relative; background: #fdba74; border-radius: 2px 2px 0 0; min-height: 2px; }
+    .bar.peak { background: #ea580c; }
+    .bar.peak::after { content: attr(data-v); position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 800; color: #c2410c; }
+    .hours { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; margin: 4px 0 0 28px;
+      font-size: 8.5px; color: #9ca3af; font-family: ui-monospace, Menlo, monospace; }
+    .hours span { text-align: center; }
+    .caption { margin-top: 8px; font-size: 10px; color: #6b7280; }
+    .caption strong { color: #111827; }
+
+    /* ── Share bars (severity mix, types) ── */
+    .stack { display: flex; height: 12px; border-radius: 3px; overflow: hidden; }
+    .stack span { display: block; height: 100%; }
+    .legend { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10.5px; }
+    .legend td { padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+    .legend tr:last-child td { border-bottom: none; }
+    .legend .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 7px; vertical-align: 0; }
+    .legend .n { text-align: right; font-weight: 700; width: 40px; }
+    .legend .pct { text-align: right; color: #9ca3af; width: 40px; }
+    .types { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    .types td { padding: 4px 0; vertical-align: middle; }
+    .types .name { width: 118px; }
+    .types .track { background: #f3f4f6; border-radius: 2px; height: 8px; overflow: hidden; }
+    .types .fill { background: #ea580c; height: 100%; border-radius: 2px; }
+    .types .n { text-align: right; font-weight: 700; width: 34px; padding-left: 8px; }
+    .types .pct { text-align: right; color: #9ca3af; width: 34px; }
+
+    /* ── Data tables ── (as incident-case-report.html) */
+    table.data { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    table.data th { text-align: left; padding: 7px 9px; background: #f3f4f6;
+      border-bottom: 1.5px solid #d1d5db; font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #4b5563; font-weight: 800; white-space: nowrap; }
+    table.data td { padding: 7px 9px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
+      overflow-wrap: anywhere; }
+    table.data tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+    table.data .r { text-align: right; }
+    table.data tfoot td { font-weight: 800; background: #f9fafb; border-top: 1.5px solid #d1d5db; border-bottom: none; }
+    .mono { font-family: ui-monospace, Menlo, monospace; font-size: 10px; white-space: nowrap; }
+    .muted { color: #9ca3af; }
+    .nowrap { white-space: nowrap; }
+    .late { color: #b91c1c; font-weight: 700; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8.5px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+    .p-critical { color: #b91c1c; background: #fef2f2; }
+    .p-high     { color: #c2410c; background: #fff7ed; }
+    .p-medium   { color: #b45309; background: #fffbeb; }
+    .p-low      { color: #15803d; background: #f0fdf4; }
+    .s-open     { color: #1d4ed8; background: #eff6ff; }
+    .s-review   { color: #b45309; background: #fffbeb; }
+    .s-action   { color: #6d28d9; background: #f5f3ff; }
+    .s-closed   { color: #15803d; background: #f0fdf4; }
+    .tally { margin-top: 7px; font-size: 10px; color: #6b7280; }
+
+    /* ── System notes ── */
+    ul.notes { list-style: none; }
+    ul.notes li { position: relative; padding: 0 0 7px 14px; font-size: 11px; color: #374151; }
+    ul.notes li::before { content: ""; position: absolute; left: 0; top: 6px; width: 5px; height: 5px;
+      border-radius: 50%; background: #9ca3af; }
+
+    /* ── Sign-off + footer ── (as incident-case-report.html) */
+    .signoff { margin-top: 30px; display: flex; gap: 40px; }
+    .sign { flex: 1; }
+    .sign .line { border-bottom: 1px solid #9ca3af; height: 30px; }
+    .sign .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #6b7280; font-weight: 700; margin-top: 5px; }
+    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e5e7eb;
+      display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; }
+
+    h2, li, .signoff, .stats, .chart, .stack { break-inside: avoid; }
+    h2 { break-after: avoid; }
+    tr { break-inside: avoid; }
+    .page-break { break-before: page; }
+    @media screen {
+      /* Show where paper will break, so pagination can be reviewed on screen. */
+      .page-break { margin-top: 36px; padding-top: 6px; border-top: 1px dashed #d1d5db; }
+      .page-break::before { content: attr(data-page); display: block; font-size: 8.5px; color: #9ca3af;
+        text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; margin-bottom: 4px; }
+    }
+    @media print {
+      body { padding: 0; }
+      @page {
+        size: A4; margin: 1.6cm;
+        @bottom-right { content: "Page " counter(page) " of " counter(pages);
+          font: 9px system-ui, sans-serif; color: #9ca3af; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ═══════════════ PAGE 1 · The day in numbers ═══════════════ -->
+  <div class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M20.5 11 L28.5 31.5 L12.5 31.5 Z" fill="currentColor" />
+        <path d="M16 33 C 24.5 28.4 30.5 23.8 40 14.6 C 35.6 24 29 29.2 21 34.8 Z" fill="currentColor" />
+        <path d="M30.6 31.2 L37.6 27 L36 34 L29 35.6 Z" fill="currentColor" />
+      </svg>
+      <div>
+        <div class="brand-name">Accel</div>
+        <div class="brand-sub">Threat Response</div>
+      </div>
+    </div>
+    <div class="doc-type">
+      <div class="kind">Daily Activity Report</div>
+      <div class="ref">28 SEP 2026</div>
+      <div class="when">Generated 28 September 2026 at 11:59 pm</div>
+    </div>
+  </div>
+
+  <div class="title-block">
+    <h1>Monday, 28 September 2026</h1>
+    <div class="subject">Astra Corp · FedEx Changi, Sembawang Naval, Astra HQ · 00:00–23:59 SGT</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Detections</div>
+      <div class="value">148</div>
+      <div class="note">▲ 12% vs Sun (132)</div>
+    </div>
+    <div class="stat">
+      <div class="label">Critical</div>
+      <div class="value bad">4</div>
+      <div class="note good">▼ 2 vs Sun</div>
+    </div>
+    <div class="stat">
+      <div class="label">Cases opened</div>
+      <div class="value">9</div>
+      <div class="note">4 still open</div>
+    </div>
+    <div class="stat">
+      <div class="label">Cases closed</div>
+      <div class="value">7</div>
+      <div class="note">5 today's · 2 earlier</div>
+    </div>
+    <div class="stat">
+      <div class="label">Ack. in SLA</div>
+      <div class="value warn">89%</div>
+      <div class="note">8 of 9 · target 95%</div>
+    </div>
+    <div class="stat">
+      <div class="label">Time to ack.</div>
+      <div class="value">8m</div>
+      <div class="note">mean · target 15m</div>
+    </div>
+  </div>
+
+  <h2>Detections by hour <span class="aside">SGT · all sites</span></h2>
+  <div class="chart">
+    <div class="axis"><span>20</span><span>15</span><span>10</span><span>5</span><span>0</span></div>
+    <div class="plot">
+      <!-- REPEAT START · hour bars — 24, 00 to 23. height = count / 20 (the axis max). -->
+      <div class="bar" data-v="2" style="height:10%"></div>
+      <div class="bar" data-v="1" style="height:5%"></div>
+      <div class="bar" data-v="1" style="height:5%"></div>
+      <div class="bar" data-v="3" style="height:15%"></div>
+      <div class="bar" data-v="2" style="height:10%"></div>
+      <div class="bar" data-v="1" style="height:5%"></div>
+      <div class="bar" data-v="2" style="height:10%"></div>
+      <div class="bar" data-v="4" style="height:20%"></div>
+      <div class="bar" data-v="6" style="height:30%"></div>
+      <div class="bar" data-v="8" style="height:40%"></div>
+      <div class="bar" data-v="9" style="height:45%"></div>
+      <div class="bar" data-v="10" style="height:50%"></div>
+      <div class="bar" data-v="9" style="height:45%"></div>
+      <div class="bar" data-v="11" style="height:55%"></div>
+      <div class="bar peak" data-v="17" style="height:85%"></div>
+      <div class="bar" data-v="12" style="height:60%"></div>
+      <div class="bar" data-v="10" style="height:50%"></div>
+      <div class="bar" data-v="9" style="height:45%"></div>
+      <div class="bar" data-v="8" style="height:40%"></div>
+      <div class="bar" data-v="7" style="height:35%"></div>
+      <div class="bar" data-v="5" style="height:25%"></div>
+      <div class="bar" data-v="4" style="height:20%"></div>
+      <div class="bar" data-v="3" style="height:15%"></div>
+      <div class="bar" data-v="4" style="height:20%"></div>
+      <!-- REPEAT END · hour bars -->
+    </div>
+  </div>
+  <div class="hours">
+    <span>00</span><span></span><span></span><span>03</span><span></span><span></span>
+    <span>06</span><span></span><span></span><span>09</span><span></span><span></span>
+    <span>12</span><span></span><span></span><span>15</span><span></span><span></span>
+    <span>18</span><span></span><span></span><span>21</span><span></span><span></span>
+  </div>
+  <p class="caption">Peak <strong>14:00–15:00, 17 detections</strong>. Quietest 01:00–03:00 and 05:00, 1 an hour. Cam-12 was offline 03:10–04:02, so the overnight count at Sembawang Naval is slightly low.</p>
+
+  <div class="cols">
+    <div>
+      <h2>Severity mix</h2>
+      <div class="stack">
+        <span style="width:2.7%; background:#dc2626"></span>
+        <span style="width:11.5%; background:#ea580c"></span>
+        <span style="width:33.1%; background:#d97706"></span>
+        <span style="width:52.7%; background:#16a34a"></span>
+      </div>
+      <table class="legend">
+        <tr><td><span class="swatch" style="background:#dc2626"></span>Critical</td><td class="n">4</td><td class="pct">3%</td></tr>
+        <tr><td><span class="swatch" style="background:#ea580c"></span>High</td><td class="n">17</td><td class="pct">11%</td></tr>
+        <tr><td><span class="swatch" style="background:#d97706"></span>Medium</td><td class="n">49</td><td class="pct">33%</td></tr>
+        <tr><td><span class="swatch" style="background:#16a34a"></span>Low</td><td class="n">78</td><td class="pct">53%</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Detection types</h2>
+      <table class="types">
+        <!-- REPEAT START · type rows — fill width is count / the top count. -->
+        <tr><td class="name">Unauthorised access</td><td><div class="track"><div class="fill" style="width:100%"></div></div></td><td class="n">46</td><td class="pct">31%</td></tr>
+        <tr><td class="name">Loitering</td><td><div class="track"><div class="fill" style="width:83%"></div></div></td><td class="n">38</td><td class="pct">26%</td></tr>
+        <tr><td class="name">Movement</td><td><div class="track"><div class="fill" style="width:67%"></div></div></td><td class="n">31</td><td class="pct">21%</td></tr>
+        <tr><td class="name">Compliance breach</td><td><div class="track"><div class="fill" style="width:46%"></div></div></td><td class="n">21</td><td class="pct">14%</td></tr>
+        <tr><td class="name">PPE violation</td><td><div class="track"><div class="fill" style="width:26%"></div></div></td><td class="n">12</td><td class="pct">8%</td></tr>
+        <!-- REPEAT END · type rows -->
+      </table>
+    </div>
+  </div>
+
+  <h2>By site</h2>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Site</th>
+        <th class="r">Detections</th>
+        <th class="r">Critical</th>
+        <th class="r">High</th>
+        <th class="r">Cases opened</th>
+        <th class="r">Cases closed</th>
+        <th class="r">Open at 23:59</th>
+        <th class="r">Ack. in SLA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- REPEAT START · site rows -->
+      <tr><td><strong>FedEx Changi</strong></td><td class="r">71</td><td class="r bad">3</td><td class="r">8</td><td class="r">4</td><td class="r">2</td><td class="r">3</td><td class="r warn">75%</td></tr>
+      <tr><td><strong>Sembawang Naval</strong></td><td class="r">52</td><td class="r bad">1</td><td class="r">6</td><td class="r">3</td><td class="r">3</td><td class="r">2</td><td class="r">100%</td></tr>
+      <tr><td><strong>Astra HQ</strong></td><td class="r">25</td><td class="r">0</td><td class="r">3</td><td class="r">2</td><td class="r">2</td><td class="r">1</td><td class="r">100%</td></tr>
+      <!-- REPEAT END · site rows -->
+    </tbody>
+    <tfoot>
+      <tr><td>All sites</td><td class="r">148</td><td class="r">4</td><td class="r">17</td><td class="r">9</td><td class="r">7</td><td class="r">6</td><td class="r">89%</td></tr>
+    </tfoot>
+  </table>
+
+  <!-- ═══════════════ PAGE 2 · The record ═══════════════ -->
+  <div class="page-break" data-page="Page 2"></div>
+
+  <h2>Critical incidents <span class="count">(4)</span></h2>
+  <!-- With none, replace the table with:
+       <p class="empty">No critical incidents today.</p> -->
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Event ID</th>
+        <th>Detection</th>
+        <th>Site › Area</th>
+        <th>Camera</th>
+        <th>Case</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- REPEAT START · critical rows -->
+      <tr>
+        <td class="mono nowrap">02:14</td>
+        <td class="mono">EVT-2026-0928-003</td>
+        <td><strong>Perimeter breach</strong></td>
+        <td>Sembawang Naval › Fence line north</td>
+        <td class="mono">Cam-12</td>
+        <td class="mono">CASE-2026-0146</td>
+        <td><span class="pill s-closed">Closed</span></td>
+      </tr>
+      <tr>
+        <td class="mono nowrap">11:47</td>
+        <td class="mono">EVT-2026-0928-041</td>
+        <td><strong>Restricted zone entry</strong></td>
+        <td>FedEx Changi › Server Room 3</td>
+        <td class="mono">Cam-04</td>
+        <td class="mono">CASE-2026-0149</td>
+        <td><span class="pill s-open">Open</span></td>
+      </tr>
+      <tr>
+        <td class="mono nowrap">14:22</td>
+        <td class="mono">EVT-2026-0928-077</td>
+        <td><strong>Tailgating at access gate</strong></td>
+        <td>FedEx Changi › Checkpoint A2</td>
+        <td class="mono">Cam-02</td>
+        <td class="mono">CASE-2026-0150</td>
+        <td><span class="pill s-review">In review</span></td>
+      </tr>
+      <tr>
+        <td class="mono nowrap">21:05</td>
+        <td class="mono">EVT-2026-0928-132</td>
+        <td><strong>Restricted zone entry</strong></td>
+        <td>FedEx Changi › Loading Bay A</td>
+        <td class="mono">Cam-01</td>
+        <td class="mono">CASE-2026-0152</td>
+        <td><span class="pill s-open">Open</span></td>
+      </tr>
+      <!-- REPEAT END · critical rows -->
+    </tbody>
+  </table>
+  <p class="tally">Status as at 23:59. Every critical detection opened a case automatically — 1 closed, 3 carry into tomorrow.</p>
+
+  <h2>Cases opened today <span class="count">(9)</span></h2>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Case</th>
+        <th>Title</th>
+        <th>Site</th>
+        <th>Severity</th>
+        <th>Assigned</th>
+        <th class="r">Ack. after</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- REPEAT START · case rows — "Ack. after" over the 15m target takes .late -->
+      <tr><td class="mono">CASE-2026-0146</td><td>Perimeter breach — Fence line north</td><td class="nowrap">Sembawang Naval</td><td><span class="pill p-critical">critical</span></td><td class="nowrap">Marcus Lee</td><td class="r mono">4m</td><td><span class="pill s-closed">Closed</span></td></tr>
+      <tr><td class="mono">CASE-2026-0147</td><td>Loitering near Gate 3</td><td class="nowrap">FedEx Changi</td><td><span class="pill p-medium">medium</span></td><td class="nowrap">Sze Hui</td><td class="r mono">7m</td><td><span class="pill s-closed">Closed</span></td></tr>
+      <tr><td class="mono">CASE-2026-0148</td><td>PPE violation — Lobby works</td><td class="nowrap">Astra HQ</td><td><span class="pill p-low">low</span></td><td class="nowrap">Olivia</td><td class="r mono">11m</td><td><span class="pill s-closed">Closed</span></td></tr>
+      <tr><td class="mono">CASE-2026-0149</td><td>Restricted zone entry — Server Room 3</td><td class="nowrap">FedEx Changi</td><td><span class="pill p-critical">critical</span></td><td class="nowrap">Sze Hui</td><td class="r mono">3m</td><td><span class="pill s-open">Open</span></td></tr>
+      <tr><td class="mono">CASE-2026-0150</td><td>Tailgating at Checkpoint A2</td><td class="nowrap">FedEx Changi</td><td><span class="pill p-critical">critical</span></td><td class="nowrap">KC Loke</td><td class="r mono">6m</td><td><span class="pill s-review">In review</span></td></tr>
+      <tr><td class="mono">CASE-2026-0151</td><td>Unattended vehicle — Pier access road</td><td class="nowrap">Sembawang Naval</td><td><span class="pill p-high">high</span></td><td class="nowrap">Marcus Lee</td><td class="r mono">9m</td><td><span class="pill s-closed">Closed</span></td></tr>
+      <tr><td class="mono">CASE-2026-0152</td><td>Restricted zone entry — Loading Bay A</td><td class="nowrap">FedEx Changi</td><td><span class="pill p-critical">critical</span></td><td class="nowrap">KC Loke</td><td class="r mono late">19m</td><td><span class="pill s-open">Open</span></td></tr>
+      <tr><td class="mono">CASE-2026-0153</td><td>Loitering at car park B2</td><td class="nowrap">Astra HQ</td><td><span class="pill p-medium">medium</span></td><td class="nowrap">Olivia</td><td class="r mono">5m</td><td><span class="pill s-closed">Closed</span></td></tr>
+      <tr><td class="mono">CASE-2026-0154</td><td>Compliance breach — Pat-down SOP</td><td class="nowrap">Sembawang Naval</td><td><span class="pill p-high">high</span></td><td class="nowrap">Marcus Lee</td><td class="r mono">8m</td><td><span class="pill s-action">Action taken</span></td></tr>
+      <!-- REPEAT END · case rows -->
+    </tbody>
+  </table>
+  <p class="tally">Status as at 23:59. Acknowledged within 15 minutes: 8 of 9. Resolved within 4 hours: 6 of the 7 cases closed today.</p>
+
+  <!-- ═══════════════ PAGE 3 · Handover ═══════════════ -->
+  <div class="page-break" data-page="Page 3"></div>
+
+  <h2>Carried into tomorrow <span class="count">(6)</span></h2>
+  <!-- With none, replace the table with:
+       <p class="empty">Nothing carries over — every case was closed today.</p> -->
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Case</th>
+        <th>Title</th>
+        <th>Site</th>
+        <th>Status</th>
+        <th class="r">Open for</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- REPEAT START · carry-over rows — oldest SLA risk first -->
+      <tr><td class="mono">CASE-2026-0149</td><td>Restricted zone entry — Server Room 3</td><td class="nowrap">FedEx Changi</td><td><span class="pill s-open">Open</span></td><td class="r mono">12h 12m</td><td class="late nowrap">Past 4h target · 15:47</td></tr>
+      <tr><td class="mono">CASE-2026-0150</td><td>Tailgating at Checkpoint A2</td><td class="nowrap">FedEx Changi</td><td><span class="pill s-review">In review</span></td><td class="r mono">9h 37m</td><td class="late nowrap">Past 4h target · 18:22</td></tr>
+      <tr><td class="mono">CASE-2026-0152</td><td>Restricted zone entry — Loading Bay A</td><td class="nowrap">FedEx Changi</td><td><span class="pill s-open">Open</span></td><td class="r mono">2h 54m</td><td>Resolve by 01:05</td></tr>
+      <tr><td class="mono">CASE-2026-0154</td><td>Compliance breach — Pat-down SOP</td><td class="nowrap">Sembawang Naval</td><td><span class="pill s-action">Action taken</span></td><td class="r mono">6h 29m</td><td>Awaiting SOP refresher sign-off</td></tr>
+      <tr><td class="mono">CASE-2026-0139</td><td>Unauthorised access — Dry dock gate</td><td class="nowrap">Sembawang Naval</td><td><span class="pill s-review">In review</span></td><td class="r mono">2d 6h</td><td>Badge log requested from contractor</td></tr>
+      <tr><td class="mono">CASE-2026-0137</td><td>Loitering — Lobby after hours</td><td class="nowrap">Astra HQ</td><td><span class="pill s-action">Action taken</span></td><td class="r mono">3d 4h</td><td>Ready to close after review</td></tr>
+      <!-- REPEAT END · carry-over rows -->
+    </tbody>
+  </table>
+
+  <h2>System notes</h2>
+  <ul class="notes">
+    <!-- REPEAT START · system notes -->
+    <li><strong>Cam-12</strong> (Sembawang Naval › Fence line north) offline 03:10–04:02, 52 min. Detections from that camera paused while it was down.</li>
+    <li><strong>Weapon detection v2.3</strong> deployed to FedEx Changi at 09:00. No rollbacks.</li>
+    <li>No rule changes today.</li>
+    <!-- REPEAT END · system notes -->
+  </ul>
+
+  <div class="signoff">
+    <div class="sign"><div class="line"></div><div class="label">Reviewed by (shift supervisor)</div></div>
+    <div class="sign"><div class="line"></div><div class="label">Handed over to</div></div>
+    <div class="sign"><div class="line"></div><div class="label">Date</div></div>
+  </div>
+
+  <footer>
+    <span>Accel TRMS · Daily Activity Report · 28 Sep 2026 · Astra Corp</span>
+    <span>Confidential — internal distribution only</span>
+  </footer>
+</body>
+</html>
