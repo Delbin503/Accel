@@ -747,7 +747,15 @@ function MultiSiteSelector({ sites, selected, onChange }: {
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 
-export function SyncPlaybackMonitoring() {
+export function SyncPlaybackMonitoring({
+  stats: statsSlot,
+  onSelectionChange,
+}: {
+  /** Replaces the visitor-analytics strip — another deployment counts different things. */
+  stats?: React.ReactNode;
+  /** Reports how many cameras are selected, so a host page can keep clear of the selection bar. */
+  onSelectionChange?: (count: number) => void;
+} = {}) {
   const allCameras = useCamerasStore((s) => s.cameras);
   const sites = useSitesStore((s) => s.sites);
 
@@ -803,6 +811,10 @@ export function SyncPlaybackMonitoring() {
   const inSync = syncMode && checkedCameras.length > 0;
   const onlineCount = filteredCameras.filter((c) => c.status === "online").length;
   const stats = React.useMemo(() => visitorStats(filteredCameras), [filteredCameras]);
+
+  React.useEffect(() => {
+    onSelectionChange?.(checkedIds.length);
+  }, [checkedIds.length, onSelectionChange]);
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
@@ -835,7 +847,7 @@ export function SyncPlaybackMonitoring() {
       </PageHeader>
 
       {/* Counts answer for what is on screen, so they sit above the filters. */}
-      <VisitorKpis stats={stats} />
+      {statsSlot ?? <VisitorKpis stats={stats} />}
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">

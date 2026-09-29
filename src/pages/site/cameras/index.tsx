@@ -1709,14 +1709,31 @@ export function ConfirmModal({
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
+/**
+ * An extra table column a deployment can add without forking this page — TRMS
+ * uses it for the base stations a camera has covered. Rendered before ACTION.
+ */
+export interface CameraExtraColumn {
+  header: string;
+  cell: (camera: CameraData) => React.ReactNode;
+}
+
 export default function CamerasPage({
   drawerAsync = "idle",
   forcedState = "normal",
+  title = "Cameras",
+  description = "Manage cameras across all sites — RTSP feeds, NVR linkage, and boundary zones.",
+  extraColumns = [],
 }: {
   /** Prototype hook — forces the camera drawer's detail-fetch state. */
   drawerAsync?: DrawerAsync;
   /** Prototype hook — forces the page's empty dev-state. */
   forcedState?: "normal" | "empty";
+  /** Page heading — a deployment may call these devices rather than cameras. */
+  title?: string;
+  description?: string;
+  /** Columns inserted before ACTION. Empty by default, so the table is unchanged. */
+  extraColumns?: CameraExtraColumn[];
 } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1888,10 +1905,8 @@ export default function CamerasPage({
     <div className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
-          <PageHeader.Title>Cameras</PageHeader.Title>
-          <PageHeader.Description>
-            Manage cameras across all sites — RTSP feeds, NVR linkage, and boundary zones.
-          </PageHeader.Description>
+          <PageHeader.Title>{title}</PageHeader.Title>
+          <PageHeader.Description>{description}</PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button size="sm" className="gap-1.5" onClick={() => setModal({ kind: "add" })}>
@@ -1971,7 +1986,7 @@ export default function CamerasPage({
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  {["ID", "NAME", "STATUS", "IP", "LOCATION", "NVR · CH", "EVENTS 24H", "ACTIVE", "ACTION"].map((h) => (
+                  {["ID", "NAME", "STATUS", "IP", "LOCATION", "NVR · CH", "EVENTS 24H", "ACTIVE", ...extraColumns.map((c) => c.header), "ACTION"].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
@@ -2032,6 +2047,11 @@ export default function CamerasPage({
                         {c.lastSeenDisplay}
                       </div>
                     </td>
+                    {extraColumns.map((col) => (
+                      <td key={col.header} className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        {col.cell(c)}
+                      </td>
+                    ))}
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <Popover>
                         <PopoverTrigger asChild>

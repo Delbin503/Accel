@@ -337,7 +337,12 @@ function SigmawaveFooter() {
 
 /* ─── Main sidebar component ────────────────────────────────────────────── */
 
-export function AppSidebar() {
+export function AppSidebar({
+  groups = NAV_GROUPS,
+}: {
+  /** Nav to render. Defaults to the app's own; a product built on the shell passes its own. */
+  groups?: NavGroup[];
+} = {}) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="pb-1 pt-3">
@@ -345,7 +350,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="gap-0 overflow-x-hidden">
-        {NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <SidebarGroup key={group.label} className="py-2">
             <SidebarGroupLabel className="mb-1 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
               {group.label}
