@@ -19,7 +19,6 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -79,41 +78,41 @@ function TypeDots({ types }: { types: RecordingTypeId[] }) {
   );
 }
 
-function StarButton({ starred, onToggle, label, className }: {
-  starred: boolean; onToggle: () => void; label: string; className?: string;
+function BookmarkButton({ bookmarked, onToggle, label, className }: {
+  bookmarked: boolean; onToggle: () => void; label: string; className?: string;
 }) {
   return (
     <button
       type="button"
-      aria-pressed={starred}
-      aria-label={starred ? `Unstar ${label}` : `Star ${label}`}
-      title={starred ? "Starred — protected from deletion" : "Star to protect from deletion"}
+      aria-pressed={bookmarked}
+      aria-label={bookmarked ? `Remove bookmark from ${label}` : `Bookmark ${label}`}
+      title={bookmarked ? "Bookmarked — cannot be deleted" : "Bookmark to keep this out of any delete"}
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className={cn(
         "inline-flex size-6 items-center justify-center rounded transition-colors",
-        starred ? "text-warning" : "text-white/70 hover:text-white",
+        bookmarked ? "text-warning" : "text-white/70 hover:text-white",
         className
       )}
     >
-      <Star className={cn("size-4", starred && "fill-warning")} />
+      <Star className={cn("size-4", bookmarked && "fill-warning")} />
     </button>
   );
 }
 
 /* ── Camera-day card ─────────────────────────────────────────────────────── */
 
-function CameraDayCard({ day, selected, starred, onToggle, onToggleStar, onOpen }: {
+function CameraDayCard({ day, selected, bookmarked, onToggle, onToggleBookmark, onOpen }: {
   day: CameraDay;
   selected: boolean;
-  starred: boolean;
+  bookmarked: boolean;
   onToggle: () => void;
-  onToggleStar: () => void;
+  onToggleBookmark: () => void;
   onOpen: () => void;
 }) {
   return (
     <div className={cn(
       "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-md",
-      selected ? "border-primary" : starred ? "border-warning/40" : "border-border hover:border-primary/40"
+      selected ? "border-primary" : bookmarked ? "border-warning/40" : "border-border hover:border-primary/40"
     )}>
       <button
         onClick={(e) => { e.stopPropagation(); onToggle(); }}
@@ -136,12 +135,13 @@ function CameraDayCard({ day, selected, starred, onToggle, onToggleStar, onOpen 
             </div>
           </div>
           <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-1">
-            {/* Starred keeps a camera-day out of any delete — the icon is the guard. */}
-            <StarButton
-              starred={starred}
-              onToggle={onToggleStar}
+            {/* A bookmark keeps a camera-day out of any delete — the filled star
+                is the whole indicator, so the row below carries no extra chip. */}
+            <BookmarkButton
+              bookmarked={bookmarked}
+              onToggle={onToggleBookmark}
               label={`${day.cameraName} · ${day.dateLabel}`}
-              className={cn("rounded bg-black/50 backdrop-blur-sm", !starred && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}
+              className={cn("rounded bg-black/50 backdrop-blur-sm", !bookmarked && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}
             />
             <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">
               {day.totalDurationDisplay}
@@ -168,15 +168,7 @@ function CameraDayCard({ day, selected, starred, onToggle, onToggleStar, onOpen 
           </p>
           <div className="flex items-center justify-between border-t border-border/60 pt-2">
             <TypeDots types={day.recordings.map((r) => r.type)} />
-            <span className="flex items-center gap-1.5">
-              {starred && (
-                <span className="inline-flex items-center gap-1 rounded border border-warning/30 bg-warning/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-warning">
-                  <Lock className="size-2.5" />
-                  Protected
-                </span>
-              )}
-              <span className="font-mono text-2xs text-muted-foreground">{day.dateLabel}</span>
-            </span>
+            <span className="font-mono text-2xs text-muted-foreground">{day.dateLabel}</span>
           </div>
         </div>
       </button>
@@ -332,13 +324,13 @@ function StandbyGroup({ standby, motion, onPlay }: {
   );
 }
 
-function CameraDayDrawer({ day, open, starred, onClose, onDelete, onToggleStar, onPlay }: {
+function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBookmark, onPlay }: {
   day: CameraDay | null;
   open: boolean;
-  starred: boolean;
+  bookmarked: boolean;
   onClose: () => void;
   onDelete: () => void;
-  onToggleStar: () => void;
+  onToggleBookmark: () => void;
   onPlay: (rec: DayRecording) => void;
 }) {
   if (!day) return null;
@@ -351,12 +343,6 @@ function CameraDayDrawer({ day, open, starred, onClose, onDelete, onToggleStar, 
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <CountChip count={day.recordings.length} />
-                {starred && (
-                  <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
-                    <Lock className="size-2.5" />
-                    Protected
-                  </span>
-                )}
               </div>
               <div className="mb-1 flex flex-wrap items-center gap-2">
                 <SheetTitle className="min-w-0 text-lg font-bold">
@@ -378,11 +364,11 @@ function CameraDayDrawer({ day, open, starred, onClose, onDelete, onToggleStar, 
               </div>
             </div>
             <div className="mt-0.5 flex flex-shrink-0 items-center gap-1">
-              <StarButton
-                starred={starred}
-                onToggle={onToggleStar}
+              <BookmarkButton
+                bookmarked={bookmarked}
+                onToggle={onToggleBookmark}
                 label={`${day.cameraName} · ${day.dateLabel}`}
-                className={cn("size-7", !starred && "text-muted-foreground hover:text-foreground")}
+                className={cn("size-7", !bookmarked && "text-muted-foreground hover:text-foreground")}
               />
               <button onClick={onClose} aria-label="Close"
                 className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -425,16 +411,16 @@ function CameraDayDrawer({ day, open, starred, onClose, onDelete, onToggleStar, 
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border bg-card px-5 py-3.5">
-          {starred && (
+          {bookmarked && (
             <p className="mr-auto inline-flex items-center gap-1.5 text-xs text-warning">
               <Lock className="size-3" />
-              Starred — unstar it before it can be deleted.
+              Bookmarked — remove the bookmark before it can be deleted.
             </p>
           )}
           <Button
             variant="outline"
-            disabled={starred}
-            aria-label={starred ? `${day.cameraName} · ${day.dateLabel} is starred and cannot be deleted` : "Delete recordings"}
+            disabled={bookmarked}
+            aria-label={bookmarked ? `${day.cameraName} · ${day.dateLabel} is bookmarked and cannot be deleted` : "Delete recordings"}
             className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
             onClick={onDelete}
           >
@@ -521,9 +507,8 @@ export function RecordingsByDay() {
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set());
-  /* Seeded so the protected state is visible without starring something first. */
-  const [starredKeys, setStarredKeys] = React.useState<Set<string>>(() => new Set(["Cam-04::Today"]));
-  const [starFilter, setStarFilter] = React.useState<"all" | "starred">("all");
+  /* Seeded so the bookmarked state is visible without bookmarking one first. */
+  const [bookmarkedKeys, setBookmarkedKeys] = React.useState<Set<string>>(() => new Set(["Cam-04::Today"]));
   const [drawerKey, setDrawerKey] = React.useState<string | null>(null);
   const [playing, setPlaying] = React.useState<DayRecording | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -536,7 +521,11 @@ export function RecordingsByDay() {
   const filtered = React.useMemo(() => {
     const list = allDays.filter((d) => {
       if (dayPreset !== "all" && d.dateLabel !== dayPreset) return false;
-      if (starFilter === "starred" && !starredKeys.has(d.key)) return false;
+      // Selecting both options constrains nothing, same as selecting neither.
+      if (filters.bookmark.length === 1) {
+        const wantBookmarked = filters.bookmark[0] === "bookmarked";
+        if (bookmarkedKeys.has(d.key) !== wantBookmarked) return false;
+      }
       if (filters.site.length > 0 && !filters.site.includes(d.siteId)) return false;
       if (filters.area.length > 0 && !filters.area.includes(d.areaId)) return false;
       if (filters.camera.length > 0 && !filters.camera.includes(d.cameraId)) return false;
@@ -557,20 +546,20 @@ export function RecordingsByDay() {
       if (sort === "largest") return b.totalMb - a.totalMb;
       return a.dayIndex - b.dayIndex || a.cameraId.localeCompare(b.cameraId);
     });
-  }, [allDays, dayPreset, filters, search, sort, starFilter, starredKeys]);
+  }, [allDays, dayPreset, filters, search, sort, bookmarkedKeys]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount);
   const pageItems = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
   const drawerDay = drawerKey ? allDays.find((d) => d.key === drawerKey) ?? null : null;
-  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || dayPreset !== "all" || starFilter !== "all");
+  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || dayPreset !== "all");
 
   const totalFiles = filtered.reduce((s, d) => s + d.recordings.length, 0);
   const totalMb = filtered.reduce((s, d) => s + d.totalMb, 0);
   const todayDays = allDays.filter((d) => d.dateLabel === "Today").length;
 
-  function toggleStar(key: string) {
-    setStarredKeys((curr) => {
+  function toggleBookmark(key: string) {
+    setBookmarkedKeys((curr) => {
       const next = new Set(curr);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -580,21 +569,21 @@ export function RecordingsByDay() {
 
   function requestDelete(requested: string[]) {
     if (requested.length === 0) return;
-    /* Starred recordings are held back rather than silently deleted — the
-       operator starred them precisely so this could not happen. */
-    const protectedKeys = requested.filter((k) => starredKeys.has(k));
-    const keys = requested.filter((k) => !starredKeys.has(k));
+    /* Bookmarked recordings are held back rather than silently deleted — the
+       operator bookmarked them precisely so this could not happen. */
+    const protectedKeys = requested.filter((k) => bookmarkedKeys.has(k));
+    const keys = requested.filter((k) => !bookmarkedKeys.has(k));
     if (keys.length === 0) {
       toast.error(
         protectedKeys.length === 1
-          ? "That recording is starred — unstar it before deleting."
-          : `All ${protectedKeys.length} selected recordings are starred — unstar them before deleting.`
+          ? "That recording is bookmarked — remove the bookmark before deleting."
+          : `All ${protectedKeys.length} selected recordings are bookmarked — remove their bookmarks before deleting.`
       );
       return;
     }
     if (protectedKeys.length > 0) {
-      toast.message(`${protectedKeys.length} starred camera-day${protectedKeys.length === 1 ? "" : "s"} kept`, {
-        description: "Starred recordings are protected from deletion.",
+      toast.message(`${protectedKeys.length} bookmarked camera-day${protectedKeys.length === 1 ? "" : "s"} kept`, {
+        description: "Bookmarked recordings cannot be deleted.",
       });
     }
     const days = keys
@@ -683,7 +672,7 @@ export function RecordingsByDay() {
           <strong className="text-foreground">{totalFiles}</strong> recording{totalFiles === 1 ? "" : "s"} match current filters
           {hasFilters && (
             <button
-              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDayPreset("all"); setStarFilter("all"); setPage(1); }}
+              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDayPreset("all"); setPage(1); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
               Clear all
@@ -691,13 +680,6 @@ export function RecordingsByDay() {
           )}
         </p>
         <div className="flex items-center gap-2">
-          <Select value={starFilter} onValueChange={(v) => { setStarFilter(v as "all" | "starred"); setPage(1); }}>
-            <SelectTrigger className="h-9 w-auto" aria-label="Filter by starred"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All recordings</SelectItem>
-              <SelectItem value="starred">Starred</SelectItem>
-            </SelectContent>
-          </Select>
           <Popover open={sortOpen} onOpenChange={setSortOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="gap-1.5">
@@ -738,9 +720,9 @@ export function RecordingsByDay() {
               key={d.key}
               day={d}
               selected={selectedKeys.has(d.key)}
-              starred={starredKeys.has(d.key)}
+              bookmarked={bookmarkedKeys.has(d.key)}
               onToggle={() => toggleDay(d.key)}
-              onToggleStar={() => toggleStar(d.key)}
+              onToggleBookmark={() => toggleBookmark(d.key)}
               onOpen={() => setDrawerKey(d.key)}
             />
           ))}
@@ -771,10 +753,10 @@ export function RecordingsByDay() {
       <CameraDayDrawer
         day={drawerDay}
         open={drawerKey !== null}
-        starred={!!drawerDay && starredKeys.has(drawerDay.key)}
+        bookmarked={!!drawerDay && bookmarkedKeys.has(drawerDay.key)}
         onClose={() => setDrawerKey(null)}
         onDelete={() => drawerDay && requestDelete([drawerDay.key])}
-        onToggleStar={() => drawerDay && toggleStar(drawerDay.key)}
+        onToggleBookmark={() => drawerDay && toggleBookmark(drawerDay.key)}
         onPlay={(rec) => setPlaying(rec)}
       />
 

@@ -6,6 +6,13 @@ export interface RecordingFilters {
   area: string[];
   camera: string[];
   type: string[];
+  /** "bookmarked" / "not" — picking both is the same as picking neither. */
+  bookmark: string[];
 }
 
-export const EMPTY_FILTERS: RecordingFilters = { site: [], area: [], camera: [], type: [] };
+export const EMPTY_FILTERS: RecordingFilters = { site: [], area: [], camera: [], type: [], bookmark: [] };
+
+export const BOOKMARK_OPTS = [
+  { value: "bookmarked", label: "Bookmarked" },
+  { value: "not", label: "Not bookmarked" },
+];

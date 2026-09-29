@@ -6,7 +6,7 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { CAMERA_AREAS, CAMERA_SITES, MOCK_CAMERAS } from "@/mocks/cameras";
 import { RECORDING_TYPES } from "./recordingTypes";
-import type { RecordingFilters } from "./recordingFilters";
+import { BOOKMARK_OPTS, type RecordingFilters } from "./recordingFilters";
 
 /* Search and filter chrome, carried over from the Recordings page so the
    camera-day proposal reads as the same screen. The only change is the last
@@ -91,7 +91,7 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
             <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All areas", "All cameras", "All types"].map((l) => (
+              {["All sites", "All areas", "All cameras", "All types", "All bookmarks"].map((l) => (
                 <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">{l}</span>
               ))}
             </div>
@@ -108,12 +108,13 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
             <Input value={search} onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by recording ID, camera, or area…" className="h-9 w-full pl-9 text-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[
               { key: "site" as const, label: "Site", opts: CAMERA_SITES },
               { key: "area" as const, label: "Area", opts: CAMERA_AREAS },
               { key: "camera" as const, label: "Camera", opts: CAMERA_OPTS },
               { key: "type" as const, label: "Recording Type", opts: TYPE_OPTS },
+              { key: "bookmark" as const, label: "Bookmark", opts: BOOKMARK_OPTS },
             ].map(({ key, label, opts }) => (
               <div key={key}>
                 <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
