@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, ScanFace } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { PAGES } from "./pages";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { REID_NAV, REID_PAGES, REID_TITLE, isReidPath } from "./reid/reidNav";
 
 /* ── Index ───────────────────────────────────────────────────────────── */
 
@@ -60,15 +62,52 @@ export function Phase13Index() {
           );
         })}
       </div>
+
+      {/* Separate module — its own pages and sidebar, not a Phase 1.3 page. */}
+      <div className="mt-2 flex flex-col gap-3">
+        <div>
+          <h2 className="text-md font-bold text-foreground">Separate module</h2>
+          <p className="text-xs text-muted-foreground">Opens with its own navigation, apart from the proposals above.</p>
+        </div>
+        <Link
+          to={REID_PAGES[0].path}
+          className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:max-w-[calc(50%-0.375rem)]"
+        >
+          <div className="flex items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+              <ScanFace className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-md font-bold text-foreground">{REID_TITLE}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{REID_PAGES.map((p) => p.title).join(" · ")}</p>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Person re-identification as its own module, with its own Live Monitoring, Model Management
+            and Model Deployment. Move between them from the module's sidebar.
+          </p>
+          <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary">
+            Open module
+            <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
+      </div>
     </div>
   );
 }
 
 /* ── Shell ───────────────────────────────────────────────────────────── */
 
+/* Inside the Re-ID module the sidebar carries only that module's pages. */
+export function ShellSidebar() {
+  const { pathname } = useLocation();
+  return <AppSidebar groups={isReidPath(pathname) ? REID_NAV : undefined} />;
+}
+
 export function Breadcrumb() {
   const { pathname } = useLocation();
-  const page = PAGES.find((p) => p.path === pathname);
+  const reid = REID_PAGES.find((p) => p.path === pathname);
+  const page = reid ? { title: REID_TITLE } : PAGES.find((p) => p.path === pathname);
   return (
     <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-xs">
       <Link
@@ -83,7 +122,13 @@ export function Breadcrumb() {
       {page && (
         <>
           <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" />
-          <span className="truncate font-semibold text-foreground">{page.title}</span>
+          <span className={cn("truncate", reid ? "text-muted-foreground" : "font-semibold text-foreground")}>{page.title}</span>
+        </>
+      )}
+      {reid && (
+        <>
+          <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" />
+          <span className="truncate font-semibold text-foreground">{reid.title}</span>
         </>
       )}
     </nav>

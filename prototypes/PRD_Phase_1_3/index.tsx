@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
@@ -11,7 +11,8 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PAGES } from "./pages";
-import { Breadcrumb, Phase13Index } from "./Phase13Home";
+import { Breadcrumb, Phase13Index, ShellSidebar } from "./Phase13Home";
+import { REID_PAGES } from "./reid/reidNav";
 import "./proto.css";
 
 /* Phase 1.3 prototype shell — routes the phase index to each proposal page. */
@@ -24,7 +25,7 @@ function App() {
           <TooltipProvider delayDuration={200}>
             <SidebarProvider defaultOpen={true}>
               <div className="flex min-h-screen w-full bg-background">
-                <AppSidebar />
+                <ShellSidebar />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
                     <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
@@ -43,6 +44,15 @@ function App() {
                       {PAGES.map((p) => (
                         <Route key={p.path} path={p.path} element={<p.Component />} />
                       ))}
+                      {/* Model (Re-ID) Module — separate from the proposals above. */}
+                      <Route path="/reid" element={<Navigate to={REID_PAGES[0].path} replace />} />
+                      {REID_PAGES.map((p) => (
+                        <Route key={p.path} path={p.path} element={<p.Component />} />
+                      ))}
+                      {/* Links inside Model Management / Deployment use the app's own
+                          routes; keep them in the module. */}
+                      <Route path="/models" element={<Navigate to="/reid/models" replace />} />
+                      <Route path="/deployment" element={<Navigate to="/reid/deployment" replace />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </main>
