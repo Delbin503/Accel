@@ -318,11 +318,16 @@ export const ORG_LICENSE_INFO = {
 export const ACCOUNT_SUBSCRIPTION = {
   planTier: "enterprise" as PlanTier,
   planName: "Enterprise",
-  billingCycle: "annual" as "monthly" | "annual",
+  // Billed monthly — matches the monthly invoice history below. Billing can
+  // switch it to annual in place, without a cancel.
+  billingCycle: "monthly" as "monthly" | "annual",
   seats: { owner: 1, admin: 8, user: 30 },
   startedDisplay: "15 Mar 2025",
-  renewsDisplay: "15 Mar 2027",
+  renewsDisplay: "01 Jul 2026",
   nextInvoiceDate: "01 Jul 2026",
+  /** Days left in the current monthly period — drives the switch-to-annual credit. */
+  daysLeftInPeriod: 12,
+  daysInPeriod: 30,
   paymentMethod: "Visa ending 4242",
   sites: ["Astra HQ", "FedEx Changi", "Sembawang Naval", "Astra Jakarta", "Tuas Megaport", "Woodlands Checkpoint", "Jurong Depot"],
 };
@@ -348,8 +353,10 @@ export interface Invoice {
   seats: { owner: number; admin: number; user: number };
   /** Sites covered by this account invoice. */
   sites: string[];
-  /** Pre-tax subtotal (plan base + seat add-ons). */
+  /** Pre-tax subtotal (plan base + seat add-ons, less any credit). */
   amount: number;
+  /** Credit applied, e.g. unused monthly time when switching to annual. */
+  credit?: { label: string; amount: number };
 }
 
 interface MonthlyInvoiceSeed {

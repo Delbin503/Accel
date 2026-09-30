@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, ChevronRight, X, Building2, Sparkles, Zap, Rocket, Check,
   AlertTriangle, Trash2, Star, RefreshCw,
   Mail, Globe, SlidersHorizontal, ChevronUp,
-  XCircle, RotateCcw, Ban, ArrowRight, LayoutGrid,
+  XCircle, RotateCcw, Ban, ArrowRight, LayoutGrid, CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,26 @@ const INVOICE_STATUS = {
   pending: { bg: "bg-warning/15 border-warning/30",           text: "text-warning",      icon: Clock,        label: "Pending" },
   failed:  { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", icon: AlertCircle,  label: "Failed"  },
 };
+
+/* ── Charges for a cycle ───────────────────────────────────────────────────── */
+
+type Seats = { owner: number; admin: number; user: number };
+
+/** Plan base + seat add-ons for one billing cycle. Annual takes the plan's
+    annual price; seats have no annual discount, so they bill as 12 months. */
+function cycleCharges(tier: PlanTier, seats: Seats, cycle: "monthly" | "annual") {
+  const plan = PLANS[tier];
+  const userSeats = seats.admin + seats.user;
+  const seatsMonthly = seats.admin * SEAT_PRICING.admin.pricePerMonth + seats.user * SEAT_PRICING.user.pricePerMonth;
+  const annual = cycle === "annual";
+  const lines: { label: string; note: string; amount: number }[] = [
+    { label: `${plan.name} plan`, note: `${annual ? "Annual" : "Monthly"} base · incl. owner seat`, amount: annual ? plan.pricePerYear : plan.pricePerMonth },
+    ...(userSeats > 0
+      ? [{ label: "User seats (Add On)", note: annual ? `${userSeats} seats × 12 months` : `${userSeats} seats`, amount: annual ? seatsMonthly * 12 : seatsMonthly }]
+      : []),
+  ];
+  return { lines, total: lines.reduce((sum, l) => sum + l.amount, 0) };
+}
 
 /* ── Section card ─────────────────────────────────────────────────────────── */
 
@@ -399,6 +419,150 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
   );
 }
 
+/* ── Switch monthly → annual modal ────────────────────────────────────────── */
+
+/* An in-place change of billing cycle — same plan, seats and sites. The annual
+   term starts today; unused time on the monthly period comes off the first
+   annual charge, so nothing is paid twice and nothing has to be cancelled. */
+export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, cards, onClose, onAddCard, onConfirm }: {
+  tier: PlanTier;
+  seats: Seats;
+  /** Unused monthly time, credited against the annual charge. */
+  credit: number;
+  daysLeft: number;
+  /** When the new annual term renews. */
+  renewsOn: string;
+  cards: SavedCard[];
+  onClose: () => void;
+  onAddCard: () => void;
+  onConfirm: (cardId: string) => void;
+}) {
+  // Mounted only while open, so the default card is picked fresh each time.
+  const [selected, setSelected] = React.useState<string>(() => cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "");
+
+  const plan = PLANS[tier];
+  const color = PLAN_COLORS[tier];
+  const Icon = PLAN_ICONS[tier];
+  const monthly = cycleCharges(tier, seats, "monthly").total;
+  const annual = cycleCharges(tier, seats, "annual");
+  const saving = monthly * 12 - annual.total;
+  const dueToday = annual.total - credit;
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+
+  return (
+    <Modal open onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Switch to annual billing"
+          description={<>Your {plan.name} plan, seats and sites stay exactly as they are. Annual billing starts today — no need to cancel.</>}
+        />
+        <ModalBody className="space-y-4">
+          {/* Monthly vs annual */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Now · Monthly</p>
+              <p className="mt-1 font-mono text-lg font-bold text-foreground">
+                ${monthly.toLocaleString()}<span className="text-xs font-medium text-muted-foreground">/mo</span>
+              </p>
+              <p className="text-2xs text-muted-foreground">${(monthly * 12).toLocaleString()} a year</p>
+            </div>
+            <div className={cn("relative rounded-lg border p-3", color.border, color.bg)}>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">New · Annual</p>
+              <p className={cn("mt-1 font-mono text-lg font-bold", color.text)}>
+                ${annual.total.toLocaleString()}<span className="text-xs font-medium text-muted-foreground">/yr</span>
+              </p>
+              <p className="text-2xs text-muted-foreground">≈ ${Math.round(annual.total / 12).toLocaleString()}/mo</p>
+              {saving > 0 && (
+                <span className="absolute right-2 top-2 rounded-full bg-success/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-success">
+                  Save ${saving.toLocaleString()}/yr
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* What's charged today */}
+          <div className="overflow-hidden rounded-lg border border-border bg-background">
+            <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-2.5">
+              <Icon className={cn("size-4", color.text)} />
+              <p className="text-sm font-semibold text-foreground">Charged today</p>
+            </div>
+            <div className="space-y-1.5 px-3.5 py-3">
+              {annual.lines.map((li) => (
+                <div key={li.label} className="flex items-center justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-foreground">{li.label}</p>
+                    <p className="text-2xs text-muted-foreground">{li.note}</p>
+                  </div>
+                  <span className="shrink-0 font-mono text-foreground">${li.amount.toLocaleString()}</span>
+                </div>
+              ))}
+              {credit > 0 && (
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-foreground">Unused monthly time</p>
+                    <p className="text-2xs text-muted-foreground">{daysLeft} days left on this month, credited</p>
+                  </div>
+                  <span className="shrink-0 font-mono text-success">−${credit.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-baseline justify-between border-t border-border px-3.5 py-2.5">
+              <div>
+                <p className="text-sm font-bold text-foreground">Due today</p>
+                <p className="text-2xs text-muted-foreground">Tax added on the invoice</p>
+              </div>
+              <span className="font-mono text-xl font-bold text-foreground">${dueToday.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+            <CalendarClock className="mt-px size-3.5 shrink-0" />
+            <span>
+              Renews on <strong className="text-foreground">{renewsOn}</strong> at ${annual.total.toLocaleString()}/yr.
+              No more monthly charges after today.
+            </span>
+          </p>
+
+          {/* Payment method */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
+            {cards.map((card) => (
+              <button key={card.id} type="button" onClick={() => setSelected(card.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
+                  selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                )}>
+                <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
+                  selected === card.id ? "border-primary" : "border-muted-foreground/40")}>
+                  {selected === card.id && <span className="size-2 rounded-full bg-primary" />}
+                </div>
+                <CreditCard className={cn("size-4 flex-shrink-0", brandColors[card.brand] ?? "text-secondary")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold text-foreground">{card.brand} ···· {card.last4}</p>
+                  <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
+                </div>
+                {card.isDefault && (
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                )}
+              </button>
+            ))}
+            <button type="button" onClick={onAddCard}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+              <Plus className="size-3.5" /> Add a new card
+            </button>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={onClose}>Keep monthly</Button>
+          <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
+            <Check className="size-3.5" /> Switch & pay ${dueToday.toLocaleString()}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
 /* ── Invoice detail drawer ────────────────────────────────────────────────── */
 
 export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
@@ -409,14 +573,9 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
   const Icon = s.icon;
   const PlanIcon = PLAN_ICONS[invoice.planTier];
   const planColor = PLAN_COLORS[invoice.planTier];
-  const invoiceUserSeats = invoice.seats.admin + invoice.seats.user;
-  const invoiceUserSeatAmount =
-    invoice.seats.admin * SEAT_PRICING.admin.pricePerMonth + invoice.seats.user * SEAT_PRICING.user.pricePerMonth;
-  const lineItems: { label: string; note: string; amount: number }[] = [
-    { label: `${invoice.planName} plan`, note: `${invoice.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: PLANS[invoice.planTier].pricePerMonth },
-    ...(invoiceUserSeats > 0
-      ? [{ label: "User seats (Add On)", note: `${invoiceUserSeats} seats`, amount: invoiceUserSeatAmount }]
-      : []),
+  const lineItems = [
+    ...cycleCharges(invoice.planTier, invoice.seats, invoice.billingCycle).lines,
+    ...(invoice.credit ? [{ label: invoice.credit.label, note: "Credit", amount: -invoice.credit.amount }] : []),
   ];
   const subtotal = invoice.amount;
   const taxes = Math.round(subtotal * 0.07);
@@ -491,7 +650,9 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
                       <p className="text-sm text-foreground">{li.label}</p>
                       <p className="text-2xs text-muted-foreground">{li.note}</p>
                     </div>
-                    <span className="font-mono text-sm text-foreground">${li.amount.toLocaleString()}</span>
+                    <span className={cn("font-mono text-sm", li.amount < 0 ? "text-success" : "text-foreground")}>
+                      {li.amount < 0 ? `−$${(-li.amount).toLocaleString()}` : `$${li.amount.toLocaleString()}`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -991,6 +1152,12 @@ export default function BillingPage() {
   const [planCycle, setPlanCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
   const [purchaseTier, setPurchaseTier] = React.useState<PlanTier | null>(null);
 
+  /* ── Billing cycle — monthly can switch to annual in place ────────────── */
+  const [billingCycle, setBillingCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
+  const [renewsDisplay, setRenewsDisplay] = React.useState(ACCOUNT_SUBSCRIPTION.renewsDisplay);
+  const [switchAnnualOpen, setSwitchAnnualOpen] = React.useState(false);
+  const [issuedInvoices, setIssuedInvoices] = React.useState<Invoice[]>([]);
+
   /* ── Multi-card wallet state ──────────────────────────────────────────── */
   const [cards, setCards] = React.useState<SavedCard[]>(INITIAL_CARDS);
   const [addCardOpen, setAddCardOpen] = React.useState(false);
@@ -1014,27 +1181,39 @@ export default function BillingPage() {
   /* ── Account subscription + upcoming invoice ──────────────────────────── */
   const acct = ACCOUNT_SUBSCRIPTION;
   const activePlan = PLANS[planTier];
-  const acctMonthly =
-    activePlan.pricePerMonth +
-    acct.seats.admin * SEAT_PRICING.admin.pricePerMonth +
-    acct.seats.user * SEAT_PRICING.user.pricePerMonth;
-  const acctLines: { label: string; note: string; amount: number }[] = [
-    { label: `${activePlan.name} plan`, note: `${acct.billingCycle === "annual" ? "Annual" : "Monthly"} base · incl. owner seat`, amount: activePlan.pricePerMonth },
-    { label: "User seats (Add On)", note: `${acct.seats.admin + acct.seats.user} seats`, amount: acct.seats.admin * SEAT_PRICING.admin.pricePerMonth + acct.seats.user * SEAT_PRICING.user.pricePerMonth },
-  ];
+  const isAnnual = billingCycle === "annual";
+  const cycleLabel = isAnnual ? "Annual" : "Monthly";
+  const { lines: acctLines, total: acctTotal } = cycleCharges(planTier, acct.seats, billingCycle);
+  const perCycle = isAnnual ? "year" : "month";
+
+  // Switching today: the annual term starts now, the unused monthly days are credited.
+  const periodEnd = new Date(acct.nextInvoiceDate);
+  const switchDate = new Date(periodEnd);
+  switchDate.setDate(periodEnd.getDate() - acct.daysLeftInPeriod);
+  const annualRenewal = new Date(switchDate);
+  annualRenewal.setFullYear(switchDate.getFullYear() + 1);
+  const formatDay = (d: Date) => d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const monthlyTotal = cycleCharges(planTier, acct.seats, "monthly").total;
+  const switchCredit = Math.round((monthlyTotal * acct.daysLeftInPeriod) / acct.daysInPeriod);
+  const annualSaving = monthlyTotal * 12 - cycleCharges(planTier, acct.seats, "annual").total;
+
+  const nextChargeDate = isAnnual ? renewsDisplay : acct.nextInvoiceDate;
   const nextInvoice: Invoice = {
-    id: "INV-2026-007",
-    issuedDisplay: acct.nextInvoiceDate,
-    periodDisplay: "Jul 2026",
-    dueDisplay: acct.nextInvoiceDate,
+    id: isAnnual ? "INV-2027-001" : "INV-2026-007",
+    issuedDisplay: nextChargeDate,
+    // "19 Jun 2027" → "Jun 2027 – Jun 2028"
+    periodDisplay: isAnnual
+      ? `${renewsDisplay.slice(3)} – ${renewsDisplay.slice(3, 7)}${Number(renewsDisplay.slice(-4)) + 1}`
+      : "Jul 2026",
+    dueDisplay: nextChargeDate,
     status: "pending",
     paymentMethod: acct.paymentMethod,
     planName: activePlan.name,
     planTier: planTier,
-    billingCycle: acct.billingCycle,
+    billingCycle,
     seats: acct.seats,
     sites: acct.sites,
-    amount: acctMonthly,
+    amount: acctTotal,
   };
   const AcctIcon = PLAN_ICONS[planTier];
   const acctColor = PLAN_COLORS[planTier];
@@ -1042,7 +1221,7 @@ export default function BillingPage() {
 
   /* ── Filtered invoices ────────────────────────────────────────────────── */
   const filteredInvoices = React.useMemo(() => {
-    const list = MOCK_INVOICES.filter(
+    const list = [...issuedInvoices, ...MOCK_INVOICES].filter(
       (inv) =>
         (invoiceStatusFilter.length === 0 || invoiceStatusFilter.includes(inv.status)) &&
         (invoiceSiteFilter.length === 0 || inv.sites.some((site) => invoiceSiteFilter.includes(site)))
@@ -1053,7 +1232,7 @@ export default function BillingPage() {
       return new Date(b.issuedDisplay).getTime() - new Date(a.issuedDisplay).getTime();
     });
     return list;
-  }, [invoiceStatusFilter, invoiceSiteFilter, invoiceSortBy]);
+  }, [issuedInvoices, invoiceStatusFilter, invoiceSiteFilter, invoiceSortBy]);
 
   /* ── Handlers ─────────────────────────────────────────────────────────── */
   function addCard(last4: string, expiry: string, brand: "Visa" | "Mastercard" | "Amex") {
@@ -1093,7 +1272,7 @@ export default function BillingPage() {
     setAccountStatus("cancelling");
     setCancelOpen(false);
     toast.success("Subscription cancelled", {
-      description: `Your ${activePlan.name} plan stays active until ${acct.renewsDisplay}. Resume anytime before then.`,
+      description: `Your ${activePlan.name} plan stays active until ${renewsDisplay}. Resume anytime before then.`,
     });
   }
 
@@ -1108,6 +1287,37 @@ export default function BillingPage() {
     setEndNowOpen(false);
     setShowPlans(false);
     toast.message("Subscription ended", { description: "View plans to reactivate your account." });
+  }
+
+  function confirmSwitchToAnnual(cardId: string) {
+    const card = cards.find((c) => c.id === cardId);
+    const annual = cycleCharges(planTier, acct.seats, "annual");
+    const dueToday = annual.total - switchCredit;
+    const renews = formatDay(annualRenewal);
+    setIssuedInvoices((list) => [
+      {
+        id: "INV-2026-007",
+        issuedDisplay: formatDay(switchDate),
+        periodDisplay: `${formatDay(switchDate).slice(3)} – ${renews.slice(3)}`,
+        dueDisplay: formatDay(switchDate),
+        status: "paid",
+        paymentMethod: card ? `${card.brand} ending ${card.last4}` : acct.paymentMethod,
+        planName: activePlan.name,
+        planTier,
+        billingCycle: "annual",
+        seats: acct.seats,
+        sites: acct.sites,
+        amount: dueToday,
+        credit: switchCredit > 0 ? { label: `Unused monthly time (${acct.daysLeftInPeriod} days)`, amount: switchCredit } : undefined,
+      },
+      ...list,
+    ]);
+    setBillingCycle("annual");
+    setRenewsDisplay(renews);
+    setSwitchAnnualOpen(false);
+    toast.success("Switched to annual billing", {
+      description: `$${dueToday.toLocaleString()} charged${card ? ` to ${card.brand} ···· ${card.last4}` : ""}. Renews ${renews}.`,
+    });
   }
 
   function confirmPurchase(cardId: string) {
@@ -1240,18 +1450,18 @@ export default function BillingPage() {
                 </div>
                 <p className="text-lg font-bold text-foreground">
                   {activePlan.name}
-                  <span className="ml-1.5 text-sm font-medium text-muted-foreground">· {acct.billingCycle === "annual" ? "Annual" : "Monthly"}</span>
+                  <span className="ml-1.5 text-sm font-medium text-muted-foreground">· {cycleLabel}</span>
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <div>
-                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Monthly</p>
-                <p className={cn("font-mono text-lg font-bold", cancelling ? "text-warning" : acctColor.text)}>${acctMonthly.toLocaleString()}</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{cycleLabel}</p>
+                <p className={cn("font-mono text-lg font-bold", cancelling ? "text-warning" : acctColor.text)}>${acctTotal.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{cancelling ? "Ends" : "Renews"}</p>
-                <p className="text-sm font-semibold text-foreground">{acct.renewsDisplay}</p>
+                <p className="text-sm font-semibold text-foreground">{renewsDisplay}</p>
               </div>
               {cancelling ? (
                 <div className="flex items-center gap-2">
@@ -1263,14 +1473,26 @@ export default function BillingPage() {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCancelOpen(true)}
-                  className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
-                >
-                  <XCircle className="size-3.5" /> Cancel subscription
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {!isAnnual && (
+                    <Button size="sm" onClick={() => setSwitchAnnualOpen(true)} className="gap-1.5">
+                      <CalendarClock className="size-3.5" /> Switch to annual
+                      {annualSaving > 0 && (
+                        <span className="rounded-full bg-primary-foreground/20 px-1.5 py-px text-3xs font-bold uppercase tracking-wider">
+                          Save ${annualSaving.toLocaleString()}/yr
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCancelOpen(true)}
+                    className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+                  >
+                    <XCircle className="size-3.5" /> Cancel subscription
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -1279,7 +1501,7 @@ export default function BillingPage() {
             <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
               <p className="text-muted-foreground">
-                Your subscription is scheduled to cancel on <strong className="text-foreground">{acct.renewsDisplay}</strong>. You'll keep full access until then — resume anytime to stay on the {activePlan.name} plan.
+                Your subscription is scheduled to cancel on <strong className="text-foreground">{renewsDisplay}</strong>. You'll keep full access until then — resume anytime to stay on the {activePlan.name} plan.
               </p>
             </div>
           )}
@@ -1299,10 +1521,10 @@ export default function BillingPage() {
               <BillingDetailsSection className="flex-1" />
             </div>
 
-            {/* Next Invoice — single account-level monthly charge */}
+            {/* Next Invoice — single account-level charge for the cycle */}
             <SectionCard
               title="Next Invoice"
-              description={`Charges ${acct.nextInvoiceDate}.`}
+              description={`Charges ${nextChargeDate}.`}
               className="lg:h-full"
               bodyClassName="flex flex-col"
             >
@@ -1315,7 +1537,7 @@ export default function BillingPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{activePlan.name} plan</p>
-                  <p className="text-2xs text-muted-foreground">{acct.billingCycle === "annual" ? "Annual" : "Monthly"} · {acct.sites.length} sites</p>
+                  <p className="text-2xs text-muted-foreground">{cycleLabel} · {acct.sites.length} sites</p>
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
               </button>
@@ -1333,8 +1555,8 @@ export default function BillingPage() {
               </div>
 
               <div className="mt-auto flex items-baseline justify-between border-t border-border pt-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly total</span>
-                <span className="font-mono text-2xl font-bold text-success">${acctMonthly.toLocaleString()}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{cycleLabel} total</span>
+                <span className="font-mono text-2xl font-bold text-success">${acctTotal.toLocaleString()}</span>
               </div>
             </SectionCard>
           </div>
@@ -1387,7 +1609,7 @@ export default function BillingPage() {
         onOpenChange={setCancelOpen}
         destructive
         title="Cancel subscription?"
-        description={`Your ${activePlan.name} plan stays active until ${acct.renewsDisplay}. After that, access to all ${acct.sites.length} sites will be suspended.`}
+        description={`Your ${activePlan.name} plan stays active until ${renewsDisplay}. After that, access to all ${acct.sites.length} sites will be suspended.`}
         confirmLabel="Cancel subscription"
         cancelLabel="Keep plan"
         onConfirm={cancelSubscription}
@@ -1415,7 +1637,7 @@ export default function BillingPage() {
         onOpenChange={setResumeOpen}
         icon={RotateCcw}
         title="Resume subscription?"
-        description={`Your ${activePlan.name} plan will stay active and renew on ${acct.renewsDisplay} at $${acctMonthly.toLocaleString()}/month.`}
+        description={`Your ${activePlan.name} plan will stay active and renew on ${renewsDisplay} at $${acctTotal.toLocaleString()}/${perCycle}.`}
         confirmLabel="Resume subscription"
         cancelLabel="Not now"
         onConfirm={resumeSubscription}
@@ -1443,7 +1665,7 @@ export default function BillingPage() {
         onOpenChange={setEndNowOpen}
         destructive
         title="End subscription now?"
-        description={`This ends your ${activePlan.name} plan immediately instead of on ${acct.renewsDisplay}. You won't be refunded for the remaining period.`}
+        description={`This ends your ${activePlan.name} plan immediately instead of on ${renewsDisplay}. You won't be refunded for the remaining period.`}
         confirmLabel="End now"
         cancelLabel="Keep until renewal"
         onConfirm={endSubscriptionNow}
@@ -1474,6 +1696,20 @@ export default function BillingPage() {
         onAddCard={() => setAddCardOpen(true)}
         onConfirm={confirmPurchase}
       />
+
+      {switchAnnualOpen && (
+        <SwitchToAnnualModal
+          tier={planTier}
+          seats={acct.seats}
+          credit={switchCredit}
+          daysLeft={acct.daysLeftInPeriod}
+          renewsOn={formatDay(annualRenewal)}
+          cards={cards}
+          onClose={() => setSwitchAnnualOpen(false)}
+          onAddCard={() => setAddCardOpen(true)}
+          onConfirm={confirmSwitchToAnnual}
+        />
+      )}
 
       <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
       <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
