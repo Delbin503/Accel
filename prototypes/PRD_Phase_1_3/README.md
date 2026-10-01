@@ -37,40 +37,78 @@ pages, so these changes stay out of the app. Both read one models store
 - **Category** — Create Model asks for one (RE-ID, Weapon Detection, Human
   Detection, PPE Detection, Object Detection, Zone Monitoring). It shows on the
   model card, and a **category filter** sits under the tags filter.
-- **Calibration File** — editing a RE-ID model, Add Step asks for the site's
-  ArUco marker map as `.json`. The file is read and parsed on pick, so an
-  invalid one is rejected there, and the marker count is shown.
-- **Calibration on deploy** — choosing a RE-ID model, site, area and cameras,
-  then **Ready to Deploy**, opens `reid/ReidCalibration.tsx` instead of the zone
-  modal: a camera dropdown (the selected cameras, each marked *no zone yet*,
-  *placed · not saved*, *zone saved* or *offline*), the camera view, **Auto-Place
-  All** and **Confirm zone**. Auto-Place fits the markers in view, drops outliers
-  and joins the rest into the zone; each re-run is a new fit. Under the view,
-  every marker is listed as on the boundary, inside the zone, or dropped.
-  Confirm zone saves it with a toast and moves to the next camera without one.
-- **Deploy + site map** — the **Deploy** button beside the title unlocks once
-  every online camera has a saved zone (offline ones calibrate on reconnect). It
-  opens `reid/ReidSiteMap.tsx`: every zone on one floor plan in metres, with the
-  site origin, each marker, and where each camera stands. Cameras sharing ≥ 2
-  markers form one linked group and share a colour; a split map is flagged.
+- **No calibration file on steps** — Add Step is the same for every category.
+  RE-ID models are calibrated per camera when they're deployed.
+- **Calibration drawer** — choosing a RE-ID model, site, area and cameras,
+  then **Ready to Deploy**, opens the calibration drawer
+  (`reid/ReidCalibration.tsx`) instead of the zone modal. It is 860 px wide,
+  like the Cameras and NVR drawers, and the camera view fits that width. At the
+  top is a camera
+  dropdown listing the selected cameras, each marked *not calibrated*,
+  *placed · not saved*, *calibrated* or *offline*; below it is the camera view.
+  The footer holds **Auto-Place Markers** and **Confirm Calibration** on the
+  left and **Save & Deploy** on the right. Auto-Place fits the markers in view,
+  drops outliers and joins the rest into the zone; each re-run is a new fit.
+  Under the view, every marker is listed as on the boundary, inside the zone,
+  or dropped. **Edit markers** turns each row's floor x / y and fit error into
+  inputs. **Save changes** re-fits the zone: an error of 12 cm or more drops the
+  marker, and edited rows are tagged. Confirm Calibration saves the camera with
+  a toast and moves to the next uncalibrated one. **Calibrate All Cameras**
+  (footer, right) does it in one go instead: it auto-places every camera that
+  isn't calibrated yet, re-running poor fits up to 8 times, saves them all, and
+  opens the merged zone map. Any camera that still can't get a usable fit is
+  named in a warning and left selected to fix by hand. The "N of N cameras
+  calibrated" count sits under the camera dropdown. **View Map**, on the right
+  of that row, opens the site map of the cameras calibrated so far. It is a
+  view-only pop-up with just Close, and is disabled until one camera is saved. Closing the drawer keeps the
+  progress; changing the selection resets it.
+- **Save & Deploy + site map** — **Save & Deploy** unlocks once every online
+  camera is calibrated (offline ones calibrate on reconnect). It opens
+  `reid/ReidSiteMap.tsx` over the drawer, as a standard 840 px (`xl`) modal: every zone on one floor plan in
+  metres, using hand-corrected positions, with the site origin, each marker,
+  and where each camera stands. Cameras sharing ≥ 2 markers form one linked
+  group and share a colour; a split map is flagged.
   **Confirm & deploy** writes the deployment and shows the usual toast.
   Each linked group becomes a **Re-ID map** (`reid/reidMaps.ts`) that Live
   Monitoring tracks weapons on; a camera sits on one map at a time.
-- **Weapon tracking in Live Monitoring** — Hero view gets a **Tracking** tab
-  beside Cameras: every active weapon track, a map picker (with live track
-  counts), and a mini map that draws only the weapon in focus — the pinned one,
-  or whatever's in the main camera. Click the map (or the enlarge icon) for
-  the full map with **every** weapon on it and its trail. Under the main camera,
-  a strip of **the other cameras on its map**, weapon-carrying ones first.
-  Weapons in view show as `W-xx` badges on every tile.
-  - Nothing pinned: a weapon entering a camera on the shown map raises a toast
-    with **Follow**; the view doesn't move.
-  - Pinned (track row, badge, or the enlarged map): the main camera follows the
-    weapon once it's held a camera for 1.5 s. Picking a camera by hand pauses
-    following (*Following W-01 paused · Resume*).
-  - The map shown: the pinned weapon's, else one picked from the list, else the
-    main camera's. Wall view has badges only; clicking one pins it and opens
-    Hero view.
+- **Zone map in deployment history** — a RE-ID model's History drawer has
+  **Cameras** and **Zone map** tabs. Zone map shows each calibrated map its
+  cameras run on: the floor plan, its linked groups, and an **Export** menu.
+  - **Calibration (.json):** camera poses, markers, corrected positions and
+    floor zones (`reid/mapExport.ts`).
+  - **Map image (.png):** the floor plan at 2×.
+  The seeded Re-ID maps come with matching history records
+  (`reid/reidDeployments.ts`), and a redeploy replaces a camera's earlier
+  record for the same model.
+- **Live Monitoring layout** — one camera wall, following the wireframe:
+  - **Header:** title and description, with a **Cameras & Tracking** toggle on
+    the right (it shows the active track count).
+  - **Filter bar:** the sites dropdown, **Grid view** (Auto · fit to width,
+    1×1, 2×2, 3×3, 4×4) and camera search.
+  - **Summary line:** "All sites · N cameras total · N online", with a pager
+    when a fixed grid can't fit every camera.
+  - **The grid.** Auto shows every camera, as many across as fit: 5 on a wide
+    screen, and 4 once the panel is open. N×N pages through N² at a time.
+- **Cameras & Tracking panel** — the toggle opens it on the right and the wall
+  reflows to make room.
+  - **Cameras tab:** the cameras grouped by area. This is the default view:
+    the wall shows every camera. Clicking a camera, here or on the wall,
+    highlights it in both places: an orange outline and an orange id chip.
+    Both scroll to it, and a fixed grid also turns to its page.
+  - **Tracking tab:** every active weapon track, a map picker and a mini map
+    of the weapon in focus. Clicking the mini map opens the enlarged map with
+    every weapon on it. While this tab is open, the wall is in **Map view**: it
+    shows only the shown map's cameras (site filter aside; search still
+    applies). The summary line names the map and has a **Show all cameras**
+    link back to the Cameras tab.
+  - **Full height:** the wall sits in a card that stretches to the bottom of
+    the screen. The panel matches the wall's height and its list scrolls
+    inside, so nothing leaves blank space at the bottom.
+  - **Weapon tags:** clicking a `W-xx` tag on a tile, a track row or a weapon
+    on the map highlights that weapon and opens the Tracking tab. While it is
+    highlighted, the camera it's in stays outlined on the wall as it moves.
+  - **Removed for now:** the visitor KPI cards, the "entered camera" toasts,
+    and the Hero view with its auto-follow.
   Tracks are simulated in `reid/weaponTracks.ts` — each walks its route between
   camera zones in real time, so every view agrees on where a weapon is.
   The site marker map, camera poses and fits are simulated in

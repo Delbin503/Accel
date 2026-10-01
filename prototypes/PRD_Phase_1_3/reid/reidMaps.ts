@@ -30,6 +30,8 @@ export interface ReidMap {
   cameraIds: string[];
   /** Marker ids each camera's zone was built from (its saved calibration). */
   used: Record<string, string[]>;
+  /** Hand-corrected marker floor positions per camera, from calibration edits. */
+  positions?: Record<string, Record<string, { x: number; y: number }>>;
   tracks: WeaponTrack[];
 }
 
@@ -69,12 +71,17 @@ const SEED: ReidMap[] = [
 interface ReidMapsState {
   maps: ReidMap[];
   /** Adds the maps a Re-ID deployment produced — one per linked camera group. */
-  addDeployment: (input: { siteName: string; modelName: string; usedByCamera: Record<string, string[]> }) => ReidMap[];
+  addDeployment: (input: {
+    siteName: string;
+    modelName: string;
+    usedByCamera: Record<string, string[]>;
+    positionsByCamera?: Record<string, Record<string, { x: number; y: number }>>;
+  }) => ReidMap[];
 }
 
 export const useReidMapsStore = create<ReidMapsState>((set, get) => ({
   maps: SEED,
-  addDeployment: ({ siteName, modelName, usedByCamera }) => {
+  addDeployment: ({ siteName, modelName, usedByCamera, positionsByCamera }) => {
     const groups = mapGroups(usedByCamera);
     const deployed = new Set(Object.keys(usedByCamera));
     const prev = get().maps;
@@ -99,6 +106,7 @@ export const useReidMapsStore = create<ReidMapsState>((set, get) => ({
         modelName,
         cameraIds,
         used: Object.fromEntries(cameraIds.map((c) => [c, usedByCamera[c]])),
+        positions: Object.fromEntries(cameraIds.map((c) => [c, positionsByCamera?.[c] ?? {}])),
         tracks,
       };
     });
@@ -111,6 +119,7 @@ export const useReidMapsStore = create<ReidMapsState>((set, get) => ({
           ...m,
           cameraIds,
           used: Object.fromEntries(cameraIds.map((c) => [c, m.used[c]])),
+          positions: m.positions && Object.fromEntries(cameraIds.map((c) => [c, m.positions?.[c] ?? {}])),
           tracks: m.tracks.filter((t) => t.route.every((c) => cameraIds.includes(c))),
         };
       })

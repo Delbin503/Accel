@@ -21,10 +21,8 @@ export type ModelCategory = (typeof MODEL_CATEGORIES)[number];
 
 export const REID_CATEGORY: ModelCategory = "RE-ID";
 
-/** Re-ID steps carry the camera calibration file — the ArUco marker map (.json). */
-export interface ModelStep extends BaseStep {
-  calibrationFile?: string;
-}
+/* Re-ID models calibrate per camera on deploy, so their steps are plain steps. */
+export type ModelStep = BaseStep;
 
 export interface ModelData extends Omit<BaseModel, "steps"> {
   category: ModelCategory;
@@ -63,7 +61,6 @@ const REID_MODEL: ModelData = {
       actionLabel: "Match each person across overlapping cameras",
       modelFile: "person_reid.onnx",
       manifestFile: "person_reid.manifest.json",
-      calibrationFile: "imt_camp_marker_map.json",
       batchSize: 16,
     },
   ],

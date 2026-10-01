@@ -35,7 +35,7 @@ export interface TrackState {
 }
 
 export function zonesFor(map: ReidMap): Record<string, SiteMarker[]> {
-  return Object.fromEntries(map.cameraIds.map((c) => [c, floorZone(map.used[c] ?? [])]));
+  return Object.fromEntries(map.cameraIds.map((c) => [c, floorZone(map.used[c] ?? [], map.positions?.[c])]));
 }
 
 const centroid = (pts: Point[]): Point => ({

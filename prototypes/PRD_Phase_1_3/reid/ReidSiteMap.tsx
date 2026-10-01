@@ -1,9 +1,19 @@
-import { AlertTriangle, Map as MapIcon, Rocket } from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
+import { AlertTriangle, ChevronDown, Download, FileJson, ImageDown, LoaderCircle, Map as MapIcon, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
 import { cn } from "@/lib/utils";
 import type { CameraData } from "@/types/cameras";
 import { LINK_MARKERS, SITE_MARKERS, cameraPose, floorZone, mapGroups } from "./calibrationGeometry";
+import { exportMapJson, exportMapPng, mapFileName } from "./mapExport";
+import { mapLabel, type ReidMap } from "./reidMaps";
 
 /* Re-ID deployment — site map review.
 
@@ -24,7 +34,20 @@ const W = 1000;
 const H = 720;
 const PAD = 70;
 
-function SiteMapCanvas({ cameras, usedByCamera }: { cameras: CameraData[]; usedByCamera: Record<string, string[]> }) {
+type PositionsByCamera = Record<string, Record<string, { x: number; y: number }>>;
+
+export function SiteMapCanvas({
+  cameras,
+  usedByCamera,
+  positionsByCamera,
+  className,
+}: {
+  cameras: CameraData[];
+  usedByCamera: Record<string, string[]>;
+  positionsByCamera?: PositionsByCamera;
+  /** Caps the drawing's height where it shares the screen with other content. */
+  className?: string;
+}) {
   const groups = mapGroups(usedByCamera);
   const groupOf = (id: string) => groups.findIndex((g) => g.includes(id));
 
@@ -44,7 +67,7 @@ function SiteMapCanvas({ cameras, usedByCamera }: { cameras: CameraData[]; usedB
   const gridRows = Math.ceil(minY);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Site map with every camera's zone" className="mx-auto block h-auto max-h-[58vh] w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Site map with every camera's zone" className={cn("mx-auto block h-auto max-h-[58vh] w-full", className)}>
       <rect width={W} height={H} className="fill-neutral-900" />
 
       {/* 1 m grid */}
@@ -59,7 +82,7 @@ function SiteMapCanvas({ cameras, usedByCamera }: { cameras: CameraData[]; usedB
 
       {/* Zones */}
       {cameras.map((c) => {
-        const outline = floorZone(usedByCamera[c.id] ?? []);
+        const outline = floorZone(usedByCamera[c.id] ?? [], positionsByCamera?.[c.id]);
         if (outline.length < 3) return null;
         const tone = GROUP_TONES[groupOf(c.id) % GROUP_TONES.length];
         return (
@@ -92,7 +115,7 @@ function SiteMapCanvas({ cameras, usedByCamera }: { cameras: CameraData[]; usedB
 
       {/* Zone labels on top of the markers */}
       {cameras.map((c) => {
-        const outline = floorZone(usedByCamera[c.id] ?? []);
+        const outline = floorZone(usedByCamera[c.id] ?? [], positionsByCamera?.[c.id]);
         if (outline.length < 3) return null;
         const cx = outline.reduce((s, m) => s + m.x, 0) / outline.length;
         const cy = outline.reduce((s, m) => s + m.y, 0) / outline.length;
@@ -136,6 +159,8 @@ export function ReidSiteMapModal({
   siteName,
   cameras,
   usedByCamera,
+  positionsByCamera,
+  mode = "review",
   onClose,
   onConfirm,
 }: {
@@ -144,8 +169,12 @@ export function ReidSiteMapModal({
   /** Cameras with a saved zone. */
   cameras: CameraData[];
   usedByCamera: Record<string, string[]>;
+  /** Hand-corrected marker positions from calibration edits. */
+  positionsByCamera?: PositionsByCamera;
+  /** "review" is the last step before deploying; "view" is a look at the calibrations saved so far. */
+  mode?: "review" | "view";
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
 }) {
   const groups = mapGroups(usedByCamera);
   const markerCount = new Set(Object.values(usedByCamera).flat()).size;
@@ -153,11 +182,15 @@ export function ReidSiteMapModal({
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="full">
+      <ModalContent size="xl">
         <ModalHeader
           icon={MapIcon}
-          title="Review site map"
-          description={`${siteName} · every camera's zone on one floor plan, in metres from the site origin.`}
+          title={mode === "review" ? "Review site map" : "Site map"}
+          description={
+            mode === "review"
+              ? `${siteName} · every camera's zone on one floor plan, in metres from the site origin.`
+              : `${siteName} · the ${cameras.length} calibrated camera${cameras.length === 1 ? "" : "s"} so far, in metres from the site origin.`
+          }
         />
         <ModalBody className="space-y-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
@@ -169,13 +202,18 @@ export function ReidSiteMapModal({
               </span>
             ))}
             <span className="ml-auto">
-              {cameras.length} camera{cameras.length === 1 ? "" : "s"} · {markerCount} markers · each colour is one
-              linked frame (≥ {LINK_MARKERS} shared markers)
+              {cameras.length} camera{cameras.length === 1 ? "" : "s"} · {markerCount} markers · one colour per linked
+              frame (≥ {LINK_MARKERS} shared markers)
             </span>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-border bg-neutral-900">
-            <SiteMapCanvas cameras={cameras} usedByCamera={usedByCamera} />
+            <SiteMapCanvas
+              cameras={cameras}
+              usedByCamera={usedByCamera}
+              positionsByCamera={positionsByCamera}
+              className="max-h-[50vh]"
+            />
           </div>
 
           {unlinked && (
@@ -184,21 +222,118 @@ export function ReidSiteMapModal({
               <span>
                 The zones form {groups.length} separate frames — some cameras share fewer than {LINK_MARKERS} markers
                 with the rest. Re-ID can't follow a person between frames that don't link; you can deploy anyway, or
-                go back and re-run those cameras.
+                go back and re-calibrate those cameras.
               </span>
             </div>
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Back to zones
-          </Button>
-          <Button size="sm" onClick={onConfirm} className="gap-1.5">
-            <Rocket className="size-3.5" />
-            Confirm & deploy
-          </Button>
+          {mode === "review" ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Back to calibration
+              </Button>
+              <Button size="sm" onClick={onConfirm} className="gap-1.5">
+                <Rocket className="size-3.5" />
+                Confirm & deploy
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>
+  );
+}
+
+/* ── Calibrated map card — Model Deployment history ───────────────────── */
+
+/** One deployed Re-ID map: the floor plan, its linked groups, and exports of the calibration. */
+export function ReidZoneMapCard({ map, cameras }: { map: ReidMap; cameras: CameraData[] }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = React.useState(false);
+  const mapCameras = map.cameraIds
+    .map((id) => cameras.find((c) => c.id === id))
+    .filter((c): c is CameraData => !!c);
+  const groups = mapGroups(map.used);
+  const markerCount = new Set(Object.values(map.used).flat()).size;
+
+  async function exportPng() {
+    const svg = ref.current?.querySelector("svg");
+    if (!svg) return;
+    setExporting(true);
+    try {
+      await exportMapPng(svg, map);
+      toast.success("Map exported", { description: `${mapFileName(map, "png")} saved to your downloads.` });
+    } catch (e) {
+      toast.error("Couldn't export the map", { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function exportJson() {
+    exportMapJson(map, cameras);
+    toast.success("Calibration exported", { description: `${mapFileName(map, "json")} saved to your downloads.` });
+  }
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-md font-semibold text-foreground">
+            <MapIcon className="size-4 text-primary" />
+            {mapLabel(map)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {map.cameraIds.length} camera{map.cameraIds.length === 1 ? "" : "s"} · {markerCount} markers ·{" "}
+            {groups.length === 1 ? "one linked frame" : `${groups.length} separate frames`}
+          </p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5" disabled={exporting}>
+              {exporting ? <LoaderCircle className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+              Export
+              <ChevronDown className="size-3.5 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onSelect={exportJson} className="gap-2">
+              <FileJson className="size-4" />
+              <span className="flex flex-col">
+                <span>Calibration (.json)</span>
+                <span className="text-2xs text-muted-foreground">Poses, markers and zones</span>
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => void exportPng()} className="gap-2">
+              <ImageDown className="size-4" />
+              <span className="flex flex-col">
+                <span>Map image (.png)</span>
+                <span className="text-2xs text-muted-foreground">The floor plan as drawn here</span>
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div ref={ref} className="bg-neutral-900">
+        <SiteMapCanvas cameras={mapCameras} usedByCamera={map.used} positionsByCamera={map.positions} />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+        {groups.map((g, i) => (
+          <span key={g.join()} className="flex items-center gap-1.5">
+            <span className={cn("size-2.5 rounded-sm", GROUP_TONES[i % GROUP_TONES.length].swatch)} />
+            <span className="font-semibold text-foreground">Group {i + 1}:</span>
+            <span className="font-mono">{g.join(", ")}</span>
+          </span>
+        ))}
+        <span className="ml-auto">Each colour is one linked frame (≥ {LINK_MARKERS} shared markers)</span>
+      </div>
+    </section>
   );
 }

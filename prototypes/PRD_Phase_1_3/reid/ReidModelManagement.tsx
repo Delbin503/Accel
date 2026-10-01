@@ -4,7 +4,7 @@
    changes stay out of the app's page. Against the original it adds:
    · a Category on every model (picked in Create Model, shown on the card)
    · a Category filter under the tags filter
-   · a Calibration File (.json marker map) on the steps of a RE-ID model
+   · RE-ID models are calibrated per camera on deploy (Model Deployment)
    Models come from the Re-ID store, which Model Deployment reads too. */
 
 import * as React from "react";
@@ -19,7 +19,6 @@ import {
   Edit2,
   GripVertical,
   UploadCloud,
-  FileJson,
   BookOpen,
   Calendar,
   Layers,
@@ -658,7 +657,7 @@ export function CreateModelModal({
               <p className="mt-1 text-xs text-sev-critical">{errors.category}</p>
             ) : category === REID_CATEGORY ? (
               <p className="mt-1 text-2xs text-muted-foreground">
-                Re-ID steps also take a camera calibration file (.json marker map).
+                Re-ID models are calibrated per camera when you deploy them.
               </p>
             ) : null}
           </div>
@@ -704,110 +703,12 @@ const DEFAULT_BATCH_SIZE = 8;
 const BATCH_SIZE_MIN = 1;
 const BATCH_SIZE_MAX = 64;
 
-/* Calibration file — reads the picked .json so a broken marker map is caught
-   here, not at deploy. Counts the markers when the file lists them. */
-function CalibrationDropzone({
-  value,
-  onChange,
-  invalid,
-}: {
-  value: string;
-  onChange: (file: string, error?: string) => void;
-  invalid?: boolean;
-}) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const [summary, setSummary] = React.useState<string | null>(null);
-
-  async function read(file: File | undefined) {
-    if (!file) return;
-    if (!file.name.toLowerCase().endsWith(".json")) {
-      onChange("", "Calibration file must be a .json file.");
-      return;
-    }
-    try {
-      const data: unknown = JSON.parse(await file.text());
-      const list = Array.isArray(data)
-        ? data
-        : data && typeof data === "object" && Array.isArray((data as { markers?: unknown }).markers)
-          ? (data as { markers: unknown[] }).markers
-          : null;
-      setSummary(list ? `Valid JSON · ${list.length} marker${list.length === 1 ? "" : "s"}` : "Valid JSON");
-      onChange(file.name);
-    } catch {
-      setSummary(null);
-      onChange("", `${file.name} isn't valid JSON.`);
-    }
-  }
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          inputRef.current?.click();
-        }
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        void read(e.dataTransfer.files?.[0]);
-      }}
-      className={cn(
-        "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 text-center transition-colors hover:border-primary/40",
-        invalid ? "border-sev-critical" : "border-border"
-      )}
-    >
-      <FileJson className="size-7 text-muted-foreground" />
-      {value ? (
-        <div className="flex max-w-full items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1">
-          <span className="truncate font-mono text-sm text-foreground">{value}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSummary(null);
-              onChange("");
-            }}
-            aria-label="Remove calibration file"
-            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-sev-critical"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      ) : (
-        <p className="text-center text-sm text-muted-foreground">
-          Upload the <span className="font-semibold text-foreground">calibration file</span> or drag and drop
-        </p>
-      )}
-      <p className="text-center text-xs text-muted-foreground/80">
-        {value && summary ? summary : "The site's ArUco marker map. Accepted: .json. Max file size 10 MB."}
-      </p>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".json,application/json"
-        className="hidden"
-        onChange={(e) => {
-          void read(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-    </div>
-  );
-}
-
 export function AddStepModal({
   initial,
-  requiresCalibration = false,
   onConfirm,
   onCancel,
 }: {
   initial?: Omit<ModelStep, "id" | "order">;
-  /** Re-ID models: the step also carries the camera calibration file. */
-  requiresCalibration?: boolean;
   onConfirm: (step: Omit<ModelStep, "id" | "order">) => void;
   onCancel: () => void;
 }) {
@@ -817,13 +718,11 @@ export function AddStepModal({
   const [modelFile, setModelFile] = React.useState(initial?.modelFile ?? "");
   const [manifestFile, setManifestFile] = React.useState(initial?.manifestFile ?? "");
   const [batchSize, setBatchSize] = React.useState(String(initial?.batchSize ?? DEFAULT_BATCH_SIZE));
-  const [calibrationFile, setCalibrationFile] = React.useState(initial?.calibrationFile ?? "");
   const [errors, setErrors] = React.useState<{
     actionLabel?: string;
     label?: string;
     modelFile?: string;
     manifestFile?: string;
-    calibrationFile?: string;
     batchSize?: string;
   }>({});
 
@@ -844,7 +743,6 @@ export function AddStepModal({
         modelFile: modelFile.trim(),
         manifestFile: manifestFile.trim(),
         batchSize: Number(batchSize),
-        ...(requiresCalibration ? { calibrationFile } : {}),
       });
   });
 
@@ -867,14 +765,12 @@ export function AddStepModal({
       label?: string;
       modelFile?: string;
       manifestFile?: string;
-      calibrationFile?: string;
       batchSize?: string;
     } = {};
     if (!actionLabel.trim()) next.actionLabel = "Action label is required.";
     if (!label.trim()) next.label = "Model title is required.";
     if (!modelFile.trim()) next.modelFile = "Upload a model file.";
     if (!manifestFile.trim()) next.manifestFile = "Upload a manifest file.";
-    if (requiresCalibration && !calibrationFile) next.calibrationFile = errors.calibrationFile ?? "Upload the calibration file.";
     const batch = Number(batchSize);
     if (!batchSize.trim() || !Number.isInteger(batch) || batch < BATCH_SIZE_MIN || batch > BATCH_SIZE_MAX) {
       next.batchSize = `Enter a whole number between ${BATCH_SIZE_MIN} and ${BATCH_SIZE_MAX}.`;
@@ -915,7 +811,7 @@ export function AddStepModal({
             <Progress value={progress} />
 
             <ul className="space-y-1.5">
-              {[modelFile.trim(), manifestFile.trim(), ...(requiresCalibration ? [calibrationFile] : [])].map((f, i) => {
+              {[modelFile.trim(), manifestFile.trim()].map((f, i) => {
                 // Manifest is small, so mark it done first; the model bundle trails.
                 // Compared against the *displayed* percent so a row never reads
                 // "Uploading…" while the header already shows 100%.
@@ -1014,32 +910,6 @@ export function AddStepModal({
               <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
             )}
           </div>
-
-          {requiresCalibration && (
-            <div>
-              <label className="mb-1.5 flex items-center gap-2 text-base font-semibold text-foreground">
-                Calibration File
-                <span className="rounded border border-purple/40 bg-purple/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-purple">
-                  Re-ID
-                </span>
-              </label>
-              <CalibrationDropzone
-                value={calibrationFile}
-                invalid={!!errors.calibrationFile}
-                onChange={(file, error) => {
-                  setCalibrationFile(file);
-                  setErrors((p) => ({ ...p, calibrationFile: error }));
-                }}
-              />
-              {errors.calibrationFile ? (
-                <p className="mt-1 text-xs text-sev-critical">{errors.calibrationFile}</p>
-              ) : (
-                <p className="mt-1 text-2xs text-muted-foreground">
-                  Marker IDs and their floor positions (metres from the site origin), shared by every camera the model runs on.
-                </p>
-              )}
-            </div>
-          )}
 
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -1161,11 +1031,6 @@ function PoolStepCard({
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
         <p className="font-mono text-xs text-muted-foreground">{step.label}</p>
       </div>
-      {step.calibrationFile && (
-        <span title={step.calibrationFile} className="inline-flex flex-shrink-0 items-center gap-1 rounded border border-purple/40 bg-purple/10 px-1.5 py-0.5 font-mono text-3xs font-semibold text-purple">
-          <FileJson className="size-3" /> CALIB
-        </span>
-      )}
       <FileTypeBadge fileName={step.modelFile} />
       {editable && (
         <HoverActions>
@@ -1268,11 +1133,6 @@ function SequenceItem({
           {step.modelFile} · batch {step.batchSize}
         </p>
       </div>
-      {step.calibrationFile && (
-        <span title={step.calibrationFile} className="inline-flex flex-shrink-0 items-center gap-1 rounded border border-purple/40 bg-purple/10 px-1.5 py-0.5 font-mono text-3xs font-semibold text-purple">
-          <FileJson className="size-3" /> CALIB
-        </span>
-      )}
       <FileTypeBadge fileName={step.modelFile} />
       {editable && (
         <button
@@ -2307,7 +2167,6 @@ function ModelDetailPanel({
       {(showAddStep || editStepId) && (
         <AddStepModal
           initial={editStepId ? draft.steps.find((s) => s.id === editStepId) : undefined}
-          requiresCalibration={model.category === REID_CATEGORY}
           onCancel={() => { setShowAddStep(false); setEditStepId(null); }}
           onConfirm={(s) => {
             if (editStepId) {

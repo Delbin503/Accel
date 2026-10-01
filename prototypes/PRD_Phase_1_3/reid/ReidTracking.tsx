@@ -153,7 +153,7 @@ export function WeaponBadges({
           <button
             key={st.track.id}
             type="button"
-            title={pinned ? `Following ${st.track.id}` : `Follow ${st.track.id}`}
+            title={pinned ? `Clear the highlight on ${st.track.id}` : `Show ${st.track.id} on its Re-ID map`}
             onClick={(e) => {
               e.stopPropagation();
               onPin(st.track.id);
@@ -230,7 +230,8 @@ export function TrackingPanel({
   const byMap = (id: string) => states.filter((s) => s.mapId === id);
   const onShown = shownMap ? byMap(shownMap.id) : [];
   // The mini map draws only the weapon in focus: the pinned one, else what's in the main camera.
-  const focus = onShown.filter((s) => (pinnedId ? s.track.id === pinnedId : s.cameraId === heroCameraId));
+  const matched = onShown.filter((s) => (pinnedId ? s.track.id === pinnedId : s.cameraId === heroCameraId));
+  const focus = matched.length || pinnedId ? matched : onShown.slice(0, 1);
   const hiddenCount = onShown.length - focus.length;
   const ordered = [...states].sort(
     (a, b) =>
@@ -313,7 +314,7 @@ export function TrackingPanel({
         ) : (
           <div className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
             <MapPinned className="size-4" />
-            {heroCameraId} isn't on a Re-ID map. Pick a map above to view one.
+            {heroCameraId ? `${heroCameraId} isn't on a Re-ID map.` : "No Re-ID map yet."} Pick a map above to view one.
           </div>
         )}
       </div>
@@ -330,6 +331,7 @@ export function MapExpandModal({
   heroCameraId,
   pinnedId,
   onPin,
+  hint = "Click a weapon on the map or in the list to follow it — the main camera switches to wherever it is.",
   onClose,
 }: {
   open: boolean;
@@ -338,6 +340,8 @@ export function MapExpandModal({
   heroCameraId: string;
   pinnedId: string | null;
   onPin: (trackId: string) => void;
+  /** What clicking a weapon does on the host page. */
+  hint?: string;
   onClose: () => void;
 }) {
   if (!map) return null;
@@ -366,9 +370,7 @@ export function MapExpandModal({
                   <TrackRow key={st.track.id} st={st} map={map} pinned={st.track.id === pinnedId} onPin={() => onPin(st.track.id)} />
                 ))
               )}
-              <p className="pt-1 text-2xs text-muted-foreground">
-                Click a weapon on the map or in the list to follow it — the main camera switches to wherever it is.
-              </p>
+              <p className="pt-1 text-2xs text-muted-foreground">{hint}</p>
             </div>
           </div>
         </ModalBody>

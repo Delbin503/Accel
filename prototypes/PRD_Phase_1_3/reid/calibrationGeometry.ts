@@ -59,6 +59,17 @@ export interface Placement {
   rmse: number;
   worst: number;
   verdict: Verdict;
+  /** Floor positions the operator corrected by hand, by marker id. */
+  positions?: Record<string, { x: number; y: number }>;
+  /** Markers whose position or fit error was edited by hand. */
+  edited?: string[];
+}
+
+/** One marker row as the operator edits it. */
+export interface MarkerEdit {
+  x: number;
+  y: number;
+  error: number;
 }
 
 function hash(s: string): number {
@@ -178,14 +189,8 @@ function hull(points: Pt[]): Pt[] {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
-/** One auto-place run: fit every marker, drop outliers, outline the zone. */
-export function autoPlace(cameraId: string, markers: SceneMarker[], run: number): Placement {
-  const r = rng(hash(`${cameraId}:${run}`));
-  const errors: Record<string, number> = {};
-  for (const m of markers) {
-    const outlier = r() < 0.17;
-    errors[m.id] = round(outlier ? 15 + r() * 180 : 0.3 + r() * r() * 6.5, 1);
-  }
+/* Outliers, RMSE, verdict and zone outline from a set of fit errors. */
+function summarise(markers: SceneMarker[], errors: Record<string, number>) {
   const usedMarkers = markers.filter((m) => errors[m.id] < OUTLIER_CM);
   const used = usedMarkers.map((m) => m.id);
   const dropped = markers.filter((m) => errors[m.id] >= OUTLIER_CM).map((m) => m.id);
@@ -195,7 +200,39 @@ export function autoPlace(cameraId: string, markers: SceneMarker[], run: number)
   const verdict: Verdict =
     used.length < 3 ? "poor" : rmse < 3 && worst < 6 ? "good" : rmse < 10 ? "usable" : "poor";
   const boundary = hull(usedMarkers.map((m) => ({ id: m.id, px: m.u, py: m.v }))).map((p) => p.id);
-  return { run, errors, used, dropped, boundary, rmse, worst, verdict };
+  return { used, dropped, boundary, rmse, worst, verdict };
+}
+
+/** One auto-place run: fit every marker, drop outliers, outline the zone. */
+export function autoPlace(cameraId: string, markers: SceneMarker[], run: number): Placement {
+  const r = rng(hash(`${cameraId}:${run}`));
+  const errors: Record<string, number> = {};
+  for (const m of markers) {
+    const outlier = r() < 0.17;
+    errors[m.id] = round(outlier ? 15 + r() * 180 : 0.3 + r() * r() * 6.5, 1);
+  }
+  return { run, errors, ...summarise(markers, errors) };
+}
+
+/** Where a marker sits on the floor in this placement — the hand-corrected spot if there is one. */
+export function markerPosition(m: SiteMarker, placement: Placement | undefined): { x: number; y: number } {
+  return placement?.positions?.[m.id] ?? { x: m.x, y: m.y };
+}
+
+/** A placement with the operator's hand edits applied — outliers, verdict and zone re-derived. */
+export function applyEdits(markers: SceneMarker[], placement: Placement, edits: Record<string, MarkerEdit>): Placement {
+  const errors = { ...placement.errors };
+  const positions = { ...placement.positions };
+  const edited = new Set(placement.edited);
+  for (const m of markers) {
+    const e = edits[m.id];
+    if (!e) continue;
+    const was = markerPosition(m, placement);
+    if (e.error !== errors[m.id] || e.x !== was.x || e.y !== was.y) edited.add(m.id);
+    errors[m.id] = round(e.error, 1);
+    positions[m.id] = { x: round(e.x, 3), y: round(e.y, 3) };
+  }
+  return { ...placement, errors, positions, edited: [...edited], ...summarise(markers, errors) };
 }
 
 /** Bounding box of the zone in the frame, normalised — what a deployment stores. */
@@ -208,9 +245,9 @@ export function zoneBox(markers: SceneMarker[], ids: string[]): [number, number,
 
 /* ── Site map ────────────────────────────────────────────────────────── */
 
-/** A camera's zone on the floor plan — the used markers' hull, in metres. */
-export function floorZone(used: string[]): SiteMarker[] {
-  const byId = new Map(SITE_MARKERS.map((m) => [m.id, m]));
+/** A camera's zone on the floor plan — the used markers' hull, in metres (hand-corrected positions win). */
+export function floorZone(used: string[], positions?: Record<string, { x: number; y: number }>): SiteMarker[] {
+  const byId = new Map(SITE_MARKERS.map((m) => [m.id, positions?.[m.id] ? { ...m, ...positions[m.id] } : m]));
   const pts = used.map((id) => byId.get(id)).filter((m): m is SiteMarker => !!m);
   const order = hull(pts.map((m) => ({ id: m.id, px: m.x, py: m.y }))).map((p) => p.id);
   return order.map((id) => byId.get(id)).filter((m): m is SiteMarker => !!m);

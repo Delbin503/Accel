@@ -3,9 +3,11 @@
    Copy of src/pages/model-deployment/index.tsx for the Re-ID module, so its
    changes stay out of the app's page. Against the original:
    · models come from the Re-ID store (created in the module's Model Management)
-   · a RE-ID model's "Ready to Deploy" opens the calibration screen
-     (ReidCalibration.tsx) instead of the zone modal; its Confirm deploys
-   · a RE-ID model needs steps to deploy, not rules */
+   · a RE-ID model's "Ready to Deploy" opens the calibration drawer
+     (ReidCalibration.tsx) instead of the zone modal; its Save & Deploy deploys
+   · a RE-ID model needs steps to deploy, not rules
+   · a RE-ID model's History drawer has a Zone map tab — the calibrated map
+     each deployment runs on, with JSON / PNG export */
 
 import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -49,7 +51,10 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { REID_CATEGORY, isDeployable, useReidModelsStore } from "./reidModels";
-import { ReidCalibrationScreen } from "./ReidCalibration";
+import { ReidCalibrationDrawer } from "./ReidCalibration";
+import { ReidZoneMapCard } from "./ReidSiteMap";
+import { useReidMapsStore } from "./reidMaps";
+import { seedReidDeployments } from "./reidDeployments";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
 import {
   MOCK_DEPLOYMENTS,
@@ -563,13 +568,10 @@ function ModelColumnEmpty() {
 
 export function DeployWizard({
   onCommit,
-  onCalibratingChange,
   forcedState = "normal",
   onRetry,
 }: {
   onCommit: (records: DeploymentData[]) => void;
-  /** Tells the page when the full-screen calibration step opens or closes. */
-  onCalibratingChange?: (calibrating: boolean) => void;
   onShowHistory?: () => void;
   forcedState?: DeployForcedState;
   onRetry?: () => void;
@@ -590,12 +592,8 @@ export function DeployWizard({
   /* Zones are per-camera; the picker in the zone step switches which one is edited. */
   const [zonesByCamera, setZonesByCamera] = React.useState<Record<string, BoundaryZone[]>>({});
   const [activeZoneCameraId, setActiveZoneCameraId] = React.useState<string | null>(null);
-  /* Re-ID models calibrate each camera instead of drawing zones. */
-  const [calibrating, setCalibratingState] = React.useState(false);
-  function setCalibrating(next: boolean) {
-    setCalibratingState(next);
-    onCalibratingChange?.(next);
-  }
+  /* Re-ID models calibrate each camera in a drawer instead of drawing zones. */
+  const [calibrating, setCalibrating] = React.useState(false);
   const models = useReidModelsStore((s) => s.models);
 
   // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
@@ -775,18 +773,6 @@ export function DeployWizard({
 
   const isEmpty = forcedState === "empty";
 
-  if (calibrating && selectedModel && selectedSite) {
-    return (
-      <ReidCalibrationScreen
-        model={selectedModel}
-        siteName={selectedSite.siteName}
-        cameras={selectedCameras}
-        onBack={() => setCalibrating(false)}
-        onConfirm={(zones) => commitDeploy(zones)}
-      />
-    );
-  }
-
   return (
     <div className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
 
@@ -940,6 +926,17 @@ export function DeployWizard({
         camerasWithZones={camerasWithZones}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => commitDeploy()}
+      />
+
+      {/* Re-ID — per-camera calibration; keyed so a new selection starts fresh. */}
+      <ReidCalibrationDrawer
+        key={`${modelId}:${cameraIds.join(",")}`}
+        open={calibrating && !!selectedModel && !!selectedSite}
+        model={selectedModel ?? null}
+        siteName={selectedSite?.siteName ?? ""}
+        cameras={selectedCameras}
+        onClose={() => setCalibrating(false)}
+        onConfirm={(zones) => commitDeploy(zones)}
       />
     </div>
   );
@@ -1275,6 +1272,19 @@ export function ModelDeploymentsDrawer({
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [removeOpen, setRemoveOpen] = React.useState(false);
 
+  /* Re-ID models also show the calibrated zone maps their cameras run on. */
+  const isReid = useReidModelsStore((s) => s.models.find((m) => m.id === model.modelId)?.category === REID_CATEGORY);
+  const allMaps = useReidMapsStore((s) => s.maps);
+  const zoneMaps = React.useMemo(
+    () =>
+      allMaps.filter(
+        (m) => m.modelName === model.modelName && m.cameraIds.some((c) => model.deployments.some((d) => d.cameraId === c))
+      ),
+    [allMaps, model.modelName, model.deployments]
+  );
+  const [tab, setTab] = React.useState<"cameras" | "map">("cameras");
+  const showMap = isReid && tab === "map";
+
   /* Reset selection when filters change */
   const rows = React.useMemo(() => {
     const q = cameraSearch.toLowerCase().trim();
@@ -1369,6 +1379,48 @@ export function ModelDeploymentsDrawer({
           </div>
         </div>
 
+        {isReid && (
+          <div role="tablist" aria-label="Deployment details" className="flex flex-shrink-0 gap-1 border-b border-border bg-card px-5">
+            {([
+              { key: "cameras", label: "Cameras", count: model.totalCameras },
+              { key: "map", label: "Zone map", count: zoneMaps.length },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors",
+                  tab === t.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t.key === "map" && <MapPin className="size-3.5" />}
+                {t.label}
+                <span className="rounded-full bg-muted px-1.5 text-2xs text-muted-foreground">{t.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showMap ? (
+          <div className="flex-1 space-y-4 overflow-auto px-5 py-4">
+            <p className="text-xs text-muted-foreground">
+              The calibrated floor zones these cameras run on — one map per linked camera group. Export the calibration as
+              JSON, or the map as an image.
+            </p>
+            {zoneMaps.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
+                <MapPin className="size-6 opacity-40" />
+                <p className="text-sm">No calibrated map for these cameras yet — redeploy to calibrate them.</p>
+              </div>
+            ) : (
+              zoneMaps.map((m) => <ReidZoneMapCard key={m.id} map={m} cameras={MOCK_CAMERAS} />)
+            )}
+          </div>
+        ) : (
+        <>
         {/* Camera search */}
         <div className="flex-shrink-0 border-b border-border bg-card/40 px-5 py-3">
           <div className="relative">
@@ -1478,8 +1530,11 @@ export function ModelDeploymentsDrawer({
           )}
         </div>
 
+        </>
+        )}
+
         {/* Bottom action bar — only when selection is non-empty */}
-        {selectedCount > 0 && (
+        {!showMap && selectedCount > 0 && (
           <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-lg">
             <p className="text-sm text-foreground">
               <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
@@ -1637,11 +1692,15 @@ export function ReidModelDeployment({
   onRetry?: () => void;
 } = {}) {
   const [tab, setTab] = React.useState<"deploy" | "history">("deploy");
-  const [deployments, setDeployments] = React.useState<DeploymentData[]>(MOCK_DEPLOYMENTS);
-  const [calibrating, setCalibrating] = React.useState(false);
-
+  const [deployments, setDeployments] = React.useState<DeploymentData[]>(() => {
+    const reid = useReidModelsStore.getState().models.find((m) => m.category === REID_CATEGORY);
+    const seeded = reid ? seedReidDeployments(useReidMapsStore.getState().maps, reid.id, reid.defaultConfidence) : [];
+    return [...seeded, ...MOCK_DEPLOYMENTS];
+  });
   function handleCommit(newRecords: DeploymentData[]) {
-    setDeployments((prev) => [...newRecords, ...prev]);
+    // A redeploy replaces a camera's earlier record for the same model.
+    const replaced = new Set(newRecords.map((r) => `${r.modelId}:${r.cameraId}`));
+    setDeployments((prev) => [...newRecords, ...prev.filter((d) => !replaced.has(`${d.modelId}:${d.cameraId}`))]);
     setTab("history");
     // One record per camera — name the model and count the cameras.
     const cams = `${newRecords.length} camera${newRecords.length === 1 ? "" : "s"}`;
@@ -1654,7 +1713,6 @@ export function ReidModelDeployment({
 
   return (
     <div className="flex flex-col gap-4">
-      {!calibrating && (
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Deployment</PageHeader.Title>
@@ -1681,12 +1739,10 @@ export function ReidModelDeployment({
           </PageHeader.Actions>
         )}
       </PageHeader>
-      )}
 
       {tab === "deploy" ? (
         <DeployWizard
           onCommit={handleCommit}
-          onCalibratingChange={setCalibrating}
           forcedState={forcedState}
           onRetry={onRetry}
         />

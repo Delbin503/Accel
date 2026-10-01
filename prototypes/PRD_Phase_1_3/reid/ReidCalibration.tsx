@@ -1,29 +1,50 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CircleCheck, LoaderCircle, Rocket, ScanLine, VideoOff, Wand2 } from "lucide-react";
+import { Check, CircleCheck, Layers, LoaderCircle, Map as MapIcon, Pencil, Rocket, ScanLine, VideoOff, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { BoundaryZone, CameraData } from "@/types/cameras";
 import type { ModelData } from "./reidModels";
-import { autoPlace, sceneMarkers, zoneBox, type Placement, type SceneMarker, type Verdict } from "./calibrationGeometry";
+import {
+  OUTLIER_CM,
+  applyEdits,
+  autoPlace,
+  markerPosition,
+  sceneMarkers,
+  zoneBox,
+  type MarkerEdit,
+  type Placement,
+  type SceneMarker,
+  type Verdict,
+} from "./calibrationGeometry";
 import { ReidSiteMapModal } from "./ReidSiteMap";
 import { useReidMapsStore } from "./reidMaps";
 
-/* Re-ID deployment — calibration step.
+/* Re-ID deployment — calibration drawer.
 
-   "Ready to Deploy" on a Re-ID model lands here instead of the zone modal.
-   Per camera: Auto-Place All fits the markers in view and joins the ones left
-   into the camera's zone — re-run until it looks right — then Confirm zone
-   saves it and moves on to the next camera without one. Once every online
-   camera has a saved zone, Deploy opens the site map review, and its Confirm
-   finishes the deployment. */
+   "Ready to Deploy" on a Re-ID model opens this drawer instead of the zone
+   modal. Per camera: Auto-Place Markers fits the markers in view and joins the
+   ones left into the camera's zone — re-run until it looks right, or Edit the
+   marker table by hand — then Confirm Calibration saves it and moves on to the
+   next camera without one. Calibrate All Cameras does that for every camera
+   still uncalibrated in one go and opens the merged zone map. Once every online
+   camera is calibrated, Save & Deploy opens the same site map review, and its
+   Confirm finishes the deployment.
+   Closing the drawer keeps the progress; changing the selection resets it. */
 
 const VB_W = 1600;
 const VB_H = 900;
 /** Long enough to read as work, short enough to re-run freely. */
 const PLACE_MS = 700;
+/** Calibrate All works through every camera, so it reads as a longer job. */
+const PLACE_ALL_MS = 1400;
+/** Calibrate All re-runs a camera's fit up to this many times to get past a poor one. */
+const MAX_RUNS = 8;
+/** placingId while Calibrate All is running. */
+const ALL = "__all__";
 
 const VERDICT: Record<Verdict, { label: string; box: string; text: string }> = {
   good: { label: "good", box: "border-success/40 bg-success/[0.06]", text: "text-success" },
@@ -104,11 +125,13 @@ function CameraFrame({
   markers,
   placement,
   placing,
+  placingLabel = "Placing markers…",
 }: {
   camera: CameraData;
   markers: SceneMarker[];
   placement: Placement | undefined;
   placing: boolean;
+  placingLabel?: string;
 }) {
   const byId = new Map(markers.map((m) => [m.id, m]));
   const outline = placement?.boundary.map((id) => byId.get(id)).filter((m): m is SceneMarker => !!m) ?? [];
@@ -181,7 +204,7 @@ function CameraFrame({
         <g>
           <rect width={VB_W} height={VB_H} className="fill-neutral-950/40" />
           <text x={VB_W / 2} y={VB_H / 2} textAnchor="middle" className="fill-neutral-100" fontSize={40} fontWeight={600}>
-            Placing markers…
+            {placingLabel}
           </text>
         </g>
       )}
@@ -191,91 +214,202 @@ function CameraFrame({
 
 /* ── Marker list ──────────────────────────────────────────────────────── */
 
-function MarkerTable({ markers, placement }: { markers: SceneMarker[]; placement: Placement }) {
+type Draft = Record<string, { x: string; y: string; error: string }>;
+
+/** A typed number, or null when the field doesn't hold one. */
+function parseNum(v: string): number | null {
+  if (v.trim() === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function MarkerTable({
+  markers,
+  placement,
+  disabled,
+  onSave,
+}: {
+  markers: SceneMarker[];
+  placement: Placement;
+  disabled: boolean;
+  onSave: (edits: Record<string, MarkerEdit>) => void;
+}) {
+  const [draft, setDraft] = React.useState<Draft | null>(null);
+  const editing = draft !== null;
+
+  // Sorted from the placement, not the draft, so rows don't jump while typing.
   const rows = [...markers].sort((a, b) => {
     const rank = (id: string) => (placement.boundary.includes(id) ? 0 : placement.dropped.includes(id) ? 2 : 1);
     return rank(a.id) - rank(b.id) || a.id.localeCompare(b.id);
   });
+
+  function startEdit() {
+    setDraft(
+      Object.fromEntries(
+        markers.map((m) => {
+          const pos = markerPosition(m, placement);
+          return [m.id, { x: pos.x.toFixed(3), y: pos.y.toFixed(3), error: placement.errors[m.id].toFixed(1) }];
+        })
+      )
+    );
+  }
+
+  const invalid = (id: string, field: "x" | "y" | "error") => {
+    if (!draft) return false;
+    const n = parseNum(draft[id][field]);
+    return n === null || (field === "error" && n < 0);
+  };
+  const anyInvalid = editing && markers.some((m) => invalid(m.id, "x") || invalid(m.id, "y") || invalid(m.id, "error"));
+
+  function save() {
+    if (!draft || anyInvalid) return;
+    onSave(
+      Object.fromEntries(
+        markers.map((m) => [
+          m.id,
+          { x: parseNum(draft[m.id].x) ?? m.x, y: parseNum(draft[m.id].y) ?? m.y, error: parseNum(draft[m.id].error) ?? 0 },
+        ])
+      )
+    );
+    setDraft(null);
+  }
+
+  const set = (id: string, field: "x" | "y" | "error", value: string) =>
+    setDraft((d) => (d ? { ...d, [id]: { ...d[id], [field]: value } } : d));
+
+  const cellInput = (id: string, field: "x" | "y" | "error", label: string) => (
+    <Input
+      value={draft?.[id][field] ?? ""}
+      onChange={(e) => set(id, field, e.target.value)}
+      inputMode="decimal"
+      aria-label={`${id} ${label}`}
+      aria-invalid={invalid(id, field) || undefined}
+      className="ml-auto h-7 w-24 px-2 text-right font-mono text-sm"
+    />
+  );
+
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40">
-          <tr className="text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <th className="px-3 py-2">Marker</th>
-            <th className="px-3 py-2 text-right">Floor x (m)</th>
-            <th className="px-3 py-2 text-right">Floor y (m)</th>
-            <th className="px-3 py-2 text-right">Fit error</th>
-            <th className="px-3 py-2">In this map</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((m) => {
-            const onBoundary = placement.boundary.includes(m.id);
-            const dropped = placement.dropped.includes(m.id);
-            return (
-              <tr key={m.id} className={cn(dropped && "text-muted-foreground")}>
-                <td className="px-3 py-2 font-mono font-semibold text-foreground">{m.id}</td>
-                <td className="px-3 py-2 text-right font-mono">{m.x.toFixed(3)}</td>
-                <td className="px-3 py-2 text-right font-mono">{m.y.toFixed(3)}</td>
-                <td className={cn("px-3 py-2 text-right font-mono", dropped && "text-sev-critical")}>
-                  {placement.errors[m.id].toFixed(1)} cm
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-semibold",
-                      onBoundary
-                        ? "border-success/40 bg-success/10 text-success"
-                        : dropped
-                          ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical"
-                          : "border-border bg-muted text-muted-foreground"
+    <div>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <CircleCheck className="size-3.5" />
+          Markers intersected · {placement.boundary.length} on the boundary,{" "}
+          {placement.used.length - placement.boundary.length} inside, {placement.dropped.length} dropped
+        </p>
+        <div className="ml-auto flex items-center gap-1.5">
+          {editing ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setDraft(null)} className="gap-1.5">
+                <X className="size-3.5" /> Cancel
+              </Button>
+              <Button size="sm" onClick={save} disabled={anyInvalid} className="gap-1.5">
+                <Check className="size-3.5" /> Save changes
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={startEdit} disabled={disabled} className="gap-1.5">
+              <Pencil className="size-3.5" /> Edit markers
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40">
+            <tr className="text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <th className="px-3 py-2">Marker</th>
+              <th className="px-3 py-2 text-right">Floor x (m)</th>
+              <th className="px-3 py-2 text-right">Floor y (m)</th>
+              <th className="px-3 py-2 text-right">Fit error{editing ? " (cm)" : ""}</th>
+              <th className="px-3 py-2">In this map</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((m) => {
+              const onBoundary = placement.boundary.includes(m.id);
+              const dropped = placement.dropped.includes(m.id);
+              const pos = markerPosition(m, placement);
+              return (
+                <tr key={m.id} className={cn(dropped && !editing && "text-muted-foreground")}>
+                  <td className="px-3 py-2 font-mono font-semibold text-foreground">
+                    {m.id}
+                    {placement.edited?.includes(m.id) && (
+                      <span className="ml-1.5 font-sans text-2xs font-medium text-info">edited</span>
                     )}
-                  >
-                    {onBoundary ? "On boundary" : dropped ? "Dropped · outlier" : "Inside zone"}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "x", "floor x") : pos.x.toFixed(3)}</td>
+                  <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "y", "floor y") : pos.y.toFixed(3)}</td>
+                  <td className={cn("px-3 py-2 text-right font-mono", dropped && !editing && "text-sev-critical")}>
+                    {editing ? cellInput(m.id, "error", "fit error") : `${placement.errors[m.id].toFixed(1)} cm`}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-semibold",
+                        onBoundary
+                          ? "border-success/40 bg-success/10 text-success"
+                          : dropped
+                            ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical"
+                            : "border-border bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {onBoundary ? "On boundary" : dropped ? "Dropped · outlier" : "Inside zone"}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {editing && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Floor positions are metres from the site origin. A fit error of {OUTLIER_CM} cm or more drops the marker as an
+          outlier — saving re-fits the zone, and you confirm the calibration again.
+        </p>
+      )}
     </div>
   );
 }
 
-/* ── Screen ───────────────────────────────────────────────────────────── */
+/* ── Drawer ───────────────────────────────────────────────────────────── */
 
 type CameraState = "offline" | "saved" | "unsaved" | "empty";
 
 const STATE_LABEL: Record<CameraState, { label: string; text: string }> = {
   offline: { label: "offline", text: "text-muted-foreground" },
-  saved: { label: "zone saved", text: "text-success" },
+  saved: { label: "calibrated", text: "text-success" },
   unsaved: { label: "placed · not saved", text: "text-warning" },
-  empty: { label: "no zone yet", text: "text-muted-foreground" },
+  empty: { label: "not calibrated", text: "text-muted-foreground" },
 };
 
-export function ReidCalibrationScreen({
+export function ReidCalibrationDrawer({
+  open,
   model,
   siteName,
   cameras,
-  onBack,
+  onClose,
   onConfirm,
 }: {
-  model: ModelData;
+  open: boolean;
+  model: ModelData | null;
   siteName: string;
   cameras: CameraData[];
-  onBack: () => void;
+  onClose: () => void;
   onConfirm: (zones: Record<string, BoundaryZone[]>) => void;
 }) {
   const [cameraId, setCameraId] = React.useState(
     () => cameras.find((c) => c.status === "online")?.id ?? cameras[0]?.id ?? ""
   );
-  /** The latest auto-place run per camera — what the frame shows. */
+  /** The latest auto-place run (plus hand edits) per camera — what the frame shows. */
   const [placements, setPlacements] = React.useState<Record<string, Placement>>({});
-  /** Zones the operator has confirmed — what deploys. */
+  /** Calibrations the operator has confirmed — what deploys. */
   const [saved, setSaved] = React.useState<Record<string, Placement>>({});
   const [placingId, setPlacingId] = React.useState<string | null>(null);
-  const [mapOpen, setMapOpen] = React.useState(false);
+  /** The site map modal: "review" before deploying, "view" to look at progress. */
+  const [mapMode, setMapMode] = React.useState<"review" | "view" | null>(null);
+  const setMapOpen = (open: boolean) => setMapMode(open ? "review" : null);
   const timer = React.useRef<number | null>(null);
   React.useEffect(() => () => {
     if (timer.current) window.clearTimeout(timer.current);
@@ -306,7 +440,7 @@ export function ReidCalibrationScreen({
           : "empty";
 
   const currentSaved = !!camera && !!placement && saved[camera.id] === placement;
-  const canConfirmZone = !!placement && placement.verdict !== "poor" && !currentSaved && !placingId;
+  const canConfirm = !!placement && placement.verdict !== "poor" && !currentSaved && !placingId;
 
   function runAutoPlace() {
     if (!camera || offline) return;
@@ -319,26 +453,79 @@ export function ReidCalibrationScreen({
     }, PLACE_MS);
   }
 
-  function confirmZone() {
+  /** Auto-places every online camera without a saved calibration, saves them, and opens the merged map. */
+  function calibrateAll() {
+    if (placingId || calibratable.length === 0) return;
+    setPlacingId(ALL);
+    timer.current = window.setTimeout(() => {
+      const nextPlacements = { ...placements };
+      const nextSaved = { ...saved };
+      const failed: CameraData[] = [];
+      for (const c of calibratable) {
+        if (nextSaved[c.id]) continue;
+        let run = placements[c.id]?.run ?? 0;
+        let p: Placement | undefined;
+        // Keep re-running a poor fit, the way an operator would.
+        for (let i = 0; i < MAX_RUNS; i++) {
+          p = autoPlace(c.id, markersByCamera[c.id], ++run);
+          if (p.verdict !== "poor") break;
+        }
+        if (!p) continue;
+        nextPlacements[c.id] = p;
+        if (p.verdict === "poor") failed.push(c);
+        else nextSaved[c.id] = p;
+      }
+      setPlacements(nextPlacements);
+      setSaved(nextSaved);
+      setPlacingId(null);
+      if (failed.length) {
+        setCameraId(failed[0].id);
+        toast.warning(`${calibratable.length - failed.length} of ${calibratable.length} cameras calibrated`, {
+          description: `${failed.map((c) => c.name).join(", ")} couldn't get a usable fit — re-run or edit ${
+            failed.length === 1 ? "it" : "them"
+          } by hand.`,
+        });
+        return;
+      }
+      toast.success(`All ${calibratable.length} cameras calibrated`, {
+        description: "Merged into one zone map — review it, then confirm to deploy.",
+      });
+      setMapOpen(true);
+    }, PLACE_ALL_MS);
+  }
+
+  function saveEdits(edits: Record<string, MarkerEdit>) {
+    if (!camera || !placement) return;
+    const next = applyEdits(markers, placement, edits);
+    setPlacements((p) => ({ ...p, [camera.id]: next }));
+    toast.success(`Marker edits applied to ${camera.name}`, {
+      description: `Re-fitted — RMSE ${next.rmse.toFixed(1)} cm (${next.verdict}), ${next.used.length} markers. ${
+        next.verdict === "poor" ? "Too poor to save — adjust again or re-run Auto-Place Markers." : "Confirm Calibration to save it."
+      }`,
+    });
+  }
+
+  function confirmCalibration() {
     if (!camera || !placement) return;
     const nextSaved = { ...saved, [camera.id]: placement };
     setSaved(nextSaved);
 
-    // Move on to the next online camera — after this one, wrapping — that has no saved zone.
+    // Move on to the next online camera — after this one, wrapping — that isn't calibrated yet.
     const start = calibratable.findIndex((c) => c.id === camera.id);
     const ordered = [...calibratable.slice(start + 1), ...calibratable.slice(0, start)];
     const next = ordered.find((c) => !nextSaved[c.id]);
     if (next) setCameraId(next.id);
 
     const done = calibratable.filter((c) => nextSaved[c.id]).length;
-    toast.success(`Zone saved for ${camera.name}`, {
+    toast.success(`Calibration saved for ${camera.name}`, {
       description: next
         ? `${placement.used.length} markers · RMSE ${placement.rmse.toFixed(1)} cm. Next: ${next.name} (${done} of ${calibratable.length} done).`
-        : `${placement.used.length} markers · RMSE ${placement.rmse.toFixed(1)} cm. All ${calibratable.length} cameras have zones — Deploy is ready.`,
+        : `${placement.used.length} markers · RMSE ${placement.rmse.toFixed(1)} cm. All ${calibratable.length} cameras are calibrated — Save & Deploy is ready.`,
     });
   }
 
   function deploy() {
+    if (!model) return;
     const zones: Record<string, BoundaryZone[]> = {};
     for (const c of calibratable) {
       const p = saved[c.id];
@@ -351,153 +538,200 @@ export function ReidCalibrationScreen({
       siteName,
       modelName: model.name,
       usedByCamera: Object.fromEntries(calibratable.map((c) => [c.id, saved[c.id].used])),
+      positionsByCamera: Object.fromEntries(calibratable.map((c) => [c.id, saved[c.id].positions ?? {}])),
     });
     setMapOpen(false);
     onConfirm(zones);
   }
 
-  if (!camera) return null;
   const v = placement ? VERDICT[placement.verdict] : null;
   const usedByCamera = Object.fromEntries(savedCameras.map((c) => [c.id, saved[c.id].used]));
+  const positionsByCamera = Object.fromEntries(savedCameras.map((c) => [c.id, saved[c.id].positions ?? {}]));
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Title + Deploy */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Button variant="outline" size="icon" onClick={onBack} aria-label="Back to deployment selection" className="mt-0.5 size-8">
-            <ArrowLeft className="size-4" />
-          </Button>
-          <PageHeader.Content>
-            <PageHeader.Title>Calibrate cameras</PageHeader.Title>
-            <PageHeader.Description>
-              {model.name} · {siteName} — auto-place the markers on each camera and confirm its zone. Deploy once
-              every camera has one.
-            </PageHeader.Description>
-          </PageHeader.Content>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
-            {savedCameras.length} of {calibratable.length} zone{calibratable.length === 1 ? "" : "s"} saved
-          </span>
-          <Button onClick={() => setMapOpen(true)} disabled={!canDeploy} className="gap-1.5">
-            <Rocket className="size-4" /> Deploy
-          </Button>
-        </div>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-          <span className="text-sm font-semibold text-foreground">Camera</span>
-          <Select value={camera.id} onValueChange={setCameraId}>
-            <SelectTrigger className="h-9 w-72 text-sm" aria-label="Camera">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {cameras.map((c) => {
-                const st = STATE_LABEL[stateOf(c)];
-                return (
-                  <SelectItem key={c.id} value={c.id}>
-                    <span className="flex items-center gap-2">
-                      {c.name}
-                      <span className={cn("text-2xs", st.text)}>· {st.label}</span>
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <span className="font-mono text-2xs text-muted-foreground">
-            {camera.id} · {markers.length} markers in view
-          </span>
-
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={runAutoPlace}
-              disabled={offline || !!placingId}
-              className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
-            >
-              {placingId === camera.id ? <LoaderCircle className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
-              {placement ? "Re-run Auto-Place All" : "Auto-Place All"}
-            </Button>
-            <Button size="sm" onClick={confirmZone} disabled={!canConfirmZone} className="gap-1.5">
-              <Check className="size-3.5" /> {currentSaved ? "Zone saved" : "Confirm zone"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Viewport */}
-        <div className="bg-neutral-950 p-3">
-          {offline ? (
-            <div className="flex aspect-video flex-col items-center justify-center gap-2 text-neutral-400">
-              <VideoOff className="size-6" />
-              <p className="text-sm">{camera.name} is offline — it calibrates when it reconnects.</p>
+    <>
+      <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+        <SheetContent
+          side="right"
+          showCloseButton={false}
+          className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
+        >
+          {/* Header */}
+          <SheetHeader className="border-b border-border bg-card px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="text-lg font-bold">Calibrate cameras</SheetTitle>
+                <SheetDescription className="mt-0.5 text-sm">
+                  {model?.name} · {siteName} — auto-place the markers on each camera and confirm its calibration. Save &amp;
+                  Deploy once every camera is calibrated.
+                </SheetDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="-mr-1 size-8">
+                <X className="size-4" />
+              </Button>
             </div>
-          ) : (
-            <CameraFrame camera={camera} markers={markers} placement={placement} placing={placingId === camera.id} />
-          )}
-        </div>
+          </SheetHeader>
 
-        {/* Result + intersected markers */}
-        <div className="space-y-3 px-4 py-4">
-          {offline ? null : !placement ? (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ScanLine className="size-4" />
-              {markers.length} markers in view. Press Auto-Place All to fit them to the floor and draw the zone.
-            </p>
-          ) : (
+          {camera ? (
             <>
-              <div className={cn("rounded-lg border px-3 py-2.5 text-sm", v?.box)}>
-                <span className={cn("font-bold", v?.text)}>{v?.label}</span>
-                <span className="text-foreground">
-                  {" "}— RMSE {placement.rmse.toFixed(1)} cm, worst marker {placement.worst.toFixed(1)} cm,{" "}
-                  {placement.used.length} markers
-                  {placement.dropped.length > 0
-                    ? `, dropped ${placement.dropped.join(", ")} (outliers, excluded)`
-                    : ", none dropped"}
-                  .
+              {/* Camera picker */}
+              <div className="flex flex-wrap items-start gap-x-2 gap-y-2 border-b border-border bg-card px-5 py-3">
+                <span className="flex h-9 items-center text-sm font-semibold text-foreground">Camera</span>
+                <div className="flex flex-col gap-1">
+                  <Select value={camera.id} onValueChange={setCameraId}>
+                    <SelectTrigger className="h-9 w-72 text-sm" aria-label="Camera">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cameras.map((c) => {
+                        const st = STATE_LABEL[stateOf(c)];
+                        return (
+                          <SelectItem key={c.id} value={c.id}>
+                            <span className="flex items-center gap-2">
+                              {c.name}
+                              <span className={cn("text-2xs", st.text)}>· {st.label}</span>
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">
+                    <strong className={cn(canDeploy ? "text-success" : "text-foreground")}>{savedCameras.length}</strong> of{" "}
+                    {calibratable.length} camera{calibratable.length === 1 ? "" : "s"} calibrated
+                  </span>
+                </div>
+                <span className="flex h-9 items-center font-mono text-2xs text-muted-foreground">
+                  {camera.id} · {markers.length} markers in view
                 </span>
-                <span className="ml-1 text-xs text-muted-foreground">
-                  Run {placement.run}
-                  {placement.verdict === "poor"
-                    ? " · re-run to get a usable zone"
-                    : currentSaved
-                      ? " · saved"
-                      : saved[camera.id]
-                        ? " · a saved zone exists — confirm to replace it"
-                        : ""}
-                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMapMode("view")}
+                  disabled={savedCameras.length === 0}
+                  title={savedCameras.length === 0 ? "Calibrate a camera to see it on the map" : "See every calibrated zone on one floor plan"}
+                  className="ml-auto mt-1 gap-1.5"
+                >
+                  <MapIcon className="size-3.5" /> View Map
+                </Button>
               </div>
 
-              <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <CircleCheck className="size-3.5" />
-                  Markers intersected · {placement.boundary.length} on the boundary, {placement.used.length - placement.boundary.length} inside, {placement.dropped.length} dropped
-                </p>
-                <MarkerTable markers={markers} placement={placement} />
+              {/* Body */}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="bg-neutral-950 p-3">
+                  {offline ? (
+                    <div className="flex aspect-video flex-col items-center justify-center gap-2 text-neutral-400">
+                      <VideoOff className="size-6" />
+                      <p className="text-sm">{camera.name} is offline — it calibrates when it reconnects.</p>
+                    </div>
+                  ) : (
+                    <CameraFrame
+                      camera={camera}
+                      markers={markers}
+                      placement={placement}
+                      placing={placingId === camera.id || placingId === ALL}
+                      placingLabel={placingId === ALL ? `Calibrating all ${calibratable.length} cameras…` : undefined}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-3 px-5 py-4">
+                  {offline ? null : !placement ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ScanLine className="size-4" />
+                      {markers.length} markers in view. Press Auto-Place Markers to fit them to the floor and draw the zone.
+                    </p>
+                  ) : (
+                    <>
+                      <div className={cn("rounded-lg border px-3 py-2.5 text-sm", v?.box)}>
+                        <span className={cn("font-bold", v?.text)}>{v?.label}</span>
+                        <span className="text-foreground">
+                          {" "}— RMSE {placement.rmse.toFixed(1)} cm, worst marker {placement.worst.toFixed(1)} cm,{" "}
+                          {placement.used.length} markers
+                          {placement.dropped.length > 0
+                            ? `, dropped ${placement.dropped.join(", ")} (outliers, excluded)`
+                            : ", none dropped"}
+                          .
+                        </span>
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          Run {placement.run}
+                          {placement.edited?.length ? ` · ${placement.edited.length} edited by hand` : ""}
+                          {placement.verdict === "poor"
+                            ? " · re-run or edit to get a usable zone"
+                            : currentSaved
+                              ? " · saved"
+                              : saved[camera.id]
+                                ? " · a saved calibration exists — confirm to replace it"
+                                : ""}
+                        </span>
+                      </div>
+
+                      <MarkerTable
+                        key={`${camera.id}:${placement.run}`}
+                        markers={markers}
+                        placement={placement}
+                        disabled={!!placingId}
+                        onSave={saveEdits}
+                      />
+                    </>
+                  )}
+                  {cameras.length > calibratable.length && (
+                    <p className="text-xs text-muted-foreground">
+                      {cameras.length - calibratable.length} offline camera
+                      {cameras.length - calibratable.length === 1 ? "" : "s"} will calibrate on reconnect and aren't needed
+                      to deploy.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={runAutoPlace}
+                  disabled={offline || !!placingId}
+                  className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                >
+                  {placingId === camera.id ? <LoaderCircle className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
+                  Auto-Place Markers
+                </Button>
+                <Button variant="outline" size="sm" onClick={confirmCalibration} disabled={!canConfirm} className="gap-1.5">
+                  <Check className="size-3.5" /> {currentSaved ? "Calibration saved" : "Confirm Calibration"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={calibrateAll}
+                  disabled={!!placingId || calibratable.length === 0}
+                  title="Auto-place every camera that isn't calibrated yet and merge them into one zone map"
+                  className="ml-auto gap-1.5"
+                >
+                  {placingId === ALL ? <LoaderCircle className="size-3.5 animate-spin" /> : <Layers className="size-3.5" />}
+                  Calibrate All Cameras
+                </Button>
+                <Button size="sm" onClick={() => setMapOpen(true)} disabled={!canDeploy} className="gap-1.5">
+                  <Rocket className="size-3.5" /> Save &amp; Deploy
+                </Button>
               </div>
             </>
+          ) : (
+            <p className="px-5 py-10 text-center text-sm text-muted-foreground">No cameras selected.</p>
           )}
-          {cameras.length > calibratable.length && (
-            <p className="text-xs text-muted-foreground">
-              {cameras.length - calibratable.length} offline camera{cameras.length - calibratable.length === 1 ? "" : "s"} will
-              calibrate on reconnect and aren't needed to deploy.
-            </p>
-          )}
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
 
       <ReidSiteMapModal
-        open={mapOpen}
+        open={mapMode !== null}
+        mode={mapMode ?? "review"}
         siteName={siteName}
         cameras={savedCameras}
         usedByCamera={usedByCamera}
+        positionsByCamera={positionsByCamera}
         onClose={() => setMapOpen(false)}
         onConfirm={deploy}
       />
-    </div>
+    </>
   );
 }

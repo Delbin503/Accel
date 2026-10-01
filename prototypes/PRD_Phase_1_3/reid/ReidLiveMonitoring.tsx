@@ -13,9 +13,11 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Crosshair,
   LayoutGrid,
   MapPin,
-  PanelsTopLeft,
+  PanelRightClose,
+  PanelRightOpen,
   Pause,
   Play,
   Radio,
@@ -33,7 +35,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -52,15 +53,13 @@ import {
 import { ScrubTrack, ZoomSurface } from "../playbackControls";
 import { CameraPlayerModal, TILE_GRADIENT, TilePlayerBar } from "../cameraPlayer";
 import { FloatingBar } from "../FloatingBar";
-import { VisitorKpis } from "../VisitorKpis";
-import { visitorStats } from "../visitorStats";
-import { toast } from "sonner";
-import { Crosshair } from "lucide-react";
 import { mapForCamera, mapLabel, useReidMapsStore } from "./reidMaps";
-import { HOLD_SEC, allTrackStates, type TrackState } from "./weaponTracks";
+import { allTrackStates, type TrackState } from "./weaponTracks";
 import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";
 
-/* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal.
+/* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal,
+   laid out as one camera wall: sites · grid view · search, then the grid,
+   with an optional Cameras & Tracking panel on the right.
 
    Two things are new against the shipped page:
    1. Every tile is selectable — hovering reveals a checkbox, and a selection
@@ -69,13 +68,6 @@ import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";
       timeline, a LIVE tag and a settings dropdown. Pull the timeline back and
       that tile leaves the live edge on its own; open Playback settings from the
       selection bar and the whole selection moves together instead. */
-
-type ViewMode = "hero" | "wall";
-
-const VIEW_MODES: { key: ViewMode; label: string; icon: React.ElementType; description: string }[] = [
-  { key: "hero", label: "Hero", icon: PanelsTopLeft, description: "Featured camera + sidebar of all cams" },
-  { key: "wall", label: "Wall", icon: LayoutGrid, description: "Uniform grid for all cameras" },
-];
 
 /* ── Camera tile ─────────────────────────────────────────────────────── */
 
@@ -92,7 +84,10 @@ function CameraTile({
   syncing,
   onExpand,
   overlay,
+  "data-panel-camera": panelAnchor,
 }: {
+  /** Lets the side panel scroll a picked camera into view. */
+  "data-panel-camera"?: string;
   camera: CameraData;
   size?: "sm" | "md" | "lg";
   checked: boolean;
@@ -117,12 +112,13 @@ function CameraTile({
 
   return (
     <div
+      data-panel-camera={panelAnchor}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-neutral-950 text-left transition-all",
         checked
           ? "border-primary shadow-[0_0_0_2px_var(--primary)]"
           : active
-            ? "border-primary/70"
+            ? "border-primary shadow-[0_0_0_1px_var(--primary)]"
             : "border-border hover:border-primary/40"
       )}
     >
@@ -143,7 +139,7 @@ function CameraTile({
             {onActivate && (
               <button
                 type="button"
-                aria-label={`Show ${camera.id} in the main view`}
+                aria-label={`Pick ${camera.id} — outline it on the wall and show its Re-ID map`}
                 onClick={onActivate}
                 className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -194,7 +190,8 @@ function CameraTile({
         {overlay && <div className="absolute right-2 top-8 z-20 flex flex-col items-end gap-1">{overlay}</div>}
 
         <span className={cn(
-          "absolute bottom-2 left-2 z-10 rounded bg-black/60 px-1.5 py-0.5 font-mono text-white/90 backdrop-blur-sm transition-opacity group-hover:opacity-0",
+          "absolute bottom-2 left-2 z-10 rounded px-1.5 py-0.5 font-mono backdrop-blur-sm transition-opacity group-hover:opacity-0",
+          active ? "bg-primary font-semibold text-primary-foreground" : "bg-black/60 text-white/90",
           compact ? "text-3xs" : "text-2xs",
           !live && "opacity-0"
         )}>
@@ -235,7 +232,101 @@ function CameraTile({
   );
 }
 
-/* ── Hero view ───────────────────────────────────────────────────────── */
+/* ── Camera wall ─────────────────────────────────────────────────────── */
+
+/** "auto" fits as many tiles across as the width allows; N is an N×N page. */
+type GridOption = "auto" | "1" | "2" | "3" | "4";
+
+const GRID_OPTIONS: { value: GridOption; label: string }[] = [
+  { value: "auto", label: "Auto · fit to width" },
+  { value: "1", label: "1×1" },
+  { value: "2", label: "2×2" },
+  { value: "3", label: "3×3" },
+  { value: "4", label: "4×4" },
+];
+
+function CameraWall({
+  cameras, grid, page, activeId, onActivate, checkedIds, onToggleCheck, pbFor, setPb, now, badgesFor,
+}: {
+  cameras: CameraData[];
+  grid: GridOption;
+  page: number;
+  /** The camera picked in the side panel, or the one the highlighted weapon is in. */
+  activeId: string | null;
+  onActivate: (id: string) => void;
+  checkedIds: string[]; onToggleCheck: (id: string) => void;
+  pbFor: (id: string) => PlaybackState;
+  setPb: (id: string, next: Partial<PlaybackState>) => void;
+  now: Date;
+  badgesFor: (cameraId: string) => React.ReactNode;
+}) {
+  /* Small tiles are too small to zoom inside, so they expand into the pop-up player instead. */
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
+
+  const n = grid === "auto" ? 0 : Number(grid);
+  const perPage = n ? n * n : cameras.length;
+  const pageItems = n ? cameras.slice((page - 1) * perPage, page * perPage) : cameras;
+  const size = n === 1 ? "lg" : n === 2 ? "md" : "sm";
+
+  if (cameras.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
+        <Search className="size-5" />
+        <p className="text-sm">No cameras match these filters.</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className={cn(
+          "grid gap-3",
+          n === 0 && "grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
+          n === 1 && "grid-cols-1",
+          n === 2 && "grid-cols-1 sm:grid-cols-2",
+          n === 3 && "grid-cols-2 lg:grid-cols-3",
+          n === 4 && "grid-cols-2 lg:grid-cols-4"
+        )}
+      >
+        {pageItems.map((c) => (
+          <div key={c.id} data-wall-camera={c.id} className="scroll-mt-4">
+            <CameraTile
+              camera={c}
+              size={size}
+              checked={checkedIds.includes(c.id)}
+              onToggleCheck={() => onToggleCheck(c.id)}
+              active={c.id === activeId}
+              onActivate={() => onActivate(c.id)}
+              pb={pbFor(c.id)}
+              onPb={(next) => setPb(c.id, next)}
+              now={now}
+              onExpand={n === 1 ? undefined : () => setExpandedId(c.id)}
+              overlay={badgesFor(c.id)}
+            />
+          </div>
+        ))}
+        {/* A fixed grid keeps its shape on the last page. */}
+        {n > 1 &&
+          Array.from({ length: Math.max(0, perPage - pageItems.length) }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-video rounded-lg border border-dashed border-border bg-muted/20" />
+          ))}
+      </div>
+
+      <CameraPlayerModal
+        camera={expanded}
+        open={!!expanded}
+        onClose={() => setExpandedId(null)}
+        pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
+        onPb={(next) => expanded && setPb(expanded.id, next)}
+        now={now}
+      />
+    </>
+  );
+}
+
+/* ── Side panel — Cameras & Tracking ─────────────────────────────────── */
 
 function CategoryChip({ label, count, active, muted }: { label: string; count: number; active?: boolean; muted?: boolean }) {
   return (
@@ -250,41 +341,29 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
   );
 }
 
-type RailTab = "cameras" | "tracking";
+type PanelTab = "cameras" | "tracking";
 
-function HeroView({
-  cameras, selectedCameraId, setSelectedCameraId, checkedIds, onToggleCheck, pbFor, setPb, now,
-  strip, badgesFor, heroOverlay, railTab, setRailTab, trackCount, trackingPanel,
+function SidePanel({
+  cameras, activeId, onActivate, tab, setTab, trackCount, trackingPanel,
+  checkedIds, onToggleCheck, pbFor, setPb, now, badgesFor,
 }: {
   cameras: CameraData[];
-  selectedCameraId: string;
-  setSelectedCameraId: (id: string) => void;
+  activeId: string | null;
+  onActivate: (id: string) => void;
+  tab: PanelTab;
+  setTab: (t: PanelTab) => void;
+  trackCount: number;
+  trackingPanel: React.ReactNode;
   checkedIds: string[];
   onToggleCheck: (id: string) => void;
   pbFor: (id: string) => PlaybackState;
   setPb: (id: string, next: Partial<PlaybackState>) => void;
   now: Date;
-  /** Small cameras under the main one — the rest of its Re-ID map. */
-  strip: { title: string; cameras: CameraData[] };
   badgesFor: (cameraId: string) => React.ReactNode;
-  /** Weapon + following chips on the main camera. */
-  heroOverlay: React.ReactNode;
-  railTab: RailTab;
-  setRailTab: (t: RailTab) => void;
-  trackCount: number;
-  trackingPanel: React.ReactNode;
 }) {
-  const [zoomArmed, setZoomArmed] = React.useState(false);
-  /* The sidebar tile the operator expanded, if any. Held as an id so a filter
-     that drops the camera closes the pop-up with it. */
+  /* Panel tiles are too small to zoom inside, so they expand into the pop-up player. */
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
-
-  const camera = cameras.find((c) => c.id === selectedCameraId) ?? cameras[0];
-  if (!camera) return null;
-
-  const pb = pbFor(camera.id);
-  const live = pb.offsetSec <= 0;
-  const checked = checkedIds.includes(camera.id);
+  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
 
   const bySite = cameras.reduce<Record<string, { siteName: string; areas: Record<string, { areaName: string; cams: CameraData[] }> }>>((acc, c) => {
     if (!acc[c.siteId]) acc[c.siteId] = { siteName: c.siteName, areas: {} };
@@ -292,134 +371,29 @@ function HeroView({
     acc[c.siteId].areas[c.areaId].cams.push(c);
     return acc;
   }, {});
-
   const onlineCount = cameras.filter((c) => c.status === "online").length;
   const offlineCount = cameras.length - onlineCount;
-  const multiSite = Object.keys(bySite).length > 1;
-  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
+  const siteCount = Object.keys(bySite).length;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-3">
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="group relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
-            <div
-              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
-            />
-            {zoomArmed && (
-              <ZoomSurface
-                zoom={pb.zoom}
-                onChange={(z) => setPb(camera.id, { zoom: z })}
-                onExit={() => setZoomArmed(false)}
-              />
-            )}
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={checked}
-              aria-label={`Select ${camera.id} for synchronised playback`}
-              onClick={() => onToggleCheck(camera.id)}
-              className={cn(
-                "absolute left-3 top-3 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity",
-                checked ? "border-primary bg-primary opacity-100"
-                  : "border-white/60 bg-black/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-              )}
-            >
-              {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-            </button>
-            <span className={cn(
-              "absolute top-3 z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white transition-all",
-              live ? "bg-sev-critical/95" : "bg-black/70",
-              checked ? "left-10" : "left-3 group-hover:left-10"
-            )}>
-              {live && <span className="size-1.5 animate-pulse rounded-full bg-white" />}
-              {live ? "Live" : "Playback"}
-            </span>
-            <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
-              {camera.id} · <span className="inline-flex items-center gap-1 text-sev-critical"><span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />REC</span> · <span className="text-info">AI</span>
-            </span>
-            {heroOverlay}
-            <div className="absolute bottom-16 left-3 z-10 rounded bg-black/60 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
-              {new Date(now.getTime() - pb.offsetSec * 1000)
-                .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                .replace(",", " ·")}
-            </div>
-            <TilePlayerBar
-              camera={camera}
-              pb={pb}
-              onChange={(n) => setPb(camera.id, n)}
-              now={now}
-              zoomArmed={zoomArmed}
-              onArmZoom={() => setZoomArmed(true)}
-              onExitZoom={() => setZoomArmed(false)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3">
-            <div className="min-w-0">
-              <TruncatedText text={`${camera.siteName} · ${camera.id}`} className="text-md font-bold text-foreground" />
-              <TruncatedText
-                text={`${camera.areaName} · ${camera.stream.resolution} · ${camera.stream.frameRate}fps · accel-vms v4.2.1 active`}
-                className="text-xs text-muted-foreground"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              {!live && (
-                <span className="rounded-md border border-warning/30 bg-warning/10 px-2 py-1 font-mono text-2xs font-semibold text-warning">
-                  −{fmtOffset(pb.offsetSec)} · {timestampAt(now, pb.offsetSec)}
-                </span>
-              )}
-              <Button variant="outline" size="sm" className="gap-1.5" disabled={live}
-                onClick={() => setPb(camera.id, { offsetSec: 0, playing: true })}>
-                <Radio className="size-3.5" />
-                Go live
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Small cameras — the rest of the main camera's Re-ID map */}
-        {strip.cameras.length > 0 && (
-          <div>
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-foreground">{strip.title}</p>
-              <p className="text-2xs text-muted-foreground">Click one to make it the main camera</p>
-            </div>
-            <div className="grid auto-cols-[minmax(160px,210px)] grid-flow-col justify-start gap-2 overflow-x-auto pb-1">
-              {strip.cameras.map((c) => (
-                <CameraTile
-                  key={c.id}
-                  camera={c}
-                  size="sm"
-                  checked={checkedIds.includes(c.id)}
-                  onToggleCheck={() => onToggleCheck(c.id)}
-                  onActivate={() => setSelectedCameraId(c.id)}
-                  pb={pbFor(c.id)}
-                  onPb={(n) => setPb(c.id, n)}
-                  now={now}
-                  onExpand={() => setExpandedId(c.id)}
-                  overlay={badgesFor(c.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Sidebar */}
-      <div className="flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card">
-        <div role="tablist" aria-label="Sidebar" className="flex flex-shrink-0 border-b border-border">
-          {(["cameras", "tracking"] as RailTab[]).map((t) => (
+    /* On desktop the panel is laid over its grid cell, so the wall alone sets the
+       row's height and the panel's list scrolls inside it — the two end flush. */
+    <div className="relative lg:min-h-[420px]">
+      <aside
+        aria-label="Cameras and tracking"
+        className="flex max-h-[80vh] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card lg:absolute lg:inset-0 lg:max-h-none"
+      >
+        <div role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
+          {(["cameras", "tracking"] as PanelTab[]).map((t) => (
             <button
               key={t}
               type="button"
               role="tab"
-              aria-selected={railTab === t}
-              onClick={() => setRailTab(t)}
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
               className={cn(
                 "-mb-px inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-xs font-semibold transition-colors",
-                railTab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
               {t === "cameras" ? "Cameras" : <><Crosshair className="size-3.5" /> Tracking</>}
@@ -430,157 +404,85 @@ function HeroView({
           ))}
         </div>
 
-        {railTab === "tracking" ? trackingPanel : (<>
-        <div className="flex-shrink-0 border-b border-border px-3 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Cameras {multiSite ? `· ${Object.keys(bySite).length} sites` : `· ${Object.values(bySite)[0]?.siteName ?? ""}`}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on
-              {offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
-            </p>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <CategoryChip label="All" count={cameras.length} active />
-            <CategoryChip label="Incident Detected" count={cameras.filter((c) => detCount(c.id) > 0).length} />
-            <CategoryChip label="Offline" count={offlineCount} muted />
-          </div>
-        </div>
+        {tab === "tracking" ? (
+          <div className="flex min-h-0 flex-1 flex-col pt-3">{trackingPanel}</div>
+        ) : (
+          <>
+            <div className="flex-shrink-0 border-b border-border px-3 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Cameras · {siteCount === 1 ? Object.values(bySite)[0].siteName : `${siteCount} sites`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on
+                  {offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
+                </p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <CategoryChip label="All" count={cameras.length} active />
+                <CategoryChip label="Incident Detected" count={cameras.filter((c) => detCount(c.id) > 0).length} />
+                <CategoryChip label="Offline" count={offlineCount} muted />
+              </div>
+              <p className="mt-2 text-2xs text-muted-foreground">Click a camera to find it on the wall.</p>
+            </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
-          {Object.entries(bySite).map(([siteId, siteData]) => (
-            <div key={siteId} className="space-y-1.5">
-              {Object.entries(siteData.areas).map(([areaKey, group]) => (
-                <details key={areaKey} open className="group/area">
-                  <summary className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted">
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                        <ChevronDown className="size-3 -rotate-90 transition-transform group-open/area:rotate-0" />
-                        {group.areaName}
-                      </p>
-                      <p className="ml-4 inline-flex items-center gap-0.5 text-2xs text-muted-foreground">
-                        <MapPin className="size-2.5" />
-                        {siteData.siteName}
-                      </p>
-                    </div>
-                    <span className="text-2xs text-muted-foreground">{group.cams.length}</span>
-                  </summary>
-                  <div className="mt-1 grid grid-cols-2 gap-1.5">
-                    {group.cams.map((c) => (
-                      <CameraTile
-                        key={c.id}
-                        camera={c}
-                        size="sm"
-                        checked={checkedIds.includes(c.id)}
-                        onToggleCheck={() => onToggleCheck(c.id)}
-                        active={c.id === camera.id}
-                        onActivate={() => setSelectedCameraId(c.id)}
-                        pb={pbFor(c.id)}
-                        onPb={(n) => setPb(c.id, n)}
-                        now={now}
-                        onExpand={() => setExpandedId(c.id)}
-                        overlay={badgesFor(c.id)}
-                      />
-                    ))}
-                  </div>
-                </details>
+            <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
+              {cameras.length === 0 && (
+                <p className="py-8 text-center text-xs text-muted-foreground">No cameras match these filters.</p>
+              )}
+              {Object.entries(bySite).map(([siteId, siteData]) => (
+                <div key={siteId} className="space-y-1.5">
+                  {Object.entries(siteData.areas).map(([areaKey, group]) => (
+                    <details key={areaKey} open className="group/area">
+                      <summary className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted">
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                            <ChevronDown className="size-3 -rotate-90 transition-transform group-open/area:rotate-0" />
+                            {group.areaName}
+                          </p>
+                          <p className="ml-4 inline-flex items-center gap-0.5 text-2xs text-muted-foreground">
+                            <MapPin className="size-2.5" />
+                            {siteData.siteName}
+                          </p>
+                        </div>
+                        <span className="text-2xs text-muted-foreground">{group.cams.length}</span>
+                      </summary>
+                      <div className="mt-1 grid grid-cols-2 gap-1.5">
+                        {group.cams.map((c) => (
+                          <CameraTile
+                            key={c.id}
+                            data-panel-camera={c.id}
+                            camera={c}
+                            size="sm"
+                            checked={checkedIds.includes(c.id)}
+                            onToggleCheck={() => onToggleCheck(c.id)}
+                            active={c.id === activeId}
+                            onActivate={() => onActivate(c.id)}
+                            pb={pbFor(c.id)}
+                            onPb={(next) => setPb(c.id, next)}
+                            now={now}
+                            onExpand={() => setExpandedId(c.id)}
+                            overlay={badgesFor(c.id)}
+                          />
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+                </div>
               ))}
             </div>
-          ))}
-        </div>
-        </>)}
-      </div>
+          </>
+        )}
 
-      <CameraPlayerModal
-        camera={expanded}
-        open={!!expanded}
-        onClose={() => setExpandedId(null)}
-        pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
-        onPb={(n) => expanded && setPb(expanded.id, n)}
-        now={now}
-      />
-    </div>
-  );
-}
-
-/* ── Wall view ───────────────────────────────────────────────────────── */
-
-function WallView({
-  cameras, gridSize, setGridSize, page, setPage, checkedIds, onToggleCheck, pbFor, setPb, now, badgesFor,
-}: {
-  cameras: CameraData[];
-  gridSize: number; setGridSize: (n: number) => void;
-  page: number; setPage: (n: number) => void;
-  checkedIds: string[]; onToggleCheck: (id: string) => void;
-  pbFor: (id: string) => PlaybackState;
-  setPb: (id: string, next: Partial<PlaybackState>) => void;
-  now: Date;
-  badgesFor: (cameraId: string) => React.ReactNode;
-}) {
-  /* Same story as the hero sidebar: a wall tile is too small to zoom inside,
-     so it expands into the pop-up player instead. */
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
-
-  const total = cameras.length;
-  const perPage = gridSize * gridSize;
-  const pageCount = Math.max(1, Math.ceil(total / perPage));
-  const pageItems = cameras.slice((page - 1) * perPage, page * perPage);
-  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-base font-semibold text-foreground">
-          Wall view · Cameras {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {total}
-        </p>
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} aria-label="Previous page"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
-            <ChevronLeft className="size-3.5" />
-          </button>
-          <button onClick={() => setPage(Math.min(pageCount, page + 1))} disabled={page === pageCount} aria-label="Next page"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
-            <ChevronRight className="size-3.5" />
-          </button>
-          <Select value={String(gridSize)} onValueChange={(v) => { setGridSize(Number(v)); setPage(1); }}>
-            <SelectTrigger className="h-7 w-auto"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2">2×2 grid (4)</SelectItem>
-              <SelectItem value="3">3×3 grid (9)</SelectItem>
-              <SelectItem value="4">4×4 grid (16)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>
-        {pageItems.map((c) => (
-          <CameraTile
-            key={c.id}
-            camera={c}
-            size={gridSize > 3 ? "sm" : "md"}
-            checked={checkedIds.includes(c.id)}
-            onToggleCheck={() => onToggleCheck(c.id)}
-            pb={pbFor(c.id)}
-            onPb={(n) => setPb(c.id, n)}
-            now={now}
-            onExpand={() => setExpandedId(c.id)}
-            overlay={badgesFor(c.id)}
-          />
-        ))}
-        {Array.from({ length: Math.max(0, perPage - pageItems.length) }).map((_, i) => (
-          <div key={`empty-${i}`} className="aspect-video rounded-lg border border-dashed border-border bg-muted/20" />
-        ))}
-      </div>
-
-      <CameraPlayerModal
-        camera={expanded}
-        open={!!expanded}
-        onClose={() => setExpandedId(null)}
-        pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
-        onPb={(n) => expanded && setPb(expanded.id, n)}
-        now={now}
-      />
+        <CameraPlayerModal
+          camera={expanded}
+          open={!!expanded}
+          onClose={() => setExpandedId(null)}
+          pb={expanded ? pbFor(expanded.id) : LIVE_STATE}
+          onPb={(next) => expanded && setPb(expanded.id, next)}
+          now={now}
+        />
+      </aside>
     </div>
   );
 }
@@ -598,7 +500,7 @@ function SyncGrid({
 }) {
   const cols = cameras.length === 1 ? 1 : cameras.length <= 4 ? 2 : 3;
   return (
-    <div className="rounded-xl border border-primary/40 bg-card p-4">
+    <div className="min-h-full rounded-xl border border-primary/40 bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-base font-semibold text-foreground">
@@ -831,11 +733,8 @@ function MultiSiteSelector({ sites, selected, onChange }: {
 /* ── Page ────────────────────────────────────────────────────────────── */
 
 export function ReidLiveMonitoring({
-  stats: statsSlot,
   onSelectionChange,
 }: {
-  /** Replaces the visitor-analytics strip — another deployment counts different things. */
-  stats?: React.ReactNode;
   /** Reports how many cameras are selected, so a host page can keep clear of the selection bar. */
   onSelectionChange?: (count: number) => void;
 } = {}) {
@@ -844,10 +743,13 @@ export function ReidLiveMonitoring({
 
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
   const [search, setSearch] = React.useState("");
-  const [viewMode, setViewMode] = React.useState<ViewMode>("hero");
-  const [gridSize, setGridSize] = React.useState(4);
+  const [grid, setGrid] = React.useState<GridOption>("auto");
   const [page, setPage] = React.useState(1);
-  const [selectedCameraId, setSelectedCameraId] = React.useState("");
+  /** The Cameras & Tracking panel on the right — the wall reflows around it. */
+  const [panelOpen, setPanelOpen] = React.useState(false);
+  const [panelTab, setPanelTab] = React.useState<PanelTab>("cameras");
+  /** A camera picked by hand, in the panel or on the wall. */
+  const [pickedCameraId, setPickedCameraId] = React.useState<string | null>(null);
 
   const [checkedIds, setCheckedIds] = React.useState<string[]>([]);
   const [syncMode, setSyncMode] = React.useState(false);
@@ -862,15 +764,61 @@ export function ReidLiveMonitoring({
     return () => clearInterval(i);
   }, []);
 
-  /* ── Re-ID tracking ──────────────────────────────────────────────── */
+  /* ── Re-ID tracking — badges on tiles, the Tracking tab, the enlarged map ── */
   const maps = useReidMapsStore((s) => s.maps);
   const [trackStates, setTrackStates] = React.useState<TrackState[]>(() => allTrackStates(maps, Date.now() / 1000));
-  const [pinnedId, setPinnedId] = React.useState<string | null>(null);
-  const [followPaused, setFollowPaused] = React.useState(false);
-  /** A map the operator picked by hand — cleared when they pick a camera or pin a track. */
+  /** The weapon highlighted on the map — its camera is outlined on the wall. */
+  const [focusId, setFocusId] = React.useState<string | null>(null);
+  /** A map picked from the Tracking tab's list. */
   const [manualMapId, setManualMapId] = React.useState<string | null>(null);
-  const [railTab, setRailTab] = React.useState<RailTab>("cameras");
   const [mapOpen, setMapOpen] = React.useState(false);
+  const mapsRef = React.useRef(maps);
+  React.useEffect(() => {
+    mapsRef.current = maps;
+  });
+  React.useEffect(() => {
+    const tick = window.setInterval(() => setTrackStates(allTrackStates(mapsRef.current, Date.now() / 1000)), 500);
+    return () => window.clearInterval(tick);
+  }, []);
+
+  const focusState = trackStates.find((x) => x.track.id === focusId) ?? null;
+  /* While a weapon is highlighted, the camera it's in is the active one — it moves as the weapon does. */
+  const activeCameraId = focusState ? focusState.cameraId ?? focusState.lastCameraId : pickedCameraId;
+  const tracksOn = (mapId: string) => trackStates.filter((x) => x.mapId === mapId).length;
+  const activeMap = activeCameraId ? mapForCamera(maps, activeCameraId) : null;
+  const busiestMap = [...maps].sort((a, b) => tracksOn(b.id) - tracksOn(a.id))[0] ?? null;
+  const shownMap =
+    (focusState && maps.find((m) => m.id === focusState.mapId)) ||
+    (manualMapId && maps.find((m) => m.id === manualMapId)) ||
+    activeMap ||
+    busiestMap;
+  const mapReason = focusState
+    ? `Highlighting ${focusState.track.id} — the camera it's in is outlined on the wall`
+    : manualMapId && shownMap
+      ? "Picked from the list — resets when you pick a camera or a weapon"
+      : activeMap
+        ? `Showing the map for ${activeCameraId}, the camera you picked`
+        : "Showing the busiest map — pick a camera or a weapon to change it";
+
+  /** A weapon tag, track row or map dot highlights that weapon; picking it again clears it. */
+  function focusWeapon(trackId: string) {
+    if (trackId === focusId) {
+      setFocusId(null);
+      return;
+    }
+    setFocusId(trackId);
+    setManualMapId(null);
+    setPanelOpen(true);
+    setPanelTab("tracking");
+  }
+
+  /** Picking a camera by hand takes over from a highlighted weapon and a hand-picked map. */
+  function pickCamera(id: string) {
+    setPickedCameraId(id);
+    setFocusId(null);
+    setManualMapId(null);
+    revealOnWall(id);
+  }
 
   const pbFor = React.useCallback((id: string) => tilePb[id] ?? LIVE_STATE, [tilePb]);
   const setPb = React.useCallback((id: string, next: Partial<PlaybackState>) => {
@@ -881,146 +829,54 @@ export function ReidLiveMonitoring({
     setCheckedIds((curr) => (curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id]));
   }
 
+  const matchesSearch = React.useCallback(
+    (c: CameraData) => !search || [c.id, c.name, c.areaName, c.siteName].join(" ").toLowerCase().includes(search.toLowerCase()),
+    [search]
+  );
   const filteredCameras = React.useMemo(() => {
     return allCameras
-      .filter((c) => {
-        if (siteFilter.length > 0 && !siteFilter.includes(c.siteId)) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          if (![c.id, c.name, c.areaName, c.siteName].join(" ").toLowerCase().includes(q)) return false;
-        }
-        return true;
-      })
+      .filter((c) => (siteFilter.length === 0 || siteFilter.includes(c.siteId)) && matchesSearch(c))
       .sort((a, b) => a.id.localeCompare(b.id));
-  }, [allCameras, siteFilter, search]);
-
-  /* The hero camera is derived, not stored — a filter that hides the current
-     pick falls through to the first match rather than needing a sync effect. */
-  const heroCameraId =
-    filteredCameras.find((c) => c.id === selectedCameraId)?.id ?? filteredCameras[0]?.id ?? "";
+  }, [allCameras, siteFilter, matchesSearch]);
 
   const checkedCameras = filteredCameras.filter((c) => checkedIds.includes(c.id));
-  const heroCamera = allCameras.find((c) => c.id === heroCameraId);
-  const pinnedState = trackStates.find((s) => s.track.id === pinnedId) ?? null;
-  const heroMap = heroCameraId ? mapForCamera(maps, heroCameraId) : null;
-  const shownMap =
-    (pinnedState && maps.find((m) => m.id === pinnedState.mapId)) ||
-    (manualMapId && maps.find((m) => m.id === manualMapId)) ||
-    heroMap ||
-    null;
-  const mapReason = pinnedState
-    ? followPaused
-      ? `Following ${pinnedState.track.id} is paused — the map still tracks it`
-      : `Following ${pinnedState.track.id} — the main camera follows it too`
-    : manualMapId && shownMap
-      ? "Picked from the list — resets when you pick a camera or pin a track"
-      : heroMap
-        ? `Showing the map for ${heroCameraId}, the camera in view`
-        : "";
-
-  /* The tick runs outside React's render, so it reads the latest selection from a ref. */
-  const live = React.useRef({ maps, pinnedId, followPaused, heroCameraId, shownMapId: shownMap?.id ?? null });
-  React.useEffect(() => {
-    live.current = { maps, pinnedId, followPaused, heroCameraId, shownMapId: shownMap?.id ?? null };
-  });
-  const lastCamera = React.useRef<Record<string, string | null>>({});
-
-  function pin(trackId: string) {
-    if (trackId === pinnedId) {
-      setPinnedId(null);
-      setFollowPaused(false);
-      return;
-    }
-    const st = trackStates.find((s) => s.track.id === trackId);
-    setPinnedId(trackId);
-    setFollowPaused(false);
-    setManualMapId(null);
-    setViewMode("hero");
-    setRailTab("tracking");
-    if (st?.lastCameraId) setSelectedCameraId(st.lastCameraId);
-    toast.dismiss(`reid-${trackId}`);
-  }
-
-  // Toast actions fire later, from the tick — they call the latest pin through a ref.
-  const pinRef = React.useRef(pin);
-  React.useEffect(() => {
-    pinRef.current = pin;
-  });
-
-  React.useEffect(() => {
-    const tick = window.setInterval(() => {
-      const cur = live.current;
-      const states = allTrackStates(cur.maps, Date.now() / 1000);
-      setTrackStates(states);
-
-      for (const st of states) {
-        const prev = lastCamera.current[st.track.id];
-        lastCamera.current[st.track.id] = st.cameraId ?? prev ?? null;
-        const entered = prev !== undefined && st.cameraId && st.cameraId !== prev;
-
-        if (st.track.id === cur.pinnedId) {
-          // Follow once the weapon has settled in the new camera — overlapping views would flicker otherwise.
-          if (!cur.followPaused && st.cameraId && st.cameraId !== cur.heroCameraId && st.sinceSec >= HOLD_SEC) {
-            setSelectedCameraId(st.cameraId);
-          }
-        } else if (entered && st.mapId === cur.shownMapId) {
-          const id = st.track.id;
-          toast(`${id} entered ${st.cameraId}`, {
-            id: `reid-${id}`,
-            description: `${st.track.weapon ?? "Unregistered weapon"} · the main camera stays where it is.`,
-            action: { label: "Follow", onClick: () => pinRef.current(id) },
-          });
-        }
-      }
-    }, 500);
-    return () => window.clearInterval(tick);
-  }, []);
-  /** Picking a camera by hand takes over from following, and from a hand-picked map. */
-  function selectCamera(id: string) {
-    setSelectedCameraId(id);
-    setManualMapId(null);
-    if (pinnedState && id !== pinnedState.cameraId) setFollowPaused(true);
-  }
-
-  function resumeFollowing() {
-    setFollowPaused(false);
-    if (pinnedState?.lastCameraId) setSelectedCameraId(pinnedState.lastCameraId);
-  }
-
-  const statesByCamera = (id: string) => trackStates.filter((s) => s.cameraId === id);
-  const badgesFor = (id: string) => <WeaponBadges states={statesByCamera(id)} pinnedId={pinnedId} onPin={pin} />;
-
-  const stripCameras = (heroMap
-    ? allCameras.filter((c) => heroMap.cameraIds.includes(c.id) && c.id !== heroCameraId)
-    : allCameras.filter((c) => heroCamera && c.areaId === heroCamera.areaId && c.id !== heroCameraId)
-  ).sort((a, b) => statesByCamera(b.id).length - statesByCamera(a.id).length || a.id.localeCompare(b.id));
-  const stripTitle = heroMap ? `Other cameras on ${mapLabel(heroMap)}` : `Other cameras in ${heroCamera?.areaName ?? "this area"}`;
-
-  const heroOverlay = (
-    <>
-      <div className="absolute left-3 top-11 z-10 flex flex-wrap gap-1">
-        <WeaponBadges states={statesByCamera(heroCameraId)} pinnedId={pinnedId} onPin={pin} size="md" />
-      </div>
-      {pinnedState && (
-        <button
-          type="button"
-          onClick={followPaused ? resumeFollowing : () => pin(pinnedState.track.id)}
-          title={followPaused ? "Resume following" : "Stop following"}
-          className={cn(
-            "absolute right-3 top-11 z-10 inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-2xs font-semibold backdrop-blur-sm",
-            followPaused ? "border-warning/50 bg-black/70 text-warning" : "border-sev-critical/50 bg-black/70 text-sev-critical"
-          )}
-        >
-          {followPaused ? <Pause className="size-3" /> : <Crosshair className="size-3" />}
-          {followPaused ? `Following ${pinnedState.track.id} paused · Resume` : `Following ${pinnedState.track.id}`}
-        </button>
-      )}
-    </>
+  const badgesFor = (id: string) => (
+    <WeaponBadges states={trackStates.filter((x) => x.cameraId === id)} pinnedId={focusId} onPin={focusWeapon} />
   );
+
+  /* On the Tracking tab the wall shows only the shown map's cameras — the map is
+     an explicit pick, so it reaches past the site filter (search still applies).
+     Back on the Cameras tab, the wall is the default view again. */
+  const mapView = panelOpen && panelTab === "tracking" && !!shownMap;
+  const wallCameras = React.useMemo(
+    () =>
+      mapView && shownMap
+        ? allCameras.filter((c) => shownMap.cameraIds.includes(c.id) && matchesSearch(c)).sort((a, b) => a.id.localeCompare(b.id))
+        : filteredCameras,
+    [mapView, shownMap, allCameras, matchesSearch, filteredCameras]
+  );
+
+  // Paging only applies to a fixed N×N grid; a filter change can shrink the page count under us.
+  const n = grid === "auto" ? 0 : Number(grid);
+  const perPage = n ? n * n : wallCameras.length;
+  const pageCount = n ? Math.max(1, Math.ceil(wallCameras.length / perPage)) : 1;
+  const currentPage = Math.min(page, pageCount);
+  const shownFrom = wallCameras.length ? (currentPage - 1) * perPage + 1 : 0;
+  const shownTo = Math.min(currentPage * perPage, wallCameras.length);
+
+  /** Turns to the camera's page on a fixed grid, then scrolls its tile into view — on the wall and in the panel list. */
+  function revealOnWall(id: string) {
+    const idx = wallCameras.findIndex((c) => c.id === id);
+    if (n && idx >= 0) setPage(Math.floor(idx / perPage) + 1);
+    window.requestAnimationFrame(() => {
+      document.querySelector(`[data-wall-camera="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      document.querySelector(`[data-panel-camera="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }
+
   /* Clearing the selection drops straight back out of playback mode. */
   const inSync = syncMode && checkedCameras.length > 0;
-  const onlineCount = filteredCameras.filter((c) => c.status === "online").length;
-  const stats = React.useMemo(() => visitorStats(filteredCameras), [filteredCameras]);
+  const onlineCount = wallCameras.filter((c) => c.status === "online").length;
 
   React.useEffect(() => {
     onSelectionChange?.(checkedIds.length);
@@ -1028,43 +884,60 @@ export function ReidLiveMonitoring({
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
-    <div className={cn("flex flex-col gap-4", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
+    <div className={cn("flex flex-col gap-4 lg:h-full", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
           <PageHeader.Description>
-            Real-time camera feeds across all sites — select cameras from any view and scrub them
-            back together while the feed keeps running.
+            Real-time camera feeds across all sites — select cameras and scrub them back together while the feed keeps
+            running. Weapon tags on a tile open its Re-ID map.
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
-          {/* View mode is about the page, not the camera list — it sits with the title. */}
-          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
-            {VIEW_MODES.map((vm) => {
-              const Icon = vm.icon;
-              const active = viewMode === vm.key;
-              return (
-                <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description} disabled={inSync}
-                  className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
-                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                  <Icon className="size-3.5" />
-                  {vm.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Opens the Cameras & Tracking panel on the right; the wall reflows around it. */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPanelOpen((o) => !o)}
+            aria-pressed={panelOpen}
+            aria-expanded={panelOpen}
+            title={panelOpen ? "Hide the Cameras & Tracking panel" : "Show the Cameras & Tracking panel"}
+            className={cn("gap-1.5", panelOpen && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary")}
+          >
+            {panelOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
+            Cameras &amp; Tracking
+            {trackStates.length > 0 && (
+              <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackStates.length}</span>
+            )}
+          </Button>
         </PageHeader.Actions>
       </PageHeader>
 
-      {/* Counts answer for what is on screen, so they sit above the filters. */}
-      {statsSlot ?? <VisitorKpis stats={stats} />}
-
-      {/* Filter bar */}
+      {/* Filter bar — sites · grid view · search */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <MultiSiteSelector sites={sites.map((s) => ({ id: s.id, name: s.name }))} selected={siteFilter} onChange={setSiteFilter} />
+        <MultiSiteSelector
+          sites={sites.map((s) => ({ id: s.id, name: s.name }))}
+          selected={siteFilter}
+          onChange={(ids) => { setSiteFilter(ids); setPage(1); }}
+        />
+        <Select value={grid} onValueChange={(v) => { setGrid(v as GridOption); setPage(1); }} disabled={inSync}>
+          <SelectTrigger className="h-9 w-48 text-base" aria-label="Grid view">
+            <span className="flex items-center gap-2">
+              <LayoutGrid className="size-3.5 text-muted-foreground" />
+              <SelectValue />
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            {GRID_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)}
+          <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={`Search ${filteredCameras.length} cameras…`}
             className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
         </div>
@@ -1076,67 +949,110 @@ export function ReidLiveMonitoring({
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-        <strong className="text-foreground">{siteLabel}</strong> · {filteredCameras.length} cameras total · {onlineCount} online
-        {inSync && <> · <strong className="text-primary">{checkedCameras.length} in synchronised playback</strong></>}
+      {/* Summary — and the pager when a fixed grid can't fit every camera */}
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        {mapView && shownMap ? (
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="inline-flex items-center gap-1 rounded-md border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-sev-critical">
+              <Crosshair className="size-3" /> Map view
+            </span>
+            <span>
+              <strong className="text-foreground">{mapLabel(shownMap)}</strong> · {wallCameras.length} camera
+              {wallCameras.length === 1 ? "" : "s"} on this map · {onlineCount} online
+            </span>
+            <button type="button" onClick={() => setPanelTab("cameras")} className="text-xs font-semibold text-primary hover:underline">
+              Show all cameras
+            </button>
+          </span>
+        ) : (
+          <span>
+            <strong className="text-foreground">{siteLabel}</strong> · {filteredCameras.length} cameras total · {onlineCount} online
+            {inSync && <> · <strong className="text-primary">{checkedCameras.length} in synchronised playback</strong></>}
+          </span>
+        )}
+        {!inSync && pageCount > 1 && (
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-xs">
+              Cameras {shownFrom}–{shownTo} of {wallCameras.length}
+            </span>
+            <button onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} aria-label="Previous page"
+              className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+              <ChevronLeft className="size-3.5" />
+            </button>
+            <button onClick={() => setPage(Math.min(pageCount, currentPage + 1))} disabled={currentPage === pageCount} aria-label="Next page"
+              className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+              <ChevronRight className="size-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {inSync ? (
-        <SyncGrid
-          cameras={checkedCameras}
-          pb={syncPb}
-          onPb={(n) => setSyncPb((c) => ({ ...c, ...n }))}
-          now={now}
-          onToggleCheck={toggleCheck}
-        />
-      ) : viewMode === "hero" ? (
-        <HeroView
-          cameras={filteredCameras}
-          selectedCameraId={heroCameraId}
-          setSelectedCameraId={selectCamera}
-          strip={{ title: stripTitle, cameras: stripCameras }}
-          badgesFor={badgesFor}
-          heroOverlay={heroOverlay}
-          railTab={railTab}
-          setRailTab={setRailTab}
-          trackCount={trackStates.length}
-          trackingPanel={
-            <TrackingPanel
-              maps={maps}
-              states={trackStates}
-              shownMap={shownMap}
-              reason={mapReason}
-              heroCameraId={heroCameraId}
-              pinnedId={pinnedId}
-              onPin={pin}
-              onPickMap={(id) => setManualMapId(id)}
-              onExpand={() => setMapOpen(true)}
+      <div className={cn("grid min-h-0 flex-1 grid-cols-1 gap-4", panelOpen && "lg:grid-cols-[minmax(0,1fr)_340px]")}>
+        <div className={cn("min-w-0", !inSync && "rounded-xl border border-border bg-card p-3")}>
+          {inSync ? (
+            <SyncGrid
+              cameras={checkedCameras}
+              pb={syncPb}
+              onPb={(next) => setSyncPb((c) => ({ ...c, ...next }))}
+              now={now}
+              onToggleCheck={toggleCheck}
             />
-          }
-          checkedIds={checkedIds}
-          onToggleCheck={toggleCheck}
-          pbFor={pbFor}
-          setPb={setPb}
-          now={now}
-        />
-      ) : (
-        <WallView
-          cameras={filteredCameras}
-          gridSize={gridSize} setGridSize={setGridSize}
-          page={page} setPage={setPage}
-          checkedIds={checkedIds} onToggleCheck={toggleCheck}
-          pbFor={pbFor} setPb={setPb} now={now}
-          badgesFor={badgesFor}
-        />
-      )}
+          ) : (
+            <CameraWall
+              cameras={wallCameras}
+              grid={grid}
+              page={currentPage}
+              activeId={activeCameraId}
+              onActivate={pickCamera}
+              checkedIds={checkedIds}
+              onToggleCheck={toggleCheck}
+              pbFor={pbFor}
+              setPb={setPb}
+              now={now}
+              badgesFor={badgesFor}
+            />
+          )}
+        </div>
+
+        {panelOpen && (
+          <SidePanel
+            cameras={filteredCameras}
+            activeId={activeCameraId}
+            onActivate={pickCamera}
+            tab={panelTab}
+            setTab={setPanelTab}
+            trackCount={trackStates.length}
+            trackingPanel={
+              <TrackingPanel
+                maps={maps}
+                states={trackStates}
+                shownMap={shownMap}
+                reason={mapReason}
+                heroCameraId={activeCameraId ?? ""}
+                pinnedId={focusId}
+                onPin={focusWeapon}
+                onPickMap={(id) => { setManualMapId(id); setFocusId(null); }}
+                onExpand={() => setMapOpen(true)}
+              />
+            }
+            checkedIds={checkedIds}
+            onToggleCheck={toggleCheck}
+            pbFor={pbFor}
+            setPb={setPb}
+            now={now}
+            badgesFor={badgesFor}
+          />
+        )}
+      </div>
 
       <MapExpandModal
-        open={mapOpen}
+        open={mapOpen && !!shownMap}
         map={shownMap}
         states={trackStates}
-        heroCameraId={heroCameraId}
-        pinnedId={pinnedId}
-        onPin={pin}
+        heroCameraId={activeCameraId ?? ""}
+        pinnedId={focusId}
+        onPin={focusWeapon}
+        hint="Click a weapon on the map or in the list to highlight it — the camera it's in is outlined on the wall."
         onClose={() => setMapOpen(false)}
       />
 
@@ -1144,7 +1060,7 @@ export function ReidLiveMonitoring({
         <SyncPlaybackBar
           count={checkedCameras.length}
           pb={syncPb}
-          onChange={(n) => setSyncPb((c) => ({ ...c, ...n }))}
+          onChange={(next) => setSyncPb((c) => ({ ...c, ...next }))}
           now={now}
           onExit={() => setSyncMode(false)}
         />
