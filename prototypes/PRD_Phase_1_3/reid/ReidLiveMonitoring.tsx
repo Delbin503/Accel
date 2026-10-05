@@ -20,6 +20,7 @@ import {
   PanelRightOpen,
   Pause,
   Play,
+  Radar,
   Radio,
   RotateCcw,
   RotateCw,
@@ -34,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -47,15 +49,16 @@ import {
   fmtOffset,
   isZoomed,
   timestampAt,
-  zoomTransform,
   type PlaybackState,
 } from "../playback";
 import { ScrubTrack, ZoomSurface } from "../playbackControls";
-import { CameraPlayerModal, TILE_GRADIENT, TilePlayerBar } from "../cameraPlayer";
+import { CameraFrameLayer, CameraPlayerModal, OfflineFrameLayer, TilePlayerBar } from "../cameraPlayer";
 import { FloatingBar } from "../FloatingBar";
 import { mapForCamera, mapLabel, useReidMapsStore } from "./reidMaps";
 import { allTrackStates, type TrackState } from "./weaponTracks";
 import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";
+import { DetectionCardStack, DetectionsPanel } from "./ReidDetections";
+import { feedDrawerPath, useLiveDetectionsStore, type LiveDetection } from "./liveDetections";
 
 /* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal,
    laid out as one camera wall: sites · grid view · search, then the grid,
@@ -83,6 +86,7 @@ function CameraTile({
   now,
   syncing,
   onExpand,
+  onOpen,
   overlay,
   "data-panel-camera": panelAnchor,
 }: {
@@ -101,6 +105,8 @@ function CameraTile({
   syncing?: boolean;
   /** Set on tiles too small to zoom inside — swaps zoom for an expand button. */
   onExpand?: () => void;
+  /** Clicking anywhere on the tile opens the camera in the expanded view. */
+  onOpen?: () => void;
   /** Re-ID weapon badges, stacked under the detection count. */
   overlay?: React.ReactNode;
 }) {
@@ -126,30 +132,33 @@ function CameraTile({
         {isOnline ? (
           <>
             {/* Zoom magnifies around the focal point the operator scrolled to. */}
-            <div
-              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
-            />
+            <CameraFrameLayer camera={camera} zoom={pb.zoom} />
             {count > 0 && !isZoomed(pb.zoom) && (
               <div
                 className={cn("absolute border-[1.5px]", count > 2 ? "border-warning" : "border-info")}
                 style={{ left: "38%", top: "36%", width: "22%", height: "32%" }}
               />
             )}
-            {onActivate && (
-              <button
-                type="button"
-                aria-label={`Pick ${camera.id} — outline it on the wall and show its Re-ID map`}
-                onClick={onActivate}
-                className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-            )}
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/95 text-sev-critical/80">
-            <AlertTriangle className="size-5" />
-            <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
-          </div>
+          <>
+            <OfflineFrameLayer />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+              <AlertTriangle className="size-5" />
+              <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
+            </div>
+          </>
+        )}
+
+        {/* The whole tile is the click target — online or offline. It picks the
+            camera (outline + Re-ID map) and opens it in the expanded view. */}
+        {(onActivate || onOpen) && (
+          <button
+            type="button"
+            aria-label={onOpen ? `Open ${camera.id} in the expanded view` : `Pick ${camera.id} — outline it on the wall and show its Re-ID map`}
+            onClick={() => { onActivate?.(); onOpen?.(); }}
+            className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
         )}
 
         {/* Selection checkbox — revealed on hover, pinned open once checked. */}
@@ -303,6 +312,7 @@ function CameraWall({
               onPb={(next) => setPb(c.id, next)}
               now={now}
               onExpand={n === 1 ? undefined : () => setExpandedId(c.id)}
+              onOpen={() => setExpandedId(c.id)}
               overlay={badgesFor(c.id)}
             />
           </div>
@@ -341,10 +351,10 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
   );
 }
 
-type PanelTab = "cameras" | "tracking";
+type PanelTab = "cameras" | "tracking" | "detections";
 
 function SidePanel({
-  cameras, activeId, onActivate, tab, setTab, trackCount, trackingPanel,
+  cameras, activeId, onActivate, tab, setTab, showTracking, trackCount, trackingPanel, detectionCount, detectionsPanel,
   checkedIds, onToggleCheck, pbFor, setPb, now, badgesFor,
 }: {
   cameras: CameraData[];
@@ -352,8 +362,12 @@ function SidePanel({
   onActivate: (id: string) => void;
   tab: PanelTab;
   setTab: (t: PanelTab) => void;
+  /** False hides the Tracking tab. */
+  showTracking: boolean;
   trackCount: number;
   trackingPanel: React.ReactNode;
+  detectionCount: number;
+  detectionsPanel: React.ReactNode;
   checkedIds: string[];
   onToggleCheck: (id: string) => void;
   pbFor: (id: string) => PlaybackState;
@@ -380,11 +394,11 @@ function SidePanel({
        row's height and the panel's list scrolls inside it — the two end flush. */
     <div className="relative lg:min-h-[420px]">
       <aside
-        aria-label="Cameras and tracking"
+        aria-label={showTracking ? "Cameras and tracking" : "Cameras and detections"}
         className="flex max-h-[80vh] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card lg:absolute lg:inset-0 lg:max-h-none"
       >
         <div role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
-          {(["cameras", "tracking"] as PanelTab[]).map((t) => (
+          {(["cameras", "tracking", "detections"] as PanelTab[]).filter((t) => showTracking || t !== "tracking").map((t) => (
             <button
               key={t}
               type="button"
@@ -396,9 +410,14 @@ function SidePanel({
                 tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              {t === "cameras" ? "Cameras" : <><Crosshair className="size-3.5" /> Tracking</>}
+              {t === "cameras" && "Cameras"}
+              {t === "tracking" && <><Crosshair className="size-3.5" /> Tracking</>}
+              {t === "detections" && <><Radar className="size-3.5" /> Detections</>}
               {t === "tracking" && trackCount > 0 && (
                 <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackCount}</span>
+              )}
+              {t === "detections" && detectionCount > 0 && (
+                <span className="rounded-full bg-warning/15 px-1.5 text-3xs font-bold text-warning">{detectionCount}</span>
               )}
             </button>
           ))}
@@ -406,6 +425,8 @@ function SidePanel({
 
         {tab === "tracking" ? (
           <div className="flex min-h-0 flex-1 flex-col pt-3">{trackingPanel}</div>
+        ) : tab === "detections" ? (
+          detectionsPanel
         ) : (
           <>
             <div className="flex-shrink-0 border-b border-border px-3 py-3">
@@ -462,6 +483,7 @@ function SidePanel({
                             onPb={(next) => setPb(c.id, next)}
                             now={now}
                             onExpand={() => setExpandedId(c.id)}
+                            onOpen={() => setExpandedId(c.id)}
                             overlay={badgesFor(c.id)}
                           />
                         ))}
@@ -498,6 +520,8 @@ function SyncGrid({
   now: Date;
   onToggleCheck: (id: string) => void;
 }) {
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const expanded = cameras.find((c) => c.id === expandedId) ?? null;
   const cols = cameras.length === 1 ? 1 : cameras.length <= 4 ? 2 : 3;
   return (
     <div className="min-h-full rounded-xl border border-primary/40 bg-card p-4">
@@ -530,9 +554,20 @@ function SyncGrid({
             onPb={onPb}
             now={now}
             syncing
+            onOpen={() => setExpandedId(c.id)}
           />
         ))}
       </div>
+
+      {/* Expanded from the synchronised grid, the camera stays on the shared timeline. */}
+      <CameraPlayerModal
+        camera={expanded}
+        open={!!expanded}
+        onClose={() => setExpandedId(null)}
+        pb={pb}
+        onPb={onPb}
+        now={now}
+      />
     </div>
   );
 }
@@ -732,12 +767,25 @@ function MultiSiteSelector({ sites, selected, onChange }: {
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 
+/** Stable empty list for when tracking is switched off. */
+const NO_TRACKS: TrackState[] = [];
+
 export function ReidLiveMonitoring({
   onSelectionChange,
+  tracking = true,
+  detectionHref = feedDrawerPath,
 }: {
   /** Reports how many cameras are selected, so a host page can keep clear of the selection bar. */
   onSelectionChange?: (count: number) => void;
+  /**
+   * Re-ID weapon tracking — the Tracking tab, the weapon tags on tiles and the
+   * map. Off, the page is plain Live Monitoring: cameras and detections only.
+   */
+  tracking?: boolean;
+  /** Where a detection's details open. Defaults to the Re-ID module's Detection Feed. */
+  detectionHref?: (eventId: string) => string;
 } = {}) {
+  const navigate = useNavigate();
   const allCameras = useCamerasStore((s) => s.cameras);
   const sites = useSitesStore((s) => s.sites);
 
@@ -764,9 +812,46 @@ export function ReidLiveMonitoring({
     return () => clearInterval(i);
   }, []);
 
+  /* ── Live detections — the Detections tab and the corner card stack ── */
+  const detections = useLiveDetectionsStore((s) => s.detections);
+  const cardIds = useLiveDetectionsStore((s) => s.cardIds);
+  const raiseDetection = useLiveDetectionsStore((s) => s.raise);
+  const dismissCard = useLiveDetectionsStore((s) => s.dismissCard);
+  const clearCards = useLiveDetectionsStore((s) => s.clearCards);
+  /* Corner cards are for when the side panel is closed — they also show over
+     the expanded camera view. With the panel open its Detections tab is the
+     notification, so new detections are listed there without a card. */
+  const feedRef = React.useRef<{ onlineIds: string[]; quiet: boolean }>({ onlineIds: [], quiet: false });
+  React.useEffect(() => {
+    feedRef.current = {
+      onlineIds: allCameras.filter((c) => c.status === "online").map((c) => c.id),
+      quiet: panelOpen,
+    };
+  });
+  /* Simulated feed: the first detection lands shortly after the wall opens, then one every 8s. */
+  React.useEffect(() => {
+    const raise = () => raiseDetection(feedRef.current.onlineIds, feedRef.current.quiet);
+    const first = window.setTimeout(raise, 2500);
+    const tick = window.setInterval(raise, 8000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(tick);
+    };
+  }, [raiseDetection]);
+  const cards = cardIds
+    .map((id) => detections.find((d) => d.id === id))
+    .filter((d): d is LiveDetection => !!d);
+  /** Opens the event's details drawer in the Detection Feed; its card has done its job. */
+  function openDetection(d: LiveDetection) {
+    dismissCard(d.id);
+    navigate(detectionHref(d.event.id));
+  }
+
   /* ── Re-ID tracking — badges on tiles, the Tracking tab, the enlarged map ── */
   const maps = useReidMapsStore((s) => s.maps);
-  const [trackStates, setTrackStates] = React.useState<TrackState[]>(() => allTrackStates(maps, Date.now() / 1000));
+  const [liveTrackStates, setTrackStates] = React.useState<TrackState[]>(() => allTrackStates(maps, Date.now() / 1000));
+  /* With tracking off there are simply no tracks: no tags, no count, no map. */
+  const trackStates = tracking ? liveTrackStates : NO_TRACKS;
   /** The weapon highlighted on the map — its camera is outlined on the wall. */
   const [focusId, setFocusId] = React.useState<string | null>(null);
   /** A map picked from the Tracking tab's list. */
@@ -890,7 +975,7 @@ export function ReidLiveMonitoring({
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
           <PageHeader.Description>
             Real-time camera feeds across all sites — select cameras and scrub them back together while the feed keeps
-            running. Weapon tags on a tile open its Re-ID map.
+            running.{tracking && " Weapon tags on a tile open its Re-ID map."}
           </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
@@ -898,14 +983,19 @@ export function ReidLiveMonitoring({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPanelOpen((o) => !o)}
+            onClick={() => {
+              // Opening the panel puts the stack away for good, so it does not
+              // spring back with stale cards when the panel closes.
+              if (!panelOpen) clearCards();
+              setPanelOpen((o) => !o);
+            }}
             aria-pressed={panelOpen}
             aria-expanded={panelOpen}
-            title={panelOpen ? "Hide the Cameras & Tracking panel" : "Show the Cameras & Tracking panel"}
+            title={`${panelOpen ? "Hide" : "Show"} the ${tracking ? "Cameras & Tracking" : "Cameras & Detections"} panel`}
             className={cn("gap-1.5", panelOpen && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary")}
           >
             {panelOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
-            Cameras &amp; Tracking
+            {tracking ? "Cameras & Tracking" : "Cameras & Detections"}
             {trackStates.length > 0 && (
               <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackStates.length}</span>
             )}
@@ -1021,6 +1111,7 @@ export function ReidLiveMonitoring({
             onActivate={pickCamera}
             tab={panelTab}
             setTab={setPanelTab}
+            showTracking={tracking}
             trackCount={trackStates.length}
             trackingPanel={
               <TrackingPanel
@@ -1035,6 +1126,15 @@ export function ReidLiveMonitoring({
                 onExpand={() => setMapOpen(true)}
               />
             }
+            detectionCount={detections.length}
+            detectionsPanel={
+              <DetectionsPanel
+                detections={detections}
+                now={now.getTime()}
+                onOpen={openDetection}
+                onLocate={pickCamera}
+              />
+            }
             checkedIds={checkedIds}
             onToggleCheck={toggleCheck}
             pbFor={pbFor}
@@ -1044,6 +1144,16 @@ export function ReidLiveMonitoring({
           />
         )}
       </div>
+
+      <DetectionCardStack
+        cards={panelOpen ? [] : cards}
+        now={now.getTime()}
+        lift={checkedIds.length === 0 ? "none" : inSync ? "playback" : "selection"}
+        onOpen={openDetection}
+        onDismiss={dismissCard}
+        onClearAll={clearCards}
+        onShowAll={() => { clearCards(); setPanelOpen(true); setPanelTab("detections"); }}
+      />
 
       <MapExpandModal
         open={mapOpen && !!shownMap}

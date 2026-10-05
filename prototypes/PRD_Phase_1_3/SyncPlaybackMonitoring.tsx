@@ -39,11 +39,10 @@ import {
   fmtOffset,
   isZoomed,
   timestampAt,
-  zoomTransform,
   type PlaybackState,
 } from "./playback";
 import { ScrubTrack, ZoomSurface } from "./playbackControls";
-import { CameraPlayerModal, TILE_GRADIENT, TilePlayerBar } from "./cameraPlayer";
+import { CameraFrameLayer, CameraPlayerModal, OfflineFrameLayer, TilePlayerBar } from "./cameraPlayer";
 import { FloatingBar } from "./FloatingBar";
 import { VisitorKpis } from "./VisitorKpis";
 import { visitorStats } from "./visitorStats";
@@ -115,10 +114,7 @@ function CameraTile({
         {isOnline ? (
           <>
             {/* Zoom magnifies around the focal point the operator scrolled to. */}
-            <div
-              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
-            />
+            <CameraFrameLayer camera={camera} zoom={pb.zoom} />
             {count > 0 && !isZoomed(pb.zoom) && (
               <div
                 className={cn("absolute border-[1.5px]", count > 2 ? "border-warning" : "border-info")}
@@ -135,10 +131,13 @@ function CameraTile({
             )}
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/95 text-sev-critical/80">
-            <AlertTriangle className="size-5" />
-            <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
-          </div>
+          <>
+            <OfflineFrameLayer />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+              <AlertTriangle className="size-5" />
+              <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
+            </div>
+          </>
         )}
 
         {/* Selection checkbox — revealed on hover, pinned open once checked. */}
@@ -274,10 +273,7 @@ function HeroView({
       <div className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="group relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
-            <div
-              className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-              style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
-            />
+            <CameraFrameLayer camera={camera} zoom={pb.zoom} />
             {zoomArmed && (
               <ZoomSurface
                 zoom={pb.zoom}

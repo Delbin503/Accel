@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, ChevronRight, ScanFace } from "lucide-react";
+import { ArrowRight, ScanFace } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
 import { PAGES } from "./pages";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { REID_NAV, REID_PAGES, REID_TITLE, isReidPath } from "./reid/reidNav";
+import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
+import { REID_NAV, REID_PAGES, REID_TITLE, isReidPath, reidNavLabel } from "./reid/reidNav";
 
 /* ── Index ───────────────────────────────────────────────────────────── */
 
@@ -104,33 +104,54 @@ export function ShellSidebar() {
   return <AppSidebar groups={isReidPath(pathname) ? REID_NAV : undefined} />;
 }
 
-export function Breadcrumb() {
+/** Trails for proposal routes the sidebar has no entry for. */
+const PROPOSAL_TRAILS: Record<string, string[]> = {
+  "/": ["Phase 1.3"],
+  "/dashboard": ["Monitor", "Dashboard"],
+  "/enhancement": ["Monitor", "Recordings", "Video Enhancement"],
+};
+
+/**
+ * In-page breadcrumb, placed above the page title like every other Accel page
+ * ("Monitor › Live Monitoring") — the same component the other prototypes use.
+ * The trail comes from the sidebar: inside the Re-ID module from the module's
+ * nav, elsewhere from the app's, with the few off-nav routes listed above.
+ */
+export function Breadcrumb({ className }: { className?: string }) {
   const { pathname } = useLocation();
-  const reid = REID_PAGES.find((p) => p.path === pathname);
-  const page = reid ? { title: REID_TITLE } : PAGES.find((p) => p.path === pathname);
+
+  let trail: string[] | undefined = PROPOSAL_TRAILS[pathname];
+  if (isReidPath(pathname)) {
+    trail = [REID_TITLE];
+    for (const group of REID_NAV) {
+      for (const item of group.items) {
+        if (item.href === pathname) trail = [group.label, item.label];
+        const child = item.children?.find((c) => c.href === pathname);
+        if (child) trail = [group.label, item.label, child.label];
+      }
+    }
+  }
+
+  return <ProtoBreadcrumb trail={trail} className={className} />;
+}
+
+/** Sidebar entries the Re-ID module has no page for. */
+export function ReidNotInModule() {
+  const { pathname } = useLocation();
+  const label = reidNavLabel(pathname);
   return (
-    <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-xs">
-      <Link
-        to="/"
-        className={cn(
-          "shrink-0 rounded px-1 py-0.5 transition-colors hover:text-foreground",
-          page ? "text-muted-foreground" : "font-semibold text-foreground"
-        )}
-      >
-        Phase 1.3
-      </Link>
-      {page && (
-        <>
-          <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" />
-          <span className={cn("truncate", reid ? "text-muted-foreground" : "font-semibold text-foreground")}>{page.title}</span>
-        </>
-      )}
-      {reid && (
-        <>
-          <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" />
-          <span className="truncate font-semibold text-foreground">{reid.title}</span>
-        </>
-      )}
-    </nav>
+    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
+      <p className="text-sm font-medium text-foreground">
+        {label ? `${label} is not part of this module` : "Not part of this module"}
+      </p>
+      <p className="text-xs">
+        The {REID_TITLE} covers <strong className="text-foreground">{REID_PAGES.map((p) => p.title).join(", ")}</strong>.
+      </p>
+      <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
+        <Link to={REID_PAGES[0].path} className="text-primary hover:underline">Go to {REID_PAGES[0].title}</Link>
+        <span className="text-muted-foreground/40">·</span>
+        <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">Back to Phase 1.3</Link>
+      </div>
+    </div>
   );
 }

@@ -20,9 +20,12 @@ proposal rather than bouncing back to the index.
 
 Not a Phase 1.3 page — a module of its own, listed under **Separate module** on
 the index. Opening it lands on `/reid/live`, and while you're inside it the
-sidebar shows only its three pages: Live Monitoring (`/reid/live`), Model
-Management (`/reid/models`) and Model Deployment (`/reid/deployment`). The
-Phase 1.3 breadcrumb is the way back.
+sidebar is the app's own, as on the main dashboard. Four entries open the
+module's pages: Live Monitoring (`/reid/live`), Detection Feed
+(`/reid/detections`), Model Management (`/reid/models`) and Model Deployment
+(`/reid/deployment`). Every other entry opens a "not part of this module" page
+under `/reid/other/…`, which links back to the Phase 1.3 index. The header
+shows only the current page name — no Phase 1.3 trail.
 
 `reid/ReidLiveMonitoring.tsx` is the module's own copy of the Phase 1.3 Live
 Monitoring, so either can change without the other. Model Management and

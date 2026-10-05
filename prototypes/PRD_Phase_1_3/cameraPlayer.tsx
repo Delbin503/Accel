@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { DialogTitle } from "@/components/ui/dialog";
 import { Modal, ModalContent } from "@/components/shared/Modal";
 import { cn } from "@/lib/utils";
+import { cameraFrame, OFFLINE_FRAME } from "@/mocks/cameraFrames";
 import type { CameraData } from "@/types/cameras";
 import {
   BUFFER_SEC,
@@ -33,8 +34,51 @@ import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSurface } from "./pla
 /* The frame and the bar that sits over it — shared by the wall tiles, the hero
    player and the expand pop-up, so all three behave identically. */
 
+/** Marks the live-detection notification stack, which stays usable over the expanded view. */
+export const DETECTION_CARDS_ATTR = "data-detection-cards";
+
 export const TILE_GRADIENT =
   "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
+
+/**
+ * The zoomable picture layer of a camera view: the camera's still frame, or
+ * the gradient placeholder when it has none.
+ *
+ * The frames carry a burned-in CAM id and timestamp along the top edge, which
+ * would sit under the tile's own LIVE tag and contradict its clock — the image
+ * is scaled past the frame so that strip is cropped away.
+ */
+export function CameraFrameLayer({ camera, zoom }: { camera: CameraData; zoom: PlaybackState["zoom"] }) {
+  const frame = cameraFrame(camera.id);
+  return (
+    <div
+      className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
+      style={{ background: frame ? undefined : TILE_GRADIENT, transform: zoomTransform(zoom) }}
+    >
+      {frame && (
+        <img
+          src={frame}
+          alt={`${camera.name} live view`}
+          draggable={false}
+          className="absolute inset-0 size-full scale-[1.18] object-cover"
+        />
+      )}
+    </div>
+  );
+}
+
+/** Backdrop for a camera with no signal — dimmed, so the Offline badge still leads. */
+export function OfflineFrameLayer() {
+  return (
+    <img
+      src={OFFLINE_FRAME}
+      alt=""
+      aria-hidden
+      draggable={false}
+      className="absolute inset-0 size-full scale-[1.18] object-cover opacity-40"
+    />
+  );
+}
 
 /* ── Tile player bar (hover) ─────────────────────────────────────────── */
 
@@ -216,10 +260,7 @@ function ExpandedPlayer({
         <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-neutral-950">
           {isOnline ? (
             <>
-              <div
-                className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
-                style={{ background: TILE_GRADIENT, transform: zoomTransform(pb.zoom) }}
-              />
+              <CameraFrameLayer camera={camera} zoom={pb.zoom} />
               {zoomArmed && (
                 <ZoomSurface
                   zoom={pb.zoom}
@@ -297,6 +338,10 @@ export function CameraPlayerModal({ camera, open, onClose, pb, onPb, now }: {
         size="xl"
         className="gap-0"
         aria-describedby={undefined}
+        // Detection notifications float over this view; using one is not a click-away.
+        onInteractOutside={(e) => {
+          if ((e.target as Element | null)?.closest?.(`[${DETECTION_CARDS_ATTR}]`)) e.preventDefault();
+        }}
         // First Escape leaves zoom mode, the next one closes the pop-up.
         onEscapeKeyDown={(e) => {
           if (zoomArmed) {
