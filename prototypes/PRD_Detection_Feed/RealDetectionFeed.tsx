@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { eventImage } from "@/mocks/detectionImages";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
@@ -77,8 +78,17 @@ const FEED_DATA: DetectionEvent[] = (() => {
 /* ─── CCTV thumbnail with bboxes ─────────────────────────────────────────── */
 
 function EventThumb({ event, selected }: { event: DetectionEvent; selected: boolean }) {
+  const frame = eventImage(event.id);
+
   return (
     <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+      {frame && (
+        <img
+          src={frame}
+          alt={`${event.camera} at ${event.time} — ${event.typeLabel}`}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
       <div
         className={cn(
           "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border border-white/80",
@@ -87,7 +97,8 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
       >
         {selected && <Check className="size-2.5 text-white" strokeWidth={3} />}
       </div>
-      {event.bboxes.map((box, i) => (
+      {/* Only events without a captured frame need the synthetic overlay. */}
+      {!frame && event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
             className={cn(

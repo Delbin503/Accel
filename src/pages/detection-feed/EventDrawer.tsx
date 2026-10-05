@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { eventImage } from "@/mocks/detectionImages";
 import type { DetectionEvent } from "@/types/detection";
 import type { AnyEntity } from "@/types/entities";
 import { SeverityBadge, parseEventText } from "./shared";
@@ -18,9 +19,20 @@ import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/Kp
 /* ── Thumbnail with bounding boxes ──────────────────────────────────────── */
 
 function DrawerThumb({ event }: { event: DetectionEvent }) {
+  const frame = eventImage(event.id);
+
   return (
     <div className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-camera-feed">
-      {event.bboxes.map((box, i) => (
+      {frame && (
+        <img
+          src={frame}
+          alt={`${event.camera} at ${event.time} — ${event.typeLabel}`}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
+      {/* The captured frame carries its own overlay, so the synthetic boxes are
+          only drawn for events that have no frame. */}
+      {!frame && event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
             className={cn(

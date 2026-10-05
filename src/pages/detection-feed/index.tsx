@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { eventImage } from "@/mocks/detectionImages";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
@@ -47,16 +48,33 @@ interface Filters {
   severity: string[];
   type: string[];
   site: string[];
+  area: string[];
   model: string[];
 }
 
-const EMPTY_FILTERS: Filters = { severity: [], type: [], site: [], model: [] };
+const EMPTY_FILTERS: Filters = { severity: [], type: [], site: [], area: [], model: [] };
+
+/* Area options come from the events themselves — FILTER_OPTIONS has no area list. */
+const AREA_OPTIONS = Array.from(
+  new Map(MOCK_EVENTS.map((e) => [e.area, e.areaDisplay] as const)).entries()
+)
+  .map(([value, label]) => ({ value, label }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 /* ─── CCTV thumbnail with bboxes ─────────────────────────────────────────── */
 
 function EventThumb({ event, selected }: { event: DetectionEvent; selected: boolean }) {
+  const frame = eventImage(event.id);
+
   return (
     <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
+      {frame && (
+        <img
+          src={frame}
+          alt={`${event.camera} at ${event.time} — ${event.typeLabel}`}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
       <div
         className={cn(
           "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border border-white/80",
@@ -65,7 +83,8 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
       >
         {selected && <Check className="size-2.5 text-white" strokeWidth={3} />}
       </div>
-      {event.bboxes.map((box, i) => (
+      {/* Only events without a captured frame need the synthetic overlay. */}
+      {!frame && event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
             className={cn(
@@ -248,7 +267,7 @@ function FilterPanel({
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
-              {["All sites", "All models"].map((l) => (
+              {["All sites", "All areas", "All models"].map((l) => (
                 <span
                   key={l}
                   className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
@@ -286,9 +305,10 @@ function FilterPanel({
             />
           </div>
           {/* Dropdowns — severity & type come from KPI cards, date from the range bar */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { key: "site" as const, label: "Site", opts: FILTER_OPTIONS.site },
+              { key: "area" as const, label: "Area", opts: AREA_OPTIONS },
               { key: "model" as const, label: "Detection Model", opts: FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (
               <div key={key}>
@@ -468,6 +488,7 @@ export default function DetectionFeedPage() {
       ev = ev.filter((e) => filters.severity.includes(e.severity));
     if (filters.type.length > 0) ev = ev.filter((e) => filters.type.includes(e.type));
     if (filters.site.length > 0) ev = ev.filter((e) => filters.site.includes(e.site));
+    if (filters.area.length > 0) ev = ev.filter((e) => filters.area.includes(e.area));
     if (filters.model.length > 0) ev = ev.filter((e) => filters.model.includes(e.modelKey));
 
     if (search.trim()) {
@@ -507,6 +528,7 @@ export default function DetectionFeedPage() {
     filters.severity.length > 0 ||
     filters.type.length > 0 ||
     filters.site.length > 0 ||
+    filters.area.length > 0 ||
     filters.model.length > 0;
 
   const dateActive = datePreset !== "all" || dateFrom !== "" || dateTo !== "";

@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
+import { cameraFrame, OFFLINE_FRAME } from "@/mocks/cameraFrames";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
@@ -71,6 +72,7 @@ function CameraTile({
   onTogglePin?: () => void;
 }) {
   const isOnline = camera.status === "online";
+  const frame = isOnline ? cameraFrame(camera.id) : OFFLINE_FRAME;
   const tileGradient = "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
   return (
     <button
@@ -83,7 +85,11 @@ function CameraTile({
       <div className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
-            <div className="absolute inset-0" style={{ background: tileGradient }} />
+            {frame ? (
+              <img src={frame} alt={`${camera.name} live view`} className="absolute inset-0 size-full scale-[1.18] object-cover" />
+            ) : (
+              <div className="absolute inset-0" style={{ background: tileGradient }} />
+            )}
             {inlineBox && (
               <div className={cn("absolute border-[1.5px]",
                 inlineBox.color === "info" && "border-info",
@@ -96,10 +102,13 @@ function CameraTile({
             )}
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/95 text-sev-critical/80">
-            <AlertTriangle className="size-5" />
-            <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
-          </div>
+          <>
+            <img src={OFFLINE_FRAME} alt="" aria-hidden className="absolute inset-0 size-full scale-[1.18] object-cover opacity-40" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+              <AlertTriangle className="size-5" />
+              <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
+            </div>
+          </>
         )}
         {isOnline && (
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-sev-critical/95 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white">
@@ -190,7 +199,15 @@ function HeroView({
       <div className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
-            <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }} />
+            {cameraFrame(camera.id) ? (
+              <img
+                src={cameraFrame(camera.id)}
+                alt={`${camera.name} live view`}
+                className="absolute inset-0 size-full scale-[1.18] object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }} />
+            )}
             <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-sev-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
               <span className="size-1.5 animate-pulse rounded-full bg-white" />
               LIVE

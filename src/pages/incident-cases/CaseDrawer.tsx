@@ -37,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListErrorState } from "@/components/shared/PageStates";
 import { cn } from "@/lib/utils";
+import { eventImage } from "@/mocks/detectionImages";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
 import { CaseStatusBadge, STATUS_CONFIG } from "@/pages/incident-cases/shared";
@@ -72,9 +73,20 @@ function SectionTitle({
 /* ── Linked incident thumbnail ───────────────────────────────────────────── */
 
 function LinkedThumb({ event }: { event: DetectionEvent }) {
+  const frame = eventImage(event.id);
+
   return (
     <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
-      {event.bboxes.map((box, i) => (
+      {frame && (
+        <img
+          src={frame}
+          alt={`${event.camera} at ${event.time} — ${event.typeLabel}`}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
+      {/* The captured frame is already annotated, so the synthetic boxes are
+          only drawn for events without one — same as the Detection Feed. */}
+      {!frame && event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
             className={cn(

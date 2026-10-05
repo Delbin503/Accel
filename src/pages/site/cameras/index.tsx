@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import cameraLiveSample from "@/assets/camera-live-sample.webp";
 import {
   Search,
   ChevronDown,
@@ -710,13 +711,24 @@ export function CameraDrawer({
             {/* Live feed */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
-                  }}
-                />
+                {camera.status === "online" ? (
+                  <>
+                    <img
+                      src={cameraLiveSample}
+                      alt={`Live feed — ${camera.siteName} / ${camera.areaName}`}
+                      className="absolute inset-0 size-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
+                  </>
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)",
+                    }}
+                  />
+                )}
                 {camera.status === "online" ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex size-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
