@@ -1,28 +1,52 @@
-import { BellRing, Cctv, LayoutDashboard, Video } from "lucide-react";
-import type { NavGroup } from "@/components/layout/AppSidebar";
+import { NAV_GROUPS, type NavGroup, type NavItem } from "@/components/layout/AppSidebar";
 
-/* TRMS's own nav — the four screens the product has, not the site-security
-   app's menu. Paths are this prototype's routes. */
+/* TRMS's nav — the app's own sidebar, cut down to the screens TRMS has.
 
-export const TRMS_NAV: NavGroup[] = [
-  {
-    label: "Monitor",
-    items: [
-      { label: "Dashboard", href: "/", icon: LayoutDashboard },
-      { label: "Live Monitoring", href: "/live", icon: Video },
-      { label: "Alert Log", href: "/alerts", icon: BellRing },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [{ label: "Devices", href: "/devices", icon: Cctv }],
-  },
-];
+   It is filtered from the app's NAV_GROUPS rather than written out again, so
+   labels, icons and order stay the app's, and the paths are the app's own
+   routes: links inside the real pages (a detection → its case, an NVR → its
+   camera) land on the right screen without any rewriting. */
 
-/** Breadcrumb trail per route. */
-export const TRMS_TRAILS: Record<string, string[]> = {
-  "/": ["Accel", "Dashboard"],
-  "/live": ["Accel", "Live Monitoring"],
-  "/alerts": ["Accel", "Alert Log"],
-  "/devices": ["Accel", "Devices"],
-};
+/** The app routes TRMS covers. Anything else is not part of this prototype. */
+const TRMS_HREFS = new Set([
+  "/",
+  "/live",
+  "/detection-feed",
+  "/site",
+  "/site/overview",
+  "/site/cameras",
+  "/site/nvr",
+  "/rules",
+  "/incidents",
+  "/activity-logs",
+]);
+
+/** TRMS calls cameras "devices". */
+const RELABEL: Record<string, string> = { "/site/cameras": "Devices" };
+
+function keep(item: NavItem): NavItem | null {
+  if (!TRMS_HREFS.has(item.href)) return null;
+  const children = item.children?.map(keep).filter((c): c is NavItem => c !== null);
+  return { ...item, label: RELABEL[item.href] ?? item.label, children };
+}
+
+export const TRMS_NAV: NavGroup[] = NAV_GROUPS.map((group) => ({
+  ...group,
+  items: group.items.map(keep).filter((i): i is NavItem => i !== null),
+})).filter((group) => group.items.length > 0);
+
+/** Breadcrumb trail for a path: group › item › child, from the nav above. */
+export function trmsTrail(pathname: string): string[] {
+  let best: { len: number; trail: string[] } | null = null;
+  const consider = (href: string, trail: string[]) => {
+    const match = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+    if (match && (!best || href.length > best.len)) best = { len: href.length, trail };
+  };
+  for (const group of TRMS_NAV) {
+    for (const item of group.items) {
+      consider(item.href, [group.label, item.label]);
+      for (const child of item.children ?? []) consider(child.href, [group.label, item.label, child.label]);
+    }
+  }
+  return (best as { trail: string[] } | null)?.trail ?? ["Accel"];
+}

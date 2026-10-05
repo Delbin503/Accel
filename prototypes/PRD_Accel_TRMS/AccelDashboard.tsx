@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { ArrowUpRight, FolderOpen, ScrollText } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -156,6 +157,7 @@ const ACTIVITY: TrmsActivity[] = [
 /* ── Page ────────────────────────────────────────────────────────────── */
 
 export function AccelDashboard() {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = React.useState<DateRange>("today");
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
@@ -235,20 +237,20 @@ export function AccelDashboard() {
             <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Live status</p>
           </div>
           <KpiGrid cols={3}>
-            <KpiCard label="Sites" value={3} sub="3 active" accent="primary" onClick={() => {}} />
+            <KpiCard label="Sites" value={3} sub="3 active" accent="primary" onClick={() => navigate("/site/overview")} />
             <KpiCard
               label="Weapons Detected"
               value={<>18<span className="text-md text-muted-foreground"> / 20</span></>}
               sub="2 missing from racks"
               accent="success"
-              onClick={() => {}}
+              onClick={() => navigate("/detection-feed")}
             />
             <KpiCard
               label="Cameras"
               value={<>142<span className="text-md text-muted-foreground"> / 150</span></>}
               sub="8 offline"
               accent="purple"
-              onClick={() => {}}
+              onClick={() => navigate("/site/cameras")}
             />
           </KpiGrid>
         </div>
@@ -256,8 +258,8 @@ export function AccelDashboard() {
         <div className="space-y-2 md:w-64 md:shrink-0">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Period · {dateLabel}</p>
           <div className="grid grid-cols-2 gap-3">
-            <KpiCard label="Events" value={eventsInRange} sub={dateLabel} accent="info" onClick={() => {}} />
-            <KpiCard label="Open Cases" value={openCases} sub={`${openCritical} critical`} accent="sev-critical" onClick={() => {}} />
+            <KpiCard label="Events" value={eventsInRange} sub={dateLabel} accent="info" onClick={() => navigate("/detection-feed")} />
+            <KpiCard label="Open Cases" value={openCases} sub={`${openCritical} critical`} accent="sev-critical" onClick={() => navigate("/incidents")} />
           </div>
         </div>
       </div>
@@ -265,7 +267,7 @@ export function AccelDashboard() {
       {/* Severity breakdown */}
       <Section
         title="Alerts by Base Station — Severity Breakdown"
-        action={<Button variant="ghost" className="gap-1 text-sm">View alert log <ArrowUpRight className="size-3" /></Button>}
+        action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>View feed <ArrowUpRight className="size-3" /></Button>}
       >
         <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
           {stations.map((s) => {
@@ -353,7 +355,7 @@ export function AccelDashboard() {
                   </div>
                 </div>
                 <div className="border-t border-border bg-muted/20 px-3 py-2.5">
-                  <button className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                  <button onClick={() => navigate("/detection-feed")} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                     View alerts for this station
                     <ArrowUpRight className="size-3" />
                   </button>
@@ -368,7 +370,7 @@ export function AccelDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section
           title="Detected Alert Events"
-          action={<Button variant="ghost" className="gap-1 text-sm">View all <ArrowUpRight className="size-3" /></Button>}
+          action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>View all <ArrowUpRight className="size-3" /></Button>}
         >
           <div className="space-y-2">
             {ALERT_EVENTS.map((e) => (
@@ -395,7 +397,7 @@ export function AccelDashboard() {
 
         <Section
           title="Incident Cases"
-          action={<Button variant="ghost" className="gap-1 text-sm">View all <ArrowUpRight className="size-3" /></Button>}
+          action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/incidents")}>View all <ArrowUpRight className="size-3" /></Button>}
         >
           <div className="space-y-2">
             {CASES.map((c) => (
@@ -418,7 +420,7 @@ export function AccelDashboard() {
       <Section
         title="Recent Activity Log"
         action={
-          <Button variant="ghost" className="gap-1 text-sm">
+          <Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/activity-logs")}>
             <ScrollText className="size-3" />
             View full log <ArrowUpRight className="size-3" />
           </Button>
