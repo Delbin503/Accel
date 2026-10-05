@@ -49,6 +49,7 @@ import ModalGalleryPage from "@/pages/dev/modals";
 import SignInPage from "@/pages/auth/SignIn";
 import SignInVerifyPage from "@/pages/auth/SignInVerify";
 import SignUpPage from "@/pages/auth/SignUp";
+import InviteSignupPage from "@/pages/auth/invite";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import AccountSuspendedPage from "@/pages/auth/AccountSuspended";
 import OnboardingSitePage from "@/pages/auth/OnboardingSite";
@@ -74,6 +75,12 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/account-suspended" element={<AccountSuspendedPage />} />
       </Route>
+
+      {/* Invite acceptance — no plan or payment step, since the seat, role and
+          site access are already assigned by the admin who sent it. Kept
+          outside RedirectIfAuthed: an invite link has to open even when
+          somebody else is already signed in on that browser. */}
+      <Route path="/invite" element={<InviteSignupPage />} />
 
       {/* On-Premise flow — testable via URL. Kept outside RedirectIfAuthed
           so /on-premise/* renders regardless of current cloud auth state. */}

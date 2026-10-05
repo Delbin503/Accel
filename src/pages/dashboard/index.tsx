@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from "recharts";
@@ -32,6 +33,7 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
+import { MOCK_NVRS } from "@/mocks/nvr";
 import { useSystemStatus, SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
 
 /* ── Zone severity thresholds (configurable in System Config) ───────── */
@@ -116,6 +118,69 @@ const SITE_COLOR_MAP: Record<string, string> = {
 const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--sev-critical)", "var(--primary)"];
 function siteColor(siteName: string, idx: number) {
   return SITE_COLOR_MAP[siteName] ?? SITE_FALLBACK_COLORS[idx % SITE_FALLBACK_COLORS.length];
+}
+
+/* ── Site chip row for trend chart ──────────────────────────────────── */
+
+const MAX_CHART_SITES = 5;
+
+function SiteChipRow({
+  sites,
+  selected,
+  onChange,
+}: {
+  sites: { name: string; count: number; color: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  function handleToggle(name: string) {
+    if (selected.includes(name)) {
+      if (selected.length === 1) return;
+      onChange(selected.filter((s) => s !== name));
+    } else {
+      if (selected.length >= MAX_CHART_SITES) {
+        const oldest = selected[0];
+        onChange([...selected.slice(1), name]);
+        toast(`${oldest} removed — max ${MAX_CHART_SITES} sites visible at once`);
+      } else {
+        onChange([...selected, name]);
+      }
+    }
+  }
+
+  return (
+    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+      {sites.map((s) => {
+        const isActive = selected.includes(s.name);
+        return (
+          <button
+            key={s.name}
+            onClick={() => handleToggle(s.name)}
+            style={isActive ? {
+              backgroundColor: `color-mix(in srgb, ${s.color} 15%, transparent)`,
+              borderColor: `color-mix(in srgb, ${s.color} 40%, transparent)`,
+              color: s.color,
+            } : undefined}
+            className={cn(
+              "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
+              isActive
+                ? "border-current/30"
+                : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+            )}
+          >
+            <span className="size-1.5 flex-shrink-0 rounded-full" style={{ background: s.color }} />
+            {s.name}
+            <span className={cn(
+              "rounded-full px-1 py-px font-mono text-3xs",
+              isActive ? "bg-white/10" : "bg-muted text-muted-foreground"
+            )}>
+              {s.count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 /* ── Site multi-select dropdown ──────────────────────────────────────── */
@@ -361,8 +426,21 @@ export default function DashboardPage() {
 
   const recentActivity = MOCK_ACTIVITY_LOGS.slice(0, 8);
 
+  const chartSiteOptions = React.useMemo(
+    () => detectionsBySite.map((s, i) => ({ name: s.site, count: s.total, color: siteColor(s.site, i) })),
+    [detectionsBySite]
+  );
+  /* Keyed by date range: switching range starts from that range's top three
+     again, without an effect resetting it a render later. */
+  const [sitePicks, setSitePicks] = React.useState<{ range: DateRange; sites: string[] } | null>(null);
+  const selectedSites =
+    sitePicks?.range === dateRange ? sitePicks.sites : detectionsBySite.slice(0, 3).map((s) => s.site);
+  const setSelectedSites = (next: string[]) => setSitePicks({ range: dateRange, sites: next });
+
   const sitesTotal = sites.length;
   const sitesActive = sites.filter((s) => s.status === "active").length;
+  const nvrTotal = MOCK_NVRS.length;
+  const nvrOnline = MOCK_NVRS.filter((n) => n.status === "online").length;
 
   /* ── System health metrics + overall % ───────────────────────────── */
   const healthMetrics: { label: string; value: string; pct: number; tone: "ok" | "warn" | "crit"; icon: React.ElementType }[] = [
@@ -473,37 +551,60 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Top KPI strip */}
-      <KpiGrid cols={4}>
-        <KpiCard
-          label="Sites"
-          value={sitesTotal}
-          sub={`${sitesActive} active`}
-          accent="primary"
-          onClick={() => navigate("/site/overview")}
-        />
-        <KpiCard
-          label="Cameras"
-          value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
-          sub={`${camTotal - camOnline} offline`}
-          accent="success"
-          onClick={() => navigate("/site/cameras")}
-        />
-        <KpiCard
-          label="Events"
-          value={eventsInRange}
-          sub={dateLabel}
-          accent="info"
-          onClick={() => navigate("/detection-feed")}
-        />
-        <KpiCard
-          label="Open Cases"
-          value={casesOpen}
-          sub={`${casesEscalated} critical`}
-          accent="sev-critical"
-          onClick={() => navigate("/incidents")}
-        />
-      </KpiGrid>
+      {/* KPI strip — live status on the left, the selected period on the right (PRD). */}
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="min-w-0 flex-[3] space-y-2">
+          <div className="flex items-center gap-1.5">
+            <span className="size-1.5 animate-pulse rounded-full bg-success" />
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Live status</p>
+          </div>
+          <KpiGrid cols={3}>
+            <KpiCard
+              label="Sites"
+              value={sitesTotal}
+              sub={`${sitesActive} active`}
+              accent="primary"
+              onClick={() => navigate("/site/overview")}
+            />
+            <KpiCard
+              label="Cameras"
+              value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
+              sub={`${camTotal - camOnline} offline`}
+              accent="success"
+              onClick={() => navigate("/site/cameras")}
+            />
+            <KpiCard
+              label="NVR Devices"
+              value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
+              sub={`${nvrTotal - nvrOnline} offline`}
+              accent="purple"
+              onClick={() => navigate("/site/nvr")}
+            />
+          </KpiGrid>
+        </div>
+        <div className="hidden w-px self-stretch bg-border md:block" />
+        <div className="space-y-2 md:w-64 md:shrink-0">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Period · {dateLabel}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <KpiCard
+              label="Events"
+              value={eventsInRange}
+              sub={dateLabel}
+              accent="info"
+              onClick={() => navigate("/detection-feed")}
+            />
+            <KpiCard
+              label="Open Cases"
+              value={casesOpen}
+              sub={`${casesEscalated} critical`}
+              accent="sev-critical"
+              onClick={() => navigate("/incidents")}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Detections trend — full width now that System Health lives in the header */}
       <div>
@@ -520,6 +621,11 @@ export default function DashboardPage() {
               <p className="px-3 py-8 text-center text-sm italic text-muted-foreground">No detections recorded in this range.</p>
             ) : (
               <>
+                <SiteChipRow
+                  sites={chartSiteOptions}
+                  selected={selectedSites}
+                  onChange={setSelectedSites}
+                />
                 <div className="h-[240px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={siteTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -531,12 +637,14 @@ export default function DashboardPage() {
                         cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3 }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
-                      {detectionsBySite.map((s, i) => (
+                      {chartSiteOptions
+                        .filter((s) => selectedSites.includes(s.name))
+                        .map((s) => (
                         <Line
-                          key={s.site}
+                          key={s.name}
                           type="monotone"
-                          dataKey={s.site}
-                          stroke={siteColor(s.site, i)}
+                          dataKey={s.name}
+                          stroke={s.color}
                           strokeWidth={2}
                           dot={{ r: 2.5 }}
                           activeDot={{ r: 4 }}
@@ -546,7 +654,10 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {detectionsBySite.slice(0, 4).map((s, i) => {
+                  {detectionsBySite
+                    .filter((s) => selectedSites.includes(s.site))
+                    .map((s) => {
+                    const i = detectionsBySite.findIndex((d) => d.site === s.site);
                     const color = siteColor(s.site, i);
                     return (
                       <Popover key={s.site}>

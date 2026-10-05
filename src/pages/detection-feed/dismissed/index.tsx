@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Check,
+  CheckSquare,
   Search,
   RotateCcw,
   ShieldOff,
@@ -24,6 +26,7 @@ import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -259,9 +262,13 @@ function ActiveFilterBar({
 function DismissedRow({
   item,
   onOpen,
+  selected,
+  onToggle,
 }: {
   item: DismissedEvent;
   onOpen: (id: string) => void;
+  selected: boolean;
+  onToggle: (id: string) => void;
 }) {
   const { event } = item;
 
@@ -269,7 +276,8 @@ function DismissedRow({
     <div
       onClick={() => onOpen(event.id)}
       className={cn(
-        "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 opacity-80 transition-all hover:bg-muted/30 hover:opacity-100",
+        "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30 hover:opacity-100",
+        selected ? "border-primary opacity-100 ring-1 ring-primary" : "opacity-80",
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4"
       )}
@@ -278,6 +286,20 @@ function DismissedRow({
       {/* Thumbnail with bounding boxes — same as Detection Feed */}
       <div className="self-start">
         <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
+          {/* Select for bulk restore — same affordance as the Detection Feed. */}
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={selected}
+            aria-label={`Select ${event.id} for restore`}
+            onClick={(e) => { e.stopPropagation(); onToggle(event.id); }}
+            className={cn(
+              "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border transition-colors",
+              selected ? "border-primary bg-primary" : "border-white/50 bg-black/50 hover:border-primary"
+            )}
+          >
+            {selected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
+          </button>
           {event.bboxes.map((box, i) => (
             <React.Fragment key={i}>
               <div
@@ -362,6 +384,28 @@ export default function DismissedEventsPage() {
   const [filters, setFilters] = React.useState<DismissedFilters>(EMPTY_DISMISSED_FILTERS);
   const [search, setSearch] = React.useState("");
   const [restoredIds, setRestoredIds] = React.useState<Set<string>>(new Set());
+  /* Bulk restore: pick several dismissals and send them back to triage together. */
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function confirmBulkRestore() {
+    const n = selectedIds.size;
+    setRestoredIds((prev) => new Set([...prev, ...selectedIds]));
+    setSelectedIds(new Set());
+    setConfirmOpen(false);
+    toast.success(`Restored ${n} event${n === 1 ? "" : "s"} to the Detection Feed`, {
+      description: "Their false-positive feedback has been withdrawn from model retraining.",
+    });
+  }
   const [drawerItemId, setDrawerItemId] = React.useState<string | null>(null);
   const [sortBy, setSortBy] = React.useState<"newest" | "oldest">("newest");
 
@@ -521,10 +565,75 @@ export default function DismissedEventsPage() {
       ) : (
         <div className="space-y-2">
           {visible.map((item) => (
-            <DismissedRow key={item.event.id} item={item} onOpen={setDrawerItemId} />
+            <DismissedRow
+              key={item.event.id}
+              item={item}
+              onOpen={setDrawerItemId}
+              selected={selectedIds.has(item.event.id)}
+              onToggle={toggleSelect}
+            />
           ))}
         </div>
       )}
+
+      {/* ── Bulk-restore selection bar ───────────────────────────────────── */}
+      {selectedIds.size > 0 && (
+        <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-2xl">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <CheckSquare className="size-3.5" />
+            </div>
+            <span className="text-base font-semibold text-foreground">
+              {selectedIds.size} event{selectedIds.size === 1 ? "" : "s"} selected
+            </span>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setSelectedIds(new Set())}>
+              <X className="size-3.5" />
+              Clear
+            </Button>
+            <span className="mx-1 h-4 w-px bg-border" />
+            <Button size="sm" className="gap-1.5" onClick={() => setConfirmOpen(true)}>
+              <RotateCcw className="size-3.5" />
+              Restore {selectedIds.size}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk-restore confirmation ────────────────────────────────────── */}
+      <Modal open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
+        <ModalContent size="sm">
+          <ModalHeader
+            title="Restore dismissed events?"
+            description={
+              <>
+                You&apos;re about to restore <strong className="text-foreground">{selectedIds.size}</strong>{" "}
+                event{selectedIds.size === 1 ? "" : "s"} back to the Detection Feed. They&apos;ll re-enter triage
+                and their false-positive feedback will be withdrawn from model retraining.
+              </>
+            }
+          />
+          <ModalBody className="max-h-[40vh] space-y-1.5">
+            {baseItems.filter((d) => selectedIds.has(d.event.id)).map((d) => (
+              <div key={d.event.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <span className="font-mono text-xs text-muted-foreground">{d.event.id}</span>
+                <span className="truncate font-semibold text-foreground">{d.event.typeLabel}</span>
+                <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground">
+                  {d.event.siteDisplay} · {d.event.camera}
+                </span>
+              </div>
+            ))}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button size="sm" className="gap-1.5" onClick={confirmBulkRestore}>
+              <RotateCcw className="size-3.5" />
+              Restore {selectedIds.size}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* ── Dismissed event drawer ────────────────────────────────────────── */}
       <DismissedDrawer
