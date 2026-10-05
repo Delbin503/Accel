@@ -129,7 +129,6 @@ export default function ActivityLogsPage() {
     return map;
   }, [dateRange, customFrom, customTo, siteFilter, now]);
 
-  const totalCount = MOCK_ACTIVITY_LOGS.length;
   const todayCount = MOCK_ACTIVITY_LOGS.filter((l) => withinRange(l, "today", "", "", now)).length;
   const successCount = MOCK_ACTIVITY_LOGS.filter((l) => l.status === "success").length;
   const failedCount = MOCK_ACTIVITY_LOGS.filter((l) => l.status === "failed").length;
@@ -162,8 +161,7 @@ export default function ActivityLogsPage() {
       </PageHeader>
 
       {/* KPI strip */}
-      <KpiGrid cols={4}>
-        <KpiCard label="Total Events" value={totalCount} sub="Audit log entries" accent="primary" />
+      <KpiGrid cols={3}>
         <KpiCard label="Today"        value={todayCount} sub="Recorded today"   accent="success" />
         <KpiCard label="Success"      value={successCount} sub="Successful actions" accent="success" />
         <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="sev-critical" />
