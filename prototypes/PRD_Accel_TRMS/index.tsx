@@ -67,7 +67,7 @@ function App() {
                     <TrmsBreadcrumb />
                     <Routes>
                       <Route path="/" element={<AccelDashboard />} />
-                      {/* Live Monitoring without Re-ID tracking: Cameras and Detections tabs only. */}
+                      {/* Live Monitoring without Re-ID tracking: site and area filters, detections panel only. */}
                       <Route path="/live" element={<ReidLiveMonitoring tracking={false} detectionHref={detectionHref} />} />
                       <Route path="/detection-feed" element={<DetectionFeedPage />} />
                       <Route path="/detection-feed/dismissed" element={<DismissedEventsPage />} />

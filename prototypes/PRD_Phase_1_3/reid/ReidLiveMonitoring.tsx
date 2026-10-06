@@ -354,7 +354,7 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
 type PanelTab = "cameras" | "tracking" | "detections";
 
 function SidePanel({
-  cameras, activeId, onActivate, tab, setTab, showTracking, trackCount, trackingPanel, detectionCount, detectionsPanel,
+  cameras, activeId, onActivate, tab, setTab, showTracking, showCameras, panelName, trackCount, trackingPanel, detectionCount, detectionsPanel,
   checkedIds, onToggleCheck, pbFor, setPb, now, badgesFor,
 }: {
   cameras: CameraData[];
@@ -364,6 +364,9 @@ function SidePanel({
   setTab: (t: PanelTab) => void;
   /** False hides the Tracking tab. */
   showTracking: boolean;
+  /** False hides the Cameras tab. */
+  showCameras: boolean;
+  panelName: string;
   trackCount: number;
   trackingPanel: React.ReactNode;
   detectionCount: number;
@@ -389,16 +392,20 @@ function SidePanel({
   const offlineCount = cameras.length - onlineCount;
   const siteCount = Object.keys(bySite).length;
 
+  const tabs = (["cameras", "tracking", "detections"] as PanelTab[])
+    .filter((t) => (showTracking || t !== "tracking") && (showCameras || t !== "cameras"));
+
   return (
     /* On desktop the panel is laid over its grid cell, so the wall alone sets the
        row's height and the panel's list scrolls inside it — the two end flush. */
     <div className="relative lg:min-h-[420px]">
       <aside
-        aria-label={showTracking ? "Cameras and tracking" : "Cameras and detections"}
+        aria-label={panelName}
         className="flex max-h-[80vh] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card lg:absolute lg:inset-0 lg:max-h-none"
       >
+        {tabs.length > 1 ? (
         <div role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
-          {(["cameras", "tracking", "detections"] as PanelTab[]).filter((t) => showTracking || t !== "tracking").map((t) => (
+          {tabs.map((t) => (
             <button
               key={t}
               type="button"
@@ -422,6 +429,15 @@ function SidePanel({
             </button>
           ))}
         </div>
+        ) : (
+          /* One tab is not a choice — it is just the panel's heading. */
+          <div className="flex flex-shrink-0 items-center gap-1.5 border-b border-border px-3 py-2.5 text-xs font-semibold text-foreground">
+            <Radar className="size-3.5 text-muted-foreground" /> Detections
+            {detectionCount > 0 && (
+              <span className="rounded-full bg-warning/15 px-1.5 text-3xs font-bold text-warning">{detectionCount}</span>
+            )}
+          </div>
+        )}
 
         {tab === "tracking" ? (
           <div className="flex min-h-0 flex-1 flex-col pt-3">{trackingPanel}</div>
@@ -708,17 +724,20 @@ function SyncPlaybackBar({
 
 /* ── Site selector ───────────────────────────────────────────────────── */
 
-function MultiSiteSelector({ sites, selected, onChange }: {
+function MultiSiteSelector({ sites, selected, onChange, noun = "site" }: {
   sites: { id: string; name: string }[];
   selected: string[];
   onChange: (ids: string[]) => void;
+  /** What is being picked — "site" or "area" — for the labels. */
+  noun?: string;
 }) {
   const [open, setOpen] = React.useState(false);
+  const allLabel = `All ${noun[0].toUpperCase()}${noun.slice(1)}s`;
   const isAll = selected.length === 0 || selected.length === sites.length;
   const display = isAll
-    ? "All Sites"
-    : selected.length === 1 ? sites.find((s) => s.id === selected[0])?.name ?? "1 site"
-      : `${selected.length} sites`;
+    ? allLabel
+    : selected.length === 1 ? sites.find((s) => s.id === selected[0])?.name ?? `1 ${noun}`
+      : `${selected.length} ${noun}s`;
 
   function toggle(id: string) {
     if (selected.includes(id)) onChange(selected.filter((x) => x !== id));
@@ -728,7 +747,7 @@ function MultiSiteSelector({ sites, selected, onChange }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
+        <button aria-label={`Filter by ${noun}`} className={cn(
           "inline-flex h-9 items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-base font-semibold transition-colors",
           open ? "border-primary" : "border-input",
           isAll ? "text-muted-foreground" : "text-foreground"
@@ -744,7 +763,7 @@ function MultiSiteSelector({ sites, selected, onChange }: {
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
-          All Sites
+          {allLabel}
         </button>
         <div className="my-1 border-t border-border" />
         {sites.map((s) => {
@@ -773,6 +792,7 @@ const NO_TRACKS: TrackState[] = [];
 export function ReidLiveMonitoring({
   onSelectionChange,
   tracking = true,
+  camerasTab = false,
   detectionHref = feedDrawerPath,
 }: {
   /** Reports how many cameras are selected, so a host page can keep clear of the selection bar. */
@@ -782,6 +802,13 @@ export function ReidLiveMonitoring({
    * map. Off, the page is plain Live Monitoring: cameras and detections only.
    */
   tracking?: boolean;
+  /**
+   * The Cameras tab in the side panel — a second, grouped list of the wall's
+   * cameras. Off by default on every Live Monitoring page: the wall is narrowed
+   * with the site and area filters instead, and the panel holds detections
+   * (and tracking, when that is on).
+   */
+  camerasTab?: boolean;
   /** Where a detection's details open. Defaults to the Re-ID module's Detection Feed. */
   detectionHref?: (eventId: string) => string;
 } = {}) {
@@ -790,12 +817,15 @@ export function ReidLiveMonitoring({
   const sites = useSitesStore((s) => s.sites);
 
   const [siteFilter, setSiteFilter] = React.useState<string[]>([]);
+  const [areaFilter, setAreaFilter] = React.useState<string[]>([]);
   const [search, setSearch] = React.useState("");
   const [grid, setGrid] = React.useState<GridOption>("auto");
   const [page, setPage] = React.useState(1);
   /** The Cameras & Tracking panel on the right — the wall reflows around it. */
   const [panelOpen, setPanelOpen] = React.useState(false);
-  const [panelTab, setPanelTab] = React.useState<PanelTab>("cameras");
+  /** The tab the panel opens on, and falls back to. */
+  const homeTab: PanelTab = camerasTab ? "cameras" : "detections";
+  const [panelTab, setPanelTab] = React.useState<PanelTab>(homeTab);
   /** A camera picked by hand, in the panel or on the wall. */
   const [pickedCameraId, setPickedCameraId] = React.useState<string | null>(null);
 
@@ -920,9 +950,24 @@ export function ReidLiveMonitoring({
   );
   const filteredCameras = React.useMemo(() => {
     return allCameras
-      .filter((c) => (siteFilter.length === 0 || siteFilter.includes(c.siteId)) && matchesSearch(c))
+      .filter((c) =>
+        (siteFilter.length === 0 || siteFilter.includes(c.siteId)) &&
+        (areaFilter.length === 0 || areaFilter.includes(c.areaId)) &&
+        matchesSearch(c))
       .sort((a, b) => a.id.localeCompare(b.id));
-  }, [allCameras, siteFilter, matchesSearch]);
+  }, [allCameras, siteFilter, areaFilter, matchesSearch]);
+
+  /* Areas on offer follow the site filter. Two sites can each have an area of
+     the same name, so a clashing name carries its site. */
+  const areaOptions = React.useMemo(() => {
+    const inSites = allCameras.filter((c) => siteFilter.length === 0 || siteFilter.includes(c.siteId));
+    const byId = new Map<string, { id: string; name: string; site: string }>();
+    inSites.forEach((c) => byId.set(c.areaId, { id: c.areaId, name: c.areaName, site: c.siteName }));
+    const list = [...byId.values()];
+    return list
+      .map((a) => ({ id: a.id, name: list.filter((o) => o.name === a.name).length > 1 ? `${a.name} · ${a.site}` : a.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCameras, siteFilter]);
 
   const checkedCameras = filteredCameras.filter((c) => checkedIds.includes(c.id));
   const badgesFor = (id: string) => (
@@ -966,6 +1011,7 @@ export function ReidLiveMonitoring({
   React.useEffect(() => {
     onSelectionChange?.(checkedIds.length);
   }, [checkedIds.length, onSelectionChange]);
+  const panelName = tracking ? (camerasTab ? "Cameras & Tracking" : "Tracking & Detections") : camerasTab ? "Cameras & Detections" : "Detections";
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
@@ -991,11 +1037,11 @@ export function ReidLiveMonitoring({
             }}
             aria-pressed={panelOpen}
             aria-expanded={panelOpen}
-            title={`${panelOpen ? "Hide" : "Show"} the ${tracking ? "Cameras & Tracking" : "Cameras & Detections"} panel`}
+            title={`${panelOpen ? "Hide" : "Show"} the ${panelName} panel`}
             className={cn("gap-1.5", panelOpen && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary")}
           >
             {panelOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
-            {tracking ? "Cameras & Tracking" : "Cameras & Detections"}
+            {panelName}
             {trackStates.length > 0 && (
               <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackStates.length}</span>
             )}
@@ -1003,12 +1049,19 @@ export function ReidLiveMonitoring({
         </PageHeader.Actions>
       </PageHeader>
 
-      {/* Filter bar — sites · grid view · search */}
+      {/* Filter bar — sites · areas · grid view · search */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <MultiSiteSelector
           sites={sites.map((s) => ({ id: s.id, name: s.name }))}
           selected={siteFilter}
-          onChange={(ids) => { setSiteFilter(ids); setPage(1); }}
+          /* Changing sites changes which areas exist, so the area pick starts over. */
+          onChange={(ids) => { setSiteFilter(ids); setAreaFilter([]); setPage(1); }}
+        />
+        <MultiSiteSelector
+          noun="area"
+          sites={areaOptions}
+          selected={areaFilter}
+          onChange={(ids) => { setAreaFilter(ids); setPage(1); }}
         />
         <Select value={grid} onValueChange={(v) => { setGrid(v as GridOption); setPage(1); }} disabled={inSync}>
           <SelectTrigger className="h-9 w-48 text-base" aria-label="Grid view">
@@ -1050,7 +1103,7 @@ export function ReidLiveMonitoring({
               <strong className="text-foreground">{mapLabel(shownMap)}</strong> · {wallCameras.length} camera
               {wallCameras.length === 1 ? "" : "s"} on this map · {onlineCount} online
             </span>
-            <button type="button" onClick={() => setPanelTab("cameras")} className="text-xs font-semibold text-primary hover:underline">
+            <button type="button" onClick={() => setPanelTab(homeTab)} className="text-xs font-semibold text-primary hover:underline">
               Show all cameras
             </button>
           </span>
@@ -1112,6 +1165,8 @@ export function ReidLiveMonitoring({
             tab={panelTab}
             setTab={setPanelTab}
             showTracking={tracking}
+            showCameras={camerasTab}
+            panelName={panelName}
             trackCount={trackStates.length}
             trackingPanel={
               <TrackingPanel

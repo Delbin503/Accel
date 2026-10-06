@@ -1,6 +1,6 @@
 import { Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
-import { SyncPlaybackMonitoring } from "./SyncPlaybackMonitoring";
+import { LiveMonitoringProposal } from "./LiveMonitoringProposal";
 import { RecordingsByDay } from "./RecordingsByDay";
 import { VideoEnhancement } from "./VideoEnhancement";
 import { CustomDashboard } from "./CustomDashboard";
@@ -49,9 +49,9 @@ export const PAGES = [
     icon: PlayCircle,
     refs: "VMS-VPB-001, VMS-VPB-002",
     summary:
-      "Hero and Wall views with a checkbox on every tile. Pick several cameras, open Playback settings, and the view narrows to just those channels with one set of controls driving all of them.",
-    points: ["Hover a tile for its own scrubber, LIVE tag and settings", "Selection bar → Clear selection · Playback settings", "Shared speed, zoom and transport across the selection"],
-    Component: SyncPlaybackMonitoring,
+      "A camera wall with a checkbox on every tile, narrowed by site and area. Pick several cameras, open Playback settings, and the view narrows to just those channels with one set of controls driving all of them.",
+    points: ["Site and area filters narrow the wall · click any tile to expand it", "Selection bar → Clear selection · Playback settings", "Shared speed, zoom and transport across the selection"],
+    Component: LiveMonitoringProposal,
   },
   {
     path: "/recordings",
