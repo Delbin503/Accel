@@ -656,6 +656,7 @@ export function DeployWizard({
   const activeZoneCamera = selectedCameras.find((c) => c.id === activeZoneCameraId) ?? null;
   const activeZones = activeZoneCameraId ? zonesByCamera[activeZoneCameraId] ?? [] : [];
   const camerasWithZones = selectedCameras.filter((c) => (zonesByCamera[c.id] ?? []).length > 0).length;
+  const zoneCount = selectedCameras.reduce((n, c) => n + (zonesByCamera[c.id] ?? []).length, 0);
 
   function openZoneStep() {
     // Default to the first selected camera, or keep the previous one if still selected.
@@ -889,6 +890,7 @@ export function DeployWizard({
         areas={selectedAreas}
         cameras={selectedCameras}
         camerasWithZones={camerasWithZones}
+        zoneCount={zoneCount}
         onClose={() => setConfirmOpen(false)}
         onConfirm={commitDeploy}
       />
@@ -909,6 +911,7 @@ export function DeployConfirmModal({
   areas,
   cameras,
   camerasWithZones,
+  zoneCount = camerasWithZones,
   onClose,
   onConfirm,
 }: {
@@ -918,6 +921,8 @@ export function DeployConfirmModal({
   areas: AreaSummary[];
   cameras: CameraData[];
   camerasWithZones: number;
+  /** Zones drawn across all selected cameras — a camera can carry several. */
+  zoneCount?: number;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -945,9 +950,7 @@ export function DeployConfirmModal({
                 value={
                   camerasWithZones === 0
                     ? "Whole frame (no zones drawn)"
-                    : camerasWithZones === selectedCameras.length
-                      ? `${selectedCameras.length} camera${selectedCameras.length === 1 ? "" : "s"} zoned`
-                      : `${camerasWithZones} of ${selectedCameras.length} cameras zoned — rest use whole frame`
+                    : `${zoneCount} zone${zoneCount === 1 ? "" : "s"} across ${camerasWithZones} camera${camerasWithZones === 1 ? "" : "s"}`
                 }
               />
               {selectedCameras.some((c) => c.status !== "online") && (

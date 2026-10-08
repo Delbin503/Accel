@@ -56,6 +56,24 @@ const AREA_OPTIONS = Array.from(
   .map(([value, label]) => ({ value, label }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
+/* Feed order — the same sort dropdown as Recordings. Events stay grouped by day;
+   the order applies within each day. */
+type SortKey = "newest" | "severity" | "confidence" | "site";
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "newest", label: "Newest First" },
+  { key: "severity", label: "Severity (High → Low)" },
+  { key: "confidence", label: "Confidence (High → Low)" },
+  { key: "site", label: "By Site" },
+];
+const SEVERITY_RANK: Record<DetectionEvent["severity"], number> = { critical: 0, medium: 1, low: 2 };
+const newestFirst = (a: DetectionEvent, b: DetectionEvent) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time);
+const SORTERS: Record<SortKey, (a: DetectionEvent, b: DetectionEvent) => number> = {
+  newest: newestFirst,
+  severity: (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || newestFirst(a, b),
+  confidence: (a, b) => b.confidence - a.confidence || newestFirst(a, b),
+  site: (a, b) => a.siteDisplay.localeCompare(b.siteDisplay) || newestFirst(a, b),
+};
+
 /* PROTOTYPE-ONLY: the real mock has ~14 events, too few to exercise Load-older / the
    150 cap. Clone the real events (keeps full card fidelity) onto the existing date
    buckets so the listing pattern is testable. Drop this when promoting to src. */
@@ -530,6 +548,8 @@ export default function DetectionFeedPage({
   const PAGE = 20;
 
   const [datePreset, setDatePreset] = React.useState<DatePreset>("all");
+  const [sort, setSort] = React.useState<SortKey>("newest");
+  const [sortOpen, setSortOpen] = React.useState(false);
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
@@ -599,8 +619,8 @@ export default function DetectionFeedPage({
       );
     }
 
-    return ev;
-  }, [allEvents, datePreset, kpiFilter, filters, search]);
+    return [...ev].sort(SORTERS[sort]);
+  }, [allEvents, datePreset, kpiFilter, filters, search, sort]);
 
   const isSelecting = selectedIds.size > 0;
 
@@ -873,12 +893,23 @@ export default function DetectionFeedPage({
             </button>
           )}
         </p>
-        <select className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground focus:border-primary focus:outline-none">
-          <option>Newest first</option>
-          <option>Severity (high → low)</option>
-          <option>Confidence (high → low)</option>
-          <option>By site</option>
-        </select>
+        <Popover open={sortOpen} onOpenChange={setSortOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="gap-1.5">
+              {SORT_OPTIONS.find((o) => o.key === sort)?.label}
+              <ChevronDown className="size-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-56 p-1">
+            {SORT_OPTIONS.map((o) => (
+              <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
+                className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted", sort === o.key ? "text-primary" : "text-foreground")}>
+                {o.label}
+                {sort === o.key && <Check className="size-3.5" />}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* ── Live "N new events" pill ─────────────────────────────────────── */}

@@ -69,6 +69,18 @@
       }
       .card .name { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.25; }
       .card .meta { margin-top: auto; display: flex; align-items: center; justify-content: space-between; }
+      .card .desc { margin-top: -4px; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+      /* Tabs — one per delivery track */
+      .tabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 28px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+      .tab {
+        display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 9px;
+        font-size: 0.88rem; font-weight: 700; color: var(--muted); text-decoration: none; transition: color 0.15s, background 0.15s;
+      }
+      .tab:hover { color: var(--text); background: var(--panel-2); }
+      .tab.on { color: #fff; background: var(--orange-soft); box-shadow: inset 0 0 0 1px var(--orange-border); }
+      .tab-count { font-size: 0.7rem; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--border-soft); color: var(--muted); font-variant-numeric: tabular-nums; }
+      .tab.on .tab-count { background: var(--orange); color: #fff; }
 
       /* Ready (clickable) */
       a.card.ready { transition: border-color 0.15s, transform 0.15s, background 0.15s; }

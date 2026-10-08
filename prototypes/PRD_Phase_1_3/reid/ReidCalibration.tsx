@@ -397,7 +397,9 @@ export function ReidCalibrationDrawer({
   siteName: string;
   cameras: CameraData[];
   onClose: () => void;
-  onConfirm: (zones: Record<string, BoundaryZone[]>) => void;
+  /** The site map's Confirm & deploy: the calibrated zones, plus `commit`, which
+      saves the Re-ID maps — called once the deployment is finally confirmed. */
+  onConfirm: (zones: Record<string, BoundaryZone[]>, commit: () => void) => void;
 }) {
   const [cameraId, setCameraId] = React.useState(
     () => cameras.find((c) => c.status === "online")?.id ?? cameras[0]?.id ?? ""
@@ -533,15 +535,16 @@ export function ReidCalibrationDrawer({
         { id: `${c.id}-reid`, label: `Re-ID floor zone · ${p.used.length} markers`, box: zoneBox(markersByCamera[c.id], p.used) },
       ];
     }
-    // The linked groups become the Re-ID maps Live Monitoring tracks weapons on.
-    useReidMapsStore.getState().addDeployment({
+    // The linked groups become the Re-ID maps Live Monitoring tracks weapons on —
+    // saved only when the deployment itself is confirmed.
+    const deployment = {
       siteName,
       modelName: model.name,
       usedByCamera: Object.fromEntries(calibratable.map((c) => [c.id, saved[c.id].used])),
       positionsByCamera: Object.fromEntries(calibratable.map((c) => [c.id, saved[c.id].positions ?? {}])),
-    });
+    };
     setMapOpen(false);
-    onConfirm(zones);
+    onConfirm(zones, () => useReidMapsStore.getState().addDeployment(deployment));
   }
 
   const v = placement ? VERDICT[placement.verdict] : null;

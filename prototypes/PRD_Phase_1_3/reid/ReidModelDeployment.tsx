@@ -587,6 +587,9 @@ export function DeployWizard({
   const [cameraIds, setCameraIds] = React.useState<string[]>([]);
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  /* A Re-ID deployment waiting on the confirm modal: its calibrated zones, and
+     the step that saves its Re-ID maps once Deploy is pressed. */
+  const [pendingReid, setPendingReid] = React.useState<{ zones: Record<string, BoundaryZone[]>; commit: () => void } | null>(null);
   /* "Ready to Deploy" opens the zone step first; Next advances to the confirm modal. */
   const [zoneStepOpen, setZoneStepOpen] = React.useState(false);
   /* Zones are per-camera; the picker in the zone step switches which one is edited. */
@@ -686,6 +689,7 @@ export function DeployWizard({
   const activeZoneCamera = selectedCameras.find((c) => c.id === activeZoneCameraId) ?? null;
   const activeZones = activeZoneCameraId ? zonesByCamera[activeZoneCameraId] ?? [] : [];
   const camerasWithZones = selectedCameras.filter((c) => (zonesByCamera[c.id] ?? []).length > 0).length;
+  const zoneCount = selectedCameras.reduce((n, c) => n + (zonesByCamera[c.id] ?? []).length, 0);
 
   function openZoneStep() {
     if (selectedModel?.category === REID_CATEGORY) {
@@ -916,16 +920,23 @@ export function DeployWizard({
         }}
       />
 
-      {/* Confirm modal */}
+      {/* Confirm modal — also the last step of a Re-ID deployment, after the site map */}
       <DeployConfirmModal
         open={confirmOpen}
         model={selectedModel}
         site={selectedSite}
         areas={selectedAreas}
         cameras={selectedCameras}
-        camerasWithZones={camerasWithZones}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={() => commitDeploy()}
+        camerasWithZones={pendingReid ? Object.values(pendingReid.zones).filter((z) => z.length > 0).length : camerasWithZones}
+        zoneCount={pendingReid ? Object.values(pendingReid.zones).reduce((n, z) => n + z.length, 0) : zoneCount}
+        onClose={() => { setConfirmOpen(false); setPendingReid(null); }}
+        onConfirm={() => {
+          if (pendingReid) {
+            pendingReid.commit();
+            commitDeploy(pendingReid.zones);
+            setPendingReid(null);
+          } else commitDeploy();
+        }}
       />
 
       {/* Re-ID — per-camera calibration; keyed so a new selection starts fresh. */}
@@ -936,7 +947,7 @@ export function DeployWizard({
         siteName={selectedSite?.siteName ?? ""}
         cameras={selectedCameras}
         onClose={() => setCalibrating(false)}
-        onConfirm={(zones) => commitDeploy(zones)}
+        onConfirm={(zones, commit) => { setPendingReid({ zones, commit }); setConfirmOpen(true); }}
       />
     </div>
   );
@@ -955,6 +966,7 @@ export function DeployConfirmModal({
   areas,
   cameras,
   camerasWithZones,
+  zoneCount = camerasWithZones,
   onClose,
   onConfirm,
 }: {
@@ -964,6 +976,8 @@ export function DeployConfirmModal({
   areas: AreaSummary[];
   cameras: CameraData[];
   camerasWithZones: number;
+  /** Zones drawn across all selected cameras — a camera can carry several. */
+  zoneCount?: number;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -991,9 +1005,7 @@ export function DeployConfirmModal({
                 value={
                   camerasWithZones === 0
                     ? "Whole frame (no zones drawn)"
-                    : camerasWithZones === selectedCameras.length
-                      ? `${selectedCameras.length} camera${selectedCameras.length === 1 ? "" : "s"} zoned`
-                      : `${camerasWithZones} of ${selectedCameras.length} cameras zoned — rest use whole frame`
+                    : `${zoneCount} zone${zoneCount === 1 ? "" : "s"} across ${camerasWithZones} camera${camerasWithZones === 1 ? "" : "s"}`
                 }
               />
               {selectedCameras.some((c) => c.status !== "online") && (
@@ -1706,7 +1718,7 @@ export function ReidModelDeployment({
     const cams = `${newRecords.length} camera${newRecords.length === 1 ? "" : "s"}`;
     toast.success(`${newRecords[0]?.modelName ?? "Model"} deployed to ${cams}`, {
       description: newRecords.some((r) => r.zones.length > 0)
-        ? "Calibrated zones saved, and the map is live in Live Monitoring's Tracking tab."
+        ? "Calibrated zones saved, and the map is live in Live Monitoring's Cameras & Tracking panel."
         : "View status in the History tab.",
     });
   }

@@ -16,10 +16,16 @@ import "./proto.css";
 
 /* Phase 1.3 prototype shell — routes the phase index to each proposal page. */
 
+/* `?p=/live` opens straight on that page — the prototypes index links each card this way. */
+const START = (() => {
+  const p = new URLSearchParams(window.location.search).get("p");
+  return p && p.startsWith("/") ? p : "/";
+})();
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={[START]}>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider delayDuration={200}>
             <SidebarProvider defaultOpen={true}>
