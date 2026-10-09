@@ -58,20 +58,23 @@ const AREA_OPTIONS = Array.from(
 
 /* Feed order — the same sort dropdown as Recordings. Events stay grouped by day;
    the order applies within each day. */
-type SortKey = "newest" | "severity" | "confidence" | "site";
+type SortKey = "newest" | "oldest" | "duration";
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "newest", label: "Newest First" },
-  { key: "severity", label: "Severity (High → Low)" },
-  { key: "confidence", label: "Confidence (High → Low)" },
-  { key: "site", label: "By Site" },
+  { key: "oldest", label: "Oldest First" },
+  { key: "duration", label: "Longest Duration" },
 ];
-const SEVERITY_RANK: Record<DetectionEvent["severity"], number> = { critical: 0, medium: 1, low: 2 };
 const newestFirst = (a: DetectionEvent, b: DetectionEvent) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time);
+/** How long the event lasted, in seconds — read from the "8m 24s" the summary states.
+    Events carry no duration field; ones that state none count as 0 and sort last. */
+function eventDurationSec(e: DetectionEvent): number {
+  const m = e.summary.match(/(\d+)m\s*(\d+)s/);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+}
 const SORTERS: Record<SortKey, (a: DetectionEvent, b: DetectionEvent) => number> = {
   newest: newestFirst,
-  severity: (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || newestFirst(a, b),
-  confidence: (a, b) => b.confidence - a.confidence || newestFirst(a, b),
-  site: (a, b) => a.siteDisplay.localeCompare(b.siteDisplay) || newestFirst(a, b),
+  oldest: (a, b) => newestFirst(b, a),
+  duration: (a, b) => eventDurationSec(b) - eventDurationSec(a) || newestFirst(a, b),
 };
 
 /* PROTOTYPE-ONLY: the real mock has ~14 events, too few to exercise Load-older / the
@@ -655,13 +658,14 @@ export default function DetectionFeedPage({
 
   const grouped = React.useMemo(
     () =>
-      DATE_GROUPS.map((g) => ({
+      /* Days run newest → oldest, except Oldest First, which turns the days round too. */
+      (sort === "oldest" ? [...DATE_GROUPS].reverse() : DATE_GROUPS).map((g) => ({
         ...g,
         events: loadedEvents
           .filter((e) => e.date === g.key)
           .filter((e) => !isSelecting || e.status !== "escalated"),
       })).filter((g) => g.events.length > 0),
-    [loadedEvents, isSelecting]
+    [loadedEvents, isSelecting, sort]
   );
 
   const pendingCount = visibleEvents.filter((e) => e.status === "pending").length;
