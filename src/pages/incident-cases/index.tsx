@@ -342,7 +342,7 @@ export default function IncidentCasesPage({
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [filters, setFilters] = React.useState<CaseFilters>(EMPTY_FILTERS);
   const [search, setSearch] = React.useState("");
-  const [sortBy, setSortBy] = React.useState<"newest" | "severity" | "status">("newest");
+  const [sortBy, setSortBy] = React.useState<"newest" | "oldest" | "duration">("newest");
   const [datePreset, setDatePreset] = React.useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
@@ -421,12 +421,13 @@ export default function IncidentCasesPage({
       );
     }
 
-    const SEV_ORDER: Record<string, number> = { critical: 0, medium: 1, low: 2 };
-    const STA_ORDER: Record<string, number> = { open: 0, "in-review": 1, "action-taken": 2, closed: 3 };
+    // How long a case has run: created → last update. Cases carry no duration field.
+    const durationMs = (c: IncidentCase) => new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime();
+    const newestFirst = (a: IncidentCase, b: IncidentCase) => b.createdAt.localeCompare(a.createdAt);
 
-    if (sortBy === "severity") list.sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity]);
-    else if (sortBy === "status") list.sort((a, b) => STA_ORDER[a.status] - STA_ORDER[b.status]);
-    else list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    if (sortBy === "oldest") list.sort((a, b) => newestFirst(b, a));
+    else if (sortBy === "duration") list.sort((a, b) => durationMs(b) - durationMs(a) || newestFirst(a, b));
+    else list.sort(newestFirst);
 
     return list;
   }, [cases, kpiFilter, filters, search, sortBy, datePreset, dateFrom, dateTo]);
@@ -507,9 +508,9 @@ export default function IncidentCasesPage({
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="severity">Severity (high → low)</SelectItem>
-            <SelectItem value="status">By status</SelectItem>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="duration">Longest Duration</SelectItem>
           </SelectContent>
         </Select>
       </div>
