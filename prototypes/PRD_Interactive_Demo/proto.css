@@ -1,0 +1,6 @@
+/* Pull in the real app theme (tokens, fonts, dark-mode variants). */
+@import "../../src/index.css";
+
+/* Tailwind v4 content sources — scan both the prototype and the reused src components. */
+@source "../../src";
+@source ".";
