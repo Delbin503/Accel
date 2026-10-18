@@ -1,9 +1,10 @@
-import { Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
+import { Crosshair, Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
 import { LiveMonitoringProposal } from "./LiveMonitoringProposal";
 import { RecordingsByDay } from "./RecordingsByDay";
 import { VideoEnhancement } from "./VideoEnhancement";
 import { CustomDashboard } from "./CustomDashboard";
+import { AarDashboard } from "./aar/AarDashboard";
 
 /* Phase 1.3 proposals.
 
@@ -78,5 +79,20 @@ export const PAGES = [
       "Non-destructive crop, brightness, sharpness and contrast on a recorded clip, with a hold-to-compare against the untouched frame.",
     points: ["Crop presets plus per-side insets", "Discarded region dims instead of disappearing", "Sharpness runs through an SVG convolve kernel"],
     Component: VideoEnhancement,
+  },
+  {
+    path: "/aar",
+    title: "AAR",
+    subtitle: "After Action Review · indoor range",
+    icon: Crosshair,
+    refs: "No ref yet",
+    summary:
+      "The Firer AAR results for one finished session: points and misses on the target board, the session's key recommendations, and every analyser panel — video, cues, recoil, breathing, stability, flinch and wobble bubble — for any shot.",
+    points: [
+      "Points, misses, mean radius, CEP and group size up top",
+      "Key recommendations link to the shots and panel behind them",
+      "Pick a shot once — every panel below follows it",
+    ],
+    Component: AarDashboard,
   },
 ] as const;

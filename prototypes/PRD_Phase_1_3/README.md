@@ -15,6 +15,7 @@ proposal rather than bouncing back to the index.
 | Synchronised Playback | `/live` | Live Monitoring | VMS-VPB-001, VMS-VPB-002 |
 | Recordings | `/recordings` | Recordings | VMS-VR-001 … 004, VMS-VPB-003 |
 | Video Enhancement | `/enhancement` | Recordings › playback | VMS-VPB-004 |
+| AAR | `/aar` | Monitor › AAR (indoor range) | No ref yet |
 
 ### Separate module · Model (Re-ID)
 
@@ -249,3 +250,24 @@ cut. **Hold to compare** shows the untouched frame.
   down to the IDs.
 - `playback.ts` holds the playback state shape and helpers; `playbackControls.tsx`
   holds the scrub track and chip rows shared by a tile and the synchronised bar.
+
+## AAR · After Action Review — `/aar`
+
+The Firer AAR analyser's results for one indoor-range session, after shooting has
+finished. Only what the Firer AAR dashboard shows is on the page:
+
+- Session strip — clip, lane, shots fired, analysis mode, sources, tracking fps and
+  the status-bar figures (loop, running, background features, lag, dropped).
+- KPIs and **Target Board** — shots, points, missed, mean radius, CEP (50%), group size.
+  Points and misses are scored off the board (4 mm rings, 10 to 6, outside 20 mm a miss).
+- **Key Recommendations** (with the shots behind each, and a link to the panel) and
+  **What's Working Well**.
+- A sticky **selected shot** bar; every panel below follows it: **Video & Tracking**
+  (frame, PTZ inset, clip timeline with shot markers), **Detected Cues**, **Recoil &
+  Muzzle Movement**, **Event Markers**, **Breathing**, **Stability / Wobble**, **Flinch
+  Indicator**, and **Wobble Bubble / Shot Summary**.
+
+`aar/aarSession.ts` holds the six shots and the signal generators; every count on the
+page (including the recommendation evidence) is derived from them. `aar/aarParts.tsx`
+draws the camera frame, the wobble plots and the shot chip. Promoting it means swapping
+`aarSession.ts` for a session query and adding loading / empty / error states.

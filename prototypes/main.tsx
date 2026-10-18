@@ -91,6 +91,7 @@ const PHASE_13_PAGES: { name: string; desc: string; path: string }[] = [
   { name: "Synchronised Playback", desc: "Live Monitoring, rebuilt", path: "/live" },
   { name: "Recordings", desc: "Recordings, rebuilt", path: "/recordings" },
   { name: "Video Enhancement", desc: "Recordings › playback", path: "/enhancement" },
+  { name: "AAR", desc: "After Action Review · indoor range", path: "/aar" },
 ];
 const REID_MODULE = {
   name: "Model (Re-ID) Module",

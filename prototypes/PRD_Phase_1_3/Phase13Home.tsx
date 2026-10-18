@@ -109,6 +109,7 @@ const PROPOSAL_TRAILS: Record<string, string[]> = {
   "/": ["Phase 1.3"],
   "/dashboard": ["Monitor", "Dashboard"],
   "/enhancement": ["Monitor", "Recordings", "Video Enhancement"],
+  "/aar": ["Monitor", "AAR"],
 };
 
 /**
