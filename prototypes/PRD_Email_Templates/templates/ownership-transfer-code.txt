@@ -1,0 +1,43 @@
+Accel — Confirm your ownership transfer
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+You're transferring ownership of {{orgName}} to {{newOwnerName}}. Enter this
+code in Accel to confirm it's you:
+
+    {{code}}
+
+Transfer details
+----------------
+Workspace:        {{orgName}}
+New Owner:        {{newOwnerName}}
+Your role after:  {{newRole}}
+Requested:        {{time}}
+Expires in:       {{expiryMinutes}} minutes
+
+Didn't start this transfer?
+---------------------------
+Don't share this code with anyone, including the new Owner. Nothing changes
+until the code is entered, so you can ignore this email — then reset your
+password and contact our support team right away.
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+Twitter: https://twitter.com/sigmawaveai
+Facebook: https://www.facebook.com/sigmawave.ai
+Instagram: https://www.instagram.com/sigmawave.ai
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

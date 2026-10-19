@@ -31,6 +31,7 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 7 | **User Invitation** | P1 | Admin invites someone. Faithful build of the Figma reference and the base every other email follows. |
 | 8 | **Role Changed** | P2 | Admin changes a user's role. |
 | 9 | **Ownership Transfer** | P1 | The chosen member accepted — ownership has moved (to both owners). |
+| 20 | **Ownership Transfer Verification Code** | P1 | Owner confirms a transfer — the 6-digit code the Transfer Ownership modal asks for, in place of their password. |
 | 18 | **Ownership Transfer Request** | P1 | Owner picks a member to hand the workspace to. The **Accept ownership** button opens Accel on a confirmation modal. |
 | 19 | **Ownership Transfer Declined** | P1 | The chosen member declined — sent to the Owner, who keeps the role. |
 | 10 | **Account Deletion Request** | P1 | Member requests deletion — sent to the Owner to action. |
@@ -57,10 +58,13 @@ templates above:
 The critical alert's detection snapshot is an inline SVG stand-in; swap it for
 a hosted `<img src="{{snapshotUrl}}">` before sending, as with the logo.
 
-### Ownership transfer (three emails, one flow)
+### Ownership transfer (four emails, one flow)
 
 A transfer is a request until the chosen member agrees to it:
 
+0. **Verification Code** → the Owner, when they confirm the transfer in User
+   Management. The Transfer Ownership modal takes this code instead of a
+   password.
 1. **Request** → the member. Its button deep-links (`{{acceptUrl}}`) into Accel
    with `AcceptOwnershipModal` open
    (`src/pages/user-management/AcceptOwnershipModal.tsx`).

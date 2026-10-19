@@ -63,6 +63,7 @@ import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from 
 import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { DEPARTMENTS } from "@/mocks/departments";
+import { OtpField } from "@/components/shared/OtpField";
 
 const DEPARTMENT_OPTIONS: { value: string; label: string }[] = DEPARTMENTS.map((d) => ({
   value: d,
@@ -1338,6 +1339,10 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
 
 /* ── Change Role modal ───────────────────────────────────────────────────── */
 
+/** One-time code emailed to the Owner to confirm an ownership transfer. */
+const OTP_LENGTH = 6;
+const OTP_EXPIRY_MINUTES = 10;
+
 export function ChangeRoleModal({
   open,
   users,
@@ -1364,7 +1369,7 @@ export function ChangeRoleModal({
   const [showTransfer, setShowTransfer] = React.useState(false);
   const [successorSearch, setSuccessorSearch] = React.useState("");
   const [selectedSuccessorId, setSelectedSuccessorId] = React.useState<string | null>(null);
-  const [password, setPassword] = React.useState("");
+  const [otp, setOtp] = React.useState("");
   const isBulk = users.length > 1;
 
   React.useEffect(() => {
@@ -1375,7 +1380,7 @@ export function ChangeRoleModal({
       setShowTransfer(false);
       setSuccessorSearch("");
       setSelectedSuccessorId(null);
-      setPassword("");
+      setOtp("");
     }
   }, [open, initial]);
 
@@ -1417,7 +1422,7 @@ export function ChangeRoleModal({
     }
     // Promoting to Owner is an ownership transfer — confirm + re-auth first.
     if (isOwnerTransfer) {
-      setShowTransfer(true);
+      openTransfer();
       return;
     }
     if (seatShortfall > 0) {
@@ -1433,8 +1438,24 @@ export function ChangeRoleModal({
     onConfirm(role);
   }
 
+  /* The transfer step emails the current Owner a one-time code (the
+     "Ownership Transfer Verification Code" template) instead of asking for
+     their password, so a hijacked session alone can't hand the workspace away. */
+  function openTransfer() {
+    setOtp("");
+    setShowTransfer(true);
+    toast.message("Verification code sent", {
+      description: `We emailed a ${OTP_LENGTH}-digit code to ${currentOwner.email}.`,
+    });
+  }
+
+  function resendCode() {
+    setOtp("");
+    toast.message("Code re-sent", { description: `A new code was sent to ${currentOwner.email}.` });
+  }
+
   function confirmTransfer() {
-    if (!password.trim()) return;
+    if (otp.length < OTP_LENGTH) return;
     if (isOwnerDemotion) {
       if (!selectedSuccessorId) return;
       if (seatShortfall > 0) onPurchaseSeat(role, seatShortfall);
@@ -1454,7 +1475,7 @@ export function ChangeRoleModal({
     ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
     : isBulk ? `Change Role (${users.length})` : "Change Role";
   const headerDescription = showTransfer
-    ? "Confirm your identity to transfer the Owner role."
+    ? "Verify it's you with the code we emailed to transfer the Owner role."
     : showSuccessorPicker
     ? "Select an active workspace member to receive ownership."
     : showPurchase
@@ -1496,9 +1517,8 @@ export function ChangeRoleModal({
               <div>
                 <p className="text-sm font-semibold text-foreground">You are transferring ownership</p>
                 <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
-                  <strong className="text-foreground">{transferRecipient?.fullName}</strong> will become the workspace <strong className="text-foreground">Owner</strong>.{" "}
-                  There is only one Owner per workspace — <strong className="text-foreground">{currentOwner.fullName}</strong> will become {isOwnerDemotion ? previousOwnerRoleWithArticle : "an Admin"}.
-                  This action is irreversible without another transfer. Are you sure you want to proceed?
+                  <strong className="text-foreground">{currentOwner.fullName}</strong> becomes {isOwnerDemotion ? previousOwnerRoleWithArticle : "an Admin"}.
+                  Only another transfer can undo this.
                 </p>
               </div>
             </div>
@@ -1513,17 +1533,16 @@ export function ChangeRoleModal({
               </div>
             )}
             <div>
-              <label htmlFor="ownership-transfer-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Re-enter your password to confirm
+              <label htmlFor="ownership-transfer-code" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Enter verification code
               </label>
-              <Input
-                id="ownership-transfer-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your account password"
-                className="text-base"
-              />
+              <OtpField id="ownership-transfer-code" value={otp} onChange={setOtp} length={OTP_LENGTH} autoFocus />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Sent to <strong className="text-foreground">{currentOwner.email}</strong> · expires in {OTP_EXPIRY_MINUTES} minutes.{" "}
+                <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary">
+                  Resend code
+                </button>
+              </p>
             </div>
           </ModalBody>
         ) : showSuccessorPicker ? (
@@ -1717,7 +1736,7 @@ export function ChangeRoleModal({
               >
                 Back
               </Button>
-              <Button size="sm" variant="destructive" disabled={!password.trim()} onClick={confirmTransfer} className="gap-1.5">
+              <Button size="sm" variant="destructive" disabled={otp.length < OTP_LENGTH} onClick={confirmTransfer} className="gap-1.5">
                 <Crown className="size-3.5" />
                 Transfer Ownership
               </Button>
@@ -1730,7 +1749,7 @@ export function ChangeRoleModal({
                 disabled={!selectedSuccessor}
                 onClick={() => {
                   setShowSuccessorPicker(false);
-                  setShowTransfer(true);
+                  openTransfer();
                 }}
                 className="gap-1.5"
               >
@@ -2773,7 +2792,7 @@ export default function UserManagementPage({
       kind: "success",
       message:
         role === "owner"
-          ? "Ownership transferred — previous Owner is now an Admin"
+          ? `Ownership transfer email sent to ${users.find((u) => u.id === ids[0])?.fullName ?? "the new Owner"}`
           : ids.length > 1
           ? `${ids.length} users updated to ${USER_ROLE_LABELS[role]}`
           : "Role updated successfully",
@@ -2798,7 +2817,7 @@ export default function UserManagementPage({
     closeDialog();
     setToast({
       kind: "success",
-      message: `Ownership transferred to ${newOwner.fullName} — ${previousOwner.fullName} is now ${previousOwnerRole === "admin" ? "an Admin" : "a Member"}`,
+      message: `Ownership transfer email sent to ${newOwner.fullName}`,
     });
   }
 

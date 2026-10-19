@@ -24,6 +24,7 @@ import twoFaHtml from "./templates/2fa-changed.html?raw";
 import welcomeHtml from "./templates/welcome.html?raw";
 import roleChangedHtml from "./templates/role-changed.html?raw";
 import ownershipHtml from "./templates/ownership-transfer.html?raw";
+import ownershipCodeHtml from "./templates/ownership-transfer-code.html?raw";
 import ownershipRequestHtml from "./templates/ownership-transfer-request.html?raw";
 import ownershipDeclinedHtml from "./templates/ownership-transfer-declined.html?raw";
 import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
@@ -168,6 +169,20 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{previousRole}}", "{{newRole}}", "{{changedBy}}", "{{dashboardUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/role-changed.html",
     html: roleChangedHtml,
+  },
+  {
+    id: "ownership-transfer-code",
+    name: "Ownership Transfer Verification Code",
+    kind: "email",
+    subject: "Your code to transfer ownership of Astra Corp",
+    category: "Team & User Management",
+    priority: "P1",
+    whenSent:
+      "When the Owner reaches the Transfer Ownership step in User Management. The code replaces the password re-entry; the transfer only goes ahead once it is entered.",
+    audience: "The current Owner starting the transfer.",
+    mergeTags: ["{{firstName}}", "{{code}}", "{{expiryMinutes}}", "{{orgName}}", "{{newOwnerName}}", "{{newRole}}", "{{time}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/ownership-transfer-code.html",
+    html: ownershipCodeHtml,
   },
   {
     id: "ownership-transfer-request",
