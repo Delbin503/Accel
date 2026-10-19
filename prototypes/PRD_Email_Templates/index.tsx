@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Mail, Clock, Users, Tag, FileCode2, FileText, Printer, Sun, Moon, Paperclip, ArrowUpRight } from "lucide-react";
+import { Mail, Clock, Users, Tag, FileCode2, FileText, Printer, Sun, Moon, Paperclip, ArrowUpRight, MousePointerClick } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { OwnershipLanding } from "./OwnershipLanding";
 import "./proto.css";
 
 import invitationHtml from "./templates/invitation.html?raw";
@@ -23,6 +24,8 @@ import twoFaHtml from "./templates/2fa-changed.html?raw";
 import welcomeHtml from "./templates/welcome.html?raw";
 import roleChangedHtml from "./templates/role-changed.html?raw";
 import ownershipHtml from "./templates/ownership-transfer.html?raw";
+import ownershipRequestHtml from "./templates/ownership-transfer-request.html?raw";
+import ownershipDeclinedHtml from "./templates/ownership-transfer-declined.html?raw";
 import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
 import accountDeletedHtml from "./templates/account-deleted.html?raw";
 import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
@@ -31,6 +34,7 @@ import criticalIncidentHtml from "./templates/critical-incident.html?raw";
 import dailyDigestHtml from "./templates/daily-activity-digest.html?raw";
 import dailyReportHtml from "./templates/daily-activity-report.html?raw";
 import weeklySummaryHtml from "./templates/weekly-summary.html?raw";
+import { Toaster } from "sonner";
 
 interface Template {
   id: string;
@@ -51,6 +55,12 @@ interface Template {
   html: string;
   /** A document template that goes out attached to this email. */
   attachment?: { templateId: string; fileName: string; meta: string };
+  /**
+   * The email's button, when the screen it opens is prototyped here. `tag` is
+   * the merge tag in the button's href, so a click on it in the preview can be
+   * told apart from the footer links.
+   */
+  button?: { tag: string; label: string; opens: string; landing: "ownership-accept" };
 }
 
 const TEMPLATES: Template[] = [
@@ -160,13 +170,47 @@ const TEMPLATES: Template[] = [
     html: roleChangedHtml,
   },
   {
+    id: "ownership-transfer-request",
+    name: "Ownership Transfer Request",
+    kind: "email",
+    subject: "Jordan Lee wants to transfer ownership of Astra Corp to you",
+    category: "Team & User Management",
+    priority: "P1",
+    whenSent:
+      "When the Owner chooses a member to hand the workspace to. Nothing changes until that member accepts; the request lapses at {{expiresAt}}.",
+    audience: "The member chosen as the next Owner.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{fromName}}", "{{currentRole}}", "{{requestedAt}}", "{{expiresAt}}", "{{acceptUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/ownership-transfer-request.html",
+    html: ownershipRequestHtml,
+    button: {
+      tag: "{{acceptUrl}}",
+      label: "Accept ownership",
+      opens: "Accel, with the Accept ownership modal open. Accepting or declining there sends the matching email.",
+      landing: "ownership-accept",
+    },
+  },
+  {
+    id: "ownership-transfer-declined",
+    name: "Ownership Transfer Declined",
+    kind: "email",
+    subject: "Alex Tan declined ownership of Astra Corp",
+    category: "Team & User Management",
+    priority: "P1",
+    whenSent:
+      "When the chosen member declines the transfer request. The Owner keeps the role; the Reason row only appears if the member left a note.",
+    audience: "The Owner who sent the request.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{toName}}", "{{toEmail}}", "{{requestedAt}}", "{{declinedAt}}", "{{declineReason}}", "{{userManagementUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/ownership-transfer-declined.html",
+    html: ownershipDeclinedHtml,
+  },
+  {
     id: "ownership-transfer",
     name: "Ownership Transfer",
     kind: "email",
     subject: "Ownership of your Accel workspace was transferred",
     category: "Team & User Management",
     priority: "P1",
-    whenSent: "When workspace ownership is transferred. Sent to both the outgoing and incoming Owner.",
+    whenSent: "When the chosen member accepts the transfer request and ownership moves. Sent to both the outgoing and incoming Owner.",
     audience: "Outgoing and incoming Owner.",
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{fromName}}", "{{toName}}", "{{transferredAt}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/ownership-transfer.html",
@@ -357,9 +401,12 @@ const LINK_BUTTON = "inline-flex items-center gap-1 text-left font-medium text-p
 function App() {
   const [id, setId] = React.useState(TEMPLATES[0].id);
   const [scheme, setScheme] = React.useState<"light" | "dark">("light");
+  /** The in-app screen an email's button opened, shown in place of the gallery. */
+  const [landing, setLanding] = React.useState<NonNullable<Template["button"]>["landing"] | null>(null);
   const tpl = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
   const isDoc = tpl.kind === "document";
   const attachment = tpl.attachment;
+  const button = tpl.button;
   const attachedTo = TEMPLATES.find((t) => t.attachment?.templateId === tpl.id);
   // A print document has one palette — only emails get the scheme rewrite.
   const previewHtml = React.useMemo(
@@ -382,9 +429,19 @@ function App() {
     if (!frame) return;
     let observer: ResizeObserver | null = null;
 
+    // Links in the preview go nowhere real (their hrefs are merge tags), so
+    // none of them navigate. The email's own button opens the screen it leads to.
+    function onLinkClick(e: MouseEvent) {
+      const link = (e.target as Element | null)?.closest?.("a");
+      if (!link) return;
+      e.preventDefault();
+      if (button && (link.getAttribute("href") ?? "").includes(button.tag)) setLanding(button.landing);
+    }
+
     function measure() {
       const root = frame?.contentDocument?.documentElement;
       if (!root) return;
+      frame?.contentDocument?.addEventListener("click", onLinkClick);
       setFrameHeight(root.scrollHeight);
       if (!observer) {
         observer = new ResizeObserver(() => {
@@ -400,11 +457,26 @@ function App() {
       frame.removeEventListener("load", measure);
       observer?.disconnect();
     };
-  }, [previewHtml]);
+  }, [previewHtml, button]);
+
+  if (landing === "ownership-accept") {
+    return (
+      <ThemeProvider defaultTheme="dark">
+        <OwnershipLanding
+          onExit={(templateId) => {
+            if (templateId) setId(templateId);
+            setLanding(null);
+          }}
+        />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider defaultTheme="dark">
       <div className="min-h-screen w-full bg-background text-foreground">
+        {/* Confirms an answer given on the Accept ownership landing. */}
+        <Toaster position="top-right" theme="dark" />
         {/* Header */}
         <header className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur-sm">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -484,6 +556,15 @@ function App() {
                 ))}
               </div>
             </InfoRow>
+            {button && (
+              <InfoRow icon={<MousePointerClick className="size-3" />} label="Button opens">
+                <button type="button" onClick={() => setLanding(button.landing)} className={LINK_BUTTON}>
+                  {button.label}
+                  <ArrowUpRight className="size-3 shrink-0" />
+                </button>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{button.opens}</span>
+              </InfoRow>
+            )}
             {attachment && (
               <InfoRow icon={<Paperclip className="size-3" />} label="Attachment">
                 <button type="button" onClick={() => setId(attachment.templateId)} className={LINK_BUTTON}>

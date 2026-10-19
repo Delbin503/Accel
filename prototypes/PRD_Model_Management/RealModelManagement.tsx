@@ -11,9 +11,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>Model Management</PageHeader.Title>
-        <PageHeader.Description>
-          Build and manage AI detection models with sequenced verification steps and attached rules.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

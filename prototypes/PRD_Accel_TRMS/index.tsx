@@ -56,7 +56,8 @@ function App() {
                 <AppSidebar groups={TRMS_NAV} />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+                    <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+                    <TrmsBreadcrumb className="md:ml-2" />
                     <div className="flex-1" />
                     <SystemStatusMenu />
                     <NotificationsBell />
@@ -64,7 +65,6 @@ function App() {
                     <UserMenu />
                   </header>
                   <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
-                    <TrmsBreadcrumb />
                     <Routes>
                       <Route path="/" element={<AccelDashboard />} />
                       {/* Live Monitoring without Re-ID tracking: site and area filters, detections panel only. */}

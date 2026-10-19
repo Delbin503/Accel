@@ -1364,9 +1364,6 @@ export default function BillingPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>
-          <PageHeader.Description>
-            One subscription per account. Manage your plan, seats, sites, payment methods, and invoices.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

@@ -818,10 +818,6 @@ export function SyncPlaybackMonitoring({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
-          <PageHeader.Description>
-            Real-time camera feeds across all sites — select cameras from any view and scrub them
-            back together while the feed keeps running.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           {/* View mode is about the page, not the camera list — it sits with the title. */}

@@ -10,9 +10,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>Site Management</PageHeader.Title>
-        <PageHeader.Description>
-          Manage all sites — upload floor plans, draw areas, and place cameras.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

@@ -33,7 +33,8 @@ function App() {
                 <ShellSidebar />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+                    <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+                    <Breadcrumb className="md:ml-2" />
                     <div className="flex-1" />
                     <SystemStatusMenu />
                     <NotificationsBell />
@@ -41,11 +42,9 @@ function App() {
                     <UserMenu />
                   </header>
 
-                  {/* Breadcrumb sits above the page title, as on every other Accel
-                      page. The routes get the remaining height, so full-height
-                      pages (the Re-ID wall) still fit without scrolling. */}
+                  {/* The routes get the remaining height, so full-height pages
+                      (the Re-ID wall) still fit without scrolling. */}
                   <main id="main-content" className="flex flex-1 flex-col overflow-auto p-6 focus:outline-none">
-                    <Breadcrumb className="mb-4 shrink-0" />
                     <div className="min-h-0 flex-1">
                     <Routes>
                       <Route path="/" element={<Phase13Index />} />

@@ -8,9 +8,6 @@ function StateHeader() {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>Recordings</PageHeader.Title>
-        <PageHeader.Description>
-          Browse all camera recordings — replay footage, link incidents and escalate to incident cases.
-        </PageHeader.Description>
       </PageHeader.Content>
     </PageHeader>
   );

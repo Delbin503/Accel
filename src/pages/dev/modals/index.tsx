@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Search, X, LayoutGrid, ArrowLeft, ArrowRight, CornerDownLeft } from "lucide-react";
-import { PageHeader, PageHeaderContent, PageHeaderTitle, PageHeaderDescription } from "@/components/layout/PageHeader";
+import { PageHeader, PageHeaderContent, PageHeaderTitle } from "@/components/layout/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -146,11 +146,6 @@ export default function ModalGalleryPage() {
       <PageHeader>
         <PageHeaderContent>
           <PageHeaderTitle>Modal Gallery</PageHeaderTitle>
-          <PageHeaderDescription>
-            Every dialog, drawer and wizard in the app — {MODAL_ENTRIES.length} entries across{" "}
-            {new Set(MODAL_ENTRIES.map((e) => e.module)).size} modules, mounted with mock data.
-            Dev-only surface; nothing here writes to the app.
-          </PageHeaderDescription>
         </PageHeaderContent>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-2xs">Esc</kbd>

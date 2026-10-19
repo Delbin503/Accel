@@ -30,6 +30,7 @@ import {
   Ban,
   Clock,
   Plus,
+  ArrowRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -1340,41 +1341,80 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
 export function ChangeRoleModal({
   open,
   users,
+  allUsers,
   seatUsage,
   onClose,
   onConfirm,
+  onTransferOwnership,
   onPurchaseSeat,
 }: {
   open: boolean;
   users: UserData[];
+  allUsers: UserData[];
   seatUsage: Record<UserRole, SeatUsage>;
   onClose: () => void;
   onConfirm: (role: UserRole) => void;
+  onTransferOwnership: (newOwnerId: string, previousOwnerRole: UserRole) => void;
   onPurchaseSeat: (role: UserRole, quantity: number) => void;
 }) {
   const initial = users.length === 1 ? users[0].role : "user";
   const [role, setRole] = React.useState<UserRole>(initial);
   const [showPurchase, setShowPurchase] = React.useState(false);
+  const [showSuccessorPicker, setShowSuccessorPicker] = React.useState(false);
   const [showTransfer, setShowTransfer] = React.useState(false);
+  const [successorSearch, setSuccessorSearch] = React.useState("");
+  const [selectedSuccessorId, setSelectedSuccessorId] = React.useState<string | null>(null);
   const [password, setPassword] = React.useState("");
   const isBulk = users.length > 1;
 
   React.useEffect(() => {
-    if (open) { setRole(initial); setShowPurchase(false); setShowTransfer(false); setPassword(""); }
+    if (open) {
+      setRole(initial);
+      setShowPurchase(false);
+      setShowSuccessorPicker(false);
+      setShowTransfer(false);
+      setSuccessorSearch("");
+      setSelectedSuccessorId(null);
+      setPassword("");
+    }
   }, [open, initial]);
 
   if (users.length === 0) return null;
 
-  // Net delta per role if we apply `role` to the selected users.
-  const additions = users.filter((u) => u.role !== role).length;
-  const seatsNeededAfter = seatUsage[role].assigned + additions;
+  const sameRole = !isBulk && role === users[0].role;
+  const isOwnerTransfer = role === "owner";
+  const isOwnerDemotion = !isBulk && users[0].role === "owner" && role !== "owner";
+  const currentOwner = allUsers.find((user) => user.role === "owner") ?? users[0];
+  const selectedSuccessor = selectedSuccessorId
+    ? allUsers.find((user) => user.id === selectedSuccessorId) ?? null
+    : null;
+  const transferRecipient = isOwnerDemotion ? selectedSuccessor : users[0];
+  const previousOwnerRoleWithArticle = role === "admin" ? "an Admin" : "a Member";
+  // When the successor already occupies the Owner's destination tier, the
+  // ownership swap frees that seat before the former Owner takes it.
+  const additions = users.filter((user) => user.role !== role).length;
+  const seatsFreedByTransfer = isOwnerDemotion && selectedSuccessor?.role === role ? 1 : 0;
+  const seatsNeededAfter = seatUsage[role].assigned + additions - seatsFreedByTransfer;
   const seatShortfall = Math.max(0, seatsNeededAfter - seatUsage[role].total);
   const currentTier = MOCK_SEATS[role];
   const purchaseTotal = seatShortfall * currentTier.pricePerMonth;
-  const sameRole = !isBulk && role === users[0].role;
-  const isOwnerTransfer = role === "owner";
+  const normalizedSuccessorSearch = successorSearch.trim().toLowerCase();
+  const successorCandidates = allUsers.filter((user) => {
+    if (user.id === currentOwner.id) return false;
+    if (!normalizedSuccessorSearch) return true;
+    return [user.id, user.fullName, user.email]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSuccessorSearch);
+  });
 
   function handleApply() {
+    // An Owner cannot leave the role until another active user is selected to
+    // receive ownership. The handoff is confirmed in the existing re-auth step.
+    if (isOwnerDemotion) {
+      setShowSuccessorPicker(true);
+      return;
+    }
     // Promoting to Owner is an ownership transfer — confirm + re-auth first.
     if (isOwnerTransfer) {
       setShowTransfer(true);
@@ -1395,18 +1435,28 @@ export function ChangeRoleModal({
 
   function confirmTransfer() {
     if (!password.trim()) return;
+    if (isOwnerDemotion) {
+      if (!selectedSuccessorId) return;
+      if (seatShortfall > 0) onPurchaseSeat(role, seatShortfall);
+      onTransferOwnership(selectedSuccessorId, role);
+      return;
+    }
     onConfirm("owner");
   }
 
-  // The modal swaps between three states, so title/description resolve together
+  // The modal swaps between several states, so title/description resolve together
   // to keep the header contract (always a title *and* a description) intact.
   const headerTitle = showTransfer
     ? "Transfer Ownership"
+    : showSuccessorPicker
+    ? "Choose the Next Owner"
     : showPurchase
     ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
     : isBulk ? `Change Role (${users.length})` : "Change Role";
   const headerDescription = showTransfer
     ? "Confirm your identity to transfer the Owner role."
+    : showSuccessorPicker
+    ? "Select an active workspace member to receive ownership."
     : showPurchase
     ? `No available ${currentTier.label.toLowerCase()} seats — purchase to continue.`
     : isBulk
@@ -1419,33 +1469,130 @@ export function ChangeRoleModal({
         <ModalHeader title={headerTitle} description={headerDescription} />
 
         {showTransfer ? (
-          <ModalBody className="space-y-3">
-            <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] px-3.5 py-3">
+          <ModalBody className="space-y-4">
+            {currentOwner && transferRecipient && (
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-lg border border-border bg-card p-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <Avatar user={currentOwner} size={32} />
+                  <div className="min-w-0">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Current Owner</p>
+                    <TruncatedText text={currentOwner.fullName} className="text-sm font-semibold text-foreground" />
+                  </div>
+                </div>
+                <div className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+                  <ArrowRight className="size-3.5" />
+                </div>
+                <div className="flex min-w-0 items-center justify-end gap-2.5 text-right">
+                  <div className="min-w-0">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">New Owner</p>
+                    <TruncatedText text={transferRecipient.fullName} className="text-sm font-semibold text-foreground" />
+                  </div>
+                  <Avatar user={transferRecipient} size={32} />
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
               <div>
-                <p className="text-base font-semibold text-foreground">You are transferring ownership</p>
-                <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                  {!isBulk ? (
-                    <><strong className="text-foreground">{users[0].fullName}</strong> will become the workspace <strong className="text-foreground">Owner</strong>.</>
-                  ) : (
-                    "The selected user will become the workspace Owner."
-                  )}{" "}
-                  There is only one Owner per workspace — the current Owner will be downgraded to Admin.
+                <p className="text-sm font-semibold text-foreground">You are transferring ownership</p>
+                <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                  <strong className="text-foreground">{transferRecipient?.fullName}</strong> will become the workspace <strong className="text-foreground">Owner</strong>.{" "}
+                  There is only one Owner per workspace — <strong className="text-foreground">{currentOwner.fullName}</strong> will become {isOwnerDemotion ? previousOwnerRoleWithArticle : "an Admin"}.
                   This action is irreversible without another transfer. Are you sure you want to proceed?
                 </p>
               </div>
             </div>
+            {isOwnerDemotion && seatShortfall > 0 && (
+              <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
+                <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
+                <p className="text-sm leading-snug text-muted-foreground">
+                  Transferring ownership will also add <strong className="text-foreground">{seatShortfall}</strong>{" "}
+                  {currentTier.label.toLowerCase()} seat{seatShortfall === 1 ? "" : "s"} at{" "}
+                  <strong className="text-foreground">${purchaseTotal}/mo</strong>.
+                </p>
+              </div>
+            )}
             <div>
-              <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="ownership-transfer-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Re-enter your password to confirm
               </label>
               <Input
+                id="ownership-transfer-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your account password"
-                className="h-9 text-base"
+                className="text-base"
               />
+            </div>
+          </ModalBody>
+        ) : showSuccessorPicker ? (
+          <ModalBody className="space-y-4">
+            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
+              <Crown className="mt-0.5 size-4 flex-shrink-0 text-warning" />
+              <p className="text-sm leading-snug text-muted-foreground">
+                Before <strong className="text-foreground">{users[0].fullName}</strong> becomes a {USER_ROLE_LABELS[role]}, choose who will take over billing, workspace settings, and irreversible actions.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="ownership-successor-search" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Search workspace users
+              </label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="ownership-successor-search"
+                  value={successorSearch}
+                  onChange={(event) => setSuccessorSearch(event.target.value)}
+                  placeholder="Search by name, email, or user ID"
+                  className="h-9 pl-9 text-base"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              {successorCandidates.length > 0 ? (
+                successorCandidates.map((candidate) => {
+                  const isEligible = candidate.status === "active";
+                  const isSelected = candidate.id === selectedSuccessorId;
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      disabled={!isEligible}
+                      onClick={() => setSelectedSuccessorId(candidate.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
+                        isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40",
+                        !isEligible && "cursor-not-allowed opacity-50 hover:border-border"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex size-4 flex-shrink-0 items-center justify-center rounded-full border",
+                          isSelected ? "border-primary" : "border-muted-foreground/40"
+                        )}
+                      >
+                        {isSelected && <span className="size-2 rounded-full bg-primary" />}
+                      </div>
+                      <Avatar user={candidate} size={34} />
+                      <div className="min-w-0 flex-1">
+                        <TruncatedText text={candidate.fullName} className="text-base font-semibold text-foreground" />
+                        <TruncatedText text={`${candidate.email} · ${candidate.id}`} className="text-xs text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                        <RoleBadge role={candidate.role} />
+                        {!isEligible && <StatusPill status={candidate.status} />}
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="rounded-lg border border-dashed border-border py-8 text-center">
+                  <UsersIcon className="mx-auto size-5 text-muted-foreground/50" />
+                  <p className="mt-2 text-sm text-muted-foreground">No users match “{successorSearch}”.</p>
+                </div>
+              )}
             </div>
           </ModalBody>
         ) : !showPurchase ? (
@@ -1560,10 +1707,35 @@ export function ChangeRoleModal({
         <ModalFooter>
           {showTransfer ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setShowTransfer(false)}>Back</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowTransfer(false);
+                  if (isOwnerDemotion) setShowSuccessorPicker(true);
+                }}
+              >
+                Back
+              </Button>
               <Button size="sm" variant="destructive" disabled={!password.trim()} onClick={confirmTransfer} className="gap-1.5">
                 <Crown className="size-3.5" />
                 Transfer Ownership
+              </Button>
+            </>
+          ) : showSuccessorPicker ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setShowSuccessorPicker(false)}>Back</Button>
+              <Button
+                size="sm"
+                disabled={!selectedSuccessor}
+                onClick={() => {
+                  setShowSuccessorPicker(false);
+                  setShowTransfer(true);
+                }}
+                className="gap-1.5"
+              >
+                Continue
+                <ArrowRight className="size-3.5" />
               </Button>
             </>
           ) : showPurchase ? (
@@ -2306,9 +2478,6 @@ function DeletedUsersPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Deleted Users List</PageHeader.Title>
-          <PageHeader.Description>
-            Review users removed from User Management. Audit history is preserved for compliance.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={onBack}>
@@ -2611,6 +2780,28 @@ export default function UserManagementPage({
     });
   }
 
+  function handleTransferOwnership(newOwnerId: string, previousOwnerRole: UserRole) {
+    const previousOwner = users.find((user) => user.role === "owner");
+    const newOwner = users.find((user) => user.id === newOwnerId);
+    if (!previousOwner || !newOwner || newOwner.status !== "active") {
+      setToast({ kind: "error", message: "Choose an active user to receive ownership" });
+      return;
+    }
+
+    setUsers((currentUsers) =>
+      currentUsers.map((user) => {
+        if (user.id === previousOwner.id) return { ...user, role: previousOwnerRole };
+        if (user.id === newOwnerId) return { ...user, role: "owner" as UserRole };
+        return user;
+      })
+    );
+    closeDialog();
+    setToast({
+      kind: "success",
+      message: `Ownership transferred to ${newOwner.fullName} — ${previousOwner.fullName} is now ${previousOwnerRole === "admin" ? "an Admin" : "a Member"}`,
+    });
+  }
+
   function handleManageSite(siteIds: string[]) {
     const ids = dialog.userIds;
     const newPerms: SitePermission[] = siteIds.map((s) => ({
@@ -2782,9 +2973,6 @@ export default function UserManagementPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>User Management</PageHeader.Title>
-          <PageHeader.Description>
-            Manage workspace members — roles, site access, and authentication.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button
@@ -3056,9 +3244,11 @@ export default function UserManagementPage({
       <ChangeRoleModal
         open={dialog.kind === "change-role"}
         users={dialogUsers}
+        allUsers={users}
         seatUsage={seatUsage}
         onClose={closeDialog}
         onConfirm={handleChangeRole}
+        onTransferOwnership={handleTransferOwnership}
         onPurchaseSeat={handlePurchaseSeat}
       />
       <ManageSiteModal

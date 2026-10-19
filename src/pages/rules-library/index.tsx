@@ -917,9 +917,6 @@ export default function RulesLibraryPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Rule Library</PageHeader.Title>
-          <PageHeader.Description>
-            Create and manage detection rules and alert conditions.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button size="sm" onClick={openCreate} className="gap-1.5">

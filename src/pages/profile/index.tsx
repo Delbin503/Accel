@@ -240,9 +240,6 @@ export default function ProfilePage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>My Profile</PageHeader.Title>
-          <PageHeader.Description>
-            Manage your personal info, contact details and authentication.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button disabled={!dirty} onClick={saveChanges} className="gap-1.5">

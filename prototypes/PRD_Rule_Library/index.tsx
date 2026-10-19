@@ -17,6 +17,8 @@ import { StateTester } from "./StateTester";
 import type { ForcedState } from "./shared";
 import "./proto.css";
 import { TesterShell } from "../_shared/TesterShell";
+import { PrototypeHandoff } from "../_shared/PrototypeHandoff";
+import { protoStart } from "../_shared/protoRoutes";
 
 /* PROTOTYPE-ONLY: floating state tester — bottom-right (left of the back-to-top
    button), low opacity, reveals on hover. Excluded when promoting to src. */
@@ -71,7 +73,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark">
-    <MemoryRouter initialEntries={["/rules"]}>
+    <MemoryRouter initialEntries={[protoStart("/rules")]}>
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
@@ -79,7 +81,8 @@ function App() {
             <AppSidebar />
             <div className="flex min-w-0 flex-1 flex-col">
               <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+                <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+                <ProtoBreadcrumb className="md:ml-2" />
                 <div className="flex-1" />
                 <SystemStatusMenu />
                 <NotificationsBell />
@@ -87,10 +90,9 @@ function App() {
                 <UserMenu />
               </header>
               <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
-                <ProtoBreadcrumb className="mb-4" />
                 <Routes>
                   <Route path="/rules" element={<RealRuleLibrary forced={forced} onResolveForced={resolve} />} />
-                  <Route path="*" element={<NotInPrototype />} />
+                  <Route path="*" element={<PrototypeHandoff><NotInPrototype /></PrototypeHandoff>} />
                 </Routes>
               </main>
             </div>

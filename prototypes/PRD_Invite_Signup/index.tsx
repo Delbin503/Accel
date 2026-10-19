@@ -95,7 +95,8 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+            <ProtoBreadcrumb className="md:ml-2" />
             <div className="flex-1" />
             <SystemStatusMenu />
             <NotificationsBell />
@@ -103,7 +104,6 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
             <UserMenu />
           </header>
           <main className="flex-1 overflow-auto p-6">
-            <ProtoBreadcrumb className="mb-4" />
             <div className="mx-auto max-w-2xl py-10">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary-muted text-primary">

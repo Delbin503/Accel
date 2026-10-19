@@ -30,7 +30,9 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 6 | **Welcome / Account Activated** | P1 | Account becomes active after setup + verification. |
 | 7 | **User Invitation** | P1 | Admin invites someone. Faithful build of the Figma reference and the base every other email follows. |
 | 8 | **Role Changed** | P2 | Admin changes a user's role. |
-| 9 | **Ownership Transfer** | P1 | Workspace ownership transferred (to both owners). |
+| 9 | **Ownership Transfer** | P1 | The chosen member accepted — ownership has moved (to both owners). |
+| 18 | **Ownership Transfer Request** | P1 | Owner picks a member to hand the workspace to. The **Accept ownership** button opens Accel on a confirmation modal. |
+| 19 | **Ownership Transfer Declined** | P1 | The chosen member declined — sent to the Owner, who keeps the role. |
 | 10 | **Account Deletion Request** | P1 | Member requests deletion — sent to the Owner to action. |
 | 11 | **Account Deleted** | P1 | After deletion, confirming access and personal data are gone. |
 | 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
@@ -54,6 +56,21 @@ templates above:
 
 The critical alert's detection snapshot is an inline SVG stand-in; swap it for
 a hosted `<img src="{{snapshotUrl}}">` before sending, as with the logo.
+
+### Ownership transfer (three emails, one flow)
+
+A transfer is a request until the chosen member agrees to it:
+
+1. **Request** → the member. Its button deep-links (`{{acceptUrl}}`) into Accel
+   with `AcceptOwnershipModal` open
+   (`src/pages/user-management/AcceptOwnershipModal.tsx`).
+2. **Accept** in the modal → **Ownership Transfer** to both people.
+3. **Decline** in the modal (optional note) → **Ownership Transfer Declined**
+   to the Owner.
+
+In the gallery, click the button in the Request preview (or "Button opens" in
+the info panel) to walk the loop. The app's User Management still transfers
+ownership immediately; wiring it to send the request instead is not done here.
 
 ## Documents
 

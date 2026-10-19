@@ -11,9 +11,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>User Management</PageHeader.Title>
-        <PageHeader.Description>
-          Manage workspace members — roles, site access, and authentication.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

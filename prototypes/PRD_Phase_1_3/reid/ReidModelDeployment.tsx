@@ -1728,9 +1728,6 @@ export function ReidModelDeployment({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Deployment</PageHeader.Title>
-          <PageHeader.Description>
-            Deploy validated AI models to cameras across sites — the final stage of the validation pipeline.
-          </PageHeader.Description>
         </PageHeader.Content>
         {forcedState !== "loading" && (
           <PageHeader.Actions>

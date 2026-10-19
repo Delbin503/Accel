@@ -502,9 +502,6 @@ export default function DashboardPage({
         <PageHeader>
           <PageHeader.Content>
             <PageHeader.Title>Dashboard</PageHeader.Title>
-            <PageHeader.Description>
-              Workspace-wide overview — pulled live from cameras, detections, incidents, deployments and storage.
-            </PageHeader.Description>
           </PageHeader.Content>
         </PageHeader>
         {forced === "loading" ? <DashboardSkeleton /> : <ErrorState onRetry={onResolveForced} />}
@@ -557,9 +554,6 @@ export default function DashboardPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Dashboard</PageHeader.Title>
-          <PageHeader.Description>
-            Workspace-wide overview — pulled live from cameras, detections, incidents, deployments and storage.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <span

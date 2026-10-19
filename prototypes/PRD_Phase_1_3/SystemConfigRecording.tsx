@@ -988,9 +988,6 @@ export function SystemConfigRecording() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Configuration</PageHeader.Title>
-          <PageHeader.Description>
-            Workspace-wide settings — permissions, SLAs, detection engine, integrations and security.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button variant="outline" onClick={() => { toast.message("Discarded local changes"); setDirty(false); }} className="gap-1.5">

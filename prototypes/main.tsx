@@ -11,74 +11,58 @@ const discovered = new Set(
 
 type Variant = { label: string; slug: string };
 type ModuleDef = { name: string; slug?: string; variants?: Variant[] };
-type Phase = { phase: string; priority: "P0" | "P1"; modules: ModuleDef[] };
+/* All delivered platform modules, reviewed together as one app: the index shows a
+   single "Phase 1 dashboard" card, and each module links on to the others through
+   the sidebar and in-page links (see _shared/protoRoutes.ts). Listed here so their
+   folders are not reported as unmapped. */
+const PHASE_ONE_MODULES: ModuleDef[] = [
+  { name: "Dashboard", slug: "PRD_Dashboard" },
+  { name: "User Management", slug: "PRD_User_Management" },
+  { name: "Profile Settings", slug: "PRD_Profile_Settings" },
+  { name: "Site · Overview", slug: "PRD_Site_Management" },
+  { name: "Site · Cameras", slug: "PRD_Cameras" },
+  { name: "Site · NVR Devices", slug: "PRD_NVR_Devices" },
+  { name: "Live Monitoring", slug: "PRD_Live_Monitoring" },
+  { name: "Detection Feed", slug: "PRD_Detection_Feed" },
+  { name: "Incident Cases", slug: "PRD_Incident_Cases" },
+  { name: "Rules Library", slug: "PRD_Rule_Library" },
+  { name: "Recordings", slug: "PRD_Recordings" },
+  { name: "Model Management", slug: "PRD_Model_Management" },
+  { name: "Model Deployment", slug: "PRD_Model_Deployment" },
+  { name: "Run Analysis", slug: "PRD_Run_Analysis" },
+  { name: "Device Health", slug: "PRD_Device_Health" },
+  { name: "System Configuration", slug: "PRD_System_Configuration" },
+  { name: "Activity Logs", slug: "PRD_Activity_Logs" },
+  { name: "Billing / Subscription", slug: "PRD_Billing" },
+];
 
-/* Platform modules grouped by delivery phase + priority (from the roadmap). */
-const PHASES: Phase[] = [
+const STANDALONE_PROTOTYPES: ModuleDef[] = [
   {
-    phase: "Phase 1",
-    priority: "P0",
-    modules: [
-      { name: "User Management", slug: "PRD_User_Management" },
-      { name: "Site · Cameras", slug: "PRD_Cameras" },
-      { name: "Live Monitoring", slug: "PRD_Live_Monitoring" },
-      { name: "Model Management", slug: "PRD_Model_Management" },
-      { name: "Model Deployment", slug: "PRD_Model_Deployment" },
+    name: "Onboarding",
+    variants: [
+      { label: "Cloud", slug: "PRD_Onboarding_Cloud" },
+      { label: "On-Premise", slug: "PRD_Onboarding_OnPremise" },
+      { label: "Invite Signup", slug: "PRD_Invite_Signup" },
     ],
   },
-  {
-    phase: "Phase 1",
-    priority: "P1",
-    modules: [
-      { name: "Detection Feed", slug: "PRD_Detection_Feed" },
-      { name: "Rules Library", slug: "PRD_Rule_Library" },
-      { name: "Incident Cases", slug: "PRD_Incident_Cases" },
-    ],
-  },
-  {
-    phase: "Phase 2",
-    priority: "P0",
-    modules: [
-      { name: "Run Analysis", slug: "PRD_Run_Analysis" },
-      { name: "System Configuration", slug: "PRD_System_Configuration" },
-      { name: "Site · NVR Devices", slug: "PRD_NVR_Devices" },
-      { name: "Recordings", slug: "PRD_Recordings" },
-      { name: "Activity Logs", slug: "PRD_Activity_Logs" },
-    ],
-  },
-  {
-    phase: "Phase 2",
-    priority: "P1",
-    modules: [
-      {
-        name: "Onboarding · Login / Registration",
-        variants: [
-          { label: "Cloud", slug: "PRD_Onboarding_Cloud" },
-          { label: "On-Premise", slug: "PRD_Onboarding_OnPremise" },
-          { label: "Invite Signup", slug: "PRD_Invite_Signup" },
-        ],
-      },
-      { name: "Profile Settings", slug: "PRD_Profile_Settings" },
-      { name: "Dashboard", slug: "PRD_Dashboard" },
-      { name: "Site · Overview", slug: "PRD_Site_Management" },
-      { name: "Device Health", slug: "PRD_Device_Health" },
-      { name: "Billing / Subscription", slug: "PRD_Billing" },
-    ],
-  },
+  { name: "Email Templates", slug: "PRD_Email_Templates" },
+  { name: "Interactive Demo", slug: "PRD_Interactive_Demo" },
+  { name: "Quick Actions", slug: "PRD_Quick_Actions" },
 ];
 
 function has(slug?: string) {
   return !!slug && discovered.has(slug);
 }
 
-/* Slugs referenced anywhere in the roadmap above. */
+/* Slugs referenced by the Phase 1 slide or its standalone prototypes. */
 const mapped = new Set<string>();
-PHASES.forEach((p) =>
-  p.modules.forEach((m) => {
+[
+  ...PHASE_ONE_MODULES,
+  ...STANDALONE_PROTOTYPES,
+].forEach((m) => {
     if (m.slug) mapped.add(m.slug);
     m.variants?.forEach((v) => mapped.add(v.slug));
-  })
-);
+  });
 /* Phase 1.3 and Accel TRMS have tabs of their own, so they're not "unmapped". */
 const OWN_TAB = new Set(["PRD_Phase_1_3", "PRD_Accel_TRMS"]);
 const unmapped = [...discovered].filter((s) => !mapped.has(s) && !OWN_TAB.has(s)).sort();
@@ -193,29 +177,6 @@ function Section({ title, badge, count, children }: { title: string; badge?: "P0
   );
 }
 
-function PhaseSection({ p }: { p: Phase }) {
-  const ready = p.modules.filter(
-    (m) => has(m.slug) || m.variants?.some((v) => has(v.slug))
-  ).length;
-  return (
-    <section className="phase">
-      <div className="phase-head">
-        <span className="phase-title">{p.phase}</span>
-        <span className={`badge ${p.priority.toLowerCase()}`}>{p.priority}</span>
-        <span className="count">
-          {ready}/{p.modules.length} prototyped
-        </span>
-      </div>
-      <div className="rule" />
-      <div className="grid">
-        {p.modules.map((m) => (
-          <ModuleCard key={m.name} mod={m} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function PrototypeIndex() {
   const [tab, setTab] = React.useState<TabKey>(tabFromHash);
   React.useEffect(() => {
@@ -225,7 +186,7 @@ function PrototypeIndex() {
   }, []);
   const phase13Ready = has(PHASE_13);
   const counts: Record<TabKey, number> = {
-    "phase-1": PHASES.reduce((n, p) => n + p.modules.length, 0) + unmapped.length,
+    "phase-1": 1 + STANDALONE_PROTOTYPES.length + unmapped.length,
     "phase-1-3": PHASE_13_PAGES.length + 1,
     trms: 1,
   };
@@ -249,9 +210,18 @@ function PrototypeIndex() {
 
       {tab === "phase-1" && (
         <>
-          {PHASES.map((p) => (
-            <PhaseSection key={`${p.phase}-${p.priority}`} p={p} />
-          ))}
+          <Section title="Phase 1" badge="P0" count={`${PHASE_ONE_MODULES.length} modules, linked`}>
+            <LinkCard
+              name="Phase 1 dashboard"
+              desc={`All ${PHASE_ONE_MODULES.length} modules in one app — move between them from the sidebar`}
+              href={has("PRD_Dashboard") ? "/PRD_Dashboard/" : null}
+            />
+          </Section>
+          <Section title="Standalone prototypes" count="4 separate reviews">
+            {STANDALONE_PROTOTYPES.map((mod) => (
+              <ModuleCard key={mod.name} mod={mod} />
+            ))}
+          </Section>
           {unmapped.length > 0 && (
             <Section title="Other prototypes" count={`${unmapped.length} not yet on the roadmap`}>
               {unmapped.map((slug) => (
@@ -260,7 +230,7 @@ function PrototypeIndex() {
             </Section>
           )}
           <footer className="note">
-            Phases reflect P0 / P1 delivery priority. Grey modules are not yet prototyped.
+            Phase 1 opens on the dashboard; every delivered module is reachable from there. Grey modules are not yet prototyped.
           </footer>
         </>
       )}

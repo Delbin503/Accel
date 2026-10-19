@@ -11,9 +11,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>Rule Library</PageHeader.Title>
-        <PageHeader.Description>
-          Create and manage detection rules and alert conditions.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

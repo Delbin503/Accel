@@ -1350,9 +1350,6 @@ function AnalysisLoadingScreen({ stage, onCancel }: { stage: number; onCancel: (
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
-          <p className="text-base text-muted-foreground">
-            The model is processing your footage. This may take a few seconds.
-          </p>
         </div>
       </div>
 
@@ -1438,9 +1435,6 @@ function AnalysisFailedScreen({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
-          <p className="text-base text-muted-foreground">
-            The pipeline could not complete. Review the failure and retry or edit setup.
-          </p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
@@ -2079,9 +2073,6 @@ function SelectStep({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
-          <p className="text-base text-muted-foreground">
-            Test models against uploaded footage with VLM-powered reasoning before deployment.
-          </p>
         </div>
         {!isLoading && (
           <div className="flex flex-shrink-0 items-center gap-2 pt-1">
@@ -2317,9 +2308,6 @@ function UploadStep({
       <div className="flex flex-shrink-0 items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
-          <p className="text-base text-muted-foreground">
-            Upload your footage and select a VLM to run the model against the clip.
-          </p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <RunQuotaButton
@@ -3839,9 +3827,6 @@ function HistoryTab({
     <div className="flex items-start justify-between gap-3">
       <div>
         <h2 className="text-xl font-bold text-foreground">Analysis History</h2>
-        <p className="text-base text-muted-foreground">
-          Browse, search, and review past analyses across all models.
-        </p>
       </div>
       <div className="flex flex-shrink-0 items-center gap-2 pt-1">
         <Button variant="ghost" size="sm" onClick={onBackToAnalysis} className="gap-1.5 text-base">

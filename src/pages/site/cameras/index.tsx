@@ -1750,7 +1750,6 @@ export default function CamerasPage({
   drawerAsync = "idle",
   forcedState = "normal",
   title = "Cameras",
-  description = "Manage cameras across all sites — RTSP feeds, NVR linkage, and boundary zones.",
   extraColumns = [],
 }: {
   /** Prototype hook — forces the camera drawer's detail-fetch state. */
@@ -1759,7 +1758,6 @@ export default function CamerasPage({
   forcedState?: "normal" | "empty";
   /** Page heading — a deployment may call these devices rather than cameras. */
   title?: string;
-  description?: string;
   /** Columns inserted before ACTION. Empty by default, so the table is unchanged. */
   extraColumns?: CameraExtraColumn[];
 } = {}) {
@@ -1934,7 +1932,6 @@ export default function CamerasPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>{title}</PageHeader.Title>
-          <PageHeader.Description>{description}</PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button size="sm" className="gap-1.5" onClick={() => setModal({ kind: "add" })}>

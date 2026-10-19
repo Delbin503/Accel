@@ -114,9 +114,11 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
       <ChangeRoleModal
         open
         users={[user]}
+        allUsers={MOCK_USERS}
         seatUsage={seatUsage}
         onClose={close}
         onConfirm={() => close()}
+        onTransferOwnership={() => close()}
         onPurchaseSeat={() => undefined}
       />
     ),

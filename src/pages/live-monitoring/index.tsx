@@ -1054,9 +1054,6 @@ export default function LiveMonitoringPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
-          <PageHeader.Description>
-            Real-time camera feeds across all sites — switch view modes and customize layouts.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

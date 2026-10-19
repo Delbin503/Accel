@@ -20,6 +20,8 @@ import {
   Settings,
   ScrollText,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -44,6 +46,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import sigmawaveLogo from "@/assets/sigmawave-logo.svg";
 
 /* ─── Nav data ──────────────────────────────────────────────────────────── */
@@ -106,6 +109,56 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const PROTOTYPE_ROUTES: Record<string, string> = {
+  "/": "/PRD_Dashboard/",
+  "/live": "/PRD_Live_Monitoring/",
+  "/recordings": "/PRD_Recordings/",
+  "/detection-feed": "/PRD_Detection_Feed/",
+  "/site/overview": "/PRD_Site_Management/",
+  "/site/cameras": "/PRD_Cameras/",
+  "/site/nvr": "/PRD_NVR_Devices/",
+  "/models": "/PRD_Model_Management/",
+  "/rules": "/PRD_Rule_Library/",
+  "/incidents": "/PRD_Incident_Cases/",
+  "/analysis": "/PRD_Run_Analysis/",
+  "/deployment": "/PRD_Model_Deployment/",
+  "/users": "/PRD_User_Management/",
+  "/device-health": "/PRD_Device_Health/",
+  "/config": "/PRD_System_Configuration/",
+  "/activity-logs": "/PRD_Activity_Logs/",
+};
+
+function prototypeHref(href: string) {
+  if (typeof window === "undefined" || !window.location.pathname.startsWith("/PRD_")) {
+    return undefined;
+  }
+
+  return PROTOTYPE_ROUTES[href];
+}
+
+/* Rendered inside `SidebarMenuButton asChild`, which passes the button's
+   className, data attributes and ref down to this element — they must reach
+   the <a> / NavLink, or the menu item loses all of its styling. */
+const SidebarLink = React.forwardRef<
+  HTMLAnchorElement,
+  { href: string; children: React.ReactNode } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href">
+>(({ href, children, ...props }, ref) => {
+  const destination = prototypeHref(href);
+  if (destination) {
+    return (
+      <a ref={ref} href={destination} {...props}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <NavLink ref={ref} to={href} end={href === "/"} {...props}>
+      {children}
+    </NavLink>
+  );
+});
+SidebarLink.displayName = "SidebarLink";
+
 /* ─── Logo ──────────────────────────────────────────────────────────────── */
 
 /* Accel logo — the brand lockup from assets/accel-logo-dark.svg, drawn inline.
@@ -142,12 +195,13 @@ function AccelLogo() {
       )}
     >
       {/* Collapsed to the icon rail there is only room for the mark, so the
-          viewBox narrows to it and the wordmark is left out. */}
+          viewBox narrows to it and the wordmark is left out. It shrinks a step
+          too, clear of the edge toggle that straddles the rail's border. */}
       <svg
         viewBox={isCollapsed ? "12 7 42 41" : "12 7 105 41"}
         role="img"
         aria-label="Accel"
-        className={cn("shrink-0", isCollapsed ? "size-8" : "h-8 w-auto")}
+        className={cn("shrink-0", isCollapsed ? "size-6" : "h-8 w-auto")}
       >
         {/* The mark keeps the logo file's exact orange rather than the primary
             token, which is a shade off — a logo is the one place the asset's
@@ -185,16 +239,18 @@ function NavLeaf({ item }: { item: NavItem }) {
         tooltip={isCollapsed ? item.label : undefined}
         className={cn(
           "relative rounded-md border-l-2 border-transparent transition-colors",
+          // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
+          "group-data-[collapsible=icon]:pl-1.5!",
           isActive &&
             "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
         )}
       >
-        <NavLink to={item.href} end={item.href === "/"}>
+        <SidebarLink href={item.href}>
           <item.icon
             className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
           />
           <span>{item.label}</span>
-        </NavLink>
+        </SidebarLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -227,6 +283,8 @@ function NavParent({ item }: { item: NavItem }) {
             tooltip={item.label}
             className={cn(
               "relative rounded-md border-l-2 border-transparent transition-colors",
+              // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
+              "group-data-[collapsible=icon]:pl-1.5!",
               isAnyChildActive &&
                 "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
             )}
@@ -260,7 +318,7 @@ function NavParent({ item }: { item: NavItem }) {
                         "bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
                     )}
                   >
-                    <NavLink to={child.href}>
+                    <SidebarLink href={child.href}>
                       <child.icon
                         className={cn(
                           "size-4 shrink-0",
@@ -268,7 +326,7 @@ function NavParent({ item }: { item: NavItem }) {
                         )}
                       />
                       <span>{child.label}</span>
-                    </NavLink>
+                    </SidebarLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
@@ -322,7 +380,7 @@ function NavParent({ item }: { item: NavItem }) {
                       childActive && "text-primary"
                     )}
                   >
-                    <NavLink to={child.href}>
+                    <SidebarLink href={child.href}>
                       <child.icon
                         className={cn(
                           "size-4 shrink-0",
@@ -330,7 +388,7 @@ function NavParent({ item }: { item: NavItem }) {
                         )}
                       />
                       <span>{child.label}</span>
-                    </NavLink>
+                    </SidebarLink>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               );
@@ -359,6 +417,44 @@ function SigmawaveFooter() {
   );
 }
 
+/* ─── Edge toggle ───────────────────────────────────────────────────────── */
+
+/* The collapse control is a small round button sitting on the sidebar's right
+   edge, level with the logo, in place of a trigger in the top bar. It is fixed
+   to the viewport rather than placed inside the sidebar: the sidebar is its own
+   stacking context below the sticky top bar, which would cover the half of the
+   button that hangs over the page. It follows the sidebar's width as it
+   collapses. On mobile the sidebar is a sheet, so the top bar keeps its
+   trigger there and this button is hidden. */
+function SidebarEdgeToggle() {
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === "collapsed";
+  const label = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+  const Icon = isCollapsed ? ChevronRight : ChevronLeft;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={label}
+          aria-expanded={!isCollapsed}
+          className={cn(
+            "fixed top-3 z-[calc(var(--z-sticky)+1)] hidden size-6 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-sidebar text-muted-foreground shadow-sm md:flex",
+            "transition-[left,color,background-color] duration-200 ease-linear hover:bg-muted hover:text-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            isCollapsed ? "left-(--sidebar-width-icon)" : "left-(--sidebar-width)"
+          )}
+        >
+          <Icon className="size-4" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 /* ─── Main sidebar component ────────────────────────────────────────────── */
 
 export function AppSidebar({
@@ -368,8 +464,11 @@ export function AppSidebar({
   groups?: NavGroup[];
 } = {}) {
   return (
+    <>
     <Sidebar collapsible="icon">
-      <SidebarHeader className="pb-1 pt-3">
+      {/* Same height as the top bar, so the logo, the edge toggle and the
+          breadcrumb all sit on one line. */}
+      <SidebarHeader className="h-12 justify-center py-0">
         <AccelLogo />
       </SidebarHeader>
 
@@ -380,7 +479,8 @@ export function AppSidebar({
               {group.label}
             </SidebarGroupLabel>
 
-            <SidebarMenu>
+            {/* Collapsed, the icons sit centred in the rail rather than flush left. */}
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center">
               {group.items.map((item) =>
                 item.children ? (
                   <NavParent key={item.href} item={item} />
@@ -399,6 +499,8 @@ export function AppSidebar({
 
       <SidebarRail />
     </Sidebar>
+    <SidebarEdgeToggle />
+    </>
   );
 }
 

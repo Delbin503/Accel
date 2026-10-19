@@ -335,9 +335,6 @@ export default function SiteOverviewPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Site Management</PageHeader.Title>
-          <PageHeader.Description>
-            Manage all sites — upload floor plans, draw areas, and place cameras.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Tooltip>

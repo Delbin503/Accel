@@ -7,7 +7,6 @@ export default function ZonesPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Zones</PageHeader.Title>
-          <PageHeader.Description>Define and configure detection zones.</PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

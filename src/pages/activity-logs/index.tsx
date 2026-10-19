@@ -148,9 +148,6 @@ export default function ActivityLogsPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Activity Log</PageHeader.Title>
-          <PageHeader.Description>
-            Full activity history for your account. Available to you and your org administrator.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button variant="outline" className="gap-1.5">

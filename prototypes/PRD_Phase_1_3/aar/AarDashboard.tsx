@@ -83,7 +83,6 @@ export function AarDashboard() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>After Action Review</PageHeader.Title>
-          <PageHeader.Description>How one indoor-range session went, why, and what to practise next.</PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button
@@ -641,11 +640,11 @@ function SelectedShot({ shot, onSelect }: { shot: Shot; onSelect: (n: number) =>
                 onClick={() => onSelect(s.n)}
                 className={cn(
                   "flex flex-col items-center rounded-lg border px-2 py-1.5 transition-colors duration-[var(--duration-fast)]",
-                  active ? "border-foreground bg-foreground text-background" : "border-border bg-background hover:border-foreground/40"
+                  active ? "border-primary bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40"
                 )}
               >
                 <span className="text-xs font-bold">Shot {s.n}</span>
-                <span className={cn("font-mono text-2xs font-semibold", active ? "text-background/70" : !hit ? "text-sev-critical" : points(s) === 10 ? "text-success" : "text-info")}>
+                <span className={cn("font-mono text-2xs font-semibold", !hit ? "text-sev-critical" : points(s) === 10 ? "text-success" : "text-info")}>
                   {hit ? `${points(s)} pts` : "Miss"}
                 </span>
               </button>
@@ -732,7 +731,7 @@ function EventMarkers({ className, selected, onSelect }: { className?: string; s
                     onClick={() => onSelect(s.n)}
                     className={cn(
                       "w-full rounded py-0.5 font-mono text-2xs font-semibold",
-                      s.n === selected ? "bg-foreground text-background" : isHit(s) ? "text-muted-foreground hover:bg-muted" : "text-sev-critical hover:bg-muted"
+                      s.n === selected ? "bg-primary/15 text-primary ring-1 ring-inset ring-primary" : isHit(s) ? "text-muted-foreground hover:bg-muted" : "text-sev-critical hover:bg-muted"
                     )}
                   >
                     {s.n}

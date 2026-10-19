@@ -1,0 +1,46 @@
+Accel — Accept ownership of {{orgName}}
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+{{fromName}} has asked to transfer ownership of the {{orgName}} workspace on
+Accel to you. Nothing changes until you confirm — you keep your current role
+until then.
+
+Request details
+---------------
+Current owner:    {{fromName}}
+Your role today:  {{currentRole}}
+Your new role:    Owner
+Requested on:     {{requestedAt}}
+Expires on:       {{expiresAt}}
+
+What accepting means
+--------------------
+As Owner you take over billing and seats, user and role management, and the
+account's irreversible controls. {{fromName}} becomes an Admin. Weren't
+expecting this? Decline from the same screen, or ignore this email and the
+request will expire.
+
+Accept ownership:
+{{acceptUrl}}
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+Twitter: https://twitter.com/sigmawaveai
+Facebook: https://www.facebook.com/sigmawave.ai
+Instagram: https://www.instagram.com/sigmawave.ai
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

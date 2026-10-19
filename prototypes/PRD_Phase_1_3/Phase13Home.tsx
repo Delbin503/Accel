@@ -14,10 +14,6 @@ export function Phase13Index() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Phase 1.3</PageHeader.Title>
-          <PageHeader.Description>
-            Proposed features for the next phase. Each one is its own page, in the module it would
-            ship inside — open it to review it at full size.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

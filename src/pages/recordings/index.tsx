@@ -640,9 +640,6 @@ export default function RecordingsPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Recordings</PageHeader.Title>
-          <PageHeader.Description>
-            Browse all camera recordings — filter by site, camera or date, and replay the footage.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

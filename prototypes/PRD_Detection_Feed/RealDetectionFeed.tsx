@@ -813,9 +813,6 @@ export default function DetectionFeedPage({
               </span>
             </span>
           </PageHeader.Title>
-          <PageHeader.Description>
-            AI-flagged events across all sites. Triage, dismiss, or escalate to a case.
-          </PageHeader.Description>
         </PageHeader.Content>
         {forced !== "loading" && (
           <PageHeader.Actions>

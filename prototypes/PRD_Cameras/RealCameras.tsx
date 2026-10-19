@@ -10,9 +10,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>Cameras</PageHeader.Title>
-        <PageHeader.Description>
-          Manage cameras across all sites — RTSP feeds, NVR linkage, and boundary zones.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

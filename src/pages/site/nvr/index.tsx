@@ -2758,9 +2758,6 @@ export default function NvrDevicesPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>NVR Devices</PageHeader.Title>
-          <PageHeader.Description>
-            Network Video Recorders storing camera footage — channel management, storage health, and cleanup.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button size="sm" className="gap-1.5" onClick={() => setModal({ kind: "add" })}>

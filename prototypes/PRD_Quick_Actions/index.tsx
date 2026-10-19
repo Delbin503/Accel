@@ -60,7 +60,8 @@ function App() {
 
                 <div className="flex min-w-0 flex-1 flex-col">
                   <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+                    <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+                    <ProtoBreadcrumb className="md:ml-2" />
                     <div className="flex-1" />
                     <div className="flex w-64 justify-end">
                       <GlobalSearchTrigger />
@@ -73,7 +74,6 @@ function App() {
                   </header>
 
                   <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
-                    <ProtoBreadcrumb className="mb-4" />
                     <Routes>
                       {/* The prototype's own surface. */}
                       <Route path="/config" element={<QuickActionsConfigPage />} />

@@ -4,7 +4,7 @@ import { trmsTrail } from "./trmsNav";
 
 /* The shared breadcrumb derives its trail from the app's full nav; TRMS has its
    own cut of it (and calls cameras "Devices"), so the trail comes from that. */
-export function TrmsBreadcrumb() {
+export function TrmsBreadcrumb({ className }: { className?: string }) {
   const { pathname } = useLocation();
-  return <ProtoBreadcrumb trail={trmsTrail(pathname)} className="mb-4" />;
+  return <ProtoBreadcrumb trail={trmsTrail(pathname)} className={className} />;
 }

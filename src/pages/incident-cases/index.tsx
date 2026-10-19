@@ -437,9 +437,6 @@ export default function IncidentCasesPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Incident Cases</PageHeader.Title>
-          <PageHeader.Description>
-            Track, investigate, and close AI-flagged security incidents across all sites.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

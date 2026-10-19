@@ -1019,10 +1019,6 @@ export function ReidLiveMonitoring({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
-          <PageHeader.Description>
-            Real-time camera feeds across all sites — select cameras and scrub them back together while the feed keeps
-            running.{tracking && " Weapon tags on a tile open its Re-ID map."}
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           {/* Opens the Cameras & Tracking panel on the right; the wall reflows around it. */}

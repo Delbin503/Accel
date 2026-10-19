@@ -92,7 +92,6 @@ export function TrmsDevices() {
   return (
     <CamerasPage
       title="Devices"
-      description="Cameras across every base station — feeds, NVR linkage, and the stations each one has covered."
       extraColumns={[STATION_COLUMN]}
     />
   );

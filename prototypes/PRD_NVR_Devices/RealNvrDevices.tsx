@@ -10,9 +10,6 @@ function StateHeader({ loading = false }: { loading?: boolean }) {
     <PageHeader>
       <PageHeader.Content>
         <PageHeader.Title>NVR Devices</PageHeader.Title>
-        <PageHeader.Description>
-          Network Video Recorders storing camera footage — channel management, storage health, and cleanup.
-        </PageHeader.Description>
       </PageHeader.Content>
       {!loading && (
         <PageHeader.Actions>

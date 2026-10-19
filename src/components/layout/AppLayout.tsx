@@ -29,8 +29,10 @@ function SkipToContent() {
 function TopBar() {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+      {/* Desktop collapses from the sidebar's own edge button; on mobile the
+          sidebar is a sheet, so it needs this trigger to open. */}
       <SidebarTrigger
-        className="text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground md:hidden"
         aria-label="Toggle sidebar"
       />
       <div className="mx-2 flex flex-1 justify-end md:justify-center">

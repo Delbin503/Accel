@@ -465,9 +465,6 @@ export default function DismissedEventsPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Dismissed Events</PageHeader.Title>
-          <PageHeader.Description>
-            Events marked as false positives — feedback retrains the detection models.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button

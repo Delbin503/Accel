@@ -155,9 +155,6 @@ export default function SystemInfoPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Info</PageHeader.Title>
-          <PageHeader.Description>
-            Application version, infrastructure details and live service status.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button variant="outline" className="gap-1.5">

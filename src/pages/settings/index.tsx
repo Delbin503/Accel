@@ -179,9 +179,6 @@ export default function SettingsPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Settings</PageHeader.Title>
-          <PageHeader.Description>
-            Customize your dashboard experience — appearance, notifications and regional preferences.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button onClick={save} className="gap-1.5">

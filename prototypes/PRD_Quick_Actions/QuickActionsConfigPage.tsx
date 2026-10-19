@@ -55,9 +55,6 @@ export default function QuickActionsConfigPage() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Configuration</PageHeader.Title>
-          <PageHeader.Description>
-            Workspace-wide settings. This prototype builds out the Quick Actions section only.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

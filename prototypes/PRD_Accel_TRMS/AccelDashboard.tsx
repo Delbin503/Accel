@@ -200,9 +200,6 @@ export function AccelDashboard() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Accel TRMS · Dashboard</PageHeader.Title>
-          <PageHeader.Description>
-            Training resource overview — weapon tracking, base-station alerts, cases and activity for Kranji Camp.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-3 py-1 text-sm font-semibold text-success">

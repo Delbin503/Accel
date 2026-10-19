@@ -13,6 +13,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import DetectionFeedPage from "@/pages/detection-feed";
 import { ReidLiveMonitoring } from "../PRD_Phase_1_3/reid/ReidLiveMonitoring";
 import "./proto.css";
+import { PrototypeHandoff } from "../_shared/PrototypeHandoff";
+import { protoStart } from "../_shared/protoRoutes";
 
 /* Live Monitoring — the Phase 1.3 design (camera wall, side panel, synchronised
    playback, detection pop-ups), without the Re-ID weapon tracking that belongs
@@ -27,7 +29,7 @@ const detectionHref = (eventId: string) => `/detection-feed?event=${encodeURICom
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-    <MemoryRouter initialEntries={["/live"]}>
+    <MemoryRouter initialEntries={[protoStart("/live")]}>
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
@@ -35,20 +37,20 @@ function App() {
             <AppSidebar />
             <div className="flex min-w-0 flex-1 flex-col">
               <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
-                <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+                <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
+                <ProtoBreadcrumb className="md:ml-2" />
                 <div className="flex-1" />
                 <SystemStatusMenu />
                 <NotificationsBell />
                 <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                 <UserMenu />
               </header>
-              {/* The routes get the height left under the breadcrumb, so the wall fills the page. */}
+              {/* The routes get the full height of the main area, so the wall fills the page. */}
               <main id="main-content" className="flex flex-1 flex-col overflow-auto p-6 focus:outline-none">
-                <ProtoBreadcrumb className="mb-4 shrink-0" />
                 <div className="min-h-0 flex-1">
                   <Routes>
                     <Route path="/detection-feed" element={<DetectionFeedPage />} />
-                    <Route path="*" element={<ReidLiveMonitoring tracking={false} detectionHref={detectionHref} />} />
+                    <Route path="*" element={<PrototypeHandoff><ReidLiveMonitoring tracking={false} detectionHref={detectionHref} /></PrototypeHandoff>} />
                   </Routes>
                 </div>
               </main>

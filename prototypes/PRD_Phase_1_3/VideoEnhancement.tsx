@@ -153,10 +153,6 @@ export function VideoEnhancement() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Video Enhancement</PageHeader.Title>
-          <PageHeader.Description>
-            VMS-VPB-004 — crop, brightness, sharpness and contrast, applied to the clip for
-            review and export. The stored recording is never modified.
-          </PageHeader.Description>
         </PageHeader.Content>
         <PageHeader.Actions>
           <Button

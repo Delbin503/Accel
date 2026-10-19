@@ -628,10 +628,6 @@ export function RecordingsByDay() {
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Recordings</PageHeader.Title>
-          <PageHeader.Description>
-            Browse all camera recordings — filter by site, camera or day, and replay the footage.
-            Each card is one camera's day, and its chip counts the recordings inside it.
-          </PageHeader.Description>
         </PageHeader.Content>
       </PageHeader>
 

@@ -456,9 +456,6 @@ export default function DeviceHealthPage({
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Device Health</PageHeader.Title>
-          <PageHeader.Description>
-            Operational status of every camera and NVR on the workspace — live heartbeat, disk usage, and last sync.
-          </PageHeader.Description>
         </PageHeader.Content>
         {forcedState !== "loading" && (
           <PageHeader.Actions>
