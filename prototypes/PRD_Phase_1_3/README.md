@@ -253,21 +253,45 @@ cut. **Hold to compare** shows the untouched frame.
 
 ## AAR · After Action Review — `/aar`
 
-The Firer AAR analyser's results for one indoor-range session, after shooting has
-finished. Only what the Firer AAR dashboard shows is on the page:
+One firer's indoor-range session. The **overview** is pinned to the screen — compact
+type and panels so it fits a laptop (1200×800 and up) without scrolling — and the
+**full report** follows below it, so nothing is hidden behind tabs. Two modes:
 
-- Session strip — clip, lane, shots fired, analysis mode, sources, tracking fps and
-  the status-bar figures (loop, running, background features, lag, dropped).
-- KPIs and **Target Board** — shots, points, missed, mean radius, CEP (50%), group size.
-  Points and misses are scored off the board (4 mm rings, 10 to 6, outside 20 mm a miss).
-- **Key Recommendations** (with the shots behind each, and a link to the panel) and
-  **What's Working Well**.
-- A sticky **selected shot** bar; every panel below follows it: **Video & Tracking**
-  (frame, PTZ inset, clip timeline with shot markers), **Detected Cues**, **Recoil &
-  Muzzle Movement**, **Event Markers**, **Breathing**, **Stability / Wobble**, **Flinch
-  Indicator**, and **Wobble Bubble / Shot Summary**.
+- **Live** follows the session as it is shot (simulated clock, 1× / 2× / 4×): shots
+  appear on the board as they land, the shot being aimed drives every panel, checks
+  stay pending until they can be judged, and **Live Cues** reads the breathing and hold
+  ("Exhale — wait for the pause") and lists what each fired shot said to fix.
+- **Results** is the finished review: pick any shot.
 
-`aar/aarSession.ts` holds the six shots and the signal generators; every count on the
-page (including the recommendation evidence) is derived from them. `aar/aarParts.tsx`
-draws the camera frame, the wobble plots and the shot chip. Promoting it means swapping
-`aarSession.ts` for a session query and adding loading / empty / error states.
+Panels, after the Marksmanship AAR report (v1.1):
+
+- **Summary strip** — firer, overall grade (A–F, score /100, vs last session) and the
+  six results: points, hits, missed, mean radius, CEP (50%), group size.
+- **Posture Tracking** — the side camera with the pose read off it: keypoints green
+  or red, legs-open angle, elbows set, body angle off the line of fire, hold and
+  flinch, and the sight picture at the break. A **Camera** tab shows the lane CCTV.
+  The session timeline underneath carries every shot.
+- **Target Board** — shots, CEP, group centre and the sight adjustment in clicks.
+- **Shot Review / Current Shot** — stance, hold stability, breath control,
+  trigger/flinch and follow-through for one shot.
+- **Shot Signals** — muzzle movement (left–right, up–down), breathing, hold and flinch,
+  3 s before to 2 s after the break, with a shared hover line.
+- **Fundamentals** — stance, breath control, weapon wobble and weapon flinch graded
+  A–F, with shots met and last session vs this one.
+- **Coaching** — the two faults that cost the most points a shot, with a drill each,
+  the five-session trend, platoon standing and badges.
+
+Full report (Results only), after the report and the earlier dashboard: shot analysis
+for the picked shot (recoil, event markers, breathing / stability / flinch with their
+stat tiles, wobble bubble, shot summary table); best vs weakest shot side by side
+(pose frame, muzzle and breathing traces, factors met, what went well / wrong, home
+drills); the factor grades table with what each measures, previous vs current and the
+trend; comparisons and achievements (platoon histogram, platoon / company / batch,
+unit averages, badges); every recommendation; and how the session was analysed.
+Coaching's "See …" links pick the shot and scroll to the panel.
+
+`aar/aarSession.ts` holds the six shots (with posture and hold), the signal generators
+and the grading; every count on the page is derived from them, and `statsFor` /
+`factorsFor` work on any subset so Live can show the shots so far. `aar/aarParts.tsx`
+draws the posture frame. Promoting it means swapping `aarSession.ts` for a session
+query (or a live stream) and adding loading / empty / error states.
