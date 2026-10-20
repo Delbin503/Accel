@@ -178,7 +178,7 @@ const TEMPLATES: Template[] = [
     category: "Team & User Management",
     priority: "P1",
     whenSent:
-      "When the Owner reaches the Transfer Ownership step in User Management. The code replaces the password re-entry; the transfer only goes ahead once it is entered.",
+      "When the Owner confirms their password on the Transfer Ownership step in User Management. The transfer only goes ahead once this code is entered too.",
     audience: "The current Owner starting the transfer.",
     mergeTags: ["{{firstName}}", "{{code}}", "{{expiryMinutes}}", "{{orgName}}", "{{newOwnerName}}", "{{newRole}}", "{{time}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/ownership-transfer-code.html",

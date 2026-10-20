@@ -31,6 +31,7 @@ import {
   Clock,
   Plus,
   ArrowRight,
+  LoaderCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -1370,6 +1371,9 @@ export function ChangeRoleModal({
   const [successorSearch, setSuccessorSearch] = React.useState("");
   const [selectedSuccessorId, setSelectedSuccessorId] = React.useState<string | null>(null);
   const [otp, setOtp] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  /* Transfer verification runs in two steps: password, then an emailed code. */
+  const [verifyStep, setVerifyStep] = React.useState<"password" | "checking" | "code">("password");
   const isBulk = users.length > 1;
 
   React.useEffect(() => {
@@ -1381,8 +1385,23 @@ export function ChangeRoleModal({
       setSuccessorSearch("");
       setSelectedSuccessorId(null);
       setOtp("");
+      setPassword("");
+      setVerifyStep("password");
     }
   }, [open, initial]);
+
+  // Simulated password check — about a second, then the code is sent.
+  const ownerEmail = allUsers.find((user) => user.role === "owner")?.email ?? users[0]?.email;
+  React.useEffect(() => {
+    if (verifyStep !== "checking") return;
+    const timer = window.setTimeout(() => {
+      setVerifyStep("code");
+      toast.message("Verification code sent", {
+        description: `We emailed a ${OTP_LENGTH}-digit code to ${ownerEmail}.`,
+      });
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [verifyStep, ownerEmail]);
 
   if (users.length === 0) return null;
 
@@ -1438,15 +1457,20 @@ export function ChangeRoleModal({
     onConfirm(role);
   }
 
-  /* The transfer step emails the current Owner a one-time code (the
-     "Ownership Transfer Verification Code" template) instead of asking for
-     their password, so a hijacked session alone can't hand the workspace away. */
+  /* The transfer step asks for the Owner's password, then emails them a
+     one-time code (the "Ownership Transfer Verification Code" template), so
+     neither a known password nor a hijacked session alone can hand the
+     workspace away. */
   function openTransfer() {
     setOtp("");
+    setPassword("");
+    setVerifyStep("password");
     setShowTransfer(true);
-    toast.message("Verification code sent", {
-      description: `We emailed a ${OTP_LENGTH}-digit code to ${currentOwner.email}.`,
-    });
+  }
+
+  function verifyPassword() {
+    if (!password.trim() || verifyStep !== "password") return;
+    setVerifyStep("checking");
   }
 
   function resendCode() {
@@ -1455,7 +1479,7 @@ export function ChangeRoleModal({
   }
 
   function confirmTransfer() {
-    if (otp.length < OTP_LENGTH) return;
+    if (verifyStep !== "code" || otp.length < OTP_LENGTH) return;
     if (isOwnerDemotion) {
       if (!selectedSuccessorId) return;
       if (seatShortfall > 0) onPurchaseSeat(role, seatShortfall);
@@ -1475,7 +1499,9 @@ export function ChangeRoleModal({
     ? `Purchase ${currentTier.label} Seat${seatShortfall === 1 ? "" : "s"}`
     : isBulk ? `Change Role (${users.length})` : "Change Role";
   const headerDescription = showTransfer
-    ? "Verify it's you with the code we emailed to transfer the Owner role."
+    ? verifyStep === "code"
+      ? "Enter the code we emailed to finish the transfer."
+      : "Confirm your identity to transfer the Owner role."
     : showSuccessorPicker
     ? "Select an active workspace member to receive ownership."
     : showPurchase
@@ -1532,18 +1558,50 @@ export function ChangeRoleModal({
                 </p>
               </div>
             )}
-            <div>
-              <label htmlFor="ownership-transfer-code" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Enter verification code
-              </label>
-              <OtpField id="ownership-transfer-code" value={otp} onChange={setOtp} length={OTP_LENGTH} autoFocus />
-              <p className="mt-2 text-sm text-muted-foreground">
-                Sent to <strong className="text-foreground">{currentOwner.email}</strong> · expires in {OTP_EXPIRY_MINUTES} minutes.{" "}
-                <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary">
-                  Resend code
-                </button>
-              </p>
-            </div>
+            {verifyStep === "code" ? (
+              <>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="size-4 flex-shrink-0 text-success" />
+                  Password confirmed
+                </div>
+                <div>
+                  <label htmlFor="ownership-transfer-code" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Enter verification code
+                  </label>
+                  <OtpField id="ownership-transfer-code" value={otp} onChange={setOtp} length={OTP_LENGTH} autoFocus />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Sent to <strong className="text-foreground">{currentOwner.email}</strong> · expires in {OTP_EXPIRY_MINUTES} minutes.{" "}
+                    <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary">
+                      Resend code
+                    </button>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  verifyPassword();
+                }}
+              >
+                <label htmlFor="ownership-transfer-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Re-enter your password
+                </label>
+                <Input
+                  id="ownership-transfer-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Your account password"
+                  className="text-base"
+                  disabled={verifyStep === "checking"}
+                  autoFocus
+                />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  We'll then email a verification code to <strong className="text-foreground">{currentOwner.email}</strong>.
+                </p>
+              </form>
+            )}
           </ModalBody>
         ) : showSuccessorPicker ? (
           <ModalBody className="space-y-4">
@@ -1729,17 +1787,41 @@ export function ChangeRoleModal({
               <Button
                 variant="ghost"
                 size="sm"
+                disabled={verifyStep === "checking"}
                 onClick={() => {
+                  // From the code step, Back returns to the password; from there, out of the transfer.
+                  if (verifyStep === "code") {
+                    setVerifyStep("password");
+                    setPassword("");
+                    setOtp("");
+                    return;
+                  }
                   setShowTransfer(false);
                   if (isOwnerDemotion) setShowSuccessorPicker(true);
                 }}
               >
                 Back
               </Button>
-              <Button size="sm" variant="destructive" disabled={otp.length < OTP_LENGTH} onClick={confirmTransfer} className="gap-1.5">
-                <Crown className="size-3.5" />
-                Transfer Ownership
-              </Button>
+              {verifyStep === "code" ? (
+                <Button size="sm" variant="destructive" disabled={otp.length < OTP_LENGTH} onClick={confirmTransfer} className="gap-1.5">
+                  <Crown className="size-3.5" />
+                  Transfer Ownership
+                </Button>
+              ) : (
+                <Button size="sm" disabled={!password.trim() || verifyStep === "checking"} onClick={verifyPassword} className="gap-1.5">
+                  {verifyStep === "checking" ? (
+                    <>
+                      <LoaderCircle className="size-3.5 animate-spin" />
+                      Checking…
+                    </>
+                  ) : (
+                    <>
+                      Continue
+                      <ArrowRight className="size-3.5" />
+                    </>
+                  )}
+                </Button>
+              )}
             </>
           ) : showSuccessorPicker ? (
             <>
