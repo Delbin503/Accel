@@ -28,7 +28,6 @@ import { cn } from "@/lib/utils";
 import { RECORDING_TYPES, TONE_CLASSES, type RecordingTypeId } from "./recordingTypes";
 import {
   ALL_RECORDINGS,
-  DAYS,
   buildCameraDays,
   fmtSize,
   motionClipsFor,
@@ -497,13 +496,36 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "largest", label: "Largest Size" },
 ];
 
-const DAY_PRESETS = [{ key: "all", label: "All days" }, ...DAYS.map((d) => ({ key: d, label: d }))];
+/* Date filter mirrors the Phase 1 Recordings page — same pills, same keys, same
+   Custom Date popover. The camera-day data only reaches three days back, so
+   This Week and This Month resolve to the whole set here. */
+type DatePreset = "all" | "today" | "yesterday" | "week" | "month" | "custom";
+const DATE_PRESETS: { key: DatePreset; label: string }[] = [
+  { key: "all",       label: "All time" },
+  { key: "today",     label: "Today" },
+  { key: "yesterday", label: "Yesterday" },
+  { key: "week",      label: "This Week" },
+  { key: "month",     label: "This Month" },
+];
+
+/* Same reference clock as the Phase 1 page, so "Today" means the same date. */
+const NOW_REF = new Date("2026-05-25T10:15:00");
+
+/** A camera-day's calendar date, derived from how many days back it sits. */
+function dayTimestamp(dayIndex: number): number {
+  const d = new Date(NOW_REF);
+  d.setDate(d.getDate() - dayIndex);
+  d.setHours(12, 0, 0, 0);
+  return d.getTime();
+}
 
 export function RecordingsByDay() {
   const [source, setSource] = React.useState<DayRecording[]>(ALL_RECORDINGS);
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<RecordingFilters>(EMPTY_FILTERS);
-  const [dayPreset, setDayPreset] = React.useState<string>("all");
+  const [datePreset, setDatePreset] = React.useState<DatePreset>("all");
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set());
@@ -520,7 +542,17 @@ export function RecordingsByDay() {
 
   const filtered = React.useMemo(() => {
     const list = allDays.filter((d) => {
-      if (dayPreset !== "all" && d.dateLabel !== dayPreset) return false;
+      if (datePreset !== "all") {
+        if (datePreset === "today"     && d.dayIndex !== 0) return false;
+        if (datePreset === "yesterday" && d.dayIndex !== 1) return false;
+        if (datePreset === "week"      && d.dayIndex > 6)  return false;
+        if (datePreset === "month"     && d.dayIndex > 29) return false;
+        if (datePreset === "custom") {
+          const ts = dayTimestamp(d.dayIndex);
+          if (dateFrom && ts < new Date(dateFrom + "T00:00:00").getTime()) return false;
+          if (dateTo   && ts > new Date(dateTo   + "T23:59:59").getTime()) return false;
+        }
+      }
       // Selecting both options constrains nothing, same as selecting neither.
       if (filters.bookmark.length === 1) {
         const wantBookmarked = filters.bookmark[0] === "bookmarked";
@@ -546,13 +578,13 @@ export function RecordingsByDay() {
       if (sort === "largest") return b.totalMb - a.totalMb;
       return a.dayIndex - b.dayIndex || a.cameraId.localeCompare(b.cameraId);
     });
-  }, [allDays, dayPreset, filters, search, sort, bookmarkedKeys]);
+  }, [allDays, datePreset, dateFrom, dateTo, filters, search, sort, bookmarkedKeys]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount);
   const pageItems = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
   const drawerDay = drawerKey ? allDays.find((d) => d.key === drawerKey) ?? null : null;
-  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || dayPreset !== "all");
+  const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || datePreset !== "all");
 
   const totalFiles = filtered.reduce((s, d) => s + d.recordings.length, 0);
   const totalMb = filtered.reduce((s, d) => s + d.totalMb, 0);
@@ -639,18 +671,21 @@ export function RecordingsByDay() {
           sub="Camera-days recorded today"
           accent="success"
           icon={Video}
-          active={dayPreset === "Today"}
-          onClick={() => { setDayPreset((c) => (c === "Today" ? "all" : "Today")); setPage(1); }}
+          active={datePreset === "today"}
+          onClick={() => { setDatePreset((c) => (c === "today" ? "all" : "today")); setDateFrom(""); setDateTo(""); setPage(1); }}
         />
         <KpiCard label="Storage" value={fmtSize(totalMb)} sub="Across the shown camera-days" accent="info" icon={HardDrive} />
       </KpiGrid>
 
       <DateRangeBar
-        label="Day"
-        presets={DAY_PRESETS}
-        active={dayPreset}
-        onSelect={(k) => { setDayPreset(k); setPage(1); }}
-        showCustom={false}
+        presets={DATE_PRESETS}
+        active={datePreset}
+        onSelect={(k) => { setDatePreset(k as DatePreset); if (k !== "custom") { setDateFrom(""); setDateTo(""); } setPage(1); }}
+        customFrom={dateFrom}
+        customTo={dateTo}
+        onCustomChange={(f, t) => { setDateFrom(f); setDateTo(t); }}
+        onCustomApply={(f, t) => { setDateFrom(f); setDateTo(t); setPage(1); }}
+        onCustomReset={() => { setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
       />
 
       <FilterPanel
@@ -658,7 +693,7 @@ export function RecordingsByDay() {
         onChange={(f) => { setFilters(f); setPage(1); }}
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
-        additionalActiveCount={dayPreset !== "all" ? 1 : 0}
+        additionalActiveCount={datePreset !== "all" ? 1 : 0}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -668,7 +703,7 @@ export function RecordingsByDay() {
           <strong className="text-foreground">{totalFiles}</strong> recording{totalFiles === 1 ? "" : "s"} match current filters
           {hasFilters && (
             <button
-              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDayPreset("all"); setPage(1); }}
+              onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
               className="ml-2 text-muted-foreground underline hover:text-primary"
             >
               Clear all

@@ -108,7 +108,8 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
             <Input value={search} onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by recording ID, camera, or area…" className="h-9 w-full pl-9 text-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {/* Four per row at most — the fifth dropdown wraps to a second row. */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {[
               { key: "site" as const, label: "Site", opts: CAMERA_SITES },
               { key: "area" as const, label: "Area", opts: CAMERA_AREAS },
