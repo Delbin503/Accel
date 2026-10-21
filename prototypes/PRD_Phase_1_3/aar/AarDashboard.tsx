@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import laneCctv from "@/assets/live-monitoring/warehouse-aisle.webp";
+import laneCctv from "@/assets/aar/prone-shooter-lane.webp";
 import { cn } from "@/lib/utils";
 import {
   BADGES, BEST_SHOT, CLICK_MM, COMPARISONS, CUES, FIRER, HOME_DRILLS, METHOD_NOTE, PLATOON_BINS, PREVIOUS_MET_TOTAL, SESSION_META,
@@ -294,7 +294,7 @@ function SummaryStrip({ shots, live, complete }: { shots: Shot[]; live: boolean;
 
 /* ── Camera: posture tracking + lane feed ────────────────────────────── */
 
-const FIRER_BOX = { x0: 0.276, y0: 0.205, x1: 0.382, y1: 0.689 };
+const FIRER_BOX = { x0: 0.045, y0: 0.335, x1: 0.575, y1: 0.93 };
 
 function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
   className?: string; shot: Shot; fired: Shot[]; live: boolean; t: number; clock: string; onSelect: (n: number) => void;
@@ -415,7 +415,7 @@ function CctvFrame({ shot, live, clock }: { shot: Shot; live: boolean; clock: st
   const fault = shot.cues.posture || shot.cues.shoulder;
   return (
     <div className="absolute inset-0">
-      <img src={laneCctv} alt={`${SESSION.lane} side camera`} draggable={false} className="absolute inset-0 size-full scale-[1.18] object-cover" />
+      <img src={laneCctv} alt={`${SESSION.lane} prone firing position, side camera`} draggable={false} className="absolute inset-0 size-full object-cover" />
       <div
         className={cn("absolute border-2", fault ? "border-sev-critical" : "border-success")}
         style={{ left: `${FIRER_BOX.x0 * 100}%`, top: `${FIRER_BOX.y0 * 100}%`, width: `${(FIRER_BOX.x1 - FIRER_BOX.x0) * 100}%`, height: `${(FIRER_BOX.y1 - FIRER_BOX.y0) * 100}%` }}
