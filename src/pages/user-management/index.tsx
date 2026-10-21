@@ -322,7 +322,13 @@ function FilterPanel({
               className="h-9 w-full pl-9 text-base"
             />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* One row — three columns on the main view, two when Status is hidden. */}
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-3",
+              filterGroups.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
+            )}
+          >
             {filterGroups.map(({ key, label, opts }) => (
               <div key={key}>
                 <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
