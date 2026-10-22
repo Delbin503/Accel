@@ -127,7 +127,7 @@ export function WobblePlot({ shot, w }: { shot: Shot; w: SwayWindow }) {
       : `${w.offAimMm?.toFixed(1)} mm off`;
 
   return (
-    <div className={cn("flex min-h-0 min-w-0 flex-col rounded-md border bg-background p-1", bad ? "border-sev-critical/40" : "border-border")}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border bg-background p-1", bad ? "border-sev-critical/40" : "border-border")}>
       <span className="font-mono text-3xs font-semibold text-foreground">{label}</span>
       <span className={cn("truncate font-mono text-3xs", bad ? "text-sev-critical" : "text-muted-foreground")}>{detail}</span>
       <svg viewBox="-44 -44 88 88" className="block min-h-0 w-full flex-1" role="img" aria-label={`${label}: ${detail}`}>

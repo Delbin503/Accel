@@ -9,6 +9,7 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import laneCctv from "@/assets/aar/prone-shooter-lane.webp";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ import {
   UNIT_AVERAGES, WEAKEST_SHOT, factorsMetTotal, shotNotes, FLINCH_LIMIT_MM, GRADE_BANDS, MISS_MM, PEERS, PREVIOUS, PREVIOUS_OVERALL, RANKED_RECS, REC_DETAIL,
   RING_MM, SESSION, SESSION_INFO, SETTLE_LIMIT_MM, SHOTS, TREND, WOBBLE_LIMIT_MM, WORKING_WELL, breathingSeries, factorsFor, firedInPause,
   flinchSeries, flinched, fmtClip, gradeOf, isHit, muzzleSeries, overallFor, points, radius, recoilSeries, settled, sightAdvice,
-  stanceScore, statsFor, wobbleSeries, type BreathPhase, type RecKey, type Shot,
+  stanceScore, statsFor, wobbleSeries, type BreathPhase, type CueKey, type RecKey, type Shot,
 } from "./aarSession";
 import { PostureFrame, WobblePlot } from "./aarParts";
 
@@ -82,7 +83,7 @@ export function AarDashboard() {
     <div className="flex flex-col gap-6">
     {/* The overview is pinned to the viewport (less the top bar and page padding), so
         it fits a laptop screen; the full report follows below it. */}
-    <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[600px]">
+    <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
       <PageHeader>
         <PageHeader.Content className="flex-row items-center gap-3">
           <PageHeader.Title>After Action Review</PageHeader.Title>
@@ -144,7 +145,7 @@ export function AarDashboard() {
 
       <SummaryStrip shots={fired} live={live} complete={complete} />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(0,1.12fr)_minmax(0,1fr)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(280px,1.12fr)_minmax(260px,1fr)]">
         <CameraPanel className="lg:col-span-5" shot={focus} fired={fired} live={live} t={t} clock={clock} onSelect={setSelected} />
         <TargetPanel className="lg:col-span-3" shots={fired} focus={focus} live={live} onSelect={setSelected} />
         <ShotPanel className="lg:col-span-4" shot={focus} rel={rel} live={live} onSelect={setSelected} />
@@ -717,7 +718,7 @@ function SignalsPanel({ className, shot, rel }: { className?: string; shot: Shot
       bodyClassName="grid grid-cols-2 grid-rows-2 gap-2 max-lg:auto-rows-[110px]"
     >
       <MiniChart title={`Muzzle · #${shot.n}`} empty={waiting ? waitText : undefined} value={rel >= 0 ? (flinched(shot) ? "Flinch at break" : "Steady at break") : meta} bad={rel >= 0 && flinched(shot)}
-        legend={<><Swatch c="bg-foreground" />L–R <Swatch c="bg-warning" />U–D <Swatch c="bg-muted-foreground/30" />Hold <Swatch c="bg-primary/30" />After</>}>
+        legend={<><Swatch c="bg-foreground" />L–R <Swatch c="bg-warning" />U–D <Swatch c="bg-success/40" />Steady</>}>
         <LineChart data={muzzleData} margin={{ top: 4, right: 4, left: -30, bottom: -6 }} {...SYNC}>
           <ReferenceArea x1={-3} x2={0} fill="var(--muted-foreground)" fillOpacity={0.06} strokeOpacity={0} />
           <ReferenceArea x1={0} x2={2} fill="var(--primary)" fillOpacity={0.07} strokeOpacity={0} />
@@ -731,7 +732,7 @@ function SignalsPanel({ className, shot, rel }: { className?: string; shot: Shot
         </LineChart>
       </MiniChart>
       <MiniChart title="Breathing" empty={waiting ? waitText : undefined} value={rel >= 0 ? (inPause ? "In the pause" : `On ${BREATH_LABEL[shot.breath].toLowerCase()}`) : "Live"} bad={rel >= 0 && !inPause}
-        legend={<><Swatch c="bg-success/50" />Pause <Swatch c="bg-info/50" />Inhale · {SESSION.breathingRate}/min · {SESSION.breathingAmplitude.toFixed(2)}×</>}>
+        legend={<><Swatch c="bg-success/50" />Pause <Swatch c="bg-info/50" />Inhale <Swatch c="bg-muted-foreground/50" />Exhale</>}>
         <LineChart data={breathData} margin={{ top: 4, right: 4, left: -30, bottom: -6 }} {...SYNC}>
           {phaseBands(breathData).map((b) => (
             <ReferenceArea key={`${b.from}-${b.phase}`} x1={b.from} x2={b.to + 0.1} fill={PHASE_FILL[b.phase]} fillOpacity={0.14} strokeOpacity={0} />
@@ -770,7 +771,7 @@ function SignalsPanel({ className, shot, rel }: { className?: string; shot: Shot
 }
 
 function Swatch({ c }: { c: string }) {
-  return <span className={cn("ml-1.5 inline-block h-1.5 w-2.5 rounded-sm align-middle first:ml-0", c)} />;
+  return <span className={cn("mr-1 ml-2.5 inline-block h-1.5 w-2.5 rounded-sm align-middle first:ml-0", c)} />;
 }
 
 function MiniChart({ title, value, bad, legend, empty, children }: {
@@ -782,7 +783,7 @@ function MiniChart({ title, value, bad, legend, empty, children }: {
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
       </div>
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-16 flex-1">
         <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
         {empty && <p className="absolute inset-0 grid place-items-center text-center text-2xs text-muted-foreground">{empty}</p>}
       </div>
@@ -824,41 +825,59 @@ function RecoilChart({ shot, rel }: { shot: Shot; rel: number }) {
   );
 }
 
-/* Event markers — the old panel: each cue the analyser picked up, per shot. */
+/* One shade per marker, so a row scans as a run of its own colour instead of a
+   wall of identical dots. The two faults keep the red/amber family, so a fault
+   still reads as a fault without checking the label. */
+const CUE_TONE: Record<CueKey, string> = {
+  flash:    "bg-info",          /* blue   */
+  recoil:   "bg-chart-4",       /* violet */
+  shoulder: "bg-sev-critical",  /* red    — fault */
+  bolt:     "bg-success",       /* green  */
+  ejection: "bg-chart-2",       /* cyan   */
+  posture:  "bg-sev-high",      /* orange — fault */
+};
+
+/* Event markers — the old panel: each cue the analyser picked up, per shot.
+   A session can run well past six shots, so the grid scrolls sideways with the
+   marker column pinned. */
 function EventMarkers({ selected }: { selected: number }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <table className="w-full border-separate border-spacing-y-0.5">
-        <thead>
-          <tr>
-            <th className="text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</th>
-            {SHOTS.map((s) => (
-              <th key={s.n} className={cn("w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary" : isHit(s) ? "text-muted-foreground" : "text-sev-critical")}>{s.n}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {CUES.map((c) => (
-            <tr key={c.key}>
-              <td className="py-0.5 pr-2 text-xs text-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className={cn("size-1.5 shrink-0 rounded-sm", c.fault ? "bg-sev-critical" : "bg-info")} />
-                  <span className="truncate">{c.label}</span>
-                </span>
-              </td>
-              {SHOTS.map((s) => {
-                const on = s.cues[c.key];
-                return (
-                  <td key={s.n} className={cn("text-center", s.n === selected && "bg-muted")}>
-                    <span title={`Shot ${s.n} · ${c.label} ${on ? "detected" : "not seen"}`} className={cn("mx-auto block size-2.5 rounded-full", on ? (c.fault ? "bg-sev-critical" : "bg-info") : "border border-border")} />
-                  </td>
-                );
-              })}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <table className="w-max min-w-full border-separate border-spacing-y-0.5">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-20 min-w-28 bg-card pr-2 text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</th>
+              {SHOTS.map((s) => (
+                <th key={s.n} className={cn("w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary" : isHit(s) ? "text-muted-foreground" : "text-sev-critical")}>{s.n}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-auto pt-1 text-3xs text-muted-foreground">Blue: detected · red: a fault · hollow: not seen. The highlighted column is the selected shot.</p>
+          </thead>
+          <tbody>
+            {CUES.map((c) => (
+              <tr key={c.key}>
+                <td className="sticky left-0 z-10 min-w-28 bg-card py-0.5 pr-2 text-xs text-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span className={cn("size-1.5 shrink-0 rounded-sm", CUE_TONE[c.key])} />
+                    <span className="truncate">{c.label}</span>
+                  </span>
+                </td>
+                {SHOTS.map((s) => {
+                  const on = s.cues[c.key];
+                  return (
+                    <td key={s.n} className={cn("text-center", s.n === selected && "bg-muted")}>
+                      <span title={`Shot ${s.n} · ${c.label} ${on ? "detected" : "not seen"}`} className={cn("mx-auto block size-2.5 rounded-full", on ? CUE_TONE[c.key] : "border border-border")} />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="shrink-0 pt-1 text-3xs text-muted-foreground">
+        One shade per marker · red and orange are the two faults · hollow: not seen. The highlighted column is the selected shot; scroll sideways for the rest.
+      </p>
     </div>
   );
 }
@@ -1247,24 +1266,22 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
         <div className="sticky top-12 z-[var(--z-sticky)] -mx-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 px-3 py-2 backdrop-blur-sm">
           <h3 className="text-md font-bold text-foreground">Shot analysis</h3>
           <span className="text-xs text-muted-foreground">Every panel in this section follows the picked shot.</span>
-          <div role="tablist" aria-label="Shots" className="ml-auto flex gap-1">
-            {SHOTS.map((s) => (
-              <button
-                key={s.n}
-                type="button"
-                role="tab"
-                aria-selected={s.n === shot.n}
-                onClick={() => onSelect(s.n)}
-                className={cn(
-                  "rounded-md border px-2 py-0.5 font-mono text-2xs font-semibold transition-colors",
-                  s.n === shot.n ? "border-primary bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40",
-                  !isHit(s) && s.n !== shot.n && "text-sev-critical"
-                )}
-              >
-                #{s.n} · {isHit(s) ? points(s) : "Miss"}
-              </button>
-            ))}
-          </div>
+          {/* A chip per shot wrapped to a second row once a session ran past
+              six, and the bar is sticky — so it is a dropdown instead. */}
+          <Select value={String(shot.n)} onValueChange={(v) => onSelect(Number(v))}>
+            <SelectTrigger aria-label="Shot" className="ml-auto h-7 w-36 font-mono text-2xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" className="max-h-72">
+              {SHOTS.map((s) => (
+                <SelectItem key={s.n} value={String(s.n)} className="font-mono text-2xs">
+                  <span className={cn(!isHit(s) && "text-sev-critical")}>
+                    Shot #{s.n} · {isHit(s) ? `${points(s)} pts` : "Miss"}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">

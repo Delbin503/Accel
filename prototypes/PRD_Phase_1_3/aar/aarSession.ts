@@ -1,7 +1,8 @@
 /* One indoor-range session as the Firer AAR analyser leaves it once shooting
-   has finished: the clip it ran on, the six shots it detected, and what it
+   has finished: the clip it ran on, the shots it detected, and what it
    measured around each one. Mock data — every total on the page (points,
-   misses, group size, the recommendation counts) is derived from SHOTS.
+   misses, group size, the recommendation counts) is derived from SHOTS, so a
+   session can hold any number of shots, not just the first six.
 
    Target coordinates are millimetres from the point of aim, +x right, +y up.
    The face scores 10 inside 4 mm, one point less per 4 mm ring down to 6;
@@ -17,8 +18,8 @@ export const SETTLE_LIMIT_MM = 3;
 export const SESSION = {
   clip: "range_lane10_side.mp4",
   lane: "Lane 10",
-  clipLength: 69.5, // s
-  position: 57.2, // s — where the clip was when analysis finished
+  clipLength: 137.0, // s
+  position: 124.7, // s — where the clip was when analysis finished
   loop: 3,
   running: "3:16.1",
   trackingFps: 22.3,
@@ -146,6 +147,42 @@ export const SHOTS: Shot[] = [
     settleMm: 6.9, muzzlePeakMm: 19, shoulderPeakMm: 49,
     sway: sway([1.4, 1.0, 1.3], [7.0, 4.8, 6.3], [10.9, 2.8, 3.6, 6.9]), cues: allCues({ shoulder: true, posture: true }),
     hold: 52, posture: { bodyOffDeg: 9, legsOpenDeg: 28, elbowsSet: false },
+  },
+  {
+    n: 7, at: 76.1, x: -3.4, y: -1.2, breath: "pause", wobbleMm: 1.5, afterRmsMm: 9.8, stability: 3, flinchMm: 3.7,
+    settleMm: 3.4, muzzlePeakMm: 19, shoulderPeakMm: 48,
+    sway: sway([1.5, 1.3, 1.5], [6.4, 5.9, 6.2], [3.7, 2.7, 3.0, 3.4]), cues: allCues({ posture: true }),
+    hold: 68, posture: { bodyOffDeg: 6, legsOpenDeg: 31, elbowsSet: true },
+  },
+  {
+    n: 8, at: 85.8, x: 2.6, y: 3.3, breath: "exhale", wobbleMm: 1.1, afterRmsMm: 9.1, stability: 3, flinchMm: 2.2,
+    settleMm: 2.7, muzzlePeakMm: 18, shoulderPeakMm: 46,
+    sway: sway([1.2, 1.0, 1.1], [5.5, 5.0, 5.2], [2.2, 1.9, 2.4, 2.7]), cues: allCues(),
+    hold: 81, posture: { bodyOffDeg: 3, legsOpenDeg: 35, elbowsSet: true },
+  },
+  {
+    n: 9, at: 96.4, x: 6.9, y: -5.1, breath: "inhale", wobbleMm: 2.1, afterRmsMm: 11.0, stability: 2, flinchMm: 7.6,
+    settleMm: 5.8, muzzlePeakMm: 21, shoulderPeakMm: 52,
+    sway: sway([2.0, 1.8, 2.1], [8.1, 7.4, 7.9], [7.6, 3.4, 4.7, 5.8]), cues: allCues({ shoulder: true, bolt: false }),
+    hold: 57, posture: { bodyOffDeg: 7, legsOpenDeg: 30, elbowsSet: false },
+  },
+  {
+    n: 10, at: 107.2, x: -0.8, y: 1.4, breath: "pause", wobbleMm: 0.9, afterRmsMm: 8.6, stability: 4, flinchMm: 1.6,
+    settleMm: 2.0, muzzlePeakMm: 18, shoulderPeakMm: 45,
+    sway: sway([0.9, 0.8, 0.9], [4.6, 4.1, 4.3], [1.6, 1.3, 1.7, 2.0]), cues: allCues(),
+    hold: 88, posture: { bodyOffDeg: 2, legsOpenDeg: 36, elbowsSet: true },
+  },
+  {
+    n: 11, at: 117.9, x: 1.9, y: 0.6, breath: "pause", wobbleMm: 1.0, afterRmsMm: 8.8, stability: 4, flinchMm: null,
+    settleMm: 2.3, muzzlePeakMm: 18, shoulderPeakMm: 46,
+    sway: sway([1.0, 0.9, 1.0], [4.9, 4.4, 4.7], [0.8, 1.5, 2.0, 2.3]), cues: allCues({ ejection: false }),
+    hold: 85, posture: { bodyOffDeg: 2, legsOpenDeg: 35, elbowsSet: true },
+  },
+  {
+    n: 12, at: 128.6, x: 0.6, y: -2.2, breath: "exhale", wobbleMm: 1.2, afterRmsMm: 9.3, stability: 3, flinchMm: 2.8,
+    settleMm: 2.9, muzzlePeakMm: 19, shoulderPeakMm: 47,
+    sway: sway([1.2, 1.1, 1.2], [5.6, 5.1, 5.4], [2.8, 2.1, 2.5, 2.9]), cues: allCues(),
+    hold: 83, posture: { bodyOffDeg: 3, legsOpenDeg: 35, elbowsSet: true },
   },
 ];
 
