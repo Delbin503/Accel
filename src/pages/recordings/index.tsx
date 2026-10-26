@@ -22,9 +22,11 @@ import {
   SkipBack,
   SkipForward,
   Trash2,
+  MoreHorizontal,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -42,8 +44,117 @@ import { MOCK_RECORDINGS, type RecordingDisplay } from "@/mocks/recordings";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
-import { RecordingCard, RecordingModeChip } from "@/components/shared/RecordingCard";
+import { RecordingModeChip } from "@/components/shared/RecordingCard";
 import type { DetectionEvent } from "@/types/detection";
+
+/* ── Recordings list ─────────────────────────────────────────────────────────
+   A list, not a grid of cards: recordings carry no thumbnail in the build, so a
+   thumbnail slot would only ever be a placeholder. Built like the User
+   Management table — same header, dividers, ID column, pills and "⋯" action
+   menu — so the two lists read alike. ────────────────────────────────────── */
+
+const HEAD = "px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60";
+const CELL = "px-4 py-3";
+const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted";
+
+function RecordingsTable({ items, selectedIds, onToggle, onToggleAll, onOpen, onDelete }: {
+  items: RecordingDisplay[];
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
+  onToggleAll: (select: boolean) => void;
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const selectedHere = items.filter((r) => selectedIds.has(r.id)).length;
+  const all = selectedHere === items.length;
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/30">
+            <tr className="border-b border-border text-left">
+              <th className={cn(HEAD, "w-10")}>
+                <Checkbox
+                  checked={all ? true : selectedHere > 0 ? "indeterminate" : false}
+                  onCheckedChange={() => onToggleAll(!all)}
+                  aria-label="Select every recording on this page"
+                />
+              </th>
+              {["Rec ID", "Camera", "Date", "Mode", "Duration / Size", "Action"].map((h) => (
+                <th key={h} className={HEAD}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {items.map((r) => {
+              const selected = selectedIds.has(r.id);
+              const label = `${r.cameraName} · ${r.dateLabel} ${r.startsAtDisplay}`;
+              return (
+                <tr
+                  key={r.id}
+                  tabIndex={0}
+                  onClick={() => onOpen(r.id)}
+                  onKeyDown={(e) => e.key === "Enter" && onOpen(r.id)}
+                  className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
+                >
+                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                    <Checkbox checked={selected} onCheckedChange={() => onToggle(r.id)} aria-label={`Select ${label}`} />
+                  </td>
+                  <td className={CELL}>
+                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      {r.id}
+                    </span>
+                  </td>
+                  {/* Takes the leftover width and truncates, as User Management's user column does. */}
+                  <td className={cn(CELL, "w-full max-w-0")}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+                        <Video className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <TruncatedText text={r.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                        <TruncatedText text={`${r.cameraId} · ${r.areaName} · ${r.siteName}`} className="text-xs text-muted-foreground" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className={CELL}>
+                    <p className="text-foreground">{r.dateLabel}</p>
+                    <p className="whitespace-nowrap text-xs text-muted-foreground">{r.startsAtDisplay.slice(0, 5)} – {r.endsAtDisplay.slice(0, 5)}</p>
+                  </td>
+                  <td className={CELL}><RecordingModeChip mode={r.mode} pill /></td>
+                  <td className={cn(CELL, "whitespace-nowrap")}>
+                    <p className="text-foreground">{r.durationDisplay}</p>
+                    <p className="text-xs text-muted-foreground">{r.fileSizeDisplay}</p>
+                  </td>
+                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button aria-label={`Actions for ${label}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                          <MoreHorizontal className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-44 p-1" align="end">
+                        <button onClick={() => onOpen(r.id)} className={cn(MENU_ITEM, "text-foreground")}>
+                          <Play className="size-3.5 text-muted-foreground" />
+                          View recording
+                        </button>
+                        <div className="my-1 border-t border-border" />
+                        <button onClick={() => onDelete(r.id)} className={cn(MENU_ITEM, "text-sev-critical hover:bg-sev-critical/10")}>
+                          <Trash2 className="size-3.5" />
+                          Delete
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 /* ── KPI strip ───────────────────────────────────────────────────────────── */
 
@@ -719,21 +830,20 @@ export default function RecordingsPage({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map((r) => {
-            const isSelected = selectedIds.has(r.id);
-            return (
-              <RecordingCard
-                key={r.id}
-                recording={r}
-                variant="page"
-                selected={isSelected}
-                onToggle={() => toggleRecording(r.id)}
-                onOpen={() => setDrawerId(r.id)}
-              />
-            );
-          })}
-        </div>
+        <RecordingsTable
+          items={pageItems}
+          selectedIds={selectedIds}
+          onToggle={toggleRecording}
+          onToggleAll={(select) =>
+            setSelectedIds((curr) => {
+              const next = new Set(curr);
+              pageItems.forEach((r) => (select ? next.add(r.id) : next.delete(r.id)));
+              return next;
+            })
+          }
+          onOpen={setDrawerId}
+          onDelete={(id) => requestDelete([id])}
+        />
       )}
 
       {filtered.length > 0 && (

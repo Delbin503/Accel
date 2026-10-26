@@ -10,6 +10,7 @@ import {
   HardDrive,
   MapPin,
   Lock,
+  MoreHorizontal,
   Play,
   Star,
   Trash2,
@@ -18,7 +19,9 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
@@ -38,19 +41,24 @@ import { EMPTY_FILTERS, type RecordingFilters } from "./recordingFilters";
 import { FilterPanel } from "./recordingsChrome";
 import { RecordingPlayerModal } from "./RecordingPlayerModal";
 import { FloatingBar } from "./FloatingBar";
+import { MOCK_NVRS } from "@/mocks/nvr";
 
 /* Recordings, reshaped for Phase 1.3.
 
-   A card is no longer one file — a camera produces one recording per enabled
-   type per day, so a card is a camera-day and its chip counts what is inside.
-   Opening it leads with the recording info and lists the day's recordings;
-   picking one opens the player in a pop-up. */
+   A row is no longer one file — a camera produces one recording per enabled
+   type per day, so a row is a camera-day and its chip counts what is inside.
+   It's a list, not a grid of cards: recordings carry no thumbnail in the
+   build, so a thumbnail slot would only ever be a placeholder. Opening a row
+   leads with the recording info and lists the day's recordings; picking one
+   opens the player in a pop-up. */
 
 /* ── Chips ───────────────────────────────────────────────────────────────── */
 
-function CountChip({ count }: { count: number }) {
+/** Pill like User Management's status pill; `types` puts one dot per recording type where its dot sits. */
+function CountChip({ count, types }: { count: number; types?: RecordingTypeId[] }) {
   return (
-    <span className="inline-flex items-center rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary">
+      {types && <TypeDots types={types} />}
       {count} Recording{count === 1 ? "" : "s"}
     </span>
   );
@@ -98,79 +106,176 @@ function BookmarkButton({ bookmarked, onToggle, label, className }: {
   );
 }
 
-/* ── Camera-day card ─────────────────────────────────────────────────────── */
+/* ── Storage card ────────────────────────────────────────────────────────────
+   Total capacity of the NVRs that record the sites in view (every NVR when no
+   site is filtered), over one bar split into used and left. Hovering either
+   part of the bar gives its size. */
 
-function CameraDayCard({ day, selected, bookmarked, onToggle, onToggleBookmark, onOpen }: {
-  day: CameraDay;
-  selected: boolean;
-  bookmarked: boolean;
-  onToggle: () => void;
-  onToggleBookmark: () => void;
-  onOpen: () => void;
-}) {
+const fmtGb = (gb: number) => (gb >= 1000 ? `${(gb / 1000).toFixed(2)} TB` : `${gb.toFixed(0)} GB`);
+
+function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number }) {
+  const nvrs = MOCK_NVRS.filter((n) => siteIds.length === 0 || siteIds.includes(n.siteId));
+  const total = nvrs.reduce((t, n) => t + n.totalStorageGb, 0);
+  const used = nvrs.reduce((t, n) => t + n.usedStorageGb, 0);
+  const left = Math.max(0, total - used);
+  const pct = total ? Math.round((used / total) * 100) : 0;
+  const full = pct >= 90;
+  const parts = [
+    { key: "used", label: "Used", gb: used, share: pct, fill: full ? "bg-sev-critical" : "bg-info", round: "rounded-l-full" },
+    { key: "left", label: "Left", gb: left, share: 100 - pct, fill: "bg-success", round: "rounded-r-full" },
+  ];
+
   return (
-    <div className={cn(
-      "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-md",
-      selected ? "border-primary" : bookmarked ? "border-warning/40" : "border-border hover:border-primary/40"
-    )}>
-      <button
-        onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        aria-label={`Select ${day.cameraName} · ${day.dateLabel}`}
-        className={cn(
-          "absolute left-2.5 top-2.5 z-20 flex size-5 items-center justify-center rounded border-2 transition-colors",
-          selected ? "border-primary bg-primary opacity-100" : "border-white/60 bg-black/40 opacity-0 hover:border-white group-hover:opacity-100"
-        )}
-      >
-        {selected && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-      </button>
+    <div className="relative flex h-[120px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-purple" />
+      <span className="mb-1.5 truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">Storage Total</span>
+      <div className="truncate text-2xl font-bold text-purple">{fmtGb(total)}</div>
+      {/* Each part is a taller hover target than the 4px bar it draws. */}
+      <div className="mt-auto flex gap-px">
+        {parts.map((part) => (
+          <Tooltip key={part.key}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={`${part.label}: ${fmtGb(part.gb)}, ${part.share}%`}
+                className="group/part flex h-3 min-w-0 items-center"
+                style={{ width: `${part.share}%` }}
+              >
+                <span className={cn("h-1 w-full transition-all group-hover/part:h-1.5", part.round, part.fill)} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <span className="flex items-center gap-1.5">
+                <span className={cn("size-1.5 rounded-full", part.fill)} />
+                <span className="font-semibold">{fmtGb(part.gb)} {part.label.toLowerCase()}</span>
+                <span className="text-muted-foreground">· {part.share}% of {fmtGb(total)}</span>
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+      <TruncatedText text={`${fmtGb(used)} used · ${fmtGb(left)} left`} title={`${fmtGb(used)} used · ${fmtGb(left)} left · recordings shown take ${fmtSize(shownMb)}`} className="pt-0.5 text-xs leading-tight text-muted-foreground" />
+    </div>
+  );
+}
 
-      <button onClick={onOpen} className="flex flex-col items-stretch text-left">
-        <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
-          <div className="absolute inset-0"
-            style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-transform group-hover:scale-110">
-              <Play className="size-4 text-white" />
-            </div>
-          </div>
-          <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-1">
-            {/* A bookmark keeps a camera-day out of any delete — the filled star
-                is the whole indicator, so the row below carries no extra chip. */}
-            <BookmarkButton
-              bookmarked={bookmarked}
-              onToggle={onToggleBookmark}
-              label={`${day.cameraName} · ${day.dateLabel}`}
-              className={cn("rounded bg-black/50 backdrop-blur-sm", !bookmarked && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}
-            />
-            <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">
-              {day.totalDurationDisplay}
-            </span>
-          </div>
-          {/* The chip counts the day's recordings — a camera no longer has one mode. */}
-          <div className={cn("absolute top-2.5 transition-all", selected ? "left-9" : "left-2.5 group-hover:left-9")}>
-            <CountChip count={day.recordings.length} />
-          </div>
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
-            <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{day.firstStartDisplay}</span>
-            <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{day.totalSizeDisplay}</span>
-          </div>
-        </div>
+/* ── Camera-day list ─────────────────────────────────────────────────────── */
 
-        <div className="p-3.5">
-          <div className="mb-1 flex items-start justify-between gap-2">
-            <TruncatedText text={day.cameraName} className="text-base font-bold text-foreground transition-colors group-hover:text-primary" />
-            <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{day.cameraId}</p>
-          </div>
-          <p className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-2.5" />
-            {day.areaName} · {day.siteName}
-          </p>
-          <div className="flex items-center justify-between border-t border-border/60 pt-2">
-            <TypeDots types={day.recordings.map((r) => r.type)} />
-            <span className="font-mono text-2xs text-muted-foreground">{day.dateLabel}</span>
-          </div>
-        </div>
-      </button>
+/* Built like the User Management table — same header, dividers, ID column,
+   pills and "⋯" action menu — so the two lists read alike. */
+const HEAD = "px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60";
+const CELL = "px-4 py-3";
+const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted";
+
+function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggleAll, onToggleBookmark, onOpen, onDelete }: {
+  days: CameraDay[];
+  selectedKeys: Set<string>;
+  bookmarkedKeys: Set<string>;
+  onToggle: (key: string) => void;
+  onToggleAll: (select: boolean) => void;
+  onToggleBookmark: (key: string) => void;
+  onOpen: (key: string) => void;
+  onDelete: (key: string) => void;
+}) {
+  const selectedHere = days.filter((d) => selectedKeys.has(d.key)).length;
+  const all = selectedHere === days.length;
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/30">
+            <tr className="border-b border-border text-left">
+              <th className={cn(HEAD, "w-10")}>
+                <Checkbox
+                  checked={all ? true : selectedHere > 0 ? "indeterminate" : false}
+                  onCheckedChange={() => onToggleAll(!all)}
+                  aria-label="Select every camera-day on this page"
+                />
+              </th>
+              {["Camera ID", "Camera", "Date", "Recordings", "Duration / Size", "Action"].map((h) => (
+                <th key={h} className={HEAD}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {days.map((day) => {
+              const selected = selectedKeys.has(day.key);
+              const bookmarked = bookmarkedKeys.has(day.key);
+              const label = `${day.cameraName} · ${day.dateLabel}`;
+              return (
+                <tr
+                  key={day.key}
+                  tabIndex={0}
+                  onClick={() => onOpen(day.key)}
+                  onKeyDown={(e) => e.key === "Enter" && onOpen(day.key)}
+                  className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
+                >
+                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                    <Checkbox checked={selected} onCheckedChange={() => onToggle(day.key)} aria-label={`Select ${label}`} />
+                  </td>
+                  <td className={CELL}>
+                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      {day.cameraId}
+                    </span>
+                  </td>
+                  {/* Takes the leftover width and truncates, as User Management's user column does. */}
+                  <td className={cn(CELL, "w-full max-w-0")}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+                        <Video className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <TruncatedText text={day.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                          {/* A bookmark keeps a camera-day out of any delete. */}
+                          {bookmarked && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
+                        </div>
+                        <TruncatedText text={`${day.areaName} · ${day.siteName}`} className="text-xs text-muted-foreground" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className={CELL}>
+                    <p className="text-foreground">{day.dateLabel}</p>
+                    <p className="whitespace-nowrap text-xs text-muted-foreground">from {day.firstStartDisplay.slice(0, 5)}</p>
+                  </td>
+                  <td className={CELL}>
+                    {/* The pill counts the day's recordings — a camera no longer has one mode. */}
+                    <CountChip count={day.recordings.length} types={day.recordings.map((r) => r.type)} />
+                  </td>
+                  <td className={cn(CELL, "whitespace-nowrap")}>
+                    <p className="text-foreground">{day.totalDurationDisplay}</p>
+                    <p className="text-xs text-muted-foreground">{day.totalSizeDisplay}</p>
+                  </td>
+                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button aria-label={`Actions for ${label}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                          <MoreHorizontal className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-44 p-1" align="end">
+                        <button onClick={() => onOpen(day.key)} className={cn(MENU_ITEM, "text-foreground")}>
+                          <Play className="size-3.5 text-muted-foreground" />
+                          View recordings
+                        </button>
+                        <button onClick={() => onToggleBookmark(day.key)} className={cn(MENU_ITEM, "text-foreground")}>
+                          <Star className={cn("size-3.5", bookmarked ? "fill-warning text-warning" : "text-muted-foreground")} />
+                          {bookmarked ? "Remove bookmark" : "Bookmark"}
+                        </button>
+                        <div className="my-1 border-t border-border" />
+                        <button onClick={() => onDelete(day.key)} className={cn(MENU_ITEM, "text-sev-critical hover:bg-sev-critical/10")}>
+                          <Trash2 className="size-3.5" />
+                          Delete
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -674,7 +779,7 @@ export function RecordingsByDay() {
           active={datePreset === "today"}
           onClick={() => { setDatePreset((c) => (c === "today" ? "all" : "today")); setDateFrom(""); setDateTo(""); setPage(1); }}
         />
-        <KpiCard label="Storage" value={fmtSize(totalMb)} sub="Across the shown camera-days" accent="info" icon={HardDrive} />
+        <StorageCard siteIds={filters.site} shownMb={totalMb} />
       </KpiGrid>
 
       <DateRangeBar
@@ -745,19 +850,22 @@ export function RecordingsByDay() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map((d) => (
-            <CameraDayCard
-              key={d.key}
-              day={d}
-              selected={selectedKeys.has(d.key)}
-              bookmarked={bookmarkedKeys.has(d.key)}
-              onToggle={() => toggleDay(d.key)}
-              onToggleBookmark={() => toggleBookmark(d.key)}
-              onOpen={() => setDrawerKey(d.key)}
-            />
-          ))}
-        </div>
+        <CameraDayTable
+          days={pageItems}
+          selectedKeys={selectedKeys}
+          bookmarkedKeys={bookmarkedKeys}
+          onToggle={toggleDay}
+          onToggleAll={(select) =>
+            setSelectedKeys((curr) => {
+              const next = new Set(curr);
+              pageItems.forEach((d) => (select ? next.add(d.key) : next.delete(d.key)));
+              return next;
+            })
+          }
+          onToggleBookmark={toggleBookmark}
+          onOpen={setDrawerKey}
+          onDelete={(key) => requestDelete([key])}
+        />
       )}
 
       {filtered.length > 0 && (

@@ -40,6 +40,7 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 import { SYSTEM_HEALTH_PRESENTATION, useSystemStatus } from "@/hooks/useSystemStatus";
 import { VisitorKpis } from "./VisitorKpis";
 import { visitorStats } from "./visitorStats";
+import { ReidMapPanel } from "./reid/ReidMapPanel";
 import {
   DEFAULT_LAYOUT,
   hiddenPanels,
@@ -908,9 +909,11 @@ export function CustomDashboard() {
   const bodies: Record<PanelId, React.ReactNode> = {
     status: (
       /* Sized by container, not viewport: the edit drawer narrows the page
-         without the window changing, and viewport breakpoints would crush it. */
+         without the window changing, and viewport breakpoints would crush it.
+         Side by side, the groups grow 3 : 2 from a basis equal to their inner
+         gaps (two and one gap-3), so all five cards come out the same width. */
       <div className="flex flex-col gap-4 @2xl:flex-row">
-        <div className="min-w-0 flex-[3]">
+        <div className="min-w-0 @2xl:flex-[3_3_24px]">
           <StripLabel live>Live status</StripLabel>
           <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
             <KpiCard label="Sites" value={sitesTotal} sub={`${sitesActive} active`} accent="primary"
@@ -924,7 +927,7 @@ export function CustomDashboard() {
           </div>
         </div>
         <div className="hidden w-px self-stretch bg-border @2xl:block" />
-        <div className="@2xl:w-64 @2xl:shrink-0">
+        <div className="min-w-0 @2xl:flex-[2_2_12px]">
           <StripLabel>Period · {dateLabel}</StripLabel>
           <div className="grid grid-cols-2 gap-3">
             <KpiCard label="Events" value={eventsInRange} sub={dateLabel} accent="info"
@@ -938,9 +941,10 @@ export function CustomDashboard() {
     visitors: (
       <div>
         <StripLabel live>Visitor counts · all cameras</StripLabel>
-        <VisitorKpis stats={visitors} gridClassName="grid grid-cols-1 gap-3 @md:grid-cols-2 @4xl:grid-cols-4" />
+        <VisitorKpis stats={visitors} gridClassName="grid grid-cols-1 gap-3 @md:grid-cols-2 @4xl:grid-cols-3" wideClassName="@md:col-span-2" />
       </div>
     ),
+    "reid-map": <ReidMapPanel />,
     detections: (
       <Section
         title="Detections by Site — Severity Breakdown"

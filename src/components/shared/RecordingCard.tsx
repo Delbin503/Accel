@@ -5,14 +5,23 @@ import type { RecordingDisplay } from "@/mocks/recordings";
 
 /* ── Mode chip ───────────────────────────────────────────────────────────── */
 
-const MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; label: string }> = {
-  continuous: { bg: "bg-primary/10 border-primary/20", text: "text-primary", label: "Continuous" },
-  event:      { bg: "bg-info/10 border-info/20",       text: "text-info",    label: "Event" },
-  scheduled:  { bg: "bg-purple-soft border-purple/20", text: "text-purple",  label: "Scheduled" },
+const MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; dot: string; label: string }> = {
+  continuous: { bg: "bg-primary/10 border-primary/20", text: "text-primary", dot: "bg-primary", label: "Continuous" },
+  event:      { bg: "bg-info/10 border-info/20",       text: "text-info",    dot: "bg-info",    label: "Event" },
+  scheduled:  { bg: "bg-purple-soft border-purple/20", text: "text-purple",  dot: "bg-purple",  label: "Scheduled" },
 };
 
-export function RecordingModeChip({ mode }: { mode: RecordingDisplay["mode"] }) {
+/** `pill` draws it like User Management's status pill, for the recordings list. */
+export function RecordingModeChip({ mode, pill }: { mode: RecordingDisplay["mode"]; pill?: boolean }) {
   const s = MODE_STYLES[mode];
+  if (pill) {
+    return (
+      <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
+        <span className={cn("size-1.5 shrink-0 rounded-full", s.dot)} />
+        {s.label}
+      </span>
+    );
+  }
   return (
     <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
       {s.label}

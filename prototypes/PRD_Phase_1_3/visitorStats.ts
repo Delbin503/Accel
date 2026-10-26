@@ -14,6 +14,11 @@ export interface VisitorStats {
   female: number;
   adult: number;
   child: number;
+  elderly: number;
+  chinese: number;
+  malay: number;
+  indian: number;
+  others: number;
 }
 
 function seedOf(id: string): number {
@@ -30,6 +35,10 @@ export function visitorStats(cameras: CameraData[]): VisitorStats {
   let exits = 0;
   let male = 0;
   let adult = 0;
+  let elderly = 0;
+  let chinese = 0;
+  let malay = 0;
+  let indian = 0;
 
   cameras
     .filter((c) => c.status === "online")
@@ -39,9 +48,18 @@ export function visitorStats(cameras: CameraData[]): VisitorStats {
       const outCount = Math.max(0, inCount - 4 + (seed % 9));
       entries += inCount;
       exits += outCount;
-      // Gender and age are classified per entry, so both splits total the entries.
+      // Gender, age and race are classified per entry, so every split totals the entries.
       male += Math.round(inCount * (0.46 + (seed % 13) / 100));
-      adult += Math.round(inCount * (0.66 + (seed % 11) / 100));
+      const a = Math.round(inCount * (0.58 + (seed % 11) / 100));
+      const e = Math.round(inCount * (0.08 + (seed % 5) / 100));
+      adult += a;
+      elderly += Math.min(e, inCount - a);
+      const chi = Math.round(inCount * (0.7 + (seed % 7) / 100));
+      const mal = Math.min(Math.round(inCount * (0.12 + (seed % 5) / 100)), inCount - chi);
+      const ind = Math.max(0, Math.min(Math.round(inCount * (0.08 + (seed % 3) / 100)), inCount - chi - mal));
+      chinese += chi;
+      malay += mal;
+      indian += ind;
     });
 
   return {
@@ -51,6 +69,11 @@ export function visitorStats(cameras: CameraData[]): VisitorStats {
     male,
     female: entries - male,
     adult,
-    child: entries - adult,
+    child: entries - adult - elderly,
+    elderly,
+    chinese,
+    malay,
+    indian,
+    others: entries - chinese - malay - indian,
   };
 }

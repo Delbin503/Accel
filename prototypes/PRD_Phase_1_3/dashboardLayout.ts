@@ -5,6 +5,7 @@ import {
   Gauge,
   LineChart,
   MapPin,
+  MapPinned,
   ScrollText,
   Users,
   type LucideIcon,
@@ -19,6 +20,7 @@ import {
 export type PanelId =
   | "status"
   | "visitors"
+  | "reid-map"
   | "detections"
   | "zones"
   | "recent-detections"
@@ -38,7 +40,8 @@ export interface PanelDef {
 
 export const PANELS: PanelDef[] = [
   { id: "status",            title: "Live Status & Period",    width: "full", icon: Gauge,      description: "Sites, cameras and NVRs online, plus events and open cases for the range." },
-  { id: "visitors",          title: "Visitor Counts",          width: "full", icon: Users,      description: "Visitors inside, entries and exits, gender and age group." },
+  { id: "visitors",          title: "Visitor Counts",          width: "full", icon: Users,      description: "Visitors inside, entries and exits, gender, age group and race." },
+  { id: "reid-map",          title: "Re-ID Map",               width: "full", icon: MapPinned,  description: "The Re-ID mini map from Live Monitoring, with the people and weapons inside it." },
   { id: "detections",        title: "Detections by Site",      width: "full", icon: LineChart,  description: "Detection trend per site with a severity breakdown." },
   { id: "zones",             title: "Zone Areas",              width: "full", icon: MapPin,     description: "Incidents per zone, with the cameras that caught them." },
   { id: "recent-detections", title: "Recent Detections",       width: "half", icon: Activity,   description: "The latest AI-detected events." },
@@ -99,6 +102,37 @@ export function shiftPanel(layout: PanelId[], id: PanelId, delta: -1 | 1): Panel
    stale when panels are renamed — both fall back to the default. */
 
 const STORAGE_KEY = "accel-p13-dashboard-layout";
+/** Panels the viewer's saved layout already knew about. */
+const KNOWN_KEY = "accel-p13-dashboard-known";
+
+/**
+ * A panel added after a layout was saved goes in at its default place, rather
+ * than waiting in the drawer as if the viewer had removed it. Layouts saved
+ * before panels were tracked count as knowing all of today's panels except
+ * the ones added since — currently the Re-ID map.
+ */
+function withNewPanels(layout: PanelId[]): PanelId[] {
+  let known: PanelId[];
+  try {
+    const raw = window.localStorage.getItem(KNOWN_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    known = Array.isArray(parsed) ? parsed.filter(isPanelId) : DEFAULT_LAYOUT.filter((id) => id !== "reid-map");
+  } catch {
+    known = DEFAULT_LAYOUT;
+  }
+  let next = layout;
+  for (const id of DEFAULT_LAYOUT) {
+    if (known.includes(id) || next.includes(id)) continue;
+    const before = DEFAULT_LAYOUT.slice(0, DEFAULT_LAYOUT.indexOf(id)).reverse().find((p) => next.includes(p)) ?? null;
+    next = before ? placePanel(next, id, before, "after") : [id, ...next];
+  }
+  try {
+    window.localStorage.setItem(KNOWN_KEY, JSON.stringify(DEFAULT_LAYOUT));
+  } catch {
+    // Storage blocked — new panels are simply offered again next visit.
+  }
+  return next;
+}
 
 export function loadLayout(): PanelId[] {
   try {
@@ -107,7 +141,11 @@ export function loadLayout(): PanelId[] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return DEFAULT_LAYOUT;
     // Drop unknown or duplicated ids rather than rejecting the whole layout.
-    return [...new Set(parsed.filter(isPanelId))];
+    const stored = [...new Set(parsed.filter(isPanelId))];
+    const next = withNewPanels(stored);
+    // Keep the added panel, or the next visit would treat it as removed.
+    if (next.length !== stored.length) saveLayout(next);
+    return next;
   } catch {
     return DEFAULT_LAYOUT;
   }

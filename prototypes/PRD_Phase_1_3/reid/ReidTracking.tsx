@@ -21,12 +21,13 @@ import { TRAIL_SEC, trackWhere, zonesFor, type TrackState } from "./weaponTracks
 /** Distinct tones for the weapons in the enlarged view; the focused one is always critical. */
 const OTHER_TONES = ["stroke-warning fill-warning", "stroke-info fill-info", "stroke-purple fill-purple", "stroke-success fill-success"];
 
-function TrackMap({
+export function TrackMap({
   map,
   states,
   focusId,
   highlightCameraId,
   size,
+  persons,
   onPick,
 }: {
   map: ReidMap;
@@ -35,6 +36,8 @@ function TrackMap({
   focusId: string | null;
   highlightCameraId?: string | null;
   size: "mini" | "full";
+  /** People in each camera's zone; drawn under the camera label when given. */
+  persons?: Record<string, number>;
   onPick?: (trackId: string) => void;
 }) {
   const full = size === "full";
@@ -56,6 +59,7 @@ function TrackMap({
   const offX = (W - (maxX - minX) * scale) / 2;
   const offY = (H - (maxY - minY) * scale) / 2;
   const px = (x: number) => offX + (x - minX) * scale;
+  const mapMid = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   const py = (y: number) => H - (offY + (y - minY) * scale);
   const tone = (st: TrackState, i: number) =>
     st.track.id === focusId ? "stroke-sev-critical fill-sev-critical" : OTHER_TONES[i % OTHER_TONES.length];
@@ -83,11 +87,26 @@ function TrackMap({
         if (!z || z.length < 3) return null;
         const cx = z.reduce((s, m) => s + m.x, 0) / z.length;
         const cy = z.reduce((s, m) => s + m.y, 0) / z.length;
+        /* Zones overlap in the middle of a map, so the headcount sits out toward
+           the zone's far corner — the vertex farthest from the map's centre. */
+        const far = z.reduce((best, m) => (Math.hypot(m.x - mapMid.x, m.y - mapMid.y) > Math.hypot(best.x - mapMid.x, best.y - mapMid.y) ? m : best), z[0]);
+        const hx = cx + (far.x - cx) * 0.6;
+        const hy = cy + (far.y - cy) * 0.6;
         return (
-          <text key={c} x={px(cx)} y={py(cy)} textAnchor="middle" dominantBaseline="middle" fontSize={full ? 22 : 11} fontWeight={700}
-            className={cn("font-mono", c === highlightCameraId ? "fill-neutral-100" : "fill-neutral-500")}>
-            {c.replace("Cam-", "C")}
-          </text>
+          <g key={c}>
+            <text x={px(cx)} y={py(cy)} textAnchor="middle" dominantBaseline="middle" fontSize={full ? 22 : 11} fontWeight={700}
+              className={cn("font-mono", c === highlightCameraId ? "fill-neutral-100" : "fill-neutral-500")}>
+              {c.replace("Cam-", "C")}
+            </text>
+            {persons && (
+              // A small person glyph and the headcount in this camera's zone.
+              <g transform={`translate(${px(hx)} ${py(hy)})`} className="fill-info">
+                <circle cx={full ? -14 : -8} cy={full ? -4 : -2.5} r={full ? 3.5 : 2} />
+                <path d={full ? "M -20 4 a 6 5 0 0 1 12 0 z" : "M -11.5 2.5 a 3.5 3 0 0 1 7 0 z"} />
+                <text x={full ? -4 : -2.5} y={full ? 4 : 2.5} fontSize={full ? 16 : 9} fontWeight={700} className="fill-info font-mono">{persons[c] ?? 0}</text>
+              </g>
+            )}
+          </g>
         );
       })}
 
@@ -332,6 +351,7 @@ export function MapExpandModal({
   pinnedId,
   onPin,
   hint = "Click a weapon on the map or in the list to follow it — the main camera switches to wherever it is.",
+  persons,
   onClose,
 }: {
   open: boolean;
@@ -342,6 +362,8 @@ export function MapExpandModal({
   onPin: (trackId: string) => void;
   /** What clicking a weapon does on the host page. */
   hint?: string;
+  /** People in each camera's zone, drawn on the map when given. */
+  persons?: Record<string, number>;
   onClose: () => void;
 }) {
   if (!map) return null;
@@ -357,7 +379,7 @@ export function MapExpandModal({
         <ModalBody>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
             <div className="overflow-hidden rounded-lg border border-border">
-              <TrackMap map={map} states={onMap} focusId={pinnedId} highlightCameraId={heroCameraId} size="full" onPick={onPin} />
+              <TrackMap map={map} states={onMap} focusId={pinnedId} highlightCameraId={heroCameraId} size="full" persons={persons} onPick={onPin} />
             </div>
             <div className="space-y-2">
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons on this map</p>

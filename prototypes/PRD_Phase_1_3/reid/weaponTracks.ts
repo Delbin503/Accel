@@ -137,3 +137,19 @@ export function trackWhere(st: TrackState): string {
   if (st.cameraId) return `${st.cameraId} · ${fmtAgo(st.sinceSec)} in view`;
   return st.lastCameraId ? `Last seen ${st.lastCameraId} · ${fmtAgo(st.sinceSec)} ago` : "Not seen yet";
 }
+
+/* People in each camera's floor zone — a stand-in for the Re-ID person count,
+   which the prototype has no detections for. Seeded from the camera id and
+   drifting slowly with the clock, so every view agrees and the number moves a
+   little, the way a live headcount does. Anyone carrying a weapon there counts. */
+export function personCounts(map: ReidMap, states: TrackState[], nowSec: number): Record<string, number> {
+  return Object.fromEntries(
+    map.cameraIds.map((c) => {
+      const seed = c.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
+      const base = 2 + (seed % 5);
+      const drift = Math.round(1.6 * Math.sin(nowSec / 45 + seed));
+      const armed = states.filter((s) => s.mapId === map.id && s.cameraId === c).length;
+      return [c, Math.max(armed, 1, base + drift)];
+    })
+  );
+}

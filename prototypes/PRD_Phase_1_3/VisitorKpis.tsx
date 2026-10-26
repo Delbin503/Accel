@@ -6,7 +6,7 @@ import { BASELINE_INSIDE, type VisitorStats } from "./visitorStats";
    168 out of 163, not two categories. These cards name each side, give it its
    own colour, and show the balance as a bar. */
 
-type StatTone = "primary" | "success" | "warning" | "info" | "purple";
+type StatTone = "primary" | "success" | "warning" | "info" | "purple" | "muted";
 
 const TONE_VALUE: Record<StatTone, string> = {
   primary: "text-foreground",
@@ -14,6 +14,7 @@ const TONE_VALUE: Record<StatTone, string> = {
   warning: "text-warning",
   info: "text-info",
   purple: "text-purple",
+  muted: "text-muted-foreground",
 };
 
 const TONE_BAR: Record<StatTone, string> = {
@@ -22,16 +23,18 @@ const TONE_BAR: Record<StatTone, string> = {
   warning: "bg-warning",
   info: "bg-info",
   purple: "bg-purple",
+  muted: "bg-muted-foreground",
 };
 
-function StatShell({ label, meta, accent, children }: {
+function StatShell({ label, meta, accent, className, children }: {
   label: string;
   meta?: React.ReactNode;
   accent: StatTone;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-[132px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4">
+    <div className={cn("relative flex min-h-[132px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
       <div className={cn("absolute inset-x-0 top-0 h-0.5", TONE_BAR[accent])} />
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
@@ -59,20 +62,23 @@ interface StatPart {
   tone: StatTone;
 }
 
-function SplitStat({ label, parts }: { label: string; parts: [StatPart, StatPart] }) {
-  const total = parts[0].value + parts[1].value;
-  const share = (v: number) => (total === 0 ? 50 : (v / total) * 100);
+/** Two to four named parts of one total, each with its share; the bar shows the balance. */
+function SplitStat({ label, parts, className }: { label: string; parts: StatPart[]; className?: string }) {
+  const total = parts.reduce((t, p) => t + p.value, 0);
+  const share = (v: number) => (total === 0 ? 100 / parts.length : (v / total) * 100);
+  const many = parts.length > 2;
 
   return (
-    <StatShell label={label} accent={parts[0].tone} meta={`${total} total`}>
+    <StatShell label={label} accent={parts[0].tone} meta={`${total} total`} className={className}>
       <div className="flex items-stretch gap-3">
         {parts.map((part, i) => (
-          <div key={part.label} className={cn("min-w-0 flex-1", i === 1 && "border-l border-border pl-3")}>
+          <div key={part.label} className={cn("min-w-0 flex-1", i > 0 && "border-l border-border pl-3")}>
             <p className={cn("flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider", TONE_VALUE[part.tone])}>
               <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[part.tone])} />
-              {part.label}
+              <span className="truncate">{part.label}</span>
             </p>
-            <p className={cn("mt-0.5 text-2xl font-bold leading-none", TONE_VALUE[part.tone])}>{part.value}</p>
+            <p className={cn("mt-0.5 font-bold leading-none", many ? "text-xl" : "text-2xl", TONE_VALUE[part.tone])}>{part.value}</p>
+            <p className="mt-1 text-2xs text-muted-foreground">{Math.round(share(part.value))}%</p>
           </div>
         ))}
       </div>
@@ -83,21 +89,20 @@ function SplitStat({ label, parts }: { label: string; parts: [StatPart, StatPart
           <span key={part.label} className={cn("h-full", TONE_BAR[part.tone])} style={{ width: `${share(part.value)}%` }} />
         ))}
       </div>
-      <p className="mt-1.5 flex justify-between text-2xs text-muted-foreground">
-        <span>{Math.round(share(parts[0].value))}%</span>
-        <span>{Math.round(share(parts[1].value))}%</span>
-      </p>
     </StatShell>
   );
 }
 
 export function VisitorKpis({
   stats,
-  gridClassName = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4",
+  gridClassName = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
+  wideClassName = "sm:col-span-2",
 }: {
   stats: VisitorStats;
   /** Replaces the column layout — the dashboard sizes it by container instead. */
   gridClassName?: string;
+  /** Lets the four-way Race card take two columns, so its parts don't crowd. */
+  wideClassName?: string;
 }) {
   return (
     <div className={gridClassName}>
@@ -126,6 +131,17 @@ export function VisitorKpis({
         parts={[
           { label: "Adult", value: stats.adult, tone: "warning" },
           { label: "Child", value: stats.child, tone: "info" },
+          { label: "Elderly", value: stats.elderly, tone: "purple" },
+        ]}
+      />
+      <SplitStat
+        label="Race"
+        className={wideClassName}
+        parts={[
+          { label: "Chinese", value: stats.chinese, tone: "info" },
+          { label: "Malay", value: stats.malay, tone: "success" },
+          { label: "Indian", value: stats.indian, tone: "warning" },
+          { label: "Others", value: stats.others, tone: "muted" },
         ]}
       />
     </div>
