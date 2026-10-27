@@ -1,6 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
+  Calendar,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -28,9 +29,11 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/formatters";
 import { RECORDING_TYPES, TONE_CLASSES, type RecordingTypeId } from "./recordingTypes";
 import {
   ALL_RECORDINGS,
+  DAYS,
   buildCameraDays,
   fmtSize,
   motionClipsFor,
@@ -54,12 +57,17 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 
 /* ── Chips ───────────────────────────────────────────────────────────────── */
 
-/** Pill like User Management's status pill; `types` puts one dot per recording type where its dot sits. */
-function CountChip({ count, types }: { count: number; types?: RecordingTypeId[] }) {
+/**
+ * Pill like User Management's status pill; `types` puts one dot per recording
+ * type where its dot sits. `bare` drops the word, for a column already headed
+ * "Recordings".
+ */
+function CountChip({ count, types, bare }: { count: number; types?: RecordingTypeId[]; bare?: boolean }) {
+  const label = `${count} Recording${count === 1 ? "" : "s"}`;
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary">
+    <span title={bare ? label : undefined} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary">
       {types && <TypeDots types={types} />}
-      {count} Recording{count === 1 ? "" : "s"}
+      {bare ? count : label}
     </span>
   );
 }
@@ -161,9 +169,18 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
 
 /* ── Camera-day list ─────────────────────────────────────────────────────── */
 
+/** The day's date and first start, e.g. "25 May 2026" and "00:00". */
+function dayDateDisplay(day: CameraDay): { date: string; time: string } {
+  // DAYS runs newest first and ends on a dated label, so the others count back from it.
+  const last = DAYS.length - 1;
+  const date = new Date(DAYS[last]);
+  date.setDate(date.getDate() + (last - day.dayIndex));
+  return { date: formatDate(date, { day: "numeric", month: "short", year: "numeric" }), time: day.firstStartDisplay.slice(0, 5) };
+}
+
 /* Built like the User Management table — same header, dividers, ID column,
    pills and "⋯" action menu — so the two lists read alike. */
-const HEAD = "px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60";
+const HEAD = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60";
 const CELL = "px-4 py-3";
 const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted";
 
@@ -192,7 +209,7 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                   aria-label="Select every camera-day on this page"
                 />
               </th>
-              {["Camera ID", "Camera", "Date", "Recordings", "Duration / Size", "Action"].map((h) => (
+              {["REC ID", "Recording Title", "Date", "Recordings", "Duration / Size", "Action"].map((h) => (
                 <th key={h} className={HEAD}>{h}</th>
               ))}
             </tr>
@@ -214,12 +231,14 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                     <Checkbox checked={selected} onCheckedChange={() => onToggle(day.key)} aria-label={`Select ${label}`} />
                   </td>
                   <td className={CELL}>
-                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
-                      {day.cameraId}
+                    {/* A camera-day is filed under its first recording's id. */}
+                    <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      {day.recordings[0]?.id ?? "—"}
                     </span>
                   </td>
-                  {/* Takes the leftover width and truncates, as User Management's user column does. */}
-                  <td className={cn(CELL, "w-full max-w-0")}>
+                  {/* About a third of the row: wide enough to read, never the whole gap,
+                      and it truncates rather than push the table past the page. */}
+                  <td className={cn(CELL, "w-[34%] max-w-0")}>
                     <div className="flex items-center gap-2.5">
                       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
                         <Video className="size-4" />
@@ -230,17 +249,24 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                           {/* A bookmark keeps a camera-day out of any delete. */}
                           {bookmarked && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
                         </div>
-                        <TruncatedText text={`${day.areaName} · ${day.siteName}`} className="text-xs text-muted-foreground" />
+                        <TruncatedText text={`${day.cameraId} · ${day.areaName} · ${day.siteName}`} className="text-xs text-muted-foreground" />
                       </div>
                     </div>
                   </td>
-                  <td className={CELL}>
-                    <p className="text-foreground">{day.dateLabel}</p>
-                    <p className="whitespace-nowrap text-xs text-muted-foreground">from {day.firstStartDisplay.slice(0, 5)}</p>
+                  {/* Date over time, each with its icon as the other modules' tables show them. */}
+                  <td className={cn(CELL, "whitespace-nowrap")}>
+                    <p className="flex items-center gap-1.5 text-sm text-foreground">
+                      <Calendar className="size-3 shrink-0 text-muted-foreground" />
+                      {dayDateDisplay(day).date}
+                    </p>
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="size-3 shrink-0" />
+                      {dayDateDisplay(day).time}
+                    </p>
                   </td>
                   <td className={CELL}>
                     {/* The pill counts the day's recordings — a camera no longer has one mode. */}
-                    <CountChip count={day.recordings.length} types={day.recordings.map((r) => r.type)} />
+                    <CountChip count={day.recordings.length} types={day.recordings.map((r) => r.type)} bare />
                   </td>
                   <td className={cn(CELL, "whitespace-nowrap")}>
                     <p className="text-foreground">{day.totalDurationDisplay}</p>

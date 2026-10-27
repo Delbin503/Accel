@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BASELINE_INSIDE, type VisitorStats } from "./visitorStats";
 
@@ -63,8 +64,9 @@ interface StatPart {
   tone: StatTone;
 }
 
-/** Below this inner width a listed card drops its shares and total — the bar and tooltips still give them. */
-const SHARE_MIN_PX = 120;
+/** Rough px per character of an uppercase card label, to tell whether "N total" fits beside it. */
+const LABEL_CHAR_PX = 8;
+const TOTAL_PX = 64;
 
 /**
  * Two to four named parts of one total, each with its share; the bar shows the
@@ -75,28 +77,28 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
   const share = (v: number) => (total === 0 ? 100 / parts.length : (v / total) * 100);
   const many = parts.length > 2;
 
+  // A narrow card keeps its title on one line by dropping "N total" (the title attribute keeps it).
   const ref = React.useRef<HTMLDivElement>(null);
-  const [showShare, setShowShare] = React.useState(true);
+  const [showTotal, setShowTotal] = React.useState(true);
   React.useEffect(() => {
     const el = ref.current;
     if (!el || !stacked) return;
-    const ro = new ResizeObserver(([entry]) => setShowShare(entry.contentRect.width >= SHARE_MIN_PX));
+    const ro = new ResizeObserver(([entry]) => setShowTotal(entry.contentRect.width >= label.length * LABEL_CHAR_PX + TOTAL_PX));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [stacked]);
+  }, [stacked, label]);
 
   return (
-    <StatShell ref={ref} label={label} accent={parts[0].tone} meta={showShare ? `${total} total` : undefined} className={className}>
+    <StatShell ref={ref} label={label} accent={parts[0].tone} meta={showTotal ? `${total} total` : undefined} className={className}>
       {stacked ? (
         <ul className="mb-2.5 flex flex-col gap-1.5" title={`${total} total`}>
           {parts.map((part) => (
-            <li key={part.label} title={`${part.label}: ${part.value} (${Math.round(share(part.value))}%)`} className="flex items-baseline gap-2">
+            <li key={part.label} className="flex items-baseline gap-2">
               <span className={cn("flex min-w-0 flex-1 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider", TONE_VALUE[part.tone])}>
                 <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[part.tone])} />
                 <span className="truncate">{part.label}</span>
               </span>
               <span className={cn("text-md font-bold leading-none", TONE_VALUE[part.tone])}>{part.value}</span>
-              {showShare && <span className="w-7 shrink-0 text-right text-2xs text-muted-foreground">{Math.round(share(part.value))}%</span>}
             </li>
           ))}
         </ul>
@@ -115,10 +117,35 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
         </div>
       )}
 
-      {/* The balance, so the split reads without doing the arithmetic. */}
-      <div className="mt-auto flex h-1.5 shrink-0 overflow-hidden rounded-full bg-muted">
-        {parts.map((part) => (
-          <span key={part.label} className={cn("h-full", TONE_BAR[part.tone])} style={{ width: `${share(part.value)}%` }} />
+      {/* The balance, so the split reads without doing the arithmetic. Hovering a
+          part gives its count and share, as the Recordings storage bar does; each
+          part is a taller hover target than the bar it draws. */}
+      <div className="mt-auto flex shrink-0 gap-px">
+        {parts.map((part, i) => (
+          <Tooltip key={part.label}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={`${part.label}: ${part.value}, ${Math.round(share(part.value))}%`}
+                className="group/part flex h-3 min-w-0 items-center"
+                style={{ width: `${share(part.value)}%` }}
+              >
+                <span className={cn(
+                  "h-1.5 w-full transition-all group-hover/part:h-2",
+                  i === 0 && "rounded-l-full",
+                  i === parts.length - 1 && "rounded-r-full",
+                  TONE_BAR[part.tone]
+                )} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <span className="flex items-center gap-1.5">
+                <span className={cn("size-1.5 rounded-full", TONE_BAR[part.tone])} />
+                <span className="font-semibold">{part.label} · {part.value}</span>
+                <span className="text-muted-foreground">· {Math.round(share(part.value))}% of {total}</span>
+              </span>
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
     </StatShell>
