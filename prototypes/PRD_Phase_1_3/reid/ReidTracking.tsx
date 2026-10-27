@@ -18,8 +18,62 @@ import { TRAIL_SEC, trackWhere, zonesFor, type TrackState } from "./weaponTracks
 
 /* ── Map drawing ──────────────────────────────────────────────────────── */
 
-/** Distinct tones for the weapons in the enlarged view; the focused one is always critical. */
-const OTHER_TONES = ["stroke-warning fill-warning", "stroke-info fill-info", "stroke-purple fill-purple", "stroke-success fill-success"];
+/* Every weapon is drawn in the critical red and named by a label chip, so the
+   map reads the same with one weapon or ten. Picking one sets it apart: its
+   trail goes solid, a target ring frames it, its chip fills, its camera's zone
+   lights up, and every other weapon fades back. */
+
+interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/**
+ * Places each label chip beside its dot where it covers no other chip, dot,
+ * camera label or headcount — trying the corners and sides close in first,
+ * then further out (drawn with a leader line). Falls back to the spot with the
+ * least overlap when the map is too crowded for a clean one.
+ */
+function placeLabels(
+  dots: { id: string; x: number; y: number; w: number; h: number; r: number }[],
+  obstacles: Box[],
+  W: number,
+  H: number
+): Record<string, Box & { far: boolean }> {
+  const placed: Box[] = [];
+  const out: Record<string, Box & { far: boolean }> = {};
+  const dotBoxes = dots.map((d) => ({ x: d.x - d.r - 2, y: d.y - d.r - 2, w: d.r * 2 + 4, h: d.r * 2 + 4 }));
+  for (const d of dots) {
+    let best: (Box & { far: boolean }) | null = null;
+    let bestHits = Infinity;
+    for (const reach of [1, 2.6]) {
+      const g = (d.r + 3) * reach;
+      const spots: [number, number][] = [
+        [d.x + g, d.y - g - d.h], [d.x - g - d.w, d.y - g - d.h], [d.x + g, d.y + g], [d.x - g - d.w, d.y + g],
+        [d.x + g + 2, d.y - d.h / 2], [d.x - g - 2 - d.w, d.y - d.h / 2], [d.x - d.w / 2, d.y - g - d.h - 2], [d.x - d.w / 2, d.y + g + 2],
+      ];
+      for (const [x, y] of spots) {
+        const box = { x, y, w: d.w, h: d.h };
+        if (x < 2 || y < 2 || x + d.w > W - 2 || y + d.h > H - 2) continue;
+        const hits = [...placed, ...obstacles, ...dotBoxes].filter((o) => overlaps(box, o)).length;
+        if (hits < bestHits) {
+          best = { ...box, far: reach > 1 };
+          bestHits = hits;
+        }
+        if (hits === 0) break;
+      }
+      if (bestHits === 0) break;
+    }
+    const chosen = best ?? { x: d.x + d.r + 3, y: d.y - d.r - 3 - d.h, w: d.w, h: d.h, far: false };
+    placed.push(chosen);
+    out[d.id] = chosen;
+  }
+  return out;
+}
 
 export function TrackMap({
   map,
@@ -33,7 +87,9 @@ export function TrackMap({
   map: ReidMap;
   /** The weapons to draw. */
   states: TrackState[];
+  /** The selected weapon; null draws every weapon alike. */
   focusId: string | null;
+  /** The zone to light up; defaults to the selected weapon's camera. */
   highlightCameraId?: string | null;
   size: "mini" | "full";
   /** People in each camera's zone; drawn under the camera label when given. */
@@ -61,54 +117,80 @@ export function TrackMap({
   const px = (x: number) => offX + (x - minX) * scale;
   const mapMid = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   const py = (y: number) => H - (offY + (y - minY) * scale);
-  const tone = (st: TrackState, i: number) =>
-    st.track.id === focusId ? "stroke-sev-critical fill-sev-critical" : OTHER_TONES[i % OTHER_TONES.length];
+
+  const focused = states.find((s) => s.track.id === focusId) ?? null;
+  const litCamera = highlightCameraId ?? focused?.cameraId ?? null;
+
+  // Camera labels and headcounts, in screen space — drawn, and kept clear of weapon labels.
+  const camFs = full ? 22 : 11;
+  const zoneMarks = map.cameraIds.flatMap((c) => {
+    const z = zones[c];
+    if (!z || z.length < 3) return [];
+    const cx = z.reduce((s, m) => s + m.x, 0) / z.length;
+    const cy = z.reduce((s, m) => s + m.y, 0) / z.length;
+    /* Zones overlap in the middle of a map, so the headcount sits out toward
+       the zone's far corner — the vertex farthest from the map's centre. */
+    const far = z.reduce((best, m) => (Math.hypot(m.x - mapMid.x, m.y - mapMid.y) > Math.hypot(best.x - mapMid.x, best.y - mapMid.y) ? m : best), z[0]);
+    return [{ id: c, zone: z, lx: px(cx), ly: py(cy), hx: px(cx + (far.x - cx) * 0.6), hy: py(cy + (far.y - cy) * 0.6) }];
+  });
+  const obstacles: Box[] = zoneMarks.flatMap((m) => {
+    const lw = camFs * 0.62 * m.id.replace("Cam-", "C").length;
+    const label = { x: m.lx - lw / 2, y: m.ly - camFs / 2, w: lw, h: camFs };
+    return persons ? [label, full ? { x: m.hx - 22, y: m.hy - 10, w: 40, h: 16 } : { x: m.hx - 12, y: m.hy - 6, w: 20, h: 10 }] : [label];
+  });
+
+  // Weapon labels: the selected one first, so it gets the best spot.
+  const fs = full ? 14 : 9;
+  const chipText = (st: TrackState) => (full || st === focused) && st.cameraId ? `${st.track.id} · ${st.cameraId}` : st.track.id;
+  const dotR = (st: TrackState) => (st === focused ? (full ? 8 : 5) : full ? 6 : 4);
+  const order = [...states].sort((a, b) => Number(b === focused) - Number(a === focused));
+  const labels = placeLabels(
+    order.map((st) => ({
+      id: st.track.id,
+      x: px(st.pos.x),
+      y: py(st.pos.y),
+      w: chipText(st).length * fs * 0.62 + (full ? 14 : 8),
+      h: fs + (full ? 8 : 5),
+      r: dotR(st),
+    })),
+    obstacles,
+    W,
+    H
+  );
+  const faded = (st: TrackState) => focused !== null && st !== focused;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${mapLabel(map)} with ${states.length} weapon${states.length === 1 ? "" : "s"}`} className="block h-auto w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${mapLabel(map)} with ${states.length} weapon${states.length === 1 ? "" : "s"}${focused ? `, ${focused.track.id} selected` : ""}`} className="block h-auto w-full">
       <rect width={W} height={H} className="fill-neutral-900" />
 
-      {map.cameraIds.map((c) => {
-        const z = zones[c];
-        if (!z || z.length < 3) return null;
-        const on = c === highlightCameraId;
+      {zoneMarks.map((m) => {
+        const on = m.id === litCamera;
         return (
           <polygon
-            key={c}
-            points={z.map((m) => `${px(m.x)},${py(m.y)}`).join(" ")}
+            key={m.id}
+            points={m.zone.map((p) => `${px(p.x)},${py(p.y)}`).join(" ")}
             strokeWidth={on ? (full ? 3 : 2) : 1}
             strokeLinejoin="round"
             className={on ? "fill-neutral-700 stroke-neutral-100" : "fill-neutral-800 stroke-neutral-600"}
           />
         );
       })}
-      {map.cameraIds.map((c) => {
-        const z = zones[c];
-        if (!z || z.length < 3) return null;
-        const cx = z.reduce((s, m) => s + m.x, 0) / z.length;
-        const cy = z.reduce((s, m) => s + m.y, 0) / z.length;
-        /* Zones overlap in the middle of a map, so the headcount sits out toward
-           the zone's far corner — the vertex farthest from the map's centre. */
-        const far = z.reduce((best, m) => (Math.hypot(m.x - mapMid.x, m.y - mapMid.y) > Math.hypot(best.x - mapMid.x, best.y - mapMid.y) ? m : best), z[0]);
-        const hx = cx + (far.x - cx) * 0.6;
-        const hy = cy + (far.y - cy) * 0.6;
-        return (
-          <g key={c}>
-            <text x={px(cx)} y={py(cy)} textAnchor="middle" dominantBaseline="middle" fontSize={full ? 22 : 11} fontWeight={700}
-              className={cn("font-mono", c === highlightCameraId ? "fill-neutral-100" : "fill-neutral-500")}>
-              {c.replace("Cam-", "C")}
-            </text>
-            {persons && (
-              // A small person glyph and the headcount in this camera's zone.
-              <g transform={`translate(${px(hx)} ${py(hy)})`} className="fill-info">
-                <circle cx={full ? -14 : -8} cy={full ? -4 : -2.5} r={full ? 3.5 : 2} />
-                <path d={full ? "M -20 4 a 6 5 0 0 1 12 0 z" : "M -11.5 2.5 a 3.5 3 0 0 1 7 0 z"} />
-                <text x={full ? -4 : -2.5} y={full ? 4 : 2.5} fontSize={full ? 16 : 9} fontWeight={700} className="fill-info font-mono">{persons[c] ?? 0}</text>
-              </g>
-            )}
-          </g>
-        );
-      })}
+      {zoneMarks.map((m) => (
+        <g key={m.id}>
+          <text x={m.lx} y={m.ly} textAnchor="middle" dominantBaseline="middle" fontSize={camFs} fontWeight={700}
+            className={cn("font-mono", m.id === litCamera ? "fill-neutral-100" : "fill-neutral-500")}>
+            {m.id.replace("Cam-", "C")}
+          </text>
+          {persons && (
+            // A small person glyph and the headcount in this camera's zone.
+            <g transform={`translate(${m.hx} ${m.hy})`} className="fill-info">
+              <circle cx={full ? -14 : -8} cy={full ? -4 : -2.5} r={full ? 3.5 : 2} />
+              <path d={full ? "M -20 4 a 6 5 0 0 1 12 0 z" : "M -11.5 2.5 a 3.5 3 0 0 1 7 0 z"} />
+              <text x={full ? -4 : -2.5} y={full ? 4 : 2.5} fontSize={full ? 16 : 9} fontWeight={700} className="fill-info font-mono">{persons[m.id] ?? 0}</text>
+            </g>
+          )}
+        </g>
+      ))}
 
       {poses.map(({ id, pose }) => (
         <g key={id}>
@@ -117,35 +199,71 @@ export function TrackMap({
         </g>
       ))}
 
-      {states.map((st, i) => (
+      {/* Trails, the selected one on top. */}
+      {[...order].reverse().map((st) => (
         <polyline
           key={`t-${st.track.id}`}
           points={st.trail.map((p) => `${px(p.x)},${py(p.y)}`).join(" ")}
           fill="none"
-          strokeWidth={st.track.id === focusId ? (full ? 3.5 : 2.5) : full ? 2 : 1.5}
+          strokeWidth={st === focused ? (full ? 4 : 2.5) : full ? 2 : 1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray={st.track.id === focusId ? undefined : "6 5"}
-          className={cn(tone(st, i), "fill-none")}
-          opacity={0.85}
+          strokeDasharray={faded(st) ? (full ? "6 6" : "3 3") : undefined}
+          className="fill-none stroke-sev-critical"
+          opacity={faded(st) ? 0.3 : 0.85}
         />
       ))}
-      {states.map((st, i) => (
-        <g
-          key={`d-${st.track.id}`}
-          // Positions update every half second — the transform eases between them.
-          style={{ transform: `translate(${px(st.pos.x)}px, ${py(st.pos.y)}px)`, transition: "transform 500ms linear" }}
-          className={cn(onPick && "cursor-pointer")}
-          onClick={() => onPick?.(st.track.id)}
-        >
-          {st.track.id === focusId && <circle r={full ? 14 : 9} className="animate-pulse fill-sev-critical/25 stroke-none" />}
-          <circle r={full ? 7 : 4.5} className={cn(tone(st, i), "stroke-neutral-950")} strokeWidth={1.5} />
-          <text x={full ? 12 : 8} y={full ? -10 : -6} fontSize={full ? 15 : 10} fontWeight={700} className="fill-neutral-100 font-mono">
-            {st.track.id}
-            {full && st.cameraId ? ` · ${st.cameraId}` : ""}
-          </text>
-        </g>
-      ))}
+
+      {/* Dots, then labels over everything so no label is hidden under a dot. */}
+      {[...order].reverse().map((st) => {
+        const r = dotR(st);
+        const t = r * 2.4;
+        return (
+          <g
+            key={`d-${st.track.id}`}
+            // Positions update every half second — the transform eases between them.
+            style={{ transform: `translate(${px(st.pos.x)}px, ${py(st.pos.y)}px)`, transition: "transform 500ms linear" }}
+            className={cn(onPick && "cursor-pointer")}
+            opacity={faded(st) ? 0.4 : 1}
+            onClick={() => onPick?.(st.track.id)}
+          >
+            {st === focused && (
+              <>
+                <circle r={t} className="animate-pulse fill-sev-critical/20 stroke-none" />
+                {/* Target brackets, so the selection reads even where trails cross. */}
+                <path
+                  d={`M ${-t} ${-t / 2} V ${-t} H ${-t / 2} M ${t / 2} ${-t} H ${t} V ${-t / 2} M ${t} ${t / 2} V ${t} H ${t / 2} M ${-t / 2} ${t} H ${-t} V ${t / 2}`}
+                  fill="none"
+                  strokeWidth={full ? 2.5 : 1.5}
+                  className="stroke-neutral-100"
+                />
+              </>
+            )}
+            <circle r={r} strokeWidth={st === focused ? (full ? 2.5 : 1.5) : 1.5}
+              className={cn("fill-sev-critical", st === focused ? "stroke-neutral-100" : "stroke-neutral-950")} />
+          </g>
+        );
+      })}
+      {[...order].reverse().map((st) => {
+        const box = labels[st.track.id];
+        const x = px(st.pos.x);
+        const y = py(st.pos.y);
+        const sel = st === focused;
+        // The leader runs to the chip's nearest point.
+        const lx = Math.max(box.x, Math.min(x, box.x + box.w));
+        const ly = Math.max(box.y, Math.min(y, box.y + box.h));
+        return (
+          <g key={`l-${st.track.id}`} opacity={faded(st) ? 0.45 : 1} className={cn(onPick && "cursor-pointer")} onClick={() => onPick?.(st.track.id)}>
+            {box.far && <line x1={x} y1={y} x2={lx} y2={ly} strokeWidth={1} className="stroke-sev-critical" />}
+            <rect x={box.x} y={box.y} width={box.w} height={box.h} rx={full ? 5 : 3} strokeWidth={1}
+              className={sel ? "fill-sev-critical stroke-neutral-100" : "fill-neutral-950 stroke-sev-critical"} />
+            <text x={box.x + box.w / 2} y={box.y + box.h / 2} textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight={700}
+              className={cn("font-mono", sel ? "fill-neutral-50" : "fill-sev-critical")}>
+              {chipText(st)}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -197,7 +315,7 @@ export function WeaponBadges({
 
 /* ── Rail panel ───────────────────────────────────────────────────────── */
 
-function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: ReidMap | undefined; pinned: boolean; onPin: () => void }) {
+export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: ReidMap | undefined; pinned: boolean; onPin: () => void }) {
   return (
     <button
       type="button"

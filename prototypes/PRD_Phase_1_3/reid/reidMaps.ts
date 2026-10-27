@@ -61,6 +61,9 @@ const SEED: ReidMap[] = [
   seedMap("map-lobby", "Lobby map", "Astra HQ", ["Cam-01", "Cam-18", "Cam-22"], [
     { id: "W-01", weapon: "SAR21 #A-0421", route: ["Cam-01", "Cam-18", "Cam-22"], phase: 0 },
     { id: "W-03", weapon: null, route: ["Cam-22", "Cam-18"], phase: 17 },
+    // Four on the lobby map, so a busy map can be seen at work.
+    { id: "W-04", weapon: "SAR21 #A-0433", route: ["Cam-18", "Cam-01"], phase: 41 },
+    { id: "W-05", weapon: null, route: ["Cam-01", "Cam-22", "Cam-18"], phase: 73 },
   ]),
   seedMap("map-loading", "Loading map", "FedEx Changi", ["Cam-04", "Cam-07"], [
     { id: "W-02", weapon: "SAR21 #A-0417", route: ["Cam-04", "Cam-07"], phase: 6 },

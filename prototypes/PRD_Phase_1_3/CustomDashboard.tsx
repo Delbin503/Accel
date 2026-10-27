@@ -941,7 +941,7 @@ export function CustomDashboard() {
     visitors: (
       <div>
         <StripLabel live>Visitor counts · all cameras</StripLabel>
-        <VisitorKpis stats={visitors} gridClassName="grid grid-cols-1 gap-3 @md:grid-cols-2 @4xl:grid-cols-3" wideClassName="@md:col-span-2" />
+        <VisitorKpis stats={visitors} statusColumns />
       </div>
     ),
     "reid-map": <ReidMapPanel />,

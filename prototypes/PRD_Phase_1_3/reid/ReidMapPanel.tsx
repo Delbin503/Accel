@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { mapLabel, useReidMapsStore } from "./reidMaps";
-import { MapExpandModal, TrackMap } from "./ReidTracking";
-import { TRAIL_SEC, allTrackStates, personCounts, trackWhere, type TrackState } from "./weaponTracks";
+import { MapExpandModal, TrackMap, TrackRow } from "./ReidTracking";
+import { TRAIL_SEC, allTrackStates, personCounts, type TrackState } from "./weaponTracks";
 
 /* Re-ID map for the customizable dashboard — the same mini map Live
    Monitoring's Tracking tab draws, with how many people and weapons are inside
    it right now. Every weapon on the map is drawn (Live Monitoring's mini map
    only draws the one in focus), each zone carries its headcount, and the
-   enlarged view is the same modal. */
+   enlarged view is the same modal. Nothing is selected until the viewer picks
+   a weapon from the list; the map then sets that one apart. */
 export function ReidMapPanel() {
   const navigate = useNavigate();
   const maps = useReidMapsStore((s) => s.maps);
@@ -29,7 +30,8 @@ export function ReidMapPanel() {
   const [pinnedId, setPinnedId] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(false);
 
-  const onMap: TrackState[] = map ? states.filter((s) => s.mapId === map.id) : [];
+  const onMap: TrackState[] = map ? states.filter((s) => s.mapId === map.id).sort((a, b) => a.track.id.localeCompare(b.track.id)) : [];
+  const pinned = onMap.find((s) => s.track.id === pinnedId) ?? null;
   const persons = map ? personCounts(map, states, now) : {};
   const personTotal = Object.values(persons).reduce((t, n) => t + n, 0);
 
@@ -81,11 +83,12 @@ export function ReidMapPanel() {
               aria-label="Enlarge map"
               className="block w-full overflow-hidden rounded-lg border border-border transition-colors hover:border-primary/50"
             >
-              <TrackMap map={map} states={onMap} focusId={pinnedId ?? onMap[0]?.track.id ?? null} size="mini" persons={persons} />
+              <TrackMap map={map} states={onMap} focusId={pinned?.track.id ?? null} size="mini" persons={persons} />
             </button>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-muted-foreground">
               <span className="flex items-center gap-1"><Users className="size-3 text-info" />people in each camera's zone</span>
               <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-sev-critical" />weapon, last {TRAIL_SEC} s</span>
+              {pinned && <span className="flex items-center gap-1"><span className="size-2 rounded-full border border-neutral-100 bg-sev-critical" />{pinned.track.id} selected</span>}
             </div>
           </div>
 
@@ -105,42 +108,48 @@ export function ReidMapPanel() {
               </div>
             </div>
 
-            <div className="min-w-0">
-              <p className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">By camera</p>
-              <ul className="grid grid-cols-1 gap-1 @md:grid-cols-2 @3xl:grid-cols-1">
-                {map.cameraIds.map((c) => {
-                  const armed = onMap.filter((s) => s.cameraId === c);
-                  return (
-                    <li key={c} className={cn("flex items-center gap-2 rounded-md border px-2.5 py-1.5", armed.length ? "border-sev-critical/40 bg-sev-critical/5" : "border-border bg-background")}>
-                      <span className="font-mono text-xs font-semibold text-foreground">{c}</span>
-                      <span className="ml-auto flex items-center gap-1 font-mono text-xs text-info"><Users className="size-3" />{persons[c] ?? 0}</span>
-                      <span className={cn("flex items-center gap-1 font-mono text-xs", armed.length ? "text-sev-critical" : "text-muted-foreground")}>
-                        <Crosshair className="size-3" />{armed.length}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {onMap.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {onMap.map((st) => (
-                  <button
-                    key={st.track.id}
-                    type="button"
-                    title={trackWhere(st)}
-                    onClick={() => setPinnedId(st.track.id === pinnedId ? null : st.track.id)}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-2xs font-bold transition-colors",
-                      st.track.id === (pinnedId ?? onMap[0]?.track.id) ? "border-sev-critical bg-sev-critical text-white" : "border-sev-critical/50 text-sev-critical hover:bg-sev-critical/10"
-                    )}
-                  >
-                    <Crosshair className="size-2.5" />{st.track.id} · {st.cameraId ?? "between cameras"}
-                  </button>
-                ))}
+            {/* Side by side when the panel is wide, so it stays about as tall as the map. */}
+            <div className="grid grid-cols-1 gap-3 @5xl:grid-cols-2">
+              <div className="min-w-0">
+                <p className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">By camera</p>
+                <ul className="grid grid-cols-1 gap-1 @md:grid-cols-2 @3xl:grid-cols-1">
+                  {map.cameraIds.map((c) => {
+                    const armed = onMap.filter((s) => s.cameraId === c);
+                    return (
+                      <li key={c} className={cn("flex items-center gap-2 rounded-md border px-2.5 py-1.5", armed.length ? "border-sev-critical/40 bg-sev-critical/5" : "border-border bg-background")}>
+                        <span className="font-mono text-xs font-semibold text-foreground">{c}</span>
+                        <span className="ml-auto flex items-center gap-1 font-mono text-xs text-info"><Users className="size-3" />{persons[c] ?? 0}</span>
+                        <span className={cn("flex items-center gap-1 font-mono text-xs", armed.length ? "text-sev-critical" : "text-muted-foreground")}>
+                          <Crosshair className="size-3" />{armed.length}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-            )}
+
+              <div className="min-w-0">
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons · {onMap.length}</p>
+                  {pinned ? (
+                    <button type="button" onClick={() => setPinnedId(null)} className="text-2xs font-semibold text-primary hover:underline">Clear selection</button>
+                  ) : onMap.length > 0 && (
+                    <span className="text-2xs text-muted-foreground">Pick one to highlight it</span>
+                  )}
+                </div>
+                {onMap.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">No weapons on this map right now.</p>
+                ) : (
+                  // Three rows show at once; a busier map scrolls.
+                  <div className="flex max-h-[11.5rem] flex-col gap-1.5 overflow-y-auto pr-0.5">
+                    {onMap.map((st) => (
+                      <TrackRow key={st.track.id} st={st} map={undefined} pinned={st.track.id === pinnedId}
+                        onPin={() => setPinnedId(st.track.id === pinnedId ? null : st.track.id)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
