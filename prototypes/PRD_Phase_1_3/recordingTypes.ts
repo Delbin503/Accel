@@ -1,8 +1,8 @@
 /* The recording types behind the Phase 1.3 proposals. Shared by the schedule,
    the coverage strip and the recordings list so they all describe the same
-   four things. */
+   things. */
 
-export type RecordingTypeId = "continuous" | "standby" | "motion" | "training";
+export type RecordingTypeId = "continuous" | "operation" | "standby" | "motion";
 
 export interface RecordingTypeDef {
   id: RecordingTypeId;
@@ -36,6 +36,15 @@ export const RECORDING_TYPES: RecordingTypeDef[] = [
     tone: "info",
   },
   {
+    id: "operation",
+    label: "Operation",
+    description: "Records during operation hours — the site's own, or the ones set for that day in the weekly schedule.",
+    minResolution: "1280x720",
+    minFps: 24,
+    alwaysOn: false,
+    tone: "success",
+  },
+  {
     id: "standby",
     label: "Standby",
     description: "The camera's resting recording — what it captures while nothing is happening.",
@@ -57,20 +66,17 @@ export const RECORDING_TYPES: RecordingTypeDef[] = [
     note: "Applied via CV model — research feasibility before committing.",
     tone: "warning",
   },
-  {
-    id: "training",
-    label: "Training",
-    description: "Captures a training session so it can be reviewed and labelled afterwards.",
-    minResolution: "1920x1080",
-    minFps: 60,
-    alwaysOn: false,
-    note: "Hardware must sustain the higher frame rate.",
-    tone: "success",
-  },
 ];
 
-/** Types that own a schedule. Motion is nested under standby instead. */
-export const TOP_LEVEL_TYPES = RECORDING_TYPES.filter((t) => !t.parent);
+/**
+ * The types a recording can be on the Recordings page, in filter order. A
+ * camera records continuously or by operation hours, plus standby — and motion
+ * only ever exists as clips inside a standby recording.
+ */
+/* The list shows a camera-day, and a camera-day is either continuous or
+   operation. Standby and motion-based live inside an operation recording, so
+   they are not types you can filter the list down to. */
+export const LISTED_TYPE_IDS: RecordingTypeId[] = ["continuous", "operation"];
 
 export function childrenOf(id: RecordingTypeId): RecordingTypeDef[] {
   return RECORDING_TYPES.filter((t) => t.parent === id);
@@ -98,10 +104,11 @@ export interface RecordingTypeConfig {
 
 export const DEFAULT_CONFIG: Record<RecordingTypeId, RecordingTypeConfig> = {
   continuous: { enabled: true,  startTime: "00:00", endTime: "23:59", resolution: "1280x720",  fps: 24 },
+  // Takes over from continuous when it is switched off; its hours come from Operation Mode.
+  operation:  { enabled: false, startTime: "08:00", endTime: "20:00", resolution: "1280x720",  fps: 24 },
   standby:    { enabled: true,  startTime: "18:00", endTime: "06:00", resolution: "1280x720",  fps: 24 },
   // Window mirrors standby's — motion only records inside its parent's hours.
   motion:     { enabled: true,  startTime: "18:00", endTime: "06:00", resolution: "1920x1080", fps: 60, revertSeconds: 50 },
-  training:   { enabled: false, startTime: "09:00", endTime: "17:00", resolution: "1920x1080", fps: 60 },
 };
 
 export const TONE_CLASSES: Record<RecordingTypeDef["tone"], { chip: string; bar: string; dot: string }> = {

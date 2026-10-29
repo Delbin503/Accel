@@ -1,11 +1,17 @@
 import { MOCK_CAMERAS } from "@/mocks/cameras";
-import { DEFAULT_CONFIG, RECORDING_TYPES, type RecordingTypeId } from "./recordingTypes";
+import { findSiteById } from "@/mocks/sites";
+import { DEFAULT_CONFIG, type RecordingTypeId } from "./recordingTypes";
 
-/* Derived recordings for the Phase 1.3 proposals.
+/* Derived recordings for the Phase 1.3 Recordings page.
 
-   One recording per enabled type, per camera, per day — built once here so the
-   "Recordings by type" list and the camera-day Recordings page describe the
-   same footage instead of inventing it twice. */
+   Matches the Recording Schedule's per-site modes. A site open round the clock
+   records continuously — one recording per camera a day. A site that keeps
+   hours records by them (operation), then rests in standby until it opens
+   again.
+
+   A camera-day is one listed recording: continuous, or operation. Standby is
+   not a recording of its own — it is the other half of an operation day, so it
+   hangs off the operation recording, and the motion clips hang off standby. */
 
 export interface DayRecording {
   id: string;
@@ -28,19 +34,26 @@ export interface DayRecording {
   durationDisplay: string;
   fileSizeDisplay: string;
   fileSizeMb: number;
+  /** Motion clips inside a standby recording; 1 for everything else. */
   clipCount: number;
+  fps: number;
+  /** Day index — 0 is today. Used for sorting without parsing the label. */
+  dayIndex: number;
+  /** Standby only — the motion recording folded inside it, split into clips by motionClipsFor. */
+  motion?: DayRecording;
+  /** Operation only — the standby that runs outside its hours, carrying the motion clips. */
+  standby?: DayRecording;
 }
 
 export const DAYS = ["Today", "Yesterday", "23 May 2026"] as const;
 
-/** Minutes a type covers in a day, from its configured window. */
-export function windowMinutes(id: RecordingTypeId): number {
-  const cfg = DEFAULT_CONFIG[id];
-  const [sh, sm] = cfg.startTime.split(":").map(Number);
-  const [eh, em] = cfg.endTime.split(":").map(Number);
-  const start = sh * 60 + sm;
-  const end = eh * 60 + em;
-  return end > start ? end - start : 1440 - start + end;
+/** Minutes from start to end, running past midnight when end comes first. */
+export function spanMinutes(start: string, end: string): number {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const a = sh * 60 + sm;
+  const b = eh * 60 + em;
+  return b > a ? b - a : 1440 - a + b;
 }
 
 /** Rough bitrate per type, so file sizes track resolution and fps sensibly. */
@@ -59,10 +72,6 @@ export function fmtSize(mb: number): string {
   return mb >= 1024 ? `${(mb / 1024).toFixed(2)} GB` : `${mb} MB`;
 }
 
-/**
- * One recording per type, per camera, per day. Motion is the exception: it
- * captures in bursts, so its row stands for a set of clips.
- */
 function buildRecordings(): DayRecording[] {
   const cameras = MOCK_CAMERAS.filter((c) => c.nvrId && c.status === "online");
   const out: DayRecording[] = [];
@@ -70,19 +79,11 @@ function buildRecordings(): DayRecording[] {
 
   DAYS.forEach((dateLabel, dayIdx) => {
     cameras.forEach((c) => {
-      RECORDING_TYPES.forEach((t) => {
-        const cfg = DEFAULT_CONFIG[t.id];
-        if (!cfg.enabled) return;
-        // A nested type only records while its parent is recording.
-        if (t.parent && !DEFAULT_CONFIG[t.parent].enabled) return;
-        const mins = windowMinutes(t.id);
-        // Motion recording only runs while something moves — a fraction of the window.
-        const effective = t.id === "motion" ? Math.round(mins * 0.08) + (c.recentEventCount % 17) : mins;
-        const clips = t.id === "motion" ? Math.max(1, c.recentEventCount - dayIdx * 2) : 1;
-        const mb = megabytesFor(t.id, effective);
-
-        out.push({
-          id: `REC-${String(n++).padStart(4, "0")}`,
+      const make = (type: RecordingTypeId, start: string, end: string, minutes: number, clips = 1): DayRecording => {
+        const cfg = DEFAULT_CONFIG[type];
+        const mb = megabytesFor(type, minutes);
+        return {
+          id: `REC-${String(n).padStart(4, "0")}`,
           cameraId: c.id,
           cameraName: c.name,
           areaName: c.areaName,
@@ -91,19 +92,46 @@ function buildRecordings(): DayRecording[] {
           areaId: c.areaId,
           nvrId: c.nvrId,
           resolution: cfg.resolution,
+          fps: cfg.fps,
           dateLabel,
-          type: t.id,
-          startsAt: cfg.startTime,
-          endsAt: cfg.endTime,
-          startsAtDisplay: `${cfg.startTime}:00`,
-          endsAtDisplay: `${cfg.endTime}:00`,
-          durationMinutes: effective,
-          durationDisplay: fmtDuration(effective),
+          dayIndex: dayIdx,
+          type,
+          startsAt: start,
+          endsAt: end,
+          startsAtDisplay: `${start}:00`,
+          endsAtDisplay: `${end}:00`,
+          durationMinutes: minutes,
+          durationDisplay: fmtDuration(minutes),
           fileSizeMb: mb,
           fileSizeDisplay: fmtSize(mb),
           clipCount: clips,
-        });
-      });
+        };
+      };
+
+      // Main recording: continuous at a round-the-clock site, else operation hours.
+      const hours = findSiteById(c.siteId)?.operatingHours;
+      const roundTheClock = !hours || (hours.from === "00:00" && hours.to === "23:59");
+      const [type, start, end] = roundTheClock
+        ? (["continuous", "00:00", "23:59"] as const)
+        : (["operation", hours.from, hours.to] as const);
+      const main = make(type, start, end, spanMinutes(start, end));
+      out.push(main);
+      n++;
+      // Continuous has nothing to rest in — standby and motion belong to operation mode.
+      if (roundTheClock) return;
+
+      // Standby from closing to opening, with the motion that fired inside it — in bursts.
+      const standby = make("standby", hours.to, hours.from, spanMinutes(hours.to, hours.from));
+      const clips = Math.max(1, c.recentEventCount - dayIdx * 2);
+      const motionMinutes = Math.round(standby.durationMinutes * 0.08) + (c.recentEventCount % 17);
+      /* Standby is a phase of the operation day, not a row of its own, so it
+         takes the operation recording's id with a suffix rather than the next
+         number — the listed ids stay consecutive. */
+      standby.id = `${main.id}-SB`;
+      // Same id as its standby, so the clips read REC-0001-SB-01, -02 …
+      standby.motion = { ...make("motion", hours.to, hours.from, motionMinutes, clips), id: standby.id };
+      standby.clipCount = clips;
+      main.standby = standby;
     });
   });
 
@@ -111,78 +139,6 @@ function buildRecordings(): DayRecording[] {
 }
 
 export const ALL_RECORDINGS: DayRecording[] = buildRecordings();
-
-/* ── Camera-day grouping ─────────────────────────────────────────────────── */
-
-/**
- * A camera's whole day. This is the unit the Recordings page lists, because a
- * camera no longer produces one file a day — it produces one per enabled type.
- */
-export interface CameraDay {
-  key: string;
-  cameraId: string;
-  cameraName: string;
-  areaName: string;
-  siteName: string;
-  siteId: string;
-  areaId: string;
-  nvrId: string | null;
-  resolution: string;
-  dateLabel: string;
-  /** Day index — 0 is today. Used for sorting without parsing the label. */
-  dayIndex: number;
-  recordings: DayRecording[];
-  totalMinutes: number;
-  totalMb: number;
-  totalSizeDisplay: string;
-  totalDurationDisplay: string;
-  clipCount: number;
-  /** Earliest start across the day's recordings, for the card's time chip. */
-  firstStartDisplay: string;
-}
-
-export function buildCameraDays(source: DayRecording[] = ALL_RECORDINGS): CameraDay[] {
-  const map = new Map<string, CameraDay>();
-
-  source.forEach((r) => {
-    const key = `${r.cameraId}::${r.dateLabel}`;
-    let day = map.get(key);
-    if (!day) {
-      day = {
-        key,
-        cameraId: r.cameraId,
-        cameraName: r.cameraName,
-        areaName: r.areaName,
-        siteName: r.siteName,
-        siteId: r.siteId,
-        areaId: r.areaId,
-        nvrId: r.nvrId,
-        resolution: r.resolution,
-        dateLabel: r.dateLabel,
-        dayIndex: DAYS.indexOf(r.dateLabel as (typeof DAYS)[number]),
-        recordings: [],
-        totalMinutes: 0,
-        totalMb: 0,
-        totalSizeDisplay: "",
-        totalDurationDisplay: "",
-        clipCount: 0,
-        firstStartDisplay: r.startsAtDisplay,
-      };
-      map.set(key, day);
-    }
-    day.recordings.push(r);
-    day.totalMinutes += r.durationMinutes;
-    day.totalMb += r.fileSizeMb;
-    day.clipCount += r.clipCount;
-    if (r.startsAt < day.firstStartDisplay.slice(0, 5)) day.firstStartDisplay = r.startsAtDisplay;
-  });
-
-  return [...map.values()].map((d) => ({
-    ...d,
-    totalSizeDisplay: fmtSize(d.totalMb),
-    totalDurationDisplay: fmtDuration(d.totalMinutes),
-  }));
-}
 
 /* ── Detected periods ────────────────────────────────────────────────────── */
 

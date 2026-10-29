@@ -29,17 +29,10 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/formatters";
-import { RECORDING_TYPES, TONE_CLASSES, type RecordingTypeId } from "./recordingTypes";
-import {
-  ALL_RECORDINGS,
-  DAYS,
-  buildCameraDays,
-  fmtSize,
-  motionClipsFor,
-  type CameraDay,
-  type DayRecording,
-} from "./dayRecordings";
+import { formatDate, formatTimeOfDay } from "@/lib/formatters";
+import { findSiteById } from "@/mocks/sites";
+import { TONE_CLASSES, typeById, type RecordingTypeId } from "./recordingTypes";
+import { ALL_RECORDINGS, DAYS, fmtSize, motionClipsFor, type DayRecording } from "./dayRecordings";
 import { EMPTY_FILTERS, type RecordingFilters } from "./recordingFilters";
 import { FilterPanel } from "./recordingsChrome";
 import { RecordingPlayerModal } from "./RecordingPlayerModal";
@@ -48,47 +41,23 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 
 /* Recordings, reshaped for Phase 1.3.
 
-   A row is no longer one file — a camera produces one recording per enabled
-   type per day, so a row is a camera-day and its chip counts what is inside.
-   It's a list, not a grid of cards: recordings carry no thumbnail in the
-   build, so a thumbnail slot would only ever be a placeholder. Opening a row
-   leads with the recording info and lists the day's recordings; picking one
-   opens the player in a pop-up. */
+   A row is a camera's day, and there are only two kinds: continuous where the
+   site runs round the clock, operation where it keeps hours. Standby is not a
+   row — it is the other half of an operation day, so it opens inside that
+   recording along with the motion clips caught while it ran. No thumbnails
+   anywhere: the build has none, so a slot would only ever be a placeholder.
+   Every video plays in a pop-up. */
 
 /* ── Chips ───────────────────────────────────────────────────────────────── */
 
-/**
- * Pill like User Management's status pill; `types` puts one dot per recording
- * type where its dot sits. `bare` drops the word, for a column already headed
- * "Recordings".
- */
-function CountChip({ count, types, bare }: { count: number; types?: RecordingTypeId[]; bare?: boolean }) {
-  const label = `${count} Recording${count === 1 ? "" : "s"}`;
-  return (
-    <span title={bare ? label : undefined} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary">
-      {types && <TypeDots types={types} />}
-      {bare ? count : label}
-    </span>
-  );
-}
-
+/** The recording's type, as a pill like User Management's status pill. */
 function TypeChip({ type }: { type: RecordingTypeId }) {
-  const def = RECORDING_TYPES.find((t) => t.id === type) ?? RECORDING_TYPES[0];
+  const def = typeById(type);
+  const tone = TONE_CLASSES[def.tone];
   return (
-    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", TONE_CLASSES[def.tone].chip)}>
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider", tone.chip)}>
+      <span className={cn("size-1.5 shrink-0 rounded-full", tone.dot)} />
       {def.label}
-    </span>
-  );
-}
-
-/** The dots on a card, one per type the day produced. */
-function TypeDots({ types }: { types: RecordingTypeId[] }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      {types.map((t) => {
-        const def = RECORDING_TYPES.find((x) => x.id === t) ?? RECORDING_TYPES[0];
-        return <span key={t} title={def.label} className={cn("size-1.5 rounded-full", TONE_CLASSES[def.tone].dot)} />;
-      })}
     </span>
   );
 }
@@ -167,15 +136,18 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
   );
 }
 
-/* ── Camera-day list ─────────────────────────────────────────────────────── */
+/* ── Recordings list ─────────────────────────────────────────────────────── */
 
-/** The day's date and first start, e.g. "25 May 2026" and "00:00". */
-function dayDateDisplay(day: CameraDay): { date: string; time: string } {
+/** A recording's calendar date and its window, e.g. "25 May 2026" and "18:00 – 06:00". */
+function recDate(rec: DayRecording): { date: string; time: string } {
   // DAYS runs newest first and ends on a dated label, so the others count back from it.
   const last = DAYS.length - 1;
   const date = new Date(DAYS[last]);
-  date.setDate(date.getDate() + (last - day.dayIndex));
-  return { date: formatDate(date, { day: "numeric", month: "short", year: "numeric" }), time: day.firstStartDisplay.slice(0, 5) };
+  date.setDate(date.getDate() + (last - rec.dayIndex));
+  return {
+    date: formatDate(date, { day: "numeric", month: "short", year: "numeric" }),
+    time: `${rec.startsAt} – ${rec.endsAt}`,
+  };
 }
 
 /* Built like the User Management table — same header, dividers, ID column,
@@ -184,18 +156,18 @@ const HEAD = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs font-normal upper
 const CELL = "px-4 py-3";
 const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted";
 
-function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggleAll, onToggleBookmark, onOpen, onDelete }: {
-  days: CameraDay[];
-  selectedKeys: Set<string>;
-  bookmarkedKeys: Set<string>;
-  onToggle: (key: string) => void;
+function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleAll, onToggleBookmark, onOpen, onDelete }: {
+  items: DayRecording[];
+  selectedIds: Set<string>;
+  bookmarkedIds: Set<string>;
+  onToggle: (id: string) => void;
   onToggleAll: (select: boolean) => void;
-  onToggleBookmark: (key: string) => void;
-  onOpen: (key: string) => void;
-  onDelete: (key: string) => void;
+  onToggleBookmark: (id: string) => void;
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
-  const selectedHere = days.filter((d) => selectedKeys.has(d.key)).length;
-  const all = selectedHere === days.length;
+  const selectedHere = items.filter((r) => selectedIds.has(r.id)).length;
+  const all = selectedHere === items.length;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
@@ -206,34 +178,34 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                 <Checkbox
                   checked={all ? true : selectedHere > 0 ? "indeterminate" : false}
                   onCheckedChange={() => onToggleAll(!all)}
-                  aria-label="Select every camera-day on this page"
+                  aria-label="Select every recording on this page"
                 />
               </th>
-              {["REC ID", "Recording Title", "Date", "Recordings", "Duration / Size", "Action"].map((h) => (
+              {["REC ID", "Recording", "Type", "Date", "Duration / Size", "Action"].map((h) => (
                 <th key={h} className={HEAD}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {days.map((day) => {
-              const selected = selectedKeys.has(day.key);
-              const bookmarked = bookmarkedKeys.has(day.key);
-              const label = `${day.cameraName} · ${day.dateLabel}`;
+            {items.map((rec) => {
+              const selected = selectedIds.has(rec.id);
+              const bookmarked = bookmarkedIds.has(rec.id);
+              const label = `${rec.id} · ${rec.cameraName}`;
+              const { date, time } = recDate(rec);
               return (
                 <tr
-                  key={day.key}
+                  key={rec.id}
                   tabIndex={0}
-                  onClick={() => onOpen(day.key)}
-                  onKeyDown={(e) => e.key === "Enter" && onOpen(day.key)}
+                  onClick={() => onOpen(rec.id)}
+                  onKeyDown={(e) => e.key === "Enter" && onOpen(rec.id)}
                   className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
                 >
                   <td className={CELL} onClick={(e) => e.stopPropagation()}>
-                    <Checkbox checked={selected} onCheckedChange={() => onToggle(day.key)} aria-label={`Select ${label}`} />
+                    <Checkbox checked={selected} onCheckedChange={() => onToggle(rec.id)} aria-label={`Select ${label}`} />
                   </td>
                   <td className={CELL}>
-                    {/* A camera-day is filed under its first recording's id. */}
                     <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
-                      {day.recordings[0]?.id ?? "—"}
+                      {rec.id}
                     </span>
                   </td>
                   {/* About a third of the row: wide enough to read, never the whole gap,
@@ -245,32 +217,40 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                       </span>
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <TruncatedText text={day.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
-                          {/* A bookmark keeps a camera-day out of any delete. */}
+                          <TruncatedText text={rec.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                          {/* A bookmark keeps a recording out of any delete. */}
                           {bookmarked && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
                         </div>
-                        <TruncatedText text={`${day.cameraId} · ${day.areaName} · ${day.siteName}`} className="text-xs text-muted-foreground" />
+                        <TruncatedText text={`${rec.cameraId} · ${rec.areaName} · ${rec.siteName}`} className="text-xs text-muted-foreground" />
                       </div>
+                    </div>
+                  </td>
+                  <td className={CELL}>
+                    <div className="flex flex-col items-start gap-1">
+                      <TypeChip type={rec.type} />
+                      {/* Plain text, so the type pill stays the one thing that reads as a type. */}
+                      {rec.standby && (
+                        <span className="whitespace-nowrap pl-1 text-xs text-muted-foreground">
+                          + standby
+                          {rec.standby.clipCount > 0 && `, ${rec.standby.clipCount} motion clip${rec.standby.clipCount === 1 ? "" : "s"}`}
+                        </span>
+                      )}
                     </div>
                   </td>
                   {/* Date over time, each with its icon as the other modules' tables show them. */}
                   <td className={cn(CELL, "whitespace-nowrap")}>
                     <p className="flex items-center gap-1.5 text-sm text-foreground">
                       <Calendar className="size-3 shrink-0 text-muted-foreground" />
-                      {dayDateDisplay(day).date}
+                      {date}
                     </p>
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="size-3 shrink-0" />
-                      {dayDateDisplay(day).time}
+                      {time}
                     </p>
                   </td>
-                  <td className={CELL}>
-                    {/* The pill counts the day's recordings — a camera no longer has one mode. */}
-                    <CountChip count={day.recordings.length} types={day.recordings.map((r) => r.type)} bare />
-                  </td>
                   <td className={cn(CELL, "whitespace-nowrap")}>
-                    <p className="text-foreground">{day.totalDurationDisplay}</p>
-                    <p className="text-xs text-muted-foreground">{day.totalSizeDisplay}</p>
+                    <p className="text-foreground">{rec.durationDisplay}</p>
+                    <p className="text-xs text-muted-foreground">{rec.fileSizeDisplay}</p>
                   </td>
                   <td className={CELL} onClick={(e) => e.stopPropagation()}>
                     <Popover>
@@ -280,16 +260,16 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-44 p-1" align="end">
-                        <button onClick={() => onOpen(day.key)} className={cn(MENU_ITEM, "text-foreground")}>
+                        <button onClick={() => onOpen(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
                           <Play className="size-3.5 text-muted-foreground" />
-                          View recordings
+                          View recording
                         </button>
-                        <button onClick={() => onToggleBookmark(day.key)} className={cn(MENU_ITEM, "text-foreground")}>
+                        <button onClick={() => onToggleBookmark(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
                           <Star className={cn("size-3.5", bookmarked ? "fill-warning text-warning" : "text-muted-foreground")} />
                           {bookmarked ? "Remove bookmark" : "Bookmark"}
                         </button>
                         <div className="my-1 border-t border-border" />
-                        <button onClick={() => onDelete(day.key)} className={cn(MENU_ITEM, "text-sev-critical hover:bg-sev-critical/10")}>
+                        <button onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-sev-critical hover:bg-sev-critical/10")}>
                           <Trash2 className="size-3.5" />
                           Delete
                         </button>
@@ -308,20 +288,36 @@ function CameraDayTable({ days, selectedKeys, bookmarkedKeys, onToggle, onToggle
 
 /* ── Drawer ──────────────────────────────────────────────────────────────── */
 
-function InfoGrid({ day }: { day: CameraDay }) {
+/** Where an operation recording's hours came from — the site's own, by default. */
+function hoursSource(rec: DayRecording): string | null {
+  if (rec.type !== "operation") return null;
+  const h = findSiteById(rec.siteId)?.operatingHours;
+  return h ? `${rec.siteName} operation hours · ${formatTimeOfDay(h.from)} – ${formatTimeOfDay(h.to)}` : "Site operation hours";
+}
+
+function InfoGrid({ rec }: { rec: DayRecording }) {
+  const { date } = recDate(rec);
+  const source = hoursSource(rec);
   const rows: [string, React.ReactNode][] = [
-    ["Camera", <span className="font-mono text-xs">{day.cameraId}</span>],
-    ["Camera Name", day.cameraName],
-    ["Site", day.siteName],
-    ["Area", day.areaName],
-    ["NVR", <span className="inline-flex items-center gap-1.5"><HardDrive className="size-3 text-info" /><span className="font-mono">{day.nvrId ?? "—"}</span></span>],
-    ["Resolution", <span className="font-mono text-xs">{day.resolution}</span>],
-    ["Day", day.dateLabel],
-    ["Recordings", <span className="font-mono text-xs">{day.recordings.length} of {RECORDING_TYPES.length} types</span>],
-    ["Total Duration", <span className="font-mono text-xs">{day.totalDurationDisplay}</span>],
-    ["Total Size", <span className="font-mono text-xs">{day.totalSizeDisplay}</span>],
-    ["First Starts At", <span className="font-mono text-xs">{day.firstStartDisplay}</span>],
-    ["Clips", <span className="font-mono text-xs">{day.clipCount}</span>],
+    ["Recording ID", <span className="font-mono text-xs">{rec.id}</span>],
+    ["Type", <TypeChip type={rec.type} />],
+    ["Camera", <span className="font-mono text-xs">{rec.cameraId}</span>],
+    ["Camera Name", rec.cameraName],
+    ["Site", rec.siteName],
+    ["Area", rec.areaName],
+    ["NVR", <span className="inline-flex items-center gap-1.5"><HardDrive className="size-3 text-info" /><span className="font-mono">{rec.nvrId ?? "—"}</span></span>],
+    ["Resolution", <span className="font-mono text-xs">{rec.resolution} · {rec.fps} fps</span>],
+    ["Date", date],
+    ["Window", <span className="font-mono text-xs">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>],
+    ["Duration", <span className="font-mono text-xs">{rec.durationDisplay}</span>],
+    ["Size", <span className="font-mono text-xs">{rec.fileSizeDisplay}</span>],
+    ...(rec.standby
+      ? ([
+          ["Standby Window", <span className="font-mono text-xs">{rec.standby.startsAtDisplay} – {rec.standby.endsAtDisplay} · {rec.standby.durationDisplay}</span>],
+          ["Motion-Based Clips", <span className="font-mono text-xs">{rec.standby.clipCount} · {rec.standby.motion?.durationDisplay} in total</span>],
+        ] as [string, React.ReactNode][])
+      : []),
+    ...(source ? [["Hours From", source] as [string, React.ReactNode]] : []),
   ];
 
   return (
@@ -336,126 +332,29 @@ function InfoGrid({ day }: { day: CameraDay }) {
   );
 }
 
-function RecordingRow({ rec, onPlay, nested, label }: {
-  rec: DayRecording;
-  onPlay: () => void;
-  /** A motion clip listed under its standby recording. */
-  nested?: boolean;
-  /** Replaces the id chip — "Clip 3 of 6" reads better than a suffixed id. */
-  label?: string;
-}) {
+/** One playable video — no thumbnail, the play button leads. */
+function PlayRow({ rec, title, onPlay }: { rec: DayRecording; title: React.ReactNode; onPlay: () => void }) {
   return (
-    <button
-      onClick={onPlay}
-      className={cn(
-        "group/row flex w-full items-center gap-3 text-left transition-colors hover:bg-muted/40",
-        nested ? "py-2.5 pl-10 pr-3.5" : "px-3.5 py-3"
-      )}
-    >
-      {/* Thumbnail doubles as the play affordance. */}
-      <span className={cn(
-        "relative shrink-0 overflow-hidden rounded-md border border-border bg-neutral-900",
-        nested ? "h-9 w-16" : "h-11 w-20"
-      )}>
-        <span className="absolute inset-0"
-          style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }} />
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="flex size-6 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-transform group-hover/row:scale-110">
-            <Play className="size-3 text-white" />
-          </span>
-        </span>
+    <button onClick={onPlay} className="group/row flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-muted/40">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary group-hover/row:text-primary-foreground">
+        <Play className="size-3.5" />
       </span>
-
       <span className="min-w-0 flex-1">
-        <span className="mb-1 flex flex-wrap items-center gap-1.5">
-          <TypeChip type={rec.type} />
-          <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{label ?? rec.id}</span>
-        </span>
+        <span className="mb-0.5 flex flex-wrap items-center gap-1.5">{title}</span>
         <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="size-2.5" />
           <span className="font-mono">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>
           <span className="text-muted-foreground/40">·</span>
           <span className="font-mono">{rec.durationDisplay}</span>
-          {rec.clipCount > 1 && (
-            <>
-              <span className="text-muted-foreground/40">·</span>
-              <span className="font-mono">{rec.clipCount} clips</span>
-            </>
-          )}
         </span>
       </span>
-
-      <span className="shrink-0 text-right">
-        <span className="block font-mono text-xs text-foreground">{rec.fileSizeDisplay}</span>
-        <span className="mt-0.5 inline-flex items-center gap-1 text-2xs font-semibold text-primary opacity-0 transition-opacity group-hover/row:opacity-100">
-          Play
-          <Play className="size-2.5" />
-        </span>
-      </span>
+      <span className="shrink-0 font-mono text-xs text-foreground">{rec.fileSizeDisplay}</span>
     </button>
   );
 }
 
-/**
- * Standby with its motion clips folded underneath. Motion runs inside the
- * standby window and fires in bursts, so a busy day can hold a dozen clips —
- * listing them flat would bury the other recording types. The standby row
- * carries the count; the chevron opens the clips.
- */
-function StandbyGroup({ standby, motion, onPlay }: {
-  standby: DayRecording;
-  motion: DayRecording | undefined;
-  onPlay: (rec: DayRecording) => void;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const clips = motion ? motionClipsFor(motion) : [];
-  const tone = TONE_CLASSES[RECORDING_TYPES.find((t) => t.id === "motion")?.tone ?? "warning"];
-
-  return (
-    <div>
-      <div className="flex items-stretch">
-        <div className="min-w-0 flex-1">
-          <RecordingRow rec={standby} onPlay={() => onPlay(standby)} />
-        </div>
-        {clips.length > 0 && (
-          /* A sibling of the play row, not inside it — a button cannot hold a button. */
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-label={`${open ? "Hide" : "Show"} ${clips.length} motion-based clip${clips.length === 1 ? "" : "s"}`}
-            className="flex shrink-0 items-center gap-1.5 border-l border-border px-3 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-          >
-            <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-semibold", tone.chip)}>
-              <strong>{clips.length}</strong> Motion
-            </span>
-            <ChevronDown className={cn(
-              "size-3.5 transition-transform duration-[var(--duration-fast)] ease-standard",
-              open && "rotate-180"
-            )} />
-          </button>
-        )}
-      </div>
-
-      {open && (
-        <div className="divide-y divide-border border-t border-border bg-muted/20">
-          {clips.map((clip, i) => (
-            <RecordingRow
-              key={clip.id}
-              rec={clip}
-              nested
-              label={`Clip ${i + 1} of ${clips.length}`}
-              onPlay={() => onPlay(clip)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBookmark, onPlay }: {
-  day: CameraDay | null;
+function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBookmark, onPlay }: {
+  rec: DayRecording | null;
   open: boolean;
   bookmarked: boolean;
   onClose: () => void;
@@ -463,7 +362,10 @@ function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBoo
   onToggleBookmark: () => void;
   onPlay: (rec: DayRecording) => void;
 }) {
-  if (!day) return null;
+  if (!rec) return null;
+  const standby = rec.standby;
+  const clips = standby?.motion ? motionClipsFor(standby.motion) : [];
+  const { date } = recDate(rec);
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -472,32 +374,30 @@ function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBoo
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <CountChip count={day.recordings.length} />
+                <TypeChip type={rec.type} />
+                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{rec.id}</span>
               </div>
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <SheetTitle className="min-w-0 text-lg font-bold">
-                  <TruncatedText text={`Recording · ${day.dateLabel}`} />
-                </SheetTitle>
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{day.cameraId}</span>
-              </div>
+              <SheetTitle className="mb-1 min-w-0 text-lg font-bold">
+                <TruncatedText text={`${rec.cameraName} · ${date}`} />
+              </SheetTitle>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <Video className="size-3" />
-                {day.cameraName} ({day.cameraId})
+                {rec.cameraId}
                 <span className="text-muted-foreground/40">·</span>
                 <MapPin className="size-3" />
-                {day.areaName} · {day.siteName}
+                {rec.areaName} · {rec.siteName}
                 <span className="text-muted-foreground/40">·</span>
                 <Clock className="size-3" />
-                <span className="font-mono">{day.totalDurationDisplay}</span>
+                <span className="font-mono">{rec.durationDisplay}</span>
                 <span className="text-muted-foreground/40">·</span>
-                <span className="font-mono">{day.totalSizeDisplay}</span>
+                <span className="font-mono">{rec.fileSizeDisplay}</span>
               </div>
             </div>
             <div className="mt-0.5 flex flex-shrink-0 items-center gap-1">
               <BookmarkButton
                 bookmarked={bookmarked}
                 onToggle={onToggleBookmark}
-                label={`${day.cameraName} · ${day.dateLabel}`}
+                label={`${rec.id} · ${rec.cameraName}`}
                 className={cn("size-7", !bookmarked && "text-muted-foreground hover:text-foreground")}
               />
               <button onClick={onClose} aria-label="Close"
@@ -509,35 +409,45 @@ function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBoo
         </SheetHeader>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
-          {/* Info leads — there is no single video to open on. */}
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording Info</p>
-            <InfoGrid day={day} />
+            <InfoGrid rec={rec} />
           </div>
 
+          {/* The hours the camera was open for — the recording this row is. */}
           <div>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recordings</p>
-              <p className="text-2xs text-muted-foreground">
-                {day.recordings.length} type{day.recordings.length === 1 ? "" : "s"} captured · {day.dateLabel}
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording</p>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <PlayRow rec={rec} onPlay={() => onPlay(rec)}
+                title={<><TypeChip type={rec.type} /><span className="font-mono text-2xs text-muted-foreground">{rec.id}</span></>} />
+            </div>
+          </div>
+
+          {/* Operation only — the rest of the day. Standby covers the closed
+              hours, and the motion it caught splits into a clip each. */}
+          {standby && (
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Outside Operation Hours</p>
+                <p className="text-2xs text-muted-foreground">
+                  Standby · {standby.durationDisplay}
+                  {clips.length > 0 && ` · ${clips.length} motion clip${clips.length === 1 ? "" : "s"}`}
+                </p>
+              </div>
+              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                <PlayRow rec={standby} onPlay={() => onPlay(standby)}
+                  title={<><TypeChip type="standby" /><span className="font-mono text-2xs text-muted-foreground">{standby.id}</span></>} />
+                {clips.map((clip, i) => (
+                  <PlayRow key={clip.id} rec={clip} onPlay={() => onPlay(clip)}
+                    title={<><TypeChip type="motion" /><span className="text-xs text-foreground">Clip {i + 1} of {clips.length}</span></>} />
+                ))}
+              </div>
+              <p className="mt-2 text-2xs text-muted-foreground">
+                Standby runs from closing to opening. Motion-based recording runs inside it: each clip starts
+                when motion is detected and ends once it stops.
               </p>
             </div>
-            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {day.recordings.map((rec) => {
-                const motion = day.recordings.find((r) => r.type === "motion");
-                const standby = day.recordings.find((r) => r.type === "standby");
-                // Motion lives under standby; it only stands alone if standby is somehow missing.
-                if (rec.type === "motion" && standby) return null;
-                if (rec.type === "standby") {
-                  return <StandbyGroup key={rec.id} standby={rec} motion={motion} onPlay={onPlay} />;
-                }
-                return <RecordingRow key={rec.id} rec={rec} onPlay={() => onPlay(rec)} />;
-              })}
-            </div>
-            <p className="mt-2 text-2xs text-muted-foreground">
-              Types that are switched off in System Configuration › Recording Schedule produce nothing, so they do not appear here.
-            </p>
-          </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border bg-card px-5 py-3.5">
@@ -550,12 +460,12 @@ function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBoo
           <Button
             variant="outline"
             disabled={bookmarked}
-            aria-label={bookmarked ? `${day.cameraName} · ${day.dateLabel} is bookmarked and cannot be deleted` : "Delete recordings"}
+            aria-label={bookmarked ? `${rec.id} is bookmarked and cannot be deleted` : "Delete recording"}
             className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
             onClick={onDelete}
           >
             <Trash2 className="size-3.5" />
-            Delete Recordings
+            Delete Recording
           </Button>
         </div>
       </SheetContent>
@@ -565,21 +475,21 @@ function CameraDayDrawer({ day, open, bookmarked, onClose, onDelete, onToggleBoo
 
 /* ── Delete confirmation ─────────────────────────────────────────────────── */
 
-function DeleteDaysModal({ open, days, onClose, onConfirm }: {
+function DeleteRecordingsModal({ open, recs, onClose, onConfirm }: {
   open: boolean;
-  days: { key: string; label: string; count: number }[];
+  recs: DayRecording[];
   onClose: () => void;
   onConfirm: () => void;
 }) {
-  if (days.length === 0) return null;
-  const fileCount = days.reduce((s, d) => s + d.count, 0);
-  const isBulk = days.length > 1;
+  if (recs.length === 0) return null;
+  const isBulk = recs.length > 1;
+  const clips = recs.reduce((s, r) => s + (r.standby?.clipCount ?? 0), 0);
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
       <ModalContent size="lg">
         <ModalHeader
-          title={isBulk ? `Delete Recordings (${fileCount})` : "Delete Recordings"}
+          title={isBulk ? `Delete Recordings (${recs.length})` : "Delete Recording"}
           description="This action cannot be undone."
           tone="destructive"
         />
@@ -590,26 +500,26 @@ function DeleteDaysModal({ open, days, onClose, onConfirm }: {
               <div className="min-w-0">
                 <p className="text-base font-semibold text-foreground">You are about to remove:</p>
                 {isBulk ? (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {fileCount} recordings across {days.length} camera-days will be deleted immediately.
-                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{recs.length} recordings will be deleted immediately.</p>
                 ) : (
                   <p className="mt-1 text-base text-muted-foreground">
-                    {days[0].label} — <span className="font-mono text-sm">{days[0].count} recording{days[0].count === 1 ? "" : "s"}</span>
+                    <span className="font-mono text-sm">{recs[0].id}</span> — {recs[0].cameraName} · {typeById(recs[0].type).label}
                   </p>
                 )}
               </div>
             </div>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            A camera-day holds one recording per enabled type — deleting it removes all of them.
-          </p>
+          {clips > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              An operation recording takes its standby, and the motion clips inside it — {clips} clip{clips === 1 ? "" : "s"} in all.
+            </p>
+          )}
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
             <Trash2 className="size-3.5" />
-            Delete {fileCount} Recording{fileCount === 1 ? "" : "s"}
+            Delete {recs.length} Recording{recs.length === 1 ? "" : "s"}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -619,17 +529,17 @@ function DeleteDaysModal({ open, days, onClose, onConfirm }: {
 
 /* ── Page ────────────────────────────────────────────────────────────────── */
 
-type SortKey = "newest" | "oldest" | "most" | "largest";
+type SortKey = "newest" | "oldest" | "longest" | "largest";
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "newest", label: "Newest First" },
   { key: "oldest", label: "Oldest First" },
-  { key: "most", label: "Most Recordings" },
+  { key: "longest", label: "Longest First" },
   { key: "largest", label: "Largest Size" },
 ];
 
 /* Date filter mirrors the Phase 1 Recordings page — same pills, same keys, same
-   Custom Date popover. The camera-day data only reaches three days back, so
-   This Week and This Month resolve to the whole set here. */
+   Custom Date popover. The data only reaches three days back, so This Week and
+   This Month resolve to the whole set here. */
 type DatePreset = "all" | "today" | "yesterday" | "week" | "month" | "custom";
 const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "all",       label: "All time" },
@@ -642,12 +552,17 @@ const DATE_PRESETS: { key: DatePreset; label: string }[] = [
 /* Same reference clock as the Phase 1 page, so "Today" means the same date. */
 const NOW_REF = new Date("2026-05-25T10:15:00");
 
-/** A camera-day's calendar date, derived from how many days back it sits. */
+/** A recording's calendar date, derived from how many days back it sits. */
 function dayTimestamp(dayIndex: number): number {
   const d = new Date(NOW_REF);
   d.setDate(d.getDate() - dayIndex);
   d.setHours(12, 0, 0, 0);
   return d.getTime();
+}
+
+/** Only continuous and operation are listed, so a row matches its own type. */
+function matchesType(rec: DayRecording, types: string[]): boolean {
+  return types.includes(rec.type);
 }
 
 export function RecordingsByDay() {
@@ -659,27 +574,28 @@ export function RecordingsByDay() {
   const [dateTo, setDateTo] = React.useState("");
   const [sort, setSort] = React.useState<SortKey>("newest");
   const [sortOpen, setSortOpen] = React.useState(false);
-  const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   /* Seeded so the bookmarked state is visible without bookmarking one first. */
-  const [bookmarkedKeys, setBookmarkedKeys] = React.useState<Set<string>>(() => new Set(["Cam-04::Today"]));
-  const [drawerKey, setDrawerKey] = React.useState<string | null>(null);
+  const [bookmarkedIds, setBookmarkedIds] = React.useState<Set<string>>(() => {
+    const seed = ALL_RECORDINGS.find((r) => r.cameraId === "Cam-04" && r.dayIndex === 0 && r.type === "standby");
+    return new Set(seed ? [seed.id] : []);
+  });
+  const [drawerId, setDrawerId] = React.useState<string | null>(null);
   const [playing, setPlaying] = React.useState<DayRecording | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<{ keys: string[]; days: { key: string; label: string; count: number }[] }>({ keys: [], days: [] });
+  const [deleteTarget, setDeleteTarget] = React.useState<DayRecording[]>([]);
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
-  const allDays = React.useMemo(() => buildCameraDays(source), [source]);
-
   const filtered = React.useMemo(() => {
-    const list = allDays.filter((d) => {
+    const list = source.filter((r) => {
       if (datePreset !== "all") {
-        if (datePreset === "today"     && d.dayIndex !== 0) return false;
-        if (datePreset === "yesterday" && d.dayIndex !== 1) return false;
-        if (datePreset === "week"      && d.dayIndex > 6)  return false;
-        if (datePreset === "month"     && d.dayIndex > 29) return false;
+        if (datePreset === "today"     && r.dayIndex !== 0) return false;
+        if (datePreset === "yesterday" && r.dayIndex !== 1) return false;
+        if (datePreset === "week"      && r.dayIndex > 6)  return false;
+        if (datePreset === "month"     && r.dayIndex > 29) return false;
         if (datePreset === "custom") {
-          const ts = dayTimestamp(d.dayIndex);
+          const ts = dayTimestamp(r.dayIndex);
           if (dateFrom && ts < new Date(dateFrom + "T00:00:00").getTime()) return false;
           if (dateTo   && ts > new Date(dateTo   + "T23:59:59").getTime()) return false;
         }
@@ -687,45 +603,45 @@ export function RecordingsByDay() {
       // Selecting both options constrains nothing, same as selecting neither.
       if (filters.bookmark.length === 1) {
         const wantBookmarked = filters.bookmark[0] === "bookmarked";
-        if (bookmarkedKeys.has(d.key) !== wantBookmarked) return false;
+        if (bookmarkedIds.has(r.id) !== wantBookmarked) return false;
       }
-      if (filters.site.length > 0 && !filters.site.includes(d.siteId)) return false;
-      if (filters.area.length > 0 && !filters.area.includes(d.areaId)) return false;
-      if (filters.camera.length > 0 && !filters.camera.includes(d.cameraId)) return false;
-      if (filters.type.length > 0 && !d.recordings.some((r) => filters.type.includes(r.type))) return false;
+      if (filters.site.length > 0 && !filters.site.includes(r.siteId)) return false;
+      if (filters.area.length > 0 && !filters.area.includes(r.areaId)) return false;
+      if (filters.camera.length > 0 && !filters.camera.includes(r.cameraId)) return false;
+      if (filters.type.length > 0 && !matchesType(r, filters.type)) return false;
       if (search) {
         const q = search.toLowerCase();
-        const hay = [d.cameraId, d.cameraName, d.areaName, d.siteName, d.dateLabel, ...d.recordings.map((r) => r.id)]
-          .join(" ")
-          .toLowerCase();
+        const hay = [r.id, r.cameraId, r.cameraName, r.areaName, r.siteName, r.dateLabel, typeById(r.type).label].join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
 
+    // Newest first, then by camera, with each camera's main recording before its standby.
+    const byTime = (a: DayRecording, b: DayRecording) =>
+      a.dayIndex - b.dayIndex || a.cameraId.localeCompare(b.cameraId) || a.id.localeCompare(b.id);
     return [...list].sort((a, b) => {
-      if (sort === "oldest") return b.dayIndex - a.dayIndex || a.cameraId.localeCompare(b.cameraId);
-      if (sort === "most") return b.recordings.length - a.recordings.length;
-      if (sort === "largest") return b.totalMb - a.totalMb;
-      return a.dayIndex - b.dayIndex || a.cameraId.localeCompare(b.cameraId);
+      if (sort === "oldest") return -byTime(a, b);
+      if (sort === "longest") return b.durationMinutes - a.durationMinutes;
+      if (sort === "largest") return b.fileSizeMb - a.fileSizeMb;
+      return byTime(a, b);
     });
-  }, [allDays, datePreset, dateFrom, dateTo, filters, search, sort, bookmarkedKeys]);
+  }, [source, datePreset, dateFrom, dateTo, filters, search, sort, bookmarkedIds]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount);
   const pageItems = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
-  const drawerDay = drawerKey ? allDays.find((d) => d.key === drawerKey) ?? null : null;
+  const drawerRec = drawerId ? source.find((r) => r.id === drawerId) ?? null : null;
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0) || datePreset !== "all");
 
-  const totalFiles = filtered.reduce((s, d) => s + d.recordings.length, 0);
-  const totalMb = filtered.reduce((s, d) => s + d.totalMb, 0);
-  const todayDays = allDays.filter((d) => d.dateLabel === "Today").length;
+  const totalMb = filtered.reduce((s, r) => s + r.fileSizeMb, 0);
+  const todayCount = source.filter((r) => r.dayIndex === 0).length;
 
-  function toggleBookmark(key: string) {
-    setBookmarkedKeys((curr) => {
+  function toggleBookmark(id: string) {
+    setBookmarkedIds((curr) => {
       const next = new Set(curr);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -734,60 +650,46 @@ export function RecordingsByDay() {
     if (requested.length === 0) return;
     /* Bookmarked recordings are held back rather than silently deleted — the
        operator bookmarked them precisely so this could not happen. */
-    const protectedKeys = requested.filter((k) => bookmarkedKeys.has(k));
-    const keys = requested.filter((k) => !bookmarkedKeys.has(k));
-    if (keys.length === 0) {
+    const protectedIds = requested.filter((id) => bookmarkedIds.has(id));
+    const ids = requested.filter((id) => !bookmarkedIds.has(id));
+    if (ids.length === 0) {
       toast.error(
-        protectedKeys.length === 1
+        protectedIds.length === 1
           ? "That recording is bookmarked — remove the bookmark before deleting."
-          : `All ${protectedKeys.length} selected recordings are bookmarked — remove their bookmarks before deleting.`
+          : `All ${protectedIds.length} selected recordings are bookmarked — remove their bookmarks before deleting.`
       );
       return;
     }
-    if (protectedKeys.length > 0) {
-      toast.message(`${protectedKeys.length} bookmarked camera-day${protectedKeys.length === 1 ? "" : "s"} kept`, {
+    if (protectedIds.length > 0) {
+      toast.message(`${protectedIds.length} bookmarked recording${protectedIds.length === 1 ? "" : "s"} kept`, {
         description: "Bookmarked recordings cannot be deleted.",
       });
     }
-    const days = keys
-      .map((k) => allDays.find((d) => d.key === k))
-      .filter((d): d is CameraDay => !!d)
-      .map((d) => ({ key: d.key, label: `${d.cameraName} · ${d.dateLabel}`, count: d.recordings.length }));
-    setDeleteTarget({ keys, days });
+    setDeleteTarget(source.filter((r) => ids.includes(r.id)));
     setDeleteOpen(true);
   }
 
   function confirmDelete() {
-    const { keys } = deleteTarget;
-    if (keys.length === 0) return;
-    const removed = allDays.filter((d) => keys.includes(d.key));
-    const ids = new Set(removed.flatMap((d) => d.recordings.map((r) => r.id)));
+    const ids = new Set(deleteTarget.map((r) => r.id));
+    if (ids.size === 0) return;
     setSource((curr) => curr.filter((r) => !ids.has(r.id)));
-    setSelectedKeys((curr) => {
-      const next = new Set(curr);
-      keys.forEach((k) => next.delete(k));
-      return next;
-    });
-    if (drawerKey && keys.includes(drawerKey)) setDrawerKey(null);
+    setSelectedIds((curr) => new Set([...curr].filter((id) => !ids.has(id))));
+    if (drawerId && ids.has(drawerId)) setDrawerId(null);
     setDeleteOpen(false);
-    toast.success(
-      keys.length === 1
-        ? `${ids.size} recording${ids.size === 1 ? "" : "s"} deleted`
-        : `${ids.size} recordings across ${keys.length} camera-days deleted`
-    );
+    toast.success(`${ids.size} recording${ids.size === 1 ? "" : "s"} deleted`);
   }
 
-  function toggleDay(key: string) {
-    setSelectedKeys((curr) => {
+  function toggleSelected(id: string) {
+    setSelectedIds((curr) => {
       const next = new Set(curr);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
 
   return (
-    <div className={cn("flex flex-col gap-4", selectedKeys.size > 0 && "pb-24")}>
+    <div className={cn("flex flex-col gap-4", selectedIds.size > 0 && "pb-24")}>
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Recordings</PageHeader.Title>
@@ -795,11 +697,11 @@ export function RecordingsByDay() {
       </PageHeader>
 
       <KpiGrid cols={3}>
-        <KpiCard label="Total Recordings" value={String(totalFiles)} sub="Across the shown camera-days" accent="primary" icon={Film} />
+        <KpiCard label="Total Recordings" value={String(filtered.length)} sub="Matching the current filters" accent="primary" icon={Film} />
         <KpiCard
           label="Today"
-          value={String(todayDays)}
-          sub="Camera-days recorded today"
+          value={String(todayCount)}
+          sub="Recorded today"
           accent="success"
           icon={Video}
           active={datePreset === "today"}
@@ -829,9 +731,7 @@ export function RecordingsByDay() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-base text-muted-foreground">
-          <strong className="text-foreground">{filtered.length}</strong> camera-day{filtered.length === 1 ? "" : "s"}
-          {" · "}
-          <strong className="text-foreground">{totalFiles}</strong> recording{totalFiles === 1 ? "" : "s"} match current filters
+          <strong className="text-foreground">{filtered.length}</strong> recording{filtered.length === 1 ? "" : "s"} match current filters
           {hasFilters && (
             <button
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
@@ -843,21 +743,21 @@ export function RecordingsByDay() {
         </p>
         <div className="flex items-center gap-2">
           <Popover open={sortOpen} onOpenChange={setSortOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-1.5">
-              {SORT_OPTIONS.find((o) => o.key === sort)?.label}
-              <ChevronDown className="size-3.5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-48 p-1">
-            {SORT_OPTIONS.map((o) => (
-              <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
-                className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                  sort === o.key ? "text-primary" : "text-foreground")}>
-                {o.label}
-                {sort === o.key && <Check className="size-3.5" />}
-              </button>
-            ))}
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-1.5">
+                {SORT_OPTIONS.find((o) => o.key === sort)?.label}
+                <ChevronDown className="size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48 p-1">
+              {SORT_OPTIONS.map((o) => (
+                <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
+                  className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                    sort === o.key ? "text-primary" : "text-foreground")}>
+                  {o.label}
+                  {sort === o.key && <Check className="size-3.5" />}
+                </button>
+              ))}
             </PopoverContent>
           </Popover>
         </div>
@@ -866,7 +766,7 @@ export function RecordingsByDay() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Film className="size-10 opacity-20" />
-          {allDays.length === 0 ? (
+          {source.length === 0 ? (
             <>
               <p className="text-sm font-medium text-foreground">No recordings found</p>
               <p className="text-sm">Recordings appear here once cameras with attached NVRs capture footage.</p>
@@ -876,21 +776,21 @@ export function RecordingsByDay() {
           )}
         </div>
       ) : (
-        <CameraDayTable
-          days={pageItems}
-          selectedKeys={selectedKeys}
-          bookmarkedKeys={bookmarkedKeys}
-          onToggle={toggleDay}
+        <RecordingTable
+          items={pageItems}
+          selectedIds={selectedIds}
+          bookmarkedIds={bookmarkedIds}
+          onToggle={toggleSelected}
           onToggleAll={(select) =>
-            setSelectedKeys((curr) => {
+            setSelectedIds((curr) => {
               const next = new Set(curr);
-              pageItems.forEach((d) => (select ? next.add(d.key) : next.delete(d.key)));
+              pageItems.forEach((r) => (select ? next.add(r.id) : next.delete(r.id)));
               return next;
             })
           }
           onToggleBookmark={toggleBookmark}
-          onOpen={setDrawerKey}
-          onDelete={(key) => requestDelete([key])}
+          onOpen={setDrawerId}
+          onDelete={(id) => requestDelete([id])}
         />
       )}
 
@@ -915,46 +815,46 @@ export function RecordingsByDay() {
         </div>
       )}
 
-      <CameraDayDrawer
-        day={drawerDay}
-        open={drawerKey !== null}
-        bookmarked={!!drawerDay && bookmarkedKeys.has(drawerDay.key)}
-        onClose={() => setDrawerKey(null)}
-        onDelete={() => drawerDay && requestDelete([drawerDay.key])}
-        onToggleBookmark={() => drawerDay && toggleBookmark(drawerDay.key)}
-        onPlay={(rec) => setPlaying(rec)}
+      <RecordingDrawer
+        rec={drawerRec}
+        open={drawerId !== null}
+        bookmarked={!!drawerRec && bookmarkedIds.has(drawerRec.id)}
+        onClose={() => setDrawerId(null)}
+        onDelete={() => drawerRec && requestDelete([drawerRec.id])}
+        onToggleBookmark={() => drawerRec && toggleBookmark(drawerRec.id)}
+        onPlay={(r) => setPlaying(r)}
       />
 
       <RecordingPlayerModal recording={playing} open={playing !== null} onClose={() => setPlaying(null)} />
 
-      {selectedKeys.size > 0 && (
+      {selectedIds.size > 0 && (
         <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
             <span className="text-base font-semibold text-foreground">
-              {selectedKeys.size} camera-day{selectedKeys.size > 1 ? "s" : ""} selected
+              {selectedIds.size} recording{selectedIds.size > 1 ? "s" : ""} selected
             </span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground" onClick={() => setSelectedKeys(new Set())}>
+            <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground" onClick={() => setSelectedIds(new Set())}>
               <X className="size-3.5" />
               Clear selection
             </Button>
             <div className="mx-1 h-4 w-px bg-border" />
             <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-              onClick={() => requestDelete([...selectedKeys])}>
+              onClick={() => requestDelete([...selectedIds])}>
               <Trash2 className="size-3.5" />
-              Delete {selectedKeys.size}
+              Delete {selectedIds.size}
             </Button>
           </div>
         </FloatingBar>
       )}
 
-      <DeleteDaysModal
+      <DeleteRecordingsModal
         open={deleteOpen}
-        days={deleteTarget.days}
+        recs={deleteTarget}
         onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
       />

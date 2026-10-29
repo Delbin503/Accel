@@ -5,12 +5,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { CAMERA_AREAS, CAMERA_SITES, MOCK_CAMERAS } from "@/mocks/cameras";
-import { RECORDING_TYPES } from "./recordingTypes";
+import { LISTED_TYPE_IDS, typeById } from "./recordingTypes";
 import { BOOKMARK_OPTS, type RecordingFilters } from "./recordingFilters";
 
 /* Search and filter chrome, carried over from the Recordings page so the
-   camera-day proposal reads as the same screen. The only change is the last
-   group: "Mode" becomes "Recording type", since a day now holds several. */
+   proposal reads as the same screen. "Mode" becomes "Recording type", and the
+   list holds only the two a row can be: continuous, or operation. */
 
 interface FilterOption {
   value: string;
@@ -79,7 +79,7 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
   }
 
   const CAMERA_OPTS = MOCK_CAMERAS.map((c) => ({ value: c.id, label: `${c.id} · ${c.name}` }));
-  const TYPE_OPTS = RECORDING_TYPES.map((t) => ({ value: t.id, label: t.label }));
+  const TYPE_OPTS = LISTED_TYPE_IDS.map((id) => ({ value: id, label: typeById(id).label }));
 
   return (
     <div className="rounded-xl border border-border bg-card">
