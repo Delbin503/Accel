@@ -678,6 +678,9 @@ function CameraDefaultsSection() {
   const [codec, setCodec] = React.useState<"h264" | "h265">("h264");
   const [resolution, setResolution] = React.useState("1920x1080");
   const [frameRate, setFrameRate] = React.useState(15);
+  /* The rates a camera actually runs at, rather than any number between 5 and
+     60 — the slider implied a precision the hardware does not have. */
+  const STREAM_FPS = [10, 15, 24, 25, 30, 50, 60];
   const [rtspPort, setRtspPort] = React.useState(554);
 
   return (
@@ -707,13 +710,15 @@ function CameraDefaultsSection() {
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Frame Rate</span>
-              <span className="font-mono text-foreground">{frameRate} fps</span>
-            </label>
-            <input type="range" min={5} max={60} step={1} value={frameRate}
-              onChange={(e) => setFrameRate(Number(e.target.value))}
-              className="w-full accent-primary" />
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Frame Rate</label>
+            <Select value={String(frameRate)} onValueChange={(v) => setFrameRate(Number(v))}>
+              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STREAM_FPS.map((f) => (
+                  <SelectItem key={f} value={String(f)}>{f} fps</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">RTSP Port</label>

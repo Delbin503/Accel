@@ -114,20 +114,15 @@ function QualityFields({ def, config, onChange }: {
 
 /** Motion is a mode the parent switches into, so it has no window of its own —
     only quality, and how long to wait before dropping back. */
-function NestedTrigger({ def, config, parentEnabled, onChange }: {
+function NestedTrigger({ def, config, onChange }: {
   def: RecordingTypeDef;
   config: RecordingTypeConfig;
-  parentEnabled: boolean;
   onChange: (next: Partial<RecordingTypeConfig>) => void;
 }) {
   const tone = TONE_CLASSES[def.tone];
-  const active = parentEnabled && config.enabled;
 
   return (
-    <div className={cn(
-      "rounded-lg border border-border bg-card px-3.5 py-3 transition-opacity",
-      !parentEnabled && "opacity-50"
-    )}>
+    <div className="rounded-lg border border-border bg-card px-3.5 py-3">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -135,19 +130,15 @@ function NestedTrigger({ def, config, parentEnabled, onChange }: {
               {def.label}
             </span>
           </div>
-          <p className={cn("text-xs leading-snug", active ? "text-foreground" : "text-muted-foreground")}>
-            {def.description}
-          </p>
+          <p className="text-xs leading-snug text-foreground">{def.description}</p>
         </div>
-        <Toggle
-          checked={config.enabled}
-          onChange={(v) => onChange({ enabled: v })}
-          disabled={!parentEnabled}
-          label={`Enable ${def.label} recording`}
-        />
+        <span className="flex shrink-0 items-center gap-1.5 rounded border border-border bg-muted px-2 py-0.5 text-2xs text-muted-foreground">
+          <Clock className="size-3" />
+          Switched on in the weekly schedule
+        </span>
       </div>
 
-      <div className={cn("mt-3 border-t border-border pt-3", !active && "pointer-events-none opacity-40")}>
+      <div className="mt-3 border-t border-border pt-3">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <QualityFields def={def} config={config} onChange={onChange} />
           <div>
@@ -181,13 +172,15 @@ function NestedTrigger({ def, config, parentEnabled, onChange }: {
 
 /* ── One scheduled type ──────────────────────────────────────────────── */
 
-function TypeRow({ def, config, configs, scheduledBy, onChange, onChangeChild }: {
+function TypeRow({ def, config, configs, scheduledBy, windowFromSchedule, onChange, onChangeChild }: {
   def: RecordingTypeDef;
   config: RecordingTypeConfig;
   configs: Record<RecordingTypeId, RecordingTypeConfig>;
-  /** Set when the weekly schedule decides this mode's days and hours — the
-      card then sets quality only, with no toggle and no window of its own. */
+  /** Set when the weekly schedule decides when this mode runs — the card shows
+      that instead of a switch. */
   scheduledBy?: string;
+  /** Set when the schedule owns the window too, so the card drops its times. */
+  windowFromSchedule?: boolean;
   onChange: (next: Partial<RecordingTypeConfig>) => void;
   onChangeChild: (id: RecordingTypeId, next: Partial<RecordingTypeConfig>) => void;
 }) {
@@ -224,9 +217,9 @@ function TypeRow({ def, config, configs, scheduledBy, onChange, onChangeChild }:
       </div>
 
       <div className={cn("mt-3 border-t border-border pt-3", !config.enabled && !scheduledBy && "pointer-events-none opacity-40")}>
-        <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2", !scheduledBy && "lg:grid-cols-4")}>
+        <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2", !windowFromSchedule && "lg:grid-cols-4")}>
           {/* A scheduled mode takes its window from the week, so it has none here. */}
-          {!scheduledBy && (
+          {!windowFromSchedule && (
             <>
               <div>
                 <label className={FIELD_LABEL}>Start Time</label>
@@ -257,7 +250,7 @@ function TypeRow({ def, config, configs, scheduledBy, onChange, onChangeChild }:
 
         <div className="mt-3 space-y-1.5">
           <QualityWarning def={def} config={config} />
-          {overnight && !scheduledBy && (
+          {overnight && !windowFromSchedule && (
             <p className="flex items-start gap-1.5 text-xs text-info">
               <Info className="mt-0.5 size-3 flex-shrink-0" />
               Window runs overnight — {formatTimeOfDay(config.startTime)} through {formatTimeOfDay(config.endTime)} the next day.
@@ -267,18 +260,18 @@ function TypeRow({ def, config, configs, scheduledBy, onChange, onChangeChild }:
           {def.id === "continuous" && scheduledBy && <Note>Set a day to Operation in the weekly schedule to record by hours instead.</Note>}
         </div>
 
-        {/* Modes that run inside this type rather than on their own schedule. */}
-        {children.length > 0 && (
+        {/* Modes that run inside this type rather than on their own schedule.
+            Switched off, they are not drawn at all. */}
+        {children.some((c) => configs[c.id].enabled) && (
           <div className="mt-3 space-y-2 border-t border-border pt-3">
             <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Switches into
             </p>
-            {children.map((child) => (
+            {children.filter((c) => configs[c.id].enabled).map((child) => (
               <NestedTrigger
                 key={child.id}
                 def={child}
                 config={configs[child.id]}
-                parentEnabled={config.enabled}
                 onChange={(next) => onChangeChild(child.id, next)}
               />
             ))}
@@ -317,6 +310,10 @@ const DAY_MODES: { id: DayMode; label: string; sub: string; dot: string }[] = [
   { id: "closed",     label: "Closed",     sub: "No recording",           dot: "bg-muted-foreground/40" },
 ];
 
+/* The modes a day can be switched into. Closed is not one of them — it is what
+   a day is once both switches are off. */
+const MODE_SWITCHES = DAY_MODES.filter((m) => m.id !== "closed");
+
 interface DayHours {
   mode: DayMode;
   start: string;
@@ -351,12 +348,16 @@ function weekModes(config: OperationConfig): Set<DayMode> {
 
 /* The week sits above every recording mode: a day is the thing that records,
    and the mode is what it records in. Pick a day, pick its mode. */
-function WeeklySchedule({ site, config, onChange }: {
+function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatch }: {
   site: SiteData;
   config: OperationConfig;
+  /** Lifted, because the mode cards below only show what this day records in. */
+  activeDay: Weekday;
+  onActiveDay: (d: Weekday) => void;
   onChange: (next: OperationConfig) => void;
+  /** Turning a day to operation switches standby and motion on with it. */
+  onPatch: (id: RecordingTypeId, next: Partial<RecordingTypeConfig>) => void;
 }) {
-  const [activeDay, setActiveDay] = React.useState<Weekday>(todayWeekday);
   const h = site.operatingHours;
   // A site open all day has no hours to record by — its days need their own.
   const allDaySite = !h || isAllDay(h.from, h.to);
@@ -371,6 +372,29 @@ function WeeklySchedule({ site, config, onChange }: {
   const anyOperation = weekModes(config).has("operation");
   const siteHours = hoursFor(site, config, day);
   const overnight = day.mode === "operation" && siteHours.end <= siteHours.start;
+
+  /* Operation brings standby and motion with it — a site that keeps hours has
+     to do something outside them. They are switched on here and shown by their
+     own cards below, so the day itself only carries the two real choices. */
+  const startOperation = () => {
+    setDay(activeDay, { mode: "operation" });
+    onPatch("standby", { enabled: true });
+    onPatch("motion", { enabled: true });
+  };
+
+  const modeRows = MODE_SWITCHES.map((m) => ({
+    id: m.id,
+    label: m.label,
+    sub: m.sub,
+    dot: m.dot,
+    on: day.mode === m.id,
+    blocked: m.id === "operation" && day.mode === "continuous",
+    aria: `${m.label} on ${d.label}`,
+    onChange: (v: boolean) => {
+      if (m.id === "operation" && v) startOperation();
+      else setDay(activeDay, { mode: v ? (m.id as DayMode) : "closed" });
+    },
+  }));
 
   return (
     <div className="rounded-lg border border-border bg-background px-3.5 py-3">
@@ -387,7 +411,7 @@ function WeeklySchedule({ site, config, onChange }: {
 
       {/* The whole week at a glance — one letter a day, with a dot for how it
           records. Picking a day opens it below. */}
-      <div role="tablist" aria-label="Day of week" className="mt-3 flex gap-1">
+      <div role="tablist" aria-label="Day of week" className="mt-3 flex flex-wrap gap-1">
         {WEEKDAYS.map((w) => {
           const wd = config.days[w.id];
           const mode = DAY_MODES.find((m) => m.id === wd.mode)!;
@@ -400,46 +424,49 @@ function WeeklySchedule({ site, config, onChange }: {
               aria-selected={picked}
               aria-label={`${w.label} — ${mode.label}`}
               title={`${w.label} — ${mode.label}`}
-              onClick={() => setActiveDay(w.id)}
+              onClick={() => onActiveDay(w.id)}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-md border py-1.5 transition-colors",
+                "flex size-8 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors",
                 picked ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
               )}
             >
-              <span className={cn("text-sm font-semibold", picked ? "text-foreground" : "text-muted-foreground")}>
+              <span className={cn("text-xs font-semibold leading-none", picked ? "text-foreground" : "text-muted-foreground")}>
                 {w.initial}
               </span>
-              <span className={cn("size-1.5 rounded-full", mode.dot)} />
+              <span className={cn("size-1 rounded-full", mode.dot)} />
             </button>
           );
         })}
       </div>
 
-      <div className="mt-3 rounded-md border border-border px-3 py-2.5">
-        <label className={FIELD_LABEL}>{d.label} records in</label>
-        <div role="radiogroup" aria-label={`${d.label} recording mode`} className="grid grid-cols-3 gap-2">
-          {DAY_MODES.map((m) => {
-            const on = day.mode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setDay(activeDay, { mode: m.id })}
-                className={cn(
-                  "flex flex-col items-start gap-0.5 rounded-md border px-2.5 py-1.5 text-left transition-colors",
-                  on ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
-                )}
-              >
-                <span className="flex items-center gap-1.5">
-                  <span className={cn("size-1.5 shrink-0 rounded-full", m.dot)} />
-                  <span className="text-sm font-semibold text-foreground">{m.label}</span>
-                </span>
-                <span className="text-2xs text-muted-foreground">{m.sub}</span>
-              </button>
-            );
-          })}
+      <div className="mt-3 rounded-md border border-border px-3.5 py-3">
+        <label className={FIELD_LABEL}>{d.label} records</label>
+        {/* A switch a mode, rather than one pick across all of them. Continuous
+            fills the day, so it leaves operation nothing to run in — turning it
+            on holds operation off rather than silently overriding it. Both off
+            is a closed day. Standby and motion only appear once there is an
+            operation day for them to sit outside of. */}
+        <div className="space-y-2">
+          {modeRows.map((r) => (
+            <div
+              key={r.id}
+              className={cn(
+                "flex items-start gap-3 rounded-md border px-3 py-2.5 transition-colors",
+                r.blocked ? "border-border opacity-45" : r.on ? "border-primary/40 bg-primary/5" : "border-border"
+              )}
+            >
+              <Toggle checked={r.on} disabled={r.blocked} onChange={r.onChange} label={r.aria} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={cn("size-2 shrink-0 rounded-full", r.dot)} />
+                  <span className="text-md font-semibold text-foreground">{r.label}</span>
+                </div>
+                <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                  {r.blocked ? "Continuous already covers the whole day." : r.sub}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
 
         {day.mode === "operation" && (
@@ -478,7 +505,7 @@ function WeeklySchedule({ site, config, onChange }: {
           <p className="mt-2 text-xs text-muted-foreground">Records around the clock on {d.label} — standby does not run.</p>
         )}
         {day.mode === "closed" && (
-          <p className="mt-2 text-xs text-muted-foreground">Nothing is recorded on {d.label}.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Both off — nothing is recorded on {d.label}.</p>
         )}
       </div>
 
@@ -665,6 +692,7 @@ function SiteEditor({ site, schedule, onSave, onCancel }: {
   onCancel: () => void;
 }) {
   const [draft, setDraft] = React.useState(schedule);
+  const [activeDay, setActiveDay] = React.useState<Weekday>(todayWeekday);
   const continuous = typeById("continuous");
   const standby = typeById("standby");
 
@@ -682,8 +710,11 @@ function SiteEditor({ site, schedule, onSave, onCancel }: {
     });
   }
 
-  const modes = weekModes(draft.operation);
   const operation = typeById("operation");
+  /* The cards show how the picked day records — a continuous day has no
+     operation hours, so its controls would only be noise. */
+  const dayMode = draft.operation.days[activeDay].mode;
+  const everyDayClosed = [...weekModes(draft.operation)].every((m) => m === "closed");
 
   return (
     <div className="flex flex-col gap-3">
@@ -694,29 +725,42 @@ function SiteEditor({ site, schedule, onSave, onCancel }: {
       <WeeklySchedule
         site={site}
         config={draft.operation}
+        activeDay={activeDay}
+        onActiveDay={setActiveDay}
         onChange={(next) => setDraft((d) => ({ ...d, operation: next }))}
+        onPatch={patch}
       />
 
-      {modes.has("continuous") && (
+      {/* A card only exists for a mode the picked day actually runs — the
+          switches all live in the weekly schedule above. */}
+      {dayMode === "continuous" && (
         <TypeRow def={continuous} config={draft.configs.continuous} configs={draft.configs}
-          scheduledBy="Runs on the days set to Continuous"
+          scheduledBy="Runs on the days set to Continuous" windowFromSchedule
           onChange={(next) => patch("continuous", next)} onChangeChild={patch} />
       )}
 
-      {modes.has("operation") && (
+      {dayMode === "operation" && (
         <>
           <TypeRow def={operation} config={draft.configs.operation} configs={draft.configs}
-            scheduledBy="Runs on the days set to Operation, by their hours"
+            scheduledBy="Runs on the days set to Operation, by their hours" windowFromSchedule
             onChange={(next) => patch("operation", next)} onChangeChild={patch} />
-          {/* Standby fills the hours outside operation, so it only has a job on an operation day. */}
-          <TypeRow def={standby} config={draft.configs.standby} configs={draft.configs}
-            onChange={(next) => patch("standby", next)} onChangeChild={patch} />
+          {/* Standby fills the hours outside operation, so it only has a job on
+              an operation day — and only once it is switched on. */}
+          {draft.configs.standby.enabled && (
+            <TypeRow def={standby} config={draft.configs.standby} configs={draft.configs}
+              scheduledBy="Runs outside operation hours"
+              onChange={(next) => patch("standby", next)} onChangeChild={patch} />
+          )}
         </>
       )}
 
-      {modes.size === 1 && modes.has("closed") && (
+      {dayMode === "closed" && (
         <div className="rounded-lg border border-border bg-background px-3.5 py-3">
-          <Note>Every day is closed, so this site records nothing. Set a day to Continuous or Operation above.</Note>
+          <Note>
+            {everyDayClosed
+              ? "Every day is closed, so this site records nothing. Set a day to Continuous or Operation above."
+              : "This day is closed, so there is nothing to configure for it. Pick another day to see how it records."}
+          </Note>
         </div>
       )}
 
