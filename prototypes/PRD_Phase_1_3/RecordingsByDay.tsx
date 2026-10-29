@@ -13,6 +13,7 @@ import {
   Lock,
   MoreHorizontal,
   Play,
+  Package,
   Star,
   Trash2,
   Video,
@@ -332,39 +333,77 @@ function InfoGrid({ rec }: { rec: DayRecording }) {
   );
 }
 
-/** One playable video — no thumbnail, the play button leads. */
-function PlayRow({ rec, title, onPlay }: { rec: DayRecording; title: React.ReactNode; onPlay: () => void }) {
+/** One playable video — no thumbnail, the play button leads. `onSelect` adds the
+    export checkbox, which only appears once a recording holds more than one. */
+function PlayRow({ rec, title, onPlay, selected, onSelect }: {
+  rec: DayRecording;
+  title: React.ReactNode;
+  onPlay: () => void;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
   return (
-    <button onClick={onPlay} className="group/row flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-muted/40">
-      <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary group-hover/row:text-primary-foreground">
-        <Play className="size-3.5" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="mb-0.5 flex flex-wrap items-center gap-1.5">{title}</span>
-        <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="size-2.5" />
-          <span className="font-mono">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>
-          <span className="text-muted-foreground/40">·</span>
-          <span className="font-mono">{rec.durationDisplay}</span>
+    <div className="group/row flex w-full items-center gap-3 px-3.5 py-3 transition-colors hover:bg-muted/40">
+      {onSelect && (
+        <Checkbox checked={selected} onCheckedChange={onSelect} aria-label={`Include ${rec.id} in the export`} />
+      )}
+      <button onClick={onPlay} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary group-hover/row:text-primary-foreground">
+          <Play className="size-3.5" />
         </span>
-      </span>
-      <span className="shrink-0 font-mono text-xs text-foreground">{rec.fileSizeDisplay}</span>
-    </button>
+        <span className="min-w-0 flex-1">
+          <span className="mb-0.5 flex flex-wrap items-center gap-1.5">{title}</span>
+          <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="size-2.5" />
+            <span className="font-mono">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="font-mono">{rec.durationDisplay}</span>
+          </span>
+        </span>
+        <span className="shrink-0 font-mono text-xs text-foreground">{rec.fileSizeDisplay}</span>
+      </button>
+    </div>
   );
 }
 
-function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBookmark, onPlay }: {
+function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onExport, onToggleBookmark, onPlay }: {
   rec: DayRecording | null;
   open: boolean;
   bookmarked: boolean;
   onClose: () => void;
   onDelete: () => void;
+  onExport: (items: DayRecording[]) => void;
   onToggleBookmark: () => void;
   onPlay: (rec: DayRecording) => void;
 }) {
+  const standby = rec?.standby;
+  /* Everything the drawer lists, in the order it lists them — the recording
+     itself, then the standby and each of its clips. */
+  const items = React.useMemo(() => {
+    if (!rec) return [];
+    const sb = rec.standby;
+    if (!sb) return [rec];
+    return [rec, sb, ...(sb.motion ? motionClipsFor(sb.motion) : [])];
+  }, [rec]);
+
+  /* Selection is only worth having once there is more than one recording.
+     Rather than resetting through an effect, it is keyed to the recording: a
+     different one reads as everything selected. */
+  const [picked, setPicked] = React.useState<{ id: string | null; ids: Set<string> }>({ id: null, ids: new Set() });
+  const allIds = React.useMemo(() => new Set(items.map((i) => i.id)), [items]);
+  const selected = picked.id === rec?.id ? picked.ids : allIds;
+  const setSelected = (ids: Set<string>) => setPicked({ id: rec?.id ?? null, ids });
+  const toggle = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
   if (!rec) return null;
-  const standby = rec.standby;
-  const clips = standby?.motion ? motionClipsFor(standby.motion) : [];
+  const clips = items.slice(2);
+  const multi = items.length > 1;
+  const chosen = items.filter((i) => selected.has(i.id));
   const { date } = recDate(rec);
 
   return (
@@ -416,9 +455,24 @@ function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBoo
 
           {/* The hours the camera was open for — the recording this row is. */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording</p>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording</p>
+              {/* Nothing to choose between when a day is one recording. */}
+              {multi && (
+                <label className="flex cursor-pointer items-center gap-2 text-2xs text-muted-foreground">
+                  <Checkbox
+                    checked={selected.size === items.length}
+                    onCheckedChange={() => setSelected(selected.size === items.length ? new Set() : new Set(allIds))}
+                    aria-label="Select every recording for export"
+                  />
+                  {selected.size} of {items.length} selected for export
+                </label>
+              )}
+            </div>
             <div className="overflow-hidden rounded-lg border border-border bg-card">
               <PlayRow rec={rec} onPlay={() => onPlay(rec)}
+                selected={multi ? selected.has(rec.id) : undefined}
+                onSelect={multi ? () => toggle(rec.id) : undefined}
                 title={<><TypeChip type={rec.type} /><span className="font-mono text-2xs text-muted-foreground">{rec.id}</span></>} />
             </div>
           </div>
@@ -436,9 +490,13 @@ function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBoo
               </div>
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
                 <PlayRow rec={standby} onPlay={() => onPlay(standby)}
+                  selected={selected.has(standby.id)}
+                  onSelect={() => toggle(standby.id)}
                   title={<><TypeChip type="standby" /><span className="font-mono text-2xs text-muted-foreground">{standby.id}</span></>} />
                 {clips.map((clip, i) => (
                   <PlayRow key={clip.id} rec={clip} onPlay={() => onPlay(clip)}
+                    selected={selected.has(clip.id)}
+                    onSelect={() => toggle(clip.id)}
                     title={<><TypeChip type="motion" /><span className="text-xs text-foreground">Clip {i + 1} of {clips.length}</span></>} />
                 ))}
               </div>
@@ -457,6 +515,17 @@ function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBoo
               Bookmarked — remove the bookmark before it can be deleted.
             </p>
           )}
+          {/* Export is never blocked by a bookmark — it takes a copy, it does not remove anything. */}
+          <Button
+            variant="outline"
+            className="gap-1.5"
+            disabled={chosen.length === 0}
+            onClick={() => onExport(chosen)}
+            aria-label={chosen.length === 0 ? "Select a recording to export" : `Export ${chosen.length} recording${chosen.length === 1 ? "" : "s"} from ${rec.id} as a zip`}
+          >
+            <Package className="size-3.5" />
+            Export{multi && ` (${chosen.length})`}
+          </Button>
           <Button
             variant="outline"
             disabled={bookmarked}
@@ -470,6 +539,77 @@ function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onToggleBoo
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/* ── Export ──────────────────────────────────────────────────────────────── */
+
+/** One file a zip holds. The drawer decides which recordings are in it. */
+function exportFiles(items: DayRecording[]): { name: string; kind: RecordingTypeId; size: string; mb: number }[] {
+  return items.map((r) => ({ name: `${r.id}.mp4`, kind: r.type, size: r.fileSizeDisplay, mb: r.fileSizeMb }));
+}
+
+function ExportRecordingModal({ open, target, onClose, onConfirm }: {
+  open: boolean;
+  /** `rec` names the archive; `items` is what the drawer picked for it. */
+  target: { rec: DayRecording; items: DayRecording[] } | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!target) return null;
+  const { rec, items } = target;
+  const files = exportFiles(items);
+  const totalMb = files.reduce((t, f) => t + f.mb, 0);
+  const partial = !!rec.standby && files.length < 2 + (rec.standby.clipCount ?? 0);
+  const { date } = recDate(rec);
+
+  return (
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent size="lg">
+        <ModalHeader
+          title="Export Recording"
+          description={`${rec.id} · ${rec.cameraName} · ${date}`}
+        />
+        <ModalBody>
+          <div className="rounded-lg border border-border bg-background p-4">
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 font-mono text-base font-semibold text-foreground">
+                <Package className="size-3.5 text-primary" />
+                {rec.id}.zip
+              </span>
+              <span className="font-mono text-xs text-muted-foreground">
+                {files.length} file{files.length === 1 ? "" : "s"} · {fmtSize(totalMb)}
+              </span>
+            </div>
+            {/* Long on a busy night, so the list scrolls rather than the modal. */}
+            <ul className="max-h-56 divide-y divide-border/60 overflow-y-auto rounded-md border border-border">
+              {files.map((f) => (
+                <li key={f.name} className="flex items-center gap-2 px-3 py-1.5">
+                  <span className={cn("size-1.5 shrink-0 rounded-full", TONE_CLASSES[typeById(f.kind).tone].dot)} />
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">{f.name}</span>
+                  <span className="shrink-0 text-2xs text-muted-foreground">{typeById(f.kind).label}</span>
+                  <span className="w-20 shrink-0 text-right font-mono text-2xs text-muted-foreground">{f.size}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {rec.standby && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {partial
+                ? "Only the recordings picked in the drawer are archived — tick the rest to include them."
+                : "The standby recording and its motion clips are part of this camera-day, so they are archived with it."}
+            </p>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" className="gap-1.5" onClick={onConfirm}>
+            <Package className="size-3.5" />
+            Export {fmtSize(totalMb)}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -584,6 +724,7 @@ export function RecordingsByDay() {
   const [playing, setPlaying] = React.useState<DayRecording | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<DayRecording[]>([]);
+  const [exportTarget, setExportTarget] = React.useState<{ rec: DayRecording; items: DayRecording[] } | null>(null);
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
@@ -821,8 +962,28 @@ export function RecordingsByDay() {
         bookmarked={!!drawerRec && bookmarkedIds.has(drawerRec.id)}
         onClose={() => setDrawerId(null)}
         onDelete={() => drawerRec && requestDelete([drawerRec.id])}
+        onExport={(items) => drawerRec && setExportTarget({ rec: drawerRec, items })}
         onToggleBookmark={() => drawerRec && toggleBookmark(drawerRec.id)}
         onPlay={(r) => setPlaying(r)}
+      />
+
+      <ExportRecordingModal
+        open={exportTarget !== null}
+        target={exportTarget}
+        onClose={() => setExportTarget(null)}
+        onConfirm={() => {
+          const target = exportTarget;
+          setExportTarget(null);
+          if (!target) return;
+          const { rec, items } = target;
+          const files = exportFiles(items);
+          const total = fmtSize(files.reduce((t, f) => t + f.mb, 0));
+          /* No real footage behind the prototype, so the archive is described
+             rather than produced — the point under review is what goes in it. */
+          toast.success(`${rec.id}.zip queued for export`, {
+            description: `${files.length} file${files.length === 1 ? "" : "s"} · ${total}. It will download when the archive is ready.`,
+          });
+        }}
       />
 
       <RecordingPlayerModal recording={playing} open={playing !== null} onClose={() => setPlaying(null)} />
