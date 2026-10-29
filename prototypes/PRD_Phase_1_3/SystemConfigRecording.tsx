@@ -724,7 +724,7 @@ function CameraDefaultsSection() {
 
       <SectionCard
         title="Recording Schedule"
-        description="Recording types applied to every camera — start time, end time, resolution and frame rate per type."
+        description="How each site records — continuously, or by operation hours with standby and motion-based recording."
       >
         <RecordingSchedule />
       </SectionCard>

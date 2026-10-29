@@ -125,16 +125,26 @@ pages, so these changes stay out of the app. Both read one models store
 
 A copy of the real System Configuration page — same section nav, same Stream
 Defaults, same field chrome — landing on **Camera Defaults**, where the
-Recording Schedule section now holds the four recording types.
+Recording Schedule section now lists **sites** rather than settings: each site
+shows the modes it records in, opens to its week, and is edited on its own.
 
 `src/pages/system-config/index.tsx` is **not** touched. `SystemConfigRecording.tsx`
 is a prototype-local copy so the proposal can be reviewed against the live page
 without changing it. The only edits against the original are the default
 section, and the Recording Schedule card's body.
 
-Each scheduled type carries an **enable switch**, **start time**, **end time**,
-**resolution** and **frame rate**. Continuous is fixed to 24/7, so its window is
-not editable.
+**The week sits above every recording mode.** A Weekly Schedule card opens
+first, outside any mode: a Mon–Sun strip of single letters, each with a dot for
+how that day records. Picking a day sets the mode it runs in — **Continuous**,
+**Operation**, or **Closed** — so a site can be continuous on a Monday and keep
+operation hours the rest of the week. Operation days take the site's own hours
+from Site Management, or their own, set per day.
+
+The mode cards below the week set only **how** each mode records — resolution
+and frame rate — and only the modes the week actually uses appear. Continuous
+and Operation have no enable switch and no window of their own, since the week
+decides both; standby keeps its switch, because it is genuinely optional within
+an operation day.
 
 **Motion is not a schedule — it is a mode standby switches into.** It sits
 nested inside standby, so it can only be turned on while standby is on, and it
@@ -146,15 +156,20 @@ stops producing recordings.
 Type descriptions say what each type *is*; the numbers live in the controls
 beneath them rather than being restated in prose.
 
-- **Whether all four are needed is still open** — every type can be switched
-  off, and switching one off removes it from the coverage strip and stops it
-  producing recordings on the Recordings page.
+- **The coverage strip is the whole week** — a row per day, Mon to Sun, each
+  bar carrying the modes that day runs: operation hours, the standby either
+  side of them, and motion drawn as a band inside standby. A continuous day
+  fills its bar; a closed day draws nothing. Today's row is marked.
 - **Spec minimums warn, they do not block.** Dropping motion below its
   specified quality says so rather than refusing the change, because the
   minimums are still under discussion.
 - **A window whose end is at or before its start runs overnight** and draws as
   two bands on the coverage strip — the default Standby 06:00 PM – 06:00 AM is
   the case to look at.
+- **The Recordings list holds two types only.** A row is a camera's day:
+  continuous, or operation. Standby is the other half of an operation day, so
+  it opens inside that recording along with the motion clips caught while it
+  ran, rather than sitting beside it as a row of its own.
 
 ## 2 · Synchronised Playback (Live Monitoring, rebuilt)
 

@@ -1,18 +1,21 @@
 import * as React from "react";
-import { AlertTriangle, Clock, Info } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, Clock, Copy, Info, MapPin, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimeSelect } from "@/components/shared/TimeSelect";
 import { formatTimeOfDay } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { useSitesStore } from "@/stores/useSitesStore";
+import { MOCK_CAMERAS } from "@/mocks/cameras";
+import type { SiteData } from "@/types/sites";
 import {
   DEFAULT_CONFIG,
   FPS_OPTIONS,
-  RECORDING_TYPES,
   RESOLUTIONS,
   REVERT_OPTIONS,
   TONE_CLASSES,
-  TOP_LEVEL_TYPES,
   childrenOf,
+  typeById,
   resolutionRank,
   type RecordingTypeConfig,
   type RecordingTypeDef,
@@ -21,7 +24,10 @@ import {
 
 /* Recording Schedule — the Phase 1.3 proposal, built to sit inside the
    System Configuration › Camera Defaults section. Field labels, control
-   heights and row chrome copy that page so it drops straight in. */
+   heights and row chrome copy that page so it drops straight in.
+
+   It lists sites, not settings: each site shows the modes it records in, opens
+   to its daily coverage, and is edited on its own. */
 
 function Toggle({ checked, onChange, label, disabled }: {
   checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean;
@@ -175,10 +181,13 @@ function NestedTrigger({ def, config, parentEnabled, onChange }: {
 
 /* ── One scheduled type ──────────────────────────────────────────────── */
 
-function TypeRow({ def, config, configs, onChange, onChangeChild }: {
+function TypeRow({ def, config, configs, scheduledBy, onChange, onChangeChild }: {
   def: RecordingTypeDef;
   config: RecordingTypeConfig;
   configs: Record<RecordingTypeId, RecordingTypeConfig>;
+  /** Set when the weekly schedule decides this mode's days and hours — the
+      card then sets quality only, with no toggle and no window of its own. */
+  scheduledBy?: string;
   onChange: (next: Partial<RecordingTypeConfig>) => void;
   onChangeChild: (id: RecordingTypeId, next: Partial<RecordingTypeConfig>) => void;
 }) {
@@ -200,49 +209,62 @@ function TypeRow({ def, config, configs, onChange, onChangeChild }: {
               <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">24/7</span>
             )}
           </div>
-          <p className={cn("text-xs leading-snug", config.enabled ? "text-foreground" : "text-muted-foreground")}>
+          <p className={cn("text-xs leading-snug", config.enabled || scheduledBy ? "text-foreground" : "text-muted-foreground")}>
             {def.description}
           </p>
         </div>
-        <Toggle checked={config.enabled} onChange={(v) => onChange({ enabled: v })} label={`Enable ${def.label} recording`} />
+        {scheduledBy ? (
+          <span className="flex shrink-0 items-center gap-1.5 rounded border border-border bg-muted px-2 py-0.5 text-2xs text-muted-foreground">
+            <Clock className="size-3" />
+            {scheduledBy}
+          </span>
+        ) : (
+          <Toggle checked={config.enabled} onChange={(v) => onChange({ enabled: v })} label={`Enable ${def.label} recording`} />
+        )}
       </div>
 
-      <div className={cn("mt-3 border-t border-border pt-3", !config.enabled && "pointer-events-none opacity-40")}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label className={FIELD_LABEL}>Start Time</label>
-            {def.alwaysOn ? (
-              <div className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-muted px-3 text-base text-muted-foreground">
-                <Clock className="size-3.5" />
-                Always on
+      <div className={cn("mt-3 border-t border-border pt-3", !config.enabled && !scheduledBy && "pointer-events-none opacity-40")}>
+        <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2", !scheduledBy && "lg:grid-cols-4")}>
+          {/* A scheduled mode takes its window from the week, so it has none here. */}
+          {!scheduledBy && (
+            <>
+              <div>
+                <label className={FIELD_LABEL}>Start Time</label>
+                {def.alwaysOn ? (
+                  <div className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-muted px-3 text-base text-muted-foreground">
+                    <Clock className="size-3.5" />
+                    Always on
+                  </div>
+                ) : (
+                  <TimeSelect value={config.startTime} onChange={(v) => onChange({ startTime: v })} aria-label={`${def.label} start time`} />
+                )}
               </div>
-            ) : (
-              <TimeSelect value={config.startTime} onChange={(v) => onChange({ startTime: v })} aria-label={`${def.label} start time`} />
-            )}
-          </div>
-          <div>
-            <label className={FIELD_LABEL}>End Time</label>
-            {def.alwaysOn ? (
-              <div className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-muted px-3 text-base text-muted-foreground">
-                <Clock className="size-3.5" />
-                Always on
+              <div>
+                <label className={FIELD_LABEL}>End Time</label>
+                {def.alwaysOn ? (
+                  <div className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-muted px-3 text-base text-muted-foreground">
+                    <Clock className="size-3.5" />
+                    Always on
+                  </div>
+                ) : (
+                  <TimeSelect value={config.endTime} onChange={(v) => onChange({ endTime: v })} aria-label={`${def.label} end time`} />
+                )}
               </div>
-            ) : (
-              <TimeSelect value={config.endTime} onChange={(v) => onChange({ endTime: v })} aria-label={`${def.label} end time`} />
-            )}
-          </div>
+            </>
+          )}
           <QualityFields def={def} config={config} onChange={onChange} />
         </div>
 
         <div className="mt-3 space-y-1.5">
           <QualityWarning def={def} config={config} />
-          {overnight && (
+          {overnight && !scheduledBy && (
             <p className="flex items-start gap-1.5 text-xs text-info">
               <Info className="mt-0.5 size-3 flex-shrink-0" />
               Window runs overnight — {formatTimeOfDay(config.startTime)} through {formatTimeOfDay(config.endTime)} the next day.
             </p>
           )}
           {def.note && <Note>{def.note}</Note>}
+          {def.id === "continuous" && scheduledBy && <Note>Set a day to Operation in the weekly schedule to record by hours instead.</Note>}
         </div>
 
         {/* Modes that run inside this type rather than on their own schedule. */}
@@ -267,135 +289,551 @@ function TypeRow({ def, config, configs, onChange, onChangeChild }: {
   );
 }
 
-/* ── 24-hour coverage strip ──────────────────────────────────────────── */
+/* ── Operation mode ──────────────────────────────────────────────────── */
 
-function CoverageStrip({ configs }: { configs: Record<RecordingTypeId, RecordingTypeConfig> }) {
-  function toPct(time: string) {
-    const [h, m] = time.split(":").map(Number);
-    return ((h * 60 + m) / (24 * 60)) * 100;
-  }
+/* With continuous recording off, a site's cameras record during operation
+   hours — by default the site's own (set in Site Management), or a weekly
+   schedule set day by day. */
 
-  /* A nested type only records while its parent is on, so it drops out of
-     the strip with the parent as well as with its own switch. */
-  const isOn = (def: (typeof RECORDING_TYPES)[number]) => {
-    const parent = def.parent ? configs[def.parent] : null;
-    return configs[def.id].enabled && (!parent || parent.enabled);
-  };
-  /* Only what will actually record is drawn — a type switched off below
-     leaves the strip rather than sitting there as an empty "off" row. */
-  const shown = RECORDING_TYPES.filter(isOn);
+const WEEKDAYS = [
+  { id: "mon", label: "Monday",    initial: "M" },
+  { id: "tue", label: "Tuesday",   initial: "T" },
+  { id: "wed", label: "Wednesday", initial: "W" },
+  { id: "thu", label: "Thursday",  initial: "T" },
+  { id: "fri", label: "Friday",    initial: "F" },
+  { id: "sat", label: "Saturday",  initial: "S" },
+  { id: "sun", label: "Sunday",    initial: "S" },
+] as const;
+type Weekday = (typeof WEEKDAYS)[number]["id"];
+
+/* A day records round the clock, by its operation hours, or not at all — so a
+   site can run continuous on a Monday and operation hours the rest of the
+   week, which one mode for the whole site could not express. */
+export type DayMode = "continuous" | "operation" | "closed";
+
+const DAY_MODES: { id: DayMode; label: string; sub: string; dot: string }[] = [
+  { id: "continuous", label: "Continuous", sub: "Records all day",        dot: TONE_CLASSES.info.dot },
+  { id: "operation",  label: "Operation",  sub: "Records between hours",  dot: TONE_CLASSES.success.dot },
+  { id: "closed",     label: "Closed",     sub: "No recording",           dot: "bg-muted-foreground/40" },
+];
+
+interface DayHours {
+  mode: DayMode;
+  start: string;
+  end: string;
+}
+
+export interface OperationConfig {
+  source: "site" | "custom";
+  days: Record<Weekday, DayHours>;
+}
+
+/** A site open round the clock is stored as 00:00–23:59. */
+const isAllDay = (start: string, end: string) => start === "00:00" && end === "23:59";
+const hoursLabel = (start: string, end: string) =>
+  isAllDay(start, end) ? "All day" : `${formatTimeOfDay(start)} – ${formatTimeOfDay(end)}`;
+
+/** Today's weekday id, for the coverage strip's custom row. */
+function todayWeekday(): Weekday {
+  return WEEKDAYS[(new Date().getDay() + 6) % 7].id;
+}
+
+/** Hours an operation day records by — the site's own, or the day's. */
+function hoursFor(site: SiteData, config: OperationConfig, day: DayHours) {
+  const h = site.operatingHours;
+  return config.source === "site" && h ? { start: h.from, end: h.to } : { start: day.start, end: day.end };
+}
+
+/** Which modes the week actually uses, so only those get settings below. */
+function weekModes(config: OperationConfig): Set<DayMode> {
+  return new Set(WEEKDAYS.map((d) => config.days[d.id].mode));
+}
+
+/* The week sits above every recording mode: a day is the thing that records,
+   and the mode is what it records in. Pick a day, pick its mode. */
+function WeeklySchedule({ site, config, onChange }: {
+  site: SiteData;
+  config: OperationConfig;
+  onChange: (next: OperationConfig) => void;
+}) {
+  const [activeDay, setActiveDay] = React.useState<Weekday>(todayWeekday);
+  const h = site.operatingHours;
+  // A site open all day has no hours to record by — its days need their own.
+  const allDaySite = !h || isAllDay(h.from, h.to);
+  const setDay = (id: Weekday, next: Partial<DayHours>) =>
+    onChange({ ...config, days: { ...config.days, [id]: { ...config.days[id], ...next } } });
+  const copyMonday = () =>
+    onChange({ ...config, days: Object.fromEntries(WEEKDAYS.map((d) => [d.id, { ...config.days.mon }])) as OperationConfig["days"] });
+
+  const day = config.days[activeDay];
+  const d = WEEKDAYS.find((w) => w.id === activeDay)!;
+  const nextDay = WEEKDAYS[(WEEKDAYS.findIndex((w) => w.id === activeDay) + 1) % 7].label;
+  const anyOperation = weekModes(config).has("operation");
+  const siteHours = hoursFor(site, config, day);
+  const overnight = day.mode === "operation" && siteHours.end <= siteHours.start;
 
   return (
     <div className="rounded-lg border border-border bg-background px-3.5 py-3">
-      <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Daily Coverage</p>
-      {shown.length === 0 ? (
-        <p className="py-3 text-center text-xs text-muted-foreground">
-          Every recording type is off — this camera will not record.
-        </p>
-      ) : (
-      <>
-      <div className="space-y-2">
-        {shown.map((def) => {
-          const cfg = configs[def.id];
-          const parent = def.parent ? configs[def.parent] : null;
-          /* A nested type covers its parent's window, so it is drawn
-             against the parent's hours. */
-          const window = parent ?? cfg;
-          const tone = TONE_CLASSES[def.tone];
-          const start = toPct(window.startTime);
-          const end = toPct(window.endTime);
-          const spans = def.alwaysOn
-            ? [{ left: 0, width: 100 }]
-            : end > start
-              ? [{ left: start, width: end - start }]
-              : [{ left: start, width: 100 - start }, { left: 0, width: end }];
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Schedule</span>
+        <button type="button" onClick={copyMonday} className="flex items-center gap-1 text-2xs font-semibold text-primary hover:underline">
+          <Copy className="size-3" />Copy Monday to all days
+        </button>
+      </div>
+      <p className="mt-1 text-xs leading-snug text-foreground">
+        Pick a day to set the mode it records in. Each day runs on its own — a site can be continuous on
+        one and keep operation hours on the next.
+      </p>
 
+      {/* The whole week at a glance — one letter a day, with a dot for how it
+          records. Picking a day opens it below. */}
+      <div role="tablist" aria-label="Day of week" className="mt-3 flex gap-1">
+        {WEEKDAYS.map((w) => {
+          const wd = config.days[w.id];
+          const mode = DAY_MODES.find((m) => m.id === wd.mode)!;
+          const picked = w.id === activeDay;
           return (
-            <div key={def.id} className="flex items-center gap-3">
-              <span className={cn("w-24 shrink-0 truncate text-xs text-muted-foreground", def.parent && "pl-3")}>
-                {def.label}
+            <button
+              key={w.id}
+              type="button"
+              role="tab"
+              aria-selected={picked}
+              aria-label={`${w.label} — ${mode.label}`}
+              title={`${w.label} — ${mode.label}`}
+              onClick={() => setActiveDay(w.id)}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-1 rounded-md border py-1.5 transition-colors",
+                picked ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
+              )}
+            >
+              <span className={cn("text-sm font-semibold", picked ? "text-foreground" : "text-muted-foreground")}>
+                {w.initial}
               </span>
-              <div className="relative h-4 flex-1 overflow-hidden rounded bg-muted">
-                {spans.map((s, i) => (
-                  <div key={i}
-                    className={cn("absolute inset-y-0 rounded-sm", tone.bar, def.parent ? "opacity-50" : "opacity-80")}
-                    style={{ left: `${s.left}%`, width: `${s.width}%` }} />
-                ))}
+              <span className={cn("size-1.5 rounded-full", mode.dot)} />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 rounded-md border border-border px-3 py-2.5">
+        <label className={FIELD_LABEL}>{d.label} records in</label>
+        <div role="radiogroup" aria-label={`${d.label} recording mode`} className="grid grid-cols-3 gap-2">
+          {DAY_MODES.map((m) => {
+            const on = day.mode === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setDay(activeDay, { mode: m.id })}
+                className={cn(
+                  "flex flex-col items-start gap-0.5 rounded-md border px-2.5 py-1.5 text-left transition-colors",
+                  on ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
+                )}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className={cn("size-1.5 shrink-0 rounded-full", m.dot)} />
+                  <span className="text-sm font-semibold text-foreground">{m.label}</span>
+                </span>
+                <span className="text-2xs text-muted-foreground">{m.sub}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {day.mode === "operation" && (
+          <div className="mt-2.5">
+            {config.source === "site" ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex h-9 flex-1 items-center gap-1.5 rounded-md border border-border bg-muted px-3 text-base text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  {hoursLabel(siteHours.start, siteHours.end)} · site hours
+                </span>
+                <button type="button" onClick={() => onChange({ ...config, source: "custom" })}
+                  className="text-2xs font-semibold text-primary hover:underline">
+                  Set hours per day
+                </button>
               </div>
-              {/* Same 12-hour formatting as the time fields below. */}
-              <span className="w-32 shrink-0 text-right font-mono text-2xs text-muted-foreground">
-                {def.alwaysOn
-                  ? "All day"
-                  : def.parent
-                    ? "when triggered"
-                    : `${formatTimeOfDay(window.startTime)} – ${formatTimeOfDay(window.endTime)}`}
+            ) : (
+              <div className="grid grid-cols-2 items-center gap-2">
+                <TimeSelect value={day.start} onChange={(v) => setDay(activeDay, { start: v })} aria-label={`${d.label} start time`} />
+                <TimeSelect value={day.end} onChange={(v) => setDay(activeDay, { end: v })} aria-label={`${d.label} end time`} />
+                {!allDaySite && (
+                  <button type="button" onClick={() => onChange({ ...config, source: "site" })}
+                    className="col-span-2 text-left text-2xs font-semibold text-primary hover:underline">
+                    Use the site's hours on every day instead
+                  </button>
+                )}
+              </div>
+            )}
+            {overnight && (
+              <span className="mt-1.5 flex items-center gap-1 text-2xs text-info">
+                <Info className="size-3" />Runs past midnight into {nextDay}
+              </span>
+            )}
+          </div>
+        )}
+        {day.mode === "continuous" && (
+          <p className="mt-2 text-xs text-muted-foreground">Records around the clock on {d.label} — standby does not run.</p>
+        )}
+        {day.mode === "closed" && (
+          <p className="mt-2 text-xs text-muted-foreground">Nothing is recorded on {d.label}.</p>
+        )}
+      </div>
+
+      {anyOperation && config.source === "site" && (
+        <div className="mt-2">
+          <Note>The site's hours are set in Site Management, so a change there applies here too.</Note>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Per-site schedule ───────────────────────────────────────────────── */
+
+/* The week decides what runs: each day records continuously, by operation
+   hours with standby (and motion-based inside it) outside them, or not at all.
+   `configs` holds the quality and windows each mode uses when a day calls for
+   it — it no longer decides whether that mode runs. */
+
+export interface SiteSchedule {
+  configs: Record<RecordingTypeId, RecordingTypeConfig>;
+  operation: OperationConfig;
+}
+
+/** A site open round the clock records continuously; one that keeps hours records by them. */
+function defaultSchedule(site: SiteData): SiteSchedule {
+  const h = site.operatingHours;
+  const roundTheClock = !h || isAllDay(h.from, h.to);
+  // A round-the-clock site has no hours of its own, so operation starts from an ordinary working day.
+  const from = roundTheClock ? "08:00" : h.from;
+  const to = roundTheClock ? "20:00" : h.to;
+  const workday: DayHours = { mode: "operation", start: from, end: to };
+  const weekend: DayHours = { mode: "closed", start: from, end: to };
+  const everyDay = (mode: DayMode): Record<Weekday, DayHours> =>
+    Object.fromEntries(WEEKDAYS.map((d) => [d.id, { mode, start: from, end: to }])) as Record<Weekday, DayHours>;
+  return {
+    configs: {
+      ...DEFAULT_CONFIG,
+      // Quality is always editable; the week decides which modes actually run.
+      continuous: { ...DEFAULT_CONFIG.continuous, enabled: true },
+      operation: { ...DEFAULT_CONFIG.operation, enabled: true },
+      // Standby fills the hours outside operation, so it starts at closing and ends at opening.
+      standby: { ...DEFAULT_CONFIG.standby, startTime: to, endTime: from },
+      motion: { ...DEFAULT_CONFIG.motion, startTime: to, endTime: from },
+    },
+    operation: {
+      source: roundTheClock ? "custom" : "site",
+      // A round-the-clock site records continuously every day; one that keeps
+      // hours works weekdays and closes at the weekend.
+      days: roundTheClock
+        ? everyDay("continuous")
+        : { mon: workday, tue: workday, wed: workday, thu: workday, fri: workday, sat: weekend, sun: weekend },
+    },
+  };
+}
+
+/** The modes a site records with across the week, for the row's chips. */
+function activeTypes(s: SiteSchedule): RecordingTypeId[] {
+  const modes = weekModes(s.operation);
+  const out: RecordingTypeId[] = [];
+  if (modes.has("continuous")) out.push("continuous");
+  if (modes.has("operation")) {
+    out.push("operation");
+    if (s.configs.standby.enabled) out.push("standby");
+    if (s.configs.standby.enabled && s.configs.motion.enabled) out.push("motion");
+  }
+  return out;
+}
+
+/* ── 24-hour coverage strip ──────────────────────────────────────────── */
+
+function toPct(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  return ((h * 60 + m) / (24 * 60)) * 100;
+}
+
+function spansOf(start: string, end: string) {
+  const a = toPct(start);
+  const b = toPct(end);
+  return b > a ? [{ left: a, width: b - a }] : [{ left: a, width: 100 - a }, { left: 0, width: b }];
+}
+
+/** One site's day: continuous across it, or operation hours with standby and motion around them. */
+function CoverageStrip({ site, schedule }: { site: SiteData; schedule: SiteSchedule }) {
+  const { configs, operation } = schedule;
+  const today = todayWeekday();
+
+  /* A row per day, so the week reads top to bottom. Each bar carries the modes
+     that day runs, layered: operation hours, the standby window around them,
+     and motion drawn as a band inside standby, which is where it triggers. */
+  type Band = { cls: string; spans: { left: number; width: number }[]; inset?: boolean };
+  function bandsFor(day: DayHours): { bands: Band[]; note: string } {
+    if (day.mode === "continuous") {
+      return { bands: [{ cls: TONE_CLASSES.info.bar, spans: [{ left: 0, width: 100 }] }], note: "All day" };
+    }
+    if (day.mode === "closed") return { bands: [], note: "Closed" };
+
+    const hours = hoursFor(site, operation, day);
+    const bands: Band[] = [{ cls: TONE_CLASSES.success.bar, spans: spansOf(hours.start, hours.end) }];
+    if (configs.standby.enabled) {
+      const w = configs.standby;
+      bands.push({ cls: TONE_CLASSES.purple.bar, spans: spansOf(w.startTime, w.endTime) });
+      if (configs.motion.enabled) {
+        bands.push({ cls: TONE_CLASSES.warning.bar, spans: spansOf(w.startTime, w.endTime), inset: true });
+      }
+    }
+    return { bands, note: hoursLabel(hours.start, hours.end) };
+  }
+
+  const legend = ([
+    ["continuous", WEEKDAYS.some((d) => operation.days[d.id].mode === "continuous")],
+    ["operation", WEEKDAYS.some((d) => operation.days[d.id].mode === "operation")],
+    ["standby", configs.standby.enabled && WEEKDAYS.some((d) => operation.days[d.id].mode === "operation")],
+    ["motion", configs.standby.enabled && configs.motion.enabled && WEEKDAYS.some((d) => operation.days[d.id].mode === "operation")],
+  ] as const).filter(([, show]) => show).map(([id]) => typeById(id));
+
+  return (
+    <div className="rounded-lg border border-border bg-background px-3.5 py-3">
+      <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Coverage</p>
+
+      <div className="space-y-1">
+        {WEEKDAYS.map((w) => {
+          const day = operation.days[w.id];
+          const { bands, note } = bandsFor(day);
+          const isToday = w.id === today;
+          return (
+            <div key={w.id} className="flex items-center gap-3">
+              <span className={cn("w-10 shrink-0 text-xs", isToday ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                {w.label.slice(0, 3)}
+              </span>
+              <div className={cn("relative h-4 flex-1 overflow-hidden rounded bg-muted", isToday && "ring-1 ring-primary/40")}>
+                {bands.map((b, bi) =>
+                  b.spans.map((sp, i) => (
+                    <div
+                      key={`${bi}-${i}`}
+                      className={cn("absolute rounded-sm", b.cls, b.inset ? "bottom-0 h-1.5 opacity-90" : "inset-y-0 opacity-80")}
+                      style={{ left: `${sp.left}%`, width: `${sp.width}%` }}
+                    />
+                  ))
+                )}
+              </div>
+              {/* Same 12-hour formatting as the time fields. */}
+              <span className={cn("w-32 shrink-0 text-right font-mono text-2xs", isToday ? "text-foreground" : "text-muted-foreground")}>
+                {note}
               </span>
             </div>
           );
         })}
       </div>
+
       {/* Hour ruler — same column widths as the rows above so it lines up. */}
       <div className="mt-2 flex items-center gap-3">
-        <span className="w-24 shrink-0" />
+        <span className="w-10 shrink-0" />
         <div className="flex flex-1 justify-between font-mono text-3xs text-muted-foreground">
-          {[0, 6, 12, 18, 24].map((h) => (
-            <span key={h}>{String(h).padStart(2, "0")}:00</span>
+          {[0, 6, 12, 18, 24].map((hr) => (
+            <span key={hr}>{String(hr).padStart(2, "0")}:00</span>
           ))}
         </div>
         <span className="w-32 shrink-0" />
       </div>
-      </>
+
+      {/* Rows are days now, so the modes need naming somewhere. */}
+      {legend.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-2.5">
+          {legend.map((def) => (
+            <span key={def.id} className="flex items-center gap-1.5 text-2xs text-muted-foreground">
+              <span className={cn("size-1.5 rounded-full", TONE_CLASSES[def.tone].dot)} />
+              {def.label}
+              {def.id === "motion" && <span className="text-muted-foreground/60">· inside standby, when triggered</span>}
+            </span>
+          ))}
+        </div>
       )}
+    </div>
+  );
+}
+
+/* ── Editing one site ────────────────────────────────────────────────── */
+
+function SiteEditor({ site, schedule, onSave, onCancel }: {
+  site: SiteData;
+  schedule: SiteSchedule;
+  onSave: (next: SiteSchedule) => void;
+  onCancel: () => void;
+}) {
+  const [draft, setDraft] = React.useState(schedule);
+  const continuous = typeById("continuous");
+  const standby = typeById("standby");
+
+  function patch(id: RecordingTypeId, next: Partial<RecordingTypeConfig>) {
+    setDraft((d) => {
+      const configs = { ...d.configs, [id]: { ...d.configs[id], ...next } };
+      /* A nested type records inside its parent's hours, so moving the
+         parent's window moves it too. */
+      if (next.startTime || next.endTime) {
+        childrenOf(id).forEach((child) => {
+          configs[child.id] = { ...configs[child.id], startTime: configs[id].startTime, endTime: configs[id].endTime };
+        });
+      }
+      return { ...d, configs };
+    });
+  }
+
+  const modes = weekModes(draft.operation);
+  const operation = typeById("operation");
+
+  return (
+    <div className="flex flex-col gap-3">
+      <CoverageStrip site={site} schedule={draft} />
+
+      {/* The week comes first, above every mode — it is what decides which of
+          them run at all. The cards below only set how each one records. */}
+      <WeeklySchedule
+        site={site}
+        config={draft.operation}
+        onChange={(next) => setDraft((d) => ({ ...d, operation: next }))}
+      />
+
+      {modes.has("continuous") && (
+        <TypeRow def={continuous} config={draft.configs.continuous} configs={draft.configs}
+          scheduledBy="Runs on the days set to Continuous"
+          onChange={(next) => patch("continuous", next)} onChangeChild={patch} />
+      )}
+
+      {modes.has("operation") && (
+        <>
+          <TypeRow def={operation} config={draft.configs.operation} configs={draft.configs}
+            scheduledBy="Runs on the days set to Operation, by their hours"
+            onChange={(next) => patch("operation", next)} onChangeChild={patch} />
+          {/* Standby fills the hours outside operation, so it only has a job on an operation day. */}
+          <TypeRow def={standby} config={draft.configs.standby} configs={draft.configs}
+            onChange={(next) => patch("standby", next)} onChangeChild={patch} />
+        </>
+      )}
+
+      {modes.size === 1 && modes.has("closed") && (
+        <div className="rounded-lg border border-border bg-background px-3.5 py-3">
+          <Note>Every day is closed, so this site records nothing. Set a day to Continuous or Operation above.</Note>
+        </div>
+      )}
+
+      <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => onSave(draft)}>
+          <Check className="size-3.5" />
+          Save {site.name}
+        </Button>
+      </div>
     </div>
   );
 }
 
 /* ── Section body ────────────────────────────────────────────────────── */
 
+/* A list of sites, each with the modes it records in. The chevron opens a
+   site's daily coverage; Edit opens it with the controls. */
 export function RecordingSchedule() {
-  const [configs, setConfigs] = React.useState(DEFAULT_CONFIG);
-
-  function patch(id: RecordingTypeId, next: Partial<RecordingTypeConfig>) {
-    setConfigs((c) => {
-      const updated = { ...c, [id]: { ...c[id], ...next } };
-      /* A nested type records inside its parent's hours, so moving the
-         parent's window moves it too. */
-      if (next.startTime || next.endTime) {
-        childrenOf(id).forEach((child) => {
-          updated[child.id] = {
-            ...updated[child.id],
-            startTime: updated[id].startTime,
-            endTime: updated[id].endTime,
-          };
-        });
-      }
-      return updated;
-    });
-  }
-
-  const enabledCount = RECORDING_TYPES.filter((t) => {
-    const parent = t.parent ? configs[t.parent] : null;
-    return configs[t.id].enabled && (!parent || parent.enabled);
-  }).length;
+  const sites = useSitesStore((s) => s.sites);
+  const [schedules, setSchedules] = React.useState<Record<string, SiteSchedule>>({});
+  const [openId, setOpenId] = React.useState<string | null>(null);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const scheduleOf = (site: SiteData) => schedules[site.id] ?? defaultSchedule(site);
 
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Each type records independently — a camera produces one recording per enabled type, per day.
-        Turn off any the deployment does not need.{" "}
-        <strong className="text-foreground">{enabledCount} of {RECORDING_TYPES.length} enabled.</strong>
+        Each site records either continuously, or by operation hours with standby and motion-based recording outside them.
+        Open a site to see its day; edit it to change how it records.
       </p>
-      <CoverageStrip configs={configs} />
-      {TOP_LEVEL_TYPES.map((def) => (
-        <TypeRow
-          key={def.id}
-          def={def}
-          config={configs[def.id]}
-          configs={configs}
-          onChange={(next) => patch(def.id, next)}
-          onChangeChild={(id, next) => patch(id, next)}
-        />
-      ))}
+      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+        {sites.map((site) => {
+          const schedule = scheduleOf(site);
+          const open = openId === site.id;
+          const editing = editingId === site.id;
+          const cameras = MOCK_CAMERAS.filter((c) => c.siteId === site.id).length;
+          const h = site.operatingHours;
+          // Closed days say nothing about how a site records, so they are left out.
+          const recording = [...weekModes(schedule.operation)].filter((m) => m !== "closed");
+          const hours =
+            recording.length === 0 ? "No recording"
+              : recording.length > 1 ? "Varies by day"
+                : recording[0] === "continuous" ? "Records 24/7"
+                  : schedule.operation.source === "custom" ? "Custom weekly hours"
+                    : h ? hoursLabel(h.from, h.to) : "Site hours";
+          return (
+            <li key={site.id}>
+              <div className={cn("flex items-center gap-3 px-3.5 py-3", open && "bg-muted/20")}>
+                <button
+                  type="button"
+                  onClick={() => { setOpenId(open ? null : site.id); if (open) setEditingId(null); }}
+                  aria-expanded={open}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+                    <MapPin className="size-4" />
+                  </span>
+                  <span className="min-w-32 flex-1">
+                    <span className="block truncate text-base font-semibold text-foreground">{site.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{cameras} camera{cameras === 1 ? "" : "s"} · {hours}</span>
+                  </span>
+                  {/* The modes this site records in. */}
+                  <span className="hidden min-w-0 flex-wrap justify-end gap-1.5 sm:flex">
+                    {activeTypes(schedule).map((id) => {
+                      const def = typeById(id);
+                      return (
+                        <span key={id} className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", TONE_CLASSES[def.tone].chip)}>
+                          <span className={cn("size-1.5 rounded-full", TONE_CLASSES[def.tone].dot)} />
+                          {def.label}
+                        </span>
+                      );
+                    })}
+                  </span>
+                </button>
+                <Button
+                  variant={editing ? "secondary" : "outline"}
+                  size="sm"
+                  className="shrink-0 gap-1.5"
+                  onClick={() => { setOpenId(site.id); setEditingId(editing ? null : site.id); }}
+                  aria-pressed={editing}
+                >
+                  <Pencil className="size-3.5" />
+                  Edit
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => { setOpenId(open ? null : site.id); if (open) setEditingId(null); }}
+                  aria-label={open ? `Collapse ${site.name}` : `Show ${site.name}'s daily coverage`}
+                  className="flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <ChevronDown className={cn("size-4 transition-transform duration-[var(--duration-fast)] ease-standard", open && "rotate-180")} />
+                </button>
+              </div>
+
+              {open && (
+                <div className="border-t border-border bg-card px-3.5 py-3.5">
+                  {editing ? (
+                    <SiteEditor
+                      key={site.id}
+                      site={site}
+                      schedule={schedule}
+                      onCancel={() => setEditingId(null)}
+                      onSave={(next) => {
+                        setSchedules((s) => ({ ...s, [site.id]: next }));
+                        setEditingId(null);
+                      }}
+                    />
+                  ) : (
+                    <CoverageStrip site={site} schedule={schedule} />
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

@@ -39,8 +39,8 @@ export const PAGES = [
     icon: Settings,
     refs: "VMS-VR-001 … 004",
     summary:
-      "The four recording types configured where they would really live — inside Camera Defaults. Each type has its own enable switch, start and end time, resolution and frame rate.",
-    points: ["Continuous, Standby, Motion-Based and Training", "Spec minimums warn rather than block", "Daily coverage strip, overnight windows included"],
+      "Recording configured where it would really live — inside Camera Defaults, as a list of sites. A weekly schedule sits above every mode: pick a day, pick what it records in.",
+    points: ["A day runs continuous, operation, or closed", "Spec minimums warn rather than block", "Weekly coverage strip, overnight windows included"],
     Component: SystemConfigRecording,
   },
   {
