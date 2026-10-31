@@ -28,8 +28,8 @@ import {
   zoomPercent,
   zoomTransform,
   type PlaybackState,
-} from "./playback";
-import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSurface } from "./playbackControls";
+} from "@/lib/playback";
+import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSurface } from "@/components/shared/PlaybackControls";
 
 /* The frame and the bar that sits over it — shared by the wall tiles, the hero
    player and the expand pop-up, so all three behave identically. */

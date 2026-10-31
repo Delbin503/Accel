@@ -7,7 +7,8 @@ import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import { MOCK_USERS } from "@/mocks/users";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
-import { MOCK_RECORDINGS } from "@/mocks/recordings";
+import { ALL_RECORDINGS } from "@/mocks/dayRecordings";
+import { typeById } from "@/lib/recordingTypes";
 
 /* ─── Result shape ──────────────────────────────────────────────────────── */
 
@@ -369,8 +370,8 @@ export function useGlobalSearch(rawQuery: string): GlobalSearch {
     /* Recordings — same reasoning as detections. */
     if (wanted("recording")) {
       // Mirrors the Recordings page search fields for the same reason.
-      const hits = MOCK_RECORDINGS.filter((r) =>
-        matches(`${r.id} ${r.cameraName} ${r.cameraId} ${r.areaName} ${r.siteName} ${r.dateLabel}`, term)
+      const hits = ALL_RECORDINGS.filter((r) =>
+        matches(`${r.id} ${r.cameraName} ${r.cameraId} ${r.areaName} ${r.siteName} ${r.dateLabel} ${typeById(r.type).label}`, term)
       );
       if (hits.length > 0) {
         out.push({

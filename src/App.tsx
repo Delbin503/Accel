@@ -13,6 +13,7 @@ import {
 import DashboardPage from "@/pages/dashboard";
 import LiveMonitoringPage from "@/pages/live-monitoring";
 import RecordingsPage from "@/pages/recordings";
+import VideoEnhancementPage from "@/pages/video-enhancement";
 import DetectionFeedPage from "@/pages/detection-feed";
 import DismissedEventsPage from "@/pages/detection-feed/dismissed";
 
@@ -107,6 +108,7 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="live" element={<LiveMonitoringPage />} />
           <Route path="recordings" element={<RecordingsPage />} />
+          <Route path="recordings/enhance" element={<VideoEnhancementPage />} />
           <Route path="detection-feed" element={<DetectionFeedPage />} />
           <Route path="detection-feed/dismissed" element={<DismissedEventsPage />} />
 

@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
+import { DownloadsIndicator } from "@/components/shared/DownloadsIndicator";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
 import { UserMenu } from "@/components/shared/UserMenu";
 import { CommandPalette } from "@/components/shared/CommandPalette";
@@ -41,6 +42,7 @@ function TopBar() {
       <QuickActionsTrigger />
       <ThemeToggle />
       <SystemStatusMenu />
+<DownloadsIndicator />
       <NotificationsBell />
       <div className="mx-1 h-5 w-px shrink-0 bg-border" />
       <UserMenu />

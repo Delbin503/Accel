@@ -20,7 +20,7 @@ import {
   type RecordingTypeConfig,
   type RecordingTypeDef,
   type RecordingTypeId,
-} from "./recordingTypes";
+} from "@/lib/recordingTypes";
 
 /* Recording Schedule — the Phase 1.3 proposal, built to sit inside the
    System Configuration › Camera Defaults section. Field labels, control

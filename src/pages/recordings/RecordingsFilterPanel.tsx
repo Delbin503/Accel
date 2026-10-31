@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
 import { CAMERA_AREAS, CAMERA_SITES, MOCK_CAMERAS } from "@/mocks/cameras";
-import { LISTED_TYPE_IDS, typeById } from "./recordingTypes";
+import { LISTED_TYPE_IDS, typeById } from "@/lib/recordingTypes";
 import { BOOKMARK_OPTS, type RecordingFilters } from "./recordingFilters";
 
 /* Search and filter chrome, carried over from the Recordings page so the

@@ -1,6 +1,6 @@
 import { MOCK_CAMERAS } from "@/mocks/cameras";
 import { findSiteById } from "@/mocks/sites";
-import { DEFAULT_CONFIG, type RecordingTypeId } from "./recordingTypes";
+import { DEFAULT_CONFIG, type RecordingTypeId } from "@/lib/recordingTypes";
 
 /* Derived recordings for the Phase 1.3 Recordings page.
 
@@ -228,4 +228,14 @@ export function motionClipsFor(motion: DayRecording): DayRecording[] {
       clipCount: 1,
     };
   });
+}
+
+/**
+ * A camera-day's recordings in the order the drawer lists them — the recording
+ * itself, then (for operation) its standby and each of the standby's motion clips.
+ */
+export function cameraDayFiles(rec: DayRecording): DayRecording[] {
+  const sb = rec.standby;
+  if (!sb) return [rec];
+  return [rec, sb, ...(sb.motion ? motionClipsFor(sb.motion) : [])];
 }

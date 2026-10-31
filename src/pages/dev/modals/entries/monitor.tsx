@@ -1,14 +1,18 @@
-import { RecordingDrawer, DeleteRecordingsModal } from "@/pages/recordings";
+import { RecordingDrawer, DeleteRecordingsModal, ExportRecordingModal } from "@/pages/recordings";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
 import { DismissModal } from "@/pages/detection-feed/DismissModal";
 import { EscalateModal } from "@/pages/detection-feed/EscalateModal";
 import { LinkCaseModal } from "@/pages/detection-feed/LinkCaseModal";
 import { DismissedDrawer } from "@/pages/detection-feed/dismissed/DismissedDrawer";
-import { MOCK_RECORDINGS } from "@/mocks/recordings";
+import { ALL_RECORDINGS, motionClipsFor } from "@/mocks/dayRecordings";
 import { MOCK_EVENTS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { ModalEntry } from "../types";
 
-const recording = MOCK_RECORDINGS[0];
+/* An operation camera-day shows the most: its standby and motion clips. */
+const recording = ALL_RECORDINGS.find((r) => r.standby) ?? ALL_RECORDINGS[0];
+const recordingFiles = recording.standby
+  ? [recording, recording.standby, ...(recording.standby.motion ? motionClipsFor(recording.standby.motion) : [])]
+  : [recording];
 const event = MOCK_EVENTS[0];
 const dismissed = MOCK_DISMISSED[0];
 
@@ -20,9 +24,30 @@ export const MONITOR_ENTRIES: ModalEntry[] = [
     module: "Monitor · Recordings",
     file: "src/pages/recordings/index.tsx",
     kind: "drawer",
-    trigger: "Recordings → click a recording card or row.",
+    trigger: "Recordings → click a recording row.",
+    note: "Operation camera-day: the recording, then its standby and motion clips.",
     render: (close) => (
-      <RecordingDrawer recording={recording} open onClose={close} onDeleteRecording={() => close()} />
+      <RecordingDrawer
+        rec={recording}
+        open
+        bookmarked={false}
+        onClose={close}
+        onDelete={close}
+        onExport={() => undefined}
+        onToggleBookmark={() => undefined}
+        onPlay={() => undefined}
+      />
+    ),
+  },
+  {
+    id: "export-recording",
+    name: "ExportRecordingModal",
+    module: "Monitor · Recordings",
+    file: "src/pages/recordings/index.tsx",
+    kind: "modal",
+    trigger: "Recordings → open a recording → Export.",
+    render: (close) => (
+      <ExportRecordingModal open target={{ rec: recording, items: recordingFiles }} onClose={close} onConfirm={close} />
     ),
   },
   {
@@ -33,15 +58,7 @@ export const MONITOR_ENTRIES: ModalEntry[] = [
     kind: "confirm",
     trigger: "Recordings → row menu → Delete.",
     note: "Single-recording copy.",
-    render: (close) => (
-      <DeleteRecordingsModal
-        open
-        count={1}
-        single={{ id: recording.id, detail: `${recording.cameraName} · ${recording.dateLabel} · ${recording.durationDisplay}` }}
-        onClose={close}
-        onConfirm={close}
-      />
-    ),
+    render: (close) => <DeleteRecordingsModal open recs={[recording]} onClose={close} onConfirm={close} />,
   },
   {
     id: "delete-recording-bulk",
@@ -51,9 +68,7 @@ export const MONITOR_ENTRIES: ModalEntry[] = [
     kind: "confirm",
     trigger: "Recordings → select rows → Delete selected.",
     note: "Bulk copy (12 selected).",
-    render: (close) => (
-      <DeleteRecordingsModal open count={12} single={null} onClose={close} onConfirm={close} />
-    ),
+    render: (close) => <DeleteRecordingsModal open recs={ALL_RECORDINGS.slice(0, 12)} onClose={close} onConfirm={close} />,
   },
 
   /* ── Detection Feed ───────────────────────────────────────────────────── */

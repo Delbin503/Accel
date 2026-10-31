@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
+import { DownloadsIndicator } from "@/components/shared/DownloadsIndicator";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
 import { UserMenu } from "@/components/shared/UserMenu";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -37,6 +38,7 @@ function App() {
                     <Breadcrumb className="md:ml-2" />
                     <div className="flex-1" />
                     <SystemStatusMenu />
+                    <DownloadsIndicator />
                     <NotificationsBell />
                     <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                     <UserMenu />

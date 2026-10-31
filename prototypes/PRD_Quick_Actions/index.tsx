@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
+import { DownloadsIndicator } from "@/components/shared/DownloadsIndicator";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
 import { UserMenu } from "@/components/shared/UserMenu";
 import { CommandPalette } from "@/components/shared/CommandPalette";
@@ -23,6 +24,7 @@ import { queryClient } from "@/lib/queryClient";
 import DashboardPage from "@/pages/dashboard";
 import LiveMonitoringPage from "@/pages/live-monitoring";
 import RecordingsPage from "@/pages/recordings";
+import VideoEnhancementPage from "@/pages/video-enhancement";
 import DetectionFeedPage from "@/pages/detection-feed";
 import DismissedEventsPage from "@/pages/detection-feed/dismissed";
 import SiteOverviewPage from "@/pages/site/overview";
@@ -68,6 +70,7 @@ function App() {
                     </div>
                     <QuickActionsTrigger />
                     <SystemStatusMenu />
+                    <DownloadsIndicator />
                     <NotificationsBell />
                     <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                     <UserMenu />
@@ -82,6 +85,7 @@ function App() {
                       <Route path="/" element={<DashboardPage />} />
                       <Route path="/live" element={<LiveMonitoringPage />} />
                       <Route path="/recordings" element={<RecordingsPage />} />
+                      <Route path="/recordings/enhance" element={<VideoEnhancementPage />} />
                       <Route path="/detection-feed" element={<DetectionFeedPage />} />
                       <Route path="/detection-feed/dismissed" element={<DismissedEventsPage />} />
                       <Route path="/site" element={<Navigate to="/site/overview" replace />} />

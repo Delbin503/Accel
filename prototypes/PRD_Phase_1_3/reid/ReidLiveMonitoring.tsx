@@ -50,10 +50,10 @@ import {
   isZoomed,
   timestampAt,
   type PlaybackState,
-} from "../playback";
-import { ScrubTrack, ZoomSurface } from "../playbackControls";
+} from "@/lib/playback";
+import { ScrubTrack, ZoomSurface } from "@/components/shared/PlaybackControls";
 import { CameraFrameLayer, CameraPlayerModal, OfflineFrameLayer, TilePlayerBar } from "../cameraPlayer";
-import { FloatingBar } from "../FloatingBar";
+import { FloatingBar } from "@/components/shared/FloatingBar";
 import { mapForCamera, mapLabel, useReidMapsStore } from "./reidMaps";
 import { allTrackStates, type TrackState } from "./weaponTracks";
 import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";

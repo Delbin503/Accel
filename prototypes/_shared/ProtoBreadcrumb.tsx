@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 /** Routes with no sidebar entry, or that need a deeper trail. */
 const EXTRA_ROUTES: Record<string, string[]> = {
   "/detection-feed/dismissed": ["Monitor", "Detection Feed", "Dismissed Events"],
+  "/recordings/enhance": ["Monitor", "Recordings", "Video Enhancement"],
   "/site/zones": ["Manage", "Site", "Zones"],
   "/users/deleted": ["System", "User Management", "Deleted Users"],
   "/profile": ["Account", "My Profile"],

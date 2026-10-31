@@ -5,19 +5,39 @@ shell (sidebar + header), with a floating dev **State tester** for exercising th
 four view states.
 
 ```
-Populated  →  the real RecordingsPage (KPIs, date range, recording card grid, detail drawer/player, bulk delete, escalate-to-case)
+Populated  →  the real RecordingsPage (KPIs + storage, date range, camera-day list, drawer, pop-up player, export, bookmark, bulk delete)
 Loading    →  KPI + card-grid skeleton
 Empty      →  "No recordings found"
 Error      →  "Couldn't load recordings." + Retry
 ```
 
+## Camera-day recordings (from Phase 1.3)
+
+The page is the Phase 1.3 Recordings design, promoted into `src/pages/recordings`
+— the Phase 1.3 prototype renders the same component, so the two stay identical.
+
+- A row is a **camera-day**, and there are two types: **Continuous** (sites open
+  round the clock) and **Operation** (sites that keep hours). Standby is not a row:
+  it is the other half of an operation day and opens inside it, with the
+  motion-based clips caught while it ran.
+- KPIs: Total Recordings, Today (filters the list), and **Storage Total** across
+  the NVRs for the sites in view, split into used / left.
+- Filters: site, area, camera, type and bookmark; date pills; sort Newest, Oldest,
+  Longest, Largest.
+- The drawer leads with Recording Info, then lists the day's recordings — each
+  plays in a **pop-up player**. Pick which go into **Export** (a zip).
+- **Bookmark** keeps a recording out of any delete; bulk delete holds bookmarked
+  ones back.
+
+Data: `src/mocks/dayRecordings.ts`; types: `src/lib/recordingTypes.ts`; player
+controls: `src/components/shared/PlaybackControls.tsx` + `src/lib/playback.ts`.
+
 ## Shared recording card
 
-The recording card layout is a shared component —
-[`src/components/shared/RecordingCard.tsx`](../../src/components/shared/RecordingCard.tsx) —
-used by both the Recordings page (`variant="page"`) and the **Cameras detail
-drawer** Recordings tab (`variant="drawer"`), so the two stay visually identical.
-See `PRD_Cameras` for the drawer usage.
+[`src/components/shared/RecordingCard.tsx`](../../src/components/shared/RecordingCard.tsx)
+is still used by the **Cameras detail drawer** Recordings tab, which lists the older
+per-file recordings. Opening one hands off to this page, which opens the camera-day
+that file falls in. See `PRD_Cameras` for the drawer usage.
 
 ## Run
 

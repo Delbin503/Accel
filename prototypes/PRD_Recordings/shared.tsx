@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 /** Dev-only forced states for the State Tester (prototype-only). */
 export type ForcedState = "normal" | "loading" | "empty" | "error";
 
-/** Skeleton that mirrors the Recordings layout: KPIs → date bar → card grid. */
+/** Skeleton that mirrors the Recordings layout: KPIs → date bar → list. */
 export function RecordingsSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      {/* KPI cards (cols=4) */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
+      {/* KPI cards — Total, Today, Storage (cols=3) */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
           <div key={i} className="h-[120px] animate-pulse rounded-xl bg-muted" />
         ))}
       </div>

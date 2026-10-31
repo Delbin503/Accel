@@ -1,8 +1,8 @@
 import { Crosshair, Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
 import { LiveMonitoringProposal } from "./LiveMonitoringProposal";
-import { RecordingsByDay } from "./RecordingsByDay";
-import { VideoEnhancement } from "./VideoEnhancement";
+import { RecordingsByDay } from "@/pages/recordings";
+import { VideoEnhancement } from "@/pages/video-enhancement";
 import { CustomDashboard } from "./CustomDashboard";
 import { AarDashboard } from "./aar/AarDashboard";
 
@@ -76,7 +76,7 @@ export const PAGES = [
     icon: Sparkles,
     refs: "VMS-VPB-004",
     summary:
-      "Non-destructive crop, brightness, sharpness and contrast on a recorded clip, with a hold-to-compare against the untouched frame.",
+      "Non-destructive crop, brightness, sharpness and contrast on a recorded clip. Opens on the recording chosen in Recordings; a dropdown switches to any other.",
     points: ["Crop presets plus per-side insets", "Discarded region dims instead of disappearing", "Sharpness runs through an SVG convolve kernel"],
     Component: VideoEnhancement,
   },

@@ -3,6 +3,7 @@ import { MemoryRouter, Navigate, Route, Routes, useLocation, useNavigate } from 
 import { Toaster } from "sonner";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
+import { DownloadsIndicator } from "@/components/shared/DownloadsIndicator";
 import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
 import { UserMenu } from "@/components/shared/UserMenu";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -60,6 +61,7 @@ function App() {
                     <TrmsBreadcrumb className="md:ml-2" />
                     <div className="flex-1" />
                     <SystemStatusMenu />
+                    <DownloadsIndicator />
                     <NotificationsBell />
                     <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                     <UserMenu />

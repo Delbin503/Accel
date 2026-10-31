@@ -15,10 +15,10 @@ import {
 import { Modal, ModalContent } from "@/components/shared/Modal";
 import { DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { RECORDING_TYPES, TONE_CLASSES } from "./recordingTypes";
-import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "./playbackControls";
-import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "./playback";
-import { periodsFor, type DayRecording } from "./dayRecordings";
+import { RECORDING_TYPES, TONE_CLASSES } from "@/lib/recordingTypes";
+import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "@/components/shared/PlaybackControls";
+import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "@/lib/playback";
+import { periodsFor, type DayRecording } from "@/mocks/dayRecordings";
 
 /* The player is a pop-up now, not the first thing in the drawer — a camera-day
    holds several recordings, so there is no single video to lead with. The

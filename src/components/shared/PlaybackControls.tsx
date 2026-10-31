@@ -16,7 +16,7 @@ import {
   zoomPercent,
   type PlaybackState,
   type ZoomState,
-} from "./playback";
+} from "@/lib/playback";
 
 /* Playback controls shared by a single tile and the synchronised bar. */
 
@@ -238,10 +238,11 @@ export function ZoomSurface({ zoom, onChange, onExit, compact }: {
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const target: HTMLElement = el;
 
     function onWheel(e: WheelEvent) {
       e.preventDefault();
-      const r = el.getBoundingClientRect();
+      const r = target.getBoundingClientRect();
       const focus = {
         x: (e.clientX - r.left) / r.width,
         y: (e.clientY - r.top) / r.height,
