@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/shared";
 import { cn } from "@/lib/utils";
+import { useNvrDefaultsStore } from "@/stores/useNvrDefaultsStore";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
 import { RecordingSchedule } from "./RecordingSchedule";
@@ -759,7 +760,11 @@ function NvrDefaultsSection() {
   const [healthCheckInterval, setHealthCheckInterval] = React.useState(60);
   const [autoCleanupEnabled, setAutoCleanupEnabled] = React.useState(true);
   const [retentionDays, setRetentionDays] = React.useState(30);
-  const [maxVideoLength, setMaxVideoLength] = React.useState("off");
+  // Shared, because Recordings splits recordings into files by it.
+  const maxVideoMinutes = useNvrDefaultsStore((st) => st.maxVideoMinutes);
+  const setMaxVideoMinutes = useNvrDefaultsStore((st) => st.setMaxVideoMinutes);
+  const maxVideoLength = maxVideoMinutes === null ? "off" : String(maxVideoMinutes);
+  const setMaxVideoLength = (v: string) => setMaxVideoMinutes(v === "off" ? null : Number(v));
   const maxVideoLabel = MAX_VIDEO_LENGTHS.find((o) => o.value === maxVideoLength)?.label;
 
   return (

@@ -231,11 +231,50 @@ export function motionClipsFor(motion: DayRecording): DayRecording[] {
 }
 
 /**
- * A camera-day's recordings in the order the drawer lists them — the recording
- * itself, then (for operation) its standby and each of the standby's motion clips.
+ * A camera-day's video files in the order the drawer lists them — the
+ * recording itself, then (for operation) its standby and each of the standby's
+ * motion clips. With `maxMinutes` (NVR Defaults → Max. length per video) the
+ * recording and standby come as the parts the NVR cut them into.
  */
-export function cameraDayFiles(rec: DayRecording): DayRecording[] {
+export function cameraDayFiles(rec: DayRecording, maxMinutes: number | null = null): DayRecording[] {
   const sb = rec.standby;
-  if (!sb) return [rec];
-  return [rec, sb, ...(sb.motion ? motionClipsFor(sb.motion) : [])];
+  const main = videoPartsFor(rec, maxMinutes);
+  if (!sb) return main;
+  return [...main, ...videoPartsFor(sb, maxMinutes), ...(sb.motion ? motionClipsFor(sb.motion) : [])];
+}
+
+/**
+ * A recording as the NVR stores it: cut into video files no longer than
+ * `maxMinutes` (System Configuration → NVR Defaults → Max. length per video).
+ * Null, or a recording that already fits, stays one file. The parts' durations
+ * and sizes add back up to the recording's.
+ */
+export function videoPartsFor(rec: DayRecording, maxMinutes: number | null): DayRecording[] {
+  if (!maxMinutes || rec.durationMinutes <= maxMinutes) return [rec];
+  const n = Math.ceil(rec.durationMinutes / maxMinutes);
+  const start = hhmmToMinutes(rec.startsAt);
+  let mbLeft = rec.fileSizeMb;
+  return Array.from({ length: n }, (_, i) => {
+    const minutes = Math.min(maxMinutes, rec.durationMinutes - i * maxMinutes);
+    // The last part takes the remainder, so the sizes always reconcile.
+    const mb = i === n - 1 ? mbLeft : Math.round((rec.fileSizeMb * minutes) / rec.durationMinutes);
+    mbLeft -= mb;
+    const from = minutesToClock(start + i * maxMinutes);
+    const to = minutesToClock(start + i * maxMinutes + minutes);
+    return {
+      ...rec,
+      id: `${rec.id}-P${String(i + 1).padStart(2, "0")}`,
+      startsAt: from,
+      endsAt: to,
+      startsAtDisplay: `${from}:00`,
+      endsAtDisplay: `${to}:00`,
+      durationMinutes: minutes,
+      durationDisplay: fmtDuration(minutes),
+      fileSizeMb: mb,
+      fileSizeDisplay: fmtSize(mb),
+      clipCount: 1,
+      standby: undefined,
+      motion: undefined,
+    };
+  });
 }

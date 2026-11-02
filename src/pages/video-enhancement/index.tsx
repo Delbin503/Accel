@@ -9,6 +9,7 @@ import { SectionCard } from "@/components/shared/SectionCard";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { ALL_RECORDINGS, cameraDayFiles } from "@/mocks/dayRecordings";
+import { useNvrDefaultsStore } from "@/stores/useNvrDefaultsStore";
 import { cameraFrame } from "@/mocks/cameraFrames";
 import { CropOverlay } from "./CropOverlay";
 import { ExportEnhancedModal } from "./ExportEnhancedModal";
@@ -171,11 +172,15 @@ export function VideoEnhancement() {
     () => ALL_RECORDINGS.find((r) => r.id === sent?.recordingId)?.id ?? ALL_RECORDINGS[0].id,
   );
   const recording = ALL_RECORDINGS.find((r) => r.id === recordingId) ?? ALL_RECORDINGS[0];
-  /* An operation recording carries its standby and motion clips; any of them
-     can be the one enhanced. Continuous has only itself. */
-  const files = React.useMemo(() => cameraDayFiles(recording), [recording]);
+  /* The camera-day's video files, any of which can be the one on screen: an
+     operation recording carries its standby and motion clips, and long
+     recordings come as several files when NVR Defaults sets a max. length per
+     video — the same list the Recordings drawer shows. */
+  const maxVideoMinutes = useNvrDefaultsStore((s) => s.maxVideoMinutes);
+  const files = React.useMemo(() => cameraDayFiles(recording, maxVideoMinutes), [recording, maxVideoMinutes]);
   const [fileId, setFileId] = React.useState(recordingId);
-  const file = files.find((f) => f.id === fileId) ?? recording;
+  // A split recording has no file under its own id; it opens on its first part.
+  const file = files.find((f) => f.id === fileId) ?? files[0];
   const frame = cameraFrame(recording.cameraId);
   /* Every recording opened from the dropdown keeps its own enhancements, so
      switching away and back loses nothing, and Export Enhanced can send
@@ -212,7 +217,7 @@ export function VideoEnhancement() {
   /** Every recording opened this session, the one on screen first. */
   const exportable = [recordingId, ...opened.filter((id) => id !== recordingId)].flatMap((id) => {
     const rec = ALL_RECORDINGS.find((r) => r.id === id);
-    return rec ? [{ rec, files: cameraDayFiles(rec), applied: summarize(settings[id] ?? UNTOUCHED) }] : [];
+    return rec ? [{ rec, files: cameraDayFiles(rec, maxVideoMinutes), applied: summarize(settings[id] ?? UNTOUCHED) }] : [];
   });
 
   /* An operation camera-day is one recording split into files — the operation

@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { formatDate, formatTimeOfDay } from "@/lib/formatters";
 import { findSiteById } from "@/mocks/sites";
 import { TONE_CLASSES, typeById, type RecordingTypeId } from "@/lib/recordingTypes";
-import { ALL_RECORDINGS, DAYS, cameraDayFiles, fmtSize, type DayRecording } from "@/mocks/dayRecordings";
+import { ALL_RECORDINGS, DAYS, cameraDayFiles, fmtSize, motionClipsFor, videoPartsFor, type DayRecording } from "@/mocks/dayRecordings";
 import { EMPTY_FILTERS, type RecordingFilters } from "./recordingFilters";
 import { FilterPanel } from "./RecordingsFilterPanel";
 import { RecordingPlayerModal } from "./RecordingPlayerModal";
@@ -44,6 +44,7 @@ import { FloatingBar } from "@/components/shared/FloatingBar";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
+import { formatVideoLength, useNvrDefaultsStore } from "@/stores/useNvrDefaultsStore";
 
 /* Recordings — the camera-day list introduced in Phase 1.3, now the app's page
    (the Phase 1.3 prototype renders this same component).
@@ -341,6 +342,16 @@ function InfoGrid({ rec }: { rec: DayRecording }) {
 
 /** One playable video — no thumbnail, the play button leads. `onSelect` adds the
     export checkbox, which only appears once a recording holds more than one. */
+/** A recording row's title — its type and its id (each video file has its own, e.g. REC-0002-P03). */
+function PartTitle({ type, rec }: { type: RecordingTypeId; rec: DayRecording }) {
+  return (
+    <>
+      <TypeChip type={type} />
+      <span className="font-mono text-2xs text-muted-foreground">{rec.id}</span>
+    </>
+  );
+}
+
 function PlayRow({ rec, title, onPlay, selected, onSelect }: {
   rec: DayRecording;
   title: React.ReactNode;
@@ -383,9 +394,16 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
   onPlay: (rec: DayRecording) => void;
 }) {
   const standby = rec?.standby;
-  /* Everything the drawer lists, in the order it lists them — the recording
-     itself, then the standby and each of its clips. */
-  const items = React.useMemo(() => (rec ? cameraDayFiles(rec) : []), [rec]);
+  /* The NVR stores long recordings as several video files when NVR Defaults
+     sets a max. length per video, so the drawer lists the files. Motion clips
+     are short bursts and stay as they are. */
+  const maxMinutes = useNvrDefaultsStore((s) => s.maxVideoMinutes);
+  const parts = React.useMemo(() => (rec ? videoPartsFor(rec, maxMinutes) : []), [rec, maxMinutes]);
+  const standbyParts = React.useMemo(() => (standby ? videoPartsFor(standby, maxMinutes) : []), [standby, maxMinutes]);
+  const clips = React.useMemo(() => (standby?.motion ? motionClipsFor(standby.motion) : []), [standby]);
+  /* Everything the drawer lists, in the order it lists them — the recording's
+     files, then the standby's and each motion clip. */
+  const items = React.useMemo(() => [...parts, ...standbyParts, ...clips], [parts, standbyParts, clips]);
 
   /* Selection is only worth having once there is more than one recording.
      Rather than resetting through an effect, it is keyed to the recording: a
@@ -402,7 +420,6 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
   };
 
   if (!rec) return null;
-  const clips = items.slice(2);
   const multi = items.length > 1;
   const chosen = items.filter((i) => selected.has(i.id));
   const { date } = recDate(rec);
@@ -470,12 +487,20 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
                 </label>
               )}
             </div>
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
-              <PlayRow rec={rec} onPlay={() => onPlay(rec)}
-                selected={multi ? selected.has(rec.id) : undefined}
-                onSelect={multi ? () => toggle(rec.id) : undefined}
-                title={<><TypeChip type={rec.type} /><span className="font-mono text-2xs text-muted-foreground">{rec.id}</span></>} />
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+              {parts.map((p) => (
+                <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
+                  selected={multi ? selected.has(p.id) : undefined}
+                  onSelect={multi ? () => toggle(p.id) : undefined}
+                  title={<PartTitle type={rec.type} rec={p} />} />
+              ))}
             </div>
+            {parts.length > 1 && maxMinutes && (
+              <p className="mt-2 text-2xs text-muted-foreground">
+                Stored as {parts.length} videos of up to {formatVideoLength(maxMinutes)} each — Max. length per video
+                in System Configuration → NVR Defaults.
+              </p>
+            )}
           </div>
 
           {/* Operation only — the rest of the day. Standby covers the closed
@@ -486,14 +511,17 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Outside Operation Hours</p>
                 <p className="text-2xs text-muted-foreground">
                   Standby · {standby.durationDisplay}
+                  {standbyParts.length > 1 && ` in ${standbyParts.length} videos`}
                   {clips.length > 0 && ` · ${clips.length} motion clip${clips.length === 1 ? "" : "s"}`}
                 </p>
               </div>
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-                <PlayRow rec={standby} onPlay={() => onPlay(standby)}
-                  selected={selected.has(standby.id)}
-                  onSelect={() => toggle(standby.id)}
-                  title={<><TypeChip type="standby" /><span className="font-mono text-2xs text-muted-foreground">{standby.id}</span></>} />
+                {standbyParts.map((p) => (
+                  <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
+                    selected={selected.has(p.id)}
+                    onSelect={() => toggle(p.id)}
+                    title={<PartTitle type="standby" rec={p} />} />
+                ))}
                 {clips.map((clip, i) => (
                   <PlayRow key={clip.id} rec={clip} onPlay={() => onPlay(clip)}
                     selected={selected.has(clip.id)}
@@ -775,6 +803,8 @@ export default function RecordingsPage({
   const [deleteTarget, setDeleteTarget] = React.useState<DayRecording[]>([]);
   const [exportTarget, setExportTarget] = React.useState<ExportTarget | null>(null);
   const startDownload = useDownloadsStore((s) => s.start);
+  // Exports take the video files the NVR stores, cut at NVR Defaults' max. length.
+  const maxVideoMinutes = useNvrDefaultsStore((s) => s.maxVideoMinutes);
   const [page, setPage] = React.useState(1);
   const pageSize = 12;
 
@@ -1062,8 +1092,8 @@ export default function RecordingsPage({
                 const recs = source.filter((r) => selectedIds.has(r.id));
                 // One camera-day exports exactly as it does from its drawer.
                 setExportTarget(recs.length === 1
-                  ? { rec: recs[0], items: cameraDayFiles(recs[0]) }
-                  : { recs, items: recs.flatMap(cameraDayFiles) });
+                  ? { rec: recs[0], items: cameraDayFiles(recs[0], maxVideoMinutes) }
+                  : { recs, items: recs.flatMap((r) => cameraDayFiles(r, maxVideoMinutes)) });
               }}
             >
               <Package className="size-3.5" />
