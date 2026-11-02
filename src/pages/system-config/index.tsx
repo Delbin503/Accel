@@ -747,12 +747,26 @@ function CameraDefaultsSection() {
 
 const RETENTION_PRESETS = [7, 14, 30, 60, 90];
 
+/** Where an NVR cuts a recording into a new file. "off" keeps one file per recording. */
+const MAX_VIDEO_LENGTHS = [
+  { value: "off", label: "Disable" },
+  { value: "5", label: "5 min" },
+  { value: "10", label: "10 min" },
+  { value: "15", label: "15 min" },
+  { value: "30", label: "30 min" },
+  { value: "60", label: "1 h" },
+  { value: "120", label: "2 h" },
+  { value: "180", label: "3 h" },
+];
+
 function NvrDefaultsSection() {
   const [storageWarn, setStorageWarn] = React.useState(85);
   const [defaultChannelCount, setDefaultChannelCount] = React.useState(16);
   const [healthCheckInterval, setHealthCheckInterval] = React.useState(60);
   const [autoCleanupEnabled, setAutoCleanupEnabled] = React.useState(true);
   const [retentionDays, setRetentionDays] = React.useState(30);
+  const [maxVideoLength, setMaxVideoLength] = React.useState("off");
+  const maxVideoLabel = MAX_VIDEO_LENGTHS.find((o) => o.value === maxVideoLength)?.label;
 
   return (
     <div className="flex flex-col gap-4">
@@ -813,6 +827,25 @@ function NvrDefaultsSection() {
             </p>
           </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title="Recording Files" description="How a NVR splits footage into video files.">
+        <div className="max-w-sm">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max. length per video</label>
+          <Select value={maxVideoLength} onValueChange={setMaxVideoLength}>
+            <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {MAX_VIDEO_LENGTHS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          {maxVideoLength === "off" ? (
+            <>Each recording is kept as <strong className="text-foreground">one file</strong>, however long it runs.</>
+          ) : (
+            <>A new file starts every <strong className="text-foreground">{maxVideoLabel}</strong>, so long recordings download and play in smaller parts.</>
+          )}
+        </p>
       </SectionCard>
 
       <SectionCard title="Hardware Defaults">
