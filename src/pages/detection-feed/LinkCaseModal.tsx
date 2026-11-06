@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FolderOpen, Check, MapPin, User, ArrowUpRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -9,11 +9,10 @@ import {
 } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
-import { CaseStatusBadge } from "@/pages/incident-cases/index";
-import type { IncidentCase } from "@/types/incidents";
 
 interface LinkCaseModalProps {
   /** IDs of events being linked */
@@ -28,69 +27,7 @@ interface LinkCaseModalProps {
   onConfirm: (caseId: string) => void;
 }
 
-function CaseOption({
-  c,
-  selected,
-  onClick,
-}: {
-  c: IncidentCase;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-all",
-        selected
-          ? "border-primary bg-primary-muted"
-          : "border-border bg-muted/20 hover:border-primary"
-      )}
-      style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${c.severity})` }}
-    >
-      {/* Radio circle */}
-      <span
-        className={cn(
-          "mt-0.5 flex size-4 flex-shrink-0 items-center justify-center rounded-full border",
-          selected ? "border-primary" : "border-muted-foreground/40"
-        )}
-      >
-        {selected && <span className="size-2.5 rounded-full bg-primary" />}
-      </span>
-
-      <div className="min-w-0 flex-1">
-        {/* Header */}
-        <div className="mb-1 flex flex-wrap items-center gap-1.5">
-          <span className="font-mono text-xs font-semibold text-muted-foreground">
-            {c.id}
-          </span>
-          <SeverityBadge severity={c.severity} />
-          <CaseStatusBadge status={c.status} />
-        </div>
-
-        {/* Title */}
-        <div className="text-base font-semibold leading-snug text-foreground">{c.title}</div>
-
-        {/* Meta */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="size-2.5" />
-            {c.siteDisplay}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <User className="size-2.5" />
-            {c.assignedTo.name}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-px">
-            {c.incidentIds.length} incident{c.incidentIds.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-      </div>
-
-      {selected && <Check className="mt-0.5 size-4 flex-shrink-0 text-primary" />}
-    </button>
-  );
-}
+const STATUS_LABEL: Record<string, string> = { open: "Open", "in-review": "In review" };
 
 export function LinkCaseModal({
   eventIds,
@@ -132,72 +69,79 @@ export function LinkCaseModal({
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title="Link to Incident Case"
-          description={<>{eventIds.length > 1 ? `Linking ${eventIds.length} selected events` : "Linking 1 event"}{" "} · Showing Open &amp; In Review cases for{" "} <strong className="text-foreground">{eventSiteDisplay}</strong></>}
-        />
+      <ModalContent size="sm">
+        <ModalHeader title="Link to Incident Case" />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Link{" "}
+            <strong className="text-foreground">
+              {eventIds.length > 1 ? `${eventIds.length} events` : eventIds[0]}
+            </strong>{" "}
+            to an open case at <strong className="text-foreground">{eventSiteDisplay}</strong>. Only cases from the same
+            site are shown.
+          </p>
 
-        {/* Search — only when there are cases to search */}
-        {eligible.length > 0 && (
-          <div className="flex-shrink-0 px-5 pt-4">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by case ID, title, or owner…"
-                className="h-9 pl-9 text-base"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Case list — scrolls internally once it exceeds ~4 cards */}
-        <ModalBody>
           {eligible.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-muted-foreground">
-              <FolderOpen className="size-10 opacity-20" />
-              <p className="text-base">No open cases for {eventSiteDisplay}.</p>
-              <p className="text-sm text-muted-foreground/70">
-                Use &ldquo;Escalate Case&rdquo; to create a new case instead.
-              </p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-10 text-muted-foreground">
-              <Search className="size-7 opacity-20" />
-              <p className="text-base">No cases match &ldquo;{query}&rdquo;.</p>
-            </div>
-          ) : (
-            <div className="max-h-[400px] space-y-2 overflow-y-auto">
-              {filtered.map((c) => (
-                <CaseOption
-                  key={c.id}
-                  c={c}
-                  selected={selectedCaseId === c.id}
-                  onClick={() => setSelectedCaseId(c.id)}
-                />
-              ))}
-            </div>
-          )}
-
-          {eligible.length > 0 && (
-            <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-              <ArrowUpRight className="size-3" />
-              Cases from other sites are hidden — incidents must share the same site.
+            <p className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+              No open cases at {eventSiteDisplay}. Escalate to create one instead.
             </p>
+          ) : (
+            <>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by case ID, title, or owner…"
+                  className="h-9 pl-9 text-base"
+                />
+              </div>
+              {filtered.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No cases match &ldquo;{query}&rdquo;.</p>
+              ) : (
+                /* One list with a checkbox per case. A link goes to one case, so ticking
+                   a case unticks any other (and ticking it again clears the pick). */
+                <ul className="max-h-72 divide-y divide-border/60 overflow-y-auto rounded-lg border border-border">
+                  {filtered.map((c) => {
+                    const on = selectedCaseId === c.id;
+                    return (
+                      <li key={c.id}>
+                        <label
+                          className={cn(
+                            "flex cursor-pointer items-start gap-3 px-3 py-3 transition-colors duration-[var(--duration-fast)] ease-standard",
+                            on ? "bg-accent" : "hover:bg-muted/40"
+                          )}
+                        >
+                          <Checkbox
+                            checked={on}
+                            onCheckedChange={(v) => setSelectedCaseId(v === true ? c.id : null)}
+                            aria-label={`Link to ${c.id}`}
+                            className="mt-0.5"
+                          />
+                          <span className="min-w-0 flex-1 space-y-1">
+                            <span className="flex items-center justify-between gap-3">
+                              <span className={cn("truncate text-sm font-medium", on ? "text-primary" : "text-foreground")}>
+                                {c.title}
+                              </span>
+                              <SeverityBadge severity={c.severity} />
+                            </span>
+                            <span className="block font-mono text-2xs text-muted-foreground">
+                              {c.id} · {STATUS_LABEL[c.status] ?? c.status} · {c.assignedTo.name} ·{" "}
+                              {c.incidentIds.length} incident{c.incidentIds.length === 1 ? "" : "s"}
+                            </span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
           )}
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            disabled={!selectedCaseId}
-            onClick={() => selectedCaseId && onConfirm(selectedCaseId)}
-          >
+          <Button size="sm" disabled={!selectedCaseId} onClick={() => selectedCaseId && onConfirm(selectedCaseId)}>
             Link to Case
           </Button>
         </ModalFooter>

@@ -58,22 +58,13 @@ export function DeleteAccountModal({
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title="Delete account"
-          description={<>This permanently deletes <strong className="text-foreground">{orgName}</strong> and everything in it. It cannot be undone.</>}
-          icon={Trash2}
-        />
-        <ModalBody className="space-y-3">
-          <div className="flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
-            <ul className="space-y-1 text-sm text-foreground">
-              <li>All sites, cameras and NVR links are removed.</li>
-              <li>Deployed models stop and their detection history is deleted.</li>
-              <li>Every member loses access immediately.</li>
-              <li>Active subscriptions are cancelled without refund.</li>
-            </ul>
-          </div>
+      <ModalContent size="sm">
+        <ModalHeader title="Delete account" />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete <strong className="text-foreground">{orgName}</strong>? Everything in it is erased, members lose
+            access, and subscriptions aren&apos;t refunded.
+          </p>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Type <span className="font-mono text-foreground">{DELETE_PHRASE}</span> to confirm
@@ -83,12 +74,10 @@ export function DeleteAccountModal({
               onChange={(e) => setTyped(e.target.value)}
               placeholder={DELETE_PHRASE}
               autoComplete="off"
-              className="h-9 font-mono text-base"
             />
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button
             variant="destructive"
             disabled={!canDelete}
@@ -98,9 +87,7 @@ export function DeleteAccountModal({
                 description: "You have 30 days to cancel before data is erased.",
               });
             }}
-            className="gap-1.5"
           >
-            <Trash2 className="size-3.5" />
             Delete account
           </Button>
         </ModalFooter>

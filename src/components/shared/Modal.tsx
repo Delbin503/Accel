@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,6 +32,13 @@ import { cn } from "@/lib/utils";
  *
  * `ModalSubheader` is the only sanctioned slot between header and body — for a
  * wizard stepper or a sticky search/filter strip.
+ *
+ * Look (the 2026 redesign, reviewed in the Modal Gallery): a 16px neutral
+ * title with no divider under it; the description is kept for screen readers
+ * but not shown; no icons in the header, on footer buttons or beside field
+ * labels; regular sizes (sm / lg) are one 550px width with a capped height that
+ * scrolls. Footers carry one action — close is the ✕ / Esc, not a Cancel button.
+ * The previous look survives only as the gallery's "classic" chrome.
  */
 
 /**
@@ -62,17 +70,107 @@ const modalVariants = cva(
 
 /** Root. Thin pass-through to Radix so `Modal`/`ModalContent` compose like shadcn. */
 function Modal(props: React.ComponentProps<typeof Dialog>) {
-  return <Dialog {...props} />;
+  // Placed side by side (gallery compare): non-modal, so both dialogs stay
+  // visible and usable at once. Centered modals (every page) are unchanged.
+  const placed = React.useContext(ModalPlacementContext) !== "center";
+  return <Dialog {...props} modal={placed ? false : props.modal} />;
+}
+
+/**
+ * Chrome. "plain" is the app's look (see the header comment). "classic" is the
+ * pre-redesign look — bordered header, visible description, icons, per-size
+ * widths — kept only so the Modal Gallery can show the old side of a compare.
+ * Context reaches through the dialog portal, so a provider around a modal
+ * styles it without touching it.
+ */
+type ModalChrome = "plain" | "classic";
+
+const ModalChromeContext = React.createContext<ModalChrome>("plain");
+
+/**
+ * Opt-in placement, also gallery-only: "left" / "right" put the dialog in that
+ * half of the screen so two can be compared side by side. Default "center".
+ */
+type ModalPlacement = "center" | "left" | "right";
+
+const ModalPlacementContext = React.createContext<ModalPlacement>("center");
+
+/**
+ * Opt-in "tidy" frame, gallery-only, for form modals previewed in place (no
+ * redesigned copy): the redesign's 550px width, a capped height so long forms
+ * scroll inside the body, and no ghost (Cancel) footer buttons — ✕ / Esc close.
+ * Only applies with the plain chrome, and only to the regular sm / lg sizes.
+ */
+const ModalTidyContext = React.createContext(false);
+
+/**
+ * Opt-in uniform width, gallery-only: the redesign's 550px for any size but
+ * "full" (full-bleed editors keep their room). Width only — unlike tidy, it
+ * leaves the height and footer buttons alone.
+ */
+const ModalUniformWidthContext = React.createContext(false);
+
+const PLACEMENT_CLASS: Record<Exclude<ModalPlacement, "center">, string> = {
+  left: "left-1/4 max-w-[46vw] sm:max-w-[46vw]",
+  right: "left-3/4 max-w-[46vw] sm:max-w-[46vw]",
+};
+
+function ModalChromeProvider({
+  chrome,
+  placement = "center",
+  tidy = false,
+  uniformWidth = false,
+  children,
+}: {
+  chrome: ModalChrome;
+  placement?: ModalPlacement;
+  tidy?: boolean;
+  uniformWidth?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <ModalChromeContext.Provider value={chrome}>
+      <ModalPlacementContext.Provider value={placement}>
+        <ModalTidyContext.Provider value={tidy}>
+          <ModalUniformWidthContext.Provider value={uniformWidth}>{children}</ModalUniformWidthContext.Provider>
+        </ModalTidyContext.Provider>
+      </ModalPlacementContext.Provider>
+    </ModalChromeContext.Provider>
+  );
+}
+
+function useTidy() {
+  const chrome = React.useContext(ModalChromeContext);
+  const tidy = React.useContext(ModalTidyContext);
+  return chrome === "plain" && tidy;
 }
 
 export interface ModalContentProps
   extends React.ComponentProps<typeof DialogContent>,
     VariantProps<typeof modalVariants> {}
 
-function ModalContent({ size, className, ...props }: ModalContentProps) {
+function ModalContent({ size, className, onInteractOutside, ...props }: ModalContentProps) {
+  const placement = React.useContext(ModalPlacementContext);
+  const plain = React.useContext(ModalChromeContext) === "plain";
+  // One width for every regular modal, with a height cap so long forms scroll inside.
+  const regularFrame = plain && (size == null || size === "sm" || size === "lg");
+  const tidyFrame = useTidy() && (size == null || size === "sm" || size === "lg");
+  const uniform = React.useContext(ModalUniformWidthContext) && size !== "full";
   return (
     <DialogContent
-      className={cn(modalVariants({ size }), className)}
+      className={cn(
+        modalVariants({ size }),
+        regularFrame && "w-[550px] max-h-[70vh]",
+        placement !== "center" && PLACEMENT_CLASS[placement],
+        className,
+        tidyFrame && "w-[550px] max-h-[70vh]",
+        uniform && "w-[550px]"
+      )}
+      onInteractOutside={(e) => {
+        onInteractOutside?.(e);
+        // Side by side, clicking one dialog mustn't close the other.
+        if (placement !== "center") e.preventDefault();
+      }}
       {...props}
     />
   );
@@ -109,10 +207,11 @@ const TONE_ICON: Record<ModalTone, string> = {
 export interface ModalHeaderProps {
   title: React.ReactNode;
   /**
-   * Required on purpose — a modal that cannot say what it does in one line is
-   * usually doing too much. Pass `null` only for chrome-less media modals.
+   * One line on what the modal does. Read to screen readers (aria-describedby);
+   * only the gallery's "classic" chrome shows it on screen. Optional: put
+   * anything the user must read in the body instead.
    */
-  description: React.ReactNode;
+  description?: React.ReactNode;
   /**
    * Rendered before the title and coloured by `tone`. Lucide icons satisfy
    * this, as do the project's hand-drawn glyphs (e.g. `CoinIcon`).
@@ -129,21 +228,29 @@ function ModalHeader({
   tone = "default",
   className,
 }: ModalHeaderProps) {
+  const plain = React.useContext(ModalChromeContext) === "plain";
   return (
     <DialogHeader
-      className={cn("flex-shrink-0 border-b border-border px-5 py-4", className)}
+      className={cn(
+        "flex-shrink-0 px-5 py-4",
+        plain ? "pb-0 text-left" : "border-b border-border",
+        className
+      )}
     >
       <DialogTitle
         className={cn(
-          "flex items-center gap-2 pr-8 text-base font-bold",
-          TONE_TITLE[tone]
+          "flex items-center gap-2 pr-8 font-bold",
+          // Titles stay neutral; a red action button carries any danger.
+          plain ? "text-lg text-foreground" : cn("text-base", TONE_TITLE[tone])
         )}
       >
-        {Icon ? <Icon className={cn("size-4 shrink-0", TONE_ICON[tone])} /> : null}
+        {Icon && !plain ? <Icon className={cn("size-4 shrink-0", TONE_ICON[tone])} /> : null}
         {title}
       </DialogTitle>
       {description ? (
-        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+        <DialogDescription className={plain ? "sr-only" : "mt-0.5 text-sm text-muted-foreground"}>
+          {description}
+        </DialogDescription>
       ) : null}
     </DialogHeader>
   );
@@ -164,9 +271,12 @@ function ModalSubheader({ className, ...props }: React.ComponentProps<"div">) {
 
 /** The single scroll region. Everything else in the shell stays pinned. */
 function ModalBody({ className, ...props }: React.ComponentProps<"div">) {
+  // Plain chrome has no header divider, so the body sits closer to the title,
+  // and field labels drop their leading icons (icons inside inputs stay).
+  const plain = React.useContext(ModalChromeContext) === "plain";
   return (
     <div
-      className={cn("flex-1 overflow-y-auto px-5 py-4", className)}
+      className={cn("flex-1 overflow-y-auto px-5 py-4", plain && "pt-0 [&_label>svg]:hidden", className)}
       {...props}
     />
   );
@@ -177,11 +287,16 @@ function ModalFooter({
   align = "end",
   ...props
 }: React.ComponentProps<"div"> & { align?: "end" | "between" }) {
+  const plain = React.useContext(ModalChromeContext) === "plain";
+  const tidy = useTidy();
   return (
     <div
       className={cn(
         "flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5",
         align === "between" ? "justify-between" : "justify-end",
+        plain && "[&_button_svg:not(.animate-spin)]:hidden",
+        // Cancel is a ghost button, or an outline one leading a multi-button footer.
+        tidy && "[&_button[data-variant=ghost]]:hidden [&_button[data-variant=outline]:first-child:not(:last-child)]:hidden",
         className
       )}
       {...props}
@@ -189,4 +304,4 @@ function ModalFooter({
   );
 }
 
-export { Modal, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter };
+export { Modal, ModalChromeProvider, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter };

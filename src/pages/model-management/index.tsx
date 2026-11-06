@@ -622,9 +622,6 @@ export function CreateModelModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
           <Button size="sm" onClick={submit}>
             Confirm
           </Button>
@@ -883,9 +880,6 @@ export function AddStepModal({
         )}
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel} disabled={uploading}>
-            Cancel
-          </Button>
           <Button size="sm" onClick={submit} disabled={uploading} className="gap-1.5">
             {uploading && <LoaderCircle className="size-3.5 animate-spin" />}
             {uploading ? "Uploading…" : "Confirm"}
@@ -910,25 +904,15 @@ export function DeleteModelModal({
   return (
     <Modal open onOpenChange={(v) => !v && onCancel()}>
       <ModalContent size="sm">
-        <ModalHeader
-          title="Delete Model"
-          description="This action cannot be undone."
-          icon={Trash2}
-          tone="destructive"
-        />
-        <ModalBody className="text-base text-muted-foreground">
-          Are you sure you want to delete{" "}
-          <span className="font-semibold text-foreground">{name}</span>? Any deployments that
-          reference this model will need to be updated.
+        <ModalHeader title="Delete Model" />
+        <ModalBody>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete <strong className="text-foreground">{name}</strong>? Deployments that reference it will need
+            updating.
+          </p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="destructive" size="sm" onClick={onConfirm} className="gap-1.5">
-            <Trash2 className="size-3.5" />
-            Delete Model
-          </Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm}>Delete Model</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
@@ -1404,7 +1388,7 @@ function configForClasses(classes: string[]): RuleConfig {
 
 /* ── Add rule from library modal ─────────────────────────────────────────── */
 
-function AddRuleModal({
+export function AddRuleModal({
   rules,
   onCancel,
   onAdd,
@@ -1497,7 +1481,6 @@ function AddRuleModal({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
           <Button size="sm" disabled={picked.length === 0} onClick={() => onAdd(picked)} className="gap-1.5">
             <Plus className="size-3.5" />
             Add {picked.length > 0 ? picked.length : ""} Rule{picked.length === 1 ? "" : "s"}

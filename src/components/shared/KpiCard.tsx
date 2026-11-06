@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 
@@ -7,18 +8,22 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
  *
  * Layout:
  *   ┌────────────────────────────────┐
- *   │ ▔ accent bar (top, h-0.5)      │ ← top accent (use `accent` color token)
- *   │ [icon] LABEL          [Active] │ ← label row + optional "Active Filter" chip
- *   │ 123 / 456                      │ ← big value (text-3xl bold)
- *   │ Sub copy below                 │ ← sub text (text-xs muted)
+ *   │ • Label                [Active] │ ← accent dot + sentence-case label
+ *   │                                │
+ *   │ 123 / 456                      │ ← big neutral value
+ *   │                                │
+ *   │ ↑ 12.5%          sub copy      │ ← footer: optional trend left, sub right
  *   └────────────────────────────────┘
+ *
+ * The accent colour lives only in the small dot beside the label, so values stay
+ * neutral and the card reads calm. Without a trend, `sub` sits on the left.
  *
  * Renders as a `<button>` when `onClick` is set, otherwise a `<div>`.
  *
  * @example
  *   <KpiCard label="Total" value={42} sub="Across sites" accent="primary" />
- *   <KpiCard icon={Video} label="Cameras" value="8 / 11" sub="3 offline"
- *            accent="success" onClick={...} active />
+ *   <KpiCard label="Events" value={128} sub="vs yesterday"
+ *            trend={{ value: "12.5%", direction: "up" }} />
  */
 
 export type KpiAccent =
@@ -33,7 +38,7 @@ export type KpiAccent =
   | "purple"
   | "muted";
 
-const ACCENT_BAR: Record<KpiAccent, string> = {
+const ACCENT_DOT: Record<KpiAccent, string> = {
   primary:        "bg-primary",
   success:        "bg-success",
   warning:        "bg-warning",
@@ -43,36 +48,44 @@ const ACCENT_BAR: Record<KpiAccent, string> = {
   info:           "bg-info",
   secondary:      "bg-secondary",
   purple:         "bg-purple",
-  muted:          "bg-muted-foreground/30",
+  muted:          "bg-muted-foreground/40",
 };
 
-const ACCENT_TEXT: Record<KpiAccent, string> = {
-  primary:        "text-foreground",
-  success:        "text-success",
-  warning:        "text-warning",
-  "sev-critical": "text-sev-critical",
-  "sev-medium":   "text-sev-medium",
-  "sev-low":      "text-sev-low",
-  info:           "text-info",
-  secondary:      "text-secondary",
-  purple:         "text-purple",
-  muted:          "text-muted-foreground",
-};
+export interface KpiTrend {
+  /** Change to show, e.g. "12.5%" or "+4". The arrow is added for you. */
+  value: React.ReactNode;
+  direction: "up" | "down" | "flat";
+  /**
+   * Whether the change is good news. Defaults to up = positive, down = negative.
+   * Set it for metrics where rising is bad (e.g. critical events going up).
+   */
+  sentiment?: "positive" | "negative" | "neutral";
+}
+
+const TREND_ICON = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
+
+const TREND_TONE = {
+  positive: "text-success",
+  negative: "text-sev-critical",
+  neutral:  "text-muted-foreground",
+} as const;
 
 export interface KpiCardProps {
-  /** Uppercase label shown above the value. */
+  /** Label shown above the value (sentence case). */
   label: React.ReactNode;
   /** Main value — usually a number, but can be any node. */
   value: React.ReactNode;
-  /** Small description below the value. */
+  /** Small description in the footer — right-aligned when a trend is shown. */
   sub?: React.ReactNode;
-  /** Optional Lucide icon shown to the left of the label. */
+  /** Optional change indicator shown at the bottom-left. */
+  trend?: KpiTrend;
+  /** Accepted for backwards compatibility; KPI cards never render icons. */
   icon?: React.ElementType;
-  /** Colour token controlling the top accent bar and value tint. Defaults to "primary". */
+  /** Colour token for the dot beside the label. Defaults to "primary". */
   accent?: KpiAccent;
   /** Click handler. When provided, the card is rendered as a button with hover state. */
   onClick?: () => void;
-  /** Active filter state — shows the "Active Filter" chip and primary border. */
+  /** Active filter state — shows the "Active" chip and primary border. */
   active?: boolean;
   /** Extra classes appended to the root. */
   className?: string;
@@ -84,8 +97,7 @@ export function KpiCard({
   label,
   value,
   sub,
-  // Icon prop is accepted for backwards compatibility but intentionally not rendered —
-  // per design system: KPI cards never show icons (uniform look across every module).
+  trend,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   icon: _Icon,
   accent = "primary",
@@ -95,43 +107,63 @@ export function KpiCard({
   className,
 }: KpiCardProps) {
   const Tag = onClick ? "button" : "div";
+  const TrendIcon = trend ? TREND_ICON[trend.direction] : null;
+  const sentiment =
+    trend?.sentiment ?? (trend?.direction === "up" ? "positive" : trend?.direction === "down" ? "negative" : "neutral");
+
   return (
     <Tag
+      type={onClick ? "button" : undefined}
       onClick={onClick}
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-xl border bg-card text-left transition-colors",
-        // Fixed height keeps cards uniform across pages/drawers — generous so sub-text never clips.
-        compact ? "h-[104px] p-4" : "h-[120px] p-4",
+        "relative flex min-w-0 flex-col rounded-xl border bg-card text-left",
+        "transition-colors duration-[var(--duration-fast)] ease-standard",
+        // Fixed height keeps cards uniform across pages/drawers — matches the KPI skeletons.
+        compact ? "h-[104px] p-3.5" : "h-[120px] p-4",
         active ? "border-primary bg-primary-muted" : "border-border",
-        onClick && "hover:border-primary/40",
+        onClick && !active && "hover:border-muted-foreground/30 hover:bg-accent/40",
         className
       )}
     >
-      {/* Top accent bar */}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", active ? "bg-muted-foreground/30" : ACCENT_BAR[accent])} />
-
-      {/* Active filter chip */}
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-
-      {/* Label (no icon — uniform across modules) */}
-      <div className={cn(
-        "mb-1.5 font-semibold uppercase tracking-wider text-muted-foreground",
-        compact ? "text-2xs" : "text-xs"
-      )}>
-        <TruncatedText>{label}</TruncatedText>
+      {/* Label row — the accent dot replaces the old coloured top stroke */}
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[accent])} />
+        <TruncatedText className={cn("min-w-0 flex-1 font-medium text-muted-foreground", compact ? "text-sm" : "text-base")}>
+          {label}
+        </TruncatedText>
+        {active && (
+          <span className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider text-primary">
+            Active
+          </span>
+        )}
       </div>
 
-      {/* Value — smaller, with proper line-height so descenders (g, y, p) aren't clipped */}
-      <div className={cn("font-bold leading-tight", ACCENT_TEXT[accent], compact ? "text-xl" : "text-2xl")}>
+      {/* Value — neutral and prominent; leading-tight keeps descenders unclipped */}
+      <div
+        className={cn(
+          "font-semibold leading-tight tracking-tight tabular-nums text-foreground",
+          compact ? "mt-1.5 text-xl" : "mt-2 text-2xl"
+        )}
+      >
         <TruncatedText>{value}</TruncatedText>
       </div>
 
-      {/* Sub — guaranteed to stay visible inside the fixed height */}
-      {sub && <TruncatedText className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</TruncatedText>}
+      {/* Footer — trend on the left, meta on the right */}
+      {(trend || sub) && (
+        <div className="mt-auto flex min-w-0 items-center gap-2 pt-2 text-xs leading-tight">
+          {trend && TrendIcon && (
+            <span className={cn("inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums", TREND_TONE[sentiment])}>
+              <TrendIcon className="size-3" aria-hidden />
+              {trend.value}
+            </span>
+          )}
+          {sub && (
+            <TruncatedText className={cn("min-w-0 flex-1 text-muted-foreground", trend && "text-right")}>
+              {sub}
+            </TruncatedText>
+          )}
+        </div>
+      )}
     </Tag>
   );
 }

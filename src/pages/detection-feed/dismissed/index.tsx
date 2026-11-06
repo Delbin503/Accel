@@ -26,7 +26,7 @@ import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
+import { RestoreDismissedModal } from "./RestoreDismissedModal";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -599,38 +599,12 @@ export default function DismissedEventsPage() {
       )}
 
       {/* ── Bulk-restore confirmation ────────────────────────────────────── */}
-      <Modal open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
-        <ModalContent size="sm">
-          <ModalHeader
-            title="Restore dismissed events?"
-            description={
-              <>
-                You&apos;re about to restore <strong className="text-foreground">{selectedIds.size}</strong>{" "}
-                event{selectedIds.size === 1 ? "" : "s"} back to the Detection Feed. They&apos;ll re-enter triage
-                and their false-positive feedback will be withdrawn from model retraining.
-              </>
-            }
-          />
-          <ModalBody className="max-h-[40vh] space-y-1.5">
-            {baseItems.filter((d) => selectedIds.has(d.event.id)).map((d) => (
-              <div key={d.event.id} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
-                <span className="font-mono text-xs text-muted-foreground">{d.event.id}</span>
-                <span className="truncate font-semibold text-foreground">{d.event.typeLabel}</span>
-                <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground">
-                  {d.event.siteDisplay} · {d.event.camera}
-                </span>
-              </div>
-            ))}
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-            <Button size="sm" className="gap-1.5" onClick={confirmBulkRestore}>
-              <RotateCcw className="size-3.5" />
-              Restore {selectedIds.size}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <RestoreDismissedModal
+        open={confirmOpen}
+        items={baseItems.filter((d) => selectedIds.has(d.event.id))}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmBulkRestore}
+      />
 
       {/* ── Dismissed event drawer ────────────────────────────────────────── */}
       <DismissedDrawer

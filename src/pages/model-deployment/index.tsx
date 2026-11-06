@@ -962,9 +962,6 @@ export function DeployConfirmModal({
             </ModalBody>
           )}
           <ModalFooter>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Cancel
-            </Button>
             <Button size="sm" onClick={onConfirm} className="gap-1.5">
               <Rocket className="size-3.5" />
               Deploy {selectedCameras.length} Camera{selectedCameras.length === 1 ? "" : "s"}
@@ -1468,45 +1465,19 @@ export function ModelDeploymentsDrawer({
         open={removeOpen}
         onOpenChange={setRemoveOpen}
         destructive
-        title={`Remove ${model.modelName} from ${selectedCount} camera${selectedCount === 1 ? "" : "s"}?`}
-        description="This stops inference on the selected cameras and deletes their deployment records. It cannot be undone."
+        title={`Remove ${model.modelName}?`}
+        description={
+          <>
+            Are you sure you want to remove <strong className="text-foreground">{model.modelName}</strong> from{" "}
+            <strong className="text-foreground">{selectedCount} camera{selectedCount === 1 ? "" : "s"}</strong>?{" "}
+            {activeSelectedCount > 0
+              ? `Detection stops on the ${activeSelectedCount} still running, and their records are deleted.`
+              : "Their deployment records are deleted."}
+          </>
+        }
         confirmLabel={`Remove ${selectedCount} Camera${selectedCount === 1 ? "" : "s"}`}
-        cancelLabel="Cancel"
         onConfirm={confirmRemove}
-        size="lg"
-      >
-        <div className="space-y-3">
-          <div className="rounded-[var(--radius)] border border-border bg-muted/30">
-            <p className="border-b border-border px-3 py-2 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60">
-              Affected cameras ({selectedCount})
-            </p>
-            {/* Capped so a 50-camera selection can't push the footer off-screen. */}
-            <ul className="max-h-44 space-y-1.5 overflow-auto p-3">
-              {selectedRows.map((d) => (
-                <li key={d.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0 truncate text-foreground">{d.cameraName}</span>
-                  <span className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="flex items-start gap-2 rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
-            <div className="space-y-1 text-sm text-foreground">
-              {activeSelectedCount > 0 && (
-                <p>
-                  <strong>{activeSelectedCount}</strong> of these deployment
-                  {activeSelectedCount === 1 ? " is" : "s are"} still <strong>active</strong> — detection stops immediately.
-                </p>
-              )}
-              <p className="text-muted-foreground">
-                Cameras stay online. Redeploy from the Deploy tab to restore coverage.
-              </p>
-            </div>
-          </div>
-        </div>
-      </ConfirmDialog>
+      />
     </div>
   );
 }

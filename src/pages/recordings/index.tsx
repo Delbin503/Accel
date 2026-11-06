@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Download,
   Film,
   HardDrive,
   MapPin,
@@ -111,10 +110,13 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
   ];
 
   return (
-    <div className="relative flex h-[120px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-purple" />
-      <span className="mb-1.5 truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">Storage Total</span>
-      <div className="truncate text-2xl font-bold text-purple">{fmtGb(total)}</div>
+    // Mirrors the shared KpiCard look (accent dot + neutral value); custom only for the usage bar.
+    <div className="relative flex h-[120px] min-w-0 flex-col rounded-xl border border-border bg-card p-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="size-1.5 shrink-0 rounded-full bg-purple" />
+        <span className="truncate text-base font-medium text-muted-foreground">Storage Total</span>
+      </div>
+      <div className="mt-2 truncate text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">{fmtGb(total)}</div>
       {/* Each part is a taller hover target than the 4px bar it draws. */}
       <div className="mt-auto flex gap-px">
         {parts.map((part) => (
@@ -607,48 +609,73 @@ export function ExportRecordingModal({ open, target, onClose, onConfirm }: {
     ? `${rec.id} · ${rec.cameraName} · ${recDate(rec).date}`
     : `${"recs" in target ? target.recs.length : 0} recordings, each with its standby and motion clips`;
 
+  // Group the zip's files by recording type, in the order they first appear —
+  // one row per type says more than a long list of near-identical file names.
+  const groups: { kind: RecordingTypeId; first: string; count: number; mb: number }[] = [];
+  for (const f of files) {
+    const g = groups.find((x) => x.kind === f.kind);
+    if (g) {
+      g.count += 1;
+      g.mb += f.mb;
+    } else {
+      groups.push({ kind: f.kind, first: f.name, count: 1, mb: f.mb });
+    }
+  }
+
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title={rec ? "Export Recording" : "Export Recordings"}
-          description={description}
-        />
-        <ModalBody>
-          <div className="rounded-lg border border-border bg-background p-4">
-            <div className="mb-2.5 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 font-mono text-base font-semibold text-foreground">
-                <Package className="size-3.5 text-primary" />
+      <ModalContent size="sm">
+        <ModalHeader title={rec ? "Export Recording" : "Export Recordings"} description={description} />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {rec ? (
+              <>
+                Export{" "}
+                <strong className="text-foreground">
+                  {rec.id} · {rec.cameraName}
+                </strong>{" "}
+                as one zip
+                {!rec.standby
+                  ? "."
+                  : partial
+                    ? ", with only the clips picked in the drawer."
+                    : ", with its standby and motion clips."}
+              </>
+            ) : (
+              <>
+                Export <strong className="text-foreground">{"recs" in target ? target.recs.length : 0} recordings</strong> as
+                one zip, each with its standby and motion clips.
+              </>
+            )}
+          </p>
+          <ul className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+            {groups.map((g) => {
+              const t = typeById(g.kind);
+              return (
+                <li key={g.kind} className="flex items-center gap-2.5 px-3 py-2.5">
+                  <span className={cn("size-1.5 shrink-0 rounded-full", TONE_CLASSES[t.tone].dot)} />
+                  <span className="w-28 shrink-0 text-sm text-foreground">{t.label}</span>
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
+                    {g.count === 1 ? g.first : `${g.count} files`}
+                  </span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{fmtSize(g.mb)}</span>
+                </li>
+              );
+            })}
+            <li className="flex items-center gap-2.5 bg-muted/30 px-3 py-2.5">
+              <span className="size-1.5 shrink-0" />
+              <span className="min-w-0 max-w-56 shrink-0 truncate font-mono text-sm font-semibold text-foreground">
                 {name}.zip
               </span>
-              <span className="font-mono text-xs text-muted-foreground">
-                {files.length} file{files.length === 1 ? "" : "s"} · {fmtSize(totalMb)}
+              <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+                {files.length} file{files.length === 1 ? "" : "s"}
               </span>
-            </div>
-            {/* Long on a busy night, so the list scrolls rather than the modal. */}
-            <ul className="max-h-56 divide-y divide-border/60 overflow-y-auto rounded-md border border-border">
-              {files.map((f) => (
-                <li key={f.name} className="flex items-center gap-2 px-3 py-1.5">
-                  <span className={cn("size-1.5 shrink-0 rounded-full", TONE_CLASSES[typeById(f.kind).tone].dot)} />
-                  <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">{f.name}</span>
-                  <span className="shrink-0 text-2xs text-muted-foreground">{typeById(f.kind).label}</span>
-                  <span className="w-20 shrink-0 text-right font-mono text-2xs text-muted-foreground">{f.size}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {rec?.standby && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              {partial
-                ? "Only the recordings picked in the drawer are archived — tick the rest to include them."
-                : "The standby recording and its motion clips are part of this camera-day, so they are archived with it."}
-            </p>
-          )}
+              <span className="shrink-0 font-mono text-xs font-semibold text-foreground">{fmtSize(totalMb)}</span>
+            </li>
+          </ul>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="gap-1.5" onClick={onConfirm}>
-            <Download className="size-3.5" />
+          <Button size="sm" onClick={onConfirm}>
             Download zip · {fmtSize(totalMb)}
           </Button>
         </ModalFooter>
@@ -667,42 +694,20 @@ export function DeleteRecordingsModal({ open, recs, onClose, onConfirm }: {
 }) {
   if (recs.length === 0) return null;
   const isBulk = recs.length > 1;
-  const clips = recs.reduce((s, r) => s + (r.standby?.clipCount ?? 0), 0);
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title={isBulk ? `Delete Recordings (${recs.length})` : "Delete Recording"}
-          description="This action cannot be undone."
-          tone="destructive"
-        />
+      <ModalContent size="sm">
+        <ModalHeader title={isBulk ? `Delete Recordings (${recs.length})` : "Delete Recording"} />
         <ModalBody>
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-            <div className="flex items-start gap-3">
-              <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-foreground">You are about to remove:</p>
-                {isBulk ? (
-                  <p className="mt-1 text-sm text-muted-foreground">{recs.length} recordings will be deleted immediately.</p>
-                ) : (
-                  <p className="mt-1 text-base text-muted-foreground">
-                    <span className="font-mono text-sm">{recs[0].id}</span> — {recs[0].cameraName} · {typeById(recs[0].type).label}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          {clips > 0 && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              An operation recording takes its standby, and the motion clips inside it — {clips} clip{clips === 1 ? "" : "s"} in all.
-            </p>
-          )}
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete{" "}
+            <strong className="text-foreground">{isBulk ? `${recs.length} recordings` : recs[0].cameraName}</strong>? This can&apos;t be
+            undone.
+          </p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" variant="destructive" className="gap-1.5" onClick={onConfirm}>
-            <Trash2 className="size-3.5" />
+          <Button size="sm" variant="destructive" onClick={onConfirm}>
             Delete {recs.length} Recording{recs.length === 1 ? "" : "s"}
           </Button>
         </ModalFooter>

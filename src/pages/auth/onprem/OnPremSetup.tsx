@@ -1089,9 +1089,6 @@ export function MemberModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button
             size="sm"
             disabled={!canSubmit}

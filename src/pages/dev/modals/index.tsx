@@ -5,7 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
+import { ModalChromeProvider } from "@/components/shared/Modal";
+import { Button } from "@/components/ui/button";
 import { MODAL_ENTRIES } from "./entries";
+import { LEGACY_CONFIRMS } from "./entries/legacyConfirms";
 import type { ModalEntry, ModalKind } from "./types";
 
 /**
@@ -87,6 +90,130 @@ function EntryCard({ entry, onOpen }: { entry: ModalEntry; onOpen: () => void })
   );
 }
 
+/* ── Redesign preview ───────────────────────────────────────────────────── */
+
+/** Kinds the gallery previews in the plain chrome (bigger title, no description, divider or icons). */
+const PLAIN_KINDS: ModalKind[] = ["confirm", "wizard", "progress"];
+
+/**
+ * Entries restyled in place: the same component in the plain chrome with the
+ * "tidy" frame (550px, capped height that scrolls, no Cancel) — used for long
+ * forms and full editors where a copy would duplicate too much.
+ */
+const IN_PLACE_IDS = [
+  "floor-plan-editor",
+  "model-create",
+  "model-add-step",
+  "model-edit-step",
+  "model-extract-rules",
+  "model-add-rule",
+  "case-change-status",
+  "case-reassign",
+  "case-link-incidents",
+  "case-edit",
+  "rule-condition",
+  "run-confirm",
+  "run-purchase",
+  "deploy-confirm",
+  "signup-invite-users",
+  "onprem-member",
+  "invite-welcome",
+  "setup-complete",
+  "guide-draw-area",
+  "guide-place-camera",
+  "user-invite",
+  "user-manage-sites",
+  "user-edit",
+  "user-suspend",
+  "profile-change-password",
+  "profile-2fa",
+  "billing-add-card",
+  "billing-retry-payment",
+  "billing-purchase-plan",
+  "billing-switch-annual",
+  "user-change-role",
+  "user-accept-ownership",
+  "draw-zone",
+  "draw-zone-wizard",
+  "recording-player",
+];
+
+/**
+ * In-place entries that get the plain header but not the tidy frame: full
+ * editors and players, and modals whose ghost button is a real action, not Cancel.
+ */
+const NO_TIDY_IDS = [
+  "floor-plan-editor",
+  "model-extract-rules",
+  // Ghost / outline footer buttons here are real steps (Back, Decline, Skip), not Cancel.
+  "user-change-role",
+  "user-accept-ownership",
+  "draw-zone",
+  "draw-zone-wizard",
+  // Media player: no footer, extra-large.
+  "recording-player",
+];
+
+/** Redesigned entries that keep their own width: canvas / full-bleed editors. */
+const OWN_WIDTH_IDS = ["draw-zone", "draw-zone-wizard", "floor-plan-editor"];
+
+/** Every redesigned modal shares the confirm width (550px) except the editors above. */
+function isUniformWidth(entry: ModalEntry) {
+  return isRedesigned(entry) && !OWN_WIDTH_IDS.includes(entry.id);
+}
+
+function isTidy(entry: ModalEntry) {
+  return IN_PLACE_IDS.includes(entry.id) && !NO_TIDY_IDS.includes(entry.id);
+}
+
+/**
+ * The "old" side of a redesigned entry: a frozen pre-redesign copy (from
+ * legacy/) when the page component has changed, otherwise the same component
+ * in the classic chrome.
+ */
+function oldRenderFor(entry: ModalEntry) {
+  return (
+    LEGACY_CONFIRMS[entry.id] ??
+    entry.legacyRender ??
+    (PLAIN_KINDS.includes(entry.kind) || IN_PLACE_IDS.includes(entry.id) ? entry.render : undefined)
+  );
+}
+
+/** Entries shown in the plain chrome: redesigned kinds, plus any entry with a redesigned copy. */
+function isRedesigned(entry: ModalEntry) {
+  return PLAIN_KINDS.includes(entry.kind) || IN_PLACE_IDS.includes(entry.id) || Boolean(LEGACY_CONFIRMS[entry.id]);
+}
+
+/* ── Compare card (old vs new) ──────────────────────────────────────────── */
+
+function CompareCard({ entry, onOpen }: { entry: ModalEntry; onOpen: (variant: Variant) => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="truncate text-md font-semibold text-foreground">{entry.name}</p>
+        {/* Trigger, not module: it tells apart entries that share a component name. */}
+        <p className="truncate text-xs text-muted-foreground" title={`${entry.module} · ${entry.trigger}`}>
+          {entry.trigger}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => onOpen("old")}>Old</Button>
+        <Button variant="outline" size="sm" onClick={() => onOpen("new")}>New</Button>
+        <Button size="sm" onClick={() => onOpen("both")}>Both</Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Which version of a redesigned confirm is showing: the page's current one, the
+ * gallery copy, or both side by side.
+ */
+type Variant = "old" | "new" | "both";
+
+const NEXT_VARIANT: Record<Variant, Variant> = { new: "old", old: "both", both: "new" };
+const VARIANT_LABEL: Record<Variant, string> = { old: "Old", new: "New", both: "Side by side" };
+
 /* ── Page ───────────────────────────────────────────────────────────────── */
 
 export default function ModalGalleryPage() {
@@ -97,6 +224,12 @@ export default function ModalGalleryPage() {
     const slug = window.location.hash.replace("#", "");
     return slug && MODAL_ENTRIES.some((e) => e.id === slug) ? slug : null;
   });
+
+  const [variant, setVariant] = React.useState<Variant>("new");
+  const openEntry = React.useCallback((id: string, v: Variant = "new") => {
+    setVariant(v);
+    setActiveId(id);
+  }, []);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -117,7 +250,13 @@ export default function ModalGalleryPage() {
     return [...map.entries()];
   }, [filtered]);
 
+  /* Confirms that have both an old (page) and new (gallery copy) version. */
+  const comparable = React.useMemo(() => filtered.filter((e) => oldRenderFor(e)), [filtered]);
+
   const active = activeId ? MODAL_ENTRIES.find((e) => e.id === activeId) ?? null : null;
+  const legacy = active ? oldRenderFor(active) : undefined;
+  const showingOld = Boolean(legacy) && variant === "old";
+  const showingBoth = Boolean(legacy) && variant === "both";
 
   const close = React.useCallback(() => setActiveId(null), []);
 
@@ -127,6 +266,12 @@ export default function ModalGalleryPage() {
   React.useEffect(() => {
     if (!active) return;
     function onKeyDown(e: KeyboardEvent) {
+      // Alt + V cycles a redesigned confirm: new → old → side by side.
+      if (e.altKey && e.code === "KeyV") {
+        e.preventDefault();
+        setVariant((v) => NEXT_VARIANT[v]);
+        return;
+      }
       if (!e.altKey || (e.key !== "ArrowRight" && e.key !== "ArrowLeft")) return;
       e.preventDefault();
       const list = filtered.length ? filtered : MODAL_ENTRIES;
@@ -154,6 +299,8 @@ export default function ModalGalleryPage() {
           <ArrowLeft className="size-3" />
           <ArrowRight className="size-3" />
           step
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-2xs">Alt V</kbd>
+          old / new / both
         </div>
       </PageHeader>
 
@@ -194,6 +341,31 @@ export default function ModalGalleryPage() {
         </div>
       </div>
 
+      {/* ── Compare: redesigned modals, old vs new ───────────────────────── */}
+      {comparable.length > 0 && (kind === "all" || kind === "modal" || PLAIN_KINDS.includes(kind)) && (
+        <section className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Compare · redesign
+            </h2>
+            <Badge variant="outline" className="font-mono text-3xs">
+              {comparable.length}
+            </Badge>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Old is the modal as it was before the redesign (a frozen copy); New is what the pages show now; Both puts them side by side. Press{" "}
+            <kbd className="rounded border border-border bg-muted px-1 font-mono text-3xs">Alt V</kbd> while one is
+            open to cycle between them.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {comparable.map((entry) => (
+              <CompareCard key={entry.id} entry={entry} onOpen={(v) => openEntry(entry.id, v)} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Groups ───────────────────────────────────────────────────────── */}
       {groups.length === 0 ? (
         <EmptyState
@@ -215,7 +387,7 @@ export default function ModalGalleryPage() {
             </div>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {entries.map((entry) => (
-                <EntryCard key={entry.id} entry={entry} onOpen={() => setActiveId(entry.id)} />
+                <EntryCard key={entry.id} entry={entry} onOpen={() => openEntry(entry.id)} />
               ))}
             </div>
           </section>
@@ -224,13 +396,64 @@ export default function ModalGalleryPage() {
 
       {/* ── Active modal ─────────────────────────────────────────────────── */}
       {active && (
-        <React.Fragment key={active.id}>
-          {active.render(close)}
+        <React.Fragment key={`${active.id}-${legacy ? variant : "new"}`}>
+          {showingBoth && legacy ? (
+            <>
+              {/* Side by side: both dialogs are non-modal, so the gallery draws the backdrop. */}
+              <div
+                className="fixed inset-0 z-[var(--z-drawer)] bg-background/80 backdrop-blur-sm"
+                onClick={close}
+                aria-hidden
+              />
+              <div className="pointer-events-none fixed inset-x-0 top-6 z-[var(--z-toast)]">
+                {[
+                  { side: "left-1/4", label: "Old", sub: "before the redesign" },
+                  { side: "left-3/4", label: "New", sub: "redesign" },
+                ].map((col) => (
+                  <span
+                    key={col.label}
+                    className={cn(
+                      "absolute -translate-x-1/2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm",
+                      col.side
+                    )}
+                  >
+                    <span className="font-semibold text-foreground">{col.label}</span> · {col.sub}
+                  </span>
+                ))}
+              </div>
+              <ModalChromeProvider chrome="classic" placement="left">
+                {legacy(close)}
+              </ModalChromeProvider>
+              <ModalChromeProvider chrome="plain" placement="right" tidy={isTidy(active)} uniformWidth={isUniformWidth(active)}>
+                {active.render(close)}
+              </ModalChromeProvider>
+            </>
+          ) : (
+            /* Confirm, wizard and progress entries preview the plain header (bigger title, no
+               description, divider or icons). The "old" side renders as the page does. */
+            <ModalChromeProvider
+              chrome={!showingOld && isRedesigned(active) ? "plain" : "classic"}
+              tidy={!showingOld && isTidy(active)}
+              uniformWidth={!showingOld && isUniformWidth(active)}
+            >
+              {showingOld && legacy ? legacy(close) : active.render(close)}
+            </ModalChromeProvider>
+          )}
           {/* Reminder strip. Pointer-inert while the modal holds focus, so it
               only ever advertises the keyboard controls. */}
           <div className="pointer-events-none fixed bottom-4 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-full border border-border bg-card/95 px-3 py-1.5 shadow-lg">
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-mono text-2xs text-foreground">{active.name}</span>
+              {legacy && (
+                <span
+                  className={cn(
+                    "rounded-full border px-1.5 py-px text-3xs font-semibold uppercase tracking-wider",
+                    variant === "new" ? "border-primary/40 bg-primary/15 text-primary" : "border-border text-muted-foreground"
+                  )}
+                >
+                  {VARIANT_LABEL[variant]}
+                </span>
+              )}
               <span className="text-muted-foreground/50">
                 {position || "–"}/{filtered.length}
               </span>
@@ -238,6 +461,13 @@ export default function ModalGalleryPage() {
               <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-3xs">Alt</kbd>
               <ArrowLeft className="size-3" />
               <ArrowRight className="size-3" />
+              {legacy && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-3xs">Alt V</kbd>
+                  <span>{VARIANT_LABEL[NEXT_VARIANT[variant]].toLowerCase()}</span>
+                </>
+              )}
               <span className="text-muted-foreground/40">·</span>
               <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-3xs">Esc</kbd>
               <CornerDownLeft className="size-3" />

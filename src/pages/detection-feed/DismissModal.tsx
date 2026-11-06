@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Info, Layers } from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -9,7 +8,7 @@ import {
 } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { ChoiceDropdown } from "@/components/shared/ChoiceDropdown";
 import type { DetectionEvent } from "@/types/detection";
 
 const FP_REASONS = [
@@ -65,84 +64,40 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
     }
   }, [open]);
 
+  const model = event ? event.model.replace(/\.\d+$/, ".3") : "accel-vms v4.3";
+
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title="Dismiss as False Positive"
-          description={event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
-        />
-
+      <ModalContent size="sm">
+        <ModalHeader title="Dismiss as False Positive" />
         <ModalBody className="space-y-4">
-          {/* Bulk banner */}
-          {isBulk && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3">
-              <Layers className="mt-0.5 size-4 flex-shrink-0 text-sev-medium" />
-              <div>
-                <p className="text-sm font-semibold text-sev-medium">
-                  Dismissing {bulkCount} selected events
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  The same reason and notes will be applied to all selected events.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* One sentence replaces the bulk banner and the "feedback retrains" banner. */}
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {isBulk ? (
+              <>
+                Are you sure you want to dismiss <strong className="text-foreground">{bulkCount} selected events</strong>?
+                One reason applies to all, and it retrains <strong className="text-foreground">{model}</strong>.
+              </>
+            ) : (
+              <>
+                Are you sure you want to dismiss <strong className="text-foreground">{event?.id ?? "this event"}</strong>?
+                Your reason retrains <strong className="text-foreground">{model}</strong>.
+              </>
+            )}
+          </p>
 
-          {/* Feedback info banner */}
-          <div className="flex gap-2.5 rounded-lg border border-purple/20 bg-purple-soft p-3">
-            <Info className="mt-0.5 size-4 flex-shrink-0 text-purple" />
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Your feedback retrains the detection model. The more specific you are, the faster{" "}
-              <strong className="text-purple">
-                {event ? event.model.replace(/\.\d+$/, ".3") : "accel-vms v4.3"}
-              </strong>{" "}
-              improves.
-            </p>
-          </div>
-
-          {/* FP reason grid */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Why is this a false positive?
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {FP_REASONS.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedReason(r.id)}
-                  className={cn(
-                    "flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors",
-                    selectedReason === r.id
-                      ? "border-primary bg-primary-muted text-primary"
-                      : "border-border bg-muted hover:border-primary"
-                  )}
-                >
-                  {/* Radio-style circle */}
-                  <span
-                    className={cn(
-                      "mt-0.5 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
-                      selectedReason === r.id
-                        ? "border-primary"
-                        : "border-muted-foreground/40"
-                    )}
-                  >
-                    {selectedReason === r.id && (
-                      <span className="size-2 rounded-full bg-primary" />
-                    )}
-                  </span>
-                  <div>
-                    <div className="font-semibold leading-tight">{r.label}</div>
-                    <div className="mt-0.5 text-2xs text-muted-foreground/70">
-                      {r.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <ChoiceDropdown
+              value={selectedReason}
+              onChange={setSelectedReason}
+              ariaLabel="Why is this a false positive?"
+              options={FP_REASONS.map((r) => ({ value: r.id, label: r.label, description: r.description }))}
+            />
           </div>
 
-          {/* Notes */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes (Optional)
@@ -157,16 +112,8 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="bg-sev-critical-soft text-sev-critical border border-sev-critical hover:bg-sev-critical hover:text-white"
-            onClick={onConfirm}
-          >
-            Dismiss Event
+          <Button size="sm" variant="destructive" onClick={onConfirm}>
+            {isBulk ? `Dismiss ${bulkCount} Events` : "Dismiss Event"}
           </Button>
         </ModalFooter>
       </ModalContent>

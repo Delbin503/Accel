@@ -136,7 +136,6 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} className="gap-1.5">
             <KeyRound className="size-3.5" />
             Update Password
@@ -191,7 +190,6 @@ export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} className="gap-1.5">
             <ShieldCheck className="size-3.5" />
             Enable 2FA

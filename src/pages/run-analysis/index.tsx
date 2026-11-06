@@ -2544,9 +2544,6 @@ export function RunConfirmModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button size="sm" className="gap-1.5" onClick={onConfirm}>
             <Sparkles className="size-3.5" />
             Proceed
@@ -3613,63 +3610,49 @@ const HISTORY_KPI_CONFIGS: {
   key: HistoryKpiFilter;
   label: string;
   sub: string;
-  barClass: string;
-  valueClass: string;
-  activeClass: string;
+  accent: KpiAccent;
   getValue: (items: PastAnalysis[]) => number;
 }[] = [
   {
     key: "all",
     label: "Total Analyses",
     sub: "All recorded runs",
-    barClass: "bg-muted-foreground/30",
-    valueClass: "text-foreground",
-    activeClass: "border-primary",
+    accent: "primary",
     getValue: (items) => items.length,
   },
   {
     key: "passed",
     label: "Passed",
     sub: "Model met the bar",
-    barClass: "bg-success",
-    valueClass: "text-success",
-    activeClass: "border-success",
+    accent: "success",
     getValue: (items) => items.filter((a) => a.status === "passed").length,
   },
   {
     key: "failed",
     label: "Failed",
     sub: "Model below threshold",
-    barClass: "bg-sev-critical",
-    valueClass: "text-sev-critical",
-    activeClass: "border-sev-critical",
+    accent: "sev-critical",
     getValue: (items) => items.filter((a) => a.status === "failed").length,
   },
   {
     key: "approved",
     label: "Approved",
     sub: "Cleared for deployment",
-    barClass: "bg-info",
-    valueClass: "text-info",
-    activeClass: "border-info",
+    accent: "info",
     getValue: (items) => items.filter((a) => a.verdict === "approved").length,
   },
   {
     key: "rejected",
     label: "Rejected",
     sub: "Needs improvement",
-    barClass: "bg-purple",
-    valueClass: "text-purple",
-    activeClass: "border-purple",
+    accent: "purple",
     getValue: (items) => items.filter((a) => a.verdict === "rejected").length,
   },
   {
     key: "pipeline-error",
     label: "Script Errors",
     sub: "Run failed mid-flow",
-    barClass: "bg-warning",
-    valueClass: "text-warning",
-    activeClass: "border-warning",
+    accent: "warning",
     getValue: (items) => items.filter((a) => a.runState === "failed").length,
   },
 ];
@@ -3686,27 +3669,14 @@ function HistoryKpiCard({
   onClick: () => void;
 }) {
   return (
-    <button
+    <SharedKpiCard
+      label={config.label}
+      value={config.getValue(items)}
+      sub={config.sub}
+      accent={config.accent}
+      active={active}
       onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/60",
-        active ? config.activeClass : "border-border"
-      )}
-    >
-      {active && (
-        <span className="absolute right-2 top-2 rounded bg-primary/10 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-primary">
-          Active Filter
-        </span>
-      )}
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", config.barClass)} />
-      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {config.label}
-      </div>
-      <div className={cn("text-3xl font-bold leading-none", config.valueClass)}>
-        {config.getValue(items)}
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground">{config.sub}</div>
-    </button>
+    />
   );
 }
 
@@ -3860,7 +3830,7 @@ function HistoryTab({
           key={cfg.key}
           config={cfg}
           items={pastAnalyses}
-          active={kpiFilter === cfg.key}
+          active={cfg.key !== "all" && kpiFilter === cfg.key}
           onClick={() => {
             setKpiFilter((cur) => (cur === cfg.key ? "all" : cfg.key));
             setPage(1);
@@ -4237,28 +4207,17 @@ export function DeleteAnalysisModal({
   return (
     <Modal open={!!target} onOpenChange={(v) => !v && onCancel()}>
       <ModalContent size="sm">
-        <ModalHeader
-          title="Delete Analysis"
-          description="This action cannot be undone."
-          icon={Trash2}
-          tone="destructive"
-        />
+        <ModalHeader title="Delete Analysis" />
         {target && (
-          <ModalBody className="text-base text-muted-foreground">
-            Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">{target.id}</span>{" "}
-            <span className="font-semibold text-foreground">— {target.name}</span>? Any
-            references to this run from validation history will be removed.
+          <ModalBody>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Are you sure you want to delete <strong className="text-foreground">{target.name}</strong>? Its validation history references
+              go too.
+            </p>
           </ModalBody>
         )}
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="destructive" size="sm" className="gap-1.5" onClick={onConfirm}>
-            <Trash2 className="size-3.5" />
-            Delete Analysis
-          </Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm}>Delete Analysis</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

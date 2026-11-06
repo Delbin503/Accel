@@ -242,7 +242,6 @@ export function AddCardModal({ open, onClose, onSave }: {
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={handleAdd} className="gap-1.5">
             <CreditCard className="size-3.5" /> Add Card
           </Button>
@@ -318,7 +317,6 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
           </button>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <RefreshCw className="size-3.5" /> Retry ${total.toLocaleString()}
           </Button>
@@ -409,7 +407,6 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <Check className="size-3.5" /> Confirm & subscribe
           </Button>
@@ -553,7 +550,6 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Keep monthly</Button>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
             <Check className="size-3.5" /> Switch & pay ${dueToday.toLocaleString()}
           </Button>
@@ -1606,84 +1602,44 @@ export default function BillingPage() {
         onOpenChange={setCancelOpen}
         destructive
         title="Cancel subscription?"
-        description={`Your ${activePlan.name} plan stays active until ${renewsDisplay}. After that, access to all ${acct.sites.length} sites will be suspended.`}
+        description={
+          <>
+            Are you sure you want to cancel <strong className="text-foreground">{activePlan.name}</strong>? It stays active until{" "}
+            <strong className="text-foreground">{renewsDisplay}</strong>, then all {acct.sites.length} sites are suspended.
+          </>
+        }
         confirmLabel="Cancel subscription"
-        cancelLabel="Keep plan"
         onConfirm={cancelSubscription}
-        size="lg"
-      >
-        <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
-          <p className="mb-2 font-semibold text-foreground">What happens when it ends</p>
-          <ul className="space-y-1.5 text-muted-foreground">
-            {[
-              "Live detection and recording stop across all sites",
-              "Team members lose access to dashboards",
-              "Recordings are retained for 30 days, then deleted",
-            ].map((t) => (
-              <li key={t} className="flex items-start gap-2">
-                <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </ConfirmDialog>
+      />
 
       <ConfirmDialog
         open={resumeOpen}
         onOpenChange={setResumeOpen}
-        icon={RotateCcw}
         title="Resume subscription?"
-        description={`Your ${activePlan.name} plan will stay active and renew on ${renewsDisplay} at $${acctTotal.toLocaleString()}/${perCycle}.`}
+        description={
+          <>
+            Are you sure you want to resume <strong className="text-foreground">{activePlan.name}</strong>? It renews on <strong className="text-foreground">{renewsDisplay}</strong> at{" "}
+            <strong className="text-foreground">${acctTotal.toLocaleString()}/{perCycle}</strong>.
+          </>
+        }
         confirmLabel="Resume subscription"
-        cancelLabel="Not now"
         onConfirm={resumeSubscription}
-        size="lg"
-      >
-        <div className="rounded-lg border border-success/30 bg-success/[0.05] p-3 text-sm">
-          <p className="mb-2 font-semibold text-foreground">What stays the same</p>
-          <ul className="space-y-1.5 text-muted-foreground">
-            {[
-              `Live detection and recording continue across all ${acct.sites.length} sites`,
-              "Team members keep access to dashboards",
-              "Seats, cameras and payment method stay unchanged",
-            ].map((t) => (
-              <li key={t} className="flex items-start gap-2">
-                <Check className="mt-0.5 size-3.5 flex-shrink-0 text-success" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </ConfirmDialog>
+      />
 
       <ConfirmDialog
         open={endNowOpen}
         onOpenChange={setEndNowOpen}
         destructive
         title="End subscription now?"
-        description={`This ends your ${activePlan.name} plan immediately instead of on ${renewsDisplay}. You won't be refunded for the remaining period.`}
+        description={
+          <>
+            Are you sure you want to end <strong className="text-foreground">{activePlan.name}</strong> today instead of on {renewsDisplay}? There&apos;s
+            no refund for the remaining period.
+          </>
+        }
         confirmLabel="End now"
-        cancelLabel="Keep until renewal"
         onConfirm={endSubscriptionNow}
-        size="lg"
-      >
-        <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
-          <p className="mb-2 font-semibold text-foreground">What happens immediately</p>
-          <ul className="space-y-1.5 text-muted-foreground">
-            {[
-              `Live detection and recording stop across all ${acct.sites.length} sites`,
-              "Team members lose access to dashboards",
-              "Recordings are retained for 30 days, then deleted",
-            ].map((t) => (
-              <li key={t} className="flex items-start gap-2">
-                <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </ConfirmDialog>
+      />
 
       <PurchasePlanModal
         tier={purchaseTier}

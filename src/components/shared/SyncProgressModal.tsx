@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CheckCircle2, CircleDot, LoaderCircle, X } from "lucide-react";
+import { CheckCircle2, CircleDot, LoaderCircle } from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -9,12 +9,13 @@ import {
 } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ProgressRow } from "@/components/shared/ProgressRow";
 
 /**
- * Canonical "device is syncing" progress modal. Replaces the two hand-rolled
- * sync modals (NVR devices + Cameras) so both stay on the same panel layout
- * the rest of the app's dialogs use: bordered sections, eyebrow labels and a
- * single right-aligned footer action.
+ * Canonical "device is syncing" progress modal (NVR devices + Cameras): one
+ * sentence, a labelled progress bar, the stage checklist, and one footer
+ * action — Cancel while running, a disabled "Finishing…" at 100% until the
+ * caller closes it.
  *
  * Progress is simulated here — the caller owns when the sync actually settles.
  */
@@ -29,9 +30,6 @@ export interface SyncProgressModalProps {
   /** Footer button copy. */
   cancelLabel?: string;
 }
-
-const RADIUS = 34;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export function SyncProgressModal({
   title, deviceLabel, stages, onCancel, cancelLabel = "Cancel Sync",
@@ -55,97 +53,53 @@ export function SyncProgressModal({
 
   return (
     <Modal open onOpenChange={() => { /* not dismissible while syncing */ }}>
-      <ModalContent size="lg" showCloseButton={false}>
-        <ModalHeader
-          title={title}
-          description={done ? "Sync complete — applying changes…" : "Keep this window open until the sync finishes."}
-        />
-
-        <ModalBody className="space-y-3">
-          {/* Progress */}
-          <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Sync Progress
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="relative shrink-0">
-                <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90">
-                  <circle cx="40" cy="40" r={RADIUS} fill="none" stroke="currentColor" strokeWidth="7" className="text-muted" />
-                  <circle
-                    cx="40" cy="40" r={RADIUS}
-                    fill="none"
-                    stroke={done ? "var(--color-success)" : "var(--primary)"}
-                    strokeWidth="7"
-                    strokeDasharray={`${(progress / 100) * CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                    strokeLinecap="round"
-                    className="transition-all duration-200"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-xl font-bold text-foreground">{progress}%</p>
-                </div>
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-md font-semibold text-foreground">{deviceLabel}</p>
-                <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                  {done ? "All steps complete" : stages[stageIndex]}
-                </p>
-                <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={cn("h-full transition-all duration-200", done ? "bg-success" : "bg-primary")}
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Steps */}
-          <div className="rounded-lg border border-border bg-background p-3.5">
-            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Steps
-            </p>
-            <ul className="space-y-2">
-              {stages.map((stage, i) => {
-                const stageDone = done || i < stageIndex;
-                const active = !done && i === stageIndex;
-                return (
-                  <li key={stage} className="flex items-center gap-2">
-                    {stageDone ? (
-                      <CheckCircle2 className="size-3.5 shrink-0 text-success" />
-                    ) : active ? (
-                      <LoaderCircle className="size-3.5 shrink-0 animate-spin text-primary" />
-                    ) : (
-                      <CircleDot className="size-3.5 shrink-0 text-muted-foreground/40" />
+      <ModalContent size="sm" showCloseButton={false}>
+        <ModalHeader title={done ? "Sync complete" : title} />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {done ? (
+              <><strong className="text-foreground">{deviceLabel}</strong> is synced. Changes are being applied.</>
+            ) : (
+              <>
+                Syncing <strong className="text-foreground">{deviceLabel}</strong>. Keep this window open until it
+                finishes.
+              </>
+            )}
+          </p>
+          <ProgressRow progress={progress} label={done ? "All steps complete" : `${stages[stageIndex]}…`} />
+          <ul className="space-y-2">
+            {stages.map((stage, i) => {
+              const stageDone = done || i < stageIndex;
+              const active = !done && i === stageIndex;
+              return (
+                <li key={stage} className="flex items-center gap-2 text-sm">
+                  {stageDone ? (
+                    <CheckCircle2 className="size-3.5 shrink-0 text-success" />
+                  ) : active ? (
+                    <LoaderCircle className="size-3.5 shrink-0 animate-spin text-primary" />
+                  ) : (
+                    <CircleDot className="size-3.5 shrink-0 text-muted-foreground/40" />
+                  )}
+                  <span
+                    className={cn(
+                      "truncate",
+                      active ? "font-semibold text-foreground" : stageDone ? "text-muted-foreground" : "text-muted-foreground/50"
                     )}
-                    <span
-                      className={cn(
-                        "truncate text-sm",
-                        active ? "font-semibold text-foreground"
-                          : stageDone ? "text-muted-foreground"
-                          : "text-muted-foreground/50",
-                      )}
-                    >
-                      {stage}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  >
+                    {stage}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </ModalBody>
-
         <ModalFooter>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onCancel}
-            className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
-          >
-            <X className="size-3.5" />
-            {cancelLabel}
-          </Button>
+          {/* At 100% the caller closes the modal on its own timer; Cancel would misreport a cancel. */}
+          {done ? (
+            <Button size="sm" disabled>Finishing…</Button>
+          ) : (
+            <Button variant="destructive" size="sm" onClick={onCancel}>{cancelLabel}</Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>

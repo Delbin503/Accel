@@ -237,9 +237,6 @@ export function ChangeStatusModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button size="sm" disabled={picked === currentStatus} onClick={() => onConfirm(picked)}>
             Update Status
           </Button>
@@ -376,9 +373,6 @@ export function ReassignModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button size="sm" disabled={picked.id === current.id} onClick={() => onConfirm(picked)}>
             Reassign
           </Button>
@@ -558,9 +552,6 @@ export function LinkNewIncidentsModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button
             size="sm"
             disabled={selectedIds.size === 0}
@@ -689,9 +680,6 @@ export function EditCaseModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button
             size="sm"
             disabled={unchanged}
@@ -709,7 +697,6 @@ export function EditCaseModal({
 
 export function DeleteCaseModal({
   open,
-  caseId,
   caseTitle,
   onClose,
   onConfirm,
@@ -722,45 +709,16 @@ export function DeleteCaseModal({
 }) {
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title="Delete Case"
-          description="This action cannot be undone."
-          tone="destructive"
-        />
-
+      <ModalContent size="sm">
+        <ModalHeader title="Delete Case" />
         <ModalBody>
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-            <div className="flex items-start gap-3">
-              <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
-              <div>
-                <p className="text-base font-semibold text-foreground">
-                  You are about to permanently delete:
-                </p>
-                <p className="mt-1 font-mono text-sm text-muted-foreground">{caseId}</p>
-                <p className="mt-0.5 text-base text-muted-foreground">{caseTitle}</p>
-              </div>
-            </div>
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            All linked incident associations will be removed. The original detection events will not
-            be affected.
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete <strong className="text-foreground">{caseTitle}</strong>? Its incident links go too; detection
+            events stay.
           </p>
         </ModalBody>
-
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="gap-1.5"
-            onClick={onConfirm}
-          >
-            <Trash2 className="size-3.5" />
-            Delete Case
-          </Button>
+          <Button size="sm" variant="destructive" onClick={onConfirm}>Delete Case</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -1,15 +1,25 @@
 import {
-  UserDrawer, InviteUsersModal, ChangeRoleModal, ManageSiteModal, EditUserModal,
-  SuspendUserModal, ReinstateModal, DeleteUserModal, ResetConfirmModal,
+  UserDrawer,
+  InviteUsersModal,
+  ChangeRoleModal,
+  ManageSiteModal,
+  EditUserModal,
+  SuspendUserModal,
   type SeatUsage,
 } from "@/pages/user-management";
 import { ChangePasswordModal, TwoFAModal } from "@/pages/profile";
-import { DeleteAccountModal } from "@/pages/settings";
-import { AddCardModal, RetryPaymentModal, PurchasePlanModal, InvoiceDetailDrawer } from "@/pages/billing";
+import { AddCardModal, RetryPaymentModal, PurchasePlanModal, InvoiceDetailDrawer, SwitchToAnnualModal } from "@/pages/billing";
 import { MOCK_USERS } from "@/mocks/users";
 import type { UserRole } from "@/types/users";
-import { MOCK_SEATS, MOCK_INVOICES } from "@/mocks/licenses";
+import { MOCK_SEATS, MOCK_INVOICES, ACCOUNT_SUBSCRIPTION } from "@/mocks/licenses";
+import { AcceptOwnershipModal, type OwnershipRequest } from "@/pages/user-management/AcceptOwnershipModal";
+import { DeleteAccountCopy, DeleteUserCopy, ReinstateUserCopy, ResetTwoFaCopy } from "../confirmCopies";
+import { CancelSubscriptionCopy, ResumeSubscriptionCopy, EndSubscriptionCopy } from "../confirmCopies";
+import { PLAN, RENEWS, SITE_COUNT, MONTHLY_TOTAL } from "./inlineConfirmData";
 import type { ModalEntry } from "../types";
+import { InviteUsersModal as LegacyInviteUsersModal, ManageSiteModal as LegacyManageSiteModal, EditUserModal as LegacyEditUserModal, SuspendUserModal as LegacySuspendUserModal } from "@/pages/dev/modals/legacy/pages/user-management";
+import { ChangePasswordModal as LegacyChangePasswordModal, TwoFAModal as LegacyTwoFAModal } from "@/pages/dev/modals/legacy/pages/profile";
+import { AddCardModal as LegacyAddCardModal, RetryPaymentModal as LegacyRetryPaymentModal, PurchasePlanModal as LegacyPurchasePlanModal, SwitchToAnnualModal as LegacySwitchToAnnualModal } from "@/pages/dev/modals/legacy/pages/billing";
 
 const user = MOCK_USERS[1];
 /** Seat rollup the user-management page normally computes from live users. */
@@ -35,6 +45,13 @@ const cards = [
   { id: "card-1", brand: "Visa" as const, last4: "6411", expiryMonth: "04", expiryYear: "28", isDefault: true },
   { id: "card-2", brand: "Mastercard" as const, last4: "2210", expiryMonth: "11", expiryYear: "27", isDefault: false },
 ];
+
+const ownershipRequest: OwnershipRequest = {
+  orgName: "Astra Security",
+  fromName: "Mei Lin Tan",
+  currentRole: "Admin",
+  expiresAt: "12 Nov 2026",
+};
 
 const failedInvoice = MOCK_INVOICES.find((i) => i.status === "failed") ?? MOCK_INVOICES[0];
 
@@ -97,9 +114,12 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "modal",
     trigger: "User Management → Invite Users.",
-    note: "Seat availability gates the role picker.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. Seat availability gates the role picker.",
     render: (close) => (
       <InviteUsersModal open onClose={close} onInvite={() => close()} seatUsage={seatUsage} />
+    ),
+    legacyRender: (close) => (
+      <LegacyInviteUsersModal open onClose={close} onInvite={() => close()} seatUsage={seatUsage} />
     ),
   },
   {
@@ -109,7 +129,7 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "modal",
     trigger: "User row menu → Change role.",
-    note: "Offers a seat purchase when the target role is full.",
+    note: "Restyled in place (plain header) — the page still uses its own version. Offers a seat purchase when the target role is full.",
     render: (close) => (
       <ChangeRoleModal
         open
@@ -130,8 +150,12 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "modal",
     trigger: "User row menu → Manage site access.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <ManageSiteModal open users={[user]} onClose={close} onConfirm={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacyManageSiteModal open users={[user]} onClose={close} onConfirm={() => close()} />
     ),
   },
   {
@@ -141,8 +165,12 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "modal",
     trigger: "User row menu → Edit user.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <EditUserModal open user={user} onClose={close} onConfirm={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacyEditUserModal open user={user} onClose={close} onConfirm={() => close()} />
     ),
   },
   {
@@ -152,9 +180,12 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "modal",
     trigger: "User row menu → Suspend.",
-    note: "Duration + reason capture.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. Duration + reason capture.",
     render: (close) => (
       <SuspendUserModal open users={[user]} onClose={close} onConfirm={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacySuspendUserModal open users={[user]} onClose={close} onConfirm={() => close()} />
     ),
   },
   {
@@ -164,9 +195,8 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "confirm",
     trigger: "Suspended user → Reinstate.",
-    render: (close) => (
-      <ReinstateModal open users={[user]} onClose={close} onConfirm={close} />
-    ),
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <ReinstateUserCopy user={user} onClose={close} />,
   },
   {
     id: "user-delete",
@@ -175,10 +205,8 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "confirm",
     trigger: "User row menu → Delete.",
-    note: "Captures a deletion note for the audit trail.",
-    render: (close) => (
-      <DeleteUserModal open users={[user]} onClose={close} onConfirm={() => close()} />
-    ),
+    note: "Gallery copy with the unified confirm look — the page still uses its own version. Captures a deletion note for the audit trail.",
+    render: (close) => <DeleteUserCopy user={user} onClose={close} />,
   },
   {
     id: "user-reset-confirm",
@@ -187,20 +215,25 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/user-management/index.tsx",
     kind: "confirm",
     trigger: "User row menu → Reset password / Reset 2FA.",
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <ResetTwoFaCopy user={user} onClose={close} />,
+  },
+
+  {
+    id: "user-accept-ownership",
+    name: "AcceptOwnershipModal",
+    module: "System · User Management",
+    file: "src/pages/user-management/AcceptOwnershipModal.tsx",
+    kind: "modal",
+    trigger: "Not opened from any page yet.",
+    note: "Restyled in place (plain header) — the page still uses its own version. Two steps: review and accept, or decline with an optional reason.",
     render: (close) => (
-      <ResetConfirmModal
+      <AcceptOwnershipModal
         open
-        title="Reset 2FA"
-        description="The user re-enrols a new authenticator on their next sign-in."
-        confirmLabel="Reset 2FA"
-        onClose={close}
-        onConfirm={close}
-        detail={
-          <>
-            <strong className="text-foreground">{user.fullName}</strong>'s current authenticator stops working
-            immediately. They'll be walked through enrolment the next time they sign in.
-          </>
-        }
+        onOpenChange={(v) => !v && close()}
+        request={ownershipRequest}
+        onAccept={close}
+        onDecline={() => close()}
       />
     ),
   },
@@ -213,7 +246,9 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/profile/index.tsx",
     kind: "modal",
     trigger: "Profile → Change password.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => <ChangePasswordModal open onClose={close} />,
+    legacyRender: (close) => <LegacyChangePasswordModal open onClose={close} />,
   },
   {
     id: "profile-2fa",
@@ -222,8 +257,9 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/profile/index.tsx",
     kind: "modal",
     trigger: "Profile → Two-factor authentication → Enable.",
-    note: "QR enrolment + code verification.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. QR enrolment + code verification.",
     render: (close) => <TwoFAModal open onClose={close} onEnable={close} />,
+    legacyRender: (close) => <LegacyTwoFAModal open onClose={close} onEnable={close} />,
   },
   {
     id: "settings-delete-account",
@@ -232,8 +268,8 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/settings/index.tsx",
     kind: "confirm",
     trigger: "Settings → Danger zone → Delete workspace.",
-    note: "Type-to-confirm on the org name.",
-    render: (close) => <DeleteAccountModal onClose={close} orgName="Astra Security" />,
+    note: "Gallery copy with the unified confirm look — the page still uses its own version. Type-to-confirm on the org name.",
+    render: (close) => <DeleteAccountCopy orgName="Astra Security" onClose={close} />,
   },
   {
     id: "billing-add-card",
@@ -242,7 +278,9 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/billing/index.tsx",
     kind: "modal",
     trigger: "Billing → Payment methods → Add card.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => <AddCardModal open onClose={close} onSave={() => close()} />,
+    legacyRender: (close) => <LegacyAddCardModal open onClose={close} onSave={() => close()} />,
   },
   {
     id: "billing-retry-payment",
@@ -251,8 +289,19 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/billing/index.tsx",
     kind: "modal",
     trigger: "Billing → failed invoice → Retry payment.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <RetryPaymentModal
+        open
+        invoice={failedInvoice}
+        cards={cards}
+        onClose={close}
+        onAddCard={() => undefined}
+        onConfirm={() => close()}
+      />
+    ),
+    legacyRender: (close) => (
+      <LegacyRetryPaymentModal
         open
         invoice={failedInvoice}
         cards={cards}
@@ -281,6 +330,7 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
     file: "src/pages/billing/index.tsx",
     kind: "modal",
     trigger: "Billing → plan card → Upgrade / Purchase.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <PurchasePlanModal
         tier="professional"
@@ -291,5 +341,80 @@ export const SYSTEM_ENTRIES: ModalEntry[] = [
         onConfirm={() => close()}
       />
     ),
+    legacyRender: (close) => (
+      <LegacyPurchasePlanModal
+        tier="professional"
+        cycle="annual"
+        cards={cards}
+        onClose={close}
+        onAddCard={() => undefined}
+        onConfirm={() => close()}
+      />
+    ),
+  },
+  {
+    id: "billing-switch-annual",
+    name: "SwitchToAnnualModal",
+    module: "Account · Billing",
+    file: "src/pages/billing/index.tsx",
+    kind: "modal",
+    trigger: "Billing → plan card → Switch to annual.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. Unused monthly time is credited against the annual charge.",
+    render: (close) => (
+      <SwitchToAnnualModal
+        tier={ACCOUNT_SUBSCRIPTION.planTier}
+        seats={ACCOUNT_SUBSCRIPTION.seats}
+        credit={420}
+        daysLeft={ACCOUNT_SUBSCRIPTION.daysLeftInPeriod}
+        renewsOn="5 Nov 2027"
+        cards={cards}
+        onClose={close}
+        onAddCard={() => undefined}
+        onConfirm={() => close()}
+      />
+    ),
+    legacyRender: (close) => (
+      <LegacySwitchToAnnualModal
+        tier={ACCOUNT_SUBSCRIPTION.planTier}
+        seats={ACCOUNT_SUBSCRIPTION.seats}
+        credit={420}
+        daysLeft={ACCOUNT_SUBSCRIPTION.daysLeftInPeriod}
+        renewsOn="5 Nov 2027"
+        cards={cards}
+        onClose={close}
+        onAddCard={() => undefined}
+        onConfirm={() => close()}
+      />
+    ),
+  },
+  {
+    id: "billing-cancel-subscription",
+    name: "ConfirmDialog (Cancel subscription)",
+    module: "Account · Billing",
+    file: "src/pages/billing/index.tsx",
+    kind: "confirm",
+    trigger: "Billing → plan card → Cancel subscription.",
+    note: "Redesigned copy — the page still uses its own version. Built inline with ConfirmDialog.",
+    render: (close) => <CancelSubscriptionCopy plan={PLAN} renews={RENEWS} sites={SITE_COUNT} onClose={close} />,
+  },
+  {
+    id: "billing-resume-subscription",
+    name: "ConfirmDialog (Resume subscription)",
+    module: "Account · Billing",
+    file: "src/pages/billing/index.tsx",
+    kind: "confirm",
+    trigger: "Billing → cancelled plan → Resume subscription.",
+    note: "Redesigned copy — the page still uses its own version. Built inline with ConfirmDialog.",
+    render: (close) => <ResumeSubscriptionCopy plan={PLAN} renews={RENEWS} total={MONTHLY_TOTAL} onClose={close} />,
+  },
+  {
+    id: "billing-end-subscription",
+    name: "ConfirmDialog (End subscription)",
+    module: "Account · Billing",
+    file: "src/pages/billing/index.tsx",
+    kind: "confirm",
+    trigger: "Billing → cancelled plan → End now.",
+    note: "Redesigned copy — the page still uses its own version. Built inline with ConfirmDialog.",
+    render: (close) => <EndSubscriptionCopy plan={PLAN} renews={RENEWS} onClose={close} />,
   },
 ];

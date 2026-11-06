@@ -22,11 +22,12 @@ export interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: React.ReactNode;
-  /** Shown under the title. Required so the header always explains the action. */
+  /** The body's one line — phrase it "Are you sure you want to…" with the item in bold. */
   description: React.ReactNode;
-  /** Optional glyph beside the title (defaults to none). */
+  /** Deprecated — titles carry no icon in the current look. Accepted for old callers. */
   icon?: LucideIcon;
   confirmLabel?: string;
+  /** Deprecated — confirms have no Cancel button (✕ / Esc close). Accepted for old callers. */
   cancelLabel?: string;
   /** Destructive styles the confirm button and signals an irreversible action. */
   destructive?: boolean;
@@ -45,9 +46,7 @@ function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  icon,
   confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
   destructive = false,
   loading = false,
   onConfirm,
@@ -58,24 +57,14 @@ function ConfirmDialog({
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent size={size} className={cn(className)}>
-        <ModalHeader
-          title={title}
-          description={description}
-          icon={icon}
-          tone={destructive ? "destructive" : "default"}
-        />
-        {children ? (
-          <ModalBody className="space-y-3">{children}</ModalBody>
-        ) : null}
+        {/* Neutral title; the description is the body's one "Are you sure…" line. */}
+        <ModalHeader title={title} />
+        <ModalBody className="space-y-3">
+          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+          {children}
+        </ModalBody>
+        {/* One action — the ✕ / Esc close, so there is no Cancel button. */}
         <ModalFooter>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            {cancelLabel}
-          </Button>
           <Button
             size="sm"
             variant={destructive ? "destructive" : "default"}

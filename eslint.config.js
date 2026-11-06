@@ -22,7 +22,9 @@ const noArbitraryTextSize = [
 ]
 
 export default defineConfig([
-  globalIgnores(['dist', 'storybook-static']),
+  // legacy/ holds generated, frozen copies of pre-redesign modals for the Modal
+  // Gallery's compare view; they keep the lint debt they had when frozen.
+  globalIgnores(['dist', 'storybook-static', 'src/pages/dev/modals/legacy/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

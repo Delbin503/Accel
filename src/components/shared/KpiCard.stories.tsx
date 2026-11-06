@@ -80,3 +80,19 @@ export const ActiveFilter: Story = {
     onClick: () => {},
   },
 };
+
+export const WithTrend: Story = {
+  render: () => (
+    <KpiGrid cols={3}>
+      <KpiCard label="Total Cases" value={250} sub="+60 added" accent="primary" trend={{ value: "12.5%", direction: "up" }} />
+      <KpiCard label="Closed" value={60} sub="+40 closed" accent="success" trend={{ value: "2.5%", direction: "up" }} />
+      <KpiCard
+        label="Critical Events"
+        value={14}
+        sub="vs prior"
+        accent="sev-critical"
+        trend={{ value: "8.0%", direction: "up", sentiment: "negative" }}
+      />
+    </KpiGrid>
+  ),
+};

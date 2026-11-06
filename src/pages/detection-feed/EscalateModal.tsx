@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Layers, Search, Check } from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -14,80 +13,13 @@ import { cn } from "@/lib/utils";
 import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
 import { ASSIGNEES } from "@/mocks/incidentCases";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { ChoiceDropdown } from "@/components/shared/ChoiceDropdown";
 
 export interface EscalateFormData {
   title: string;
   severity: Severity;
   assignee: CaseAssignee;
   notes: string;
-}
-
-/* Searchable assignee combobox — typeahead with name + id matching. */
-function AssigneeSearchSelect({ value, onChange }: { value: CaseAssignee; onChange: (next: CaseAssignee) => void }) {
-  const [query, setQuery] = React.useState("");
-  const [open, setOpen] = React.useState(false);
-  const wrapperRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!wrapperRef.current) return;
-      if (!wrapperRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, []);
-
-  const filtered = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return ASSIGNEES;
-    return ASSIGNEES.filter((a) =>
-      `${a.name} ${a.id}`.toLowerCase().includes(q)
-    );
-  }, [query]);
-
-  const displayLabel = `${value.name} (${value.id})`;
-
-  return (
-    <div ref={wrapperRef} className="relative">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={open ? query : displayLabel}
-          placeholder="Search assignees by name or ID…"
-          onFocus={() => { setOpen(true); setQuery(""); }}
-          onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); }}
-          className="h-9 pl-9 text-base"
-        />
-      </div>
-      {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-3 text-center text-sm italic text-muted-foreground">No assignees match "{query}".</p>
-          ) : (
-            filtered.map((a) => {
-              const selected = a.id === value.id;
-              return (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => { onChange(a); setOpen(false); setQuery(""); }}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-left text-base hover:bg-muted/50",
-                    selected && "bg-primary/10"
-                  )}
-                >
-                  <Check className={cn("size-3 flex-shrink-0", selected ? "text-primary" : "opacity-0")} strokeWidth={3} />
-                  <TruncatedText text={a.name} className="text-foreground" />
-                  <span className="ml-auto font-mono text-2xs text-muted-foreground">{a.id}</span>
-                </button>
-              );
-            })
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
 
 const SLA_BY_SEVERITY: Record<
@@ -154,29 +86,21 @@ export function EscalateModal({
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title="Escalate to Incident Case"
-          description={event ? `From event ${event.id}` : isBulk ? `From ${bulkCount} selected events` : "From selected events"}
-        />
-
+      <ModalContent size="sm">
+        <ModalHeader title="Escalate to Incident Case" />
         <ModalBody className="space-y-4">
-          {/* Bulk banner */}
-          {isBulk && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary-muted p-3">
-              <Layers className="mt-0.5 size-4 flex-shrink-0 text-primary" />
-              <div>
-                <p className="text-sm font-semibold text-primary">
-                  Escalating {bulkCount} selected events
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  All events will be linked to this new incident case.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* One sentence replaces the description and the bulk banner. */}
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {isBulk ? (
+              <>
+                Create one case from <strong className="text-foreground">{bulkCount} selected events</strong>;
+                they&apos;ll all be linked to it.
+              </>
+            ) : (
+              <>Create an incident case from <strong className="text-foreground">{event?.id}</strong>.</>
+            )}
+          </p>
 
-          {/* Case title */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
@@ -185,13 +109,12 @@ export function EscalateModal({
               value={title}
               onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
               aria-invalid={!!titleErr}
-              className="text-base"
+              className="h-9 text-base"
               placeholder="Describe the incident..."
             />
             {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
           </div>
 
-          {/* Severity + Assignee */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -201,12 +124,11 @@ export function EscalateModal({
                 {(["low", "medium", "critical"] as Severity[]).map((sev) => (
                   <button
                     key={sev}
+                    type="button"
                     onClick={() => setPickedSev(sev)}
                     className={cn(
-                      "flex-1 rounded border px-2 py-2 text-2xs font-bold uppercase tracking-wider text-muted-foreground transition-colors",
-                      pickedSev === sev
-                        ? SEV_OPTION_STYLES[sev]
-                        : "border-border bg-muted hover:border-primary"
+                      "h-9 flex-1 rounded-md border text-2xs font-bold uppercase tracking-wider transition-colors",
+                      pickedSev === sev ? SEV_OPTION_STYLES[sev] : "border-input text-muted-foreground hover:border-ring"
                     )}
                   >
                     {sev}
@@ -218,34 +140,22 @@ export function EscalateModal({
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Assign To
               </label>
-              <AssigneeSearchSelect value={assignee} onChange={setAssignee} />
+              <ChoiceDropdown
+                value={assignee.id}
+                onChange={(id) => setAssignee(ASSIGNEES.find((a) => a.id === id) ?? assignee)}
+                ariaLabel="Assign to"
+                options={ASSIGNEES.map((a) => ({ value: a.id, label: a.name, hint: a.id }))}
+              />
             </div>
           </div>
 
-          {/* SLA */}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              SLA Target (auto-set by severity)
-            </label>
-            <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-card p-3">
-              {(
-                [
-                  ["Acknowledge", sla.acknowledge],
-                  ["Initial Action", sla.action],
-                  ["Resolution", sla.resolution],
-                ] as [string, string][]
-              ).map(([l, v]) => (
-                <div key={l}>
-                  <div className="mb-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {l}
-                  </div>
-                  <div className="font-mono text-sm font-bold text-foreground">{v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* The SLA box becomes one line under the severity it follows. */}
+          <p className="text-xs text-muted-foreground">
+            SLA: acknowledge in <strong className="text-foreground">{sla.acknowledge}</strong> · act within{" "}
+            <strong className="text-foreground">{sla.action}</strong> · resolve within{" "}
+            <strong className="text-foreground">{sla.resolution}</strong>
+          </p>
 
-          {/* Notes */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Initial Notes
@@ -260,12 +170,7 @@ export function EscalateModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={handleConfirm}>
-            Create Case
-          </Button>
+          <Button size="sm" onClick={handleConfirm}>Create Case</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

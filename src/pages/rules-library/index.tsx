@@ -710,25 +710,15 @@ export function DeleteModal({
   return (
     <Modal open onOpenChange={(v) => !v && onCancel()}>
       <ModalContent size="sm">
-        <ModalHeader
-          title="Delete Rule"
-          description="This action cannot be undone."
-          icon={Trash2}
-          tone="destructive"
-        />
-        <ModalBody className="text-base text-muted-foreground">
-          Are you sure you want to delete{" "}
-          <span className="font-semibold text-foreground">{ruleName}</span>? Any models that
-          reference this rule will need to be updated.
+        <ModalHeader title="Delete Rule" />
+        <ModalBody>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete <strong className="text-foreground">{ruleName}</strong>? Models that reference it will need
+            updating.
+          </p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="destructive" size="sm" onClick={onConfirm} className="gap-1.5">
-            <Trash2 className="size-3.5" />
-            Delete Rule
-          </Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm}>Delete Rule</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

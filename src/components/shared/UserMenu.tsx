@@ -156,9 +156,8 @@ export function UserMenu({ className }: UserMenuProps) {
         onOpenChange={setSignOutOpen}
         destructive
         title="Sign out?"
-        description="You'll be signed out on this device and returned to the sign-in screen."
+        description="Are you sure you want to sign out? You'll return to the sign-in screen on this device."
         confirmLabel="Sign Out"
-        cancelLabel="Stay signed in"
         onConfirm={confirmSignOut}
       />
     </>

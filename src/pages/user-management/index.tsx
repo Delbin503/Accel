@@ -1178,7 +1178,6 @@ export function InviteUsersModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={handleSend} className="gap-1.5">
             <Mail className="size-3.5" />
             Send Invite
@@ -1981,7 +1980,6 @@ export function ManageSiteModal({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" disabled={!isDirty} onClick={() => onConfirm(sites)}>
             Save Changes
           </Button>
@@ -2093,7 +2091,6 @@ export function EditUserModal({
           </p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             size="sm"
             disabled={unchanged || !firstName.trim()}
@@ -2308,7 +2305,6 @@ export function SuspendUserModal({
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button
             variant="destructive"
             size="sm"
@@ -2342,38 +2338,17 @@ export function ReinstateModal({
   const isBulk = users.length > 1;
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title={isBulk ? `Reinstate User (${users.length})` : "Reinstate User"}
-          description="Sign-in is restored immediately and previous access is reapplied."
-        />
-        <ModalBody className="space-y-3">
-          {isBulk ? (
-            <p className="text-base text-muted-foreground">
-              Reinstating <strong className="text-foreground">{users.length}</strong> selected users.
-            </p>
-          ) : (
-            <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
-              <Avatar user={users[0]} size={32} />
-              <div className="min-w-0">
-                <TruncatedText text={users[0].fullName} className="text-base font-semibold text-foreground" />
-                <TruncatedText text={users[0].email} className="text-xs text-muted-foreground" />
-              </div>
-            </div>
-          )}
-          <div className="rounded-lg border border-success/25 bg-success/[0.06] px-3 py-2.5">
-            <p className="text-sm leading-snug text-muted-foreground">
-              <RotateCcw className="mr-1 inline-block size-3 text-success align-text-bottom" />
-              Access will be restored on next sign-in. Existing role and site permissions are unchanged.
-            </p>
-          </div>
+      <ModalContent size="sm">
+        <ModalHeader title={isBulk ? `Reinstate Users (${users.length})` : "Reinstate User"} />
+        <ModalBody>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to reinstate{" "}
+            <strong className="text-foreground">{isBulk ? `${users.length} users` : users[0].fullName}</strong>? They regain access on next
+            sign-in with their existing role{isBulk ? "s" : ""}.
+          </p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={onConfirm} className="gap-1.5">
-            <RotateCcw className="size-3.5" />
-            Reinstate
-          </Button>
+          <Button size="sm" onClick={onConfirm}>Reinstate</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
@@ -2404,53 +2379,26 @@ export function DeleteUserModal({
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title={isBulk ? `Delete Users (${users.length})` : "Delete User"}
-          description="This action cannot be undone."
-          tone="destructive"
-        />
-        <ModalBody>
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-            <div className="flex items-start gap-3">
-              <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-destructive" />
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-foreground">
-                  You are about to permanently remove:
-                </p>
-                {isBulk ? (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {users.length} selected users will lose access immediately.
-                  </p>
-                ) : (
-                  <>
-                    <p className="mt-1 font-mono text-sm text-muted-foreground">{users[0].id}</p>
-                    <p className="mt-0.5 text-base text-muted-foreground">{users[0].fullName} · {users[0].email}</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Audit history remains preserved for compliance. You will need to re-invite the user to restore access.
+      <ModalContent size="sm">
+        <ModalHeader title={isBulk ? `Delete Users (${users.length})` : "Delete User"} />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete{" "}
+            <strong className="text-foreground">{isBulk ? `${users.length} users` : users[0].fullName}</strong>? Audit history is kept;
+            re-invite {isBulk ? "them" : "them"} to restore access.
           </p>
-          <div className="mt-4">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Note (Optional)
-            </label>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Note (Optional)</label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Reason for permanent deletion — preserved in the audit log."
               rows={3}
-              className="w-full"
             />
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" variant="destructive" className="gap-1.5" onClick={() => onConfirm(note)}>
-            <Trash2 className="size-3.5" />
+          <Button size="sm" variant="destructive" onClick={() => onConfirm(note)}>
             Delete {isBulk ? `${users.length} Users` : "User"}
           </Button>
         </ModalFooter>
@@ -2482,16 +2430,12 @@ export function ResetConfirmModal({
 }) {
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
+      <ModalContent size="sm">
         <ModalHeader title={title} description={description} />
         <ModalBody>
-          <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
-            <div className="text-sm leading-snug text-muted-foreground">{detail}</div>
-          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">{detail}</p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={onConfirm}>{confirmLabel}</Button>
         </ModalFooter>
       </ModalContent>
@@ -3391,7 +3335,8 @@ export default function UserManagementPage({
         onConfirm={handleResetPassword}
         detail={
           <>
-            A password reset email will be sent. The user will be required to set a new password on next sign-in.
+            Are you sure you want to reset the password for <strong className="text-foreground">{dialogUsers[0]?.fullName ?? "this user"}</strong>?
+            They&apos;ll get a reset email and must set a new one on next sign-in.
           </>
         }
       />
@@ -3404,7 +3349,8 @@ export default function UserManagementPage({
         onConfirm={handleReset2FA}
         detail={
           <>
-            The user's current 2FA enrolment will be removed. They will be prompted to re-enrol on next sign-in.
+            Are you sure you want to reset 2FA for <strong className="text-foreground">{dialogUsers[0]?.fullName ?? "this user"}</strong>? Their
+            authenticator stops now; they re-enrol at next sign-in.
           </>
         }
       />

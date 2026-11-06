@@ -14,7 +14,6 @@ import {
   X,
   RotateCw,
   MousePointer2,
-  Save,
   Wifi,
   WifiOff,
   Clock,
@@ -537,24 +536,27 @@ export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape
           </div>
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {AREA_PALETTE.map((c) => (
-                <button key={c} onClick={() => setColor(c)}
-                  className={cn("relative size-7 rounded-md border-2 transition-colors",
-                    color === c ? "border-foreground" : "border-transparent hover:border-foreground/30")}
-                  style={{ background: c }}>
-                  {color === c && <Check className="absolute inset-0 m-auto size-3.5 text-white drop-shadow" strokeWidth={3} />}
-                </button>
+                <button
+                  key={c}
+                  type="button"
+                  aria-label={`Color ${c}`}
+                  aria-pressed={color === c}
+                  onClick={() => setColor(c)}
+                  className={cn(
+                    "size-7 rounded-md ring-offset-2 ring-offset-background transition-shadow",
+                    color === c ? "ring-2 ring-foreground" : "hover:ring-2 hover:ring-foreground/30"
+                  )}
+                  // Swatch fill is the area's own colour value from the palette data.
+                  style={{ background: c }}
+                />
               ))}
             </div>
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
-            <Save className="size-3.5" />
-            Save
-          </Button>
+          <Button size="sm" disabled={!dirty} onClick={handleSave}>Save</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
@@ -630,7 +632,6 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
               <span className="text-sm text-muted-foreground">to</span>
               <TimeSelect value={opTo} onChange={setOpTo} aria-label="Closing time" className="min-w-0 flex-1" />
             </div>
-            <p className="mt-1 text-xs text-muted-foreground/70">Daily window when this site is operational.</p>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (Optional)</label>
@@ -640,11 +641,7 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!dirty} onClick={handleSave} className="gap-1.5">
-            <Save className="size-3.5" />
-            Save Changes
-          </Button>
+          <Button size="sm" disabled={!dirty} onClick={handleSave}>Save Changes</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
@@ -657,16 +654,13 @@ export function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: Site
   if (!site) return null;
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="lg">
-        <ModalHeader
-          title={<>Delete {site.name}?</>}
-          description="This action cannot be undone."
-          tone="destructive"
-        />
-        <ModalBody className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            This will permanently remove the site, its <strong className="text-foreground">{site.areas.length}</strong> area{site.areas.length === 1 ? "" : "s"} and floor plan.
-            Cameras assigned to this site will remain in the Cameras module but will be unassigned.
+      <ModalContent size="sm">
+        <ModalHeader title={`Delete ${site.name}?`} />
+        <ModalBody className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Are you sure you want to delete <strong className="text-foreground">{site.name}</strong>? Its{" "}
+            <strong className="text-foreground">{site.areas.length}</strong> area{site.areas.length === 1 ? "" : "s"} and floor plan go too;
+            its cameras stay, unassigned.
           </p>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -676,11 +670,7 @@ export function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: Site
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={confirm.trim() !== site.name}
-            onClick={onConfirm}
-            className="gap-1.5 border-sev-critical/40 bg-sev-critical/15 text-sev-critical hover:bg-sev-critical/25">
-            <Trash2 className="size-3.5" />
+          <Button variant="destructive" size="sm" disabled={confirm.trim() !== site.name} onClick={onConfirm}>
             Delete Site
           </Button>
         </ModalFooter>
@@ -1555,7 +1545,12 @@ export function FloorPlanModal({
       open={deleteFloorPlanOpen}
       onOpenChange={setDeleteFloorPlanOpen}
       title="Remove floor plan?"
-      description="The image will be removed from this site. Areas and camera positions stay saved, but you'll need to re-upload a plan to see them on the map again."
+      description={
+        <>
+          Are you sure you want to remove the floor plan for <strong className="text-foreground">{site.name}</strong>? Areas and camera positions stay
+          saved.
+        </>
+      }
       confirmLabel="Remove"
       destructive
       onConfirm={() => { onDeleteFloorPlan(); setDeleteFloorPlanOpen(false); }}

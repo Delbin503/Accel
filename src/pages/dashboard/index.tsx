@@ -24,7 +24,7 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTrend } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { cn } from "@/lib/utils";
@@ -318,6 +318,25 @@ export default function DashboardPage() {
   const camOnline = cameras.filter((c) => c.status === "online").length;
   const camTotal = cameras.length;
   const eventsInRange = filteredEvents.length;
+
+  // Events in the equally long window right before the selected one — drives the KPI trend.
+  const eventsTrend = React.useMemo<KpiTrend | undefined>(() => {
+    if (!dateBounds.from || !dateBounds.to) return undefined;
+    const days = Math.round((Date.parse(dateBounds.to) - Date.parse(dateBounds.from)) / 86_400_000) + 1;
+    const prevFrom = shiftDate(dateBounds.from, -days);
+    const prevTo = shiftDate(dateBounds.from, -1);
+    const prev = MOCK_EVENTS.filter((e) => e.date >= prevFrom && e.date <= prevTo).length;
+    if (prev === 0) return undefined;
+    const pct = ((eventsInRange - prev) / prev) * 100;
+    const direction = pct > 0 ? "up" : pct < 0 ? "down" : "flat";
+    // More detections is not good news, so rising events read as negative.
+    return {
+      // Whole numbers once the change is large, so the narrow card stays readable.
+      value: `${Math.abs(pct).toFixed(Math.abs(pct) >= 10 ? 0 : 1)}%`,
+      direction,
+      sentiment: direction === "up" ? "negative" : direction === "down" ? "positive" : "neutral",
+    };
+  }, [dateBounds, eventsInRange]);
   const casesOpen = filteredCases.filter((c) => c.status === "open" || c.status === "in-review").length;
   const casesEscalated = filteredCases.filter((c) => c.severity === "critical").length;
 
@@ -580,7 +599,7 @@ export default function DashboardPage() {
           </KpiGrid>
         </div>
         <div className="hidden w-px self-stretch bg-border md:block" />
-        <div className="space-y-2 md:w-64 md:shrink-0">
+        <div className="space-y-2 md:w-72 md:shrink-0">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Period · {dateLabel}
           </p>
@@ -588,7 +607,8 @@ export default function DashboardPage() {
             <KpiCard
               label="Events"
               value={eventsInRange}
-              sub={dateLabel}
+              trend={eventsTrend}
+              sub={eventsTrend ? "vs prior" : dateLabel}
               accent="info"
               onClick={() => navigate("/detection-feed")}
             />

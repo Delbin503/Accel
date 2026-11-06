@@ -1,21 +1,13 @@
 import { CreateSiteWizard } from "@/pages/site/overview/CreateSiteWizard";
+import { SiteDetailDrawer } from "@/pages/site/overview/SiteDetailDrawer";
+import { CameraDrawer, type CameraFormFields } from "@/pages/site/cameras";
+import { NvrDrawer } from "@/pages/site/nvr";
 import {
-  SiteDetailDrawer, EditSiteModal, EditAreaModal, DeleteSiteModal,
-} from "@/pages/site/overview/SiteDetailDrawer";
-import {
-  CameraDrawer, CameraFormModal, LinkNvrModal, ConfirmModal,
-  type CameraFormFields,
-} from "@/pages/site/cameras";
-import {
-  NvrDrawer, ExportRecordingsModal, CleanupStorageModal, CleanupRunningModal,
-  CleanupCompletedModal, LinkCameraModal, UnlinkConfirmModal, AddNvrModal,
-  EditNvrModal, DeleteNvrModal,
-} from "@/pages/site/nvr";
-import {
-  CreateModelModal, AddStepModal, DeleteModelModal, ExtractRulesPrompt,
-} from "@/pages/model-management";
-import { DeleteModal as DeleteRuleModal } from "@/pages/rules-library";
-import { CaseDrawer, ChangeStatusModal, ReassignModal, LinkNewIncidentsModal, EditCaseModal, DeleteCaseModal } from "@/pages/incident-cases/CaseDrawer";
+  CameraFormCopy, LinkNvrChannelCopy, AddNvrCopy, EditNvrCopy,
+  ExportRecordingsCopy, CleanupStorageCopy, CleanupCompletedCopy, LinkCameraCopy,
+} from "../deviceCopies";
+import { CreateModelModal, AddStepModal, ExtractRulesPrompt, AddRuleModal } from "@/pages/model-management";
+import { CaseDrawer, ChangeStatusModal, ReassignModal, LinkNewIncidentsModal, EditCaseModal } from "@/pages/incident-cases/CaseDrawer";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { MOCK_SITES_FULL, SITE_ACCENT_COLORS } from "@/mocks/sites";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
@@ -24,8 +16,20 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_CASES, ASSIGNEES } from "@/mocks/incidentCases";
 import { ENTITY_PROFILES } from "@/mocks/entities";
 import type { SiteData } from "@/types/sites";
+import { ConditionModal } from "@/pages/rules-library/RuleConditions";
+import { newCondition } from "@/lib/ruleTemplates";
+import { EVENT_TEMPLATES } from "@/mocks/ruleTemplates";
+import { MOCK_RULES } from "@/mocks/rulesLibrary";
+import { DeleteCaseCopy, DeleteNamedCopy, DeleteNvrCopy, DeleteSiteCopy, UndeployModelCopy, UnlinkCameraCopy } from "../confirmCopies";
+import { CleanupProgressCopy } from "../progressCopies";
+import { EditSiteCopy, EditAreaCopy } from "../formCopies";
+import { RemoveFloorPlanCopy } from "../confirmCopies";
+import { FLOOR_PLAN_SITE } from "./inlineConfirmData";
 import type { ModalEntry } from "../types";
 import { FloorPlanPreview } from "../previews";
+import { CreateModelModal as LegacyCreateModelModal, AddStepModal as LegacyAddStepModal, AddRuleModal as LegacyAddRuleModal } from "@/pages/dev/modals/legacy/pages/model-management";
+import { ConditionModal as LegacyConditionModal } from "@/pages/dev/modals/legacy/pages/rules-library/RuleConditions";
+import { ChangeStatusModal as LegacyChangeStatusModal, ReassignModal as LegacyReassignModal, LinkNewIncidentsModal as LegacyLinkNewIncidentsModal, EditCaseModal as LegacyEditCaseModal } from "@/pages/dev/modals/legacy/pages/incident-cases/CaseDrawer";
 
 const site: SiteData = MOCK_SITES_FULL[0];
 const area = site.areas[0];
@@ -35,7 +39,7 @@ const incidentCase = MOCK_CASES[0];
 const entity = Object.values(ENTITY_PROFILES)[0];
 
 /** Edit-mode form values for a camera — the page derives these from CameraData. */
-const cameraForm: CameraFormFields = {
+export const cameraForm: CameraFormFields = {
   id: camera.id,
   name: camera.name,
   siteId: camera.siteId,
@@ -89,7 +93,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/overview/SiteDetailDrawer.tsx",
     kind: "modal",
     trigger: "Site drawer → Edit Site.",
-    render: (close) => <EditSiteModal site={site} open onClose={close} onSave={() => close()} />,
+    note: "Redesigned copy — the page still uses its own version.",
+    render: (close) => <EditSiteCopy site={site} onClose={close} />,
   },
   {
     id: "edit-area",
@@ -98,7 +103,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/overview/SiteDetailDrawer.tsx",
     kind: "modal",
     trigger: "Floor-plan editor → area → Rename.",
-    render: (close) => <EditAreaModal area={area} open onClose={close} onSave={() => close()} />,
+    note: "Redesigned copy — the page still uses its own version.",
+    render: (close) => <EditAreaCopy area={area} onClose={close} />,
   },
   {
     id: "delete-site",
@@ -107,8 +113,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/overview/SiteDetailDrawer.tsx",
     kind: "confirm",
     trigger: "Site drawer → Delete Site.",
-    note: "Type-to-confirm on the site name.",
-    render: (close) => <DeleteSiteModal site={site} open onClose={close} onConfirm={close} />,
+    note: "Gallery copy with the unified confirm look — the page still uses its own version. Type-to-confirm on the site name.",
+    render: (close) => <DeleteSiteCopy site={site} onClose={close} />,
   },
   {
     id: "floor-plan-editor",
@@ -117,7 +123,7 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/overview/SiteDetailDrawer.tsx",
     kind: "modal",
     trigger: "Site drawer → Open Floor Plan Editor.",
-    note: "Full-bleed editor. Draw areas, place cameras, aim them.",
+    note: "Restyled in place (plain header) — the page still uses its own version. Full-bleed editor. Draw areas, place cameras, aim them.",
     render: (close) => <FloorPlanPreview onClose={close} />,
   },
 
@@ -199,16 +205,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/cameras/index.tsx",
     kind: "modal",
     trigger: "Cameras → Add Camera.",
-    note: "mode=\"add\" — empty form with a generated camera ID.",
+    note: "Redesigned copy — the page still uses its own version. mode=\"add\" — empty form with a generated camera ID.",
     render: (close) => (
-      <CameraFormModal
-        open
-        mode="add"
-        initial={null}
-        takenIds={MOCK_CAMERAS.map((c) => c.id)}
-        onClose={close}
-        onSubmit={() => close()}
-      />
+      <CameraFormCopy mode="add" initial={null} takenIds={MOCK_CAMERAS.map((c) => c.id)} onClose={close} />
     ),
   },
   {
@@ -218,16 +217,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/cameras/index.tsx",
     kind: "modal",
     trigger: "Cameras → camera → Edit.",
-    note: "mode=\"edit\" — pre-filled from an existing camera.",
+    note: "Redesigned copy — the page still uses its own version. mode=\"edit\" — pre-filled from an existing camera.",
     render: (close) => (
-      <CameraFormModal
-        open
-        mode="edit"
-        initial={cameraForm}
-        takenIds={MOCK_CAMERAS.map((c) => c.id)}
-        onClose={close}
-        onSubmit={() => close()}
-      />
+      <CameraFormCopy mode="edit" initial={cameraForm} takenIds={MOCK_CAMERAS.map((c) => c.id)} onClose={close} />
     ),
   },
   {
@@ -237,7 +229,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/cameras/index.tsx",
     kind: "modal",
     trigger: "Camera drawer → Link to NVR.",
-    render: (close) => <LinkNvrModal open camera={camera} onClose={close} onLink={() => close()} />,
+    note: "Redesigned copy — the page still uses its own version.",
+    render: (close) => <LinkNvrChannelCopy camera={camera} onClose={close} />,
   },
   {
     id: "camera-confirm-undeploy",
@@ -246,24 +239,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/cameras/index.tsx",
     kind: "confirm",
     trigger: "Camera drawer → deployed model → Undeploy.",
-    note: "Page-local confirm shell with a consequence callout.",
-    render: (close) => (
-      <ConfirmModal
-        open
-        title="Undeploy Model"
-        description="Detection stops on this camera until the model is redeployed."
-        confirmLabel="Undeploy"
-        onClose={close}
-        onConfirm={close}
-        detail={
-          <>
-            <strong className="text-foreground">PPE Compliance v3</strong> will stop running on{" "}
-            <strong className="text-foreground">{camera.name}</strong>. No new detection events will be
-            produced until the model is redeployed.
-          </>
-        }
-      />
-    ),
+    note: "Gallery copy with the unified confirm look — the page still uses its own version. Page-local confirm shell with a consequence callout.",
+    render: (close) => <UndeployModelCopy cameraName={camera.name} modelName="PPE Compliance v3" onClose={close} />,
   },
 
   /* ── Site · NVR ───────────────────────────────────────────────────────── */
@@ -297,8 +274,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "NVR & Devices → Add NVR.",
+    note: "Redesigned copy — the page still uses its own version.",
     render: (close) => (
-      <AddNvrModal open takenIds={MOCK_NVRS.map((n) => n.id)} onClose={close} onConfirm={() => close()} />
+      <AddNvrCopy takenIds={MOCK_NVRS.map((n) => n.id)} onClose={close} />
     ),
   },
   {
@@ -308,7 +286,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "NVR drawer → Edit.",
-    render: (close) => <EditNvrModal open nvr={nvr} onClose={close} onConfirm={() => close()} />,
+    note: "Redesigned copy — the page still uses its own version.",
+    render: (close) => <EditNvrCopy nvr={nvr} onClose={close} />,
   },
   {
     id: "nvr-delete",
@@ -317,7 +296,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "confirm",
     trigger: "NVR drawer → Delete.",
-    render: (close) => <DeleteNvrModal open nvr={nvr} onClose={close} onConfirm={close} />,
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <DeleteNvrCopy nvr={nvr} onClose={close} />,
   },
   {
     id: "nvr-export",
@@ -326,9 +306,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "NVR drawer → Export recordings.",
-    note: "Channel picker + range + format, with a size estimate.",
+    note: "Redesigned copy — the page still uses its own version. Channel picker + range + format, with a size estimate.",
     render: (close) => (
-      <ExportRecordingsModal open nvr={nvr} onClose={close} onConfirm={() => close()} />
+      <ExportRecordingsCopy nvr={nvr} onClose={close} />
     ),
   },
   {
@@ -338,8 +318,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "NVR drawer → Clean up storage.",
+    note: "Redesigned copy — the page still uses its own version.",
     render: (close) => (
-      <CleanupStorageModal open nvr={nvr} onClose={close} onConfirm={() => close()} />
+      <CleanupStorageCopy nvr={nvr} onClose={close} />
     ),
   },
   {
@@ -349,9 +330,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "progress",
     trigger: "Immediately after a cleanup is confirmed.",
-    render: (close) => (
-      <CleanupRunningModal open methodLabel="Older than 30 days" totalToProcess={412} onCancel={close} />
-    ),
+    note: "Redesigned copy — the page still uses its own version.",
+    render: (close) => <CleanupProgressCopy methodLabel="Older than 30 days" totalToProcess={412} onClose={close} />,
   },
   {
     id: "nvr-cleanup-done",
@@ -360,9 +340,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "When a cleanup run finishes.",
+    note: "Redesigned copy — the page still uses its own version.",
     render: (close) => (
-      <CleanupCompletedModal
-        open
+      <CleanupCompletedCopy
         previous={7.4}
         freed={2.1}
         current={5.3}
@@ -379,8 +359,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "modal",
     trigger: "NVR drawer → channel → Link camera.",
+    note: "Redesigned copy — the page still uses its own version.",
     render: (close) => (
-      <LinkCameraModal open nvr={nvr} channel={3} onClose={close} onConfirm={() => close()} />
+      <LinkCameraCopy nvr={nvr} channel={3} onClose={close} />
     ),
   },
   {
@@ -390,17 +371,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/site/nvr/index.tsx",
     kind: "confirm",
     trigger: "NVR drawer → channel → Unlink.",
-    note: "Offers an export-first escape hatch.",
-    render: (close) => (
-      <UnlinkConfirmModal
-        open
-        nvr={nvr}
-        channel={3}
-        onClose={close}
-        onConfirm={close}
-        onExportFirst={close}
-      />
-    ),
+    note: "Gallery copy with the unified confirm look — the page still uses its own version. Offers an export-first escape hatch.",
+    render: (close) => <UnlinkCameraCopy nvr={nvr} channel={3} onClose={close} />,
   },
 
   /* ── Model Management ─────────────────────────────────────────────────── */
@@ -411,7 +383,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/model-management/index.tsx",
     kind: "modal",
     trigger: "Model Management → New Model.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => <CreateModelModal onConfirm={() => close()} onCancel={close} />,
+    legacyRender: (close) => <LegacyCreateModelModal onConfirm={() => close()} onCancel={close} />,
   },
   {
     id: "model-add-step",
@@ -420,7 +394,9 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/model-management/index.tsx",
     kind: "modal",
     trigger: "Model editor → Add Step.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => <AddStepModal onConfirm={() => close()} onCancel={close} />,
+    legacyRender: (close) => <LegacyAddStepModal onConfirm={() => close()} onCancel={close} />,
   },
   {
     id: "model-edit-step",
@@ -429,9 +405,22 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/model-management/index.tsx",
     kind: "modal",
     trigger: "Model editor → step → Edit.",
-    note: "Same shell, pre-filled from an existing step.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. Same shell, pre-filled from an existing step.",
     render: (close) => (
       <AddStepModal
+        initial={{
+          label: "Helmet Detection",
+          actionLabel: "Detect helmets",
+          modelFile: "helmet.onnx",
+          manifestFile: "helmet.manifest.json",
+          batchSize: 8,
+        }}
+        onConfirm={() => close()}
+        onCancel={close}
+      />
+    ),
+    legacyRender: (close) => (
+      <LegacyAddStepModal
         initial={{
           label: "Helmet Detection",
           actionLabel: "Detect helmets",
@@ -451,7 +440,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/model-management/index.tsx",
     kind: "confirm",
     trigger: "Model Management → model → Delete.",
-    render: (close) => <DeleteModelModal name="PPE Compliance v3" onConfirm={close} onCancel={close} />,
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <DeleteNamedCopy kind="Model" name="PPE Compliance v3" references="deployments" onClose={close} />,
   },
   {
     id: "model-extract-rules",
@@ -460,9 +450,22 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/model-management/index.tsx",
     kind: "modal",
     trigger: "After a model file upload — offers rule extraction.",
+    note: "Restyled in place (plain header) — the page still uses its own version.",
     render: (close) => (
       <ExtractRulesPrompt modelFile="helmet.onnx" onConfirm={close} onSkip={close} />
     ),
+  },
+
+  {
+    id: "model-add-rule",
+    name: "AddRuleModal",
+    module: "Manage · Model Management",
+    file: "src/pages/model-management/index.tsx",
+    kind: "modal",
+    trigger: "Model Management → edit a model → Rules → Add rule.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. Search and multi-pick from rules not yet on the model.",
+    render: (close) => <AddRuleModal rules={MOCK_RULES} onCancel={close} onAdd={() => close()} />,
+    legacyRender: (close) => <LegacyAddRuleModal rules={MOCK_RULES} onCancel={close} onAdd={() => close()} />,
   },
 
   /* ── Rules Library ────────────────────────────────────────────────────── */
@@ -473,8 +476,23 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/rules-library/index.tsx",
     kind: "confirm",
     trigger: "Rules Library → rule → Delete.",
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <DeleteNamedCopy kind="Rule" name="No helmet in Loading Bay" references="models" onClose={close} />,
+  },
+
+  {
+    id: "rule-condition",
+    name: "ConditionModal",
+    module: "Manage · Rules Library",
+    file: "src/pages/rules-library/RuleConditions.tsx",
+    kind: "modal",
+    trigger: "Rules Library → open a rule → Conditions → Add condition.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version. New-condition copy; editing an existing one uses the same shell.",
     render: (close) => (
-      <DeleteRuleModal ruleName="No helmet in Loading Bay" onConfirm={close} onCancel={close} />
+      <ConditionModal condition={newCondition(EVENT_TEMPLATES[0])} isNew onClose={close} onSave={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacyConditionModal condition={newCondition(EVENT_TEMPLATES[0])} isNew onClose={close} onSave={() => close()} />
     ),
   },
 
@@ -518,8 +536,12 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/incident-cases/CaseDrawer.tsx",
     kind: "modal",
     trigger: "Case drawer → Update Case → Change status.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <ChangeStatusModal open currentStatus="open" onClose={close} onConfirm={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacyChangeStatusModal open currentStatus="open" onClose={close} onConfirm={() => close()} />
     ),
   },
   {
@@ -529,8 +551,12 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/incident-cases/CaseDrawer.tsx",
     kind: "modal",
     trigger: "Case drawer → Update Case → Reassign.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <ReassignModal open current={ASSIGNEES[0]} onClose={close} onConfirm={() => close()} />
+    ),
+    legacyRender: (close) => (
+      <LegacyReassignModal open current={ASSIGNEES[0]} onClose={close} onConfirm={() => close()} />
     ),
   },
   {
@@ -540,8 +566,18 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/incident-cases/CaseDrawer.tsx",
     kind: "modal",
     trigger: "Case drawer → Update Case → Link incidents.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <LinkNewIncidentsModal
+        open
+        caseSite={incidentCase.site}
+        alreadyLinked={[]}
+        onClose={close}
+        onConfirm={() => close()}
+      />
+    ),
+    legacyRender: (close) => (
+      <LegacyLinkNewIncidentsModal
         open
         caseSite={incidentCase.site}
         alreadyLinked={[]}
@@ -557,8 +593,19 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/incident-cases/CaseDrawer.tsx",
     kind: "modal",
     trigger: "Case drawer → Update Case → Edit details.",
+    note: "Restyled in place (plain header, 550px, scrolls, no Cancel) — the page still uses its own version.",
     render: (close) => (
       <EditCaseModal
+        open
+        title={incidentCase.title}
+        severity={incidentCase.severity}
+        notes=""
+        onClose={close}
+        onConfirm={() => close()}
+      />
+    ),
+    legacyRender: (close) => (
+      <LegacyEditCaseModal
         open
         title={incidentCase.title}
         severity={incidentCase.severity}
@@ -575,15 +622,8 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     file: "src/pages/incident-cases/CaseDrawer.tsx",
     kind: "confirm",
     trigger: "Case drawer → Update Case → Delete case.",
-    render: (close) => (
-      <DeleteCaseModal
-        open
-        caseId={incidentCase.id}
-        caseTitle={incidentCase.title}
-        onClose={close}
-        onConfirm={close}
-      />
-    ),
+    note: "Gallery copy with the unified confirm look — the page still uses its own version.",
+    render: (close) => <DeleteCaseCopy caseTitle={incidentCase.title} onClose={close} />,
   },
   {
     id: "entity-drawer",
@@ -593,5 +633,15 @@ export const MANAGE_ENTRIES: ModalEntry[] = [
     kind: "drawer",
     trigger: "Case or event drawer → click an entity chip.",
     render: (close) => <EntityDrawer entity={entity} open onClose={close} />,
+  },
+  {
+    id: "floor-plan-remove",
+    name: "ConfirmDialog (Remove floor plan)",
+    module: "Site · Overview",
+    file: "src/pages/site/overview/SiteDetailDrawer.tsx",
+    kind: "confirm",
+    trigger: "Floor-plan editor → Remove floor plan.",
+    note: "Redesigned copy — the page still uses its own version. Built inline with ConfirmDialog.",
+    render: (close) => <RemoveFloorPlanCopy siteName={FLOOR_PLAN_SITE} onClose={close} />,
   },
 ];

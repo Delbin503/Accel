@@ -267,7 +267,7 @@ export function RecordingPlayerModal({ recording, open, onClose }: {
       }}
     >
       <ModalContent
-        size="xl"
+        size="lg"
         className="gap-0"
         aria-describedby={undefined}
         // First Escape leaves zoom mode, the next one closes the pop-up.

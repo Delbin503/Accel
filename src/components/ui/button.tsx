@@ -49,6 +49,9 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
+      // Exposes the variant so a container can style by it — the Modal Gallery's
+      // "tidy" preview hides ghost (Cancel) buttons this way. No visual change.
+      data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

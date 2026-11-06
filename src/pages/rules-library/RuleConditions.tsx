@@ -388,9 +388,6 @@ export function ConditionModal({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
           <Button size="sm" onClick={submit}>
             {isNew ? "Add Condition" : "Save Condition"}
           </Button>

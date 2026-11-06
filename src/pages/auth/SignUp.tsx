@@ -2026,13 +2026,6 @@ export function InviteUsersModal({
 
         <ModalFooter>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
             size="sm"
             disabled={!canSubmit}
             onClick={() => onInvite(parsed.valid, role, departments)}

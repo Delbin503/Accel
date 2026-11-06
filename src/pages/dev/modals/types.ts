@@ -24,4 +24,9 @@ export interface ModalEntry {
   note?: string;
   /** Mounts the component. Called only while the entry is the active one. */
   render: (close: () => void) => React.ReactNode;
+  /**
+   * The pre-redesign version, for the compare view's "Old" side, when the page
+   * component has since changed. Mounts a frozen copy from `legacy/`.
+   */
+  legacyRender?: (close: () => void) => React.ReactNode;
 }
