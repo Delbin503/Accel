@@ -35,9 +35,6 @@ Privacy Policy: https://accel.com/privacy
 Terms & Conditions: https://accel.com/terms
 Contact Us: {{supportEmail}}
 
-Twitter: https://twitter.com/sigmawaveai
-Facebook: https://www.facebook.com/sigmawave.ai
-Instagram: https://www.instagram.com/sigmawave.ai
 LinkedIn: https://www.linkedin.com/company/sigmawave-ai
 
 (c) 2026 Sigmawave AI. All Rights Reserved.
