@@ -41,6 +41,7 @@ import { SYSTEM_HEALTH_PRESENTATION, useSystemStatus } from "@/hooks/useSystemSt
 import { VisitorKpis } from "./VisitorKpis";
 import { visitorStats } from "./visitorStats";
 import { ReidMapPanel } from "./reid/ReidMapPanel";
+import { DashboardSkeleton, ErrorState, type ForcedState, type HealthMode, type ScaleMode } from "../PRD_Dashboard/states";
 import {
   DEFAULT_LAYOUT,
   hiddenPanels,
@@ -686,10 +687,26 @@ function StripLabel({ children, live }: { children: React.ReactNode; live?: bool
   );
 }
 
-export function CustomDashboard() {
+/**
+ * PROTOTYPE-ONLY tester hooks, used when this dashboard runs as the Phase 1
+ * Dashboard module (its floating State Tester). Phase 1.3 passes none.
+ *  - forced: loading / error replace the page; empty keeps the layout with no data.
+ *  - forcedHealth: overrides the system health the banner and pill show.
+ *  - scale: "many" previews the per-site charts and Sites KPI with 20 sites.
+ */
+export function CustomDashboard({
+  forced = "normal",
+  onResolveForced = () => {},
+  forcedHealth,
+  scale = "normal",
+}: { forced?: ForcedState; onResolveForced?: () => void; forcedHealth?: HealthMode; scale?: ScaleMode } = {}) {
   const navigate = useNavigate();
-  const cameras = useCamerasStore((s) => s.cameras);
-  const sites = useSitesStore((s) => s.sites);
+  const emptyMode = forced === "empty";
+  const scaleMany = scale === "many";
+  const camerasRaw = useCamerasStore((s) => s.cameras);
+  const sitesRaw = useSitesStore((s) => s.sites);
+  const cameras = emptyMode ? [] : camerasRaw;
+  const sites = emptyMode ? [] : sitesRaw;
   const status = useSystemStatus();
 
   /* ── Layout + edit mode ──────────────────────────────────────────── */
@@ -746,17 +763,19 @@ export function CustomDashboard() {
 
   /* ── Filtered events / cases ─────────────────────────────────────── */
   const filteredEvents = React.useMemo(() => {
+    if (emptyMode) return [];
     if (!dateBounds.from || !dateBounds.to) return MOCK_EVENTS;
     return MOCK_EVENTS.filter((e) => e.date >= dateBounds.from && e.date <= dateBounds.to);
-  }, [dateBounds]);
+  }, [dateBounds, emptyMode]);
 
   const filteredCases = React.useMemo(() => {
+    if (emptyMode) return [];
     if (!dateBounds.from || !dateBounds.to) return MOCK_CASES;
     return MOCK_CASES.filter((c) => {
       const d = c.createdAt.slice(0, 10);
       return d >= dateBounds.from && d <= dateBounds.to;
     });
-  }, [dateBounds]);
+  }, [dateBounds, emptyMode]);
 
   /* ── Derived stats ───────────────────────────────────────────────── */
   const camOnline = cameras.filter((c) => c.status === "online").length;
@@ -767,6 +786,15 @@ export function CustomDashboard() {
   const visitors = React.useMemo(() => visitorStats(cameras), [cameras]);
 
   const detectionsBySite = React.useMemo(() => {
+    // PROTOTYPE-ONLY: 20-site preview — synthetic dataset so the chart shows scale.
+    if (scaleMany) {
+      return Array.from({ length: 20 }, (_, i) => {
+        const critical = i % 5 === 0 ? 1 + (i % 3) : 0;
+        const medium = 1 + ((i * 3) % 5);
+        const low = 2 + ((i * 2) % 6);
+        return { site: `Site ${i + 1}`, critical, medium, low, total: critical + medium + low };
+      }).sort((a, b) => b.total - a.total);
+    }
     const map = new Map<string, { site: string; critical: number; medium: number; low: number; total: number }>();
     for (const e of filteredEvents) {
       if (!map.has(e.siteDisplay)) {
@@ -777,7 +805,7 @@ export function CustomDashboard() {
       row.total += 1;
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [filteredEvents]);
+  }, [filteredEvents, scaleMany]);
 
   // Per-site trend — bucket labels adapt to the selected date range.
   const siteTrend = React.useMemo(() => {
@@ -870,11 +898,18 @@ export function CustomDashboard() {
     return zoneAreas.filter((z) => zoneSiteFilter.includes(z.siteKey));
   }, [zoneAreas, zoneSiteFilter]);
 
-  const camerasBySite = sites.map((s) => ({
-    name: s.name,
-    online: cameras.filter((c) => c.siteId === s.id && c.status === "online").length,
-    offline: cameras.filter((c) => c.siteId === s.id && c.status !== "online").length,
-  }));
+  const camerasBySite = scaleMany
+    ? // PROTOTYPE-ONLY: synthetic 20-site dataset to preview the chart at scale.
+      Array.from({ length: 20 }, (_, i) => {
+        const total = 3 + ((i * 7) % 8);
+        const offline = i % 4 === 0 ? 1 + (i % 3) : 0;
+        return { name: `Site ${i + 1}`, online: total - offline, offline };
+      })
+    : sites.map((s) => ({
+        name: s.name,
+        online: cameras.filter((c) => c.siteId === s.id && c.status === "online").length,
+        offline: cameras.filter((c) => c.siteId === s.id && c.status !== "online").length,
+      }));
 
   const recentEvents = [...filteredEvents]
     .sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`))
@@ -882,26 +917,35 @@ export function CustomDashboard() {
   const recentCases = [...filteredCases]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 4);
-  const recentActivity = MOCK_ACTIVITY_LOGS.slice(0, 8);
+  const recentActivity = emptyMode ? [] : MOCK_ACTIVITY_LOGS.slice(0, 8);
 
-  const sitesTotal = sites.length;
-  const sitesActive = sites.filter((s) => s.status === "active").length;
-  const nvrTotal = MOCK_NVRS.length;
-  const nvrOnline = MOCK_NVRS.filter((n) => n.status === "online").length;
+  const sitesTotal = scaleMany ? 20 : sites.length;
+  const sitesActive = scaleMany ? 20 : sites.filter((s) => s.status === "active").length;
+  const nvrTotal = emptyMode ? 0 : MOCK_NVRS.length;
+  const nvrOnline = emptyMode ? 0 : MOCK_NVRS.filter((n) => n.status === "online").length;
 
   /* ── System health ───────────────────────────────────────────────────
      Read from the same hook as the top-bar status menu, so the pill and the
      banner can never disagree with it. The banner names the worst group. */
-  const systemStatus = status.overall;
+  // A forced health (Phase 1 State Tester) wins; the banner then names the
+  // least healthy group, since no group may actually be at the forced level.
+  const systemStatus = forcedHealth ?? status.overall;
   const statusPresentation = SYSTEM_HEALTH_PRESENTATION[systemStatus];
-  const worstGroup = (
-    [
-      { label: "cameras", g: status.cameras },
-      { label: "NVRs", g: status.nvrs },
-      { label: "servers", g: status.servers },
-    ] as const
-  ).find(({ g }) => g.health === systemStatus);
+  const healthGroups = [
+    { label: "cameras", g: status.cameras },
+    { label: "NVRs", g: status.nvrs },
+    { label: "servers", g: status.servers },
+  ] as const;
+  const worstGroup =
+    healthGroups.find(({ g }) => g.health === systemStatus) ??
+    (forcedHealth && forcedHealth !== "healthy" ? healthGroups.find(({ g }) => g.health !== "healthy") ?? healthGroups[0] : undefined);
   const [alertAcknowledged, setAlertAcknowledged] = React.useState(false);
+  // Re-show the banner when the tester's health changes.
+  const [shownHealth, setShownHealth] = React.useState(forcedHealth);
+  if (shownHealth !== forcedHealth) {
+    setShownHealth(forcedHealth);
+    setAlertAcknowledged(false);
+  }
   const showAlertBanner = systemStatus !== "healthy" && !!worstGroup && !alertAcknowledged;
 
   /* ── Panel bodies ─────────────────────────────────────────────────── */
@@ -1232,8 +1276,9 @@ export function CustomDashboard() {
         action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/site/overview")}>
           Sites <ArrowUpRight className="size-3" />
         </Button>}>
-          <div className="h-[260px]">
-          <div className="h-full">
+          {/* 20-site preview: the chart keeps ~52px per site and scrolls sideways. */}
+          <div className={cn("h-[260px]", scaleMany && "overflow-x-auto")}>
+          <div className={cn("h-full", scaleMany && "min-w-[1040px]")}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
@@ -1242,9 +1287,9 @@ export function CustomDashboard() {
                   stroke="var(--muted-foreground)"
                   fontSize={11}
                   interval={0}
-                  angle={-12}
+                  angle={scaleMany ? -45 : -12}
                   textAnchor="end"
-                  height={50}
+                  height={scaleMany ? 64 : 50}
                 />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} />
                 <Tooltip
@@ -1323,6 +1368,21 @@ export function CustomDashboard() {
       </Section>
     ),
   };
+
+  // PROTOTYPE-ONLY: loading & error replace the page; "empty" falls through and
+  // renders the full layout with empty data.
+  if (forced === "loading" || forced === "error") {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader>
+          <PageHeader.Content>
+            <PageHeader.Title>Dashboard</PageHeader.Title>
+          </PageHeader.Content>
+        </PageHeader>
+        {forced === "loading" ? <DashboardSkeleton /> : <ErrorState onRetry={onResolveForced} />}
+      </div>
+    );
+  }
 
   return (
     /* While editing, the docked drawer covers the right edge — pad the page

@@ -1,0 +1,1434 @@
+<title>Training Assessment Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Accel app shell (sidebar + 48px top bar) framed in the page; one screen at a time, routed on the hash. Lo-fi greys only. */
+:root {
+  --bg: #ecece8;
+  --surface: #ffffff;
+  --surface-2: #f6f6f2;
+  --line: #d3d3cc;
+  --line-2: #e6e6e0;
+  --fg: #24241f;
+  --muted: #64645c;
+  --ph: #dfdfd8;
+  --ink: #2a2a25;
+  --on-ink: #ffffff;
+  --scrim: rgba(24, 24, 20, 0.5);
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141412; --surface: #1d1d1a; --surface-2: #24241f; --line: #3b3b35; --line-2: #2d2d28;
+    --fg: #ecece6; --muted: #a3a39a; --ph: #34342e; --ink: #ecece6; --on-ink: #161613; --scrim: rgba(0, 0, 0, 0.6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141412; --surface: #1d1d1a; --surface-2: #24241f; --line: #3b3b35; --line-2: #2d2d28;
+  --fg: #ecece6; --muted: #a3a39a; --ph: #34342e; --ink: #ecece6; --on-ink: #161613; --scrim: rgba(0, 0, 0, 0.6); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font: 400 14px/1.45 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 24px;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+a { color: inherit; }
+
+.app { max-width: 1480px; margin: 0 auto; display: flex; min-height: 880px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.side { width: 236px; flex: none; background: var(--surface); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+.logo { height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--line-2); font-weight: 700; letter-spacing: 0.06em; }
+.logo i { width: 22px; height: 22px; border-radius: 5px; background: var(--ink); display: inline-block; }
+.navs { padding: 12px 10px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.grp { display: flex; flex-direction: column; gap: 2px; }
+.gl { font: 600 10px var(--font); letter-spacing: 0.1em; color: var(--muted); padding: 0 8px 4px; display: flex; gap: 6px; align-items: center; }
+.gl em { font-style: normal; border: 1px dashed var(--muted); border-radius: 999px; padding: 0 5px; font-size: 9px; }
+.ni { appearance: none; border: 0; background: none; text-align: left; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; width: 100%; }
+.ni i { width: 14px; height: 14px; border-radius: 3px; background: var(--line); flex: none; }
+.ni.ta { color: var(--fg); }
+.ni:hover { background: var(--surface-2); }
+.ni[aria-current="page"] { background: var(--ph); color: var(--fg); font-weight: 600; }
+.ni[aria-current="page"] i { background: var(--ink); }
+.foot-s { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--line-2); font-size: 11px; color: var(--muted); }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.top { height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.search { flex: 1; display: flex; justify-content: center; }
+.search span { width: 100%; max-width: 380px; height: 30px; border: 1px solid var(--line); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 12px; color: var(--muted); }
+.ic { width: 28px; height: 28px; border-radius: 6px; background: var(--surface-2); border: 0; flex: none; }
+.av { width: 28px; height: 28px; border-radius: 50%; background: var(--line); flex: none; }
+.reset { appearance: none; border: 1px dashed var(--line); background: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
+
+.page { padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ph-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.ph-head > div:first-child { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.crumb { font-size: 12px; color: var(--muted); }
+.crumb button { appearance: none; border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 12px; }
+h1 { font-size: 24px; font-weight: 700; margin: 0; line-height: 1.2; text-wrap: balance; }
+h2 { font-size: 15px; font-weight: 600; margin: 0; }
+h3 { font-size: 17px; font-weight: 600; margin: 0; }
+.desc { font-size: 13px; color: var(--muted); margin: 0; max-width: 70ch; }
+.hint { font-size: 12px; color: var(--muted); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.sb { justify-content: space-between; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.flush { padding: 0; }
+.card.flush > .row:first-child { padding: 14px 16px 6px; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.span2 { grid-column: span 2; }
+
+.btn { appearance: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.pri { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.btn.sm { height: 28px; padding: 0 9px; font-size: 12px; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.link { appearance: none; border: 0; background: none; padding: 0; font-size: 12px; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.chip.dark { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.chip.grey { background: var(--ph); border-color: var(--ph); }
+.chip.dash { border-style: dashed; border-color: var(--muted); }
+.in { height: 34px; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 0 10px; font-size: 13px; }
+textarea.in { height: 76px; padding: 8px 10px; resize: vertical; }
+.fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lb { font-size: 13px; font-weight: 600; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 6px; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; background: var(--surface); }
+.opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 13px; cursor: pointer; background: var(--surface); }
+.opt:has(input:checked) { border: 2px solid var(--ink); padding: 11px; }
+.opt b { display: block; }
+.note { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 6px; border: 2px solid var(--ink); font-size: 13px; }
+.note.soft { border: 1px solid var(--line); background: var(--surface-2); }
+
+.tw { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; }
+.tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl tr.hl td { background: var(--surface-2); }
+.rowbtn { appearance: none; border: 0; background: none; padding: 0; font-weight: 600; text-decoration: underline; cursor: pointer; text-align: left; }
+.sr { position: absolute; left: -9999px; }
+.bar { height: 8px; border-radius: 4px; background: var(--ph); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--muted); transition: width 300ms ease; }
+.ph { background: var(--ph); border-radius: 6px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tab { appearance: none; border: 0; background: none; font-size: 13px; padding: 8px 12px; border-bottom: 2px solid transparent; color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"], .tab[aria-current="page"] { border-bottom-color: var(--ink); color: var(--fg); font-weight: 600; }
+
+/* wizard */
+.wiz { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.steps { width: 260px; flex: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.stp { appearance: none; border: 0; background: none; display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 6px; font-size: 13px; text-align: left; cursor: pointer; color: var(--muted); }
+.stp b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px dashed var(--muted); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+.stp.done { color: var(--fg); }
+.stp.done b { border: 1.5px solid var(--ink); }
+.stp[aria-current="step"] { background: var(--ph); color: var(--fg); font-weight: 600; }
+.stp[aria-current="step"] b { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.form { flex: 999 1 520px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.grpbox { border: 1px solid var(--line-2); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.gt { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ffoot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line-2); padding-top: 16px; flex-wrap: wrap; align-items: center; }
+.pill-steps { display: flex; gap: 8px; flex-wrap: wrap; }
+.ps { font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.ps.on { border: 2px solid var(--ink); color: var(--fg); font-weight: 600; padding: 5px 11px; }
+.ps.done { color: var(--fg); }
+
+/* camera views, video */
+.view { position: relative; height: 170px; border-radius: 6px; background: var(--ph); overflow: hidden; }
+.view .who { position: absolute; left: 46%; top: 28%; width: 8%; height: 48%; border-radius: 12px; background: var(--line); }
+.view .area { position: absolute; left: 28%; top: 16%; width: 44%; height: 68%; border: 2px dashed var(--ink); border-radius: 4px; }
+.view .tag { position: absolute; left: 8px; top: 6px; font-size: 12px; color: var(--muted); }
+.pose { position: absolute; left: 44%; top: 18%; width: 12%; height: 62%; border: 2px dashed var(--ink); border-radius: 16px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.phase { appearance: none; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; background: var(--surface); cursor: pointer; }
+.phase[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.timeline { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.lane { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 12px; }
+.track { position: relative; height: 16px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line-2); }
+.rec { position: absolute; top: 0; bottom: 0; background: var(--line); }
+.sel { position: absolute; top: -4px; bottom: -4px; border: 2px solid var(--ink); border-radius: 4px; }
+.fb { display: grid; grid-template-columns: 140px minmax(0, 1fr) 30px; gap: 10px; align-items: center; font-size: 13px; }
+.fb .t { height: 10px; border-radius: 5px; background: var(--ph); overflow: hidden; }
+.fb .t span { display: block; height: 100%; background: var(--muted); }
+.chart { height: 140px; display: flex; align-items: flex-end; gap: 14px; border-bottom: 1px solid var(--line); padding: 0 4px; }
+.chart div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.chart span { width: 100%; max-width: 44px; background: var(--line); border-radius: 3px 3px 0 0; }
+.chart div:last-child span { background: var(--ink); }
+.strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.strip > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.strip span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.strip b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.find { border: 1px solid var(--line-2); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.fund { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 6px; font-size: 13px; }
+.fund b { text-align: center; border: 1px solid var(--line); border-radius: 4px; }
+.spark { height: 64px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line-2); }
+.sheet { width: 100%; max-width: 560px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 32px; display: flex; flex-direction: column; gap: 12px; margin: 0 auto; }
+.prev { flex: 999 1 460px; min-width: 0; background: var(--ph); border-radius: 8px; padding: 24px; }
+
+/* session results: attempt timeline, metric tables, signals, compare */
+.atl { position: relative; height: 40px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); margin: 4px 0 2px; }
+.atl .blk { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--line); }
+.atl .blk b { position: absolute; left: 5px; top: 3px; font: 500 10px var(--mono); color: var(--muted); white-space: nowrap; }
+.mk { position: absolute; top: 20px; width: 12px; height: 12px; margin-left: -6px; padding: 0; border-radius: 3px; border: 1px solid var(--muted); background: var(--surface); cursor: pointer; }
+.mk.fault { background: var(--muted); border-color: var(--muted); }
+.mk.flag { background: var(--surface); border: 2px dashed var(--ink); }
+.mk[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
+.lgd { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); }
+.lgd i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--muted); margin-right: 5px; }
+.lgd i.fault { background: var(--muted); }
+.lgd i.flag { border: 1.5px dashed var(--ink); }
+.res { font: 500 11px var(--mono); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.res.fail { border-color: var(--ink); background: var(--ink); color: var(--on-ink); }
+.res.warn { border-color: var(--ink); }
+.sig { border: 1px solid var(--line-2); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.sig .plot { display: block; width: 100%; height: 76px; background: var(--surface-2); border-radius: 4px; }
+.tbl td .sub { display: block; font-size: 11px; color: var(--muted); }
+
+/* modal + toast */
+.scrim { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center; padding: 72px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); z-index: 20; overflow-y: auto; }
+.modal { width: 100%; max-width: 600px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; }
+.mh { padding: 20px 24px 8px; display: flex; flex-direction: column; gap: 4px; }
+.mb { padding: 8px 24px 20px; display: flex; flex-direction: column; gap: 14px; }
+.mf { padding: 14px 24px; border-top: 1px solid var(--line-2); display: flex; justify-content: flex-end; gap: 10px; }
+.drop { border: 1.5px dashed var(--muted); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.badge { font: 600 11px var(--mono); border: 1px solid var(--ink); border-radius: 4px; padding: 1px 6px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--on-ink); padding: 10px 16px; border-radius: 8px; font-size: 13px; z-index: 30; max-width: calc(100% - 32px); }
+
+@media (max-width: 1000px) {
+  .kpis, .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: 1fr; }
+  .span2 { grid-column: auto; }
+}
+@media (max-width: 860px) {
+  .app { flex-direction: column; }
+  .side { width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .grp.other, .foot-s { display: none; }
+  .navs { padding: 8px; }
+  .grp.ta { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+  .grp.ta .gl { width: 100%; }
+  .grp.ta .ni { width: auto; }
+  .g2 { grid-template-columns: 1fr; }
+  .steps { width: 100%; }
+  .page { padding: 18px 14px 40px; }
+  .search { display: none; }
+  .top { justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+
+/* use-case switch in the top bar */
+.ucs { display: flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 8px; padding: 3px; flex: none; }
+.ucs .hint { padding: 0 6px; }
+.ucb { appearance: none; border: 0; background: none; font-size: 13px; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); }
+.ucb[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); font-weight: 600; }
+.kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.fund { grid-template-columns: minmax(0, 1fr) auto; }
+.fund b { padding: 0 6px; min-width: 34px; }
+@media (max-width: 860px) { .ucs .hint { display: none; } .top { flex-wrap: wrap; height: auto; padding-block: 8px; } }
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="Main navigation">
+    <div class="logo"><i aria-hidden="true"></i>ACCEL</div>
+    <nav class="navs" id="nav"></nav>
+    <div class="foot-s">Sigmawave</div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <div class="ucs" id="ucs" role="group" aria-label="Use case"></div>
+      <div class="search"><span>Search… <span class="kbd">⌘K</span></span></div>
+      <button class="reset" type="button" data-act="reset">Reset</button>
+      <button class="ic" type="button" aria-label="Notifications"></button>
+      <span class="av" aria-hidden="true"></span>
+    </header>
+    <main class="page" id="page" aria-live="polite"></main>
+  </div>
+</div>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+/* ── helpers ─────────────────────────────────────────────────────── */
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const getP = (p) => p.split(".").reduce((o, k) => (o == null ? o : o[k]), S);
+const setP = (p, v) => { const ks = p.split("."); const last = ks.pop(); ks.reduce((o, k) => o[k], S)[last] = v; };
+const idOf = (p) => "f-" + p.replace(/[^a-zA-Z0-9]+/g, "-");
+const checked = (p) => (getP(p) ? "checked" : "");
+const radio = (p, v) => (getP(p) === v ? "checked" : "");
+const select = (p, opts, extra = "") => `<select class="in" id="${idOf(p)}" data-bind="${p}" ${extra}>${opts.map((o) => `<option value="${esc(o)}" ${getP(p) === o ? "selected" : ""}>${o === "" ? "— None (optional)" : esc(o)}</option>`).join("")}</select>`;
+const input = (p, extra = "") => `<input class="in" id="${idOf(p)}" data-bind="${p}" value="${esc(getP(p))}" ${extra}>`;
+const field = (label, p, control) => `<div class="fld"><label class="lb" for="${idOf(p)}">${label}</label>${control}</div>`;
+const box = (p, label) => `<label class="chk"><input type="checkbox" data-bind="${p}" ${checked(p)}> ${esc(label)}</label>`;
+const kpi = (l, v, h = "") => `<div class="card kpi"><span class="l">${l}</span><span class="v">${v}</span>${h ? `<span class="hint">${h}</span>` : ""}</div>`;
+const pf = (v) => v === "pass" ? `<span class="res">Pass</span>` : v === "warn" ? `<span class="res warn">Warn</span>` : v === "fail" ? `<span class="res fail">Fail</span>` : `<span class="hint">—</span>`;
+/* one signal chart: target band behind the line, phase markers on top */
+const sig = (c) => { const n = Math.max(1, c.pts.length - 1), y = (v) => 76 - (v / 100) * 76;
+  return `<div class="sig"><div class="row sb"><b style="font-size:13px">${esc(c.title)}</b><span class="hint">${esc(c.note)}</span></div>
+    <svg class="plot" viewBox="0 0 300 76" preserveAspectRatio="none" role="img" aria-label="${esc(c.title)} · ${esc(c.note)}">
+      ${c.band ? `<rect x="0" y="${y(c.band[1])}" width="300" height="${((c.band[1] - c.band[0]) / 100) * 76}" fill="var(--ph)"></rect>` : ""}
+      ${(c.events || []).map(([x, l]) => `<line x1="${x * 3}" y1="0" x2="${x * 3}" y2="76" stroke="var(--line)" stroke-dasharray="3 3"></line><text x="${x * 3 + 3}" y="10" font-size="8" fill="var(--muted)">${esc(l)}</text>`).join("")}
+      ${(c.pts2 || []).length ? `<polyline points="${c.pts2.map((v, i) => `${(i / Math.max(1, c.pts2.length - 1)) * 300},${y(v)}`).join(" ")}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></polyline>` : ""}
+      <polyline points="${c.pts.map((v, i) => `${(i / n) * 300},${y(v)}`).join(" ")}" fill="none" stroke="var(--ink)" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+    </svg></div>`; };
+/* a plain table card: {title, note, cols, rows} */
+const tcard = (t) => `<section class="card flush"><div class="row sb"><h2>${esc(t.title)}</h2>${t.note ? `<span class="hint">${esc(t.note)}</span>` : ""}</div><div class="tw"><table class="tbl"><thead><tr>${t.cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>
+  ${t.rows.map((r) => `<tr>${r.map((c, i) => `<td>${i === 0 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>`;
+const head = (crumb, title, desc, actions = "") => `<div class="ph-head"><div><span class="crumb">${crumb}</span><h1>${title}</h1>${desc ? `<p class="desc">${desc}</p>` : ""}</div><div class="row">${actions}</div></div>`;
+const statusChip = (s) => s === "Configured" ? `<span class="chip">Configured</span>` : s === "Active" ? `<span class="chip dark">Active</span>` : s === "Inactive" ? `<span class="chip">Inactive</span>` : s === "Ongoing" ? `<span class="chip grey">Ongoing</span>` : s === "Completed" ? `<span class="chip">Completed</span>` : `<span class="chip dash">${esc(s)}</span>`;
+const objOf = (keys, on) => Object.fromEntries(keys.map((k, i) => [k, on ? !!on[i] : true]));
+
+/* ── use cases: every screen reads its words and values from here ── */
+const CAPS = ["Person detection", "Tracking", "Re-identification", "Pose estimation", "Action recognition", "Object detection", "Movement analysis"];
+const UC = {
+  golf: {
+    label: "Golf", full: "Golf swing", person: "golfer", people: "golfers", Person: "Golfer", unit: "bay", Unit: "Bay", Units: "Bays",
+    modelId: "m1", modelName: "Golf Swing Assessment", short: "Golf Swing", newName: "Junior Golf Swing Assessment", cat: "Sports › Golf",
+    acts: ["Driver", "Woods", "Irons", "Wedges", "Putting"], actsOn: [1, 1, 1, 1, 0], desc: "Swing technique for junior squad clinics.",
+    cv: [["Person detection & Re-ID", "Person Re-ID · v1.4", "Person"], ["Pose estimation", "Pose 3D · v1.2", "Body, hands and feet keypoints"], ["Action recognition", "Golf Swing Events · v1.0", "Address · takeaway · top · impact · finish"], ["Object detection", "Club & Ball Detector · v1.0", "Club · ball"]],
+    cvAlt: { "Pose estimation": ["Pose 3D · v1.2", "Pose 2D · v1.2"], "Person detection & Re-ID": ["Person Re-ID · v1.4", "Person Re-ID · v1.3"] },
+    detects: "Swing moments: address → finish · Objects: club, ball",
+    pose: { mode: "3D from two views", fps: "240 fps", fpsOpts: ["240 fps", "120 fps", "60 fps"], smoothing: "Light", keypoints: "Body + hands + feet" },
+    profile: "Golf bay · 2 cameras · 240 fps · 1080p", positions: ["Face-on", "Down-the-line"],
+    guide: "Face-on ≈ 3 m in front at chest height · Down-the-line ≈ 3 m behind on the hand line · sample frame per camera",
+    extra: { label: "Launch monitor", yes: "Yes, pair one per bay", no: "No, technique-only report" },
+    hwOnly: null,
+    fewer: { opts: [["reduced", "Run with reduced analysis", "One view, so 2D only: no turn or X-factor. Sway and tempo still work.", false], ["block", "Block that area", "The bay can't go live until it has both cameras", false]], def: "reduced" },
+    short: { unit: 4, pos: "Down-the-line", loses: "turn and X-factor" },
+    testcams: ["Bay 4 · CAM-12 face-on + CAM-13 down-the-line", "Bay 1 · CAM-01 + CAM-02"], views: ["Face-on · 240 fps", "Down-the-line · 240 fps"],
+    area: "bay area", calMsg: "Calibrated from the mat markers", covOk: "Golfer and club in both views", covWarn: "Club at the top touches the face-on frame edge. Move the camera back ≈ 30 cm.",
+    whoOpts: [["registered", "Registered golfers only", "Results always saved to a profile"], ["walkins", "Registered + walk-ins", "Unknown golfers get temporary IDs (Golfer 001 …) to assign later"]], whoDefault: "walkins",
+    sources: ["Participant Management", "Import CSV", "Bay booking system"], links: ["Bay booking, or coach assigns a bay · one golfer per bay", "QR check-in"],
+    required: ["Name", "Handicap", "Coach"], groups: ["Junior squad", "Academy squad", "Members"], privacy: "Standard", privacyLocked: false,
+    applies: "club", appliesOpts: ["Driver", "Woods", "7-iron", "Wedges"], appliesDefault: "7-iron",
+    crit: [["Posture hold (spine angle lost)", "≤ 5°"], ["Turn (X-factor at top)", "35–50°"], ["Sway", "≤ 4 cm"]], critMore: "Sequence · Tempo · Setup",
+    faultsLabel: "Faults to detect", faults: ["Early extension", "Over-the-top", "Sway", "Out of sequence", "Reverse pivot"],
+    scoring: [["grades", "Weighted score with A–F grades", "A ≥ 85 · B ≥ 75 · C ≥ 65 · D ≥ 50", false], ["goal", "Progress to personal goal", "No grades, no ranking", false]], scoringDefault: "grades",
+    review: "70% confidence", critOnly: { kind: "toggle", label: "Ignore practice swings", value: true },
+    rtypes: ["Individual", "Group"], sections: ["Score & grade", "Best swing clip", "Faults", "Swing log", "Drills", "Coach notes"], recs: "A drill per fault · from the drill library", share: ["Golfer app", "Email", "PDF"], repOnly: null,
+    testFootage: ["Recorded · Bay 4 · today 10:12–10:14 (3 swings)", "Live · Bay 4"], testRef: ["Coach frame check", "Matches at impact"],
+    testChecks: ["Coverage · golfer and club in both views", "Frame rate · 240 fps on both cameras", "Pose · 3D joints on all 3 swings", "Swing moments · 5 of 5 found", "Club and ball detected"], testTag: "Swing 2 of 3 · impact",
+    sites: ["Main academy", "East academy"], areaName: "Hitting bays", unitNames: ["Bay 1", "Bay 2", "Bay 3", "Bay 4", "Bay 5", "Bay 6"], camsPerUnit: 2,
+    failUnit: 2, failCam: "Down-the-line · CAM-06", failCells: ["✗ 60, needs 120", "✓", "✓", "✓"], failFix: "Raise CAM-06 to 120 fps or more in Cameras, then re-check.", fixedMsg: "CAM-06 now at 240 fps · all cameras pass",
+    camGroup: "Academy bays (12 cameras)", unitCams: ["Face-on · CAM-01", "Down-the-line · CAM-02", "Launch monitor · LM-1"], depName: "Main academy bays", schedule: ["Opening hours · 07:00–22:00", "Always on"],
+    session: { dep: "Main academy bays · Golf Swing v1", name: "Junior squad clinic", one: ["One golfer", "A lesson in one bay"], group: ["Group clinic", "Several golfers across bays"], date: "Sat 8 Nov 2026", from: "09:00", to: "10:30",
+      extraLabel: "Clubs", extra: ["7-iron", "Driver", "Wedges"], extraOn: [1, 1, 0], focus: ["Early extension · carried over from last clinic", "None"], groupOpts: ["Junior squad (8 golfers)", "Academy squad (10 golfers)"],
+      roster: [["Marcus Tan · HCP 14", "Bay 4"], ["Aiden Lee · HCP 9", "Bay 1"]], missing: ["Priya Nair · HCP 18", "Bay 2", "Priya Nair"], more: "5 more golfers", count: 8, consentHard: false,
+      lanes: ["Bay 1 · face-on", "Bay 1 · down-the-line", "Bay 2 · face-on", "+ 9 more cameras"], axis: ["08:00", "10:00", "12:00"], cams: 12 },
+    run: { item: "swings", per: [["Marcus Tan", "Bay 4", 22], ["Aiden Lee", "Bay 1", 19], ["Wei Jie Ong", "Bay 3", 17]], temp: "Golfer 004", tempUnit: "Bay 2", tempItems: "12 swings", tempTime: "09:05–10:20",
+      mixWhere: "Bays 3 & 4", mixWhat: "two golfers crossed at 09:42", mixItems: "3 swings may be on the wrong golfer", mixRows: [["09:42:10", "Wei Jie Ong"], ["09:42:55", "Wei Jie Ong"], ["09:43:31", "Marcus Tan"]], mixPeople: ["Marcus Tan", "Wei Jie Ong"],
+      assignOpts: ["Priya Nair", "Wei Jie Ong", "Aiden Lee"], newProfile: "name, handicap, coach", notAnalysed: "4 not analysed (out of frame)", mustAssign: false, keep: "Unassigned swings are kept for 30 days" },
+    results: { kpis: [["Golfers", "8", "8 completed assessments"], ["Group score", "74 · C", "+3 vs last clinic"], ["Most common fault", "Early extension", "5 of 8 golfers"]],
+      trendTitle: "Group trend · score by clinic", trend: [66, 68, 70, 71, 74], trendFrom: "11 Oct", trendTo: "8 Nov", faultsTitle: "Common faults across the group", faultBars: [["Early extension", 5], ["Sway", 3], ["Over-the-top", 2], ["Out of sequence", 1]], of: 8,
+      cols: ["Golfer", "Swings", "Score", "Change", "Top fault"], rows: [["Marcus Tan", 22, "78 · B", "+7", "Early extension"], ["Aiden Lee", 19, "84 · B", "+2", "—"], ["Wei Jie Ong", 17, "69 · C", "+1", "Sway"], ["Priya Nair", 12, "66 · C", "new", "Over-the-top"]], noRank: false },
+    ind: { name: "Marcus Tan", sub: "HCP 14 · right-handed · Coach Daniel Lim · 7-iron · 22 swings", strip: [["Score", "78 · B"], ["Change", "+7"], ["Consistency", "81%"], ["Tempo", "3.1 : 1"], ["Club speed", "78 mph"]],
+      itemLabel: "Swing", items: ["Swing 7 · best", "Swing 3 · worst", "Swing 12"], views: ["Face-on", "Down-the-line"], phases: ["Address", "Takeaway", "Top", "Impact", "Finish"], phase: "Impact",
+      findings: [["Early extension", "Hips moved 7 cm toward the ball · 9 of 22 swings · 0:42", 62, "pending"], ["Sway", "Pelvis shift 5 cm at top · 4 of 22 swings", 88, "confirmed"]],
+      fundTitle: "Fundamentals", fund: [["Setup", "A"], ["Turn", "B"], ["Sway", "C"], ["Posture hold", "D"], ["Sequence", "B"], ["Tempo", "A"]], signals: "Rotation · sequence · spine angle · sway",
+      drill: ["Chair drill", "For early extension · 3 × 10 swings"], notes: "Keep the hips back through impact.", history: ["Score 58 → 78", "Spine angle lost", "Faults over time"], goal: "Goal 85", next: "Aiden Lee", coach: "Coach", signoff: false },
+    sess: { status: "Complete", meta: [["Model", "Golf Swing v1"], ["Deployment", "Main academy bays · Bays 1–6"], ["Source", "Live · 12 cameras"], ["Started", "09:00 · 1 h 30 m"], ["Swings analysed", "148 of 162"], ["Flagged for review", "7 swings"]],
+      partial: "14 swings across 3 bays were not analysed · golfer out of frame at address." },
+    det: {
+      meta: [["Status", "Complete"], ["Started", "09:00 · 1 h 30 m"], ["Location", "Bay 4 · Main academy"], ["Model", "Golf Swing v1"], ["Clubs", "7-iron · Driver"], ["Analysed", "18 of 22 swings"]],
+      cams: [["Face-on · CAM-12", "Online", "240 fps · 1080p", "pass"], ["Down-the-line · CAM-13", "Online", "240 fps · 1080p", "pass"], ["Launch monitor · LM-1", "Paired", "Ball & club data", "pass"]],
+      partial: "4 of 22 swings were not analysed · golfer out of frame at address.",
+      item: "Swing", items: "swings", best: 7,
+      cols: ["#", "Time", "Club", "Score", "Main fault", "Review"],
+      blocks: [[0, "Warm-up · 7-iron"], [58, "Driver block"], [84, "7-iron block"]],
+      attempts: [
+        { n: 2, x: 6, time: "09:04", cells: ["7-iron", "64 · D", "Early extension"], review: "Confirmed", kind: "fault" },
+        { n: 3, x: 13, time: "09:08", cells: ["7-iron", "61 · D", "Early extension"], review: "Confirmed", kind: "fault", tag: "worst" },
+        { n: 7, x: 29, time: "09:21", cells: ["7-iron", "86 · A", "—"], review: "AI only", kind: "good", tag: "best" },
+        { n: 9, x: 38, time: "09:33", cells: ["7-iron", "80 · B", "—"], review: "AI only", kind: "good" },
+        { n: 12, x: 52, time: "09:47", cells: ["7-iron", "74 · C", "Sway"], review: "Needs review", kind: "flag" },
+        { n: 15, x: 68, time: "10:02", cells: ["Driver", "71 · C", "Early extension"], review: "AI only", kind: "fault" },
+        { n: 18, x: 78, time: "10:11", cells: ["Driver", "79 · B", "—"], review: "AI only", kind: "good" },
+        { n: 21, x: 92, time: "10:24", cells: ["7-iron", "68 · C", "Over-the-top"], review: "Needs review", kind: "flag" },
+      ],
+      listNote: "8 of the 18 analysed swings · the rest open from the timeline",
+      metrics: {
+        good: [["Chest turn at top", "94°", "85–105°", "pass"], ["Pelvis turn at top", "46°", "40–55°", "pass"], ["X-factor", "48°", "35–50°", "pass"], ["X-factor stretch", "54°", "≥ 50°", "pass"], ["Pelvis sway", "3.1 cm", "≤ 4 cm", "pass"], ["Chest sway", "2.4 cm", "≤ 4 cm", "pass"], ["Pelvis lift at impact", "1.8 cm", "≤ 3 cm", "pass"], ["Spine angle, address → impact", "34° → 31° · −3°", "≤ 5° change", "pass"], ["Lead arm at top", "168°", "≥ 160°", "pass"], ["Lead wrist at top", "12° cupped", "≤ 15°", "pass"], ["Shaft angle at top", "6° across", "≤ 10°", "pass"], ["Hand height at top", "Shoulder + 14 cm", "—", ""], ["Head movement", "2.6 cm", "≤ 5 cm", "pass"], ["Weight shift, rear → lead", "82%", "≥ 75%", "pass"], ["Backswing / downswing", "0.78 s / 0.25 s", "3 : 1", "pass"], ["Hand speed (estimated)", "21.4 mph", "—", ""]],
+        fault: [["Chest turn at top", "78°", "85–105°", "fail"], ["Pelvis turn at top", "52°", "40–55°", "pass"], ["X-factor", "26°", "35–50°", "fail"], ["X-factor stretch", "29°", "≥ 50°", "fail"], ["Pelvis sway", "6.2 cm", "≤ 4 cm", "fail"], ["Chest sway", "4.4 cm", "≤ 4 cm", "warn"], ["Pelvis lift at impact", "4.6 cm", "≤ 3 cm", "fail"], ["Spine angle, address → impact", "34° → 25° · −9°", "≤ 5° change", "fail"], ["Lead arm at top", "151°", "≥ 160°", "warn"], ["Lead wrist at top", "19° cupped", "≤ 15°", "warn"], ["Shaft angle at top", "14° across", "≤ 10°", "warn"], ["Hand height at top", "Shoulder + 4 cm", "—", ""], ["Head movement", "7.1 cm", "≤ 5 cm", "fail"], ["Weight shift, rear → lead", "61%", "≥ 75%", "fail"], ["Backswing / downswing", "0.71 s / 0.30 s", "3 : 1", "warn"], ["Hand speed (estimated)", "19.2 mph", "—", ""]],
+      },
+      tables: [
+        { title: "Swing sequence", note: "In sequence · pelvis → chest → arms → club", cols: ["Segment", "Peak rotation speed", "Order", "Gap to next peak"], rows: [["Pelvis", "412 °/s", "1", "38 ms"], ["Chest", "624 °/s", "2", "31 ms"], ["Lead arm", "811 °/s", "3", "24 ms"], ["Club", "1,180 °/s", "4", "—"]] },
+        { title: "Ball & club data", note: "Launch monitor LM-1", cols: ["Measure", "This swing", "Session average"], rows: [["Club speed", "79 mph", "78 mph"], ["Ball speed", "104 mph", "102 mph"], ["Smash factor", "1.32", "1.31"], ["Launch angle", "18.4°", "19.1°"], ["Spin rate", "6,420 rpm", "6,610 rpm"], ["Carry", "148 m", "144 m"], ["Club path", "2.1° in-to-out", "1.4° in-to-out"], ["Face angle", "0.8° open", "1.6° open"], ["Shot shape", "Straight", "Slight fade"]] },
+      ],
+      charts: [
+        { title: "Pelvis & chest rotation", note: "Chest (solid) vs pelvis (dashed) · band 85–105° at top", pts: [4, 12, 30, 58, 80, 88, 60, 28, 8, 3], pts2: [3, 8, 18, 32, 44, 48, 36, 18, 6, 2], band: [58, 88], events: [[6, "Address"], [24, "Takeaway"], [46, "Top"], [72, "Impact"], [92, "Finish"]] },
+        { title: "Rotation speed by segment", note: "Peaks in order · 38 / 31 / 24 ms apart", pts: [2, 8, 20, 40, 64, 90, 68, 38, 14, 5], events: [[46, "Top"], [72, "Impact"]] },
+        { title: "Sway & lift", note: "Target ≤ 4 cm", pts: [20, 24, 31, 44, 52, 46, 37, 30, 26, 24], band: [0, 40], events: [[46, "Top"], [72, "Impact"]] },
+        { title: "Head movement", note: "Target ≤ 5 cm", pts: [10, 12, 17, 23, 27, 24, 20, 18, 16, 15], band: [0, 50], events: [[72, "Impact"]] },
+      ],
+      compare: { opts: ["Swing 3 · worst", "Swing 12", "Best swing last session", "Coach reference swing"], syncs: ["Impact", "Top of backswing", "Address"],
+        cols: ["Metric", "Swing 7", "Swing 3", "Difference"], rows: [["Score", "86 · A", "61 · D", "+25"], ["X-factor", "48°", "26°", "+22°"], ["Pelvis sway", "3.1 cm", "6.2 cm", "−3.1 cm"], ["Spine angle change", "−3°", "−9°", "+6°"], ["Tempo", "3.1 : 1", "2.4 : 1", "+0.7"], ["Head movement", "2.6 cm", "7.1 cm", "−4.5 cm"]] },
+    },
+    report: { title: "Swing report", ind: "78 · B", group: "74 · C", send: "Send to golfer app", extra: "Email" },
+  },
+
+  gym: {
+    label: "Gym", full: "Gym / weightlifting", person: "lifter", people: "lifters", Person: "Lifter", unit: "rack", Unit: "Rack", Units: "Racks",
+    modelId: "m2", modelName: "Strength Technique Assessment", short: "Strength Technique", newName: "Powerlifting Technique Assessment", cat: "Fitness › Strength",
+    acts: ["Back squat", "Deadlift", "Bench press", "Overhead press", "Front squat"], actsOn: [1, 1, 1, 1, 0], desc: "Barbell technique for PT clients and classes.",
+    cv: [["Person detection & Re-ID", "Person Re-ID · v1.4", "Person"], ["Pose estimation", "Pose 2D · v1.2", "Body and feet keypoints"], ["Action recognition", "Rep Counter · rules", "Rep start · bottom · lockout (from pose angles)"], ["Object detection", "Barbell Detector · v1.0", "Barbell · plates"]],
+    cvAlt: { "Pose estimation": ["Pose 2D · v1.2", "Pose 3D · v1.2"], "Action recognition": ["Rep Counter · rules", "Exercise Recognition · v0.9"] },
+    detects: "Objects: barbell, plates · Reps are counted by rules, not a model",
+    pose: { mode: "2D from one view", fps: "60 fps", fpsOpts: ["60 fps", "120 fps"], smoothing: "Medium", keypoints: "Body + feet" },
+    profile: "Rack side camera · 60 fps · 1080p", positions: ["Side", "Front (optional)"],
+    guide: "Side ≈ 1 m high, 3–4 m away, looking along the bar · Front camera optional for knee tracking",
+    extra: { label: "Bar speed sensor", yes: "Yes, pair one per rack", no: "No, bar speed from video" },
+    fewer: { na: "Not needed: one side camera is the requirement, and the front camera is optional." },
+    short: null,
+    hwOnly: { kind: "toggle", label: "One camera, several racks", value: false, hint: "Only if no rack blocks another. Angled views lose depth and bar path accuracy." },
+    testcams: ["Rack 2 · CAM-21 side", "Rack 5 · CAM-24 side"], views: ["Side · 60 fps"],
+    area: "rack zone", calMsg: "Calibrated from the 45 cm plate", covOk: "Lifter fully in frame at the bottom of a squat", covWarn: "A spotter in front of the bar hides the knees at the bottom. Keep the side clear.",
+    whoOpts: [["registered", "Registered members only", "Results always saved to a profile"], ["walkins", "Registered + walk-ins", "Walk-ins get temporary IDs (Lifter 001 …), saved under rack and time until claimed"]], whoDefault: "walkins",
+    sources: ["Participant Management", "Import CSV", "Membership system"], links: ["QR check-in at the rack · several lifters across racks", "Tap card", "PT assigns"],
+    required: ["Name", "Training age", "PT"], groups: ["6 pm barbell class", "PT clients", "Members"], privacy: "Standard", privacyLocked: false,
+    applies: "exercise", appliesOpts: ["Back squat", "Deadlift", "Bench press", "Overhead press"], appliesDefault: "Back squat",
+    crit: [["Depth (hip crease vs knee)", "Below parallel"], ["Torso lean at bottom", "≤ 45°"], ["Bar path drift", "≤ 5 cm"]], critMore: "Knee tracking · Tempo",
+    faultsLabel: "Faults to detect", faults: ["Knee cave", "Shallow depth", "Forward lean", "Back rounding", "Hips rise first", "Heel lift", "Bar drift"],
+    scoring: [["score", "Weighted form score, 0–100", "Depth 1.5 · Knee tracking 1.2 · …", false], ["goal", "Progress to personal goal", "No score, no ranking", false]], scoringDefault: "score",
+    review: "70% confidence", critOnly: { kind: "fill", label: "Flag fatigue at bar speed loss", value: "20%" },
+    rtypes: ["Lifter summary", "Class report"], sections: ["Form score", "Rep clips", "Top fault + cue", "Rep & set log", "PT notes"], recs: "A cue per fault · from the cue library", share: ["Lifter app", "CSV", "PDF"], repOnly: null,
+    testFootage: ["Recorded · Rack 2 · today 07:40 (1 set of 5)", "Live · Rack 2"], testRef: ["Linear transducer reading (optional)", "0.61 m/s"],
+    testChecks: ["Coverage · lifter fully in frame at the bottom", "Frame rate · 60 fps", "Pose · joints found on all 5 reps", "Reps counted · 5 of 5", "Barbell tracked · plate scale set"], testTag: "Rep 3 of 5 · bottom",
+    sites: ["Downtown gym", "Northside gym"], areaName: "Strength floor", unitNames: ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8"], camsPerUnit: 1,
+    failUnit: 4, failCam: "Side · CAM-24", failCells: ["✗ 30, needs 60", "✓", "✓", "✓"], failFix: "Raise CAM-24 to 60 fps or more in Cameras, then re-check.", fixedMsg: "CAM-24 now at 60 fps · all cameras pass",
+    camGroup: "Strength floor (8 cameras)", unitCams: ["Side · CAM-21", "Front · none", "Bar speed sensor · BS-1"], depName: "Strength floor", schedule: ["Opening hours · 06:00–23:00", "Always on"],
+    session: { dep: "Strength floor · Strength Technique v1", name: "6 pm barbell class", one: ["One client", "A PT session at one rack"], group: ["Class", "Several lifters across racks"], date: "Mon 10 Nov 2026", from: "18:00", to: "19:00",
+      extraLabel: "Exercises", extra: ["Back squat", "Deadlift", "Overhead press"], extraOn: [1, 1, 0], focus: ["Knee cave · carried over from last class", "None"], groupOpts: ["6 pm barbell class (12 lifters)", "PT clients (18 lifters)"],
+      roster: [["Ravi Kumar · 3 yrs", "Rack 2"], ["Hannah Goh · 1 yr", "Rack 4"]], missing: ["Jason Teo · 5 yrs", "Rack 5", "Jason Teo"], more: "9 more lifters", count: 12, consentHard: false,
+      lanes: ["Rack 1 · side", "Rack 2 · side", "Rack 3 · side", "+ 5 more cameras"], axis: ["17:00", "18:30", "20:00"], cams: 8 },
+    run: { item: "sets", per: [["Hannah Goh", "Rack 4", 5], ["Ravi Kumar", "Rack 2", 6], ["Jason Teo", "Rack 5", 5]], temp: "Lifter 011", tempUnit: "Rack 7", tempItems: "4 sets", tempTime: "18:10–18:50",
+      mixWhere: "Racks 6 & 7", mixWhat: "two lifters swapped racks at 18:25", mixItems: "2 sets may be on the wrong lifter", mixRows: [["18:26 · set 3", "Ravi Kumar"], ["18:31 · set 4", "Ravi Kumar"], ["18:33 · set 4", "Hannah Goh"]], mixPeople: ["Hannah Goh", "Ravi Kumar"],
+      assignOpts: ["Daniel Ho", "Hannah Goh", "Ravi Kumar"], newProfile: "name, training age, PT", notAnalysed: "2 not analysed (bar out of frame)", mustAssign: false, keep: "Unassigned sets stay under rack and time until claimed" },
+    results: { kpis: [["Lifters", "12", "11 completed"], ["Class form score", "81", "+2 vs last class"], ["Most common fault", "Knee cave", "5 lifters"]],
+      trendTitle: "Class trend · form score by class", trend: [74, 76, 79, 79, 81], trendFrom: "13 Oct", trendTo: "10 Nov", faultsTitle: "Most common faults today", faultBars: [["Knee cave", 5], ["Forward lean", 3], ["Shallow depth", 2], ["Heel lift", 1]], of: 12,
+      cols: ["Lifter", "Sets", "Form score", "Change", "Top fault"], rows: [["Hannah Goh", 5, "77", "+5", "Knee cave"], ["Ravi Kumar", 6, "84", "+3", "—"], ["Jason Teo", 5, "72", "new", "Forward lean"]], noRank: false },
+    ind: { name: "Hannah Goh", sub: "1 yr training · PT Sarah Koh · back squat · 5 sets", strip: [["Form score", "77"], ["Change", "+5"], ["Clean reps", "19 of 25"], ["Depth hit", "88%"], ["Bar speed", "0.62 m/s"]],
+      itemLabel: "Set", items: ["Set 3 · 60 kg · best", "Set 5 · 65 kg · worst", "Set 1 · 50 kg"], views: ["Side"], phases: ["Start", "Descent", "Bottom", "Sticking point", "Lockout"], phase: "Bottom",
+      findings: [["Knee cave", "Knees moved in 6 cm at the bottom · reps 3–5 of set 5 · 18:42", 58, "pending"], ["Forward lean", "Torso 49° at the bottom · 4 reps", 84, "confirmed"]],
+      fundTitle: "Criteria", fund: [["Depth", "A"], ["Torso lean", "C"], ["Knee tracking", "D"], ["Bar path", "B"], ["Tempo", "B"]], signals: "Bar path coloured by speed · bar speed per rep",
+      drill: ["Cue: \"knees out\"", "For knee cave · next 3 sets"], notes: "Pause squats at 50 kg next week.", history: ["Form score 68 → 77", "Bar speed at 60 kg", "Faults over time"], goal: "Block goal 80", next: "Ravi Kumar", coach: "PT", signoff: false },
+    sess: { status: "Complete", meta: [["Model", "Strength Technique v1"], ["Deployment", "Strength floor · Racks 1–8"], ["Source", "Live · 8 cameras"], ["Started", "18:00 · 1 h"], ["Reps analysed", "268 of 284"], ["Flagged for review", "11 reps"]],
+      partial: "16 reps across 2 racks were not analysed · bar out of frame at lockout." },
+    det: {
+      meta: [["Status", "Complete"], ["Started", "18:00 · 1 h"], ["Location", "Rack 4 · Downtown gym"], ["Model", "Strength Technique v1"], ["Exercise", "Back squat"], ["Analysed", "23 of 25 reps"]],
+      cams: [["Side · CAM-23", "Online", "60 fps · 1080p", "pass"], ["Front", "Not fitted", "Knee tracking from the side only", "warn"], ["Bar speed sensor · BS-1", "Paired", "Mean & peak bar speed", "pass"]],
+      partial: "2 of 25 reps were not analysed · bar out of frame at lockout.",
+      item: "Rep", items: "reps", best: 13,
+      cols: ["#", "Time", "Set · load", "Form score", "Main fault", "Review"],
+      blocks: [[0, "Set 1 · 50 kg"], [22, "Set 2 · 55 kg"], [43, "Set 3 · 60 kg"], [64, "Set 4 · 60 kg"], [84, "Set 5 · 65 kg"]],
+      attempts: [
+        { n: 3, x: 10, time: "18:06", cells: ["Set 1 · 50 kg", "86", "—"], review: "AI only", kind: "good" },
+        { n: 8, x: 31, time: "18:14", cells: ["Set 2 · 55 kg", "83", "—"], review: "AI only", kind: "good" },
+        { n: 13, x: 50, time: "18:23", cells: ["Set 3 · 60 kg", "88", "—"], review: "AI only", kind: "good", tag: "best" },
+        { n: 15, x: 56, time: "18:25", cells: ["Set 3 · 60 kg", "79", "Forward lean"], review: "Confirmed", kind: "fault" },
+        { n: 20, x: 72, time: "18:35", cells: ["Set 4 · 60 kg", "74", "Knee cave"], review: "Needs review", kind: "flag" },
+        { n: 23, x: 86, time: "18:43", cells: ["Set 5 · 65 kg", "68", "Knee cave"], review: "Needs review", kind: "flag" },
+        { n: 24, x: 91, time: "18:44", cells: ["Set 5 · 65 kg", "63", "Shallow depth"], review: "Confirmed", kind: "fault", tag: "worst" },
+        { n: 25, x: 96, time: "18:45", cells: ["Set 5 · 65 kg", "66", "Hips rise first"], review: "AI only", kind: "fault" },
+      ],
+      listNote: "8 of the 23 analysed reps · the rest open from the timeline",
+      metrics: {
+        good: [["Depth · hip below knee", "Yes · knee 118°", "Below parallel", "pass"], ["Hip angle at bottom", "64°", "≥ 55°", "pass"], ["Knee tracking / valgus", "3°", "≤ 8°", "pass"], ["Torso lean at bottom", "41°", "≤ 45°", "pass"], ["Spine neutral", "Held", "Held", "pass"], ["Hip–knee timing", "Together", "Hips not first", "pass"], ["Heel lift", "None", "None", "pass"], ["Left–right shift", "1.2 cm", "≤ 3 cm", "pass"], ["Bar path drift from vertical", "3.1 cm", "≤ 5 cm", "pass"], ["Mean bar speed", "0.64 m/s", "≥ 0.55 m/s", "pass"], ["Peak bar speed", "0.92 m/s", "—", ""], ["Range of motion", "54 cm", "—", ""], ["Tempo · down / pause / up", "1.8 / 0.2 / 1.1 s", "—", ""]],
+        fault: [["Depth · hip below knee", "No · knee 104°", "Below parallel", "fail"], ["Hip angle at bottom", "71°", "≥ 55°", "pass"], ["Knee tracking / valgus", "14°", "≤ 8°", "fail"], ["Torso lean at bottom", "49°", "≤ 45°", "fail"], ["Spine neutral", "Lost at the bottom", "Held", "fail"], ["Hip–knee timing", "Hips rose first · 0.18 s", "Hips not first", "fail"], ["Heel lift", "Right heel 1.1 cm", "None", "warn"], ["Left–right shift", "4.6 cm", "≤ 3 cm", "fail"], ["Bar path drift from vertical", "7.4 cm forward", "≤ 5 cm", "fail"], ["Mean bar speed", "0.41 m/s", "≥ 0.55 m/s", "fail"], ["Peak bar speed", "0.63 m/s", "—", ""], ["Range of motion", "47 cm", "—", ""], ["Tempo · down / pause / up", "2.1 / 0.0 / 1.9 s", "—", ""]],
+      },
+      tables: [
+        { title: "Sets", note: "Fatigue flagged at 20% bar-speed loss", cols: ["Set", "Load", "Reps done / prescribed", "Set score", "Speed loss", "Form broke at"], rows: [["Set 1", "50 kg", "5 / 5", "86", "4%", "—"], ["Set 2", "55 kg", "5 / 5", "84", "7%", "—"], ["Set 3", "60 kg", "5 / 5", "82", "11%", "—"], ["Set 4", "60 kg", "5 / 5", "78", "16%", "Rep 5"], ["Set 5", "65 kg", "5 / 5", "69", "24%", "Rep 3"]] },
+        { title: "Bar speed at the same load", note: "Back squat at 60 kg · training block week 4", cols: ["Session", "Mean bar speed", "Change"], rows: [["Today", "0.62 m/s", "+0.02"], ["3 Nov", "0.60 m/s", "+0.03"], ["27 Oct", "0.57 m/s", "—"]] },
+      ],
+      charts: [
+        { title: "Bar speed per rep · set 5", note: "24% loss, first → last rep", pts: [78, 72, 63, 54, 44], events: [[60, "Fatigue flag"]] },
+        { title: "Knee & hip angle through the rep", note: "Knee (solid) vs hip (dashed)", pts: [88, 60, 32, 18, 24, 48, 74, 90], pts2: [84, 58, 34, 22, 30, 52, 76, 88], events: [[38, "Bottom"], [60, "Sticking point"], [92, "Lockout"]] },
+        { title: "Bar height over time", note: "Descent · bottom · lockout", pts: [92, 66, 38, 16, 20, 46, 72, 92], events: [[38, "Bottom"], [92, "Lockout"]] },
+        { title: "Torso angle through the rep", note: "Target ≤ 45°", pts: [18, 32, 46, 58, 54, 42, 28, 18], band: [0, 50], events: [[38, "Bottom"]] },
+      ],
+      compare: { opts: ["Rep 24 · worst", "Rep 20", "Same load last week", "Coach reference rep"], syncs: ["Bottom of rep", "Start", "Lockout"],
+        cols: ["Metric", "Rep 13", "Rep 24", "Difference"], rows: [["Form score", "88", "63", "+25"], ["Depth", "Below parallel", "Above parallel", "−14° knee"], ["Knee valgus", "3°", "14°", "−11°"], ["Torso lean", "41°", "49°", "−8°"], ["Bar path drift", "3.1 cm", "7.4 cm", "−4.3 cm"], ["Mean bar speed", "0.64 m/s", "0.41 m/s", "+0.23 m/s"]] },
+    },
+    report: { title: "Lifter summary", ind: "77", group: "81", send: "Send to lifter app", extra: "Export CSV" },
+  },
+
+  physio: {
+    label: "Physio", full: "Physio / rehab", person: "patient", people: "patients", Person: "Patient", unit: "room", Unit: "Room", Units: "Rooms",
+    modelId: "m3", modelName: "Rehab Movement Assessment", short: "Rehab Movement", newName: "Post-op Knee Rehab Assessment", cat: "Healthcare › Rehabilitation",
+    acts: ["Range of motion", "Gait", "Standard tests", "Exercises", "Balance"], actsOn: [1, 1, 1, 1, 0], desc: "Decision support for knee rehab, not diagnosis.",
+    cv: [["Person detection & Re-ID", "Person Re-ID · v1.4", "Person"], ["Pose estimation", "Pose 3D · v1.2", "Body and feet keypoints, left and right"], ["Action recognition", "Gait Events · v1.0", "Heel strike · toe off · test start and end"], ["Object detection", "Walking Aid Detector · v1.0", "Cane · frame · crutches"]],
+    cvAlt: { "Pose estimation": ["Pose 3D · v1.2", "Pose 2D · v1.2"] },
+    detects: "Gait events: heel strike, toe off · Objects: walking aids",
+    pose: { mode: "3D from two views", fps: "60 fps", fpsOpts: ["60 fps", "120 fps"], smoothing: "Strong", keypoints: "Body + feet, left and right" },
+    profile: "Treatment room · 2 cameras · 60 fps + gait walkway", positions: ["Room front", "Room side", "Walkway side", "Walkway end (optional)"],
+    guide: "Room cameras ≈ 1 m high, ≈ 3 m away, 90° apart · walkway side camera ≈ 4–5 m back",
+    extra: { label: "Depth camera", yes: "Yes, one per room", no: "No, 3D from the two room cameras" },
+    fewer: { opts: [["reduced", "Run with reduced analysis", "Not allowed: clinical angles need both views", true], ["block", "Block that room", "The room can't go live until it has both cameras. Timed tests could still run on one camera.", false]], def: "block" },
+    short: { unit: 2, pos: "Side", loses: "joint angles" },
+    hwOnly: { kind: "fill", label: "Walkway length", value: "10 m (2 m speed up, 6 m timed, 2 m slow down)" },
+    testcams: ["Room 1 · CAM-31 front + CAM-32 side", "Gait walkway · CAM-35"], views: ["Front · 60 fps", "Side · 60 fps"],
+    area: "floor marker and walkway", calMsg: "Calibrated from the floor markers and the 10 m walkway", covOk: "Room and the full walkway in view", covWarn: "A chair hides the walkway end marker. Move it so the timed 6 m stays clear.",
+    whoOpts: [["registered", "Registered patients only", "Every result goes to a clinical record"], ["walkins", "Registered + temporary IDs in classes", "Each temporary ID must be assigned before results are saved"]], whoDefault: "walkins",
+    sources: ["Participant Management", "Import CSV", "Clinic records system"], links: ["Clinician selects the patient · several patients in a class", "Class list"],
+    required: ["Name", "Diagnosis", "Affected side", "Clinician", "Consent"], groups: ["Knee rehab class", "Falls prevention class"], privacy: "Clinical (locked)", privacyLocked: true,
+    applies: "test", appliesOpts: ["Knee ROM", "Timed Up and Go", "30 s sit-to-stand", "10 m walk"], appliesDefault: "Knee ROM",
+    crit: [["Knee flexion", "Norm ≥ 135° · patient goal 125°"], ["Knee extension lag", "≤ 5°"], ["Left–right difference", "≤ 10%"]], critMore: "Hip flexion · Ankle dorsiflexion",
+    faultsLabel: "Compensations to detect", faults: ["Trunk lean", "Hip hike", "Knee cave", "Shoulder shrug"],
+    scoring: [["grades", "Grades or scores", "Not used for clinical care", true], ["goal", "Progress to the patient's own goal", "No grades, no ranking", false]], scoringDefault: "goal",
+    review: "80% confidence", critOnly: { kind: "toggle", label: "Accuracy notes on gait timing", value: true },
+    rtypes: ["Visit report", "Class summary", "Progress report for referrer"], sections: ["Measures vs goal", "Video clips (face blurred)", "Test log", "Home programme", "Clinician notes"], recs: "Home exercise programme template", share: ["Patient app", "PDF", "Referrer email"], repOnly: null,
+    testFootage: ["Recorded · Room 1 · today 08:30 (knee ROM, 3 reps)", "Recorded · Walkway · today 08:35 (10 m walk)"], testRef: ["Goniometer reading", "118°"],
+    testChecks: ["Coverage · patient and walkway in view", "Frame rate · 60 fps", "Pose · 3D joints, left and right", "Knee angle within 3° of the goniometer", "Gait speed within 0.05 m/s of the stopwatch"], testTag: "Rep 2 of 3 · full flexion",
+    sites: ["Clinic A", "Clinic B"], areaName: "Rehab wing", unitNames: ["Room 1", "Room 2", "Room 3", "Gait walkway"], camsPerUnit: 2,
+    failUnit: 3, failCam: "Walkway side · CAM-35", failCells: ["✓ 60", "✓", "✓", "✗ End marker hidden"], failFix: "Clear the walkway end marker, then re-check. The walkway can't record until it's fixed.", fixedMsg: "Walkway markers read correctly · all cameras pass",
+    camGroup: "Clinic A (7 cameras)", unitCams: ["Front · CAM-31", "Side · CAM-32", "Face blur on"], depName: "Clinic A rehab", schedule: ["Clinic hours · 08:00–18:00", "Always on"],
+    session: { dep: "Clinic A rehab · Rehab Movement v1", name: "Knee rehab class", one: ["One-to-one visit", "One patient, one room"], group: ["Group class", "Several patients in a room"], date: "Tue 11 Nov 2026", from: "10:00", to: "11:00",
+      extraLabel: "Tests", extra: ["Knee ROM", "30 s sit-to-stand", "10 m walk"], extraOn: [1, 1, 0], focus: ["Knee flexion · goal 125°", "None"], groupOpts: ["Knee rehab class (6 patients)", "Falls prevention class (8 patients)"],
+      roster: [["Mei Ling Chua · left knee", "Room 1"], ["Ahmad Rahim · right knee", "Room 1"]], missing: ["Grace Tan · left knee", "Room 1", "Grace Tan"], more: "3 more patients", count: 6, consentHard: true,
+      lanes: ["Room 1 · front", "Room 1 · side", "Walkway · side", "+ 4 more cameras"], axis: ["09:00", "10:30", "12:00"], cams: 7 },
+    run: { item: "tests", per: [["Mei Ling Chua", "Room 1", 4], ["Ahmad Rahim", "Room 1", 4], ["Grace Tan", "Room 1", 3]], temp: "Patient 002", tempUnit: "Room 1", tempItems: "3 tests", tempTime: "10:05–10:40",
+      mixWhere: "Room 1", mixWhat: "two patients crossed during the walk test at 10:22", mixItems: "1 walk test may be on the wrong patient", mixRows: [["10:22 · 10 m walk", "Ahmad Rahim"], ["10:24 · sit-to-stand", "Ahmad Rahim"], ["10:26 · knee ROM", "Mei Ling Chua"]], mixPeople: ["Mei Ling Chua", "Ahmad Rahim"],
+      assignOpts: ["Lim Boon Huat", "Grace Tan", "Ahmad Rahim"], newProfile: "name, diagnosis, affected side, clinician, consent", notAnalysed: "1 not analysed (patient left the frame)", mustAssign: true, keep: "Results can't be saved until every temporary ID is assigned" },
+    results: { kpis: [["Patients", "6", "6 completed"], ["On track", "5 of 6", "Against their own goals"], ["Common compensation", "Trunk lean", "3 patients"]],
+      trendTitle: "Attendance · last 5 classes", trend: [5, 6, 6, 5, 6], trendFrom: "14 Oct", trendTo: "11 Nov", faultsTitle: "Common compensations in the class", faultBars: [["Trunk lean", 3], ["Hip hike", 2], ["Knee cave", 1]], of: 6,
+      cols: ["Patient", "Tests", "Progress to goal", "Since last visit", "Main compensation"], rows: [["Ahmad Rahim", 4, "64%", "+5%", "Hip hike"], ["Grace Tan", 3, "52%", "new", "—"], ["Mei Ling Chua", 4, "78%", "+8%", "Trunk lean"]], noRank: true },
+    ind: { name: "Mei Ling Chua", sub: "Left knee, post-op week 8 · Clinician Dr. Lim · 4 tests", strip: [["Progress to goal", "78%"], ["Knee flexion", "112°"], ["Goal", "125°"], ["Baseline", "95°"], ["Sit-to-stand", "11 reps"]],
+      itemLabel: "Test", items: ["Knee ROM · rep 2", "30 s sit-to-stand", "10 m walk"], views: ["Front", "Side"], phases: ["Start", "Full flexion", "Full extension", "Finish"], phase: "Full flexion",
+      findings: [["Trunk lean", "Leaned 12° to the right during sit-to-stand · 0:31", 66, "pending"], ["Left–right difference", "Flexion 112° vs 138° on the other side", 91, "confirmed"]],
+      fundTitle: "Measures", fund: [["Knee flexion L", "112°"], ["Knee flexion R", "138°"], ["Extension lag", "4°"], ["Gait speed", "1.02 m/s"], ["Sit-to-stand", "11"]], signals: "Knee angle through the movement, left and right overlaid",
+      drill: ["Heel slides", "Home programme · 3 × 15 daily"], notes: "Flexion improving. Add step-ups next week.", history: ["Knee flexion 95° → 112°", "Gait speed", "Sit-to-stand"], goal: "Goal 125°", next: "Ahmad Rahim", coach: "Clinician", signoff: true },
+    sess: { status: "Complete", meta: [["Model", "Rehab Movement v1"], ["Deployment", "Clinic A rehab · Rooms 1–3 · walkway"], ["Source", "Live · 7 cameras"], ["Started", "10:00 · 1 h"], ["Tests analysed", "21 of 23"], ["Flagged for review", "4 tests"]],
+      partial: "2 tests were not analysed · patient left the frame during the walk." },
+    det: {
+      meta: [["Status", "Complete"], ["Visit", "8 of 12 · post-op week 8"], ["Started", "10:00 · 35 min"], ["Location", "Room 1 · Clinic A"], ["Model", "Rehab Movement v1"], ["Analysed", "7 of 8 items"]],
+      cams: [["Front · CAM-31", "Online", "60 fps · 1080p", "pass"], ["Side · CAM-32", "Online", "60 fps · 1080p", "pass"], ["Walkway · CAM-35", "Online", "10 m walkway · markers read", "pass"], ["Face blur", "On", "Required for clinical records", "pass"]],
+      partial: "1 of 8 items was not analysed · patient left the frame during the walk.",
+      item: "Test", items: "tests", best: 2,
+      cols: ["#", "Time", "Test", "Result", "Compensation", "Review"],
+      blocks: [[0, "Range of motion"], [36, "Function tests"], [58, "Gait"], [74, "Balance"]],
+      attempts: [
+        { n: 1, x: 8, time: "10:04", cells: ["Knee ROM · rep 1", "108° flexion", "Trunk lean"], review: "AI only", kind: "fault" },
+        { n: 2, x: 16, time: "10:06", cells: ["Knee ROM · rep 2", "112° flexion", "—"], review: "Clinician confirmed", kind: "good", tag: "best today" },
+        { n: 3, x: 24, time: "10:08", cells: ["Knee ROM · rep 3", "110° flexion", "—"], review: "AI only", kind: "good" },
+        { n: 4, x: 44, time: "10:16", cells: ["30 s sit-to-stand", "11 reps", "Trunk lean 12°"], review: "Needs review", kind: "flag" },
+        { n: 5, x: 62, time: "10:22", cells: ["10 m walk", "1.02 m/s", "Hip hike"], review: "Needs review", kind: "flag" },
+        { n: 6, x: 78, time: "10:28", cells: ["Single-leg balance · left", "14 s", "—"], review: "AI only", kind: "good" },
+        { n: 7, x: 88, time: "10:31", cells: ["Single-leg balance · right", "26 s", "—"], review: "AI only", kind: "good" },
+      ],
+      listNote: "Every item this visit · patients are never ranked against each other",
+      metrics: {
+        good: [["Full range reached", "Yes", "Through range", "pass"], ["Trunk lean", "4°", "≤ 8°", "pass"], ["Hip hike", "1.2 cm", "≤ 2 cm", "pass"], ["Knee valgus", "3°", "≤ 8°", "pass"], ["Movement control / smoothness", "Smooth", "Smooth", "pass"], ["Active or assisted", "Active", "—", ""], ["Pain-limited (clinician)", "No", "—", ""], ["Pain score (patient-reported)", "2 / 10", "≤ 3", "pass"], ["Knee flexion · left", "112°", "Goal 125° · norm ≥ 135°", "warn"], ["Knee flexion · right", "138°", "Norm ≥ 135°", "pass"], ["Left–right difference", "26° · 19%", "≤ 10%", "fail"], ["Extension lag · left", "4°", "≤ 5°", "pass"]],
+        fault: [["Full range reached", "No · stopped at 108°", "Through range", "fail"], ["Trunk lean", "12° to the right", "≤ 8°", "fail"], ["Hip hike", "2.8 cm", "≤ 2 cm", "fail"], ["Knee valgus", "9°", "≤ 8°", "warn"], ["Movement control / smoothness", "Hesitation at mid-range", "Smooth", "fail"], ["Active or assisted", "Active", "—", ""], ["Pain-limited (clinician)", "Yes · marked by Dr. Lim", "—", ""], ["Pain score (patient-reported)", "5 / 10", "≤ 3", "fail"], ["Knee flexion · left", "108°", "Goal 125° · norm ≥ 135°", "warn"], ["Knee flexion · right", "138°", "Norm ≥ 135°", "pass"], ["Left–right difference", "30° · 22%", "≤ 10%", "fail"], ["Extension lag · left", "6°", "≤ 5°", "warn"]],
+      },
+      tables: [
+        { title: "Range of motion", note: "Affected side: left", cols: ["Joint & movement", "Left", "Right", "Difference", "Normal", "Baseline → goal", "Active / assisted"], rows: [["Knee flexion", "112°", "138°", "26° · 19%", "≥ 135°", "95° → 125°", "Active"], ["Knee extension", "−4°", "0°", "4°", "0°", "−12° → 0°", "Active"], ["Hip flexion", "104°", "116°", "12° · 10%", "≥ 120°", "92° → 115°", "Active"], ["Ankle dorsiflexion", "12°", "16°", "4°", "≥ 15°", "8° → 15°", "Assisted"]] },
+        { title: "Gait · 10 m walk", note: "Walkway 10 m (2 m up · 6 m timed · 2 m down) · timing measures at 60 fps carry ±0.03 s, speed and step length are the reliable ones", cols: ["Measure", "Left", "Right", "Value", "Symmetry"], rows: [["Walking speed", "—", "—", "1.02 m/s", "—"], ["Cadence", "—", "—", "98 steps/min", "—"], ["Step length", "52 cm", "61 cm", "—", "85%"], ["Stride length", "—", "—", "113 cm", "—"], ["Step time", "0.64 s", "0.58 s", "—", "91%"], ["Stance time", "66% cycle", "61% cycle", "—", "92%"], ["Swing time", "34% cycle", "39% cycle", "—", "87%"], ["Double support", "—", "—", "28% cycle", "—"]] },
+        { title: "Standard tests", note: "Clinic norms where provided", cols: ["Test", "Today", "Last visit", "Norm / cut-off"], rows: [["Timed Up and Go", "11.4 s", "12.8 s", "< 12 s"], ["30-second sit-to-stand", "11 reps", "9 reps", "≥ 12 reps"], ["5-times sit-to-stand", "13.1 s", "14.9 s", "< 12 s"], ["Single-leg balance · left", "14 s", "9 s", "≥ 30 s"], ["Single-leg balance · right", "26 s", "25 s", "≥ 30 s"], ["10-metre walk", "9.8 s · 1.02 m/s", "10.6 s · 0.94 m/s", "≥ 1.2 m/s"]] },
+        { title: "Record & privacy", note: "Clinical privacy is locked on for this model", cols: ["Item", "Status"], rows: [["Consent", "On file · signed 2 Sep 2026"], ["Face blur", "On for every clip"], ["Video retention", "Delete after 12 Nov 2027"], ["Who viewed this record", "Dr. Lim (today) · S. Koh, physio (4 Nov)"], ["Shared with", "Patient app · referrer not yet sent"]] },
+      ],
+      charts: [
+        { title: "Knee angle through the movement", note: "Left (solid) vs right (dashed)", pts: [8, 30, 58, 76, 72, 46, 18, 6], pts2: [8, 36, 68, 92, 88, 54, 20, 6], events: [[44, "Full flexion"], [86, "Full extension"]] },
+        { title: "Knee flexion across visits", note: "Baseline 95° → goal 125°", pts: [20, 28, 38, 45, 52, 58, 64, 70], band: [84, 100], events: [[88, "Today"]] },
+        { title: "Gait speed across visits", note: "Goal 1.2 m/s", pts: [22, 30, 36, 44, 52, 58, 64, 68], band: [84, 100], events: [[88, "Today"]] },
+        { title: "Step timing, left vs right", note: "Symmetry 91%", pts: [52, 58, 54, 60, 56, 59, 55, 58], pts2: [44, 48, 45, 50, 46, 49, 45, 48] },
+      ],
+      compare: { opts: ["Knee ROM · rep 1", "Visit 7 · 1 Nov", "Baseline visit · 16 Sep", "Unaffected side"], syncs: ["Full flexion", "Start", "Finish"],
+        cols: ["Measure", "This visit", "Visit 7", "Change"], rows: [["Knee flexion · left", "112°", "106°", "+6°"], ["Extension lag", "4°", "6°", "−2°"], ["Left–right difference", "19%", "24%", "−5 pts"], ["Gait speed", "1.02 m/s", "0.94 m/s", "+0.08 m/s"], ["30 s sit-to-stand", "11 reps", "9 reps", "+2"], ["Pain score", "2 / 10", "4 / 10", "−2"]] },
+    },
+    report: { title: "Visit report", ind: "78% to goal", group: "5 of 6 on track", send: "Send to patient app", extra: "Send to referrer" },
+  },
+};
+for (const k of Object.keys(UC)) UC[k].uc = k;
+let U = UC.golf;
+
+/* ── CV models in Model Management: shared by every assessment model ── */
+const CV_CAPS = ["Person detection & Re-ID", "Pose estimation", "Action recognition", "Object detection"];
+const CV_LIB = [
+  ["Person Re-ID · v1.4", "Person detection & Re-ID", "Person · the same person across cameras"],
+  ["Person Re-ID · v1.3", "Person detection & Re-ID", "Person · older version"],
+  ["Pose · v1.2", "Pose estimation", "Body, hands and feet keypoints · 2D or 3D, set in Camera setup"],
+  ["Pose · v1.1", "Pose estimation", "Body and feet keypoints · 2D or 3D"],
+  ["Golf Swing Events · v1.0", "Action recognition", "Address · takeaway · top · impact · finish"],
+  ["Rep Counter · rules", "Action recognition", "Rep start · bottom · lockout (from pose angles)"],
+  ["Exercise Recognition · v0.9", "Action recognition", "Squat · deadlift · bench · press"],
+  ["Gait Events · v1.0", "Action recognition", "Heel strike · toe off · test start and end"],
+  ["Club & Ball Detector · v1.0", "Object detection", "Club · ball"],
+  ["Barbell Detector · v1.0", "Object detection", "Barbell · plates"],
+  ["Walking Aid Detector · v1.0", "Object detection", "Cane · frame · crutches"],
+].map(([name, cap, detects], i) => ({ id: "cv" + i, name, cap, detects }));
+/* which AI capabilities each kind of CV model makes possible */
+const CAP_COVER = { "Person detection & Re-ID": ["Person detection", "Tracking", "Re-identification"], "Pose estimation": ["Pose estimation", "Movement analysis"], "Action recognition": ["Action recognition"], "Object detection": ["Object detection"] };
+const selCv = (d = S.draft) => S.lib.filter((m) => d.cvSel[m.id]);
+const capsOn = (d = S.draft) => { const cov = new Set(selCv(d).flatMap((m) => CAP_COVER[m.cap])); return CAPS.filter((c) => d.caps[c] && cov.has(c)); };
+
+/* ── pose mode decides the cameras each area needs ─────────────────── */
+const POSE_MODES = ["3D from two views", "2D from one view"];
+const POSE_REQ = {
+  golf: {
+    "3D from two views": { pos: ["Face-on", "Down-the-line"], why: "3D joints are built by combining two views, so each bay needs both cameras.", gets: "Full analysis: turn, X-factor, sway, sequence and tempo." },
+    "2D from one view": { pos: ["Face-on"], why: "2D reads the swing from one camera.", gets: "Sway, posture and tempo only. No turn or X-factor, which need depth." },
+  },
+  gym: {
+    "3D from two views": { pos: ["Side", "Front"], why: "3D combines the side and front views, so each rack needs both cameras.", gets: "Adds knee tracking and bar path in depth.",
+      fewer: { opts: [["reduced", "Run with reduced analysis", "Side camera only, so 2D: no knee tracking in depth.", false], ["block", "Block that rack", "The rack can't go live until it has both cameras.", false]] } },
+    "2D from one view": { pos: ["Side"], why: "2D reads the lift from the side camera.", gets: "Depth, torso lean, bar path and tempo. Knee cave needs the front view (3D)." },
+  },
+  physio: {
+    "3D from two views": { pos: ["Room front", "Room side"], walk: ["Walkway side", "Walkway end (optional)"], why: "3D combines the front and side views, so each room needs both cameras.", gets: "Joint angles in every plane, left and right." },
+    "2D from one view": { pos: ["Room side"], walk: ["Walkway side"], why: "2D reads movement from the side camera.", gets: "Angles only in the side camera's plane. Less accurate for clinical measures." },
+  },
+};
+const poseReq = (d = S.draft) => POSE_REQ[U.uc][d.poseMode] || POSE_REQ[U.uc][POSE_MODES[0]];
+const posAll = (d = S.draft) => { const r = poseReq(d); return r.walk ? [...r.pos, ...r.walk] : r.pos; };
+const presetFor = (d = S.draft) => { const r = poseReq(d), n = r.pos.length; return `${U.Unit} · ${n} camera${n === 1 ? "" : "s"} (${r.pos.join(" + ")}) · ${d.fps} · 1080p${r.walk ? " + gait walkway" : ""}`; };
+
+/* ── test cameras: positions and the cameras inside one area ─────── */
+const pad2 = (n) => String(n).padStart(2, "0");
+/* positions the chosen pose mode needs in this area (the walkway has its own) */
+const isWalk = (area) => U.uc === "physio" && /walkway/i.test(area);
+function posFor(area, d = S.draft) { const r = poseReq(d); return isWalk(area) ? r.walk : r.pos; }
+function camsIn(area) {
+  const i = U.unitNames.indexOf(area);
+  if (U.uc === "golf") return [`CAM-${pad2(i * 2 + 1)}`, `CAM-${pad2(i * 2 + 2)}`];
+  if (U.uc === "gym") return [`CAM-${21 + i}`, `CAM-${41 + i}`];
+  return isWalk(area) ? ["CAM-37", "CAM-38"] : [`CAM-${31 + i * 2}`, `CAM-${32 + i * 2}`];
+}
+/* cameras are listed in 3D position order, so each position keeps its own camera in 2D too */
+function defaultCams(area, d = S.draft) {
+  const cams = camsIn(area), full = POSE_REQ[U.uc][POSE_MODES[0]];
+  const order = isWalk(area) ? full.walk : full.pos;
+  return Object.fromEntries(posFor(area, d).map((pos) => [pos, cams[order.indexOf(pos)] || ""]));
+}
+
+/* ── state ───────────────────────────────────────────────────────── */
+let S;
+/* ── new session: active deployments of this use case at a site, and their areas ── */
+const modelShort = () => U.modelName.replace(" Assessment", "");
+const depsFor = (site) => S.deployments.filter((d) => d.active && d.site === site && d.model.startsWith(modelShort()));
+const depLabel = (d) => `${d.name} · ${d.model}`;
+function areasOf(d) {
+  if (!d) return [];
+  if (d.locs.includes(",")) return d.locs.split(", ");
+  const m = d.locs.match(/(\d+)[–-](\d+)/);
+  const units = U.unitNames.filter((u) => !/walkway/i.test(u)).slice(0, m ? Number(m[2]) : U.unitNames.length);
+  return /walkway/i.test(d.locs) ? [...units, U.unitNames.find((u) => /walkway/i.test(u))] : units;
+}
+/* sample CSV per use case: columns are the model's required profile fields */
+/* already on this session's list (roster, the missing-consent row, or imported) */
+const inSession = (nm) => U.session.roster.some(([x]) => x.split(" · ")[0] === nm) || U.session.missing[2] === nm || S.ns.imported.some((p) => p.name === nm);
+const CSV = {
+  golf: { file: "junior_squad.csv", cols: ["Name", "Handicap", "Coach", "Consent"], rows: [["Ethan Lim", "12", "Daniel Lim", "Yes"], ["Chloe Ng", "21", "Daniel Lim", "Yes"], ["Marcus Tan", "14", "Daniel Lim", "Yes"]] },
+  gym: { file: "barbell_class.csv", cols: ["Name", "Training age", "PT", "Consent"], rows: [["Ben Ong", "2 yrs", "Sarah Koh", "Yes"], ["Nur Aisyah", "6 months", "Sarah Koh", "No"], ["Hannah Goh", "1 yr", "Sarah Koh", "Yes"]] },
+  physio: { file: "knee_rehab_class.csv", cols: ["Name", "Diagnosis", "Affected side", "Clinician", "Consent"], rows: [["Daniel Wong", "ACL repair", "Right", "Dr. Lim", "Yes"], ["Siti Rahman", "Knee replacement", "Left", "Dr. Lim", "Yes"], ["Mei Ling Chua", "ACL repair", "Left", "Dr. Lim", "Yes"]] },
+};
+
+function draftFor(u) {
+  const prevU = U; U = u;
+  const area = u.testcams[0].split(" · ")[0];
+  const cvSel = {};
+  for (const [, model] of u.cv) { const m = CV_LIB.find((x) => x.name === (/^Pose/.test(model) ? "Pose · v1.2" : model)); if (m) cvSel[m.id] = true; }
+  const d = { tcamsInit: null,
+    id: null, name: u.newName, cat: u.cat, acts: objOf(u.acts, u.actsOn), desc: u.desc, caps: objOf(CAPS),
+    cvSel, cvFilter: "All capabilities", poseMode: u.pose.mode, fps: u.pose.fps, smoothing: u.pose.smoothing,
+    profile: "", presets: [], fewer: u.fewer.def || null, extra: "yes", hwOnly: u.hwOnly ? u.hwOnly.value : null, tsite: u.sites[0], tarea: u.testcams[0].split(" · ")[0], get tcams() { return this._tc || (this._tc = { ...this.tcamsInit }); }, set tcams(v) { this._tc = v; }, areaDrawn: true, calibrated: false,
+    who: u.whoDefault, source: u.sources[0], link: u.links[0], groups: [...u.groups], privacy: u.privacy,
+    applies: u.appliesDefault, crit: u.crit.map((c) => c[1]), faults: objOf(u.faults), scoring: u.scoringDefault, review: u.review, critOnly: u.critOnly.value,
+    rtypes: objOf(u.rtypes), sections: objOf(u.sections), video: true, recs: u.recs, share: objOf(u.share), repOnly: u.repOnly ? u.repOnly.value : null,
+    testFootage: u.testFootage[0], testRef: u.testRef[1], test: "idle",
+  };
+  d.profile = presetFor(d);
+  d.tcamsInit = defaultCams(area, d);
+  U = prevU;
+  return d;
+}
+function ucState(u) {
+  return {
+    draft: draftFor(u), step: 1,
+    up: { cap: "Action recognition", title: u.cv[2][1].replace(/ · v[\d.]+/, "") + " v1.1", batch: "8" },
+    dep: { model: u.modelId, site: u.sites[0], units: objOf(u.unitNames), group: u.camGroup, name: u.depName, fixed: false, short: "pending", reduced: false, schedule: u.schedule[0] },
+    ns: { step: 1, site: u.sites[0], depSel: "", areasFor: "", areas: {}, imported: [], dep: u.session.dep, name: u.session.name, type: "group", date: u.session.date, from: u.session.from, to: u.session.to, extra: objOf(u.session.extra, u.session.extraOn), focus: u.session.focus[0], group: u.session.groupOpts[0], consent: false, src: "recorded" },
+    run: { sid: null, progress: 0 },
+    issues: { g4: false, mix: false, choice: "assign", to: u.run.assignOpts[0], mix1: u.run.mixPeople[0] },
+    findings: u.ind.findings.map(([name, detail, conf, state], i) => ({ id: "f" + i, name, detail, conf, state })),
+    phase: u.ind.phase, pose: true, item: u.ind.items[0], notes: u.ind.notes, signed: false,
+    att: String((u.det.attempts.find((a) => a.tag && a.tag.startsWith("best")) || u.det.attempts[0]).n),
+    attFilter: "all", bestAtt: String(u.det.best), cmpB: u.det.compare.opts[0], sync: u.det.compare.syncs[0], overlay: false,
+    preset: { name: "", perArea: "2", fps: "240 fps", res: "1080p", cal: "Floor or mat markers" },
+    rep: { type: "individual", sections: { ...objOf(u.sections), "Progress chart": false } },
+    modal: null, csv: { ctx: "session", toGroup: true },
+  };
+}
+function freshState(uc, rt) {
+  U = UC[uc];
+  return {
+    uc, route: rt,
+    models: [
+      { id: "m1", uc: "golf", name: "Golf Swing Assessment", cat: "Sports › Golf", ver: "v1", status: "Configured", deps: "2 sites", edited: "2 Nov · Daniel Lim" },
+      { id: "m2", uc: "gym", name: "Strength Technique Assessment", cat: "Fitness › Strength", ver: "v1", status: "Configured", deps: "1 site", edited: "28 Oct · Gym admin" },
+      { id: "m3", uc: "physio", name: "Rehab Movement Assessment", cat: "Healthcare › Rehabilitation", ver: "v1", status: "Configured", deps: "1 site", edited: "20 Oct · Clinic admin" },
+      { id: "m4", uc: "physio", name: "Shoulder Rehab Assessment", cat: "Healthcare › Rehabilitation", ver: "v1", status: "Draft", step: 2, deps: "—", edited: "Yesterday · Clinic admin" },
+    ],
+    cur: UC[uc].modelId,
+    deployments: [
+      { name: "Main academy bays", model: "Golf Swing v1", site: "Main academy", locs: "Bays 1–6", cams: 12, health: "! 1 camera below 120 fps", active: true },
+      { name: "Strength floor", model: "Strength Technique v1", site: "Downtown gym", locs: "Racks 1–8", cams: 8, health: "! 1 camera below 60 fps", active: true },
+      { name: "Clinic A rehab", model: "Rehab Movement v1", site: "Clinic A", locs: "Rooms 1–3 · walkway", cams: 7, health: "✓ All good", active: true },
+      { name: "East academy bays", model: "Golf Swing v1", site: "East academy", locs: "Bays 1–4", cams: 8, health: "—", active: false },
+    ],
+    sessions: [
+      { id: "s1", uc: "golf", name: "Academy squad", model: "Golf Swing v1", dep: "Main academy bays", src: "Recorded", people: 10, time: "Sat 1 Nov 09:00–11:00", status: "Completed" },
+      { id: "s2", uc: "gym", name: "PT clients · Friday", model: "Strength Technique v1", dep: "Strength floor", src: "Recorded", people: 4, time: "Fri 7 Nov 07:00–09:00", status: "Completed" },
+      { id: "s3", uc: "physio", name: "Knee rehab class", model: "Rehab Movement v1", dep: "Clinic A rehab", src: "Live", people: 6, time: "Tue 4 Nov 10:00–11:00", status: "Completed" },
+    ],
+    people: [
+      { uc: "golf", name: "Marcus Tan", info: "Golf · HCP 14", id: "GA-0217", group: "Junior squad", coach: "Daniel Lim", consent: true, last: "1 Nov" },
+      { uc: "golf", name: "Priya Nair", info: "Golf · HCP 18", id: "GA-0233", group: "Junior squad", coach: "Daniel Lim", consent: false, last: "—" },
+      { uc: "gym", name: "Hannah Goh", info: "Gym · 1 yr training", id: "DG-1140", group: "6 pm barbell class", coach: "Sarah Koh", consent: true, last: "7 Nov" },
+      { uc: "gym", name: "Jason Teo", info: "Gym · 5 yrs training", id: "DG-1102", group: "6 pm barbell class", coach: "Sarah Koh", consent: false, last: "—" },
+      { uc: "physio", name: "Mei Ling Chua", info: "Physio · left knee", id: "CA-0451", group: "Knee rehab class", coach: "Dr. Lim", consent: true, last: "4 Nov" },
+      { uc: "physio", name: "Grace Tan", info: "Physio · left knee", id: "CA-0468", group: "Knee rehab class", coach: "Dr. Lim", consent: false, last: "—" },
+    ],
+    np: { name: "", info: "", group: "", coach: "" },
+    ptab: "people", toast: "", mfilter: "all", lib: CV_LIB.map((m) => ({ ...m })),
+    ...ucState(UC[uc]),
+  };
+}
+const INIT = (typeof window.__TA_INIT === "object" && window.__TA_INIT) || {};
+const hashRoute = () => location.hash.slice(1);
+S = freshState(UC[INIT.uc] ? INIT.uc : "golf", INIT.route || hashRoute() || "dashboard");
+if (INIT.step) { S.step = Math.min(STEPS.length, Math.max(1, Number(INIT.step))); S.ns.step = Math.min(3, S.step); }
+
+/* ── navigation ──────────────────────────────────────────────────── */
+const TA = [
+  ["Assessment Dashboard", "dashboard", ["dashboard"]],
+  ["Assessment Models", "models", ["models", "wizard", "model"]],
+  ["Active Deployments", "deployments", ["deployments", "deploy", "verify"]],
+  ["Assessment Sessions", "sessions", ["sessions", "new-session", "running", "people"]],
+  ["Results & Reports", "results", ["results", "individual", "report"]],
+  ["Participants", "participants", ["participants"]],
+];
+const OTHER = [["MONITOR", ["Dashboard", "Live Monitoring", "Recordings", "Detection Feed"]], ["MANAGE", ["Site", "Model Management", "Rules Library", "Incident Cases"]], ["DEPLOY", ["Run Analysis", "Model Deployment"]]];
+const route = () => (ROUTES[S.route] ? S.route : "dashboard");
+function go(r) {
+  S.route = r;
+  try { if (hashRoute() !== r) history.replaceState(null, "", "#" + r); } catch (e) { /* framed page without a URL to update: routing stays in memory */ }
+  render(); window.scrollTo(0, 0);
+}
+function toast(msg) { S.toast = msg; renderToast(); clearTimeout(toast.t); toast.t = setTimeout(() => { S.toast = ""; renderToast(); }, 2600); }
+
+function renderNav() {
+  const r = route();
+  const other = (g) => `<div class="grp other"><div class="gl">${g[0]}</div>${g[1].map((n) => `<button type="button" class="ni" data-act="soon"><i aria-hidden="true"></i>${n}</button>`).join("")}</div>`;
+  document.getElementById("nav").innerHTML = OTHER.map(other).join("") +
+    `<div class="grp ta"><div class="gl">TRAINING ASSESSMENT <em>NEW</em></div>${TA.map(([label, to, owns]) => `<button type="button" class="ni ta" data-go="${to}" ${owns.includes(r) ? 'aria-current="page"' : ""}><i aria-hidden="true"></i>${label}</button>`).join("")}</div>` +
+    other(["SYSTEM", ["User Management", "Device Health", "System Configuration", "Activity Logs"]]);
+  document.getElementById("ucs").innerHTML = `<span class="hint">Use case</span>` + Object.keys(UC).map((k) => `<button type="button" class="ucb" data-act="uc" data-v="${k}" aria-pressed="${S.uc === k}">${UC[k].label}</button>`).join("");
+}
+
+/* ── screens ─────────────────────────────────────────────────────── */
+function dashboard() {
+  const drafts = S.models.filter((m) => m.status === "Draft").length;
+  const ongoing = S.sessions.filter((s) => s.status === "Ongoing");
+  const pending = S.findings.filter((f) => f.state === "pending");
+  return head("Training Assessment", "Assessment Dashboard", `Models, deployments, sessions in progress and recent results. Showing the ${esc(U.full.toLowerCase())} use case; switch at the top.`,
+      `<button class="btn" data-act="newSession">New session</button><button class="btn pri" data-act="newModel">+ New assessment model</button>`) +
+    `<div class="kpis">${kpi("Assessment models", S.models.length, `${S.models.length - drafts} configured · ${drafts} draft${drafts === 1 ? "" : "s"}`)}${kpi("Active deployments", S.deployments.filter((d) => d.active).length, "Across 4 sites")}${kpi("Sessions in progress", ongoing.length)}${kpi("Needs review", pending.length + (S.run.sid && !S.issues.g4 ? 1 : 0), "Findings and unknown people")}</div>
+    <div class="g3">
+      <section class="card span2"><div class="row sb"><h2>Sessions in progress</h2><button class="link" data-go="sessions">View all</button></div>
+        ${ongoing.length ? ongoing.map((s) => `<div class="find"><div class="row sb"><b>${esc(s.name)}</b>${statusChip("Ongoing")}</div><span class="hint">${esc(s.model)} · ${esc(s.dep)} · ${esc(s.src)}</span><div class="bar"><span style="width:${S.run.progress}%"></span></div><div class="row sb"><span class="hint">${S.run.progress}% analysed</span><button class="btn sm" data-go="running">Open</button></div></div>`).join("") : `<p class="hint">No sessions running. Start one with New session.</p>`}
+      </section>
+      <section class="card"><h2>Needs review</h2>
+        ${pending.map((f) => `<div class="row sb"><span>${esc(U.ind.name)} · ${esc(f.name)}</span><button class="btn sm" data-go="individual">${f.conf}%</button></div>`).join("") || `<p class="hint">Nothing waiting.</p>`}
+      </section>
+    </div>
+    <div class="g3">
+      <section class="card flush span2"><div class="row sb"><h2>Recent results</h2><button class="link" data-go="results">Results & Reports</button></div>
+        <div class="tw"><table class="tbl"><thead><tr><th>Session</th><th>Model</th><th>People</th><th>Completed</th></tr></thead><tbody>
+        ${S.sessions.filter((s) => s.status === "Completed").map((s) => `<tr><td>${s.uc === S.uc ? `<button class="rowbtn" data-go="results">${esc(s.name)}</button>` : esc(s.name)}</td><td>${esc(s.model)}</td><td>${s.people}</td><td>${esc(s.time)}</td></tr>`).join("")}
+        </tbody></table></div></section>
+      <section class="card"><div class="row sb"><h2>Active deployments</h2><button class="link" data-go="deployments">View all</button></div>
+        ${S.deployments.map((d) => `<div class="row sb"><span>${esc(d.site)} · ${esc(d.locs)}</span>${statusChip(d.active ? "Active" : "Inactive")}</div>`).join("")}
+      </section>
+    </div>`;
+}
+
+function models() {
+  const f = S.mfilter, rows = S.models.filter((m) => f === "all" || m.uc === f);
+  const tabs = [["all", "All use cases"], ...Object.keys(UC).map((k) => [k, UC[k].label])];
+  return head("Training Assessment / Assessment Models", "Assessment Models", "Configure an assessment once, then deploy it wherever it's needed. Models from every use case are listed; opening one switches to its use case.", `<button class="btn pri" data-act="newModel">+ New assessment model</button>`) +
+    `<div class="tabs" role="tablist" aria-label="Filter by use case">${tabs.map(([v, l]) => `<button type="button" class="tab" role="tab" aria-selected="${f === v}" data-act="mfilter" data-v="${v}">${l} · ${v === "all" ? S.models.length : S.models.filter((m) => m.uc === v).length}</button>`).join("")}</div>
+    <section class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Model</th><th>Use case</th><th>Category</th><th>Version</th><th>Status</th><th>Deployments</th><th>Last edited</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+    ${rows.map((m) => `<tr><td>${m.status === "Draft" ? `<b>${esc(m.name)}</b>` : `<button class="rowbtn" data-act="openModel" data-id="${m.id}">${esc(m.name)}</button>`}</td><td>${esc(UC[m.uc].label)}</td><td>${esc(m.cat)}</td><td>${m.ver}</td><td>${statusChip(m.status === "Draft" ? `Draft · step ${m.step} of ${STEPS.length}` : m.status)}</td><td>${esc(m.deps)}</td><td>${esc(m.edited)}</td>
+      <td>${m.status === "Draft" ? `<button class="btn sm" data-act="continueDraft" data-id="${m.id}">Continue</button>` : `<button class="btn sm" data-act="deployModel" data-id="${m.id}">Deploy</button>`}</td></tr>`).join("")}
+    </tbody></table></div></section>
+    <p class="hint">Editing a configured model saves a new version. Deployments and past sessions keep the version they used.</p>`;
+}
+
+const STEPS = ["Basic information", "AI configuration", "Camera setup", "Participant configuration", "Criteria & reporting", "Test & save"];
+function wizard() {
+  const d = S.draft, n = S.step;
+  const body = [w1, w2, w3, w4, w5w6, w7][n - 1]();
+  return head(`<button data-go="models">Assessment Models</button> / ${esc(d.name || "New model")} (draft)`, d.id ? "Edit assessment model" : `New ${esc(U.label.toLowerCase())} assessment model`, "",
+      `<button class="btn" data-go="models">Cancel</button><button class="btn" data-act="saveDraft">Save draft</button>`) +
+    `<div class="wiz">
+      <nav class="steps" aria-label="Setup steps"><span class="gt" style="padding:0 6px 6px">Setup · step ${n} of ${STEPS.length}</span>
+        ${STEPS.map((s, i) => `<button type="button" class="stp ${i + 1 < n ? "done" : ""}" data-act="toStep" data-n="${i + 1}" ${i + 1 === n ? 'aria-current="step"' : ""}><b>${i + 1 < n ? "✓" : i + 1}</b>${s}</button>`).join("")}
+        <span class="hint" style="padding:8px 6px 0;border-top:1px solid var(--line-2);margin-top:6px">Status: Draft · saved automatically</span>
+      </nav>
+      <form class="form" onsubmit="return false" aria-labelledby="wt"><div class="fld"><h3 id="wt">${STEPS[n - 1]}</h3>${body.desc ? `<p class="desc">${body.desc}</p>` : ""}</div>${body.html}
+        <div class="ffoot">${n > 1 ? `<button type="button" class="btn" data-act="toStep" data-n="${n - 1}">Back</button>` : `<span class="hint">Saved as Draft</span>`}
+        ${n < STEPS.length ? `<button type="button" class="btn pri" data-act="toStep" data-n="${n + 1}">Next: ${STEPS[n]}</button>` : `<button type="button" class="btn pri" data-act="saveModel" ${d.test !== "passed" ? "disabled" : ""}>Save model</button>`}</div>
+      </form></div>`;
+}
+const only = () => `<span class="chip dash">Only for ${esc(U.label.toLowerCase())}</span>`;
+function w1() {
+  return { desc: "Name the model and say what activity it assesses.", html:
+    `<div class="g2">${field("Model name", "draft.name", input("draft.name"))}<div class="fld"><label class="lb" for="${idOf("draft.cat")}">Industry / category</label>${select("draft.cat", Object.values(UC).map((u) => u.cat))}<span class="hint">Changing it loads that use case's defaults for the next steps.</span></div></div>
+    <fieldset><legend class="lb">Activity</legend><div class="row">${U.acts.map((a) => box(`draft.acts.${a}`, a)).join("")}</div></fieldset>
+    ${field("Description", "draft.desc", `<textarea class="in" id="${idOf("draft.desc")}" data-bind="draft.desc">${esc(S.draft.desc)}</textarea>`)}
+    <div class="fld"><span class="lb">Version</span><span class="note soft">v1 · created automatically. Later edits save a new version; past sessions keep theirs.</span></div>` };
+}
+function w2() {
+  const d = S.draft, f = d.cvFilter;
+  const list = S.lib.filter((m) => f === "All capabilities" || m.cap === f);
+  const picked = selCv(d);
+  const has = (cap) => picked.some((m) => m.cap === cap);
+  const covered = new Set(picked.flatMap((m) => CAP_COVER[m.cap]));
+  const dup = CV_CAPS.filter((c) => picked.filter((m) => m.cap === c).length > 1);
+  const checks = [
+    has("Person detection & Re-ID") ? "✓ Person detection & Re-ID model picked" : "✗ Pick a person detection model. Every assessment needs one to follow people.",
+    has("Pose estimation") ? "✓ Pose model picked · 2D or 3D is set in Camera setup" : "✗ Pick a pose model. Movement is measured from body keypoints.",
+    ...dup.map((c) => `✗ ${picked.filter((m) => m.cap === c).length} ${c} models picked. Keep one.`),
+  ];
+  return { desc: "Pick the CV models first, then the AI capabilities they make possible.", html:
+    `<div class="fld"><div class="row sb"><span class="lb">1 · CV models</span><button type="button" class="btn" data-act="openUpload">+ Upload CV model</button></div>
+      <div class="row" style="align-items:flex-end"><div style="flex:0 1 300px">${field("Filter by AI capability", "draft.cvFilter", select("draft.cvFilter", ["All capabilities", ...CV_CAPS]))}</div><span class="hint" style="padding-bottom:8px">${picked.length} selected · existing models from Model Management</span></div>
+      <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th><span class="sr">Use</span></th><th>CV model</th><th>AI capability</th><th>Detects · from manifest</th></tr></thead><tbody>
+      ${list.map((m) => `<tr><td><input type="checkbox" aria-label="Use ${esc(m.name)}" data-bind="draft.cvSel.${m.id}" ${d.cvSel[m.id] ? "checked" : ""}></td><td>${d.cvSel[m.id] ? `<b>${esc(m.name)}</b>` : esc(m.name)}${m.up ? ` <span class="chip">Uploaded</span>` : ""}</td><td>${esc(m.cap)}</td><td class="hint">${esc(m.detects)}</td></tr>`).join("") || `<tr><td colspan="4" class="hint">No CV models for this capability yet. Upload one.</td></tr>`}
+      </tbody></table></div></div></div>
+    <fieldset><legend class="lb">2 · AI capabilities <span class="hint" style="font-weight:400">· only what the selected CV models can do</span></legend>
+      <div class="row">${CAPS.map((c) => covered.has(c) ? box(`draft.caps.${c}`, c) : `<label class="chk" style="opacity:.45"><input type="checkbox" disabled> ${esc(c)}</label>`).join("")}</div>
+      ${CAPS.some((c) => !covered.has(c)) ? `<span class="hint">Greyed out: no selected CV model provides it. Pick or upload one above.</span>` : ""}</fieldset>
+    <div class="fld"><span class="lb">Detects · from the manifests</span><span class="hint">${esc(picked.map((m) => m.detects).join(" · ") || "Nothing yet. Pick a CV model.")}</span></div>
+    <div class="fld"><span class="lb">Model check</span>${checks.map((c) => `<span>${esc(c)}</span>`).join("")}<span class="hint">Versions are pinned to this assessment model.</span></div>` };
+}
+function w3() {
+  const d = S.draft;
+  const view = (tag) => `<div class="fld"><span class="hint">${esc(tag)}</span><div class="view"><div class="who"></div>${d.areaDrawn ? `<div class="area"></div>` : ""}</div></div>`;
+  const hw = U.hwOnly ? (U.hwOnly.kind === "toggle"
+    ? `<div class="fld"><span class="lb">${esc(U.hwOnly.label)} ${only()}</span><label class="row" style="font-size:13px"><input type="checkbox" data-bind="draft.hwOnly" ${checked("draft.hwOnly")}> Allow</label><span class="hint">${esc(U.hwOnly.hint)}</span></div>`
+    : `<div class="fld"><label class="lb" for="${idOf("draft.hwOnly")}">${esc(U.hwOnly.label)} ${only()}</label>${input("draft.hwOnly")}</div>`) : "";
+  const r = poseReq(d), fwCfg = r.fewer || U.fewer;
+  const poseModel = (selCv(d).find((m) => m.cap === "Pose estimation") || {}).name;
+  const presetOpts = [...new Set([presetFor(d), ...d.presets])];
+  const fw = r.pos.length < 2 ? `<div class="fld"><span class="lb">If an area has fewer cameras than required</span><span class="hint">Not needed: ${esc(d.poseMode)} needs one camera per ${esc(U.unit)}.</span></div>`
+    : fwCfg.na ? `<div class="fld"><span class="lb">If an area has fewer cameras than required</span><span class="hint">${esc(fwCfg.na)}</span></div>`
+    : `<fieldset><legend class="lb">If an area has fewer cameras than required</legend><div class="g2">${fwCfg.opts.map(([v, t, h, dis]) => `<label class="opt" ${dis ? 'style="opacity:.5;cursor:not-allowed"' : ""}><input type="radio" name="fw" value="${v}" data-bind="draft.fewer" ${radio("draft.fewer", v)} ${dis ? "disabled" : ""}><span><b>${esc(t)}</b><span class="hint">${esc(h)}</span></span></label>`).join("")}</div></fieldset>`;
+  return { desc: "Brief: Hardware & environment. Set the cameras this model needs, then try them on a test camera. Each site picks its real cameras when deploying.", html:
+    `<section class="grpbox"><span class="gt">Camera requirements · saved with the model</span>
+      <div class="fld"><span class="lb">Pose settings · decide the cameras each ${esc(U.unit)} needs</span>
+        <div class="g3">${field("Pose mode", "draft.poseMode", select("draft.poseMode", POSE_MODES))}${field("Frame rate", "draft.fps", select("draft.fps", U.pose.fpsOpts))}${field("Smoothing", "draft.smoothing", select("draft.smoothing", ["Light", "Medium", "Strong"]))}</div>
+        <span class="hint">Pose model: ${poseModel ? esc(poseModel) + " (from AI configuration)" : "none picked yet, add one in AI configuration"} · keypoints: ${esc(U.pose.keypoints)}. More: confidence, hidden joints, mirroring, angles to compute.</span></div>
+      <div class="note soft" style="flex-direction:column;gap:4px"><b>${esc(d.poseMode)} → ${r.pos.length} camera${r.pos.length === 1 ? "" : "s"} per ${esc(U.unit)}${r.walk ? ` and ${r.walk.filter((p) => !/optional/i.test(p)).length} on the gait walkway` : ""}, ${esc(d.fps)} or more</b><span>${esc(r.why)}</span><span class="hint">${esc(r.gets)}</span></div>
+      <div class="g2"><div class="fld"><div class="row sb"><label class="lb" for="${idOf("draft.profile")}">Camera preset</label><button type="button" class="link" data-act="soonToast" data-msg="Opens System Configuration › Camera Defaults">Manage in Camera Defaults ↗</button></div>${select("draft.profile", [...presetOpts, "+ Create camera preset"])}<span class="hint">${d.profile === presetFor(d) ? "✓ Matches the pose settings · updates when they change" : "Custom preset · check it has the cameras and frame rate above"}</span></div><div class="fld"><span class="lb">Camera positions</span><div class="row">${posAll(d).map((p) => `<span class="chip">${esc(p)}</span>`).join("")}</div></div></div>
+      <div class="fld"><span class="lb">Placement guide</span><span class="hint">${esc(U.guide)}</span></div>
+      <fieldset><legend class="lb">Other devices · ${esc(U.extra.label.toLowerCase())}</legend><div class="row"><label class="chk"><input type="radio" name="ex" value="yes" data-bind="draft.extra" ${radio("draft.extra", "yes")}> ${esc(U.extra.yes)}</label><label class="chk"><input type="radio" name="ex" value="no" data-bind="draft.extra" ${radio("draft.extra", "no")}> ${esc(U.extra.no)}</label></div></fieldset>
+      ${fw}
+      ${hw}
+    </section>
+    <section class="grpbox"><span class="gt">Try it on a test camera</span>
+      <div class="row sb"><span class="lb">Test cameras</span><button type="button" class="link" data-act="soonToast" data-msg="Opens Site › Cameras">Pick from Cameras ↗</button></div>
+      <div class="g2">${field("Site", "draft.tsite", select("draft.tsite", U.sites))}${field("Area", "draft.tarea", select("draft.tarea", U.unitNames))}</div>
+      <div class="g2">${posFor(d.tarea).map((pos) => field(esc(pos), `draft.tcams.${pos}`, select(`draft.tcams.${pos}`, [...camsIn(d.tarea), /optional/i.test(pos) ? "" : null].filter((x) => x !== null).map((c) => c), ""))).join("")}</div>
+      <span class="hint">Only cameras in ${esc(d.tarea)} are listed, so every view sees the same space and the footage can be time-synced.</span>
+      <div class="g2">${posFor(d.tarea).filter((pos) => d.tcams[pos]).map((pos) => view(`${pos} · ${d.tcams[pos]} · ${d.fps}`)).join("")}</div>
+      <div class="row"><button type="button" class="btn" data-act="toggleArea">${d.areaDrawn ? "Clear detection zone" : "Draw detection zone"}</button><button type="button" class="btn" data-act="calibrate">${d.calibrated ? "Re-calibrate" : "Calibrate"}</button><span class="hint">${d.calibrated ? esc(U.calMsg) : "Not calibrated yet"}</span></div>
+      <div class="fld"><div class="row sb"><span class="lb">Camera check</span><button type="button" class="link" data-act="soonToast" data-msg="Opens Device Health">View in Device Health ↗</button></div>${(() => {
+        const req = posFor(d.tarea).filter((pos) => !/optional/i.test(pos));
+        const missing = req.filter((pos) => !d.tcams[pos]);
+        const picked = Object.values(d.tcams).filter(Boolean);
+        const dup = picked.length !== new Set(picked).size;
+        return (missing.length ? missing.map((pos) => `<span>✗ ${esc(pos)} has no camera in ${esc(d.tarea)}</span>`).join("") : `<span>✓ One camera per position, all in ${esc(d.tarea)}</span>`) + (dup ? `<span>✗ The same camera is picked twice. Pick a different camera for each position.</span>` : "");
+      })()}<span>✓ ${esc(U.covOk)}</span><span>${d.areaDrawn ? `✓ Detection zone drawn (${esc(U.area)})` : `✗ Draw the detection zone (${esc(U.area)})`}</span><span>${d.calibrated ? "✓ Calibrated" : "✗ Not calibrated"}</span><span class="hint">! ${esc(U.covWarn)}</span></div>
+    </section>` };
+}
+function w4() {
+  const d = S.draft;
+  const priv = { Standard: ["Required", "Off", `${U.ind.coach} + staff`, "12 months"], "Clinical (locked)": ["Required, locked", "On", "The patient's clinicians", "12 months"], Custom: ["Optional", "Off", "Chosen roles", "6 months"] }[d.privacy];
+  return { desc: "Rules for who gets assessed and how their data is handled. The people themselves live in Participants.", html:
+    `<fieldset><legend class="lb">Who is assessed</legend><div class="g2">${U.whoOpts.map(([v, t, h]) => `<label class="opt"><input type="radio" name="who" value="${v}" data-bind="draft.who" ${radio("draft.who", v)}><span><b>${esc(t)}</b><span class="hint">${esc(h)}</span></span></label>`).join("")}</div></fieldset>
+    <div class="g2">${field("Participant list", "draft.source", select("draft.source", U.sources))}${field("How people are linked", "draft.link", select("draft.link", U.links))}</div>
+    <div class="row"><span class="hint">Required profile fields:</span>${U.required.map((r) => `<span class="chip">${esc(r)}</span>`).join("")}</div>
+    <div class="fld"><span class="lb">Groups</span><div class="row">${d.groups.map((g, i) => `<span class="chip">${esc(g)} <button type="button" class="link" data-act="rmGroup" data-i="${i}" aria-label="Remove ${esc(g)}">×</button></span>`).join("")}<button type="button" class="btn sm" data-act="addGroup">+ Add group</button></div></div>
+    <div class="fld"><label class="lb" for="${idOf("draft.privacy")}">Privacy</label>${select("draft.privacy", U.privacyLocked ? ["Clinical (locked)"] : ["Standard", "Custom"], `style="max-width:320px" ${U.privacyLocked ? "disabled" : ""}`)}
+      ${U.privacyLocked ? `<span class="hint">Locked for clinical use. Consent and face blur can't be turned off.</span>` : ""}
+      <div class="kpis">${["Consent", "Face blur", "Who can view", "Keep video"].map((k, i) => `<div class="note soft" style="flex-direction:column;gap:2px"><span class="hint">${k}</span>${esc(priv[i])}</div>`).join("")}</div></div>` };
+}
+function w5() {
+  const d = S.draft;
+  const co = U.critOnly;
+  return { desc: "What good looks like, which faults to flag, and how a score is worked out.", html:
+    `<div class="fld"><span class="lb">Applies to · each ${esc(U.applies)}</span><div class="tabs" role="tablist">${U.appliesOpts.map((c) => `<button type="button" class="tab" role="tab" aria-selected="${d.applies === c}" data-act="applies" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
+    <div class="fld"><span class="lb">Criteria · ${esc(d.applies)}</span><div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Criterion</th><th>Benchmark</th></tr></thead><tbody>
+      ${U.crit.map(([c], i) => `<tr><td>${esc(c)}</td><td><input class="in" aria-label="${esc(c)} benchmark" data-bind="draft.crit.${i}" value="${esc(d.crit[i])}"></td></tr>`).join("")}
+      <tr><td class="hint">${esc(U.critMore)}</td><td class="hint">more</td></tr></tbody></table></div></div></div>
+    <fieldset><legend class="lb">${esc(U.faultsLabel)} <span class="hint" style="font-weight:400">· limits are rules in the Rule Library</span></legend><div class="row">${U.faults.map((f) => box(`draft.faults.${f}`, f)).join("")}</div></fieldset>
+    <fieldset><legend class="lb">Scoring</legend><div class="g2">${U.scoring.map(([v, t, h, dis]) => `<label class="opt" ${dis ? 'style="opacity:.5;cursor:not-allowed"' : ""}><input type="radio" name="sc" value="${v}" data-bind="draft.scoring" ${radio("draft.scoring", v)} ${dis ? "disabled" : ""}><span><b>${esc(t)}</b><span class="hint">${esc(h)}</span></span></label>`).join("")}</div></fieldset>
+    <div class="g2">${field("Send to review below", "draft.review", select("draft.review", ["60% confidence", "70% confidence", "80% confidence"]))}
+      ${co.kind === "toggle" ? `<div class="fld"><span class="lb">${esc(co.label)} ${only()}</span><label class="row" style="font-size:13px"><input type="checkbox" data-bind="draft.critOnly" ${checked("draft.critOnly")}> On</label></div>` : `<div class="fld"><label class="lb" for="${idOf("draft.critOnly")}">${esc(co.label)} ${only()}</label>${input("draft.critOnly")}</div>`}</div>` };
+}
+function w6() {
+  const d = S.draft;
+  const sec = Object.entries(d.sections).filter(([, v]) => v).map(([k]) => k);
+  return { desc: "What each report contains and how it's shared.", html:
+    `<div class="row" style="align-items:flex-start;gap:20px"><div style="flex:1 1 320px;display:flex;flex-direction:column;gap:16px;min-width:0">
+      <fieldset><legend class="lb">Report types</legend><div class="row">${U.rtypes.map((k) => box(`draft.rtypes.${k}`, k)).join("")}</div></fieldset>
+      <fieldset><legend class="lb">Report sections</legend><div class="row">${U.sections.map((k) => box(`draft.sections.${k}`, k)).join("")}</div></fieldset>
+      <label class="row" style="font-size:13px"><input type="checkbox" data-bind="draft.video" ${checked("draft.video")}> <b>Video evidence with timestamps</b></label>
+      ${field("Recommendations", "draft.recs", select("draft.recs", [U.recs, "None"]))}
+      <fieldset><legend class="lb">Share / export</legend><div class="row">${U.share.map((k) => box(`draft.share.${k}`, k)).join("")}</div></fieldset>
+      ${U.repOnly ? `<div class="fld"><span class="lb">${esc(U.repOnly.label)} ${only()}</span><label class="row" style="font-size:13px"><input type="checkbox" data-bind="draft.repOnly" ${checked("draft.repOnly")}> On</label></div>` : ""}
+    </div>
+    <div style="flex:1 1 300px;min-width:0" class="card"><span class="hint">Preview · ${esc(U.rtypes[0].toLowerCase())}</span><div class="row sb"><b>${esc(U.ind.name)}</b><b style="font-size:20px">${esc(U.report.ind)}</b></div>
+      ${sec.map((s) => `<span class="hint">${esc(s)}</span><div class="ph" style="height:${/clip/i.test(s) ? 90 : 12}px"></div>`).join("") || `<p class="hint">Pick at least one section.</p>`}</div></div>` };
+}
+/* criteria and reporting share one step, as two sections */
+function w5w6() {
+  const c = w5(), r = w6();
+  return { desc: "What good looks like, how it's scored, and what goes in the report.", html:
+    `<section class="grpbox"><span class="gt">Assessment criteria</span><span class="hint">${c.desc}</span>${c.html}</section>
+    <section class="grpbox"><span class="gt">Reporting</span><span class="hint">${r.desc}</span>${r.html}</section>` };
+}
+function w7() {
+  const d = S.draft;
+  const sum = [["Basic information", `${d.name} · ${d.cat} · v1`], ["AI configuration", `${selCv(d).map((m) => m.name.split(" · ")[0]).join(", ")} · ${capsOn(d).length} capabilities`], ["Camera setup", `${d.poseMode} · ${d.profile}`], ["Participants", `${(U.whoOpts.find((w) => w[0] === d.who) || [])[1]} · ${d.privacy} privacy`], ["Criteria", `${Object.values(d.faults).filter(Boolean).length} ${U.faultsLabel.split(" ")[0].toLowerCase()} · ${(U.scoring.find((s) => s[0] === d.scoring) || [])[1]}`], ["Reporting", Object.keys(d.share).filter((k) => d.share[k]).join(", ")]];
+  return { desc: "Check the setup end to end on the test cameras, then save the model.", html:
+    `<div class="card flush"><div class="tw"><table class="tbl"><tbody>${sum.map(([k, v], i) => `<tr><td><b>${k}</b></td><td class="hint">${esc(v)}</td><td style="text-align:right"><button type="button" class="link" data-act="toStep" data-n="${Math.min(i + 1, 5)}">Edit</button></td></tr>`).join("")}</tbody></table></div></div>
+    <div class="row" style="align-items:flex-end"><div style="flex:1 1 300px">${field("Test footage", "draft.testFootage", select("draft.testFootage", U.testFootage))}</div><div style="flex:0 1 220px">${field(esc(U.testRef[0]), "draft.testRef", input("draft.testRef"))}</div><button type="button" class="btn" data-act="runTest" ${d.test === "running" ? "disabled" : ""}>${d.test === "running" ? "Running…" : d.test === "passed" ? "Run again" : "Run test analysis"}</button></div>
+    ${d.test === "idle" ? `<p class="note soft">Run a test to check coverage, frame rate, pose and detection before saving.</p>` : d.test === "running" ? `<div class="fld"><span class="hint">Analysing the test footage…</span><div class="bar"><span style="width:60%"></span></div></div>` :
+    `<div class="row" style="align-items:flex-start"><div class="view" style="flex:1 1 300px;height:200px"><span class="tag">${esc(U.testTag)}</span><div class="pose"></div></div>
+      <div class="fld" style="flex:1 1 240px;font-size:13px">${U.testChecks.map((c) => `<span>✓ ${esc(poseReq(d).pos.length < 2 ? c.replace(/on both cameras/, "on the camera").replace(/in both views/, "in the view").replace(/3D joints/, "2D joints") : c)}</span>`).join("")}</div></div>
+      <div class="note">✓ <span><b>Test passed.</b> Saving makes this model Configured and ready to deploy.</span></div>`}` };
+}
+
+function model() {
+  const m = S.models.find((x) => x.id === S.cur) || S.models[0];
+  const deps = S.deployments.filter((d) => d.model.startsWith(m.name.replace(" Assessment", "")));
+  return head(`<button data-go="models">Assessment Models</button> / ${esc(m.name)}`, `${esc(m.name)} ${statusChip(m.status)} <span class="chip">${m.ver}</span>`, `${esc(m.cat)} · saved ${esc(m.edited)}`,
+      `<button class="btn" data-act="editModel">Edit (saves a new version)</button><button class="btn pri" data-act="deployModel" data-id="${m.id}">Deploy</button>`) +
+    `<div class="g3">
+      <div class="card"><h2>AI configuration</h2><span>${esc(selCv().map((c) => c.name.split(" · ")[0]).join(" · "))}</span><span class="hint">${capsOn().length} AI capabilities</span></div>
+      <div class="card"><h2>Camera requirements</h2><span>${esc(S.draft.profile)}</span><span class="hint">${esc(S.draft.poseMode)} · ${esc(posAll().join(" + "))}</span></div>
+      <div class="card"><h2>Participants</h2><span>${esc((U.whoOpts.find((w) => w[0] === S.draft.who) || [])[1])}</span><span class="hint">${esc(S.draft.privacy)} privacy</span></div>
+      <div class="card"><h2>Criteria</h2><span>${U.crit.length + 2} criteria · ${U.faults.length} ${esc(U.faultsLabel.split(" ")[0].toLowerCase())}</span><span class="hint">${esc((U.scoring.find((s) => s[0] === S.draft.scoring) || [])[1])}</span></div>
+      <div class="card"><h2>Reporting</h2><span>${esc(U.rtypes.join(" + "))}</span><span class="hint">${esc(U.share.join(" · "))}</span></div>
+      <div class="card"><h2>Last test</h2><span>Passed</span><span class="hint">${esc(S.draft.tarea)} · ${esc(Object.values(S.draft.tcams || {}).filter(Boolean).join(" + "))}</span></div>
+    </div>
+    <section class="card flush"><div class="row sb"><h2>Deployments</h2><button class="link" data-go="deployments">Manage in Active Deployments</button></div>
+      ${deps.length ? `<div class="tw"><table class="tbl"><thead><tr><th>Deployment</th><th>Locations</th><th>Status</th></tr></thead><tbody>${deps.map((d) => `<tr><td>${esc(d.name)}</td><td>${esc(d.locs)}</td><td>${statusChip(d.active ? "Active" : "Inactive")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="hint" style="padding:0 16px 16px">Not deployed yet. Use Deploy to run it at a site.</p>`}
+    </section>`;
+}
+
+function deployments() {
+  const act = S.deployments.filter((d) => d.active).length;
+  return head("Training Assessment / Active Deployments", "Active Deployments", "Where each assessment model is running, and whether its cameras still meet the model's needs.", `<button class="btn pri" data-act="deployModel" data-id="${U.modelId}">+ Deploy a model</button>`) +
+    `<div class="kpis">${kpi("Active", act)}${kpi("Inactive", S.deployments.length - act)}${kpi("Cameras in use", S.deployments.filter((d) => d.active).reduce((n, d) => n + d.cams, 0))}${kpi("Camera issues", S.deployments.filter((d) => d.health.startsWith("!")).length)}</div>
+    <section class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Deployment</th><th>Model</th><th>Site</th><th>Locations</th><th>Cameras</th><th>Health</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+    ${S.deployments.map((d, i) => `<tr><td><b>${esc(d.name)}</b></td><td>${esc(d.model)}</td><td>${esc(d.site)}</td><td>${esc(d.locs)}</td><td>${d.cams}</td><td>${esc(d.health)}</td><td>${statusChip(d.active ? "Active" : "Inactive")}</td><td><button class="btn sm" data-act="toggleDep" data-i="${i}">${d.active ? "Deactivate" : "Reactivate"}</button></td></tr>`).join("")}
+    </tbody></table></div></section>`;
+}
+
+function deploy() {
+  const p = S.dep;
+  const cfg = S.models.filter((m) => m.status === "Configured");
+  const n = Object.values(p.units).filter(Boolean).length;
+  const col = (num, title, inner, sub = "") => `<section class="card" style="gap:8px"><span class="hint">${num}</span><h2>${title}</h2>${sub ? `<span class="hint">${sub}</span>` : ""}${inner}</section>`;
+  return head(`<button data-go="deployments">Active Deployments</button> / Deploy a model`, "Deploy a model", "Same pattern as Model Deployment: pick left to right. The model's saved settings are applied automatically.", `<button class="btn" data-go="deployments">Cancel</button>`) +
+    `<div class="kpis" style="align-items:start">
+      ${col(1, "Assessment model", cfg.map((m) => `<label class="opt"><input type="radio" name="dm" value="${m.id}" data-bind="dep.model" ${radio("dep.model", m.id)}><span><b>${esc(m.name)}</b><span class="hint">${m.ver} · Configured</span></span></label>`).join("") + `<span class="hint">Drafts can't be deployed.</span>`)}
+      ${col(2, "Site", U.sites.map((s) => `<label class="opt"><input type="radio" name="ds" value="${esc(s)}" data-bind="dep.site" ${radio("dep.site", s)}><span><b>${esc(s)}</b><span class="hint">Area: ${esc(U.areaName)}</span></span></label>`).join("") + `<span class="hint">From Site Management.</span>`)}
+      ${col(3, "Areas", U.unitNames.map((b) => `<label class="chk"><input type="checkbox" data-bind="dep.units.${b}" ${checked(`dep.units.${b}`)}> ${esc(b)}</label>`).join("") + `<span class="hint">${n} of ${U.unitNames.length} selected · from Site Management</span>`)}
+      ${col(4, "Cameras", select("dep.group", [U.camGroup, "+ Create group"]) + `<div class="find"><b>${esc(U.unitNames[0])}</b>${U.unitCams.map((c) => `<span class="hint">${esc(c)}</span>`).join("")}</div>` +
+        (U.short ? `<div class="find" style="border-style:dashed"><b>${esc(U.unitNames[U.short.unit])}</b><span class="hint">${esc(U.unitCams[0])}</span><span><b>${esc(U.short.pos)} · no camera in this area</b></span><button type="button" class="link" data-act="soonToast" data-msg="Opens Site › Cameras to add a camera" style="align-self:flex-start">Add camera in Cameras ↗</button></div>` : "") +
+        `<span class="hint">Other ${esc(U.unit)}s mapped the same way · live preview per camera</span>`, "The real cameras at this site, from Cameras")}
+    </div>
+    <section class="card"><div class="row sb" style="align-items:flex-end"><div style="flex:1 1 280px;max-width:360px">${field("Deployment name", "dep.name", input("dep.name"))}</div><button class="btn pri" data-go="verify" ${n ? "" : "disabled"}>Next: Verify deployment</button></div></section>`;
+}
+
+function verify() {
+  const p = S.dep, m = S.models.find((x) => x.id === p.model);
+  const sel = U.unitNames.filter((b) => p.units[b]);
+  const failName = U.unitNames[U.failUnit];
+  const failing = sel.includes(failName) && !p.fixed;
+  const shortName = U.short ? U.unitNames[U.short.unit] : null;
+  const shortOn = !!shortName && sel.includes(shortName);
+  const sc = p.short;
+  const reducedAllowed = !U.fewer.na && S.draft.fewer === "reduced";
+  const ok = sel.filter((b) => !(b === failName && failing) && !(b === shortName && (sc === "pending" || sc === "skip")));
+  const shortRow = (b) => sc === "added" ? `<tr><td>${esc(b)}</td><td>Both cameras</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>`
+    : `<tr class="hl"><td><b>${esc(b)}</b></td><td><b>${esc(U.short.pos)} · missing</b></td><td colspan="4"><b>✗ Needs ${U.camsPerUnit} cameras, has 1</b>${sc === "reduced" ? " · running reduced" : sc === "skip" ? " · skipped" : ""}</td></tr>`;
+  return head(`<button data-go="deployments">Active Deployments</button> / Deploy / Verify`, "Verify & activate", `${esc(m ? m.name : "Model")} ${m ? m.ver : ""} → ${esc(p.site)} · ${sel.length} ${esc(U.unit)}s. Each camera is checked against the model's hardware profile.`, `<button class="btn" data-go="deploy">Back</button>`) +
+    `<section class="card"><div class="row sb"><h2>Camera check</h2><div class="row"><button class="btn sm" data-act="soonToast" data-msg="Calibrated all cameras">Calibrate all</button><button class="btn sm" data-act="soonToast" data-msg="Re-checked ${sel.length * U.camsPerUnit} cameras">Re-check</button></div></div>
+      <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>${esc(U.Unit)}</th><th>Cameras</th><th>Frame rate</th><th>Angle</th><th>Lighting</th><th>Coverage</th></tr></thead><tbody>
+      ${sel.map((b) => b === shortName ? shortRow(b) : b === failName && failing ? `<tr class="hl"><td><b>${esc(b)}</b></td><td><b>${esc(U.failCam)}</b></td>${U.failCells.map((c) => `<td>${c.startsWith("✗") ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join("")}</tr>` : `<tr><td>${esc(b)}</td><td>${U.camsPerUnit === 2 ? "Both cameras" : "Side camera"}</td><td>✓ ${esc(U.pose.fps.replace(" fps", ""))}</td><td>✓</td><td>✓</td><td>✓</td></tr>`).join("")}
+      </tbody></table></div></div>
+      ${shortOn && sc !== "added" ? `<div class="note" style="flex-direction:column;gap:8px"><span>! <b>${esc(shortName)} has 1 of ${U.camsPerUnit} cameras.</b> ${sc === "reduced" ? `It will run with reduced analysis: no ${esc(U.short.loses)}.` : sc === "skip" ? "It's skipped; the other areas can go live." : "Choose what to do:"}</span>
+        <div class="row"><button type="button" class="btn sm" data-act="shortFix" data-v="added">Add camera in Cameras, re-check</button><button type="button" class="btn sm" data-act="shortFix" data-v="skip">Skip ${esc(shortName)}</button>${reducedAllowed ? `<button type="button" class="btn sm" data-act="shortFix" data-v="reduced">Run with reduced analysis</button>` : `<span class="hint">Reduced analysis is blocked by this model's camera rule.</span>`}</div></div>` : ""}
+      ${failing ? `<div class="note">! <span><b>${esc(failName)} can't be activated.</b> ${esc(U.failFix)} The rest can go live now. <button type="button" class="link" data-act="fixCam">I've fixed it, re-check</button></span></div>` : `<div class="note soft">✓ All selected cameras meet the hardware profile.</div>`}
+    </section>
+    <section class="card"><h2>Activate</h2><div class="g3">${field("Schedule (optional)", "dep.schedule", select("dep.schedule", U.schedule))}<div class="fld"><span class="lb">Settings applied</span><span>${esc(m ? m.name : "")} ${m ? m.ver : ""}, to every ${esc(U.unit)}</span></div><div class="fld"><span class="lb">Goes live</span><span>${ok.length ? esc(ok.map((b) => b === shortName && sc === "reduced" ? b + " (reduced)" : b).join(", ")) : "Nothing selected"}</span></div></div>
+      <div class="ffoot"><span class="hint">You can deactivate or reactivate any ${esc(U.unit)} later.</span><button class="btn pri" data-act="activate" ${ok.length ? "" : "disabled"}>Activate ${ok.length} ${esc(U.unit)}${ok.length === 1 ? "" : "s"}</button></div></section>`;
+}
+
+function sessions() {
+  const row = (s) => `<tr><td><b>${esc(s.name)}</b><div class="hint">${esc(s.model)}</div></td><td>${esc(s.dep)}</td><td>${esc(s.src)}</td><td>${s.people}</td><td>${esc(s.time)}</td><td>${statusChip(s.status)}</td>
+    <td>${s.status === "Completed" && s.uc === S.uc ? `<button class="btn sm" data-go="results">Results</button>` : s.id === S.run.sid ? `<button class="btn sm" data-go="running">Open</button>` : ""}</td></tr>`;
+  return head("Training Assessment / Assessment Sessions", "Assessment Sessions", "Lessons, classes and visits analysed from live cameras or existing recordings.", `<button class="btn pri" data-act="newSession">+ New ${esc(U.label.toLowerCase())} session</button>`) +
+    `<section class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Session</th><th>Deployment</th><th>Footage</th><th>People</th><th>Time</th><th>Status</th><th><span class="sr">Open</span></th></tr></thead><tbody>${S.sessions.map(row).join("")}</tbody></table></div></section>`;
+}
+
+function newSession() {
+  const n = S.ns, ss = U.session;
+  const pills = ["Details", "Participants", "Footage"].map((l, i) => `<span class="ps ${i + 1 === n.step ? "on" : i + 1 < n.step ? "done" : ""}">${i + 1 < n.step ? "✓" : i + 1} · ${l}</span>`).join("");
+  let body = "", nextOk = true;
+  const deps = depsFor(n.site);
+  if (!deps.some((d) => depLabel(d) === n.depSel)) n.depSel = deps[0] ? depLabel(deps[0]) : "";
+  const dep = deps.find((d) => depLabel(d) === n.depSel);
+  if (n.areasFor !== n.depSel) { n.areasFor = n.depSel; n.areas = objOf(areasOf(dep)); }
+  const areasOn = Object.keys(n.areas).filter((a) => n.areas[a]);
+  if (n.step === 1) nextOk = !!dep && areasOn.length > 0;
+  if (n.step === 1) body = `<h3>Details</h3>
+    <fieldset><legend class="lb">Use case</legend><div class="g3">${Object.values(UC).map((u) => `<label class="opt"><input type="radio" name="nuc" value="${u.uc}" data-bind="ns.uc" ${S.uc === u.uc ? "checked" : ""}><span><b>${esc(u.label)}</b><span class="hint">${esc(u.full)} · ${esc(u.Units.toLowerCase())}</span></span></label>`).join("")}</div></fieldset>
+    <div class="g2">${field("Site", "ns.site", select("ns.site", U.sites))}
+      ${dep ? field("Deployed model", "ns.depSel", select("ns.depSel", deps.map(depLabel))) : `<div class="fld"><span class="lb">Deployed model</span><span class="note">! No active ${esc(U.label.toLowerCase())} deployment at ${esc(n.site)}. <button type="button" class="link" data-go="deployments">Open Active Deployments</button></span></div>`}</div>
+    ${dep ? `<fieldset><legend class="lb">${esc(U.Units)} · from this deployment</legend><div class="row">${areasOf(dep).map((a) => box(`ns.areas.${a}`, a)).join("")}</div>
+      <span class="hint">${areasOn.length} of ${areasOf(dep).length} ${esc(U.Units.toLowerCase())} selected · only these cameras are analysed.</span>${areasOn.length ? "" : `<span class="note">! Pick at least one ${esc(U.unit)}.</span>`}</fieldset>` : ""}
+    <div class="g2">${field("Session name", "ns.name", input("ns.name"))}</div>
+    <fieldset><legend class="lb">Session type</legend><div class="g2"><label class="opt"><input type="radio" name="nt" value="one" data-bind="ns.type" ${radio("ns.type", "one")}><span><b>${esc(ss.one[0])}</b><span class="hint">${esc(ss.one[1])}</span></span></label><label class="opt"><input type="radio" name="nt" value="group" data-bind="ns.type" ${radio("ns.type", "group")}><span><b>${esc(ss.group[0])}</b><span class="hint">${esc(ss.group[1])}</span></span></label></div></fieldset>
+    <div class="g3">${field("Date", "ns.date", input("ns.date"))}${field("From", "ns.from", input("ns.from"))}${field("To", "ns.to", input("ns.to"))}</div>
+    <fieldset><legend class="lb">${esc(ss.extraLabel)}</legend><div class="row">${ss.extra.map((c) => box(`ns.extra.${c}`, c)).join("")}</div></fieldset>
+    ${field("Focus (optional)", "ns.focus", select("ns.focus", ss.focus))}`;
+  if (n.step === 2) {
+    nextOk = !(ss.consentHard && !n.consent);
+    body = `<div class="row sb"><h3>Participants</h3><div class="row"><button type="button" class="btn" data-act="openCsv" data-ctx="session">Import CSV</button><button type="button" class="btn" data-act="openAddPerson">+ Add person</button></div></div>
+    <div class="row" style="align-items:flex-end"><div style="flex:1 1 260px;max-width:360px">${field("Group", "ns.group", select("ns.group", ss.groupOpts))}</div><span class="hint">Unlisted ${esc(U.people)} get temporary IDs during analysis.</span></div>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>${esc(U.Person)}</th><th>${esc(U.Unit)}</th><th>Consent</th></tr></thead><tbody>
+      ${ss.roster.map(([nm, u]) => `<tr><td>${esc(nm)}</td><td>${esc(u)}</td><td>✓ On file</td></tr>`).join("")}
+      ${n.imported.map((p) => `<tr><td>${esc(p.name)} <span class="chip">From CSV</span></td><td class="hint">Any</td><td>${p.consent ? "✓ On file" : `<b>✗ Missing</b> <span class="hint">won't be recorded</span>`}</td></tr>`).join("")}
+      <tr class="${n.consent ? "" : "hl"}"><td>${esc(ss.missing[0])}</td><td>${esc(ss.missing[1])}</td><td>${n.consent ? "✓ Captured just now" : `<b>✗ Missing</b> <button type="button" class="btn sm" data-act="consent">Capture consent</button>`}</td></tr>
+      <tr><td class="hint">${esc(ss.more)}</td><td class="hint">Any</td><td>✓ On file</td></tr></tbody></table></div></div>
+    ${n.consent ? `<div class="note soft">✓ Everyone in the session has consent on file.</div>` : ss.consentHard
+      ? `<div class="note">! <span><b>${esc(ss.missing[2])} has no consent on file.</b> Clinical rule: you can't continue until consent is captured or the patient is removed from this session.</span></div>`
+      : `<div class="note">! <span><b>${esc(ss.missing[2])} has no consent on file.</b> They won't be recorded or analysed until consent is captured. The rest can go ahead.</span></div>`}`;
+  }
+  if (n.step === 3) body = `<h3>Live or recorded?</h3>
+    <div class="g2"><label class="opt"><input type="radio" name="src" value="live" data-bind="ns.src" ${radio("ns.src", "live")}><span><b>Live</b><span class="hint">Analyse the cameras while the session runs.</span></span></label><label class="opt"><input type="radio" name="src" value="recorded" data-bind="ns.src" ${radio("ns.src", "recorded")}><span><b>Recorded</b><span class="hint">Pick footage the VMS already recorded. No start or stop needed.</span></span></label></div>
+    ${n.src === "recorded" ? `<div class="fld"><span class="lb">Recordings · ${esc(n.date)}</span><div class="timeline" role="img" aria-label="Recordings per camera with the chosen time range selected">
+      ${ss.lanes.map((l, i) => `<div class="lane"><span class="${i === ss.lanes.length - 1 ? "hint" : ""}">${esc(l)}</span><div class="track"><div class="rec" style="left:0;${i === 2 ? "width:70%" : "right:0"}"></div><div class="sel" style="left:25%;width:37.5%"></div></div></div>`).join("")}
+      <div class="lane"><span></span><div class="row sb hint">${ss.axis.map((a) => `<span>${a}</span>`).join("")}</div></div></div></div>
+      <span class="hint">${esc(n.from)}–${esc(n.to)} · ${ss.cams} cameras · split into clips by the NVR's max length per video.</span>` : `<div class="note soft">Analysis starts when you press Start and runs until you complete the session.</div>`}`;
+  return head(`<button data-go="sessions">Assessment Sessions</button> / New session`, `New ${esc(U.label.toLowerCase())} session`, "", "") +
+    `<div class="pill-steps">${pills}</div>
+    <form class="form" style="max-width:920px" onsubmit="return false">${body}
+      <div class="ffoot">${n.step > 1 ? `<button type="button" class="btn" data-act="nsStep" data-n="${n.step - 1}">Back</button>` : `<button type="button" class="btn" data-go="sessions">Cancel</button>`}
+      ${n.step < 3 ? `<button type="button" class="btn pri" data-act="nsStep" data-n="${n.step + 1}" ${nextOk ? "" : "disabled"}>Next: ${["", "Participants", "Footage"][n.step]}</button>` : `<button type="button" class="btn pri" data-act="startRun">${n.src === "live" ? "Start" : "Run analysis"}</button>`}</div></form>`;
+}
+
+function running() {
+  const s = S.sessions.find((x) => x.id === S.run.sid);
+  if (!s) return head("Assessment Sessions", "No session running", `Start a ${esc(U.label.toLowerCase())} session to see it analyse.`, `<button class="btn pri" data-act="newSession">+ New session</button>`);
+  const p = S.run.progress, done = p >= 100, r = U.run;
+  const open = (S.issues.g4 ? 0 : 1) + (S.issues.mix ? 0 : 1);
+  const blocked = r.mustAssign && !S.issues.g4;
+  const row = ([nm, u, n], i) => { const pct = Math.min(100, Math.round(p * [1.6, 1.4, 1][i])); return `<tr><td>${esc(nm)}</td><td>${esc(u)}</td><td>${n}</td><td>${pct}%</td><td>${pct >= 100 ? "✓ Done" : "Analysing"}</td></tr>`; };
+  const g4name = S.issues.choice === "assign" ? S.issues.to : S.issues.choice === "new" ? `New ${U.person}` : "Discarded";
+  return head(`<button data-go="sessions">Assessment Sessions</button> / ${esc(s.name)}`, `${esc(s.name)} ${statusChip(s.status)}`, `${esc(s.model)} · ${esc(s.dep)} · ${esc(s.src)} · ${s.people} ${esc(U.people)}`,
+      `<button class="btn" data-act="soonToast" data-msg="Paused">Pause</button><button class="btn pri" data-act="complete" ${done && !blocked ? "" : "disabled"}>Complete session</button>`) +
+    `<section class="card"><div class="row sb"><h2>Analysis progress</h2><span class="hint">${done ? "Finished" : p + "%"}</span></div><div class="bar"><span style="width:${p}%"></span></div>
+      <div class="row hint"><span><b>${Math.round(p * 0.9)}</b> ${esc(r.item)} found</span><span><b>${Math.round(p * 0.8)}</b> analysed</span><span>${esc(r.notAnalysed)}</span></div></section>
+    <div class="g3"><section class="card flush span2"><div class="row sb"><h2>Per ${esc(U.person)}</h2></div><div class="tw"><table class="tbl"><thead><tr><th>${esc(U.Person)}</th><th>${esc(U.Unit)}</th><th>${esc(r.item[0].toUpperCase() + r.item.slice(1))}</th><th>Progress</th><th>Status</th></tr></thead><tbody>
+      ${r.per.map(row).join("")}
+      <tr class="${S.issues.g4 ? "" : "hl"}"><td>${S.issues.g4 ? esc(g4name) : `<b>${esc(r.temp)}</b>`}</td><td>${esc(r.tempUnit)}</td><td>${esc(r.tempItems)}</td><td>100%</td><td>${S.issues.g4 ? "✓ Assigned" : "<b>Temporary ID</b>"}</td></tr></tbody></table></div></section>
+      <section class="card"><div class="row sb"><h2>Tracking warnings</h2><span class="chip">${open}</span></div>
+        ${S.issues.g4 ? "" : `<div class="find">! ${esc(r.temp)} in ${esc(r.tempUnit)} isn't on the list<span class="hint">${esc(r.tempItems)} waiting for a name</span></div>`}
+        ${S.issues.mix ? "" : `<div class="find">! ${esc(r.mixWhere)}: ${esc(r.mixWhat)}<span class="hint">${esc(r.mixItems)}</span></div>`}
+        ${open ? `<button class="btn" data-go="people">Fix tracking & people</button>` : `<p class="hint">✓ Every result is linked to a known ${esc(U.person)}.</p>`}
+      </section></div>
+    ${S.dep.reduced && U.short ? `<p class="note soft">! ${esc(U.unitNames[U.short.unit])} runs on one camera: ${esc(U.short.loses)} won't be measured. The same notice shows if a camera drops mid-session.</p>` : ""}
+    ${blocked ? `<p class="note">! <span><b>Complete is locked.</b> ${esc(r.keep)}.</span></p>` : done && open ? `<p class="note soft">You can complete now. ${esc(r.keep)}.</p>` : ""}`;
+}
+
+function people() {
+  const i = S.issues, r = U.run;
+  return head(`<button data-go="running">${esc(S.ns.name)}</button> / Fix tracking & people`, "Fix tracking & people", `Make sure every result belongs to the right ${esc(U.person)} before it's shared.`, `<button class="btn pri" data-act="resolve">Done</button>`) +
+    `<section class="card"><div class="row sb"><h2>Unknown people · 1</h2><span class="hint">${esc(r.keep)}</span></div>
+      <div class="row" style="align-items:flex-start;gap:20px"><div class="fld"><b>${esc(r.temp)} · ${esc(r.tempUnit)}</b><div class="row" aria-hidden="true">${"<div class='ph' style='width:64px;height:48px'></div>".repeat(4)}</div><span class="hint">${esc(r.tempItems)} · ${esc(r.tempTime)}</span></div>
+      <fieldset style="flex:1 1 380px;display:flex;flex-direction:column;gap:8px"><legend class="hint">What should happen to ${esc(r.temp)}?</legend>
+        <label class="opt" style="align-items:center"><input type="radio" name="g4" value="assign" data-bind="issues.choice" ${radio("issues.choice", "assign")}><span style="flex:1">Assign to an existing ${esc(U.person)}</span><select class="in" style="max-width:200px" aria-label="${esc(U.Person)}" data-bind="issues.to">${r.assignOpts.map((o) => `<option ${i.to === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
+        <label class="opt"><input type="radio" name="g4" value="new" data-bind="issues.choice" ${radio("issues.choice", "new")}><span>Create a new profile (${esc(r.newProfile)})</span></label>
+        <label class="opt"><input type="radio" name="g4" value="discard" data-bind="issues.choice" ${radio("issues.choice", "discard")}><span>Discard these results</span></label></fieldset></div></section>
+    <section class="card flush"><div class="row sb"><h2>Possible mix-ups · ${esc(r.mixWhere)}</h2><span class="hint">${esc(r.mixWhat)}</span></div>
+      <div class="tw"><table class="tbl"><thead><tr><th>When</th><th>Clip</th><th>Linked to now</th><th>Should be</th></tr></thead><tbody>
+      ${r.mixRows.map(([t, who], k) => `<tr><td>${esc(t)}</td><td><div class="ph" style="width:64px;height:40px"></div></td><td>${esc(who)}</td><td>${k === 0 ? `<select class="in" aria-label="${esc(U.Person)} for ${esc(t)}" data-bind="issues.mix1">${r.mixPeople.map((o) => `<option ${i.mix1 === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>` : `<span class="hint">Keep</span>`}</td></tr>`).join("")}
+      </tbody></table></div></section>`;
+}
+
+function results() {
+  const R = U.results;
+  const max = Math.max(...R.trend), min = Math.min(...R.trend);
+  const h = (v) => 40 + ((v - min) / Math.max(1, max - min)) * 80;
+  const pending = S.findings.filter((f) => f.state === "pending").length;
+  return head("Training Assessment / Results & Reports", esc(S.ns.name), `${esc(modelShort())} v1 · ${esc(S.ns.site || U.sites[0])} · ${esc(S.ns.date)} ${esc(S.ns.from)}–${esc(S.ns.to)}`, `<button class="btn pri" data-act="openReport" data-t="group">Generate report</button>`) +
+    `<nav class="tabs" aria-label="Results views"><button class="tab" aria-current="page" data-go="results">Group</button><button class="tab" data-go="individual">Individual</button></nav>
+    <div class="kpis">${kpi(...R.kpis[0])}${kpi(...R.kpis[1])}${kpi("Needs review", pending, "Low-confidence findings")}${kpi(...R.kpis[2])}</div>
+    <div class="g2"><section class="card"><h2>${esc(R.trendTitle)}</h2><div class="chart" role="img" aria-label="${esc(R.trendTitle)}">${R.trend.map((v) => `<div><span style="height:${h(v)}px"></span>${v}</div>`).join("")}</div><div class="row sb hint"><span>${R.trendFrom}</span><span>${R.trendTo}</span></div></section>
+      <section class="card"><h2>${esc(R.faultsTitle)}</h2>${R.faultBars.map(([f, n]) => `<div class="fb"><span>${esc(f)}</span><div class="t"><span style="width:${(n / R.of) * 100}%"></span></div><span>${n}</span></div>`).join("")}</section></div>
+    ${S.dep.reduced && U.short ? `<p class="note soft">${esc(U.unitNames[U.short.unit])} ran on one camera. Its ${esc(U.people)} show ${esc(U.short.loses)} as "Not measured · needs 2 cameras", never as zero, and the group score only counts what every area measured.</p>` : ""}
+    <section class="card"><div class="row sb"><h2>Session</h2><div class="row">${statusChip(U.sess.status)}<button class="btn sm" data-act="soonToast" data-msg="Session link copied">Share</button><button class="btn sm" data-act="soonToast" data-msg="Note added to the session">Add note</button></div></div>
+      <div class="strip">${U.sess.meta.map(([k, val]) => `<div><span>${esc(k)}</span><b style="font-size:14px">${esc(val)}</b></div>`).join("")}</div>
+      <div class="tw"><table class="tbl"><thead><tr><th>Camera / hardware</th><th>Status</th><th>Against what the model needs</th><th>Check</th></tr></thead><tbody>
+      ${U.det.cams.map(([n, st, spec, chk]) => `<tr><td><b>${esc(n)}</b></td><td>${esc(st)}</td><td>${esc(spec)}</td><td>${pf(chk)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="note soft">${esc(U.sess.partial)}</p></section>
+    <section class="card flush"><div class="row sb"><h2>${esc(U.Person)}s</h2><span class="hint">${R.noRank ? "Listed by name. Patients aren't ranked or compared with each other." : `Click a ${esc(U.person)} to open their breakdown`}</span></div><div class="tw"><table class="tbl"><thead><tr>${R.cols.map((c) => `<th>${esc(c)}</th>`).join("")}<th>Review</th></tr></thead><tbody>
+      ${R.rows.map((rw) => `<tr><td>${rw[0] === U.ind.name ? `<button class="rowbtn" data-go="individual">${esc(rw[0])}</button>` : `<b>${esc(rw[0])}</b>`}</td>${rw.slice(1).map((c) => `<td>${esc(c)}</td>`).join("")}<td>${rw[0] === U.ind.name && pending ? `<span class="chip">${pending} finding</span>` : ""}</td></tr>`).join("")}
+      </tbody></table></div></section>`;
+}
+
+function individual() {
+  const I = U.ind, D = U.det, C = D.compare;
+  const att = D.attempts.find((a) => String(a.n) === S.att) || D.attempts[0];
+  const metrics = D.metrics[att.kind === "good" ? "good" : "fault"];
+  const outside = metrics.filter((m) => m[3] === "fail" || m[3] === "warn").length;
+  const shown = D.attempts.filter((a) => S.attFilter === "all" || (S.attFilter === "faults" ? a.kind !== "good" : a.review === "Needs review"));
+  const fcard = (f) => `<div class="find"><div class="row sb"><b>${esc(f.name)}</b>${f.state === "pending" ? `<span class="chip">${f.conf}% sure</span>` : f.state === "dismissed" ? `<span class="chip dash">Dismissed</span>` : `<span class="chip dark">${f.state === "corrected" ? "Corrected" : "Confirmed"}</span>`}</div><span class="hint">${esc(f.detail)}</span>
+    ${f.state === "pending" ? `<div class="row"><button class="btn sm" data-act="finding" data-id="${f.id}" data-v="confirmed">Confirm</button><button class="btn sm" data-act="finding" data-id="${f.id}" data-v="dismissed">Dismiss</button><button class="btn sm" data-act="finding" data-id="${f.id}" data-v="corrected">Correct</button></div>` : `<button class="link" data-act="finding" data-id="${f.id}" data-v="pending" style="align-self:flex-start">Undo</button>`}</div>`;
+  const v = (t) => `<div class="view" style="height:220px"><span class="tag">${esc(t)} · ${esc(D.item)} ${att.n} · ${esc(S.phase)}</span>${S.pose ? `<div class="pose"></div>` : `<div class="who"></div>`}</div>`;
+  const pending = S.findings.filter((f) => f.state === "pending").length;
+  /* Compare always runs selected vs something else: the selected attempt drops out of
+     the list, and when a faulty one is selected the two data columns swap over. */
+  const flip = (t) => t.startsWith("+") ? "−" + t.slice(1) : t.startsWith("−") ? "+" + t.slice(1) : t;
+  const cmpOpts = [`${D.item} ${D.best} · reference`, ...C.opts].filter((o) => !o.startsWith(`${D.item} ${att.n} `) && o !== `${D.item} ${att.n}`);
+  const cmpB = cmpOpts.includes(S.cmpB) ? S.cmpB : cmpOpts[0];
+  const cmpRows = C.rows.map((r) => att.kind === "good" ? r : [r[0], r[2], r[1], flip(r[3])]);
+  const attSelect = `<select class="in" style="width:auto" aria-label="${esc(D.item)}" data-bind="att">${D.attempts.map((a) => `<option value="${a.n}" ${String(a.n) === S.att ? "selected" : ""}>${esc(D.item)} ${a.n}${a.tag ? ` · ${esc(a.tag)}` : ""}</option>`).join("")}</select>`;
+  return head(`<button data-go="results">${esc(S.ns.name)}</button> / ${esc(I.name)}`, esc(I.name), esc(I.sub),
+      `<button class="btn" data-go="results">Back to group</button><button class="btn" data-act="soonToast" data-msg="Next ${esc(U.person)}: ${esc(I.next)}">Next ${esc(U.person)}</button><button class="btn" data-act="soonToast" data-msg="Link copied · ${esc(I.name)}">Share</button>${I.signoff ? `<button class="btn" data-act="signoff" ${S.signed ? "disabled" : ""}>${S.signed ? "✓ Signed off" : "Sign off visit"}</button>` : ""}<button class="btn pri" data-act="openReport" data-t="individual">Generate report</button>`) +
+    `<nav class="tabs" aria-label="Results views"><button class="tab" data-go="results">Group</button><button class="tab" aria-current="page" data-go="individual">Individual</button></nav>
+    <div class="strip">${I.strip.map(([k, val]) => `<div><span>${esc(k)}</span><b>${esc(val)}</b></div>`).join("")}<div><span>To review</span><b>${pending}</b></div></div>
+
+    <section class="card"><div class="row sb"><h2>Session timeline</h2><span class="hint">${esc(D.meta[0][1])} · ${esc(D.meta.find((m) => m[0] === "Analysed") ? D.meta.find((m) => m[0] === "Analysed")[1] : "")}</span></div>
+      <div class="atl">${D.blocks.map(([x, l]) => `<div class="blk" style="left:${x}%"><b>${esc(l)}</b></div>`).join("")}
+        ${D.attempts.map((a) => `<button type="button" class="mk ${a.kind}" style="left:${a.x}%" data-act="pickAtt" data-v="${a.n}" aria-pressed="${String(a.n) === S.att}" title="${esc(D.item)} ${a.n} · ${esc(a.time)}"><span class="sr">${esc(D.item)} ${a.n} · ${esc(a.time)}</span></button>`).join("")}</div>
+      <div class="row sb"><div class="lgd"><span><i></i>Within target</span><span><i class="fault"></i>Fault found</span><span><i class="flag"></i>Flagged for review</span></div><span class="hint">${esc(S.ns.from)} → ${esc(S.ns.to)}</span></div></section>
+
+    <div class="g3"><section class="card span2"><div class="row sb"><h2>${esc(D.item)} video</h2><div class="row">${attSelect}<label class="row hint"><input type="checkbox" data-bind="pose" ${checked("pose")}> Pose</label>${U.uc === "physio" ? `<span class="chip">Face blur on</span>` : ""}</div></div>
+      <div class="${I.views.length > 1 ? "g2" : ""}">${I.views.map(v).join("")}</div>
+      <div class="row sb"><div class="chips">${I.phases.map((pp) => `<button class="phase" data-act="phase" data-v="${esc(pp)}" aria-pressed="${S.phase === pp}">${esc(pp)}</button>`).join("")}</div><div class="row">${["0.25×", "0.5×", "1×"].map((sp) => `<button class="btn sm" data-act="soonToast" data-msg="Playback ${esc(sp)}">${esc(sp)}</button>`).join("")}<button class="btn sm" data-act="soonToast" data-msg="Frame by frame · ← →">Frame</button><button class="btn sm" data-act="soonToast" data-msg="Line tool: drag on the video">Line</button><button class="btn sm" data-act="soonToast" data-msg="Angle tool: click three points">Angle</button><button class="btn sm" data-act="soonToast" data-msg="Circle and freehand · Clear drawings">Draw</button></div></div></section>
+      <section class="card"><h2>Findings</h2>${S.findings.map(fcard).join("")}</section></div>
+
+    <section class="card flush"><div class="row sb"><h2>${esc(D.item)}s</h2><div class="chips">${[["all", "All"], ["faults", "Faults only"], ["flagged", "Flagged"]].map(([k, l]) => `<button class="phase" data-act="attFilter" data-v="${k}" aria-pressed="${S.attFilter === k}">${l}</button>`).join("")}</div></div>
+      <div class="tw"><table class="tbl"><thead><tr>${D.cols.map((c) => `<th>${esc(c)}</th>`).join("")}<th>Reference</th></tr></thead><tbody>
+      ${shown.map((a) => `<tr class="${String(a.n) === S.att ? "hl" : ""}"><td><button class="rowbtn" data-act="pickAtt" data-v="${a.n}">${esc(D.item)} ${a.n}</button>${a.tag ? `<span class="sub">${esc(a.tag)}</span>` : ""}</td><td>${esc(a.time)}</td>${a.cells.map((c) => `<td>${esc(c)}</td>`).join("")}<td>${esc(a.review)}</td><td>${String(a.n) === S.bestAtt ? `<span class="chip dark">Reference</span>` : `<button class="btn sm" data-act="markBest" data-v="${a.n}">Mark as best</button>`}</td></tr>`).join("")}
+      ${shown.length ? "" : `<tr><td colspan="${D.cols.length + 1}"><span class="hint">No ${esc(D.items)} match this filter.</span></td></tr>`}
+      </tbody></table></div><div class="row sb"><span class="hint">${esc(D.listNote)}</span><span class="hint">Reviewed: AI only · confirmed · corrected · dismissed</span></div></section>
+
+    <section class="card flush"><div class="row sb"><h2>${esc(D.item)} ${att.n} · every measure</h2><span class="hint">${esc(att.time)} · ${outside ? `${outside} outside target` : "all within target"}</span></div>
+      <div class="tw"><table class="tbl"><thead><tr><th>Measure</th><th>This ${esc(D.item.toLowerCase())}</th><th>Target</th><th>Result</th></tr></thead><tbody>
+      ${metrics.map(([k, val, t, r]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(val)}</td><td>${esc(t)}</td><td>${pf(r)}</td></tr>`).join("")}</tbody></table></div></section>
+
+    ${D.tables.map(tcard).join("")}
+
+    <section class="card"><div class="row sb"><h2>Signals</h2><span class="hint">${esc(I.signals)} · target band behind the line, markers at each phase</span></div>
+      <div class="g2">${D.charts.map(sig).join("")}</div></section>
+
+    <section class="card"><div class="row sb"><h2>Compare</h2><div class="row"><span class="hint">${esc(D.item)} ${att.n} vs</span><select class="in" style="width:auto" aria-label="Compare with" data-bind="cmpB">${cmpOpts.map((o) => `<option ${cmpB === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select><select class="in" style="width:auto" aria-label="Sync point" data-bind="sync">${C.syncs.map((o) => `<option value="${esc(o)}" ${S.sync === o ? "selected" : ""}>Sync at ${esc(o)}</option>`).join("")}</select><label class="row hint"><input type="checkbox" data-bind="overlay" ${checked("overlay")}> Overlay</label></div></div>
+      ${S.overlay ? `<div class="view" style="height:220px"><span class="tag">${esc(D.item)} ${att.n} + ${esc(cmpB)} · synced at ${esc(S.sync)}</span><div class="who"></div><div class="pose"></div></div>`
+        : `<div class="g2"><div class="view" style="height:220px"><span class="tag">${esc(D.item)} ${att.n} · ${esc(S.sync)}</span><div class="pose"></div></div><div class="view" style="height:220px"><span class="tag">${esc(cmpB)} · ${esc(S.sync)}</span><div class="pose"></div></div></div>`}
+      <div class="tw"><table class="tbl"><thead><tr><th>${esc(C.cols[0])}</th><th>${esc(D.item)} ${att.n}</th><th>${esc(cmpB)}</th><th>${esc(C.cols[3])}</th></tr></thead><tbody>
+      ${cmpRows.map((r) => `<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("")}</tbody></table></div></section>
+
+    <div class="g2"><section class="card"><div class="row sb"><h2>${esc(I.fundTitle)}</h2><span class="hint">This session vs last</span></div><div class="fund">${I.fund.map(([k, val]) => `<span>${esc(k)}</span><b>${esc(val)}</b>`).join("")}</div></section>
+      <section class="card"><h2>${U.uc === "physio" ? "Home programme" : "Drills"} & notes</h2><div class="find"><b>${esc(I.drill[0])}</b><span class="hint">${esc(I.drill[1])}</span><button class="link" data-act="pickAtt" data-v="${D.attempts.find((a) => a.kind !== "good") ? D.attempts.find((a) => a.kind !== "good").n : att.n}" style="align-self:flex-start">See the clearest example</button></div><button class="btn sm" data-act="soonToast" data-msg="Add your own ${U.uc === "physio" ? "exercise" : "drill"}" style="align-self:flex-start">+ Add</button><label class="hint" for="notes">${esc(I.coach)} notes</label><textarea class="in" id="notes" data-bind="notes">${esc(S.notes)}</textarea></section></div>
+
+    <section class="card"><div class="row sb"><h2>Setup & system status</h2><span class="hint">${esc((D.meta.find((m) => m[0] === "Location") || ["", ""])[1])}</span></div>
+      <div class="tw"><table class="tbl"><thead><tr><th>Camera / hardware</th><th>Status</th><th>Against what the model needs</th><th>Check</th></tr></thead><tbody>
+      ${D.cams.map(([n, st, spec, chk]) => `<tr><td><b>${esc(n)}</b></td><td>${esc(st)}</td><td>${esc(spec)}</td><td>${pf(chk)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="note soft">${esc(D.partial)}</p></section>
+
+    <section class="card"><div class="row sb"><h2>History · last 5 sessions</h2><span class="hint">${esc(I.goal)}</span></div><div class="g3">${I.history.map((hh) => `<div class="fld"><span class="hint">${esc(hh)}</span><div class="spark"></div></div>`).join("")}</div></section>`;
+}
+
+function report() {
+  const r = S.rep, R = U.report;
+  const shown = S.findings.filter((f) => f.state === "confirmed" || f.state === "corrected");
+  const pending = S.findings.filter((f) => f.state === "pending").length;
+  const needSign = U.ind.signoff && r.type === "individual" && !S.signed;
+  const on = (k) => r.sections[k];
+  const who = r.type === "group" ? S.ns.name : U.ind.name;
+  return head(`<button data-go="${r.type === "group" ? "results" : "individual"}">${esc(who)}</button> / Report`, "Generate report", "",
+      `<button class="btn" data-act="soonToast" data-msg="PDF ready in Downloads" ${needSign ? "disabled" : ""}>Export PDF</button><button class="btn" data-act="soonToast" data-msg="${esc(R.extra)} done" ${needSign ? "disabled" : ""}>${esc(R.extra)}</button><button class="btn pri" data-act="soonToast" data-msg="${esc(R.send)} · sent" ${needSign ? "disabled" : ""}>${esc(R.send)}</button>`) +
+    `${needSign ? `<div class="note">! <span><b>Sign off the visit first.</b> Clinical reports can't be shared until the clinician signs off. <button class="link" data-go="individual">Go to the visit</button></span></div>` : ""}
+    <div class="row" style="align-items:flex-start;gap:20px"><form class="card" style="flex:1 1 280px;max-width:360px" onsubmit="return false"><h2>Report settings</h2>
+      <fieldset><legend class="lb">Report</legend><div class="fld"><label class="opt"><input type="radio" name="rt" value="individual" data-bind="rep.type" ${radio("rep.type", "individual")}> ${esc(U.rtypes[0])} · ${esc(U.ind.name)}</label><label class="opt"><input type="radio" name="rt" value="group" data-bind="rep.type" ${radio("rep.type", "group")}> ${esc(U.rtypes[1])} · ${esc(S.ns.name)}</label></div></fieldset>
+      <fieldset><legend class="lb">Sections</legend><div class="fld">${Object.keys(r.sections).map((k) => `<label class="row" style="font-size:13px"><input type="checkbox" data-bind="rep.sections.${k}" ${checked(`rep.sections.${k}`)}> ${esc(k)}</label>`).join("")}</div></fieldset>
+      <span class="hint">Only confirmed findings are included.${pending ? ` ${pending} still waiting for review.` : ""}</span></form>
+    <div class="prev"><article class="sheet" aria-label="Report preview"><div class="row sb hint"><span>ACCEL · ${esc(R.title)}</span><span>${esc(S.ns.date)}</span></div>
+      <div class="row sb"><b style="font-size:18px">${esc(who)}</b><b style="font-size:22px">${esc(r.type === "group" ? R.group : R.ind)}</b></div>
+      ${Object.keys(r.sections).filter(on).map((k) => /clip/i.test(k) ? `<div class="ph" style="height:140px" role="img" aria-label="${esc(k)}"></div>`
+        : /log/i.test(k) ? `<b>${esc(k)}</b>${U.det.attempts.slice(0, 4).map((a) => `<span>• ${esc(U.det.item)} ${a.n} · ${esc(a.time)} · ${a.cells.map(esc).join(" · ")}</span>`).join("")}<span class="hint">The full ${esc(U.det.items)} log is attached as a table.</span>`
+        : /fault|measure|score/i.test(k) ? `<b>${esc(k)}</b>${shown.length ? shown.map((f) => `<span>• ${esc(f.name)}</span>`).join("") : `<span class="hint">No confirmed findings yet.</span>`}`
+        : /note/i.test(k) ? `<b>${esc(k)}</b><span>${esc(S.notes)}</span>`
+        : /progress/i.test(k) ? `<b>${esc(k)}</b><div class="spark"></div>`
+        : `<b>${esc(k)}</b><span>• ${esc(U.ind.drill[0])} · ${esc(U.ind.drill[1])}</span>`).join("")}
+    </article></div></div>`;
+}
+
+function participants() {
+  const t = S.ptab;
+  const list = [...S.people].sort((a, b) => (a.uc === S.uc ? -1 : 0) - (b.uc === S.uc ? -1 : 0));
+  return head("Training Assessment / Participants", "Participants", "Registered people and groups for every use case. Sessions pick from here; walk-ins can be added later.",
+      `<button class="btn" data-act="openCsv" data-ctx="page">Import CSV</button><button class="btn pri" data-act="openAddPerson">+ Add ${esc(U.person)}</button>`) +
+    `<div class="kpis">${kpi("People", S.people.length)}${kpi("Groups", 8)}${kpi("Missing consent", S.people.filter((p) => !p.consent).length)}${kpi("Unassigned temporary IDs", S.issues.g4 ? 2 : 3, "")}</div>
+    <div class="tabs" role="tablist">${[["people", "People"], ["groups", "Groups"], ["unassigned", "Unassigned"]].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${t === k}" data-act="ptab" data-v="${k}">${l}</button>`).join("")}</div>
+    ${t === "people" ? `<section class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>ID</th><th>Group</th><th>Coach / PT / clinician</th><th>Consent</th><th>Last session</th></tr></thead><tbody>
+      ${list.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="hint">${esc(p.info)}</div></td><td>${esc(p.id)}</td><td>${esc(p.group)}</td><td>${esc(p.coach)}</td><td>${p.consent ? "✓" : `<button class="btn sm" data-act="pconsent" data-id="${esc(p.id)}">Capture</button>`}</td><td>${esc(p.last)}</td></tr>`).join("")}
+      </tbody></table></div></section>` : t === "groups" ? `<div class="g3">${Object.values(UC).flatMap((u) => u.groups).map((g) => `<div class="card"><b>${esc(g)}</b><span class="hint">Group</span></div>`).join("")}</div>`
+      : `<section class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Temporary ID</th><th>Session</th><th>Results</th><th><span class="sr">Action</span></th></tr></thead><tbody>
+      ${Object.entries(UC).filter(([k]) => !(k === S.uc && S.issues.g4)).map(([k, u]) => `<tr><td><b>${esc(u.run.temp)}</b></td><td>${esc(u.session.name)}</td><td>${esc(u.run.tempItems)}</td><td>${k === S.uc && S.run.sid ? `<button class="btn sm" data-go="people">Assign</button>` : `<span class="hint">${esc(u.label)}</span>`}</td></tr>`).join("")}</tbody></table></div></section>`}`;
+}
+
+const ROUTES = { dashboard, models, wizard, model, deployments, deploy, verify, sessions, "new-session": newSession, running, people, results, individual, report, participants };
+for (const k of Object.keys(UC)) UC[k].uc = k;
+
+/* ── modals ──────────────────────────────────────────────────────── */
+function renderModal() {
+  const el = document.getElementById("modal");
+  if (!S.modal) { el.innerHTML = ""; return; }
+  if (S.modal === "upload") el.innerHTML = `<div class="scrim" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="mh"><h3 id="mt">Upload CV model</h3><p class="desc">Same form as Model Management. Saved there and reusable by any assessment model.</p></div>
+    <div class="mb"><div class="g2">${field("Capability", "up.cap", select("up.cap", ["Action recognition", "Pose estimation", "Object detection", "Person detection & Re-ID"]))}${field("Model title", "up.title", input("up.title"))}</div>
+      <div class="fld"><span class="lb">CV model file (.onnx)</span><div class="drop"><span class="badge">ONNX</span><span style="flex:1">${esc(S.up.title.toLowerCase().replace(/[^a-z0-9]+/g, "_"))}.onnx · 48 MB</span><button type="button" class="btn sm">Replace</button></div></div>
+      <div class="fld"><span class="lb">Manifest (.json)</span><div class="drop"><span class="badge">JSON</span><span style="flex:1">${esc(S.up.title.toLowerCase().replace(/[^a-z0-9]+/g, "_"))}.manifest.json · 4 KB</span><button type="button" class="btn sm">Replace</button></div></div>
+      <div style="max-width:180px">${field("Batch size", "up.batch", input("up.batch"))}</div>
+      <div class="note soft" style="flex-direction:column;gap:4px"><b>Read from the manifest</b><span class="hint">Input 640 × 640 · outputs match "${esc(S.up.cap)}"</span><span>✓ Fits "${esc(S.up.cap)}"</span></div></div>
+    <div class="mf"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="button" class="btn pri" data-act="upload">Upload</button></div></div></div>`;
+  if (S.modal === "preset") el.innerHTML = `<div class="scrim" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="mh"><h3 id="mt">Create camera preset</h3><p class="desc">Saved in System Configuration › Camera Defaults, so any assessment model can use it. Every deployment is checked against it.</p></div>
+    <div class="mb">${field("Preset name", "preset.name", input("preset.name", 'placeholder="e.g. Golf bay · 2 cameras · 240 fps"'))}
+      <div class="g2">${field("Cameras per area", "preset.perArea", select("preset.perArea", ["1", "2", "3"]))}${field("Minimum frame rate", "preset.fps", select("preset.fps", ["60 fps", "120 fps", "240 fps"]))}</div>
+      <div class="g2">${field("Minimum resolution", "preset.res", select("preset.res", ["720p", "1080p", "4K"]))}${field("Calibration", "preset.cal", select("preset.cal", ["Floor or mat markers", "Known object size", "None"]))}</div>
+      <div class="fld"><span class="lb">Positions</span><div class="row">${poseReq().pos.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}<button type="button" class="btn sm">+ Add position</button></div><span class="hint">Each position gets a placement guide: height, distance, sample frame.</span></div></div>
+    <div class="mf"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="button" class="btn pri" data-act="savePreset">Save preset</button></div></div></div>`;
+  if (S.modal === "addPerson") el.innerHTML = `<div class="scrim" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="mh"><h3 id="mt">Add ${esc(U.person)}</h3><p class="desc">Required fields come from the model's participant rules: ${esc(U.required.join(", "))}.</p></div>
+    <div class="mb">${field("Name", "np.name", input("np.name", 'placeholder="Full name"'))}<div class="g2">${field("Group", "np.group", select("np.group", U.groups))}${field(esc(U.ind.coach), "np.coach", input("np.coach"))}</div>${field(esc(U.required[1]), "np.info", input("np.info"))}
+      <label class="row" style="font-size:13px"><input type="checkbox" checked ${U.privacyLocked ? "disabled" : ""}> Consent captured${U.privacyLocked ? " (required)" : ""}</label></div>
+    <div class="mf"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="button" class="btn pri" data-act="addPerson">Add ${esc(U.person)}</button></div></div></div>`;
+  if (S.modal === "csv") {
+    const c = CSV[S.uc], known = (nm) => S.people.some((p) => p.name === nm);
+    const fields = ["Name", ...U.required.filter((r) => r !== "Name" && r !== "Consent"), "Consent"];
+    el.innerHTML = `<div class="scrim" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="mh"><h3 id="mt">Import ${esc(U.people)} from CSV</h3><p class="desc">One row per person. Columns are matched to the profile fields this use case needs: ${esc(U.required.join(", "))}.</p></div>
+    <div class="mb"><div class="fld"><span class="lb">CSV file</span><div class="drop"><span class="badge">CSV</span><span style="flex:1">${esc(c.file)} · ${c.rows.length} rows</span><button type="button" class="btn sm">Replace</button></div><button type="button" class="link" data-act="soonToast" data-msg="Downloaded ${esc(U.label.toLowerCase())}_participants_template.csv">Download template</button></div>
+      <div class="fld"><span class="lb">Match columns</span><div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>CSV column</th><th>Profile field</th></tr></thead><tbody>
+        ${c.cols.map((col) => `<tr><td>${esc(col)}</td><td><select class="in" aria-label="Field for ${esc(col)}">${fields.map((f) => `<option ${f === col ? "selected" : ""}>${esc(f)}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div></div></div>
+      <div class="fld"><span class="lb">Preview</span><div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody>
+        ${c.rows.map((r) => `<tr><td>${esc(r[0])}</td><td class="hint">${S.csv.ctx === "session" && inSession(r[0]) ? "Already in this session · skipped" : known(r[0]) ? "Already registered · added from their profile" : "New profile"}${r[r.length - 1] === "No" ? " · ✗ no consent, won't be recorded" : ""}</td></tr>`).join("")}</tbody></table></div></div></div>
+      ${S.csv.ctx === "session" ? `<label class="row" style="font-size:13px"><input type="checkbox" data-bind="csv.toGroup" ${S.csv.toGroup ? "checked" : ""}> Also add new people to ${esc(S.ns.group)}</label>` : ""}</div>
+    <div class="mf"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="button" class="btn pri" data-act="importCsv">Import ${c.rows.length} ${esc(U.people)}</button></div></div></div>`;
+  }
+  const first = el.querySelector(".modal input, .modal select");
+  if (first) first.focus();
+}
+function renderToast() { document.getElementById("toast").innerHTML = S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ""; }
+
+/* ── actions ─────────────────────────────────────────────────────── */
+let runTimer = null;
+function startTimer() {
+  clearInterval(runTimer);
+  runTimer = setInterval(() => {
+    S.run.progress = Math.min(100, S.run.progress + 5);
+    if (route() === "running" || route() === "dashboard") render(true);
+    if (S.run.progress >= 100) clearInterval(runTimer);
+  }, 300);
+}
+/* switch the whole prototype to another use case (keeps models, deployments, people) */
+function switchUc(k) {
+  clearInterval(runTimer);
+  S.sessions = S.sessions.filter((s) => s.status !== "Ongoing");
+  U = UC[k]; S.uc = k; S.cur = U.modelId;
+  Object.assign(S, ucState(U));
+}
+/* a model from another use case: switch first, so every screen uses its words and values */
+const ucFor = (id) => { const m = S.models.find((x) => x.id === id); if (m && m.uc && m.uc !== S.uc) { switchUc(m.uc); toast(`Switched to ${U.full} for ${m.name}`); } return m; };
+const ACT = {
+  soon: () => toast("Existing Accel module · not part of this prototype"),
+  soonToast: (el) => toast(el.dataset.msg),
+  uc: (el) => {
+    if (el.dataset.v === S.uc) return;
+    clearInterval(runTimer);
+    S.sessions = S.sessions.filter((s) => s.status !== "Ongoing");
+    switchUc(el.dataset.v);
+    toast(`Switched to ${U.full}`); render(); renderModal();
+  },
+  reset: () => { clearInterval(runTimer); S = freshState(S.uc, "dashboard"); toast("Prototype reset"); go("dashboard"); },
+  newModel: () => { S.draft = draftFor(U); S.step = 1; go("wizard"); },
+  mfilter: (el) => { S.mfilter = el.dataset.v; render(); },
+  continueDraft: (el) => { const m = ucFor(el.dataset.id); S.draft = { ...draftFor(U), id: m.id, name: m.name, cat: m.cat }; S.step = m.step || 1; go("wizard"); },
+  openModel: (el) => { ucFor(el.dataset.id); S.cur = el.dataset.id; go("model"); },
+  editModel: () => { const m = S.models.find((x) => x.id === S.cur); S.draft = { ...draftFor(U), id: m.id, name: m.name, cat: m.cat }; S.step = 1; go("wizard"); },
+  toStep: (el) => { S.step = Number(el.dataset.n); render(); window.scrollTo(0, 0); },
+  saveDraft: () => {
+    const d = S.draft;
+    if (d.id) { const m = S.models.find((x) => x.id === d.id); if (m.status === "Draft") { m.step = S.step; m.name = d.name; } }
+    else { d.id = "m" + Date.now(); S.models.push({ id: d.id, uc: S.uc, name: d.name || "Untitled model", cat: d.cat, ver: "v1", status: "Draft", step: S.step, deps: "—", edited: "Just now · You" }); }
+    toast("Draft saved"); go("models");
+  },
+  openUpload: () => { S.modal = "upload"; renderModal(); },
+  savePreset: () => {
+    const nm = S.preset.name.trim() || `${U.Unit} · ${S.preset.perArea} camera${S.preset.perArea === "1" ? "" : "s"} · ${S.preset.fps} · ${S.preset.res}`;
+    S.draft.presets.push(nm); S.draft.profile = nm; S.modal = null; renderModal(); toast(`Saved "${nm}" in Camera Defaults`); render();
+  },
+  closeModal: (el, e) => { if (e && el.classList.contains("scrim") && e.target !== el) return; S.modal = null; renderModal(); },
+  upload: () => {
+    const d = S.draft, same = S.lib.filter((m) => m.cap === S.up.cap);
+    let m = same.find((x) => x.name === S.up.title);
+    if (!m) { m = { id: "cvu" + Date.now(), name: S.up.title, cap: S.up.cap, detects: (same.find((x) => d.cvSel[x.id]) || same[0] || { detects: "Read from the manifest" }).detects, up: true }; S.lib.unshift(m); }
+    for (const x of same) d.cvSel[x.id] = false; // one model per capability: the upload replaces it
+    d.cvSel[m.id] = true;
+    S.modal = null; renderModal(); toast(`Uploaded ${m.name} to Model Management · selected for ${m.cap}`); render();
+  },
+  toggleArea: () => { S.draft.areaDrawn = !S.draft.areaDrawn; render(); },
+  calibrate: () => { S.draft.calibrated = true; toast(U.calMsg); render(); },
+  addGroup: () => { S.draft.groups.push(`New group ${S.draft.groups.length + 1}`); render(); },
+  rmGroup: (el) => { S.draft.groups.splice(Number(el.dataset.i), 1); render(); },
+  applies: (el) => { S.draft.applies = el.dataset.v; render(); },
+  runTest: () => { S.draft.test = "running"; render(); setTimeout(() => { S.draft.test = "passed"; if (route() === "wizard") render(); }, 1600); },
+  saveModel: () => {
+    const d = S.draft;
+    let m = d.id && S.models.find((x) => x.id === d.id);
+    if (m) { m.status = "Configured"; m.name = d.name; if (m.deps !== "—") m.ver = "v" + (Number(m.ver.slice(1)) + 1); m.edited = "Just now · You"; delete m.step; }
+    else { m = { id: "m" + Date.now(), uc: S.uc, name: d.name || "Untitled model", cat: d.cat, ver: "v1", status: "Configured", deps: "—", edited: "Just now · You" }; S.models.push(m); }
+    S.cur = m.id; toast(`${m.name} saved · Configured`); go("model");
+  },
+  deployModel: (el) => {
+    const m = ucFor(el.dataset.id);
+    S.dep.model = el.dataset.id; S.dep.fixed = false; S.dep.short = "pending";
+    S.dep.name = el.dataset.id === U.modelId ? U.depName : `${m.name.replace(" Assessment", "")} · ${S.dep.site}`;
+    go("deploy");
+  },
+  fixCam: () => { S.dep.fixed = true; toast(U.fixedMsg); render(); },
+  shortFix: (el) => { S.dep.short = el.dataset.v; toast(el.dataset.v === "added" ? "Camera added in Cameras · area passes" : el.dataset.v === "skip" ? "Area skipped" : "Area will run with reduced analysis"); render(); },
+  activate: () => {
+    const p = S.dep, m = S.models.find((x) => x.id === p.model);
+    const failName = U.unitNames[U.failUnit];
+    const shortName = U.short ? U.unitNames[U.short.unit] : null;
+    const live = U.unitNames.filter((b) => p.units[b] && !(b === failName && !p.fixed) && !(b === shortName && (p.short === "pending" || p.short === "skip")));
+    p.reduced = !!shortName && live.includes(shortName) && p.short === "reduced";
+    const d = { name: p.name, model: `${m.name.replace(" Assessment", "")} ${m.ver}`, site: p.site, locs: live.join(", "), cams: live.length * U.camsPerUnit, health: p.reduced ? `Active · reduced: ${shortName} (1 of ${U.camsPerUnit} cameras)` : p.units[failName] && !p.fixed ? `! ${failName} not active` : "✓ All good", active: true };
+    const i = S.deployments.findIndex((x) => x.name === p.name);
+    if (i >= 0) S.deployments[i] = d; else S.deployments.unshift(d);
+    if (m.deps === "—") m.deps = "1 site";
+    toast(`Activated ${live.length} ${U.unit}${live.length === 1 ? "" : "s"} · ${p.name}`); go("deployments");
+  },
+  toggleDep: (el) => { const d = S.deployments[Number(el.dataset.i)]; d.active = !d.active; toast(`${d.name} ${d.active ? "reactivated" : "deactivated"}`); render(); },
+  newSession: () => { S.ns.step = 1; go("new-session"); },
+  nsStep: (el) => { S.ns.step = Number(el.dataset.n); render(); window.scrollTo(0, 0); },
+  consent: () => { S.ns.consent = true; const p = S.people.find((x) => x.name === U.session.missing[2]); if (p) p.consent = true; toast(`Consent captured for ${U.session.missing[2]}`); render(); },
+  startRun: () => {
+    const id = "s" + Date.now();
+    S.sessions = S.sessions.filter((s) => s.status !== "Ongoing");
+    S.sessions.unshift({ id, uc: S.uc, name: S.ns.name, model: `${modelShort()} v1`, dep: (S.ns.depSel.split(" · ")[0] || U.depName), src: S.ns.src === "live" ? "Live" : "Recorded", people: U.session.count + S.ns.imported.length, time: `${S.ns.date.replace(" 2026", "")} ${S.ns.from}–${S.ns.to}`, status: "Ongoing" });
+    S.run = { sid: id, progress: 0 }; S.issues.g4 = false; S.issues.mix = false;
+    startTimer(); go("running");
+  },
+  resolve: () => { S.issues.g4 = true; S.issues.mix = true; toast(S.issues.choice === "assign" ? `${U.run.temp} assigned to ${S.issues.to}` : S.issues.choice === "new" ? `New profile created for ${U.run.temp}` : `${U.run.temp}'s results discarded`); go("running"); },
+  complete: () => { const s = S.sessions.find((x) => x.id === S.run.sid); if (s) s.status = "Completed"; S.run.sid = null; toast("Session completed · results ready"); go("results"); },
+  finding: (el) => { const f = S.findings.find((x) => x.id === el.dataset.id); f.state = el.dataset.v; render(); },
+  phase: (el) => { S.phase = el.dataset.v; render(); },
+  pickAtt: (el) => { S.att = el.dataset.v; render(true); },
+  attFilter: (el) => { S.attFilter = el.dataset.v; render(true); },
+  markBest: (el) => { S.bestAtt = el.dataset.v; toast(`${U.det.item} ${el.dataset.v} marked as the reference ${U.det.item.toLowerCase()}`); render(true); },
+  signoff: () => { S.signed = true; toast("Visit signed off"); render(); },
+  openReport: (el) => { S.rep.type = el.dataset.t; go("report"); },
+  ptab: (el) => { S.ptab = el.dataset.v; render(); },
+  pconsent: (el) => { const p = S.people.find((x) => x.id === el.dataset.id); if (p) p.consent = true; toast("Consent captured"); render(); },
+  openCsv: (el) => { S.csv = { ctx: el.dataset.ctx, toGroup: true }; S.modal = "csv"; renderModal(); },
+  importCsv: () => {
+    const c = CSV[S.uc], added = [], before = S.ns.imported.length;
+    for (const r of c.rows) {
+      const consent = r[r.length - 1] !== "No";
+      if (!S.people.some((p) => p.name === r[0])) {
+        S.people.unshift({ uc: S.uc, name: r[0], info: `${U.label} · ${r[1]}`, id: U.label.slice(0, 2).toUpperCase() + "-0" + (300 + S.people.length), group: S.csv.ctx === "session" && S.csv.toGroup ? S.ns.group.replace(/ \(.*\)$/, "") : "—", coach: r[c.cols.length - 2] || "—", consent, last: "—" });
+        added.push(r[0]);
+      }
+      if (S.csv.ctx === "session" && !inSession(r[0])) S.ns.imported.push({ name: r[0], consent });
+    }
+    S.modal = null; renderModal();
+    toast(S.csv.ctx === "session" ? `Added ${S.ns.imported.length - before} ${U.people} to the session · ${added.length} new profile${added.length === 1 ? "" : "s"}` : `Imported ${added.length} new ${U.people} · ${c.rows.length - added.length} already registered`);
+    render();
+  },
+  openAddPerson: () => { S.np = { name: "", info: "", group: U.groups[0], coach: "" }; S.modal = "addPerson"; renderModal(); },
+  addPerson: () => {
+    if (!S.np.name.trim()) { toast("Add a name first"); return; }
+    S.people.unshift({ uc: S.uc, name: S.np.name.trim(), info: `${U.label} · ${S.np.info || "—"}`, id: U.label.slice(0, 2).toUpperCase() + "-0" + (300 + S.people.length), group: S.np.group, coach: S.np.coach || "—", consent: true, last: "—" });
+    S.modal = null; renderModal(); toast(`${S.np.name.trim()} added`); render();
+  },
+};
+
+/* ── events ──────────────────────────────────────────────────────── */
+document.addEventListener("click", (e) => {
+  const g = e.target.closest("[data-go]");
+  if (g) { e.preventDefault(); go(g.dataset.go); return; }
+  const a = e.target.closest("[data-act]");
+  if (a && ACT[a.dataset.act]) ACT[a.dataset.act](a, e);
+});
+document.addEventListener("input", (e) => {
+  const b = e.target.closest("[data-bind]");
+  if (b && (b.tagName === "TEXTAREA" || (b.tagName === "INPUT" && b.type !== "checkbox" && b.type !== "radio"))) setP(b.dataset.bind, b.value);
+});
+document.addEventListener("change", (e) => {
+  const b = e.target.closest("[data-bind]");
+  if (!b) return;
+  if (b.type === "checkbox") setP(b.dataset.bind, b.checked);
+  else if (b.type === "radio") {
+    if (!b.checked) return;
+    if (b.dataset.bind === "ns.uc") { if (b.value !== S.uc) { switchUc(b.value); S.ns.step = 1; toast(`New ${U.label.toLowerCase()} session · pick the site and deployed model`); } render(true); return; }
+    setP(b.dataset.bind, b.value);
+  }
+  else if (b.tagName === "SELECT") {
+    if (b.value.startsWith("+ Create camera preset")) { b.value = getP(b.dataset.bind); S.preset = { name: "", perArea: String(poseReq().pos.length), fps: S.draft.fps, res: "1080p", cal: "Floor or mat markers" }; S.modal = "preset"; renderModal(); return; }
+    setP(b.dataset.bind, b.value);
+    if (b.dataset.bind === "draft.tarea") S.draft.tcams = defaultCams(b.value);
+    if (b.dataset.bind === "ns.site") { S.ns.depSel = ""; S.ns.areasFor = ""; }
+    if (b.dataset.bind === "draft.poseMode" || b.dataset.bind === "draft.fps") {
+      S.draft.profile = presetFor(S.draft); S.draft.tcams = defaultCams(S.draft.tarea);
+      const n = poseReq().pos.length; toast(`Camera requirements updated · ${n} camera${n === 1 ? "" : "s"} per ${U.unit}, ${S.draft.fps}`);
+    }
+    if (b.dataset.bind === "draft.cat") {
+      const k = Object.keys(UC).find((x) => UC[x].cat === b.value);
+      if (k && k !== S.uc) {
+        const { id, name } = S.draft, typed = name !== U.newName;
+        switchUc(k); S.draft.id = id; if (typed) S.draft.name = name; S.step = 1;
+        toast(`Now a ${U.label.toLowerCase()} model · the next steps use ${U.full} defaults`);
+      }
+    }
+  }
+  else return; // text fields are stored on input; no re-render, so typing keeps focus
+  if (b.closest(".modal")) renderModal(); else render(true);
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.modal) { S.modal = null; renderModal(); } });
+window.addEventListener("hashchange", () => { const h = hashRoute(); if (ROUTES[h] && h !== S.route) { S.route = h; render(); window.scrollTo(0, 0); } });
+
+function render(keepScroll) {
+  const y = window.scrollY;
+  renderNav();
+  document.getElementById("page").innerHTML = ROUTES[route()]();
+  renderToast();
+  if (keepScroll) window.scrollTo(0, y);
+}
+render();
+</script>

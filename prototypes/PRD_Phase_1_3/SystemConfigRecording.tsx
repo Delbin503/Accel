@@ -1015,8 +1015,10 @@ function SecuritySection() {
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 
-export function SystemConfigRecording() {
-  const [section, setSection] = React.useState<Section>("camera-defaults");
+/** Section the page opens on: the Phase 1.3 card lands on the Recording Schedule
+ *  (Camera Defaults); the Phase 1 module opens on General like the real page. */
+export function SystemConfigRecording({ initialSection = "camera-defaults" }: { initialSection?: Section } = {}) {
+  const [section, setSection] = React.useState<Section>(initialSection);
   const [dirty, setDirty] = React.useState(false);
 
   React.useEffect(() => { setDirty(true); }, [section]);

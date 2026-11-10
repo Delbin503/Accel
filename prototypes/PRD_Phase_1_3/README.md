@@ -16,6 +16,14 @@ proposal rather than bouncing back to the index.
 | Recordings | `/recordings` | Recordings | VMS-VR-001 … 004, VMS-VPB-003 |
 | Video Enhancement | `/enhancement` | Recordings › playback | VMS-VPB-004 |
 | AAR | `/aar` | Monitor › AAR (indoor range) | No ref yet |
+| Swing Assessment | `/golf` | Training Assessment › golf | No ref yet |
+
+**Merged into Phase 1.** Customizable Dashboard (`/dashboard`), System
+Configuration, Synchronised Playback, Recordings and Video Enhancement now ship
+in the Phase 1 modules (`PRD_Dashboard`, `PRD_System_Configuration`,
+`PRD_Live_Monitoring`, `PRD_Recordings`), which import these pages from here.
+Their routes still work in this prototype, but the phase index and the
+prototypes index list only AAR (`MERGED_INTO_PHASE_ONE` in `pages.ts`).
 
 ### Separate module · Model (Re-ID)
 
@@ -310,3 +318,49 @@ and the grading; every count on the page is derived from them, and `statsFor` /
 `factorsFor` work on any subset so Live can show the shots so far. `aar/aarParts.tsx`
 draws the posture frame. Promoting it means swapping `aarSession.ts` for a session
 query (or a live stream) and adding loading / empty / error states.
+
+## Swing Assessment · golf — `/golf`
+
+The AAR layout reused for golf: one golfer's 7-iron lesson at an indoor bay,
+ten swings, with launch-monitor data. Background and the full list of display
+items: `TRAINING-ASSESSMENT-USE-CASE-RESEARCH.md` and
+`TRAINING-ASSESSMENT-DISPLAY-ITEMS.md` at the repo root.
+
+Like the AAR, the **overview** is pinned to the screen and the **full report**
+follows below. One swing is picked at a time and every panel follows it.
+
+- **Summary strip** — golfer and handicap, swing score (A–F, /100, vs last
+  lesson), swings, consistency, tempo, club speed, carry, and how many AI
+  findings the coach still has to review.
+- **Swing Video** — face-on and down-the-line views drawn with the pose on top:
+  joints green or red, and the measures for that moment (turn and X-factor at
+  the top, sway and head off their address lines, spine angle and hips toward
+  the ball at impact, club path arrow). Five key moments (address, takeaway,
+  top, impact, finish) with play / step, a Pose switch, and coach drawing tools
+  (line, angle with its value, clear). The lesson timeline under it has every
+  swing, coloured by grade.
+- **Swing Review** — pick any of the ten swings; seven checks against the
+  coach's targets, and the AI findings with confidence. The coach confirms or
+  dismisses each finding (undo is one click).
+- **Ball & Club** — where every ball landed (carry vs left/right of target,
+  coloured by shape), and the picked swing's club / ball speed, smash, launch,
+  spin, carry, path, face and shape.
+- **Swing Signals** — chest and pelvis rotation, the kinematic sequence (peak
+  speed of pelvis → chest → arms → club), spine angle against its hold band,
+  and sway / hips toward ball. A line marks the moment shown in the video.
+- **Fundamentals** — setup, turn, sway control, posture hold, sequence and
+  tempo, graded A–F, swings that met each, and last lesson vs this one.
+- **Coaching** — the two faults seen most, how many swings and how much carry
+  they cost, a drill each, and a "See swing" link that opens the swing, view
+  and moment that show the fault.
+
+Full report: **Compare swings** (any two, side by side or overlaid, synced at
+any moment, with a measure-by-measure table), **Every swing** (one row per
+swing, out-of-target values in red, click to review), **Progress** (swing
+score by lesson against the goal, plus spine angle lost, X-factor and club
+speed over time) and **Coach notes**.
+
+`golf/golfSession.ts` holds the swings, the coach's targets, scoring, faults
+and signal generators; every number on the page comes from it. `golf/golfParts.tsx`
+draws the pose frames, the drawing layer and the dispersion plot. Not built
+yet: Live mode (between swings), and loading / empty / error states.

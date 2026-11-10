@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, ScanFace } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { PAGES } from "./pages";
+import { MERGED_INTO_PHASE_ONE, PAGES } from "./pages";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { REID_NAV, REID_PAGES, REID_TITLE, isReidPath, reidNavLabel } from "./reid/reidNav";
@@ -18,7 +18,7 @@ export function Phase13Index() {
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {PAGES.map((p) => {
+        {PAGES.filter((p) => !MERGED_INTO_PHASE_ONE.includes(p.path)).map((p) => {
           const Icon = p.icon;
           return (
             <Link
@@ -106,6 +106,7 @@ const PROPOSAL_TRAILS: Record<string, string[]> = {
   "/dashboard": ["Monitor", "Dashboard"],
   "/enhancement": ["Monitor", "Recordings", "Video Enhancement"],
   "/aar": ["Monitor", "AAR"],
+  "/golf": ["Training Assessment", "Swing Assessment"],
 };
 
 /**

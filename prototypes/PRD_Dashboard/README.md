@@ -13,6 +13,12 @@ npm run prototype        # vite on http://localhost:5174
 
 Floating **Dev · State** control (bottom-right, faint, reveals on hover) flips the state.
 
+**Now the Customizable Dashboard** (merged from Phase 1.3,
+`PRD_Phase_1_3/CustomDashboard.tsx`): Customize enters edit mode to reorder,
+remove and restore panels. The State tester still drives Loading / Empty / Error,
+System Health and the 20-site preview. `RealDashboard.tsx` is the previous fixed
+layout; it is no longer mounted.
+
 ## Fixes in this prototype
 
 1. **KPI row** — kept as the original single 4-card grid (Sites · Cameras · Events · Open Cases).

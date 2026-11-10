@@ -11,7 +11,9 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import RealDashboard from "./RealDashboard";
+/* Phase 1.3's Customizable Dashboard, merged into Phase 1. RealDashboard.tsx
+   (the fixed layout) is no longer mounted. */
+import { CustomDashboard } from "../PRD_Phase_1_3/CustomDashboard";
 import { StateTester } from "./StateTester";
 import type { ForcedState, HealthMode, ScaleMode } from "./states";
 import "./proto.css";
@@ -61,7 +63,7 @@ function App() {
               </header>
               <main id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
-                  <Route path="*" element={<PrototypeHandoff><RealDashboard forced={forced} onResolveForced={resolve} forcedHealth={health} scale={scale} /></PrototypeHandoff>} />
+                  <Route path="*" element={<PrototypeHandoff><CustomDashboard forced={forced} onResolveForced={resolve} forcedHealth={health} scale={scale} /></PrototypeHandoff>} />
                 </Routes>
               </main>
             </div>

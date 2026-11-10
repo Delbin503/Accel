@@ -48,6 +48,7 @@ const STANDALONE_PROTOTYPES: ModuleDef[] = [
   { name: "Email Templates", slug: "PRD_Email_Templates" },
   { name: "Interactive Demo", slug: "PRD_Interactive_Demo" },
   { name: "Quick Actions", slug: "PRD_Quick_Actions" },
+  { name: "Training Assessment (lo-fi)", slug: "PRD_Training_Assessment" },
 ];
 
 function has(slug?: string) {
@@ -67,15 +68,14 @@ const mapped = new Set<string>();
 const OWN_TAB = new Set(["PRD_Phase_1_3", "PRD_Accel_TRMS"]);
 const unmapped = [...discovered].filter((s) => !mapped.has(s) && !OWN_TAB.has(s)).sort();
 
-/* Phase 1.3 pages — each card opens the prototype straight on its page (?p=). */
+/* Phase 1.3 pages — each card opens the prototype straight on its page (?p=).
+   Customizable Dashboard, System Configuration (Recording Schedule),
+   Synchronised Playback, Recordings and Video Enhancement were merged into
+   Phase 1 — they open from the Phase 1 dashboard's sidebar now. */
 const PHASE_13 = "PRD_Phase_1_3";
 const PHASE_13_PAGES: { name: string; desc: string; path: string }[] = [
-  { name: "Customizable Dashboard", desc: "Dashboard, rebuilt", path: "/dashboard" },
-  { name: "System Configuration", desc: "Camera Defaults › Recording Schedule", path: "/config" },
-  { name: "Synchronised Playback", desc: "Live Monitoring, rebuilt", path: "/live" },
-  { name: "Recordings", desc: "Recordings, rebuilt", path: "/recordings" },
-  { name: "Video Enhancement", desc: "Recordings › playback", path: "/enhancement" },
   { name: "AAR", desc: "After Action Review · indoor range", path: "/aar" },
+  { name: "Swing Assessment", desc: "Training Assessment · golf", path: "/golf" },
 ];
 const REID_MODULE = {
   name: "Model (Re-ID) Module",
@@ -237,7 +237,7 @@ function PrototypeIndex() {
 
       {tab === "phase-1-3" && (
         <>
-          <Section title="Phase 1.3" badge="P1" count={`${PHASE_13_PAGES.length} pages`}>
+          <Section title="Phase 1.3" badge="P1" count={`${PHASE_13_PAGES.length} page${PHASE_13_PAGES.length === 1 ? "" : "s"}`}>
             {PHASE_13_PAGES.map((pg) => (
               <LinkCard key={pg.path} name={pg.name} desc={pg.desc} href={phase13Ready ? `/${PHASE_13}/?p=${pg.path}` : null} />
             ))}

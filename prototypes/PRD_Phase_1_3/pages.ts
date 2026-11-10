@@ -1,10 +1,11 @@
-import { Crosshair, Film, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
+import { Crosshair, Film, FlagTriangleRight, LayoutDashboard, PlayCircle, Settings, Sparkles } from "lucide-react";
 import { SystemConfigRecording } from "./SystemConfigRecording";
 import { LiveMonitoringProposal } from "./LiveMonitoringProposal";
 import { RecordingsByDay } from "@/pages/recordings";
 import { VideoEnhancement } from "@/pages/video-enhancement";
 import { CustomDashboard } from "./CustomDashboard";
 import { AarDashboard } from "./aar/AarDashboard";
+import { GolfDashboard } from "./golf/GolfDashboard";
 
 /* Phase 1.3 proposals.
 
@@ -14,6 +15,10 @@ import { AarDashboard } from "./aar/AarDashboard";
 
    Paths mirror the real app's routes, so the sidebar's own links land on the
    matching proposal instead of bouncing back to the index. */
+
+/** Proposals merged into Phase 1. Their routes stay (the sidebar still links
+ *  to them) but the phase index no longer lists them. */
+export const MERGED_INTO_PHASE_ONE: readonly string[] = ["/dashboard", "/config", "/live", "/recordings", "/enhancement"];
 
 export const PAGES = [
   {
@@ -94,5 +99,20 @@ export const PAGES = [
       "Pick a shot once — every panel below follows it",
     ],
     Component: AarDashboard,
+  },
+  {
+    path: "/golf",
+    title: "Swing Assessment",
+    subtitle: "Training Assessment · golf",
+    icon: FlagTriangleRight,
+    refs: "No ref yet",
+    summary:
+      "The AAR layout for one golfer's lesson at an indoor bay: the swing read off face-on and down-the-line cameras at five key moments, launch-monitor data, the fundamentals graded against last lesson, and the faults to fix with a drill each.",
+    points: [
+      "Pick a swing once — video, review, ball data and signals follow it",
+      "Coach confirms or dismisses each AI finding",
+      "Compare two swings side by side or overlaid, synced at a moment",
+    ],
+    Component: GolfDashboard,
   },
 ] as const;

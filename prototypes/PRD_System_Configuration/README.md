@@ -21,7 +21,7 @@ a dirty-state Save bar, and the real controls for each area:
 | **User Access** | Role permissions matrix |
 | **SLA & Escalation** | Response targets per severity |
 | **Detection Engine** | Confidence thresholds, models |
-| **Camera Defaults** | RTSP, codec, frame rate, recording |
+| **Camera Defaults** | RTSP, codec, frame rate, and the weekly Recording Schedule per site (merged from Phase 1.3) |
 | **NVR Defaults** | Channel cleanup, storage warnings |
 | **Notifications** | Default delivery channels |
 | **Integrations** | Webhooks, SSO, third-party |
