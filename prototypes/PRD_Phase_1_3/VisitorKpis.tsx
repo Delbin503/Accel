@@ -20,7 +20,8 @@ const TONE_BAR: Record<StatTone, string> = {
 
 /* Same shell as the shared KpiCard (components/shared/KpiCard.tsx): accent dot
    beside a sentence-case label, neutral values, no coloured top stroke. Fixed
-   height so the five cards line up with each other and with the status strip. */
+   height — tall enough for the four-part Race card, which was clipping its bar
+   at 152px — so all five cards and their bars line up across the strip. */
 const StatShell = React.forwardRef<HTMLDivElement, {
   label: string;
   meta?: React.ReactNode;
@@ -28,10 +29,12 @@ const StatShell = React.forwardRef<HTMLDivElement, {
   className?: string;
   children: React.ReactNode;
 }>(({ label, meta, accent, className, children }, ref) => {
+  /* "muted" means a card whose parts carry the colour themselves — the header
+     dot stays neutral rather than repeating the first part's colour. */
   return (
-    <div ref={ref} className={cn("relative flex h-[152px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
+    <div ref={ref} className={cn("relative flex h-[172px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
       <div className="flex min-w-0 items-center gap-2">
-        <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[accent])} />
+        <span className={cn("size-1.5 shrink-0 rounded-full", accent === "muted" ? "bg-muted-foreground/40" : TONE_BAR[accent])} />
         <span className="min-w-0 flex-1 truncate text-base font-medium text-muted-foreground">{label}</span>
         {meta && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>}
       </div>
@@ -83,7 +86,7 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
   }, [stacked, label]);
 
   return (
-    <StatShell ref={ref} label={label} accent={parts[0].tone} meta={showTotal ? `${total} total` : undefined} className={className}>
+    <StatShell ref={ref} label={label} accent="muted" meta={showTotal ? `${total} total` : undefined} className={className}>
       {stacked ? (
         <ul className="mb-2.5 mt-2 flex flex-col gap-1.5" title={`${total} total`}>
           {parts.map((part) => (
