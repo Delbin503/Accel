@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { BASELINE_INSIDE, type VisitorStats } from "./visitorStats";
+import { type VisitorStats } from "./visitorStats";
 
 /* A split count reads as a fraction inside a KPI card — "168 / 163" looks like
    168 out of 163, not two categories. These cards name each side, give it its
@@ -45,12 +45,12 @@ const StatShell = React.forwardRef<HTMLDivElement, {
 StatShell.displayName = "StatShell";
 
 function SingleStat({ label, value, sub, accent }: {
-  label: string; value: number; sub: string; accent: StatTone;
+  label: string; value: number; sub?: string; accent: StatTone;
 }) {
   return (
     <StatShell label={label} accent={accent}>
       <p className="mt-2 text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">{value}</p>
-      <p className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</p>
+      {sub && <p className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</p>}
     </StatShell>
   );
 }
@@ -172,7 +172,6 @@ export function VisitorKpis({
       key="Visitors Inside"
       label="Visitors inside"
       value={stats.inside}
-      sub={`${BASELINE_INSIDE} at start-up + entries − exits`}
       accent="primary"
     />,
     <SplitStat
