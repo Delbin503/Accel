@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, Crosshair, Maximize2, MapPinned, Users } from "lucide-react";
+import { ArrowUpRight, Maximize2, MapPinned, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
 import { mapLabel, useReidMapsStore } from "./reidMaps";
 import { MapExpandModal, TrackMap, TrackRow } from "./ReidTracking";
@@ -78,18 +79,10 @@ export function ReidMapPanel() {
            stretched to one height; stacked when narrow. */
         <div className="grid grid-cols-1 gap-4 p-4 @3xl:grid-cols-[minmax(0,180px)_minmax(0,1fr)_minmax(0,320px)]">
           <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-1 @3xl:grid-rows-2">
-            <div className="relative flex flex-col overflow-hidden rounded-xl border border-border bg-background p-4">
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-info" />
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Users className="size-3.5 text-info" />Persons</p>
-              <p className="mt-2 text-4xl font-bold leading-none text-info">{personTotal}</p>
-              <p className="mt-auto pt-2 text-2xs text-muted-foreground">inside the map now</p>
-            </div>
-            <div className="relative flex flex-col overflow-hidden rounded-xl border border-border bg-background p-4">
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-sev-critical" />
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Crosshair className="size-3.5 text-sev-critical" />Weapons</p>
-              <p className={cn("mt-2 text-4xl font-bold leading-none", onMap.length ? "text-sev-critical" : "text-foreground")}>{onMap.length}</p>
-              <p className="mt-auto pt-2 text-2xs text-muted-foreground">tracked on this map</p>
-            </div>
+            {/* Same shared KPI card as the dashboard's status strip and visitor
+                counts; bg-background keeps them distinct inside this panel. */}
+            <KpiCard label="Persons" value={personTotal} sub="inside the map now" accent="info" className="bg-background" />
+            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="sev-critical" className="bg-background" />
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">

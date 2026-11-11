@@ -9,15 +9,6 @@ import { BASELINE_INSIDE, type VisitorStats } from "./visitorStats";
 
 type StatTone = "primary" | "success" | "warning" | "info" | "purple" | "muted";
 
-const TONE_VALUE: Record<StatTone, string> = {
-  primary: "text-foreground",
-  success: "text-success",
-  warning: "text-warning",
-  info: "text-info",
-  purple: "text-purple",
-  muted: "text-muted-foreground",
-};
-
 const TONE_BAR: Record<StatTone, string> = {
   primary: "bg-primary",
   success: "bg-success",
@@ -27,6 +18,9 @@ const TONE_BAR: Record<StatTone, string> = {
   muted: "bg-muted-foreground",
 };
 
+/* Same shell as the shared KpiCard (components/shared/KpiCard.tsx): accent dot
+   beside a sentence-case label, neutral values, no coloured top stroke. Fixed
+   height so the five cards line up with each other and with the status strip. */
 const StatShell = React.forwardRef<HTMLDivElement, {
   label: string;
   meta?: React.ReactNode;
@@ -35,11 +29,11 @@ const StatShell = React.forwardRef<HTMLDivElement, {
   children: React.ReactNode;
 }>(({ label, meta, accent, className, children }, ref) => {
   return (
-    <div ref={ref} className={cn("relative flex min-h-[132px] flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", TONE_BAR[accent])} />
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-        {meta && <span className="shrink-0 font-mono text-2xs text-muted-foreground">{meta}</span>}
+    <div ref={ref} className={cn("relative flex h-[152px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[accent])} />
+        <span className="min-w-0 flex-1 truncate text-base font-medium text-muted-foreground">{label}</span>
+        {meta && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>}
       </div>
       {children}
     </div>
@@ -52,7 +46,7 @@ function SingleStat({ label, value, sub, accent }: {
 }) {
   return (
     <StatShell label={label} accent={accent}>
-      <p className={cn("text-4xl font-bold leading-none", TONE_VALUE[accent])}>{value}</p>
+      <p className="mt-2 text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">{value}</p>
       <p className="mt-auto pt-2 text-xs leading-tight text-muted-foreground">{sub}</p>
     </StatShell>
   );
@@ -91,26 +85,26 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
   return (
     <StatShell ref={ref} label={label} accent={parts[0].tone} meta={showTotal ? `${total} total` : undefined} className={className}>
       {stacked ? (
-        <ul className="mb-2.5 flex flex-col gap-1.5" title={`${total} total`}>
+        <ul className="mb-2.5 mt-2 flex flex-col gap-1.5" title={`${total} total`}>
           {parts.map((part) => (
             <li key={part.label} className="flex items-baseline gap-2">
-              <span className={cn("flex min-w-0 flex-1 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider", TONE_VALUE[part.tone])}>
+              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[part.tone])} />
                 <span className="truncate">{part.label}</span>
               </span>
-              <span className={cn("text-md font-bold leading-none", TONE_VALUE[part.tone])}>{part.value}</span>
+              <span className="shrink-0 text-md font-semibold leading-none tabular-nums text-foreground">{part.value}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <div className="flex items-stretch gap-3">
+        <div className="mt-2 flex items-stretch gap-3">
           {parts.map((part, i) => (
             <div key={part.label} className={cn("min-w-0 flex-1", i > 0 && "border-l border-border pl-3")}>
-              <p className={cn("flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider", TONE_VALUE[part.tone])}>
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={cn("size-1.5 shrink-0 rounded-full", TONE_BAR[part.tone])} />
                 <span className="truncate">{part.label}</span>
               </p>
-              <p className={cn("mt-0.5 font-bold leading-none", many ? "text-xl" : "text-2xl", TONE_VALUE[part.tone])}>{part.value}</p>
+              <p className={cn("mt-1 font-semibold leading-tight tracking-tight tabular-nums text-foreground", many ? "text-xl" : "text-2xl")}>{part.value}</p>
               <p className="mt-1 text-2xs text-muted-foreground">{Math.round(share(part.value))}%</p>
             </div>
           ))}
@@ -173,14 +167,14 @@ export function VisitorKpis({
   const cards = [
     <SingleStat
       key="Visitors Inside"
-      label="Visitors Inside"
+      label="Visitors inside"
       value={stats.inside}
       sub={`${BASELINE_INSIDE} at start-up + entries − exits`}
       accent="primary"
     />,
     <SplitStat
       key="Visitor Count"
-      label="Visitor Count"
+      label="Visitor count"
       stacked={statusColumns}
       parts={[
         { label: "Entries", value: stats.entries, tone: "success" },
@@ -198,7 +192,7 @@ export function VisitorKpis({
     />,
     <SplitStat
       key="Age Group"
-      label="Age Group"
+      label="Age group"
       stacked={statusColumns}
       parts={[
         { label: "Adult", value: stats.adult, tone: "warning" },
