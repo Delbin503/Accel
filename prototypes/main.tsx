@@ -48,8 +48,11 @@ const STANDALONE_PROTOTYPES: ModuleDef[] = [
   { name: "Email Templates", slug: "PRD_Email_Templates" },
   { name: "Interactive Demo", slug: "PRD_Interactive_Demo" },
   { name: "Quick Actions", slug: "PRD_Quick_Actions" },
-  { name: "Training Assessment (lo-fi)", slug: "PRD_Training_Assessment" },
 ];
+
+/* Phase 2: the training-assessment lo-fi plus the Phase 1.3 prototype's
+   Training Assessment module and AAR page. */
+const TA_LOFI: ModuleDef = { name: "Training Assessment (lo-fi)", slug: "PRD_Training_Assessment" };
 
 function has(slug?: string) {
   return !!slug && discovered.has(slug);
@@ -60,12 +63,13 @@ const mapped = new Set<string>();
 [
   ...PHASE_ONE_MODULES,
   ...STANDALONE_PROTOTYPES,
+  TA_LOFI,
 ].forEach((m) => {
     if (m.slug) mapped.add(m.slug);
     m.variants?.forEach((v) => mapped.add(v.slug));
   });
-/* Phase 1.3 and Accel TRMS have tabs of their own, so they're not "unmapped". */
-const OWN_TAB = new Set(["PRD_Phase_1_3", "PRD_Accel_TRMS"]);
+/* Phase 1.3 has a tab of its own, so it's not "unmapped". */
+const OWN_TAB = new Set(["PRD_Phase_1_3"]);
 const unmapped = [...discovered].filter((s) => !mapped.has(s) && !OWN_TAB.has(s)).sort();
 
 /* Phase 1.3 pages — each card opens the prototype straight on its page (?p=).
@@ -73,21 +77,23 @@ const unmapped = [...discovered].filter((s) => !mapped.has(s) && !OWN_TAB.has(s)
    Synchronised Playback, Recordings and Video Enhancement were merged into
    Phase 1 — they open from the Phase 1 dashboard's sidebar now. */
 const PHASE_13 = "PRD_Phase_1_3";
-const PHASE_13_PAGES: { name: string; desc: string; path: string }[] = [
-  { name: "AAR", desc: "After Action Review · indoor range", path: "/aar" },
-  { name: "Swing Assessment", desc: "Training Assessment · golf", path: "/golf" },
-];
+const AAR_PAGE = { name: "AAR", desc: "After Action Review · indoor range", path: "/aar" };
 const REID_MODULE = {
   name: "Model (Re-ID) Module",
   desc: "Live Monitoring · Detection Feed · Model Management · Model Deployment",
   path: "/reid/live",
 };
+const TA_MODULE = {
+  name: "Training Assessment Module",
+  desc: "Dashboard · Model Management · Camera Defaults · External Devices · Model Deployment · Performance & Posture",
+  path: "/assessment/dashboard",
+};
 
-type TabKey = "phase-1" | "phase-1-3" | "trms";
+type TabKey = "phase-1" | "phase-1-3" | "phase-2";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "phase-1", label: "Phase 1" },
   { key: "phase-1-3", label: "Phase 1.3" },
-  { key: "trms", label: "Accel TRMS" },
+  { key: "phase-2", label: "Phase 2" },
 ];
 const tabFromHash = (): TabKey => {
   const h = window.location.hash.slice(1);
@@ -187,8 +193,8 @@ function PrototypeIndex() {
   const phase13Ready = has(PHASE_13);
   const counts: Record<TabKey, number> = {
     "phase-1": 1 + STANDALONE_PROTOTYPES.length + unmapped.length,
-    "phase-1-3": PHASE_13_PAGES.length + 1,
-    trms: 1,
+    "phase-1-3": 1,
+    "phase-2": 3,
   };
 
   return (
@@ -217,7 +223,7 @@ function PrototypeIndex() {
               href={has("PRD_Dashboard") ? "/PRD_Dashboard/" : null}
             />
           </Section>
-          <Section title="Standalone prototypes" count="4 separate reviews">
+          <Section title="Standalone prototypes" count={`${STANDALONE_PROTOTYPES.length} separate reviews`}>
             {STANDALONE_PROTOTYPES.map((mod) => (
               <ModuleCard key={mod.name} mod={mod} />
             ))}
@@ -236,21 +242,16 @@ function PrototypeIndex() {
       )}
 
       {tab === "phase-1-3" && (
-        <>
-          <Section title="Phase 1.3" badge="P1" count={`${PHASE_13_PAGES.length} page${PHASE_13_PAGES.length === 1 ? "" : "s"}`}>
-            {PHASE_13_PAGES.map((pg) => (
-              <LinkCard key={pg.path} name={pg.name} desc={pg.desc} href={phase13Ready ? `/${PHASE_13}/?p=${pg.path}` : null} />
-            ))}
-          </Section>
-          <Section title="Separate module" count="Opens with its own navigation">
-            <LinkCard name={REID_MODULE.name} desc={REID_MODULE.desc} href={phase13Ready ? `/${PHASE_13}/?p=${REID_MODULE.path}` : null} />
-          </Section>
-        </>
+        <Section title="Phase 1.3" badge="P1" count="Opens with its own navigation">
+          <LinkCard name={REID_MODULE.name} desc={REID_MODULE.desc} href={phase13Ready ? `/${PHASE_13}/?p=${REID_MODULE.path}` : null} />
+        </Section>
       )}
 
-      {tab === "trms" && (
-        <Section title="Accel TRMS" count="1 prototype">
-          <LinkCard name="Accel TRMS" desc="The TRMS prototype" href={has("PRD_Accel_TRMS") ? "/PRD_Accel_TRMS/" : null} />
+      {tab === "phase-2" && (
+        <Section title="Phase 2" count="3 prototypes">
+          <LinkCard name={TA_MODULE.name} desc={TA_MODULE.desc} href={phase13Ready ? `/${PHASE_13}/?p=${TA_MODULE.path}` : null} />
+          <LinkCard name={AAR_PAGE.name} desc={AAR_PAGE.desc} href={phase13Ready ? `/${PHASE_13}/?p=${AAR_PAGE.path}` : null} />
+          <ModuleCard mod={TA_LOFI} />
         </Section>
       )}
     </div>

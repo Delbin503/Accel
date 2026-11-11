@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
@@ -19,7 +20,7 @@ import {
 } from "./golfSession";
 import { Dispersion, DrawLayer, SwingFrame, type Mark, type Tool, type View } from "./golfParts";
 
-/* Swing Assessment — one golfer's lesson at an indoor bay, laid out like the
+/* Swing Analysis — one golfer's lesson at an indoor bay, laid out like the
    range AAR: the overview fits a laptop screen (summary, swing video with the
    pose read off it, the picked swing's review, ball data, signals,
    fundamentals and coaching), and the full report follows below it (compare
@@ -41,6 +42,8 @@ const reviewKey = (n: number, k: FaultKey) => `${n}:${k}`;
 /* ── Page ────────────────────────────────────────────────────────────── */
 
 export function GolfDashboard() {
+  // Opened from Results with the golfer's name; the sample golfer otherwise.
+  const golfer = useGolfer();
   const [selected, setSelected] = React.useState(BEST_SWING);
   const [phase, setPhase] = React.useState<Phase>("impact");
   const [view, setView] = React.useState<View>("dtl");
@@ -60,14 +63,14 @@ export function GolfDashboard() {
       <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
         <PageHeader>
           <PageHeader.Content className="flex-row items-center gap-3">
-            <PageHeader.Title>Swing Assessment</PageHeader.Title>
+            <PageHeader.Title>Swing Analysis</PageHeader.Title>
             <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
               <span className="size-1.5 rounded-full bg-success" />
               Lesson complete
             </span>
           </PageHeader.Content>
           <PageHeader.Actions>
-            <Button variant="outline" size="sm" onClick={() => toast.success(`Shared with ${GOLFER.name}`, { description: `${SESSION.club} lesson · ${SESSION.date}` })}>
+            <Button variant="outline" size="sm" onClick={() => toast.success(`Shared with ${golfer.name}`, { description: `${SESSION.club} lesson · ${SESSION.date}` })}>
               <Share2 className="size-4" />
               Share with golfer
             </Button>
@@ -87,7 +90,7 @@ export function GolfDashboard() {
           ))}
         </dl>
 
-        <SummaryStrip reviews={reviews} />
+        <SummaryStrip reviews={reviews} golfer={golfer} />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
           <VideoPanel className="lg:col-span-5" swing={swing} view={view} phase={phase} onView={setView} onPhase={setPhase} onSelect={setSelected} />
@@ -121,10 +124,11 @@ function Panel({ id, title, meta, action, className, bodyClassName, children }: 
   );
 }
 
-function PanelTabs<T extends string>({ value, onChange, tabs }: { value: T; onChange: (v: T) => void; tabs: [T, string][] }) {
+function PanelTabs<T extends string>({ value, onChange, tabs, className }: { value: T; onChange: (v: T) => void; tabs: [T, string][]; className?: string }) {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as T)}>
-      <TabsList className="h-7">
+      {/* The shared TabsList sets h-9 through a group-data variant, so match it to shrink. */}
+      <TabsList className={cn("group-data-[orientation=horizontal]/tabs:h-7", className)}>
         {tabs.map(([v, label]) => (
           <TabsTrigger key={v} value={v} className="px-2 text-2xs">{label}</TabsTrigger>
         ))}
@@ -174,7 +178,15 @@ const signed = (v: number, digits = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${
 
 /* ── Summary strip ───────────────────────────────────────────────────── */
 
-function SummaryStrip({ reviews }: { reviews: Reviews }) {
+/** The golfer named in the URL (?person=), or the sample golfer. */
+function useGolfer() {
+  const name = new URLSearchParams(useLocation().search).get("person");
+  if (!name) return GOLFER;
+  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  return { ...GOLFER, name, initials };
+}
+
+function SummaryStrip({ reviews, golfer }: { reviews: Reviews; golfer: typeof GOLFER }) {
   const s = STATS;
   const open = SWINGS.flatMap((w) => findingsFor(w).map((f) => reviewKey(w.n, f.key))).filter((k) => !reviews[k]).length;
   const kpis: { label: string; value: string; tone?: string; info: string; delta: React.ReactNode }[] = [
@@ -188,9 +200,9 @@ function SummaryStrip({ reviews }: { reviews: Reviews }) {
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{GOLFER.initials}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{golfer.initials}</span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-bold text-foreground">{GOLFER.name}</p>
+          <p className="truncate text-xs font-bold text-foreground">{golfer.name}</p>
           <p className="truncate font-mono text-2xs text-muted-foreground">{GOLFER.id} · HCP {GOLFER.handicap}</p>
         </div>
       </div>
@@ -352,17 +364,23 @@ function ReviewPanel({ className, swing, reviews, onReview, onSelect }: {
   const checks = checksFor(swing);
   const met = checks.filter((c) => c.ok).length;
   const findings = findingsFor(swing);
+  // Keep the picked swing in view in the sideways-scrolling row, wherever it was picked from.
+  const strip = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    strip.current?.querySelector<HTMLElement>("[data-active]")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [swing.n]);
   const score = swingScore(swing);
   const tag = swing.n === BEST_SWING ? "Best swing" : swing.n === WEAKEST_SWING ? "Weakest swing" : null;
   return (
     <Panel className={className} title="Swing Review" meta="Pick a swing">
-      <div role="tablist" aria-label="Swings" className="mb-2 grid shrink-0 grid-cols-5 gap-1 xl:grid-cols-10">
+      {/* One row that scrolls sideways, however many swings the lesson had. */}
+      <div ref={strip} role="tablist" aria-label="Swings" className="mb-2 flex shrink-0 gap-1 overflow-x-auto pb-1">
         {SWINGS.map((s) => {
           const active = s.n === swing.n;
           const sc = swingScore(s);
           return (
-            <button key={s.n} type="button" role="tab" aria-selected={active} onClick={() => onSelect(s.n)}
-              className={cn("flex flex-col items-center rounded-md border py-0.5 transition-colors duration-[var(--duration-fast)]",
+            <button key={s.n} type="button" role="tab" aria-selected={active} data-active={active || undefined} onClick={() => onSelect(s.n)}
+              className={cn("flex w-12 shrink-0 flex-col items-center rounded-md border py-0.5 transition-colors duration-[var(--duration-fast)]",
                 active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40")}>
               <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                 #{s.n}
@@ -648,13 +666,12 @@ function FullReport({ selected, onSelect }: { selected: number; onSelect: (n: nu
   );
 }
 
-/* Two swings side by side (or one over the other), stopped at the same moment. */
+/* Two swings side by side, stopped at the same moment. */
 function CompareSection({ selected }: { selected: number }) {
   const [a, setA] = React.useState(BEST_SWING);
   const [b, setB] = React.useState(selected === BEST_SWING ? WEAKEST_SWING : selected);
   const [view, setView] = React.useState<View>("dtl");
   const [phase, setPhase] = React.useState<Phase>("impact");
-  const [overlay, setOverlay] = React.useState(false);
   const A = swingByN(a);
   const B = swingByN(b);
   const swingSelect = (value: number, onChange: (n: number) => void, label: string, tone: string) => (
@@ -696,11 +713,8 @@ function CompareSection({ selected }: { selected: number }) {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {swingSelect(a, setA, "Swing A", "bg-success")}
           {swingSelect(b, setB, "Swing B", "bg-info")}
-          <PanelTabs value={view} onChange={setView} tabs={[["face", "Face-on"], ["dtl", "Down-the-line"]]} />
-          <label className="flex items-center gap-1.5 text-2xs text-muted-foreground">
-            <Switch checked={overlay} onCheckedChange={setOverlay} aria-label="Overlay swing B on swing A" />
-            Overlay
-          </label>
+          {/* Same height as the swing pickers beside it. */}
+          <PanelTabs value={view} onChange={setView} tabs={[["face", "Face-on"], ["dtl", "Down-the-line"]]} className="group-data-[orientation=horizontal]/tabs:h-8" />
         </div>
       </header>
       <div className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
@@ -713,28 +727,18 @@ function CompareSection({ selected }: { selected: number }) {
               </button>
             ))}
           </div>
-          {overlay ? (
-            <figure className="overflow-hidden rounded-lg border border-border">
-              <div className="aspect-video"><SwingFrame swing={A} view={view} phase={phase} ghost={B} /></div>
-              <figcaption className="flex gap-3 border-t border-border px-2 py-1 text-2xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-success" />Swing {A.n} (pose)</span>
-                <span className="flex items-center gap-1"><span className="h-0.5 w-3 border-t-2 border-dashed border-info" />Swing {B.n} (dashed)</span>
-              </figcaption>
-            </figure>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {[A, B].map((s, i) => (
-                <figure key={i} className="overflow-hidden rounded-lg border border-border">
-                  <div className="aspect-video"><SwingFrame swing={s} view={view} phase={phase} hud={false} /></div>
-                  <figcaption className="flex items-center gap-1.5 border-t border-border px-2 py-1 text-2xs">
-                    <span className={cn("size-2 rounded-full", i === 0 ? "bg-success" : "bg-info")} />
-                    <span className="font-semibold text-foreground">Swing {s.n}</span>
-                    <span className="text-muted-foreground">{swingScore(s)}/100 · {s.carry} yd · {shapeOf(s)}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {[A, B].map((s, i) => (
+              <figure key={i} className="overflow-hidden rounded-lg border border-border">
+                <div className="aspect-video"><SwingFrame swing={s} view={view} phase={phase} hud={false} /></div>
+                <figcaption className="flex items-center gap-1.5 border-t border-border px-2 py-1 text-2xs">
+                  <span className={cn("size-2 rounded-full", i === 0 ? "bg-success" : "bg-info")} />
+                  <span className="font-semibold text-foreground">Swing {s.n}</span>
+                  <span className="text-muted-foreground">{swingScore(s)}/100 · {s.carry} yd · {shapeOf(s)}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
         <div className="lg:col-span-4">
           <table className="w-full border-collapse">

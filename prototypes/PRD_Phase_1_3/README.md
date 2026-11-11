@@ -127,6 +127,32 @@ pages, so these changes stay out of the app. Both read one models store
   `reid/calibrationGeometry.ts`, seeded by id, so each camera sees the markers
   in front of it and overlapping cameras share them.
 
+### Separate module · Training Assessment
+
+The approved lo-fi (`PRD_Training_Assessment`) as hi-fi, following the Phase
+1.3 UI. A module of its own like Re-ID: everything lives under `/assessment`
+(`assessment/`), opens on its Dashboard, and uses the app's sidebar plus two
+entries: **Site › External Devices** and **Manage › Performance & Posture**
+(after Incident Cases). On the prototype index it sits under the **Phase 2** tab,
+next to AAR and the lo-fi.
+Every other entry opens a "not part of this module" page under
+`/assessment/other/…`. Each page is the module's own copy, so nothing here
+changes Phase 1, Phase 1.3 or Re-ID.
+
+| Page | Route | Copy of | What changed |
+|---|---|---|---|
+| Dashboard | `/assessment/dashboard` | `CustomDashboard.tsx` | **Golf / Gym / Physio Assessment** panels, one per use case (Live sessions, Total participants, Scheduled, Complete, Reports to send; score trend, top faults, live & upcoming). On by default; remove it or add it back in Customize. Layout saved under its own key. |
+| Model Management | `/assessment/models` | `reid/ReidModelManagement.tsx` | **Performance & Posture** category. Create Model asks only for the basic info; the use case is picked in Edit Model, which seeds the sequence with that use case's CV models. Assessment models need no rules: the rules column shows criteria and faults. |
+| System Configuration | `/assessment/config` | `SystemConfigRecording.tsx` | Camera Defaults › **Assessment Cameras & Pose** (`TaPoseDefaults.tsx`): pose mode (3D / 2D), frame rate, smoothing and keypoints per use case. The camera requirements change with the pose mode (views per bay/rack/room, required vs optional, fps, placement). Also: what to do when a unit has fewer cameras, a readiness check against the installed cameras, and face blur. |
+| External Devices | `/assessment/site/external-devices` | new, laid out like NVR Devices | Launch monitors, bar speed sensors, depth cameras, force plates. Each is paired to one bay, rack or room. KPIs, filters, table, detail drawer (pairing, what it adds to results, latest reading, recent sessions), Add (simulated pairing), Edit, Test connection, Remove. |
+| Model Deployment | `/assessment/deployment` | `src/pages/model-deployment` | The last column is **Camera & Device**, with an **All · Cameras · Devices** filter. Devices sit beside their unit's cameras. Cameras below the model's pose fps are flagged. Devices skip the zone step. Confirm lists devices separately. |
+| Performance & Posture | `/assessment/sessions` | new | **Sessions · Results** tab buttons at the top right, a collapsible Filters bar (Results adds an **Analysis** filter: Swing / Lift / Rehab). Sessions are Live, Scheduled or Complete; completed ones move to Results. New Session: use case → site → deployed model → units, time, participants with Import CSV, live or recorded. Results opens on the report list, supports multi-select CSV/PDF export, and takes a group report to group results. Individual results open the matching full dashboard: Swing Analysis (`/assessment/sessions/swing-analysis`), Lift Analysis (`/assessment/sessions/lift-analysis`) or Rehab Analysis (`/assessment/sessions/rehab-analysis`). Reports can be previewed, signed off where clinical, sent and exported from the same list. |
+
+Data: `taData.ts` (use cases, venues, cameras, devices, sessions, results,
+reports), `taModels.ts` (models store), `taPose.ts` (pose settings, which Model
+Deployment reads too), `taDeploy.ts` (deploy targets and seeded history). Nav:
+`taNav.ts`; pages: `taPages.ts`.
+
 ---
 
 ## 1 · System Configuration › Recording Schedule

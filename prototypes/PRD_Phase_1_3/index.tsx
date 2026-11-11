@@ -11,8 +11,14 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { queryClient } from "@/lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PAGES } from "./pages";
-import { Breadcrumb, Phase13Index, ReidNotInModule, ShellSidebar } from "./Phase13Home";
+import { Breadcrumb, Phase13Index, ReidNotInModule, ShellSidebar, TaNotInModule } from "./Phase13Home";
 import { REID_OTHER_PATH, REID_PAGES } from "./reid/reidNav";
+import { TA_PAGES } from "./assessment/taPages";
+import { TA_GOLF_ANALYSIS_PATH, TA_GYM_ANALYSIS_PATH, TA_OTHER_PATH, TA_PATH, TA_PHYSIO_ANALYSIS_PATH, TA_RESULT_PATH, TA_ROUTES } from "./assessment/taNav";
+import { TaSessionResult } from "./assessment/TaSessions";
+import { GolfDashboard } from "./golf/GolfDashboard";
+import { GymDashboard } from "./gym/GymDashboard";
+import { PhysioDashboard } from "./physio/PhysioDashboard";
 import "./proto.css";
 
 /* Phase 1.3 prototype shell — routes the phase index to each proposal page. */
@@ -63,6 +69,16 @@ function App() {
                       {/* Links inside Model Management / Deployment use the app's own
                           routes; keep them in the module. */}
                       <Route path="/models" element={<Navigate to="/reid/models" replace />} />
+                      {/* Training Assessment Module — separate from the proposals and from Re-ID. */}
+                      <Route path={TA_PATH} element={<Navigate to={TA_ROUTES.dashboard} replace />} />
+                      {TA_PAGES.map((p) => (
+                        <Route key={p.path} path={p.path} element={<p.Component />} />
+                      ))}
+                      <Route path={TA_RESULT_PATH} element={<TaSessionResult />} />
+                      <Route path={TA_GOLF_ANALYSIS_PATH} element={<GolfDashboard />} />
+                      <Route path={TA_GYM_ANALYSIS_PATH} element={<GymDashboard />} />
+                      <Route path={TA_PHYSIO_ANALYSIS_PATH} element={<PhysioDashboard />} />
+                      <Route path={`${TA_OTHER_PATH}/*`} element={<TaNotInModule />} />
                       <Route path="/deployment" element={<Navigate to="/reid/deployment" replace />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
