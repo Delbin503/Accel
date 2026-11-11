@@ -80,9 +80,11 @@ export function ReidMapPanel() {
         <div className="grid grid-cols-1 gap-4 p-4 @3xl:grid-cols-[minmax(0,180px)_minmax(0,1fr)_minmax(0,320px)]">
           <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-1 @3xl:grid-rows-2">
             {/* Same shared KPI card as the dashboard's status strip and visitor
-                counts; bg-background keeps them distinct inside this panel. */}
-            <KpiCard label="Persons" value={personTotal} sub="inside the map now" accent="info" className="bg-background" />
-            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="sev-critical" className="bg-background" />
+                counts; bg-background keeps them distinct inside this panel, and
+                h-full fills the two rows beside the map instead of leaving the
+                card's fixed height stranded in a taller column. */}
+            <KpiCard label="Persons" value={personTotal} sub="inside the map now" accent="info" className="h-full min-h-[120px] bg-background" />
+            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="sev-critical" className="h-full min-h-[120px] bg-background" />
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
