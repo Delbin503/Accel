@@ -116,8 +116,9 @@ function Body({ pose, bones }: { pose: Pose; bones: string[][] }) {
   );
 }
 
-export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = true, className, children }: {
-  swing: Swing; view: View; phase: Phase; showPose?: boolean; ghost?: Swing; hud?: boolean; className?: string; children?: React.ReactNode;
+/** `ball` false: no launch-monitor data for this swing, so the club path readout is left off. */
+export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = true, ball = true, className, children }: {
+  swing: Swing; view: View; phase: Phase; showPose?: boolean; ghost?: Swing; hud?: boolean; ball?: boolean; className?: string; children?: React.ReactNode;
 }) {
   const { pose, bad } = poseFor(swing, view, phase);
   const bones = view === "face" ? FACE_BONES : DTL_BONES;
@@ -143,7 +144,7 @@ export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = t
       <Body pose={pose} bones={bones} />
       {ghostPose && <Skeleton pose={ghostPose} bad={new Set()} bones={bones} ghost />}
       {showPose && <Skeleton pose={pose} bad={bad} bones={bones} />}
-      {showPose && (view === "face" ? <FaceLabels swing={swing} phase={phase} /> : <DtlLabels swing={swing} phase={phase} />)}
+      {showPose && (view === "face" ? <FaceLabels swing={swing} phase={phase} /> : <DtlLabels swing={swing} phase={phase} ball={ball} />)}
 
       {hud && (
         <g className="font-mono" fontSize="10" fill={HUD}>
@@ -213,7 +214,7 @@ function DtlGuides({ swing, phase }: { swing: Swing; phase: Phase }) {
   );
 }
 
-function DtlLabels({ swing, phase }: { swing: Swing; phase: Phase }) {
+function DtlLabels({ swing, phase, ball }: { swing: Swing; phase: Phase; ball: boolean }) {
   const lostBad = spineLost(swing) > TARGET.spineLost[1];
   const thrustBad = swing.pelvisThrust > TARGET.pelvisThrust[1];
   const pathBad = !inRange(swing.clubPath, TARGET.clubPath);
@@ -231,8 +232,12 @@ function DtlLabels({ swing, phase }: { swing: Swing; phase: Phase }) {
         <>
           <text x="300" y="106" fill={lostBad ? BAD : OK}>SPINE {swing.spineAddr}° → {swing.spineImpact}°</text>
           <text x="300" y="120" fill={thrustBad ? BAD : OK}>HIPS +{swing.pelvisThrust.toFixed(1)} CM TO BALL</text>
-          <text x="300" y="134" fill={pathBad ? BAD : OK}>PATH {swing.clubPath > 0 ? "+" : ""}{swing.clubPath.toFixed(1)}° {swing.clubPath < 0 ? "OUT-TO-IN" : "IN-TO-OUT"}</text>
-          <PathArrow path={swing.clubPath} bad={pathBad} />
+          {ball && (
+            <>
+              <text x="300" y="134" fill={pathBad ? BAD : OK}>PATH {swing.clubPath > 0 ? "+" : ""}{swing.clubPath.toFixed(1)}° {swing.clubPath < 0 ? "OUT-TO-IN" : "IN-TO-OUT"}</text>
+              <PathArrow path={swing.clubPath} bad={pathBad} />
+            </>
+          )}
         </>
       )}
     </g>

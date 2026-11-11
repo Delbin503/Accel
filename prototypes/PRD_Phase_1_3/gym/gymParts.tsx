@@ -107,8 +107,9 @@ function repTrace(r: Rep): Pt[] {
   return pts;
 }
 
-export function RepFrame({ rep, phase, showPose = true, showPath = true, ghost, hud = true, className, children }: {
-  rep: Rep; phase: Phase; showPose?: boolean; showPath?: boolean; ghost?: Rep; hud?: boolean; className?: string; children?: React.ReactNode;
+/** `speed` overrides the mean speed shown on the ascent label; `speedEst` marks it as estimated from video (no bar speed sensor). */
+export function RepFrame({ rep, phase, showPose = true, showPath = true, ghost, hud = true, speed, speedEst = false, className, children }: {
+  rep: Rep; phase: Phase; showPose?: boolean; showPath?: boolean; ghost?: Rep; hud?: boolean; speed?: number; speedEst?: boolean; className?: string; children?: React.ReactNode;
 }) {
   const { d, up } = stateAt(rep, phase);
   const pose = poseAt(rep, d, up, phase);
@@ -149,7 +150,7 @@ export function RepFrame({ rep, phase, showPose = true, showPath = true, ghost, 
       {ghostPose && <Plates at={ghostPose.bar} ghost />}
       {showPose && <Skeleton pose={pose} bad={bad} />}
       <Plates at={pose.bar} />
-      {showPose && <Labels rep={rep} phase={phase} />}
+      {showPose && <Labels rep={rep} phase={phase} speed={speed ?? rep.meanVel} speedEst={speedEst} />}
 
       {hud && (
         <g className="font-mono" fontSize="10" fill={HUD}>
@@ -163,7 +164,7 @@ export function RepFrame({ rep, phase, showPose = true, showPath = true, ghost, 
   );
 }
 
-function Labels({ rep, phase }: { rep: Rep; phase: Phase }) {
+function Labels({ rep, phase, speed, speedEst }: { rep: Rep; phase: Phase; speed: number; speedEst: boolean }) {
   const row = (y: number, bad: boolean, text: string) => <text key={text} x="322" y={y} fill={bad ? BAD : OK}>{text}</text>;
   const rows: React.ReactNode[] = [];
   if (phase === "setup") rows.push(row(110, rep.setup > TARGET.setup, `BAR +${rep.setup.toFixed(1)} CM OF MID-FOOT`));
@@ -176,7 +177,7 @@ function Labels({ rep, phase }: { rep: Rep; phase: Phase }) {
   if (phase === "ascent") {
     rows.push(row(110, rep.drift > TARGET.drift, `BAR DRIFT ${rep.drift.toFixed(1)} CM`));
     rows.push(row(124, rep.hipRise > TARGET.hipRise, `HIPS FIRST +${rep.hipRise}°`));
-    rows.push(row(138, false, `${rep.meanVel.toFixed(2)} M/S`));
+    rows.push(row(138, false, speedEst ? `≈${speed.toFixed(2)} M/S · EST.` : `${speed.toFixed(2)} M/S`));
   }
   if (phase === "lockout") rows.push(row(110, rep.lockout < TARGET.lockout, `HIP ${rep.lockout}°`));
   return <g className="font-mono" fontSize="10">{rows}</g>;

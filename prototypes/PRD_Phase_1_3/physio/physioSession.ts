@@ -7,6 +7,8 @@
    and goal, never ranked or graded against other patients; the visit report
    needs a clinician's sign-off before it is shared; faces are blurred. */
 
+import type { DeviceMode } from "../assessment/deviceState";
+
 export const PATIENT = {
   name: "Ahmad Rahim",
   id: "PT-0412",
@@ -248,9 +250,10 @@ export function gaitSteps(r: Rep) {
 
 /* ── Checks & findings ───────────────────────────────────────────────── */
 
-export type Check = { label: string; ok: boolean; note: string };
+/** `na`: the check needs a device that gave no data for this rep, so it is shown greyed and not counted. */
+export type Check = { label: string; ok: boolean; note: string; na?: boolean };
 
-export function checksFor(r: Rep): Check[] {
+export function checksFor(r: Rep, mode: DeviceMode = "connected"): Check[] {
   const hike = { label: "Hip hike", ok: r.hipHike <= LIMIT.hipHike, note: `${r.hipHike.toFixed(1)} cm · max ${LIMIT.hipHike}` };
   const lean = { label: "Trunk lean", ok: r.trunkLean <= LIMIT.trunkLean, note: `${r.trunkLean}° · max ${LIMIT.trunkLean}°` };
   const straight = { label: "Straightens", ok: r.lag <= LIMIT.lag, note: `${r.lag}° short · max ${LIMIT.lag}°` };
@@ -270,7 +273,7 @@ export function checksFor(r: Rep): Check[] {
       { label: "Controlled lowering", ok: r.hold >= LIMIT.stsLower, note: `${r.hold.toFixed(1)} s · aim ${LIMIT.stsLower} s` },
       hike,
       lean,
-      { label: "Left–right load", ok: r.lr <= LIMIT.lr, note: `${r.lr}% · max ${LIMIT.lr}%` },
+      { label: "Left–right load", ok: r.lr <= LIMIT.lr, note: `${r.lr}% · max ${LIMIT.lr}%`, na: !hasLoad(r, mode) },
     ];
   return [
     { label: "Bend in swing", ok: r.flex >= LIMIT.gaitSwing, note: `${r.flex}° · need ${LIMIT.gaitSwing}°` },
@@ -282,7 +285,9 @@ export function checksFor(r: Rep): Check[] {
   ];
 }
 
-export const failedChecks = (r: Rep) => checksFor(r).filter((c) => !c.ok).length;
+/** The checks a rep is judged on: those the missing device could not give are left out. */
+export const scoredChecks = (r: Rep, mode: DeviceMode = "connected") => checksFor(r, mode).filter((c) => !c.na);
+export const failedChecks = (r: Rep, mode: DeviceMode = "connected") => scoredChecks(r, mode).filter((c) => !c.ok).length;
 
 export type FaultKey = "hipHike" | "trunkLean" | "kneeCave" | "shrug";
 
@@ -322,12 +327,15 @@ export const HOME_PROGRAMME: { name: string; dose: string; done: number; planned
 const romReps = repsOf("rom");
 const stsReps = repsOf("sts");
 const lrReps = REPS.filter((r) => r.ex !== "rom");
+const walkReps = repsOf("gait");
 
 export const TODAY = {
   flex: Math.max(...romReps.map((r) => r.flex)),
   bestRom: [...romReps].sort((a, b) => b.flex - a.flex)[0].id,
   lag: Math.round(mean(romReps.map((r) => r.lag))),
   lr: Math.round(mean(lrReps.map((r) => r.lr))),
+  /** Step-length difference on the walk alone: what's left without the force plate. */
+  lrWalk: Math.round(mean(walkReps.map((r) => r.lr))),
   sts: +stsReps.reduce((a, r) => a + r.rise + r.hold, 0).toFixed(1),
   adherence: Math.round((HOME_PROGRAMME.reduce((a, e) => a + e.done, 0) / HOME_PROGRAMME.reduce((a, e) => a + e.planned, 0)) * 100),
   painBefore: 3,
@@ -337,14 +345,15 @@ export const TODAY = {
   reps: REPS.length,
 };
 
-/** Every visit so far, oldest first. Week 1 is the baseline; the last row is today. */
+/** Every visit so far, oldest first. Week 1 is the baseline; the last row is today.
+ *  `lrWalk` is the step-length difference on the walk alone, read off the walkway camera. */
 export const VISITS = [
-  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 34, painBefore: 6, painAfter: 6, adherence: null as number | null },
-  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 30, painBefore: 5, painAfter: 5, adherence: 60 },
-  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 26, painBefore: 5, painAfter: 4, adherence: 68 },
-  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 22, painBefore: 4, painAfter: 4, adherence: 74 },
-  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 18, painBefore: 4, painAfter: 3, adherence: 80 },
-  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr, painBefore: TODAY.painBefore, painAfter: TODAY.painAfter, adherence: TODAY.adherence },
+  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 34, lrWalk: 30, painBefore: 6, painAfter: 6, adherence: null as number | null },
+  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 30, lrWalk: 26, painBefore: 5, painAfter: 5, adherence: 60 },
+  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 26, lrWalk: 21, painBefore: 5, painAfter: 4, adherence: 68 },
+  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 22, lrWalk: 17, painBefore: 4, painAfter: 4, adherence: 74 },
+  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 18, lrWalk: 13, painBefore: 4, painAfter: 3, adherence: 80 },
+  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr, lrWalk: TODAY.lrWalk, painBefore: TODAY.painBefore, painAfter: TODAY.painAfter, adherence: TODAY.adherence },
 ];
 export const BASELINE = VISITS[0];
 export const PREVIOUS = VISITS[VISITS.length - 2];
@@ -409,7 +418,7 @@ export function suggestedPlan(): { plan: Plan; reasons: { label: string; ok: boo
   return { plan: fails === 0 || (fails === 1 && reasons[0].ok) ? "progress" : fails <= 2 ? "hold" : "regress", reasons };
 }
 
-export const DISCHARGE: { label: string; target: string; now: string; met: boolean }[] = [
+export const DISCHARGE: { label: string; target: string; now: string; met: boolean; note?: string }[] = [
   { label: "Knee bend", target: `≥ ${LIMIT.goalFlex}°`, now: `${TODAY.flex}°`, met: TODAY.flex >= LIMIT.goalFlex },
   { label: "Knee straighten", target: `≤ ${LIMIT.lag}° short`, now: `${TODAY.lag}°`, met: TODAY.lag <= LIMIT.lag },
   { label: "Left–right difference", target: `≤ ${LIMIT.lr}%`, now: `${TODAY.lr}%`, met: TODAY.lr <= LIMIT.lr },
@@ -421,3 +430,73 @@ export const DISCHARGE: { label: string; target: string; now: string; met: boole
 ];
 
 export const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+
+/* ── Force plate ─────────────────────────────────────────────────────── */
+
+/* The force plate gives one thing: left–right load during sit-to-stand.
+   Everything else is from the cameras (angles, compensations, the walk and
+   its step lengths) or the patient app. With no plate, left–right falls back
+   to step length on the walk; when it drops out partway, the sit-to-stands
+   after the drop have no load. */
+
+export const PLATE = "Force plate";
+
+/** In the "went offline" preview the plate drops out as sit-to-stand 4 starts. */
+export const PLATE_OFFLINE_SEC = repById("sts-4").at;
+export const PLATE_OFFLINE_AT = fmtClock(PLATE_OFFLINE_SEC);
+
+/** Whether the rep has the force-plate load it needs. Only sit-to-stand uses the plate. */
+export const hasLoad = (r: Rep, mode: DeviceMode) => r.ex !== "sts" || mode === "connected" || (mode === "offline" && r.at < PLATE_OFFLINE_SEC);
+
+const nRange = (rs: Rep[]) => (rs.length > 1 ? `${rs[0].n}–${rs[rs.length - 1].n}` : rs.length ? `${rs[0].n}` : "");
+/** Sit-to-stand reps with and without plate load, as "1–3" / "4–5". */
+export const loadSpan = (mode: DeviceMode) => ({
+  with: nRange(stsReps.filter((r) => hasLoad(r, mode))),
+  without: nRange(stsReps.filter((r) => !hasLoad(r, mode))),
+});
+
+/** Today's left–right difference from what the plate gave, against the same measure on earlier visits. */
+export function lrFor(mode: DeviceMode): { now: number; last: number; baseline: number; tag: string | null; source: string } {
+  if (mode === "none")
+    return { now: TODAY.lrWalk, last: PREVIOUS.lrWalk, baseline: BASELINE.lrWalk, tag: "walk only", source: "step length on the walk only: no force plate this visit" };
+  if (mode === "offline") {
+    const span = loadSpan(mode);
+    return {
+      now: Math.round(mean(lrReps.filter((r) => hasLoad(r, mode)).map((r) => r.lr))), last: PREVIOUS.lr, baseline: BASELINE.lr, tag: "partial",
+      source: `force-plate load on sit-to-stand ${span.with} (the plate went offline at ${PLATE_OFFLINE_AT}, so none for ${span.without}) and step length on the walk`,
+    };
+  }
+  return { now: TODAY.lr, last: PREVIOUS.lr, baseline: BASELINE.lr, tag: null, source: "force-plate load on sit-to-stand and step length on the walk" };
+}
+
+/** A visit's left–right value on the same footing as today's. */
+export const lrOfVisit = (v: (typeof VISITS)[number], mode: DeviceMode) =>
+  mode === "none" ? v.lrWalk : v.wk === PATIENT.week ? lrFor(mode).now : v.lr;
+
+export function measuresFor(mode: DeviceMode): typeof MEASURES {
+  if (mode === "connected") return MEASURES;
+  const lr = lrFor(mode);
+  return MEASURES.map((m) =>
+    m.key === "lr"
+      ? { ...m, title: `Symmetry · ${lr.tag}`, baseline: lr.baseline, last: lr.last, now: lr.now, info: `How unevenly weight and steps fall between the legs, from ${lr.source}. Goal 10% or less.` }
+      : m,
+  );
+}
+
+export function dischargeFor(mode: DeviceMode): typeof DISCHARGE {
+  if (mode === "connected") return DISCHARGE;
+  const lr = lrFor(mode);
+  return DISCHARGE.map((d) =>
+    d.label === "Left–right difference"
+      ? { ...d, now: `${lr.now}%`, met: lr.now <= LIMIT.lr, note: mode === "none" ? "walk only · no force plate" : `no load on sit-to-stand ${loadSpan(mode).without}` }
+      : d,
+  );
+}
+
+export function methodNote(mode: DeviceMode) {
+  if (mode === "none")
+    return "Joint angles come from 3D pose read off two room cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera, and left–right difference comes from step length on the walk only: no force plate was connected. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.";
+  if (mode === "offline")
+    return `Joint angles come from 3D pose read off two room cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera. Left–right load comes from the force plate until it went offline at ${PLATE_OFFLINE_AT} (sit-to-stand ${loadSpan(mode).without} have none), plus step length on the walk. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.`;
+  return METHOD_NOTE;
+}

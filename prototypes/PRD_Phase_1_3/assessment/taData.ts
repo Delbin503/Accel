@@ -384,7 +384,7 @@ const SEED_SESSIONS: TaSession[] = [
   {
     id: "SES-1039", name: "PT clients · Thursday", useCase: "gym", modelName: "Strength Technique Assessment", siteId: "dt",
     deployment: "Strength floor", units: ["Rack 1", "Rack 2"], date: "Thu 6 Nov 2026", time: "07:00–08:00",
-    source: "Recorded", status: "complete", coach: "Sarah Koh", participants: GYM_PEOPLE.slice(0, 3), analysed: 94, captured: 96, flagged: 2, devices: ["BS-1"],
+    source: "Recorded", status: "complete", coach: "Sarah Koh", participants: GYM_PEOPLE.slice(0, 3), analysed: 94, captured: 96, flagged: 2, devices: [],
   },
   {
     id: "SES-1036", name: "Falls prevention class", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",

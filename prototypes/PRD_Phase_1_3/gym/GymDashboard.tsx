@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   Check, ChevronLeft, ChevronRight, CircleCheck, CircleMinus, CircleX, Dumbbell, Eraser, FileDown, Info, Pause, PenLine, Play, Share2, Trophy,
-  TrendingDown, TrendingUp, TriangleRight, X,
+  TrendingDown, TrendingUp, TriangleRight, Unplug, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,13 @@ import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/componen
 import { cn } from "@/lib/utils";
 import { DrawLayer, type Mark, type Tool } from "../golf/golfParts";
 import {
-  BEST_REP, FAULTS, GRADE_BANDS, HISTORY, LIFTER, METHOD_NOTE, PERSONAL_BESTS, PHASES, PREVIOUS, REPS, SESSION, SETS, STATS, STOP_AT, TARGET, WEAKEST_REP, WINDOW,
-  findingsFor, fmtClock, fundamentalsFor, gradeOf, initialsOf, nextLoad, peakVelOf, phaseTime, rankedFaults, repById, repLoss, repScore, repSeries, repsOf,
-  velLossOf, type FaultKey, type Finding, type Phase, type Rep,
+  BEST_REP, FAULTS, GOOD_PCT_TO_ADD, GRADE_BANDS, LIFTER, PHASES, PREVIOUS, REPS, SENSOR_LOST_AT, SESSION, SETS, STATS, STOP_AT, TARGET, WEAKEST_REP, WINDOW,
+  findingsFor, fmtClock, fundamentalsFor, gradeOf, historyFor, initialsOf, methodNote, nextLoad, peakVelOf, personalBestsFor, phaseTime, rankedFaults, repById,
+  repLossIn, repScore, repSeries, repsOf, sensorMeasured, setEstimated, speedStatsFor, velIn, velLossIn, type FaultKey, type Finding, type Phase, type Rep,
 } from "./gymSession";
 import { BarPathPlot, RepFrame } from "./gymParts";
+import { DeviceOfflineBanner, DevicePreviewSwitch, DeviceStatusValue, EstTag, NeedsDevice } from "../assessment/deviceMode";
+import { useDeviceMode, type DeviceMode } from "../assessment/deviceState";
 
 /* Lift Analysis — one lifter's back-squat workout at a rack, laid out like the
    golf Swing Assessment: the overview fits a laptop screen (summary, rep video
@@ -30,7 +32,12 @@ import { BarPathPlot, RepFrame } from "./gymParts";
    fundamentals and coaching), and the full report follows below it (first rep
    vs last rep, every rep in a table, progress across sessions, coach notes).
 
-   One rep is "picked" at a time and every panel follows it. */
+   One rep is "picked" at a time and every panel follows it.
+
+   The bar speed sensor can be connected, missing, or drop out at set 4
+   (?device=, see ../assessment/deviceMode.tsx). Without it, mean bar speed is
+   estimated from the side camera's bar tracking and tagged "est."; peak speed,
+   power and the speed curve need the sensor; est. 1RM falls back to load × reps. */
 
 const TOOLTIP_STYLE = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 };
 const AXIS = { stroke: "var(--muted-foreground)", fontSize: 9, tickLine: false, axisLine: false } as const;
@@ -59,6 +66,7 @@ export function GymDashboard() {
   const [phase, setPhase] = React.useState<Phase>("bottom");
   const [reviews, setReviews] = React.useState<Reviews>({});
   const rep = repById(selected);
+  const [device, setDevice] = useDeviceMode();
 
   /* A coaching "See rep" link picks the rep and the moment that shows the fault. */
   function showFault(id: string, key: FaultKey) {
@@ -79,6 +87,7 @@ export function GymDashboard() {
             </span>
           </PageHeader.Content>
           <PageHeader.Actions>
+            <DevicePreviewSwitch device="Bar speed sensor" mode={device} onChange={setDevice} />
             <Button variant="outline" size="sm" onClick={() => toast.success(`Shared with ${name}`, { description: `${SESSION.lift} · ${SESSION.date}` })}>
               <Share2 className="size-4" />
               Share with lifter
@@ -93,7 +102,9 @@ export function GymDashboard() {
         <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
           {([
             ["Gym / rack", `${SESSION.gym} · ${SESSION.rack}`], ["Lift", `${SESSION.lift} · ${SESSION.plannedSets} × ${SESSION.plannedReps} @ ${SESSION.load} kg`],
-            ["Coach", SESSION.coach], ["Date", SESSION.date], ["Camera", `${SESSION.cameras} · no front`], ["Bar sensor", SESSION.sensor],
+            ["Coach", SESSION.coach], ["Date", SESSION.date],
+            ["Camera", device === "none" ? `${SESSION.cameras} · no front · speed est. from video` : `${SESSION.cameras} · no front`],
+            ["Bar sensor", <DeviceStatusValue mode={device} connected={SESSION.sensor} offlineFrom={SENSOR_LOST_AT} />],
           ] as const).map(([k, v]) => (
             <div key={k} className="flex items-baseline gap-1.5">
               <dt className="text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
@@ -101,20 +112,23 @@ export function GymDashboard() {
             </div>
           ))}
         </dl>
+        {device === "offline" && (
+          <DeviceOfflineBanner>Bar speed sensor went offline at {SENSOR_LOST_AT} — Set 4 speeds are estimated from video.</DeviceOfflineBanner>
+        )}
 
-        <SummaryStrip name={name} />
+        <SummaryStrip name={name} device={device} />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
-          <VideoPanel className="lg:col-span-5" rep={rep} phase={phase} onPhase={setPhase} onSelect={setSelected} />
-          <ReviewPanel className="lg:col-span-4" rep={rep} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
-          <BarPathPanel className="lg:col-span-3" rep={rep} onSelect={setSelected} />
-          <SignalsPanel className="lg:col-span-5" rep={rep} phase={phase} onSelect={setSelected} />
+          <VideoPanel className="lg:col-span-5" rep={rep} phase={phase} device={device} onPhase={setPhase} onSelect={setSelected} />
+          <ReviewPanel className="lg:col-span-4" rep={rep} device={device} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
+          <BarPathPanel className="lg:col-span-3" rep={rep} device={device} onSelect={setSelected} />
+          <SignalsPanel className="lg:col-span-5" rep={rep} phase={phase} device={device} onSelect={setSelected} />
           <FundamentalsPanel className="lg:col-span-3" />
-          <CoachingPanel className="lg:col-span-4" onSee={showFault} />
+          <CoachingPanel className="lg:col-span-4" device={device} onSee={showFault} />
         </div>
       </div>
 
-      <FullReport selected={selected} onSelect={setSelected} />
+      <FullReport selected={selected} device={device} onSelect={setSelected} />
     </div>
   );
 }
@@ -187,19 +201,31 @@ function Delta({ now, before, lowerIsBetter = false, unit = "", digits = 0 }: { 
 
 const signed = (v: number, digits = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(digits)}`;
 const repLabel = (r: Rep) => `Set ${r.set} · Rep ${r.rep}`;
+/** Speed loss vs the set's first rep; a video estimate can come out faster than the first rep. */
+const lossText = (loss: number) => (loss < 0 ? `+${-loss}` : `−${loss}`);
 
 /* ── Summary strip ───────────────────────────────────────────────────── */
 
-function SummaryStrip({ name }: { name: string }) {
+function SummaryStrip({ name, device }: { name: string; device: DeviceMode }) {
   const s = STATS;
-  const lossBad = s.velLoss > TARGET.velLoss;
-  const kpis: { label: string; value: string; tone?: string; info: string; delta: React.ReactNode }[] = [
+  const sp = speedStatsFor(device);
+  const est = device !== "connected";
+  const lossBad = sp.velLoss > TARGET.velLoss;
+  const estSub = <span className="text-muted-foreground">{device === "none" ? "From video" : "Set 4 est. from video"}</span>;
+  const speedSource = device === "none"
+    ? "Estimated from the side camera's bar tracking: no bar speed sensor on this session."
+    : device === "offline" ? `From the bar speed sensor for sets 1–3; set 4 is estimated from video after the sensor went offline at ${SENSOR_LOST_AT}.` : "From the bar speed sensor.";
+  const kpis: { label: string; value: string; tone?: string; est?: boolean; info: string; delta: React.ReactNode }[] = [
     { label: "Sets", value: `${s.sets}/${SESSION.plannedSets}`, tone: s.sets >= SESSION.plannedSets ? "text-success" : "text-warning", info: "Sets done out of the sets planned for this workout.", delta: <span className="text-muted-foreground">{s.sets >= SESSION.plannedSets ? "All planned" : `${SESSION.plannedSets - s.sets} skipped`}</span> },
     { label: "Good reps", value: `${s.good}/${s.reps}`, tone: s.good / s.reps >= 0.85 ? "text-success" : "text-warning", info: "Reps with no fault found: depth, torso lean, bar path and the rest all within the coach's targets.", delta: <Delta now={s.good} before={PREVIOUS.good} /> },
     { label: "Volume", value: `${s.volume.toLocaleString()} kg`, info: "Load × reps across every set.", delta: <Delta now={s.volume} before={PREVIOUS.volume} unit=" kg" /> },
-    { label: "Avg bar speed", value: `${s.avgVel.toFixed(2)} m/s`, tone: "text-info", info: `Mean speed of the bar on the way up, averaged over every rep. From the bar speed sensor. Last session was at ${PREVIOUS.load} kg.`, delta: <Delta now={+s.avgVel.toFixed(2)} before={PREVIOUS.avgVel} unit=" m/s" digits={2} /> },
-    { label: "Est. 1RM", value: `${s.e1rm} kg`, tone: "text-purple", info: "Estimated one-rep max from the load and how fast the first rep of each set moved (load–velocity profile).", delta: <Delta now={s.e1rm} before={PREVIOUS.e1rm} unit=" kg" /> },
-    { label: "Velocity loss", value: `${s.velLoss}%`, tone: lossBad ? "text-sev-critical" : "text-success", info: `How much slower the last rep was than the first, in the worst set. Above ${TARGET.velLoss}% form usually breaks down.`, delta: <Delta now={s.velLoss} before={PREVIOUS.velLoss} unit="%" lowerIsBetter /> },
+    { label: "Avg bar speed", value: `${sp.avgVel.toFixed(2)} m/s`, tone: "text-info", est, info: `Mean speed of the bar on the way up, averaged over every rep. ${speedSource} Last session was at ${PREVIOUS.load} kg.`, delta: est ? estSub : <Delta now={+sp.avgVel.toFixed(2)} before={PREVIOUS.avgVel} unit=" m/s" digits={2} /> },
+    {
+      label: "Est. 1RM", value: `${sp.e1rm} kg`, tone: "text-purple",
+      info: est ? "Estimated one-rep max from the load and reps done (load × (1 + reps ÷ 30)). Needs no bar speed sensor." : "Estimated one-rep max from the load and how fast the first rep of each set moved (load–velocity profile).",
+      delta: est ? <span className="text-muted-foreground">From load × reps</span> : <Delta now={sp.e1rm} before={PREVIOUS.e1rm} unit=" kg" />,
+    },
+    { label: "Velocity loss", value: `${sp.velLoss}%`, tone: lossBad ? "text-sev-critical" : "text-success", est, info: `How much slower the last rep was than the first, in the worst set. Above ${TARGET.velLoss}% form usually breaks down.${est ? ` ${speedSource}` : ""}`, delta: est ? estSub : <Delta now={sp.velLoss} before={PREVIOUS.velLoss} unit="%" lowerIsBetter /> },
   ];
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
@@ -230,7 +256,14 @@ function SummaryStrip({ name }: { name: string }) {
           <TooltipTrigger asChild>
             <div className="min-w-0 cursor-help rounded-xl border border-border bg-card px-2.5 py-2">
               <p className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k.label}</p>
-              <p className={cn("mt-0.5 truncate text-lg font-bold leading-tight", k.tone ?? "text-foreground")}>{k.value}</p>
+              {k.est ? (
+                <p className={cn("mt-0.5 flex items-center gap-1 text-lg font-bold leading-tight", k.tone ?? "text-foreground")}>
+                  <span className="truncate">{k.value}</span>
+                  <EstTag className="shrink-0" />
+                </p>
+              ) : (
+                <p className={cn("mt-0.5 truncate text-lg font-bold leading-tight", k.tone ?? "text-foreground")}>{k.value}</p>
+              )}
               <p className="truncate text-3xs">{k.delta}</p>
             </div>
           </TooltipTrigger>
@@ -245,8 +278,8 @@ function SummaryStrip({ name }: { name: string }) {
 
 const PHASE_ORDER = PHASES.map((p) => p.key);
 
-function VideoPanel({ className, rep, phase, onPhase, onSelect }: {
-  className?: string; rep: Rep; phase: Phase; onPhase: (p: Phase) => void; onSelect: (id: string) => void;
+function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
+  className?: string; rep: Rep; phase: Phase; device: DeviceMode; onPhase: (p: Phase) => void; onSelect: (id: string) => void;
 }) {
   const [showPose, setShowPose] = React.useState(true);
   const [showPath, setShowPath] = React.useState(true);
@@ -304,7 +337,7 @@ function VideoPanel({ className, rep, phase, onPhase, onSelect }: {
       }
     >
       <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
-        <RepFrame rep={rep} phase={phase} showPose={showPose} showPath={showPath} className="absolute inset-0">
+        <RepFrame rep={rep} phase={phase} showPose={showPose} showPath={showPath} speed={velIn(rep, device)} speedEst={!sensorMeasured(rep, device)} className="absolute inset-0">
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </RepFrame>
         {tool !== "none" && (
@@ -373,9 +406,10 @@ function checksFor(r: Rep): CheckRow[] {
 
 const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-sev-critical" } as const;
 
-function ReviewPanel({ className, rep, reviews, onReview, onSelect }: {
-  className?: string; rep: Rep; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (id: string) => void;
+function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
+  className?: string; rep: Rep; device: DeviceMode; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (id: string) => void;
 }) {
+  const repEst = !sensorMeasured(rep, device);
   const checks = checksFor(rep);
   const measured = checks.filter((c) => c.ok !== null);
   const met = measured.filter((c) => c.ok).length;
@@ -390,13 +424,15 @@ function ReviewPanel({ className, rep, reviews, onReview, onSelect }: {
       <div role="tablist" aria-label="Sets" className="mb-1.5 grid shrink-0 grid-cols-4 gap-1">
         {SETS.map((s) => {
           const active = s === rep.set;
-          const loss = velLossOf(s);
+          const loss = velLossIn(s, device);
+          const est = setEstimated(s, device);
           return (
             <button key={s} type="button" role="tab" aria-selected={active} onClick={() => !active && onSelect(repsOf(s)[0].id)}
+              title={est ? "Speed loss estimated from video" : undefined}
               className={cn("flex items-center justify-between gap-1 rounded-md border px-2 py-1 transition-colors duration-[var(--duration-fast)]",
                 active ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40")}>
               <span className={cn("text-2xs font-semibold", active ? "text-foreground" : "text-muted-foreground")}>Set {s}</span>
-              <span className={cn("font-mono text-3xs", loss > TARGET.velLoss ? "text-sev-critical" : "text-muted-foreground")}>−{loss}%</span>
+              <span className={cn("font-mono text-3xs", loss > TARGET.velLoss ? "text-sev-critical" : "text-muted-foreground")}>{est && "≈"}−{loss}%</span>
             </button>
           );
         })}
@@ -419,7 +455,9 @@ function ReviewPanel({ className, rep, reviews, onReview, onSelect }: {
         })}
       </div>
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
-        <span className="truncate">{repLabel(rep)}: <span className="font-semibold text-foreground">{score}/100 · {rep.meanVel.toFixed(2)} m/s</span> · {met}/{measured.length} met</span>
+        <span className="truncate">
+          {repLabel(rep)}: <span className="font-semibold text-foreground" title={repEst ? "Speed estimated from video" : undefined}>{score}/100 · {repEst && "≈"}{velIn(rep, device).toFixed(2)} m/s</span> · {met}/{measured.length} met
+        </span>
         {tag && <span className={cn("ml-auto shrink-0 rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", rep.id === BEST_REP ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{tag}</span>}
       </p>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
@@ -480,15 +518,22 @@ function FindingRow({ id, f, status, onReview }: { id: string; f: Finding; statu
 
 /* ── Bar path ────────────────────────────────────────────────────────── */
 
-function BarPathPanel({ className, rep, onSelect }: { className?: string; rep: Rep; onSelect: (id: string) => void }) {
+function BarPathPanel({ className, rep, device, onSelect }: { className?: string; rep: Rep; device: DeviceMode; onSelect: (id: string) => void }) {
   const peak = peakVelOf(rep);
-  const cells: [string, string, boolean?][] = [
+  /* Drift, travel and start come off the camera; without the sensor mean speed is a video
+     estimate (given two columns for its tag), and peak speed and power share one "needs" cell. */
+  const cells: [string, React.ReactNode, boolean?, string?][] = [
     ["Drift", `${rep.drift.toFixed(1)} cm`, rep.drift > TARGET.drift],
     ["Bar travel", `${rep.rom} cm`],
     ["Start", `${signed(rep.setup)} cm`, rep.setup > TARGET.setup],
-    ["Mean speed", `${rep.meanVel.toFixed(2)} m/s`],
-    ["Peak speed", `${peak.toFixed(2)} m/s`],
-    ["Power", `${Math.round(SESSION.load * 9.81 * rep.meanVel)} W`],
+    ...(sensorMeasured(rep, device) ? [
+      ["Mean speed", `${rep.meanVel.toFixed(2)} m/s`],
+      ["Peak speed", `${peak.toFixed(2)} m/s`],
+      ["Power", `${Math.round(SESSION.load * 9.81 * rep.meanVel)} W`],
+    ] as [string, React.ReactNode][] : [
+      ["Mean speed", <span className="flex items-center gap-1">≈{velIn(rep, device).toFixed(2)} m/s <EstTag /></span>, false, "col-span-2"],
+      ["Peak · power", <span title="Peak speed and power need the bar speed sensor"><NeedsDevice device="sensor" className="font-sans text-2xs font-normal" /></span>],
+    ] as [string, React.ReactNode, boolean?, string?][]),
   ];
   return (
     <Panel className={className} title="Bar Path" meta={`${repLabel(rep)} · side view`}
@@ -497,8 +542,8 @@ function BarPathPanel({ className, rep, onSelect }: { className?: string; rep: R
         <BarPathPlot rep={rep} others={repsOf(rep.set)} onSelect={onSelect} className="max-h-full" />
       </div>
       <dl className="mt-2 grid shrink-0 grid-cols-3 gap-x-2 gap-y-1">
-        {cells.map(([k, v, bad]) => (
-          <div key={k} className="min-w-0">
+        {cells.map(([k, v, bad, span]) => (
+          <div key={k} className={cn("min-w-0", span)}>
             <dt className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
             <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{v}</dd>
           </div>
@@ -518,15 +563,18 @@ function BarPathPanel({ className, rep, onSelect }: { className?: string; rep: R
 const SYNC = { syncId: "gym-signals", syncMethod: "value" } as const;
 const T_TICKS = [0, 1, 2, 3, 4];
 
-function SignalsPanel({ className, rep, phase, onSelect }: { className?: string; rep: Rep; phase: Phase; onSelect: (id: string) => void }) {
+function SignalsPanel({ className, rep, phase, device, onSelect }: { className?: string; rep: Rep; phase: Phase; device: DeviceMode; onSelect: (id: string) => void }) {
   const series = React.useMemo(() => repSeries(rep), [rep]);
   const now = +phaseTime(rep, phase).toFixed(2);
   const bottom = +phaseTime(rep, "bottom").toFixed(2);
   const atBottom = series.reduce((a, p) => (Math.abs(p.t - bottom) < Math.abs(a.t - bottom) ? p : a));
   const leanBad = rep.lean > TARGET.lean;
   const setReps = repsOf(rep.set);
-  const stop = +(setReps[0].meanVel * STOP_AT).toFixed(2);
-  const loss = repLoss(rep);
+  const measured = sensorMeasured(rep, device);
+  const setEst = setEstimated(rep.set, device);
+  const vel = (r: Rep) => velIn(r, device);
+  const stop = +(vel(setReps[0]) * STOP_AT).toFixed(2);
+  const loss = repLossIn(rep, device);
   const marks = (
     <>
       <ReferenceLine x={bottom} stroke="var(--muted-foreground)" strokeDasharray="3 3" />
@@ -535,8 +583,18 @@ function SignalsPanel({ className, rep, phase, onSelect }: { className?: string;
   );
   const xAxis = <XAxis dataKey="t" type="number" domain={WINDOW} ticks={T_TICKS} {...AXIS} />;
   return (
-    <Panel className={className} title="Rep Signals" meta={repLabel(rep)} action={<InfoTip text={METHOD_NOTE} />}
+    <Panel className={className} title="Rep Signals" meta={repLabel(rep)} action={<InfoTip text={methodNote(device)} />}
       bodyClassName="grid grid-cols-2 grid-rows-2 gap-2 max-lg:auto-rows-[120px]">
+      {/* The speed curve through the rep needs the sensor; the video only gives a mean per rep. */}
+      {!measured ? (
+        <MiniChart title="Bar speed" est value={`avg ≈${vel(rep).toFixed(2)}`} legend="m/s · mean est. from video"
+          empty={
+            <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+              <Unplug className="size-4 text-muted-foreground" />
+              <p className="text-2xs">Speed curve: <NeedsDevice device="Bar speed sensor" /></p>
+            </div>
+          } />
+      ) : (
       <MiniChart title="Bar speed" value={`avg ${rep.meanVel.toFixed(2)} · pk ${peakVelOf(rep).toFixed(2)}`} legend={<><Swatch c="bg-info" />m/s · dashed: bottom</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -26, bottom: -6 }} {...SYNC}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
@@ -548,6 +606,7 @@ function SignalsPanel({ className, rep, phase, onSelect }: { className?: string;
           <Line type="monotone" dataKey="vel" stroke="var(--info)" strokeWidth={1.6} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
+      )}
       <MiniChart title="Hip & knee" value={`Hip ${atBottom.hip}° · knee ${atBottom.knee}°`} legend={<><Swatch c="bg-warning" />Hip <Swatch c="bg-purple" />Knee · joint angle °</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -26, bottom: -6 }} {...SYNC}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
@@ -572,19 +631,19 @@ function SignalsPanel({ className, rep, phase, onSelect }: { className?: string;
           <Line type="monotone" dataKey="lean" stroke={leanBad || rep.hipRise > TARGET.hipRise ? "var(--sev-critical)" : "var(--success)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
-      <MiniChart title={`Set ${rep.set} speed`} value={`Rep ${rep.rep} −${loss}%`} bad={velLossOf(rep.set) > TARGET.velLoss}
+      <MiniChart title={`Set ${rep.set} speed`} est={setEst} value={`Rep ${rep.rep} ${setEst ? "≈" : ""}${lossText(loss)}%`} bad={velLossIn(rep.set, device) > TARGET.velLoss}
         legend={<><Swatch c="bg-primary" />Picked <span className="ml-2.5 mr-1 inline-block w-2.5 border-t border-dashed border-sev-critical align-middle" />Stop at −{TARGET.velLoss}% ({stop} m/s)</>}>
-        <BarChart data={setReps.map((r) => ({ id: r.id, rep: r.rep, vel: r.meanVel, loss: repLoss(r) }))} margin={{ top: 4, right: 4, left: -26, bottom: -6 }}>
+        <BarChart data={setReps.map((r) => ({ id: r.id, rep: r.rep, vel: vel(r), loss: repLossIn(r, device) }))} margin={{ top: 4, right: 4, left: -26, bottom: -6 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           <XAxis dataKey="rep" {...AXIS} tickFormatter={(v) => `R${v}`} />
           <YAxis domain={[0, 0.7]} ticks={[0, 0.2, 0.4, 0.6]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)", opacity: 0.4 }} labelFormatter={(v) => `Rep ${v}`}
-            formatter={(v, _n, p) => [`${v} m/s · −${(p?.payload as { loss?: number } | undefined)?.loss ?? 0}%`, "Mean speed"]} />
+            formatter={(v, _n, p) => [`${v} m/s · ${lossText((p?.payload as { loss?: number } | undefined)?.loss ?? 0)}%`, setEst ? "Mean speed (est.)" : "Mean speed"]} />
           <ReferenceLine y={stop} stroke="var(--sev-critical)" strokeDasharray="3 3" />
           <Bar dataKey="vel" radius={[3, 3, 0, 0]} isAnimationActive={false} className="cursor-pointer"
             onClick={(d) => { const id = (d as { payload?: { id?: string } }).payload?.id; if (id) onSelect(id); }}>
             {setReps.map((r) => (
-              <Cell key={r.id} fill={r.id === rep.id ? "var(--primary)" : r.meanVel < stop ? "var(--sev-critical)" : "var(--muted-foreground)"} fillOpacity={r.id === rep.id ? 1 : 0.45} />
+              <Cell key={r.id} fill={r.id === rep.id ? "var(--primary)" : vel(r) < stop ? "var(--sev-critical)" : "var(--muted-foreground)"} fillOpacity={r.id === rep.id ? 1 : 0.45} />
             ))}
           </Bar>
         </BarChart>
@@ -597,15 +656,19 @@ function Swatch({ c }: { c: string }) {
   return <span className={cn("mr-1 ml-2.5 inline-block h-1.5 w-2.5 rounded-sm align-middle first:ml-0", c)} />;
 }
 
-function MiniChart({ title, value, bad, legend, children }: { title: string; value: string; bad?: boolean; legend: React.ReactNode; children: React.ReactElement }) {
+/** `est` tags the chart as estimated from video; `empty` stands in for the chart when there's nothing to plot. */
+function MiniChart({ title, value, bad, est, legend, empty, children }: {
+  title: string; value: string; bad?: boolean; est?: boolean; legend: React.ReactNode; empty?: React.ReactNode; children?: React.ReactElement;
+}) {
   return (
     <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
+        {est && <EstTag className="shrink-0" />}
         <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
       </div>
       <div className="relative min-h-16 flex-1">
-        <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
+        {empty ?? <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>}
       </div>
       <p className="truncate pb-1 text-3xs text-muted-foreground">{legend}</p>
     </div>
@@ -647,13 +710,15 @@ function FundamentalsPanel({ className }: { className?: string }) {
 
 /* ── Coaching ────────────────────────────────────────────────────────── */
 
-function CoachingPanel({ className, onSee }: { className?: string; onSee: (id: string, k: FaultKey) => void }) {
-  const faults = rankedFaults(REPS).slice(0, 2);
+function CoachingPanel({ className, device, onSee }: { className?: string; device: DeviceMode; onSee: (id: string, k: FaultKey) => void }) {
+  const faults = rankedFaults(REPS, device).slice(0, 2);
   const strongest = [...fundamentalsFor(REPS)].sort((a, b) => b.score - a.score).slice(0, 2);
-  const next = nextLoad();
+  const next = nextLoad(device);
+  /* With no sensor at all, a fault's cost is in rep-score points and the load call rests on form. */
+  const noSensor = device === "none";
   return (
     <Panel className={className} title="Coaching" meta="Ranked by impact"
-      action={<InfoTip text="Faults are ranked by how many reps they hit and how much they matter for safety and the lift. Speed is how much slower those reps moved than clean reps." />}>
+      action={<InfoTip text={`Faults are ranked by how many reps they hit and how much they matter for safety and the lift. ${noSensor ? "Points are how much lower those reps scored than clean reps." : `Speed is how much slower those reps moved than clean reps.${device === "offline" ? " Set 4 speeds are estimated from video." : ""}`}`} />}>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {faults.map((f, i) => (
           <div key={f.key} className="rounded-lg border border-border bg-background p-2">
@@ -662,7 +727,10 @@ function CoachingPanel({ className, onSee }: { className?: string; onSee: (id: s
               <span className="min-w-0 truncate text-xs font-bold text-foreground">{f.label}</span>
               <InfoTip text={`${f.what} First seen in set ${f.firstSet}.`} />
               <span className="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">
-                {f.count}/{REPS.length} reps{f.velCost > 0 && <> · <span className="text-sev-critical">−{f.velCost.toFixed(2)} m/s</span></>}
+                {f.count}/{REPS.length} reps
+                {noSensor
+                  ? f.scoreCost > 0 && <> · <span className="text-sev-critical">−{f.scoreCost} pts</span></>
+                  : f.velCost > 0 && <> · <span className="text-sev-critical">−{f.velCost.toFixed(2)} m/s</span>{f.velCostEst && <EstTag className="ml-1" />}</>}
               </span>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -680,14 +748,18 @@ function CoachingPanel({ className, onSee }: { className?: string; onSee: (id: s
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
               Next session
-              <InfoTip text={next.hold
-                ? `Hold the load: the last set lost ${STATS.velLoss}% speed and form broke down. Stop a set when the bar is ${TARGET.velLoss}% slower than its first rep. Add 2.5 kg once every set stays under that.`
-                : "Every set stayed under the velocity-loss cut-off with clean reps, so add 2.5 kg."} />
+              <InfoTip text={noSensor
+                ? next.hold
+                  ? `Hold the load: ${next.goodPct}% of reps were clean and form broke down in the last set. With no bar speed sensor the call rests on form: add 2.5 kg once ${GOOD_PCT_TO_ADD}% of reps are clean.`
+                  : `${next.goodPct}% of reps were clean and the last set held together, so add 2.5 kg.`
+                : next.hold
+                  ? `Hold the load: the last set lost ${next.velLoss}% speed and form broke down. Stop a set when the bar is ${TARGET.velLoss}% slower than its first rep. Add 2.5 kg once every set stays under that.`
+                  : "Every set stayed under the velocity-loss cut-off with clean reps, so add 2.5 kg."} />
             </p>
             <p className="truncate whitespace-nowrap font-mono text-md font-bold text-foreground">{next.load} kg <span className="text-2xs font-semibold text-muted-foreground">· {SESSION.plannedSets} × {SESSION.plannedReps}</span></p>
           </div>
           <span className={cn("shrink-0 rounded px-1.5 py-0.5 text-3xs font-bold uppercase", next.hold ? "bg-warning/15 text-warning" : "bg-success/15 text-success")}>{next.hold ? "Hold" : "+2.5 kg"}</span>
-          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">Stop &lt; {next.stopVel} m/s</span>
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">{noSensor ? `${next.goodPct}% good reps` : <>Stop &lt; {next.stopVel} m/s</>}</span>
         </div>
         <p className="flex items-center gap-1.5 text-2xs text-muted-foreground">
           <CircleCheck className="size-3.5 shrink-0 text-success" />
@@ -700,25 +772,28 @@ function CoachingPanel({ className, onSee }: { className?: string; onSee: (id: s
 
 /* ── Full report ─────────────────────────────────────────────────────── */
 
-function FullReport({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+function FullReport({ selected, device, onSelect }: { selected: string; device: DeviceMode; onSelect: (id: string) => void }) {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
-      <CompareSection />
-      <RepTable selected={selected} onSelect={onSelect} />
-      <ProgressSection />
+      <CompareSection device={device} />
+      <RepTable selected={selected} device={device} onSelect={onSelect} />
+      <ProgressSection device={device} />
     </div>
   );
 }
 
 /* First rep vs last rep (or any two), stopped at the same moment: fatigue at a glance. */
-function CompareSection() {
+function CompareSection({ device }: { device: DeviceMode }) {
   const [a, setA] = React.useState(REPS[0].id);
   const [b, setB] = React.useState(REPS[REPS.length - 1].id);
   const [phase, setPhase] = React.useState<Phase>("bottom");
   const [overlay, setOverlay] = React.useState(false);
   const A = repById(a);
   const B = repById(b);
+  /* Which side's speed the sensor didn't measure: mean speed is then a video estimate, peak speed isn't known. */
+  const unmeasured: [boolean, boolean] = [!sensorMeasured(A, device), !sensorMeasured(B, device)];
+  const estOf = (r: Rep) => !sensorMeasured(r, device);
   const repSelect = (value: string, onChange: (id: string) => void, label: string, tone: string) => (
     <div className="flex items-center gap-1.5">
       <span className={cn("size-2 rounded-full", tone)} />
@@ -734,7 +809,8 @@ function CompareSection() {
       </Select>
     </div>
   );
-  type Row = { label: string; a: number; b: number; unit: string; target?: string; bad?: (v: number) => boolean; digits?: number };
+  /** `est`: that side is a video estimate; `na`: that side needs the sensor. */
+  type Row = { label: string; a: number; b: number; unit: string; target?: string; bad?: (v: number) => boolean; digits?: number; est?: [boolean, boolean]; na?: [boolean, boolean] };
   const rows: Row[] = [
     { label: "Rep score", a: repScore(A), b: repScore(B), unit: "", digits: 0 },
     { label: "Depth", a: A.depth, b: B.depth, unit: " cm", target: "≥ 0", bad: (v) => v < TARGET.depth },
@@ -744,8 +820,8 @@ function CompareSection() {
     { label: "Back flexion", a: A.backRound, b: B.backRound, unit: "°", target: `≤ ${TARGET.backRound}`, bad: (v) => v > TARGET.backRound, digits: 0 },
     { label: "Descent", a: A.ecc, b: B.ecc, unit: " s", target: TARGET.ecc.join("–"), bad: (v) => v < TARGET.ecc[0] || v > TARGET.ecc[1] },
     { label: "Ascent", a: A.con, b: B.con, unit: " s", digits: 2 },
-    { label: "Mean speed", a: A.meanVel, b: B.meanVel, unit: " m/s", digits: 2 },
-    { label: "Peak speed", a: peakVelOf(A), b: peakVelOf(B), unit: " m/s", digits: 2 },
+    { label: "Mean speed", a: velIn(A, device), b: velIn(B, device), unit: " m/s", digits: 2, est: unmeasured },
+    { label: "Peak speed", a: unmeasured[0] ? 0 : peakVelOf(A), b: unmeasured[1] ? 0 : peakVelOf(B), unit: " m/s", digits: 2, na: unmeasured },
     { label: "Lockout", a: A.lockout, b: B.lockout, unit: "°", target: `≥ ${TARGET.lockout}`, bad: (v) => v < TARGET.lockout, digits: 0 },
     { label: "Heel lift", a: A.heelLift, b: B.heelLift, unit: " cm", target: `≤ ${TARGET.heelLift}`, bad: (v) => v > TARGET.heelLift },
   ];
@@ -768,7 +844,7 @@ function CompareSection() {
           <PanelTabs value={phase} onChange={setPhase} tabs={PHASES.map((p) => [p.key, p.label])} />
           {overlay ? (
             <figure className="overflow-hidden rounded-lg border border-border">
-              <div className="aspect-video"><RepFrame rep={A} phase={phase} ghost={B} showPath={false} /></div>
+              <div className="aspect-video"><RepFrame rep={A} phase={phase} ghost={B} showPath={false} speed={velIn(A, device)} speedEst={estOf(A)} /></div>
               <figcaption className="flex gap-3 border-t border-border px-2 py-1 text-2xs text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-success" />{repLabel(A)} (pose)</span>
                 <span className="flex items-center gap-1"><span className="h-0.5 w-3 border-t-2 border-dashed border-info" />{repLabel(B)} (dashed)</span>
@@ -778,11 +854,11 @@ function CompareSection() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[A, B].map((r, i) => (
                 <figure key={i} className="overflow-hidden rounded-lg border border-border">
-                  <div className="aspect-video"><RepFrame rep={r} phase={phase} hud={false} /></div>
+                  <div className="aspect-video"><RepFrame rep={r} phase={phase} hud={false} speed={velIn(r, device)} speedEst={estOf(r)} /></div>
                   <figcaption className="flex items-center gap-1.5 border-t border-border px-2 py-1 text-2xs">
                     <span className={cn("size-2 rounded-full", i === 0 ? "bg-success" : "bg-info")} />
                     <span className="font-semibold text-foreground">{repLabel(r)}</span>
-                    <span className="truncate text-muted-foreground">{repScore(r)}/100 · {r.meanVel.toFixed(2)} m/s · {findingsFor(r).length || "no"} faults</span>
+                    <span className="truncate text-muted-foreground">{repScore(r)}/100 · {estOf(r) && "≈"}{velIn(r, device).toFixed(2)} m/s · {findingsFor(r).length || "no"} faults</span>
                   </figcaption>
                 </figure>
               ))}
@@ -804,13 +880,17 @@ function CompareSection() {
               {rows.map((r) => {
                 const dg = r.digits ?? 1;
                 const d = +(r.b - r.a).toFixed(dg);
+                const na = r.na?.[0] || r.na?.[1];
+                const value = (v: number, i: 0 | 1) => (r.na?.[i] ? "—" : `${r.est?.[i] ? "≈" : ""}${v.toFixed(dg)}${r.unit}`);
                 return (
                   <tr key={r.label} className="border-b border-border/60 font-mono text-2xs last:border-0">
-                    <td className="py-1 pr-2 font-sans text-xs text-foreground">{r.label}</td>
-                    <td className={cn("py-1 pr-2 text-right", r.bad?.(r.a) ? "text-sev-critical" : "text-foreground")}>{r.a.toFixed(dg)}{r.unit}</td>
-                    <td className={cn("py-1 pr-2 text-right", r.bad?.(r.b) ? "text-sev-critical" : "text-foreground")}>{r.b.toFixed(dg)}{r.unit}</td>
-                    <td className="py-1 pr-2 text-right text-muted-foreground">{d === 0 ? "—" : signed(d, dg)}</td>
-                    <td className="py-1 text-right text-muted-foreground">{r.target ?? "—"}</td>
+                    <td className="py-1 pr-2 font-sans text-xs text-foreground">
+                      {r.label}{(r.est?.[0] || r.est?.[1]) && <EstTag className="ml-1" />}
+                    </td>
+                    <td className={cn("py-1 pr-2 text-right", r.na?.[0] ? "text-muted-foreground" : r.bad?.(r.a) ? "text-sev-critical" : "text-foreground")}>{value(r.a, 0)}</td>
+                    <td className={cn("py-1 pr-2 text-right", r.na?.[1] ? "text-muted-foreground" : r.bad?.(r.b) ? "text-sev-critical" : "text-foreground")}>{value(r.b, 1)}</td>
+                    <td className="py-1 pr-2 text-right text-muted-foreground">{na || d === 0 ? "—" : signed(d, dg)}</td>
+                    <td className="py-1 text-right text-muted-foreground">{na ? <NeedsDevice device="sensor" className="font-sans" /> : r.target ?? "—"}</td>
                   </tr>
                 );
               })}
@@ -824,7 +904,7 @@ function CompareSection() {
 }
 
 /* Every rep of the workout in one table, grouped by set. */
-function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+function RepTable({ selected, device, onSelect }: { selected: string; device: DeviceMode; onSelect: (id: string) => void }) {
   const cols: [string, string][] = [
     ["Set", "Set"], ["Rep", "Rep in the set"], ["Score", "Rep score"], ["Depth", "Hip crease vs knee, cm (+ below)"], ["Lean", "Torso lean at the bottom, °"],
     ["Hips", "Extra lean off the bottom (hips first), °"], ["Drift", "Bar drift off mid-foot, cm"], ["Speed", "Mean bar speed up, m/s"], ["Loss", "Slower than the set's first rep, %"],
@@ -836,20 +916,29 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
     <section className="overflow-hidden rounded-xl border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Every rep</h3>
-        <span className="text-2xs text-muted-foreground">{REPS.length} reps · click to review</span>
+        <span className="text-2xs text-muted-foreground">
+          {REPS.length} reps · click to review
+          {device === "none" ? " · speed and loss est. from video" : device === "offline" ? " · ≈ set 4 speed est. from video" : ""}
+        </span>
       </header>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-border">
-              {cols.map(([h, full]) => <th key={h} title={full} className="px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</th>)}
+              {cols.map(([h, full]) => (
+                <th key={h} title={full} className="px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">
+                  {h}{device === "none" && (h === "Speed" || h === "Loss") && <EstTag className="ml-1" />}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {REPS.map((r) => {
               const sc = repScore(r);
               const faults = findingsFor(r);
-              const loss = repLoss(r);
+              const loss = repLossIn(r, device);
+              /* Offline: mark set 4's estimated cells; with no sensor the column headers carry the tag. */
+              const approx = device === "offline" && !sensorMeasured(r, device) ? "≈" : "";
               return (
                 <tr key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
                   className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.rep === 1 && r.set > 1 && "border-t-2 border-t-border", r.id === selected && "bg-muted")}>
@@ -860,8 +949,8 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
                   <td className={cn(cell, red(r.lean > TARGET.lean))}>{r.lean}</td>
                   <td className={cn(cell, red(r.hipRise > TARGET.hipRise))}>{r.hipRise}</td>
                   <td className={cn(cell, red(r.drift > TARGET.drift))}>{r.drift.toFixed(1)}</td>
-                  <td className={cn(cell, "text-foreground")}>{r.meanVel.toFixed(2)}</td>
-                  <td className={cn(cell, red(loss > TARGET.velLoss))}>{loss ? `−${loss}` : "—"}</td>
+                  <td className={cn(cell, "text-foreground")}>{approx}{velIn(r, device).toFixed(2)}</td>
+                  <td className={cn(cell, red(loss > TARGET.velLoss))}>{loss ? `${approx}${lossText(loss)}` : "—"}</td>
                   <td className={cn(cell, red(r.ecc < TARGET.ecc[0]))}>{r.ecc.toFixed(1)}</td>
                   <td className={cn(cell, "text-muted-foreground")}>{r.con.toFixed(2)}</td>
                   <td className={cn(cell, red(r.lockout < TARGET.lockout))}>{r.lockout}</td>
@@ -884,12 +973,16 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
 }
 
 /* Est. 1RM and volume across the lifter's back-squat sessions, personal bests, and the coach's notes. */
-function ProgressSection() {
-  const [note, setNote] = React.useState("Strong first three sets at 100 kg. Set 4 fell apart from rep 4: hips shot up and the chest dropped. Stay at 100 kg next week and stop a set once the bar slows past 0.42 m/s.");
-  const first = HISTORY[0];
-  const small: { key: "avgVel" | "velLoss" | "goodPct"; title: string; unit: string; band?: [number, number]; lowerIsBetter?: boolean; digits?: number; pad: number }[] = [
-    { key: "avgVel", title: "Avg bar speed", unit: " m/s", digits: 2, pad: 0.02 },
-    { key: "velLoss", title: "Velocity loss", unit: "%", band: [0, TARGET.velLoss], lowerIsBetter: true, digits: 0, pad: 2 },
+function ProgressSection({ device }: { device: DeviceMode }) {
+  /* The suggested note follows the device state until the coach edits it. */
+  const [edited, setEdited] = React.useState<string | null>(null);
+  const note = edited ?? `Strong first three sets at 100 kg. Set 4 fell apart from rep 4: hips shot up and the chest dropped. Stay at 100 kg next week and ${device === "none" ? `add weight once ${GOOD_PCT_TO_ADD}% of reps are clean` : `stop a set once the bar slows past ${nextLoad(device).stopVel} m/s`}.`;
+  const history = historyFor(device);
+  const est = device !== "connected";
+  const first = history[0];
+  const small: { key: "avgVel" | "velLoss" | "goodPct"; title: string; unit: string; band?: [number, number]; lowerIsBetter?: boolean; digits?: number; pad: number; est?: boolean }[] = [
+    { key: "avgVel", title: "Avg bar speed", unit: " m/s", digits: 2, pad: 0.02, est },
+    { key: "velLoss", title: "Velocity loss", unit: "%", band: [0, TARGET.velLoss], lowerIsBetter: true, digits: 0, pad: 2, est },
     { key: "goodPct", title: "Good reps", unit: "%", digits: 0, pad: 2 },
   ];
   return (
@@ -905,7 +998,7 @@ function ProgressSection() {
         </div>
         <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={HISTORY} margin={{ top: 8, right: -8, left: -20, bottom: 0 }}>
+            <ComposedChart data={history} margin={{ top: 8, right: -8, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
               <XAxis dataKey="date" {...AXIS} fontSize={10} />
               <YAxis yAxisId="rm" domain={[100, 125]} ticks={[100, 110, 120]} {...AXIS} fontSize={10} />
@@ -918,12 +1011,16 @@ function ProgressSection() {
           </ResponsiveContainer>
         </div>
         <ul className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {PERSONAL_BESTS.map((p) => (
+          {personalBestsFor(device).map((p) => (
             <li key={p.label} className={cn("min-w-0 rounded-lg border px-2 py-1", p.isNew ? "border-warning/30 bg-warning/[0.06]" : "border-border bg-background")}>
               <p className="flex items-center gap-1 truncate text-3xs font-semibold uppercase text-muted-foreground">
                 {p.isNew && <Trophy className="size-3 shrink-0 text-warning" />}{p.label}
               </p>
-              <p className="truncate font-mono text-xs font-bold text-foreground">{p.value}</p>
+              {p.est ? (
+                <p className="flex items-center gap-1 font-mono text-xs font-bold text-foreground"><span className="truncate">{p.value}</span><EstTag className="shrink-0" /></p>
+              ) : (
+                <p className="truncate font-mono text-xs font-bold text-foreground">{p.value}</p>
+              )}
               <p className="truncate text-3xs text-muted-foreground">{p.isNew ? `PB · was ${p.was}` : p.was}</p>
             </li>
           ))}
@@ -932,18 +1029,22 @@ function ProgressSection() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:col-span-4 lg:grid-cols-1">
         {small.map((m) => {
           const a = first[m.key];
-          const z = HISTORY[HISTORY.length - 1][m.key];
+          const z = history[history.length - 1][m.key];
           const better = m.lowerIsBetter ? z < a : z > a;
           return (
             <div key={m.key} className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
               <div className="w-28 shrink-0">
-                <p className="truncate text-3xs font-semibold uppercase text-muted-foreground">{m.title}</p>
+                {m.est ? (
+                  <p className="flex items-center gap-1 text-3xs font-semibold uppercase text-muted-foreground"><span className="truncate">{m.title}</span><EstTag className="shrink-0" /></p>
+                ) : (
+                  <p className="truncate text-3xs font-semibold uppercase text-muted-foreground">{m.title}</p>
+                )}
                 <p className="font-mono text-md font-bold text-foreground">{z.toFixed(m.digits)}{m.unit}</p>
                 <p className={cn("truncate text-3xs", better ? "text-success" : "text-sev-critical")}>{signed(z - a, m.digits)}{m.unit} since {first.date}</p>
               </div>
               <div className="h-12 min-w-0 flex-1">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={HISTORY} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                  <LineChart data={history} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                     {m.band && <ReferenceArea y1={m.band[0]} y2={m.band[1]} fill="var(--success)" fillOpacity={0.1} strokeOpacity={0} />}
                     <YAxis hide domain={[(v: number) => v - m.pad, (v: number) => v + m.pad]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(_, p) => String(p?.[0]?.payload?.date ?? "")} formatter={(v) => [`${v}${m.unit}`, m.title]} />
@@ -957,7 +1058,7 @@ function ProgressSection() {
       </div>
       <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 lg:col-span-3">
         <h3 className="text-sm font-bold text-foreground">Coach notes</h3>
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} className="min-h-28 flex-1 text-sm" aria-label="Coach notes" />
+        <Textarea value={note} onChange={(e) => setEdited(e.target.value)} className="min-h-28 flex-1 text-sm" aria-label="Coach notes" />
         <div className="flex items-center gap-2">
           <span className="text-3xs text-muted-foreground">Shown on the lifter's report</span>
           <Button size="sm" className="ml-auto" onClick={() => toast.success("Notes saved")}>Save notes</Button>

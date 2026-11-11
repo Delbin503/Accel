@@ -534,7 +534,9 @@ function SessionPicker({ value, onChange, sessions, allowAll }: { value: string;
 
 /** One person's result opens their use case's analysis dashboard — swing, lift or rehab. */
 function analysisHref(uc: UseCaseKey, person: string, sessionId: string) {
-  return `${TA_ANALYSIS[uc].path}?person=${encodeURIComponent(person)}&session=${sessionId}`;
+  /* A session that ran without an external device opens its dashboard in the no-device state. */
+  const noDevice = useSessionsStore.getState().sessions.find((s) => s.id === sessionId)?.devices.length === 0;
+  return `${TA_ANALYSIS[uc].path}?person=${encodeURIComponent(person)}&session=${sessionId}${noDevice ? "&device=none" : ""}`;
 }
 
 /* ── Group results (a group report, or a session opened from Sessions) ─── */

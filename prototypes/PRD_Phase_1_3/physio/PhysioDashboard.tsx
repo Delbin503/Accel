@@ -5,7 +5,7 @@ import {
   Area, CartesianGrid, ComposedChart, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart, Cell,
 } from "recharts";
 import {
-  Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, FileDown, Info, Lock, Pause, Play, Share2, ShieldCheck, Sparkles, TrendingDown, TrendingUp, Undo2, X,
+  Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, FileDown, Info, Lock, Pause, Play, Share2, ShieldCheck, Sparkles, TrendingDown, TrendingUp, Undo2, Unplug, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useDeviceMode, type DeviceMode } from "../assessment/deviceState";
+import { DeviceOfflineBanner, DevicePreviewSwitch, DeviceStatusValue, NeedsDevice } from "../assessment/deviceMode";
 import {
-  BASELINE, DISCHARGE, EXERCISES, EXPECTED_BAND, EX_ORDER, FAULTS, HEALTHY, HOME_PROGRAMME, KEY_MOMENT, LIMIT, MEASURES, METHOD_NOTE, MOMENTS, PATIENT,
-  PLAN_CHANGES, PREVIOUS, PROGRESS, REPS, REVIEW_BELOW, TIMELINE_WEEKS, TODAY, VISIT, VISITS,
-  checksFor, failedChecks, findingsFor, fmtClock, gaitSteps, goalWeek, momentTime, progressOf, repById, repName, repSeries, repsOf, suggestedPlan,
+  BASELINE, EXERCISES, EXPECTED_BAND, EX_ORDER, FAULTS, HEALTHY, HOME_PROGRAMME, KEY_MOMENT, LIMIT, MEASURES, MOMENTS, PATIENT,
+  PLAN_CHANGES, PLATE, PLATE_OFFLINE_AT, PREVIOUS, PROGRESS, REPS, REVIEW_BELOW, TIMELINE_WEEKS, TODAY, VISIT, VISITS,
+  checksFor, dischargeFor, failedChecks, findingsFor, fmtClock, gaitSteps, goalWeek, hasLoad, loadSpan, lrFor, lrOfVisit, measuresFor, methodNote, momentTime,
+  progressOf, repById, repName, repSeries, repsOf, scoredChecks, suggestedPlan,
   type FaultKey, type Finding, type MeasureKey, type Moment, type Plan, type Rep, type View,
 } from "./physioSession";
 import { RangeGauge, RoomFrame } from "./physioParts";
@@ -30,7 +33,12 @@ import { RangeGauge, RoomFrame } from "./physioParts";
    sign-off).
 
    One rep is "picked" at a time and every panel follows it. The patient is
-   only ever compared with their own baseline and goal: no grades, no ranks. */
+   only ever compared with their own baseline and goal: no grades, no ranks.
+
+   The force plate (?device=none | offline) only measures left–right load on
+   sit-to-stand. Without it, those load checks are greyed and left out of the
+   rep's count, and left–right falls back to what's left: step length on the
+   walk, plus any sit-to-stands before the plate dropped out. */
 
 const TOOLTIP_STYLE = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 };
 const AXIS = { stroke: "var(--muted-foreground)", fontSize: 9, tickLine: false, axisLine: false } as const;
@@ -42,8 +50,8 @@ const reviewKey = (id: string, k: FaultKey) => `${id}:${k}`;
 const statusOf = (reviews: Reviews, r: Rep, f: Finding): Status => reviews[reviewKey(r.id, f.key)] ?? (f.conf >= REVIEW_BELOW ? "auto" : undefined);
 const openFindings = (reviews: Reviews) => REPS.flatMap((r) => findingsFor(r).filter((f) => !statusOf(reviews, r, f)).map((f) => ({ rep: r, f })));
 
-const repTone = (r: Rep) => {
-  const n = failedChecks(r);
+const repTone = (r: Rep, device: DeviceMode) => {
+  const n = failedChecks(r, device);
   return n === 0 ? "success" : n === 1 ? "warning" : "sev-critical";
 };
 const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-critical": "text-sev-critical" } as const;
@@ -57,6 +65,7 @@ const SIGNED_AT = "11 Nov · 10:48";
 export function PhysioDashboard() {
   const { search } = useLocation();
   const name = new URLSearchParams(search).get("person")?.trim() || PATIENT.name;
+  const [device, setDevice] = useDeviceMode();
 
   const [selected, setSelected] = React.useState(TODAY.bestRom);
   const [view, setView] = React.useState<View>("side");
@@ -104,6 +113,7 @@ export function PhysioDashboard() {
             </span>
           </PageHeader.Content>
           <PageHeader.Actions>
+            <DevicePreviewSwitch device={PLATE} mode={device} onChange={setDevice} />
             <UiTooltip>
               <TooltipTrigger asChild>
                 <span tabIndex={signed ? -1 : 0}>
@@ -123,29 +133,37 @@ export function PhysioDashboard() {
         </PageHeader>
 
         <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
-          {([["Clinic / room", `${VISIT.clinic} · ${VISIT.room}`], ["Clinician", VISIT.clinician], ["Date", VISIT.date], ["Cameras", VISIT.cameras], ["Device", VISIT.device], ["Privacy", "Faces blurred"]] as const).map(([k, v]) => (
+          {([
+            ["Clinic / room", `${VISIT.clinic} · ${VISIT.room}`], ["Clinician", VISIT.clinician], ["Date", VISIT.date], ["Cameras", VISIT.cameras],
+            ["Device", <DeviceStatusValue mode={device} connected={VISIT.device} offlineFrom={PLATE_OFFLINE_AT} />], ["Privacy", "Faces blurred"],
+          ] as [string, React.ReactNode][]).map(([k, v]) => (
             <div key={k} className="flex items-baseline gap-1.5">
               <dt className="text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
               <dd className="text-2xs font-semibold text-foreground">{v}</dd>
             </div>
           ))}
         </dl>
+        {device === "offline" && (
+          <DeviceOfflineBanner>
+            Force plate went offline at <span className="font-mono font-semibold">{PLATE_OFFLINE_AT}</span> — no left–right load for sit-to-stand {loadSpan(device).without}.
+          </DeviceOfflineBanner>
+        )}
 
-        <SummaryStrip name={name} open={open.length} />
+        <SummaryStrip name={name} open={open.length} device={device} />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
-          <VideoPanel className="lg:col-span-5" rep={rep} view={view} moment={moment} onView={setView} onMoment={setMoment} onSelect={(id) => pick(id)} />
-          <ReviewPanel className="lg:col-span-4" rep={rep} reviews={reviews} onReview={review} onSelect={(id) => pick(id)} />
+          <VideoPanel className="lg:col-span-5" rep={rep} view={view} moment={moment} device={device} onView={setView} onMoment={setMoment} onSelect={(id) => pick(id)} />
+          <ReviewPanel className="lg:col-span-4" rep={rep} reviews={reviews} device={device} onReview={review} onSelect={(id) => pick(id)} />
           <RangePanel className="lg:col-span-3" rep={rep} />
-          <SignalsPanel className="lg:col-span-5" rep={rep} moment={moment} onSelect={(id) => pick(id)} />
-          <MeasuresPanel className="lg:col-span-3" />
+          <SignalsPanel className="lg:col-span-5" rep={rep} moment={moment} device={device} onSelect={(id) => pick(id)} />
+          <MeasuresPanel className="lg:col-span-3" device={device} />
           <ClinicianPanel className="lg:col-span-4" plan={plan} approved={approved}
             onPlan={(p) => { setPlan(p); setApproved(false); setSigned(false); }}
             onApprove={(v) => { setApproved(v); if (!v) setSigned(false); }} />
         </div>
       </div>
 
-      <FullReport name={name} selected={selected} onSelect={(id) => pick(id, { scroll: true })} open={open} approved={approved} plan={plan}
+      <FullReport name={name} device={device} selected={selected} onSelect={(id) => pick(id, { scroll: true })} open={open} approved={approved} plan={plan}
         signed={signed} onSign={setSigned} onShare={share} />
     </div>
   );
@@ -240,7 +258,8 @@ function MiniChart({ title, value, bad, legend, children }: { title: string; val
 
 /* ── Summary strip ───────────────────────────────────────────────────── */
 
-function SummaryStrip({ name, open }: { name: string; open: number }) {
+function SummaryStrip({ name, open, device }: { name: string; open: number; device: DeviceMode }) {
+  const lr = lrFor(device);
   const kpis: { label: string; value: React.ReactNode; tone?: string; info: string; delta: React.ReactNode }[] = [
     {
       label: "Straighten", value: `${TODAY.lag}° short`, tone: TODAY.lag <= LIMIT.lag ? "text-success" : "text-warning",
@@ -248,9 +267,11 @@ function SummaryStrip({ name, open }: { name: string; open: number }) {
       delta: <Delta now={TODAY.lag} before={PREVIOUS.lag} lowerIsBetter unit="°" />,
     },
     {
-      label: "Left–right", value: `${TODAY.lr}%`, tone: TODAY.lr <= LIMIT.lr ? "text-success" : "text-warning",
-      info: `How unevenly the legs share the work: force-plate load on sit-to-stand and step length on the walk. Goal ${LIMIT.lr}% or less. Week 1: ${BASELINE.lr}%.`,
-      delta: <Delta now={TODAY.lr} before={PREVIOUS.lr} lowerIsBetter unit="%" />,
+      label: "Left–right",
+      value: lr.tag ? <>{lr.now}%<span className="ml-1 text-3xs font-semibold text-muted-foreground">{lr.tag}</span></> : `${lr.now}%`,
+      tone: lr.now <= LIMIT.lr ? "text-success" : "text-warning",
+      info: `How unevenly the legs share the work, from ${lr.source}. Goal ${LIMIT.lr}% or less. Week 1: ${lr.baseline}%.`,
+      delta: <Delta now={lr.now} before={lr.last} lowerIsBetter unit="%" />,
     },
     {
       label: "Pain", value: <>{TODAY.painBefore} → {TODAY.painAfter}<span className="text-xs text-muted-foreground"> /10</span></>, tone: "text-foreground",
@@ -320,8 +341,8 @@ function SummaryStrip({ name, open }: { name: string; open: number }) {
 
 const MOMENT_ORDER: Moment[] = [0, 1, 2, 3];
 
-function VideoPanel({ className, rep, view, moment, onView, onMoment, onSelect }: {
-  className?: string; rep: Rep; view: View; moment: Moment; onView: (v: View) => void; onMoment: (m: Moment) => void; onSelect: (id: string) => void;
+function VideoPanel({ className, rep, view, moment, device, onView, onMoment, onSelect }: {
+  className?: string; rep: Rep; view: View; moment: Moment; device: DeviceMode; onView: (v: View) => void; onMoment: (m: Moment) => void; onSelect: (id: string) => void;
 }) {
   const [showPose, setShowPose] = React.useState(true);
   const [playing, setPlaying] = React.useState(false);
@@ -357,7 +378,7 @@ function VideoPanel({ className, rep, view, moment, onView, onMoment, onSelect }
       }
     >
       <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
-        <RoomFrame rep={rep} view={shown} moment={moment} showPose={showPose} className="absolute inset-0" />
+        <RoomFrame rep={rep} view={shown} moment={moment} showPose={showPose} noLoad={!hasLoad(rep, device)} className="absolute inset-0" />
       </div>
       {/* Moments of the picked rep */}
       <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
@@ -398,7 +419,7 @@ function VideoPanel({ className, rep, view, moment, onView, onMoment, onSelect }
           })}
           {REPS.map((r) => (
             <button key={r.id} type="button" onClick={() => onSelect(r.id)} aria-label={`${repName(r)} at ${fmtClock(r.at)}`} title={`${repName(r)} · ${fmtClock(r.at)} · ${r.flex}°`}
-              className={cn("absolute bottom-1 size-2 -translate-x-1/2 rounded-full ring-1 ring-card transition-transform hover:scale-150", r.id === rep.id ? "scale-125 bg-foreground" : TONE_DOT[repTone(r)])}
+              className={cn("absolute bottom-1 size-2 -translate-x-1/2 rounded-full ring-1 ring-card transition-transform hover:scale-150", r.id === rep.id ? "scale-125 bg-foreground" : TONE_DOT[repTone(r, device)])}
               style={{ left: pct(r.at) }} />
           ))}
         </div>
@@ -410,7 +431,7 @@ function VideoPanel({ className, rep, view, moment, onView, onMoment, onSelect }
 
 /* ── Rep review ──────────────────────────────────────────────────────── */
 
-function RepPicker({ rep, onSelect }: { rep: Rep; onSelect: (id: string) => void }) {
+function RepPicker({ rep, device, onSelect }: { rep: Rep; device: DeviceMode; onSelect: (id: string) => void }) {
   /* One scrolling row: each movement type is labelled, followed by its reps.
      The picked rep is kept in view when it is chosen from elsewhere (timeline, video). */
   const activeRef = React.useRef<HTMLButtonElement>(null);
@@ -427,13 +448,14 @@ function RepPicker({ rep, onSelect }: { rep: Rep; onSelect: (id: string) => void
           </span>
           {repsOf(ex).map((r) => {
             const active = r.id === rep.id;
+            const scored = scoredChecks(r, device).length;
             return (
               <button key={r.id} ref={active ? activeRef : undefined} type="button" role="tab" aria-selected={active} onClick={() => onSelect(r.id)}
-                title={`${repName(r)} · ${r.flex}° · ${checksFor(r).length - failedChecks(r)}/${checksFor(r).length} checks`}
+                title={`${repName(r)} · ${r.flex}° · ${scored - failedChecks(r, device)}/${scored} checks${hasLoad(r, device) ? "" : " · no force-plate load"}`}
                 className={cn("flex h-8 w-9 shrink-0 items-center justify-center gap-1 rounded-md border text-xs font-bold text-foreground transition-colors duration-[var(--duration-fast)]",
                   active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40")}>
                 {r.n}
-                <span className={cn("size-1.5 rounded-full", TONE_DOT[repTone(r)])} />
+                <span className={cn("size-1.5 rounded-full", TONE_DOT[repTone(r, device)])} />
               </button>
             );
           })}
@@ -443,23 +465,30 @@ function RepPicker({ rep, onSelect }: { rep: Rep; onSelect: (id: string) => void
   );
 }
 
-function ReviewPanel({ className, rep, reviews, onReview, onSelect }: {
-  className?: string; rep: Rep; reviews: Reviews; onReview: (k: string, r: Review | null) => void; onSelect: (id: string) => void;
+function ReviewPanel({ className, rep, reviews, device, onReview, onSelect }: {
+  className?: string; rep: Rep; reviews: Reviews; device: DeviceMode; onReview: (k: string, r: Review | null) => void; onSelect: (id: string) => void;
 }) {
-  const checks = checksFor(rep);
-  const met = checks.filter((c) => c.ok).length;
+  const checks = checksFor(rep, device);
+  const scored = checks.filter((c) => !c.na);
+  const met = scored.filter((c) => c.ok).length;
   const findings = findingsFor(rep);
   const best = rep.id === TODAY.bestRom;
   return (
     <Panel className={className} title="Rep Review" meta="Pick a rep" action={<span className="flex items-center gap-1.5 text-3xs text-muted-foreground"><span className="size-1.5 rounded-full bg-success" />all met<span className="size-1.5 rounded-full bg-warning" />1 missed<span className="size-1.5 rounded-full bg-sev-critical" />2+</span>}>
-      <RepPicker rep={rep} onSelect={onSelect} />
+      <RepPicker rep={rep} device={device} onSelect={onSelect} />
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
-        <span className="truncate">{repName(rep)}: <span className="font-semibold text-foreground">{rep.flex}° · {met}/{checks.length} checks met</span></span>
+        <span className="truncate">{repName(rep)}: <span className="font-semibold text-foreground">{rep.flex}° · {met}/{scored.length} checks met</span></span>
         {best && <span className="ml-auto shrink-0 rounded bg-success/15 px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider text-success">Best bend</span>}
       </p>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
-          {checks.map((c) => (
+          {checks.map((c) => c.na ? (
+            <li key={c.label} className="flex items-center gap-2 rounded-md bg-muted/40 px-2 py-0.5" title="Not counted: the force plate gave no load for this rep">
+              <Unplug className="size-4 shrink-0 text-muted-foreground" aria-label="No data" />
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground">{c.label}</span>
+              <NeedsDevice device={PLATE} className="ml-auto truncate text-right text-2xs" />
+            </li>
+          ) : (
             <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-0.5", c.ok ? "bg-background" : "bg-sev-critical/[0.07]")}>
               {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />}
               <span className="shrink-0 text-xs font-semibold text-foreground">{c.label}</span>
@@ -554,7 +583,7 @@ function RangePanel({ className, rep }: { className?: string; rep: Rep }) {
 
 /* ── Signals ─────────────────────────────────────────────────────────── */
 
-function SignalsPanel({ className, rep, moment, onSelect }: { className?: string; rep: Rep; moment: Moment; onSelect: (id: string) => void }) {
+function SignalsPanel({ className, rep, moment, device, onSelect }: { className?: string; rep: Rep; moment: Moment; device: DeviceMode; onSelect: (id: string) => void }) {
   const series = React.useMemo(() => repSeries(rep), [rep]);
   const reps = repsOf(rep.ex);
   const byRep = reps.map((r) => ({ id: r.id, n: r.n, flex: r.flex }));
@@ -570,7 +599,7 @@ function SignalsPanel({ className, rep, moment, onSelect }: { className?: string
   const yStep = hi - lo > 20 ? 10 : 5;
   const yTicks = Array.from({ length: 8 }, (_, i) => Math.ceil(lo / yStep) * yStep + i * yStep).filter((v) => v <= hi);
   return (
-    <Panel className={className} title="Signals" meta={`${repName(rep)} · line: now`} action={<InfoTip text={METHOD_NOTE} />}
+    <Panel className={className} title="Signals" meta={`${repName(rep)} · line: now`} action={<InfoTip text={methodNote(device)} />}
       bodyClassName="grid grid-cols-2 grid-rows-2 gap-2 max-lg:auto-rows-[120px]">
       <MiniChart title="Knee angle" value={`${rep.flex}° · L ${rep.ex === "gait" ? HEALTHY.gaitSwing : rep.ex === "rom" ? HEALTHY.flex : rep.flex}°`}
         legend={<><Swatch c="bg-primary" />Right <Swatch c="border-info" dashed />Left <Swatch c="border-foreground" dashed />Aim {need}°</>}>
@@ -644,12 +673,12 @@ function measureFmt(key: MeasureKey, v: number) {
   return `${m.digits && !Number.isInteger(v) ? v.toFixed(m.digits) : v}${m.unit}`;
 }
 
-function MeasuresPanel({ className }: { className?: string }) {
+function MeasuresPanel({ className, device }: { className?: string; device: DeviceMode }) {
   return (
     <Panel className={className} title="Measures vs Goal" meta="week 1 → goal"
       action={<InfoTip text="Each bar runs from the patient's week-1 baseline (left) to their goal (right). The tick is the last visit. Patients are only compared with themselves." />}>
       <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto">
-        {MEASURES.map((m) => {
+        {measuresFor(device).map((m) => {
           const p = progressOf(m.baseline, m.goal, m.now);
           const last = progressOf(m.baseline, m.goal, m.last);
           const lowerIsBetter = m.goal < m.baseline;
@@ -768,15 +797,15 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
 /* ── Full report ─────────────────────────────────────────────────────── */
 
 function FullReport(props: {
-  name: string; selected: string; onSelect: (id: string) => void; open: { rep: Rep; f: Finding }[]; approved: boolean; plan: Plan; signed: boolean; onSign: (v: boolean) => void; onShare: () => void;
+  name: string; device: DeviceMode; selected: string; onSelect: (id: string) => void; open: { rep: Rep; f: Finding }[]; approved: boolean; plan: Plan; signed: boolean; onSign: (v: boolean) => void; onShare: () => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
-      <RecoverySection />
-      <RepTable selected={props.selected} onSelect={props.onSelect} />
+      <RecoverySection device={props.device} />
+      <RepTable device={props.device} selected={props.selected} onSelect={props.onSelect} />
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-        <DischargeCard className="lg:col-span-5" />
+        <DischargeCard className="lg:col-span-5" device={props.device} />
         <SignOffCard className="lg:col-span-7" {...props} />
       </section>
     </div>
@@ -786,14 +815,15 @@ function FullReport(props: {
 const CURVE_TABS: [Exclude<MeasureKey, "adherence">, string][] = [["flex", "Knee bend"], ["lag", "Straighten"], ["sts", "Sit-to-stand"], ["lr", "Left–right"]];
 
 /* Recovery across visits against the usual timeline after a knee replacement, plus pain. */
-function RecoverySection() {
+function RecoverySection({ device }: { device: DeviceMode }) {
   const [key, setKey] = React.useState<Exclude<MeasureKey, "adherence">>("flex");
-  const m = MEASURES.find((x) => x.key === key)!;
+  const m = measuresFor(device).find((x) => x.key === key)!;
+  const lrTag = lrFor(device).tag;
   const gw = goalWeek();
   const data = TIMELINE_WEEKS.map((wk) => {
     const v = VISITS.find((x) => x.wk === wk);
     const proj = key === "flex" && gw && wk >= PATIENT.week && wk <= gw ? Math.min(LIMIT.goalFlex, Math.round(TODAY.flex + ((LIMIT.goalFlex - TODAY.flex) * (wk - PATIENT.week)) / (gw - PATIENT.week))) : null;
-    return { wk, band: EXPECTED_BAND[key](wk), actual: v ? v[key] : null, proj };
+    return { wk, band: EXPECTED_BAND[key](wk), actual: v ? (key === "lr" ? lrOfVisit(v, device) : v[key]) : null, proj };
   });
   const domain: Record<typeof key, [number, number]> = { flex: [60, 135], lag: [0, 18], sts: [8, 30], lr: [0, 40] };
   const lowerIsBetter = m.goal < m.baseline;
@@ -829,9 +859,11 @@ function RecoverySection() {
           </ResponsiveContainer>
         </div>
         <p className="mt-1 flex flex-wrap gap-x-3 text-3xs text-muted-foreground">
-          <span><Swatch c="bg-primary" />{m.label}</span>
+          <span><Swatch c="bg-primary" />{m.label}{key === "lr" && lrTag && ` (${lrTag})`}</span>
           <span><Swatch c="bg-success/30" />Usual range</span>
           {key === "flex" && gw && <span><Swatch c="border-primary" dashed />At this pace: goal by week {gw}</span>}
+          {key === "lr" && device === "none" && <span>No force plate: step length on the walk, every visit</span>}
+          {key === "lr" && device === "offline" && <span>Today: no force-plate load on sit-to-stand {loadSpan(device).without}</span>}
         </p>
       </div>
       <div className="rounded-xl border border-border bg-card p-3 lg:col-span-4">
@@ -859,7 +891,7 @@ function RecoverySection() {
 }
 
 /* Every rep of the visit in one table. */
-function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected: string; onSelect: (id: string) => void }) {
   const cols: [string, string][] = [
     ["Rep", "Exercise and rep"], ["Time", "Time into the visit"], ["Bend", "Most knee bend, °"], ["Short", "Short of straight, °"], ["Speed", "Bend speed °/s, or lowering s"],
     ["Hold", "Hold at end range, s"], ["Hip", "Hip hike, cm"], ["Trunk", "Trunk lean, °"], ["L–R", "Left–right difference, %"], ["Checks", "Checks met"], ["Findings", "AI findings"],
@@ -881,8 +913,9 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
           </thead>
           <tbody>
             {REPS.map((r) => {
-              const checks = checksFor(r);
+              const checks = scoredChecks(r, device);
               const met = checks.filter((c) => c.ok).length;
+              const load = hasLoad(r, device);
               const fs = findingsFor(r);
               const need = EXERCISES[r.ex].need;
               return (
@@ -898,8 +931,10 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
                   <td className={cn(cell, r.ex === "rom" ? red(r.hold < LIMIT.hold) : "text-muted-foreground")}>{r.ex === "rom" ? r.hold.toFixed(1) : "—"}</td>
                   <td className={cn(cell, red(r.hipHike > LIMIT.hipHike))}>{r.hipHike.toFixed(1)}</td>
                   <td className={cn(cell, red(r.trunkLean > LIMIT.trunkLean))}>{r.trunkLean}</td>
-                  <td className={cn(cell, r.ex === "rom" ? "text-muted-foreground" : red(r.lr > LIMIT.lr))}>{r.ex === "rom" ? "—" : r.lr}</td>
-                  <td className={cn(cell, TONE_TEXT[repTone(r)])}>{met}/{checks.length}</td>
+                  <td className={cn(cell, r.ex === "rom" || !load ? "text-muted-foreground" : red(r.lr > LIMIT.lr))} title={load ? undefined : `Needs ${PLATE.toLowerCase()}`}>
+                    {r.ex === "rom" || !load ? "—" : r.lr}
+                  </td>
+                  <td className={cn(cell, TONE_TEXT[repTone(r, device)])}>{met}/{checks.length}</td>
                   <td className={cn(cell, "font-sans")}>
                     {fs.length ? (
                       <span className="flex flex-wrap gap-1">
@@ -917,23 +952,27 @@ function RepTable({ selected, onSelect }: { selected: string; onSelect: (id: str
   );
 }
 
-function DischargeCard({ className }: { className?: string }) {
-  const met = DISCHARGE.filter((d) => d.met).length;
+function DischargeCard({ className, device }: { className?: string; device: DeviceMode }) {
+  const criteria = dischargeFor(device);
+  const met = criteria.filter((d) => d.met).length;
   return (
     <div className={cn("flex flex-col rounded-xl border border-border bg-card p-3", className)}>
       <div className="mb-2 flex items-baseline gap-2">
         <h3 className="text-sm font-bold text-foreground">Discharge criteria</h3>
-        <span className="text-2xs text-muted-foreground">{met} of {DISCHARGE.length} met</span>
+        <span className="text-2xs text-muted-foreground">{met} of {criteria.length} met</span>
         <InfoTip text="What the patient needs to reach before they finish rehab. Set by the clinician for this patient." />
       </div>
       <div className="mb-2 h-1.5 rounded-full bg-muted">
-        <div className="h-full rounded-full bg-success" style={{ width: `${(met / DISCHARGE.length) * 100}%` }} />
+        <div className="h-full rounded-full bg-success" style={{ width: `${(met / criteria.length) * 100}%` }} />
       </div>
       <ul className="flex flex-col gap-0.5">
-        {DISCHARGE.map((d) => (
+        {criteria.map((d) => (
           <li key={d.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", d.met ? "bg-background" : "bg-muted/40")}>
             {d.met ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <span className="size-4 shrink-0 rounded-full border-2 border-muted-foreground/40" aria-label="Not yet" />}
-            <span className="truncate text-xs font-semibold text-foreground">{d.label}</span>
+            <span className="min-w-0 truncate text-xs font-semibold text-foreground">
+              {d.label}
+              {d.note && <span className="ml-1.5 text-3xs font-normal text-muted-foreground">{d.note}</span>}
+            </span>
             <span className="ml-auto shrink-0 font-mono text-2xs text-muted-foreground">{d.target}</span>
             <span className={cn("w-16 shrink-0 text-right font-mono text-2xs font-semibold", d.met ? "text-success" : "text-foreground")}>{d.now}</span>
           </li>

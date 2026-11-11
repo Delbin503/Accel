@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
-  Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, Eraser, FileDown, Info, PenLine, Play, Pause, Share2, Target, TrendingDown, TrendingUp, TriangleRight, X,
+  Check, ChevronLeft, ChevronRight, CircleCheck, CircleDashed, CircleX, Eraser, FileDown, Info, PenLine, Play, Pause, Share2, Target, TrendingDown, TrendingUp, TriangleRight, WifiOff, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
-  BEST_SWING, FAULTS, GOAL_SCORE, GOLFER, GRADE_BANDS, LESSONS, METHOD_NOTE, PHASES, PREVIOUS, SESSION, STATS, SWINGS, TARGET, WEAKEST_SWING, WINDOW,
-  findingsFor, fmtClock, fundamentalsFor, gradeOf, inRange, inSequence, phaseTime, rankedFaults, sequenceSeries, shapeOf, smash, spineLost,
-  swingByN, swingScore, swingSeries, tempo, xFactor, type FaultKey, type Finding, type Phase, type Swing,
+  BEST_SWING, FAULTS, GOAL_SCORE, GOLFER, GRADE_BANDS, LESSONS, MONITOR_OFFLINE_FROM, PHASES, PREVIOUS, SESSION, STATS, SWINGS, TARGET, WEAKEST_SWING, WINDOW,
+  findingsFor, fmtClock, fundamentalsFor, gradeOf, hasBallFor, inRange, inSequence, methodNoteFor, phaseTime, rankedFaults, sequenceSeries, shapeOf, smash, spineLost,
+  statsFor, swingByN, swingScore, swingSeries, tempo, xFactor, type FaultKey, type Finding, type HasBall, type Phase, type Swing,
 } from "./golfSession";
+import { useDeviceMode, type DeviceMode } from "../assessment/deviceState";
+import { DeviceMissing, DeviceOfflineBanner, DevicePreviewSwitch, DeviceStatusValue, NeedsDevice } from "../assessment/deviceMode";
 import { Dispersion, DrawLayer, SwingFrame, type Mark, type Tool, type View } from "./golfParts";
 
 /* Swing Analysis — one golfer's lesson at an indoor bay, laid out like the
@@ -35,6 +37,16 @@ const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-criti
 const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "sev-critical": "bg-sev-critical/15" } as const;
 const TONE_DOT = { success: "bg-success", warning: "bg-warning", "sev-critical": "bg-sev-critical" } as const;
 
+/* The bay's launch monitor gives the ball and club numbers; the cameras give
+   everything about the body. It can be connected, missing for the whole
+   lesson ("none"), or drop out from swing 7 ("offline"). */
+const DEVICE = "Launch monitor";
+const OFFLINE_AT = fmtClock(swingByN(MONITOR_OFFLINE_FROM).at);
+/** "1–6" and "7–10": the swings with and without ball data when the monitor dropped out. */
+const WITH_BALL = `1–${MONITOR_OFFLINE_FROM - 1}`;
+const WITHOUT_BALL = `${MONITOR_OFFLINE_FROM}–${SWINGS.length}`;
+type Monitor = { mode: DeviceMode; hasBall: HasBall };
+
 type Review = "confirmed" | "dismissed";
 type Reviews = Record<string, Review>;
 const reviewKey = (n: number, k: FaultKey) => `${n}:${k}`;
@@ -48,6 +60,8 @@ export function GolfDashboard() {
   const [phase, setPhase] = React.useState<Phase>("impact");
   const [view, setView] = React.useState<View>("dtl");
   const [reviews, setReviews] = React.useState<Reviews>({});
+  const [mode, setMode] = useDeviceMode();
+  const monitor = React.useMemo<Monitor>(() => ({ mode, hasBall: hasBallFor(mode) }), [mode]);
   const swing = swingByN(selected);
 
   /* A coaching "See swing" link picks the swing and the view and moment that show the fault. */
@@ -70,6 +84,7 @@ export function GolfDashboard() {
             </span>
           </PageHeader.Content>
           <PageHeader.Actions>
+            <DevicePreviewSwitch device={DEVICE} mode={mode} onChange={setMode} />
             <Button variant="outline" size="sm" onClick={() => toast.success(`Shared with ${golfer.name}`, { description: `${SESSION.club} lesson · ${SESSION.date}` })}>
               <Share2 className="size-4" />
               Share with golfer
@@ -82,7 +97,10 @@ export function GolfDashboard() {
         </PageHeader>
 
         <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
-          {([["Academy / bay", `${GOLFER.academy} · ${SESSION.bay}`], ["Club", SESSION.club], ["Coach", SESSION.coach], ["Date", SESSION.date], ["Cameras", SESSION.cameras], ["Launch monitor", SESSION.launchMonitor]] as const).map(([k, v]) => (
+          {([
+            ["Academy / bay", `${GOLFER.academy} · ${SESSION.bay}`], ["Club", SESSION.club], ["Coach", SESSION.coach], ["Date", SESSION.date], ["Cameras", SESSION.cameras],
+            [DEVICE, <DeviceStatusValue mode={mode} connected={SESSION.launchMonitor} offlineFrom={OFFLINE_AT} />],
+          ] as const).map(([k, v]) => (
             <div key={k} className="flex items-baseline gap-1.5">
               <dt className="text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
               <dd className="text-2xs font-semibold text-foreground">{v}</dd>
@@ -90,19 +108,25 @@ export function GolfDashboard() {
           ))}
         </dl>
 
-        <SummaryStrip reviews={reviews} golfer={golfer} />
+        {mode === "offline" && (
+          <DeviceOfflineBanner>
+            {DEVICE} went offline at {OFFLINE_AT} — no ball or club data for swings {WITHOUT_BALL}. Averages use swings {WITH_BALL}.
+          </DeviceOfflineBanner>
+        )}
+
+        <SummaryStrip reviews={reviews} golfer={golfer} monitor={monitor} />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
-          <VideoPanel className="lg:col-span-5" swing={swing} view={view} phase={phase} onView={setView} onPhase={setPhase} onSelect={setSelected} />
-          <ReviewPanel className="lg:col-span-4" swing={swing} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
-          <BallPanel className="lg:col-span-3" swing={swing} onSelect={setSelected} />
-          <SignalsPanel className="lg:col-span-5" swing={swing} phase={phase} />
+          <VideoPanel className="lg:col-span-5" swing={swing} ball={monitor.hasBall(swing)} view={view} phase={phase} onView={setView} onPhase={setPhase} onSelect={setSelected} />
+          <ReviewPanel className="lg:col-span-4" swing={swing} ball={monitor.hasBall(swing)} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
+          <BallPanel className="lg:col-span-3" swing={swing} monitor={monitor} onSelect={setSelected} />
+          <SignalsPanel className="lg:col-span-5" swing={swing} phase={phase} mode={mode} />
           <FundamentalsPanel className="lg:col-span-3" />
-          <CoachingPanel className="lg:col-span-4" onSee={showFault} />
+          <CoachingPanel className="lg:col-span-4" monitor={monitor} onSee={showFault} />
         </div>
       </div>
 
-      <FullReport selected={selected} onSelect={setSelected} />
+      <FullReport selected={selected} onSelect={setSelected} monitor={monitor} />
     </div>
   );
 }
@@ -186,15 +210,27 @@ function useGolfer() {
   return { ...GOLFER, name, initials };
 }
 
-function SummaryStrip({ reviews, golfer }: { reviews: Reviews; golfer: typeof GOLFER }) {
-  const s = STATS;
-  const open = SWINGS.flatMap((w) => findingsFor(w).map((f) => reviewKey(w.n, f.key))).filter((k) => !reviews[k]).length;
+function SummaryStrip({ reviews, golfer, monitor }: { reviews: Reviews; golfer: typeof GOLFER; monitor: Monitor }) {
+  const { mode, hasBall } = monitor;
+  const s = React.useMemo(() => statsFor(SWINGS, hasBall), [hasBall]);
+  const open = SWINGS.flatMap((w) => findingsFor(w, hasBall(w)).map((f) => reviewKey(w.n, f.key))).filter((k) => !reviews[k]).length;
+  /* With the monitor dropped out, its averages only cover the swings it saw:
+     the card says so, and the change vs last lesson moves to the hover note. */
+  const ballNote = (delta: React.ReactNode) => (mode === "offline" ? <span className="text-warning">Swings {WITH_BALL} only</span> : delta);
+  const vsLast = (d: number, unit: string) => ` ${d >= 0 ? "+" : "−"}${Math.abs(d).toFixed(1)}${unit} vs ${PREVIOUS.date}.`;
+  /* No monitor: two camera measures take the ball cards' places. */
+  const ballKpis = mode === "none" ? [
+    { label: "X-factor", value: `${Math.round(s.xFactor)}°`, tone: inRange(s.xFactor, TARGET.xFactor) ? "text-success" : "text-warning", info: "Average gap between chest and pelvis turn at the top, from the cameras.", delta: <Delta now={+s.xFactor.toFixed(1)} before={PREVIOUS.xFactor} unit="°" /> },
+    { label: "Sway", value: `${s.sway.toFixed(1)} cm`, tone: s.sway <= TARGET.pelvisSway[1] ? "text-success" : "text-warning", info: "Average pelvis shift away from the target at the top, from the cameras.", delta: <Delta now={+s.sway.toFixed(1)} before={PREVIOUS.sway} lowerIsBetter unit=" cm" /> },
+  ] : [
+    { label: "Club speed", value: `${s.clubSpeed.toFixed(1)} mph`, tone: "text-purple", info: `Average club head speed at impact, from the launch monitor${mode === "offline" ? ` (swings ${WITH_BALL}: it went offline at ${OFFLINE_AT}).${vsLast(s.clubSpeed - PREVIOUS.clubSpeed, " mph")}` : "."}`, delta: ballNote(<Delta now={+s.clubSpeed.toFixed(1)} before={PREVIOUS.clubSpeed} unit=" mph" />) },
+    { label: "Carry", value: `${Math.round(s.carry)} yd`, tone: "text-foreground", info: `Average carry distance, from the launch monitor${mode === "offline" ? ` (swings ${WITH_BALL}: it went offline at ${OFFLINE_AT}).${vsLast(Math.round(s.carry) - PREVIOUS.carry, " yd")}` : "."}`, delta: ballNote(<Delta now={Math.round(s.carry)} before={PREVIOUS.carry} unit=" yd" />) },
+  ];
   const kpis: { label: string; value: string; tone?: string; info: string; delta: React.ReactNode }[] = [
     { label: "Swings", value: String(s.swings), info: "Swings the cameras picked up and analysed in this lesson.", delta: <span className="text-muted-foreground">{fmtClock(SESSION.lengthSec)} recorded</span> },
-    { label: "Consistency", value: `${s.consistency}/100`, tone: "text-info", info: "How alike the swings were: the spread of turn, posture, path and tempo against each target's range. 100 = every swing the same.", delta: <Delta now={s.consistency} before={PREVIOUS.consistency} /> },
+    { label: "Consistency", value: `${s.consistency}/100`, tone: "text-info", info: `How alike the swings were: the spread of turn, posture${mode === "none" ? "" : mode === "offline" ? `, path (swings ${WITH_BALL})` : ", path"} and tempo against each target's range. 100 = every swing the same.`, delta: <Delta now={s.consistency} before={PREVIOUS.consistency} /> },
     { label: "Tempo", value: `${s.tempo.toFixed(1)} : 1`, tone: inRange(s.tempo, TARGET.tempo) ? "text-success" : "text-warning", info: "Backswing time divided by downswing time, averaged. Around 3 : 1 is typical.", delta: <Delta now={+s.tempo.toFixed(1)} before={PREVIOUS.tempo} lowerIsBetter /> },
-    { label: "Club speed", value: `${s.clubSpeed.toFixed(1)} mph`, tone: "text-purple", info: "Average club head speed at impact, from the launch monitor.", delta: <Delta now={+s.clubSpeed.toFixed(1)} before={PREVIOUS.clubSpeed} unit=" mph" /> },
-    { label: "Carry", value: `${Math.round(s.carry)} yd`, tone: "text-foreground", info: "Average carry distance, from the launch monitor.", delta: <Delta now={Math.round(s.carry)} before={PREVIOUS.carry} unit=" yd" /> },
+    ...ballKpis,
     { label: "To review", value: String(open), tone: open ? "text-warning" : "text-success", info: "AI findings the coach hasn't confirmed or dismissed yet.", delta: <span className="text-muted-foreground">{open ? "Confirm or dismiss" : "All reviewed"}</span> },
   ];
   return (
@@ -231,8 +267,8 @@ function SummaryStrip({ reviews, golfer }: { reviews: Reviews; golfer: typeof GO
 
 const PHASE_ORDER = PHASES.map((p) => p.key);
 
-function VideoPanel({ className, swing, view, phase, onView, onPhase, onSelect }: {
-  className?: string; swing: Swing; view: View; phase: Phase; onView: (v: View) => void; onPhase: (p: Phase) => void; onSelect: (n: number) => void;
+function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSelect }: {
+  className?: string; swing: Swing; ball: boolean; view: View; phase: Phase; onView: (v: View) => void; onPhase: (p: Phase) => void; onSelect: (n: number) => void;
 }) {
   const [showPose, setShowPose] = React.useState(true);
   const [tool, setTool] = React.useState<Tool>("none");
@@ -287,7 +323,7 @@ function VideoPanel({ className, swing, view, phase, onView, onPhase, onSelect }
       }
     >
       <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
-        <SwingFrame swing={swing} view={view} phase={phase} showPose={showPose} className="absolute inset-0">
+        <SwingFrame swing={swing} view={view} phase={phase} showPose={showPose} ball={ball} className="absolute inset-0">
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </SwingFrame>
         {tool !== "none" && (
@@ -342,9 +378,10 @@ function VideoPanel({ className, swing, view, phase, onView, onPhase, onSelect }
 
 /* ── Swing review ────────────────────────────────────────────────────── */
 
-type CheckRow = { label: string; ok: boolean; note: string };
+/** `ok` null: the check needs the launch monitor and this swing has no data, so it's neither met nor missed. */
+type CheckRow = { label: string; ok: boolean | null; note: string };
 
-function checksFor(s: Swing): CheckRow[] {
+function checksFor(s: Swing, ball: boolean): CheckRow[] {
   return [
     { label: "Setup", ok: inRange(s.spineAddr, TARGET.spineAddr), note: `Spine ${s.spineAddr}° · aim ${TARGET.spineAddr.join("–")}°` },
     { label: "Turn", ok: inRange(s.chestTurn, TARGET.chestTurn) && inRange(s.pelvisTurn, TARGET.pelvisTurn) && inRange(xFactor(s), TARGET.xFactor), note: `Chest ${s.chestTurn}° · pelvis ${s.pelvisTurn}° · X ${xFactor(s)}°` },
@@ -352,18 +389,21 @@ function checksFor(s: Swing): CheckRow[] {
     { label: "Posture hold", ok: spineLost(s) <= TARGET.spineLost[1] && s.pelvisThrust <= TARGET.pelvisThrust[1], note: `Lost ${spineLost(s)}° · hips ${s.pelvisThrust.toFixed(1)} cm to ball` },
     { label: "Sequence", ok: inSequence(s), note: inSequence(s) ? "Pelvis → chest → arms → club" : "Chest before pelvis" },
     { label: "Tempo", ok: inRange(tempo(s), TARGET.tempo), note: `${tempo(s).toFixed(1)} : 1 · ${s.backswing.toFixed(2)} s / ${s.downswing.toFixed(2)} s` },
-    { label: "Club path", ok: inRange(s.clubPath, TARGET.clubPath), note: `${signed(s.clubPath)}° ${s.clubPath < 0 ? "out-to-in" : "in-to-out"}` },
+    ball
+      ? { label: "Club path", ok: inRange(s.clubPath, TARGET.clubPath), note: `${signed(s.clubPath)}° ${s.clubPath < 0 ? "out-to-in" : "in-to-out"}` }
+      : { label: "Club path", ok: null, note: "" },
   ];
 }
 
 const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-sev-critical" } as const;
 
-function ReviewPanel({ className, swing, reviews, onReview, onSelect }: {
-  className?: string; swing: Swing; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (n: number) => void;
+function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
+  className?: string; swing: Swing; ball: boolean; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (n: number) => void;
 }) {
-  const checks = checksFor(swing);
+  const checks = checksFor(swing, ball);
   const met = checks.filter((c) => c.ok).length;
-  const findings = findingsFor(swing);
+  const scored = checks.filter((c) => c.ok !== null).length;
+  const findings = findingsFor(swing, ball);
   // Keep the picked swing in view in the sideways-scrolling row, wherever it was picked from.
   const strip = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
@@ -393,12 +433,18 @@ function ReviewPanel({ className, swing, reviews, onReview, onSelect }: {
         })}
       </div>
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
-        <span>Swing {swing.n}: <span className="font-semibold text-foreground">{score}/100 · {swing.carry} yd · {shapeOf(swing)}</span> · {met}/{checks.length} met</span>
+        <span>Swing {swing.n}: <span className="font-semibold text-foreground">{score}/100{ball && ` · ${swing.carry} yd · ${shapeOf(swing)}`}</span> · {met}/{scored} met</span>
         {tag && <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", swing.n === BEST_SWING ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{tag}</span>}
       </p>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
-          {checks.map((c) => (
+          {checks.map((c) => c.ok === null ? (
+            <li key={c.label} className="flex items-center gap-2 rounded-md bg-background px-2 py-1">
+              <CircleDashed className="size-4 shrink-0 text-muted-foreground" aria-label="Not measured" />
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground">{c.label}</span>
+              <NeedsDevice device={DEVICE} className="ml-auto truncate text-right text-2xs" />
+            </li>
+          ) : (
             <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok ? "bg-background" : "bg-sev-critical/[0.07]")}>
               {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />}
               <span className="shrink-0 text-xs font-semibold text-foreground">{c.label}</span>
@@ -451,7 +497,17 @@ function FindingRow({ n, f, status, onReview }: { n: number; f: Finding; status?
 
 /* ── Ball & club ─────────────────────────────────────────────────────── */
 
-function BallPanel({ className, swing, onSelect }: { className?: string; swing: Swing; onSelect: (n: number) => void }) {
+function BallPanel({ className, swing, monitor, onSelect }: { className?: string; swing: Swing; monitor: Monitor; onSelect: (n: number) => void }) {
+  const { mode, hasBall } = monitor;
+  const plotted = React.useMemo(() => SWINGS.filter(hasBall), [hasBall]);
+  if (mode === "none") {
+    return (
+      <Panel className={className} title="Ball & Club" meta={`Swing ${swing.n} · no launch monitor`}>
+        <DeviceMissing device={DEVICE} unit={SESSION.bay} what="Ball and club data (speed, carry, launch, spin, path, face) weren't captured for this lesson." />
+      </Panel>
+    );
+  }
+  const ball = hasBall(swing);
   const shape = shapeOf(swing);
   const cells: [string, string, boolean?][] = [
     ["Club speed", `${swing.clubSpeed} mph`],
@@ -465,18 +521,28 @@ function BallPanel({ className, swing, onSelect }: { className?: string; swing: 
     ["Shape", shape, shape === "Slice" || shape === "Hook"],
   ];
   return (
-    <Panel className={className} title="Ball & Club" meta={`Swing ${swing.n} · launch monitor`}>
+    <Panel className={className} title="Ball & Club" meta={mode === "offline" ? `Swing ${swing.n} · swings ${WITH_BALL} plotted` : `Swing ${swing.n} · launch monitor`}>
       <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
-        <Dispersion swings={SWINGS} focus={swing.n} onSelect={onSelect} className="max-h-full" />
+        <Dispersion swings={plotted} focus={swing.n} onSelect={onSelect} className="max-h-full" />
       </div>
-      <dl className="mt-2 grid shrink-0 grid-cols-3 gap-x-2 gap-y-1">
-        {cells.map(([k, v, bad]) => (
-          <div key={k} className="min-w-0">
-            <dt className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
-            <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{v}</dd>
+      {ball ? (
+        <dl className="mt-2 grid shrink-0 grid-cols-3 gap-x-2 gap-y-1">
+          {cells.map(([k, v, bad]) => (
+            <div key={k} className="min-w-0">
+              <dt className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
+              <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{v}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <div role="status" className="mt-2 flex shrink-0 items-center gap-2 rounded-lg border border-dashed border-border px-2.5 py-2.5">
+          <WifiOff className="size-4 shrink-0 text-warning" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground">No ball data for swing {swing.n}</p>
+            <p className="text-2xs text-muted-foreground">Launch monitor offline from {OFFLINE_AT}. Pick one of swings {WITH_BALL} for ball and club numbers.</p>
           </div>
-        ))}
-      </dl>
+        </div>
+      )}
       <ul className="mt-1.5 flex shrink-0 flex-wrap gap-x-3 gap-y-0.5 text-3xs text-muted-foreground">
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-success" />Straight</li>
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-info" />Draw / fade</li>
@@ -492,7 +558,7 @@ const SYNC = { syncId: "golf-signals", syncMethod: "value" } as const;
 const T_TICKS = [-1.5, -1, -0.5, 0];
 const SEQ_TONE = { pelvis: "var(--info)", chest: "var(--warning)", arms: "var(--purple)", club: "var(--foreground)" } as const;
 
-function SignalsPanel({ className, swing, phase }: { className?: string; swing: Swing; phase: Phase }) {
+function SignalsPanel({ className, swing, phase, mode }: { className?: string; swing: Swing; phase: Phase; mode: DeviceMode }) {
   const series = React.useMemo(() => swingSeries(swing), [swing]);
   const seq = React.useMemo(() => sequenceSeries(swing), [swing]);
   const now = phaseTime(swing, phase);
@@ -509,7 +575,7 @@ function SignalsPanel({ className, swing, phase }: { className?: string; swing: 
   );
   const xAxis = <XAxis dataKey="t" type="number" domain={WINDOW} ticks={T_TICKS} {...AXIS} />;
   return (
-    <Panel className={className} title="Swing Signals" meta={`Swing ${swing.n} · dashed: top, impact`} action={<InfoTip text={METHOD_NOTE} />}
+    <Panel className={className} title="Swing Signals" meta={`Swing ${swing.n} · dashed: top, impact`} action={<InfoTip text={methodNoteFor(mode)} />}
       bodyClassName="grid grid-cols-2 grid-rows-2 gap-2 max-lg:auto-rows-[120px]">
       <MiniChart title="Rotation" value={`Chest ${swing.chestTurn}° · pelvis ${swing.pelvisTurn}°`} legend={<><Swatch c="bg-warning" />Chest <Swatch c="bg-info" />Pelvis · ° from address</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -28, bottom: -6 }} {...SYNC}>
@@ -618,8 +684,11 @@ function FundamentalsPanel({ className }: { className?: string }) {
 
 /* ── Coaching ────────────────────────────────────────────────────────── */
 
-function CoachingPanel({ className, onSee }: { className?: string; onSee: (n: number, k: FaultKey) => void }) {
-  const faults = rankedFaults(SWINGS).slice(0, 2);
+function CoachingPanel({ className, monitor, onSee }: { className?: string; monitor: Monitor; onSee: (n: number, k: FaultKey) => void }) {
+  const faults = rankedFaults(SWINGS, monitor.hasBall).slice(0, 2);
+  /* Without carry from the launch monitor, a fault's cost is the swing score it takes off. */
+  const cost = (f: (typeof faults)[number]) =>
+    monitor.mode === "none" ? (f.costPts > 0 ? `−${f.costPts} pts` : null) : f.costYd > 0 ? `−${f.costYd} yd` : null;
   const strongest = [...fundamentalsFor(SWINGS)].sort((a, b) => b.score - a.score).slice(0, 2);
   return (
     <Panel className={className} title="Coaching" meta="What to work on next">
@@ -630,7 +699,7 @@ function CoachingPanel({ className, onSee }: { className?: string; onSee: (n: nu
               <span className="grid size-4 shrink-0 place-items-center rounded bg-sev-critical/15 font-mono text-3xs font-bold text-sev-critical">{i + 1}</span>
               <span className="text-xs font-bold text-foreground">{f.label}</span>
               <span className="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">
-                {f.count}/{SWINGS.length} swings{f.costYd > 0 && <> · <span className="text-sev-critical">−{f.costYd} yd</span></>}
+                {f.count}/{SWINGS.length} swings{cost(f) && <> · <span className="text-sev-critical">{cost(f)}</span></>}
               </span>
             </div>
             <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">{f.what}</p>
@@ -655,19 +724,20 @@ function CoachingPanel({ className, onSee }: { className?: string; onSee: (n: nu
 
 /* ── Full report ─────────────────────────────────────────────────────── */
 
-function FullReport({ selected, onSelect }: { selected: number; onSelect: (n: number) => void }) {
+function FullReport({ selected, onSelect, monitor }: { selected: number; onSelect: (n: number) => void; monitor: Monitor }) {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
-      <CompareSection selected={selected} />
-      <SwingTable selected={selected} onSelect={onSelect} />
-      <ProgressSection />
+      <CompareSection selected={selected} monitor={monitor} />
+      <SwingTable selected={selected} onSelect={onSelect} monitor={monitor} />
+      <ProgressSection monitor={monitor} />
     </div>
   );
 }
 
 /* Two swings side by side, stopped at the same moment. */
-function CompareSection({ selected }: { selected: number }) {
+function CompareSection({ selected, monitor }: { selected: number; monitor: Monitor }) {
+  const { mode, hasBall } = monitor;
   const [a, setA] = React.useState(BEST_SWING);
   const [b, setB] = React.useState(selected === BEST_SWING ? WEAKEST_SWING : selected);
   const [view, setView] = React.useState<View>("dtl");
@@ -689,7 +759,10 @@ function CompareSection({ selected }: { selected: number }) {
       </Select>
     </div>
   );
-  type Row = { label: string; a: number; b: number; unit: string; target?: readonly [number, number]; lowerIsBetter?: boolean; digits?: number };
+  /* null: that swing has no launch-monitor data. */
+  type Row = { label: string; a: number | null; b: number | null; unit: string; target?: readonly [number, number]; lowerIsBetter?: boolean; digits?: number };
+  const ballA = hasBall(A);
+  const ballB = hasBall(B);
   const rows: Row[] = [
     { label: "Swing score", a: swingScore(A), b: swingScore(B), unit: "", digits: 0 },
     { label: "Chest turn", a: A.chestTurn, b: B.chestTurn, unit: "°", target: TARGET.chestTurn, digits: 0 },
@@ -700,11 +773,14 @@ function CompareSection({ selected }: { selected: number }) {
     { label: "Spine lost", a: spineLost(A), b: spineLost(B), unit: "°", target: TARGET.spineLost, digits: 0 },
     { label: "Hips to ball", a: A.pelvisThrust, b: B.pelvisThrust, unit: " cm", target: TARGET.pelvisThrust },
     { label: "Tempo", a: tempo(A), b: tempo(B), unit: " : 1", target: TARGET.tempo },
-    { label: "Club path", a: A.clubPath, b: B.clubPath, unit: "°", target: TARGET.clubPath },
-    { label: "Club speed", a: A.clubSpeed, b: B.clubSpeed, unit: " mph", digits: 0 },
-    { label: "Carry", a: A.carry, b: B.carry, unit: " yd", digits: 0 },
+    // Launch-monitor rows: left off with no monitor, "—" for a swing it missed.
+    ...(mode === "none" ? [] : [
+      { label: "Club path", a: ballA ? A.clubPath : null, b: ballB ? B.clubPath : null, unit: "°", target: TARGET.clubPath },
+      { label: "Club speed", a: ballA ? A.clubSpeed : null, b: ballB ? B.clubSpeed : null, unit: " mph", digits: 0 },
+      { label: "Carry", a: ballA ? A.carry : null, b: ballB ? B.carry : null, unit: " yd", digits: 0 },
+    ]),
   ];
-  const fmt = (v: number, d = 1) => v.toFixed(d);
+  const fmt = (v: number | null, d = 1) => (v === null ? "—" : v.toFixed(d));
   return (
     <section className="rounded-xl border border-border bg-card">
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
@@ -730,11 +806,13 @@ function CompareSection({ selected }: { selected: number }) {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {[A, B].map((s, i) => (
               <figure key={i} className="overflow-hidden rounded-lg border border-border">
-                <div className="aspect-video"><SwingFrame swing={s} view={view} phase={phase} hud={false} /></div>
+                <div className="aspect-video"><SwingFrame swing={s} view={view} phase={phase} hud={false} ball={hasBall(s)} /></div>
                 <figcaption className="flex items-center gap-1.5 border-t border-border px-2 py-1 text-2xs">
                   <span className={cn("size-2 rounded-full", i === 0 ? "bg-success" : "bg-info")} />
                   <span className="font-semibold text-foreground">Swing {s.n}</span>
-                  <span className="text-muted-foreground">{swingScore(s)}/100 · {s.carry} yd · {shapeOf(s)}</span>
+                  <span className="text-muted-foreground">
+                    {swingScore(s)}/100{hasBall(s) ? ` · ${s.carry} yd · ${shapeOf(s)}` : mode === "offline" ? " · no ball data" : ""}
+                  </span>
                 </figcaption>
               </figure>
             ))}
@@ -753,14 +831,15 @@ function CompareSection({ selected }: { selected: number }) {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const d = r.b - r.a;
-                const out = (v: number) => r.target && !inRange(+v.toFixed(r.digits ?? 1), r.target);
+                const d = r.a === null || r.b === null ? null : r.b - r.a;
+                const out = (v: number | null) => v !== null && r.target && !inRange(+v.toFixed(r.digits ?? 1), r.target);
+                const val = (v: number | null) => (v === null ? <span className="text-muted-foreground">—</span> : <>{fmt(v, r.digits)}{r.unit}</>);
                 return (
                   <tr key={r.label} className="border-b border-border/60 last:border-0 font-mono text-2xs">
                     <td className="py-1 pr-2 font-sans text-xs text-foreground">{r.label}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.a) ? "text-sev-critical" : "text-foreground")}>{fmt(r.a, r.digits)}{r.unit}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.b) ? "text-sev-critical" : "text-foreground")}>{fmt(r.b, r.digits)}{r.unit}</td>
-                    <td className="py-1 pr-2 text-right text-muted-foreground">{Math.abs(d) < 0.05 ? "—" : signed(d, r.digits ?? 1)}</td>
+                    <td className={cn("py-1 pr-2 text-right", out(r.a) ? "text-sev-critical" : "text-foreground")}>{val(r.a)}</td>
+                    <td className={cn("py-1 pr-2 text-right", out(r.b) ? "text-sev-critical" : "text-foreground")}>{val(r.b)}</td>
+                    <td className="py-1 pr-2 text-right text-muted-foreground">{d === null || Math.abs(d) < 0.05 ? "—" : signed(d, r.digits ?? 1)}</td>
                     <td className="py-1 text-right text-muted-foreground">{r.target ? `${r.target[0]}–${r.target[1]}` : "—"}</td>
                   </tr>
                 );
@@ -775,11 +854,15 @@ function CompareSection({ selected }: { selected: number }) {
 }
 
 /* Every swing of the lesson in one table. */
-function SwingTable({ selected, onSelect }: { selected: number; onSelect: (n: number) => void }) {
+/* The launch monitor's columns, between the body measures and the findings. */
+const BALL_COLS: [string, string][] = [["Club", "Club speed, mph"], ["Carry", "Carry, yd"], ["Path", "Club path, °"], ["Face", "Face to target, °"], ["Shape", "Ball flight"]];
+
+function SwingTable({ selected, onSelect, monitor }: { selected: number; onSelect: (n: number) => void; monitor: Monitor }) {
+  const { mode, hasBall } = monitor;
   const cols: [string, string][] = [
     ["#", "Swing"], ["Score", "Swing score"], ["Chest", "Chest turn, °"], ["Pelvis", "Pelvis turn, °"], ["X", "X-factor, °"], ["Sway", "Pelvis sway, cm"],
-    ["Head", "Head move, cm"], ["Spine", "Spine angle lost, °"], ["Hips", "Hips toward ball, cm"], ["Tempo", "Backswing : downswing"], ["Club", "Club speed, mph"],
-    ["Carry", "Carry, yd"], ["Path", "Club path, °"], ["Face", "Face to target, °"], ["Shape", "Ball flight"], ["Faults", "AI findings"],
+    ["Head", "Head move, cm"], ["Spine", "Spine angle lost, °"], ["Hips", "Hips toward ball, cm"], ["Tempo", "Backswing : downswing"],
+    ...(mode === "none" ? [] : BALL_COLS), ["Faults", "AI findings"],
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-sev-critical" : "text-muted-foreground");
@@ -799,7 +882,8 @@ function SwingTable({ selected, onSelect }: { selected: number; onSelect: (n: nu
           <tbody>
             {SWINGS.map((s) => {
               const sc = swingScore(s);
-              const faults = findingsFor(s);
+              const ball = hasBall(s);
+              const faults = findingsFor(s, ball);
               return (
                 <tr key={s.n} tabIndex={0} onClick={() => onSelect(s.n)} onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
                   className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted")}>
@@ -813,11 +897,19 @@ function SwingTable({ selected, onSelect }: { selected: number; onSelect: (n: nu
                   <td className={cn(cell, red(spineLost(s) > TARGET.spineLost[1]))}>{spineLost(s)}</td>
                   <td className={cn(cell, red(s.pelvisThrust > TARGET.pelvisThrust[1]))}>{s.pelvisThrust.toFixed(1)}</td>
                   <td className={cn(cell, red(!inRange(tempo(s), TARGET.tempo)))}>{tempo(s).toFixed(1)}</td>
-                  <td className={cn(cell, "text-muted-foreground")}>{s.clubSpeed}</td>
-                  <td className={cn(cell, "text-foreground")}>{s.carry}</td>
-                  <td className={cn(cell, red(!inRange(s.clubPath, TARGET.clubPath)))}>{signed(s.clubPath)}</td>
-                  <td className={cn(cell, "text-muted-foreground")}>{signed(s.faceAngle)}</td>
-                  <td className={cn(cell, red(shapeOf(s) === "Slice" || shapeOf(s) === "Hook"))}>{shapeOf(s)}</td>
+                  {mode === "none" ? null : ball ? (
+                    <>
+                      <td className={cn(cell, "text-muted-foreground")}>{s.clubSpeed}</td>
+                      <td className={cn(cell, "text-foreground")}>{s.carry}</td>
+                      <td className={cn(cell, red(!inRange(s.clubPath, TARGET.clubPath)))}>{signed(s.clubPath)}</td>
+                      <td className={cn(cell, "text-muted-foreground")}>{signed(s.faceAngle)}</td>
+                      <td className={cn(cell, red(shapeOf(s) === "Slice" || shapeOf(s) === "Hook"))}>{shapeOf(s)}</td>
+                    </>
+                  ) : (
+                    <td colSpan={BALL_COLS.length} className={cn(cell, "font-sans text-muted-foreground")} title={`${DEVICE} offline from ${OFFLINE_AT}`}>
+                      No data · launch monitor offline
+                    </td>
+                  )}
                   <td className={cn(cell, "font-sans")}>
                     {faults.length ? (
                       <span className="flex flex-wrap gap-1">
@@ -836,12 +928,22 @@ function SwingTable({ selected, onSelect }: { selected: number; onSelect: (n: nu
 }
 
 /* Score and key measures across the golfer's lessons, plus the coach's notes. */
-function ProgressSection() {
+function ProgressSection({ monitor }: { monitor: Monitor }) {
+  const { mode, hasBall } = monitor;
   const [note, setNote] = React.useState("Good lesson. Turn is much better. Next: chair drill every practice to stop the hips moving toward the ball.");
-  const small: { key: "spineLost" | "xFactor" | "clubSpeed"; title: string; unit: string; band?: readonly [number, number]; lowerIsBetter?: boolean }[] = [
+  /* This lesson's club speed covers only the swings the launch monitor saw. */
+  const lessons = React.useMemo(() => {
+    if (mode !== "offline") return LESSONS;
+    const s = statsFor(SWINGS, hasBall);
+    return LESSONS.map((l, i) => (i === LESSONS.length - 1 ? { ...l, clubSpeed: +s.clubSpeed.toFixed(1), carry: Math.round(s.carry) } : l));
+  }, [mode, hasBall]);
+  const small: { key: "spineLost" | "xFactor" | "clubSpeed" | "sway"; title: string; unit: string; band?: readonly [number, number]; lowerIsBetter?: boolean }[] = [
     { key: "spineLost", title: "Spine angle lost", unit: "°", band: TARGET.spineLost, lowerIsBetter: true },
     { key: "xFactor", title: "X-factor", unit: "°", band: TARGET.xFactor },
-    { key: "clubSpeed", title: "Club speed", unit: " mph" },
+    // No launch monitor: a camera measure in place of club speed.
+    mode === "none"
+      ? { key: "sway", title: "Pelvis sway", unit: " cm", band: TARGET.pelvisSway, lowerIsBetter: true }
+      : { key: "clubSpeed", title: "Club speed", unit: " mph" },
   ];
   return (
     <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
@@ -866,8 +968,8 @@ function ProgressSection() {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:col-span-4 lg:grid-cols-1">
         {small.map((m) => {
-          const first = LESSONS[0][m.key];
-          const last = LESSONS[LESSONS.length - 1][m.key];
+          const first = lessons[0][m.key];
+          const last = lessons[lessons.length - 1][m.key];
           const better = m.lowerIsBetter ? last < first : last > first;
           return (
             <div key={m.key} className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
@@ -878,7 +980,7 @@ function ProgressSection() {
               </div>
               <div className="h-12 min-w-0 flex-1">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={LESSONS} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                  <LineChart data={lessons} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                     {m.band && <ReferenceArea y1={m.band[0]} y2={m.band[1]} fill="var(--success)" fillOpacity={0.1} strokeOpacity={0} />}
                     <YAxis hide domain={["dataMin - 2", "dataMax + 2"]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(_, p) => String(p?.[0]?.payload?.date ?? "")} formatter={(v) => [`${v}${m.unit}`, m.title]} />
