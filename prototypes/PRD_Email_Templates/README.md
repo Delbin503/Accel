@@ -37,6 +37,8 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 10 | **Account Deletion Request** | P1 | Member requests deletion — sent to the Owner to action. |
 | 11 | **Account Deleted** | P1 | After deletion, confirming access and personal data are gone. |
 | 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
+| 21 | **Payment Successful** | P1 | A subscription charge goes through — sign-up checkout, renewal, or an upgrade. The receipt, with the invoice PDF attached. |
+| 22 | **Plan Changed** | P1 | Owner switches plan from Billing — upgrade or downgrade, listing anything the Reduce usage modal let go of. |
 | 14 | **Critical Incident Alert** | P1 | The moment a critical detection opens a case — to that site's critical rota. |
 | 15 | **Daily Activity Digest** | P2 | 23:59 every day, with the Daily Activity Report attached as a PDF. |
 | 16 | **Weekly Summary** | P2 | Every Monday 08:00 — detections, cases and SLA performance for the week before. |

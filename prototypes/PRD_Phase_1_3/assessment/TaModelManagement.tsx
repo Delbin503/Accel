@@ -1916,47 +1916,7 @@ function ModelDetailPanel({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-
-                {/* Step Pool */}
-                <div>
-                  <SectionHeader
-                    label="Step Pool"
-                    count={poolSteps.length}
-                    description="Drag steps → sequence to build pipeline"
-                  />
-                  {draft.steps.length === 0 ? (
-                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
-                      <UploadCloud className="size-7 opacity-20" />
-                      <p className="text-center text-sm">Click "+ Add Step" to upload</p>
-                    </div>
-                  ) : poolSteps.length === 0 ? (
-                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
-                      <Check className="size-6 opacity-20" />
-                      <p className="text-center text-sm">All steps placed in sequence</p>
-                    </div>
-                  ) : (
-                    <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
-                      {poolSteps.map((step) => (
-                        <PoolStepCard
-                          key={step.id}
-                          step={step}
-                          editable
-                          isDragging={poolDragId === step.id}
-                          onEdit={() => setEditStepId(step.id)}
-                          onRemove={() =>
-                            patchDraft({
-                              steps: draft.steps.filter((s) => s.id !== step.id),
-                              sequenceIds: draft.sequenceIds.filter((id) => id !== step.id),
-                            })
-                          }
-                          onDragStart={() => handlePoolDragStart(step.id)}
-                          onDragEnd={handlePoolDragEnd}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
 
                 {/* Sequence */}
                 <div>
@@ -2008,6 +1968,46 @@ function ModelDetailPanel({
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Step Pool */}
+                <div>
+                  <SectionHeader
+                    label="Step Pool"
+                    count={poolSteps.length}
+                    description="Drag steps into the sequence to build the pipeline"
+                  />
+                  {draft.steps.length === 0 ? (
+                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
+                      <UploadCloud className="size-7 opacity-20" />
+                      <p className="text-center text-sm">Click "+ Add Step" to upload</p>
+                    </div>
+                  ) : poolSteps.length === 0 ? (
+                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
+                      <Check className="size-6 opacity-20" />
+                      <p className="text-center text-sm">All steps placed in sequence</p>
+                    </div>
+                  ) : (
+                    <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
+                      {poolSteps.map((step) => (
+                        <PoolStepCard
+                          key={step.id}
+                          step={step}
+                          editable
+                          isDragging={poolDragId === step.id}
+                          onEdit={() => setEditStepId(step.id)}
+                          onRemove={() =>
+                            patchDraft({
+                              steps: draft.steps.filter((s) => s.id !== step.id),
+                              sequenceIds: draft.sequenceIds.filter((id) => id !== step.id),
+                            })
+                          }
+                          onDragStart={() => handlePoolDragStart(step.id)}
+                          onDragEnd={handlePoolDragEnd}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

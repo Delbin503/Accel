@@ -1,0 +1,42 @@
+Accel — Your plan has changed
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+{{orgName}}'s Accel subscription is moving from {{oldPlan}} to {{newPlan}}.
+The new price of {{newPrice}} applies from {{effectiveDate}}.
+
+Plan change
+-----------
+Plan:          {{oldPlan}} -> {{newPlan}}
+New price:     {{newPrice}}
+Takes effect:  {{effectiveDate}}
+New limits:    {{newLimits}}
+Changes made:  {{usageChanges}}
+Changed by:    {{changedBy}} on {{changedAt}}
+
+Need something back?
+--------------------
+Deactivated sites keep their recordings for 30 days, and turned-off cameras
+stay on their site. To bring them back, upgrade again from Billing before
+then — everything returns as it was. If you didn't expect this change, contact
+us right away.
+
+View billing: {{billingUrl}}
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

@@ -1,0 +1,42 @@
+Accel — Payment successful
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+Thanks — we've received your payment of {{amountPaid}} for {{orgName}}'s
+Accel subscription. Your {{planName}} plan is active, and the paid invoice is
+attached to this email as a PDF.
+
+Receipt
+-------
+Amount paid:     {{amountPaid}}
+Plan:            {{planName}} · {{billingCycle}}
+Billing period:  {{billingPeriod}}
+Paid with:       {{cardBrand}} ending {{cardLast4}}
+Paid on:         {{paidAt}}
+Invoice:         {{invoiceId}}
+
+What happens next
+-----------------
+Your next charge is {{nextChargeAmount}} on {{nextChargeDate}}, to the same
+card. Auto-renewal can be switched off, and seats or sites changed, at any time
+from Billing in Accel. We never ask for card details by email.
+
+View invoice: {{invoiceUrl}}
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

@@ -30,6 +30,8 @@ import ownershipDeclinedHtml from "./templates/ownership-transfer-declined.html?
 import accountDeletionRequestHtml from "./templates/account-deletion-request.html?raw";
 import accountDeletedHtml from "./templates/account-deleted.html?raw";
 import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
+import paymentSuccessfulHtml from "./templates/payment-successful.html?raw";
+import planChangedHtml from "./templates/plan-changed.html?raw";
 import incidentCaseReportHtml from "./templates/incident-case-report.html?raw";
 import criticalIncidentHtml from "./templates/critical-incident.html?raw";
 import dailyDigestHtml from "./templates/daily-activity-digest.html?raw";
@@ -271,6 +273,34 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{invoiceId}}", "{{amountDue}}", "{{billingPeriod}}", "{{cardBrand}}", "{{cardLast4}}", "{{declineReason}}", "{{declinedAt}}", "{{retryDate}}", "{{gracePeriodDays}}", "{{billingUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/update-payment-method.html",
     html: updatePaymentMethodHtml,
+  },
+  {
+    id: "payment-successful",
+    name: "Payment Successful",
+    kind: "email",
+    subject: "Payment successful · {{planName}}",
+    category: "Billing & Subscription",
+    priority: "P1",
+    whenSent:
+      "When a subscription charge goes through: checkout at sign-up (alongside the in-app Payment successful modal), each renewal, and the prorated charge on an upgrade. The paid invoice PDF is attached.",
+    audience: "The workspace Owner / billing contact.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{planName}}", "{{billingCycle}}", "{{amountPaid}}", "{{billingPeriod}}", "{{cardBrand}}", "{{cardLast4}}", "{{invoiceId}}", "{{paidAt}}", "{{nextChargeDate}}", "{{nextChargeAmount}}", "{{invoiceUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/payment-successful.html",
+    html: paymentSuccessfulHtml,
+  },
+  {
+    id: "plan-changed",
+    name: "Plan Changed",
+    kind: "email",
+    subject: "Your Accel plan is changing to {{newPlan}}",
+    category: "Billing & Subscription",
+    priority: "P1",
+    whenSent:
+      "When the Owner switches plan from Billing → Change plan — an upgrade (charged now) or a downgrade (from the renewal date), including what the Reduce usage modal let go of.",
+    audience: "The workspace Owner / billing contact.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{oldPlan}}", "{{newPlan}}", "{{newPrice}}", "{{effectiveDate}}", "{{newLimits}}", "{{usageChanges}}", "{{changedBy}}", "{{changedAt}}", "{{billingUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/plan-changed.html",
+    html: planChangedHtml,
   },
   {
     id: "critical-incident",

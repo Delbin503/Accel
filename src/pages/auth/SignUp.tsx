@@ -70,6 +70,7 @@ import {
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
+import { PaymentSuccessModal, type PaymentReceipt } from "@/components/shared/PaymentSuccessModal";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/shared/AuthBackground";
@@ -269,6 +270,8 @@ export default function SignUpPage({
 
   /* Plan + payment */
   const [picked, setPicked] = React.useState<CloudPlanId>("professional-cloud");
+  /* Set once checkout charges the card; shows the payment-success modal before site setup. */
+  const [receipt, setReceipt] = React.useState<PaymentReceipt | null>(null);
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
@@ -416,10 +419,24 @@ export default function SignUpPage({
   function confirmCheckout() {
     setError(null);
     if (!agreedCheckoutTos)
-      return setError("Please accept the Terms to confirm checkout.");
-    toast.success("Subscription activated", {
-      description: `${plan.name} plan · ${cycle === "annual" ? "billed annually" : "billed monthly"}`,
+      return setError("Please accept the Terms of Service and Privacy Policy to confirm checkout.");
+    // Same total as the review step's "Total due today".
+    const monthlyPerSite = cycle === "annual" ? Math.round(plan.pricePerYear / 12) : plan.pricePerMonth;
+    const totalDue = monthlyPerSite + additionalSeats * monthlyPerSeat;
+    const digits = cardNumber.replace(/\s/g, "");
+    const brand = digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card";
+    setReceipt({
+      amount: `S$${totalDue.toLocaleString()}`,
+      planName: plan.name,
+      cycle,
+      card: `${brand} ···· ${digits.slice(-4)}`,
+      reference: `INV-${new Date().getFullYear()}-${String(totalDue).padStart(4, "0").slice(-4)}${digits.slice(-2)}`,
+      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
     });
+  }
+
+  function continueAfterPayment() {
+    setReceipt(null);
     setStep("site");
   }
 
@@ -1244,6 +1261,10 @@ export default function SignUpPage({
                   I agree to{" "}
                   <a href="#" className="text-primary underline">
                     Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-primary underline">
+                    Privacy Policy
                   </a>
                   .
                 </span>
@@ -1263,6 +1284,7 @@ export default function SignUpPage({
             </Button>
           </div>
         </div>
+        <PaymentSuccessModal receipt={receipt} onContinue={continueAfterPayment} continueLabel="Continue to site setup" />
       </WizardShell>
     );
   }
@@ -1516,10 +1538,7 @@ export default function SignUpPage({
             assigned seat{invites.length === 0 ? "" : "s"}
           </div>
 
-          <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-4 py-3.5">
-            <Button variant="ghost" onClick={finish}>
-              Skip for now
-            </Button>
+          <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-end gap-2 border-t border-border bg-card px-4 py-3.5">
             <Button onClick={finish} className="h-10 gap-1.5">
               <CheckCircle2 className="size-3.5" />
               Finish & Enter Dashboard

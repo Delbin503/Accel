@@ -29,6 +29,10 @@ import {
   type Invoice, type PlanTier,
 } from "@/mocks/licenses";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
+import { ReduceUsageModal } from "./ReduceUsageModal";
+import { overLimits, type UsageMember, type UsageSite } from "./usageLimits";
+
+const PLAN_RANK: Record<PlanTier, number> = { starter: 0, professional: 1, enterprise: 2 };
 
 /* ── Mock camera usage per subscription (hardcoded for demo) ─────────────── */
 
@@ -993,10 +997,14 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
 
 /* ── Plan card (available plans / resubscribe) ────────────────────────────── */
 
-function PlanCard({ tier, cycle, previous, onSelect }: {
+function PlanCard({ tier, cycle, previous, current = false, currentTier, onSelect }: {
   tier: PlanTier;
   cycle: "monthly" | "annual";
   previous: boolean;
+  /** The account's active plan — shown, but not selectable. */
+  current?: boolean;
+  /** The active plan, to word the button as an upgrade or a downgrade. */
+  currentTier?: PlanTier;
   onSelect: () => void;
 }) {
   const plan = PLANS[tier];
@@ -1006,7 +1014,7 @@ function PlanCard({ tier, cycle, previous, onSelect }: {
   return (
     <div className={cn(
       "relative flex flex-col rounded-xl border bg-card p-5 transition-colors",
-      plan.highlight ? "border-primary/50" : "border-border"
+      current ? cn(color.border, color.bg) : plan.highlight ? "border-primary/50" : "border-border"
     )}>
       {plan.highlight && (
         <span className="absolute -top-2.5 left-5 rounded-full bg-primary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary-foreground">
@@ -1023,9 +1031,12 @@ function PlanCard({ tier, cycle, previous, onSelect }: {
             <p className="text-2xs text-muted-foreground">{plan.tagline}</p>
           </div>
         </div>
-        {previous && (
-          <span className="flex-shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Previous
+        {(previous || current) && (
+          <span className={cn(
+            "flex-shrink-0 rounded-full border px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider",
+            current ? cn(color.border, color.text) : "border-border bg-muted text-muted-foreground"
+          )}>
+            {current ? "Current" : "Previous"}
           </span>
         )}
       </div>
@@ -1041,14 +1052,18 @@ function PlanCard({ tier, cycle, previous, onSelect }: {
           </li>
         ))}
       </ul>
-      <Button
-        onClick={onSelect}
-        variant={plan.highlight ? "default" : "outline"}
-        className="mt-5 w-full gap-1.5"
-      >
-        {previous ? "Resubscribe" : "Switch"} to {plan.name}
-        <ArrowRight className="size-3.5" />
-      </Button>
+      {current ? (
+        <Button disabled variant="outline" className="mt-5 w-full">Current plan</Button>
+      ) : (
+        <Button
+          onClick={onSelect}
+          variant={plan.highlight ? "default" : "outline"}
+          className="mt-5 w-full gap-1.5"
+        >
+          {previous ? "Resubscribe to" : currentTier && PLAN_RANK[tier] < PLAN_RANK[currentTier] ? "Downgrade to" : currentTier ? "Upgrade to" : "Switch to"} {plan.name}
+          <ArrowRight className="size-3.5" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -1143,16 +1158,19 @@ export default function BillingPage() {
   const [planTier, setPlanTier] = React.useState<PlanTier>(ACCOUNT_SUBSCRIPTION.planTier);
   const [cancelOpen, setCancelOpen] = React.useState(false);
   const [resumeOpen, setResumeOpen] = React.useState(false);
-  const [endNowOpen, setEndNowOpen] = React.useState(false);
   const [showPlans, setShowPlans] = React.useState(false);
   const [planCycle, setPlanCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
   const [purchaseTier, setPurchaseTier] = React.useState<PlanTier | null>(null);
 
+  /* ── Plan changes while active: downgrades must fit the smaller plan first ── */
+  const [seats, setSeats] = React.useState(ACCOUNT_SUBSCRIPTION.seats);
+  const [reduceTier, setReduceTier] = React.useState<PlanTier | null>(null);
+  const [downgradeTier, setDowngradeTier] = React.useState<PlanTier | null>(null);
+
   /* ── Billing cycle — monthly can switch to annual in place ────────────── */
-  const [billingCycle, setBillingCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
-  const [renewsDisplay, setRenewsDisplay] = React.useState(ACCOUNT_SUBSCRIPTION.renewsDisplay);
-  const [switchAnnualOpen, setSwitchAnnualOpen] = React.useState(false);
-  const [issuedInvoices, setIssuedInvoices] = React.useState<Invoice[]>([]);
+  const [billingCycle] = React.useState<BillingCycle>(ACCOUNT_SUBSCRIPTION.billingCycle);
+  const [renewsDisplay] = React.useState(ACCOUNT_SUBSCRIPTION.renewsDisplay);
+  const [issuedInvoices] = React.useState<Invoice[]>([]);
 
   /* ── Multi-card wallet state ──────────────────────────────────────────── */
   const [cards, setCards] = React.useState<SavedCard[]>(INITIAL_CARDS);
@@ -1169,29 +1187,26 @@ export default function BillingPage() {
 
   /* ── Aggregates (account-wide, across all sites) ──────────────────────── */
   const activeSubs = subs.filter((s) => s.status !== "cancelled");
-  const totalSeats = activeSubs.reduce((s, x) => s + x.seats.owner + x.seats.admin + x.seats.user, 0);
-  const totalUsers = MOCK_USERS.length;
+  /* What the account uses now — checked against a smaller plan's limits on downgrade. */
+  const usageSites: UsageSite[] = activeSubs
+    .map((x) => ({ id: x.id, name: x.siteName, cameras: USAGE_DATA[x.id]?.usedCameras ?? 0 }));
+  const siteNames = usageSites.map((x) => x.name);
+  const members: UsageMember[] = MOCK_USERS
+    .map((u) => ({ id: u.id, name: u.fullName, email: u.email, role: u.role }));
+  const seatCount = seats.owner + seats.admin + seats.user;
+  const seatsChanged = seats !== ACCOUNT_SUBSCRIPTION.seats;
+  const totalSeats = seatsChanged ? seatCount : activeSubs.reduce((s, x) => s + x.seats.owner + x.seats.admin + x.seats.user, 0);
+  const totalUsers = members.length;
   const totalCameras = Object.values(USAGE_DATA).reduce((s, d) => s + d.usedCameras, 0);
-  const totalNvrs = activeSubs.reduce((s, x) => s + (USAGE_DATA[x.id]?.usedNvrs ?? 0), 0);
+  const totalNvrs = usageSites.reduce((s, x) => s + (USAGE_DATA[x.id]?.usedNvrs ?? 0), 0);
 
   /* ── Account subscription + upcoming invoice ──────────────────────────── */
   const acct = ACCOUNT_SUBSCRIPTION;
   const activePlan = PLANS[planTier];
   const isAnnual = billingCycle === "annual";
   const cycleLabel = isAnnual ? "Annual" : "Monthly";
-  const { lines: acctLines, total: acctTotal } = cycleCharges(planTier, acct.seats, billingCycle);
+  const { lines: acctLines, total: acctTotal } = cycleCharges(planTier, seats, billingCycle);
   const perCycle = isAnnual ? "year" : "month";
-
-  // Switching today: the annual term starts now, the unused monthly days are credited.
-  const periodEnd = new Date(acct.nextInvoiceDate);
-  const switchDate = new Date(periodEnd);
-  switchDate.setDate(periodEnd.getDate() - acct.daysLeftInPeriod);
-  const annualRenewal = new Date(switchDate);
-  annualRenewal.setFullYear(switchDate.getFullYear() + 1);
-  const formatDay = (d: Date) => d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const monthlyTotal = cycleCharges(planTier, acct.seats, "monthly").total;
-  const switchCredit = Math.round((monthlyTotal * acct.daysLeftInPeriod) / acct.daysInPeriod);
-  const annualSaving = monthlyTotal * 12 - cycleCharges(planTier, acct.seats, "annual").total;
 
   const nextChargeDate = isAnnual ? renewsDisplay : acct.nextInvoiceDate;
   const nextInvoice: Invoice = {
@@ -1207,8 +1222,8 @@ export default function BillingPage() {
     planName: activePlan.name,
     planTier: planTier,
     billingCycle,
-    seats: acct.seats,
-    sites: acct.sites,
+    seats,
+    sites: siteNames,
     amount: acctTotal,
   };
   const AcctIcon = PLAN_ICONS[planTier];
@@ -1278,42 +1293,31 @@ export default function BillingPage() {
     toast.success("Subscription resumed", { description: `Your ${activePlan.name} plan will renew as normal.` });
   }
 
-  function endSubscriptionNow() {
-    setAccountStatus("cancelled");
-    setEndNowOpen(false);
-    setShowPlans(false);
-    toast.message("Subscription ended", { description: "View plans to reactivate your account." });
+  /* Picking another plan while active: upgrades are bought now; downgrades
+     must fit the smaller plan's limits first. When they don't, the reduce-usage
+     modal says what's over and links to the page that fixes each one. */
+  function selectPlan(tier: PlanTier) {
+    if (tier === planTier) return;
+    if (PLAN_RANK[tier] > PLAN_RANK[planTier]) return setPurchaseTier(tier);
+    const over = overLimits(tier, usageSites, members);
+    if (over.sites || over.cameras || over.seats) setReduceTier(tier);
+    else setDowngradeTier(tier);
   }
 
-  function confirmSwitchToAnnual(cardId: string) {
-    const card = cards.find((c) => c.id === cardId);
-    const annual = cycleCharges(planTier, acct.seats, "annual");
-    const dueToday = annual.total - switchCredit;
-    const renews = formatDay(annualRenewal);
-    setIssuedInvoices((list) => [
-      {
-        id: "INV-2026-007",
-        issuedDisplay: formatDay(switchDate),
-        periodDisplay: `${formatDay(switchDate).slice(3)} – ${renews.slice(3)}`,
-        dueDisplay: formatDay(switchDate),
-        status: "paid",
-        paymentMethod: card ? `${card.brand} ending ${card.last4}` : acct.paymentMethod,
-        planName: activePlan.name,
-        planTier,
-        billingCycle: "annual",
-        seats: acct.seats,
-        sites: acct.sites,
-        amount: dueToday,
-        credit: switchCredit > 0 ? { label: `Unused monthly time (${acct.daysLeftInPeriod} days)`, amount: switchCredit } : undefined,
-      },
-      ...list,
-    ]);
-    setBillingCycle("annual");
-    setRenewsDisplay(renews);
-    setSwitchAnnualOpen(false);
-    toast.success("Switched to annual billing", {
-      description: `$${dueToday.toLocaleString()} charged${card ? ` to ${card.brand} ···· ${card.last4}` : ""}. Renews ${renews}.`,
-    });
+  function applyDowngrade(tier: PlanTier) {
+    const limit = PLANS[tier].userLimit;
+    // Unassigned seats drop so the paid seats fit the plan; every member keeps a seat.
+    if (limit !== "unlimited" && seatCount > limit) {
+      setSeats({
+        owner: members.filter((m) => m.role === "owner").length,
+        admin: members.filter((m) => m.role === "admin").length,
+        user: members.filter((m) => m.role === "user").length,
+      });
+    }
+    setPlanTier(tier);
+    setDowngradeTier(null);
+    setShowPlans(false);
+    toast.success(`Switched to ${PLANS[tier].name}`, { description: `The new price applies from ${renewsDisplay}.` });
   }
 
   function confirmPurchase(cardId: string) {
@@ -1461,22 +1465,12 @@ export default function BillingPage() {
                   <Button size="sm" onClick={() => setResumeOpen(true)} className="gap-1.5">
                     <RotateCcw className="size-3.5" /> Resume subscription
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEndNowOpen(true)} className="gap-1.5 text-muted-foreground hover:text-sev-critical">
-                    End now
-                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
-                  {!isAnnual && (
-                    <Button size="sm" onClick={() => setSwitchAnnualOpen(true)} className="gap-1.5">
-                      <CalendarClock className="size-3.5" /> Switch to annual
-                      {annualSaving > 0 && (
-                        <span className="rounded-full bg-primary-foreground/20 px-1.5 py-px text-3xs font-bold uppercase tracking-wider">
-                          Save ${annualSaving.toLocaleString()}/yr
-                        </span>
-                      )}
-                    </Button>
-                  )}
+                  <Button size="sm" variant="outline" onClick={() => setShowPlans((v) => !v)} className="gap-1.5">
+                    <LayoutGrid className="size-3.5" /> {showPlans ? "Hide plans" : "Change plan"}
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -1490,6 +1484,29 @@ export default function BillingPage() {
             </div>
           </div>
 
+          {/* Available plans — change plan while active */}
+          {showPlans && !cancelling && (
+            <div>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-md font-bold text-foreground">Available plans</h3>
+                <p className="text-xs text-muted-foreground">Billed {cycleLabel.toLowerCase()}</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {(["starter", "professional", "enterprise"] as PlanTier[]).map((tier) => (
+                  <PlanCard
+                    key={tier}
+                    tier={tier}
+                    cycle={billingCycle}
+                    previous={false}
+                    current={tier === planTier}
+                    currentTier={planTier}
+                    onSelect={() => selectPlan(tier)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {cancelling && (
             <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
@@ -1501,10 +1518,10 @@ export default function BillingPage() {
 
           {/* KPI strip */}
           <KpiGrid cols={4}>
-            <KpiCard label="Active Sites" value={activeSubs.length} sub={`On ${activePlan.name} plan`} accent="primary" />
+            <KpiCard label="Active Sites" value={usageSites.length} sub={`On ${activePlan.name} plan`} accent="primary" />
             <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users assigned`} accent="info" />
-            <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${activeSubs.length} sites`} accent="warning" />
-            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${activeSubs.length} sites`} accent="purple" />
+            <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${usageSites.length} sites`} accent="warning" />
+            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} accent="purple" />
           </KpiGrid>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
@@ -1530,7 +1547,7 @@ export default function BillingPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{activePlan.name} plan</p>
-                  <p className="text-2xs text-muted-foreground">{cycleLabel} · {acct.sites.length} sites</p>
+                  <p className="text-2xs text-muted-foreground">{cycleLabel} · {siteNames.length} sites</p>
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
               </button>
@@ -1605,7 +1622,7 @@ export default function BillingPage() {
         description={
           <>
             Are you sure you want to cancel <strong className="text-foreground">{activePlan.name}</strong>? It stays active until{" "}
-            <strong className="text-foreground">{renewsDisplay}</strong>, then all {acct.sites.length} sites are suspended.
+            <strong className="text-foreground">{renewsDisplay}</strong>, then all {siteNames.length} sites are suspended.
           </>
         }
         confirmLabel="Cancel subscription"
@@ -1626,19 +1643,28 @@ export default function BillingPage() {
         onConfirm={resumeSubscription}
       />
 
+      {reduceTier && (
+        <ReduceUsageModal
+          tier={reduceTier}
+          currentTier={planTier}
+          sites={usageSites}
+          members={members}
+          onClose={() => setReduceTier(null)}
+        />
+      )}
+
       <ConfirmDialog
-        open={endNowOpen}
-        onOpenChange={setEndNowOpen}
-        destructive
-        title="End subscription now?"
+        open={downgradeTier !== null}
+        onOpenChange={(v) => !v && setDowngradeTier(null)}
+        title={`Downgrade to ${downgradeTier ? PLANS[downgradeTier].name : ""}?`}
         description={
           <>
-            Are you sure you want to end <strong className="text-foreground">{activePlan.name}</strong> today instead of on {renewsDisplay}? There&apos;s
-            no refund for the remaining period.
+            Your sites, cameras and seats already fit the {downgradeTier ? PLANS[downgradeTier].name : ""} plan. The lower price applies from{" "}
+            <strong className="text-foreground">{renewsDisplay}</strong>.
           </>
         }
-        confirmLabel="End now"
-        onConfirm={endSubscriptionNow}
+        confirmLabel="Downgrade"
+        onConfirm={() => downgradeTier && applyDowngrade(downgradeTier)}
       />
 
       <PurchasePlanModal
@@ -1649,20 +1675,6 @@ export default function BillingPage() {
         onAddCard={() => setAddCardOpen(true)}
         onConfirm={confirmPurchase}
       />
-
-      {switchAnnualOpen && (
-        <SwitchToAnnualModal
-          tier={planTier}
-          seats={acct.seats}
-          credit={switchCredit}
-          daysLeft={acct.daysLeftInPeriod}
-          renewsOn={formatDay(annualRenewal)}
-          cards={cards}
-          onClose={() => setSwitchAnnualOpen(false)}
-          onAddCard={() => setAddCardOpen(true)}
-          onConfirm={confirmSwitchToAnnual}
-        />
-      )}
 
       <AddCardModal open={addCardOpen} onClose={() => setAddCardOpen(false)} onSave={addCard} />
       <InvoiceDetailDrawer invoice={activeInvoice} onRetryPayment={handleRetryPayment} onClose={() => setActiveInvoice(null)} />
