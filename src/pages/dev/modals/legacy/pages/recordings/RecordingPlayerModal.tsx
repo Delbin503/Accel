@@ -105,7 +105,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
               }}
             />
             <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-              <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
+              <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-severity-critical" : "bg-white/60")} />
               {isPlaying ? "Playing" : "Paused"}
             </span>
             <button
@@ -157,16 +157,16 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 className="group/track relative flex h-4 w-full cursor-pointer items-center"
               >
                 <div className="absolute inset-x-0 h-1 rounded-full bg-white/25" />
-                <div className="absolute left-0 h-1 rounded-full bg-sev-critical" style={{ width: `${progress}%` }} />
+                <div className="absolute left-0 h-1 rounded-full bg-severity-critical" style={{ width: `${progress}%` }} />
                 {periods.map((p) => (
                   <span key={p.label + p.at} title={p.label}
                     className={cn("absolute size-1.5 -translate-x-1/2 rounded-full",
                       p.tone === "info" && "bg-info",
                       p.tone === "warning" && "bg-warning",
-                      p.tone === "critical" && "bg-sev-critical")}
+                      p.tone === "critical" && "bg-severity-critical")}
                     style={{ left: `${p.at * 100}%` }} />
                 ))}
-                <span className="absolute size-3 -translate-x-1/2 scale-0 rounded-full bg-sev-critical transition-transform group-hover/track:scale-100"
+                <span className="absolute size-3 -translate-x-1/2 scale-0 rounded-full bg-severity-critical transition-transform group-hover/track:scale-100"
                   style={{ left: `${progress}%` }} />
               </div>
 
@@ -228,7 +228,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 <span className={cn("size-2 shrink-0 rounded-full",
                   p.tone === "info" && "bg-info",
                   p.tone === "warning" && "bg-warning",
-                  p.tone === "critical" && "bg-sev-critical")} />
+                  p.tone === "critical" && "bg-severity-critical")} />
                 <span className="min-w-0 flex-1 truncate text-base text-foreground">{p.label}</span>
                 <span className="shrink-0 font-mono text-2xs text-muted-foreground">
                   {fmtClock(Math.round(p.at * totalSec))}

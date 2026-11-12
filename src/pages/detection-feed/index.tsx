@@ -90,7 +90,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
             className={cn(
               "absolute border-2",
               box.variant === "person"  ? "border-info bg-info/10"
-              : box.variant === "vehicle" ? "border-purple bg-purple/10"
+              : box.variant === "vehicle" ? "border-violet bg-violet/10"
               : "border-primary bg-primary/10"
             )}
             style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
@@ -99,7 +99,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
             className={cn(
               "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
               box.variant === "person"  ? "bg-info"
-              : box.variant === "vehicle" ? "bg-purple"
+              : box.variant === "vehicle" ? "bg-violet"
               : "bg-primary"
             )}
             style={{ top: box.top, left: box.left }}
@@ -143,10 +143,10 @@ function EventCard({
         "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30",
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4",
-        selected ? "border-primary bg-primary-muted" : "border-border",
+        selected ? "border-primary bg-primary/10" : "border-border",
         event.status === "escalated" && "opacity-75"
       )}
-      style={{ borderLeftColor: `var(--sev-${event.severity})` }}
+      style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       {/* Thumbnail — row 1 col 1 */}
       <div className="self-start" onClick={(e) => { e.stopPropagation(); onSelect(event.id); }}>
@@ -159,7 +159,7 @@ function EventCard({
           <SeverityBadge severity={event.severity} />
           <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           {event.status === "escalated" && (
-            <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-success">
+            <span className="inline-flex items-center gap-1 rounded bg-success/15 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-success">
               <span className="size-1.5 rounded-full bg-success" />
               Escalated
             </span>
@@ -170,8 +170,8 @@ function EventCard({
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-purple hover:text-purple">
-            <span className="size-1.5 rounded-full bg-purple" />
+          <span className="inline-flex items-center gap-1 rounded border border-violet/20 bg-violet/15 px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-violet hover:text-violet">
+            <span className="size-1.5 rounded-full bg-violet" />
             {event.model}
           </span>
         </div>
@@ -405,9 +405,9 @@ const KPI_CONFIGS: {
   sub: string;
 }[] = [
   { key: "all",       label: "Total",     accent: "primary",      getValue: (e) => e.length,                                     sub: "Across 3 sites" },
-  { key: "critical",  label: "Critical",  accent: "sev-critical", getValue: (e) => e.filter((x) => x.severity === "critical").length, sub: "Immediate threat" },
-  { key: "medium",    label: "Medium",    accent: "sev-medium",   getValue: (e) => e.filter((x) => x.severity === "medium").length,   sub: "Needs review" },
-  { key: "low",       label: "Low",       accent: "sev-low",      getValue: (e) => e.filter((x) => x.severity === "low").length,      sub: "Informational" },
+  { key: "critical",  label: "Critical",  accent: "severity-critical", getValue: (e) => e.filter((x) => x.severity === "critical").length, sub: "Immediate threat" },
+  { key: "medium",    label: "Medium",    accent: "severity-medium",   getValue: (e) => e.filter((x) => x.severity === "medium").length,   sub: "Needs review" },
+  { key: "low",       label: "Low",       accent: "severity-low",      getValue: (e) => e.filter((x) => x.severity === "low").length,      sub: "Informational" },
   { key: "pending",   label: "Pending",   accent: "warning",      getValue: (e) => e.filter((x) => x.status === "pending").length,    sub: "Awaiting triage" },
   { key: "escalated", label: "Escalated", accent: "success",      getValue: (e) => e.filter((x) => x.status === "escalated").length,  sub: "In incident case" },
 ];
@@ -671,7 +671,7 @@ export default function DetectionFeedPage() {
           <PageHeader.Title>
             <span className="flex items-center gap-2.5">
               Detection Feed
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success-soft px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-success">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-success">
                 <span className="size-1.5 animate-pulse rounded-full bg-success" />
                 Live
               </span>

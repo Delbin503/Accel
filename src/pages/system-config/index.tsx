@@ -68,7 +68,7 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform",
+      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform",
         checked ? "translate-x-[18px]" : "translate-x-0.5")} />
     </button>
   );
@@ -127,7 +127,7 @@ function GeneralSection() {
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization Name</label>
             <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} aria-invalid={!orgName.trim()} className="h-9 text-base" />
-            {!orgName.trim() && <p className="mt-1 text-xs text-sev-critical">Organization name is required.</p>}
+            {!orgName.trim() && <p className="mt-1 text-xs text-severity-critical">Organization name is required.</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization ID</label>
@@ -366,7 +366,7 @@ function UserAccessSection() {
 /* ── SLA ─────────────────────────────────────────────────────────────── */
 
 const SEVERITY_OPTS: { key: "critical" | "medium" | "low"; label: string; bg: string; text: string; description: string }[] = [
-  { key: "critical", label: "Critical", bg: "bg-sev-critical/15", text: "text-sev-critical", description: "Highest priority — immediate escalation required" },
+  { key: "critical", label: "Critical", bg: "bg-severity-critical/15", text: "text-severity-critical", description: "Highest priority — immediate escalation required" },
   { key: "medium",   label: "Medium",   bg: "bg-warning/15",      text: "text-warning",      description: "Standard review — investigate within window" },
   { key: "low",      label: "Low",      bg: "bg-info/15",         text: "text-info",         description: "Lowest priority — routine triage" },
 ];
@@ -957,10 +957,10 @@ function SecuritySection() {
                 </div>
 
                 {draft.length > 0 && !draftValid && (
-                  <p className="mt-1 text-xs text-sev-critical">Enter a valid IPv4 address or CIDR range.</p>
+                  <p className="mt-1 text-xs text-severity-critical">Enter a valid IPv4 address or CIDR range.</p>
                 )}
                 {draftValid && draftDuplicate && (
-                  <p className="mt-1 text-xs text-sev-critical">That range is already on the allowlist.</p>
+                  <p className="mt-1 text-xs text-severity-critical">That range is already on the allowlist.</p>
                 )}
 
                 {ipRanges.length === 0 ? (

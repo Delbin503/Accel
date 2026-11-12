@@ -35,8 +35,8 @@ export function DeleteAccountModal({
           icon={Trash2}
         />
         <ModalBody className="space-y-3">
-          <div className="flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+          <div className="flex items-start gap-2 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3 py-2.5">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
             <ul className="space-y-1 text-sm text-foreground">
               <li>All sites, cameras and NVR links are removed.</li>
               <li>Deployed models stop and their detection history is deleted.</li>

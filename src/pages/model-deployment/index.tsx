@@ -71,7 +71,7 @@ const DEP_STATUS: Record<DeploymentStatus, { bg: string; text: string; dot: stri
   paused:           { bg: "bg-warning/15 border-warning/30", text: "text-warning",   dot: "bg-warning",   label: "Paused" },
   "pending-camera": { bg: "bg-info/15 border-info/30",               text: "text-info",          dot: "bg-info",          label: "Pending" },
   stopped:          { bg: "bg-muted border-border",                  text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Stopped" },
-  failed:           { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical", label: "Failed" },
+  failed:           { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical", dot: "bg-severity-critical", label: "Failed" },
 };
 
 /* ── Model health (derived from underlying deployments) ─────────────────── */
@@ -494,8 +494,8 @@ function HistorySkeleton() {
 
 function ContentError({ onRetry }: { onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-20 text-muted-foreground">
-      <AlertTriangle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
+      <AlertTriangle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load deployments.</p>
       {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>}
     </div>
@@ -1139,7 +1139,7 @@ function HistoryView({
                 <div className="grid grid-cols-3 gap-1.5 text-2xs">
                   <Stat label="Active"  value={m.active}  tone="success" />
                   <Stat label="Paused"  value={m.paused}  tone="warning" />
-                  <Stat label="Failed"  value={m.failed}  tone="sev-critical" />
+                  <Stat label="Failed"  value={m.failed}  tone="severity-critical" />
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border/60 pt-2 text-2xs text-muted-foreground">
@@ -1169,11 +1169,11 @@ function HistoryView({
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone: "success" | "warning" | "sev-critical" }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone: "success" | "warning" | "severity-critical" }) {
   const txt =
     tone === "success"      ? "text-success" :
     tone === "warning"      ? "text-warning" :
-                              "text-sev-critical";
+                              "text-severity-critical";
   return (
     <div className="rounded-md border border-border/60 bg-background px-2 py-1.5">
       <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
@@ -1267,7 +1267,7 @@ export function ModelDeploymentsDrawer({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Drawer */}
-      <aside className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-2xl">
+      <aside className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-modal">
         {/* Header */}
         <div className="border-b border-border bg-card px-5 py-4">
           <div className="flex items-start justify-between gap-3">
@@ -1404,7 +1404,7 @@ export function ModelDeploymentsDrawer({
 
         {/* Bottom action bar — only when selection is non-empty */}
         {selectedCount > 0 && (
-          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-lg">
+          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-floating">
             <p className="text-sm text-foreground">
               <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
               <button onClick={() => setSelected(new Set())} className="ml-2 text-muted-foreground underline hover:text-foreground">

@@ -75,10 +75,10 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
         <ModalBody className="space-y-4">
           {/* Bulk banner */}
           {isBulk && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3">
-              <Layers className="mt-0.5 size-4 flex-shrink-0 text-sev-medium" />
+            <div className="flex items-start gap-2.5 rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-3">
+              <Layers className="mt-0.5 size-4 flex-shrink-0 text-severity-medium" />
               <div>
-                <p className="text-sm font-semibold text-sev-medium">
+                <p className="text-sm font-semibold text-severity-medium">
                   Dismissing {bulkCount} selected events
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -89,11 +89,11 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
           )}
 
           {/* Feedback info banner */}
-          <div className="flex gap-2.5 rounded-lg border border-purple/20 bg-purple-soft p-3">
-            <Info className="mt-0.5 size-4 flex-shrink-0 text-purple" />
+          <div className="flex gap-2.5 rounded-lg border border-violet/20 bg-violet/15 p-3">
+            <Info className="mt-0.5 size-4 flex-shrink-0 text-violet" />
             <p className="text-sm leading-relaxed text-muted-foreground">
               Your feedback retrains the detection model. The more specific you are, the faster{" "}
-              <strong className="text-purple">
+              <strong className="text-violet">
                 {event ? event.model.replace(/\.\d+$/, ".3") : "accel-vms v4.3"}
               </strong>{" "}
               improves.
@@ -113,7 +113,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
                   className={cn(
                     "flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors",
                     selectedReason === r.id
-                      ? "border-primary bg-primary-muted text-primary"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted hover:border-primary"
                   )}
                 >
@@ -162,7 +162,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
           <Button
             size="sm"
             variant="destructive"
-            className="bg-sev-critical-soft text-sev-critical border border-sev-critical hover:bg-sev-critical hover:text-white"
+            className="bg-severity-critical/15 text-severity-critical border border-severity-critical hover:bg-severity-critical hover:text-white"
             onClick={onConfirm}
           >
             Dismiss Event

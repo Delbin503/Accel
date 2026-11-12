@@ -44,7 +44,7 @@ function SeverityChip({ severity }: { severity: Severity }) {
   return (
     <span
       className="inline-flex items-center rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider text-white"
-      style={{ background: `var(--sev-${severity})` }}
+      style={{ background: `var(--severity-${severity})` }}
     >
       {SEV_LABEL[severity]}
     </span>
@@ -61,7 +61,7 @@ function TimelineRow({ entry }: { entry: EntityTimelineEntry }) {
   return (
     <div
       className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30"
-      style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${entry.severity})` }}
+      style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${entry.severity})` }}
     >
       <div className="min-w-0">
         <div className="mb-1 flex flex-wrap items-center gap-1.5">
@@ -111,8 +111,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_DOT: Record<string, string> = {
   open: "bg-info",
-  "in-review": "bg-sev-medium",
-  "action-taken": "bg-purple",
+  "in-review": "bg-severity-medium",
+  "action-taken": "bg-violet",
   closed: "bg-success",
 };
 
@@ -134,7 +134,7 @@ function LinkedCaseCard({
   return (
     <div
       className="rounded-xl border bg-card p-4"
-      style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${severity})` }}
+      style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${severity})` }}
     >
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
         <SeverityChip severity={severity} />
@@ -172,7 +172,7 @@ function EntityKpiRow({
   priorIncidents: number;
 }) {
   const reidAccent: KpiAccent =
-    reIdConfidence == null ? "muted" : reIdConfidence >= 85 ? "success" : "sev-medium";
+    reIdConfidence == null ? "muted" : reIdConfidence >= 85 ? "success" : "severity-medium";
   const reidLabel =
     reIdConfidence == null ? "Not available" :
     reIdConfidence >= 85 ? "High confidence" :
@@ -184,7 +184,7 @@ function EntityKpiRow({
         label="Total Detections"
         value={totalDetections}
         sub={totalDetections === 0 ? "No events recorded" : totalDetections === 1 ? "1 event recorded" : "Recorded events"}
-        accent={totalDetections > 0 ? "sev-critical" : "muted"}
+        accent={totalDetections > 0 ? "severity-critical" : "muted"}
       />
       <SharedKpiCard compact
         label="RE-ID Confidence"
@@ -202,7 +202,7 @@ function EntityKpiRow({
             label="Prior Incidents"
             value={prior}
             sub={prior === 0 ? "Clean history" : prior === 1 ? "1 prior case" : `${prior} prior cases`}
-            accent={prior > 0 ? "sev-medium" : "muted"}
+            accent={prior > 0 ? "severity-medium" : "muted"}
           />
         );
       })()}
@@ -290,7 +290,7 @@ function PossibleMatchCard({
               </span>
             )}
             {isRejected && (
-              <span className="inline-flex items-center gap-0.5 rounded-full border border-sev-critical/30 bg-sev-critical/15 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-severity-critical/30 bg-severity-critical/15 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-severity-critical">
                 <X className="size-2.5" strokeWidth={3} />
                 Rejected
               </span>
@@ -308,7 +308,7 @@ function PossibleMatchCard({
         {verdict === "pending" && (
           <div className="flex flex-shrink-0 items-center gap-1.5">
             <Button variant="outline" onClick={onReject}
-              className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10">
+              className="gap-1.5 border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10">
               <X className="size-3" />
               Reject
             </Button>
@@ -664,7 +664,7 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
                     </span>
                   )}
                   {entity.identified ? (
-                    <span className="rounded border border-success/20 bg-success-soft px-1.5 py-px text-2xs font-semibold text-success">
+                    <span className="rounded border border-success/20 bg-success/15 px-1.5 py-px text-2xs font-semibold text-success">
                       Identified
                     </span>
                   ) : (

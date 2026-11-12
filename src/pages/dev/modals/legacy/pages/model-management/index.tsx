@@ -20,7 +20,7 @@ import type { RuleData, RuleSeverity } from "@/types/rules";
 const SEV_BADGE: Record<RuleSeverity, { bg: string; text: string; dot: string; label: string }> = {
   low:      { bg: "bg-info/15",         text: "text-info",         dot: "bg-info",         label: "Low" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      label: "Medium" },
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", label: "Critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", dot: "bg-severity-critical", label: "Critical" },
 };
 
 function SeverityBadge({ severity }: { severity: RuleSeverity }) {
@@ -86,7 +86,7 @@ function UploadDropzone({
       }}
       className={cn(
         "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 text-center transition-colors hover:border-primary/40",
-        invalid ? "border-sev-critical" : "border-border"
+        invalid ? "border-severity-critical" : "border-border"
       )}
     >
       <UploadCloud className="size-7 text-muted-foreground" />
@@ -100,7 +100,7 @@ function UploadDropzone({
               onChange("");
             }}
             aria-label="Remove file"
-            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-sev-critical"
+            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-severity-critical"
           >
             <X className="size-3.5" />
           </button>
@@ -167,7 +167,7 @@ export function CreateModelModal({
               className="h-10 text-base"
               aria-invalid={!!errors.name}
             />
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -184,7 +184,7 @@ export function CreateModelModal({
               className="w-full resize-none"
               aria-invalid={!!errors.desc}
             />
-            {errors.desc && <p className="mt-1 text-xs text-sev-critical">{errors.desc}</p>}
+            {errors.desc && <p className="mt-1 text-xs text-severity-critical">{errors.desc}</p>}
           </div>
         </ModalBody>
 
@@ -360,7 +360,7 @@ export function AddStepModal({
               aria-invalid={!!errors.actionLabel}
             />
             {errors.actionLabel && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.actionLabel}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.actionLabel}</p>
             )}
           </div>
 
@@ -378,7 +378,7 @@ export function AddStepModal({
               className="h-10 text-base"
               aria-invalid={!!errors.label}
             />
-            {errors.label && <p className="mt-1 text-xs text-sev-critical">{errors.label}</p>}
+            {errors.label && <p className="mt-1 text-xs text-severity-critical">{errors.label}</p>}
           </div>
 
           <div>
@@ -397,7 +397,7 @@ export function AddStepModal({
               invalid={!!errors.modelFile}
             />
             {errors.modelFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.modelFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.modelFile}</p>
             )}
           </div>
 
@@ -417,7 +417,7 @@ export function AddStepModal({
               invalid={!!errors.manifestFile}
             />
             {errors.manifestFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.manifestFile}</p>
             )}
           </div>
 
@@ -440,7 +440,7 @@ export function AddStepModal({
               aria-invalid={!!errors.batchSize}
             />
             {errors.batchSize ? (
-              <p className="mt-1 text-xs text-sev-critical">{errors.batchSize}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.batchSize}</p>
             ) : (
               <p className="mt-1 text-2xs text-muted-foreground">
                 Frames processed per inference pass ({BATCH_SIZE_MIN}–{BATCH_SIZE_MAX}). Higher uses

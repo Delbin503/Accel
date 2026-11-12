@@ -186,7 +186,7 @@ function ParamRow({
           onClick={onRemove}
           title={`Remove ${meta.label}`}
           aria-label={`Remove ${meta.label}`}
-          className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-sev-critical/10 hover:text-sev-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-severity-critical/10 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3" />
         </button>
@@ -301,7 +301,7 @@ function ClassCard({
           onClick={onRemove}
           title={`Remove ${cls}`}
           aria-label={`Remove ${cls}`}
-          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-sev-critical/40 hover:text-sev-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-severity-critical/40 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3.5" />
         </button>
@@ -381,7 +381,7 @@ export function RuleTemplateForm({
             invalid={invalidClasses}
           />
           {invalidClasses && (
-            <p className="mt-1 text-xs text-sev-critical">Pick at least one object class.</p>
+            <p className="mt-1 text-xs text-severity-critical">Pick at least one object class.</p>
           )}
         </div>
 

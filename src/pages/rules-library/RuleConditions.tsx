@@ -245,7 +245,7 @@ export function ConditionModal({
               </p>
             )}
             {errors.templateId && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.templateId}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.templateId}</p>
             )}
           </div>
 
@@ -269,7 +269,7 @@ export function ConditionModal({
               Object classes and confidence are always carried. Add the rest as the event needs them.
             </p>
             {errors.parameters && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.parameters}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.parameters}</p>
             )}
           </div>
 
@@ -287,7 +287,7 @@ export function ConditionModal({
               mono
             />
             {errors.objectClasses && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.objectClasses}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.objectClasses}</p>
             )}
           </div>
 
@@ -312,7 +312,7 @@ export function ConditionModal({
               <span className="shrink-0 text-base text-muted-foreground">%</span>
             </div>
             {errors.confidence && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.confidence}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.confidence}</p>
             )}
           </div>
 
@@ -443,7 +443,7 @@ function ConditionCard({
             onClick={onRemove}
             aria-label={`Remove ${template?.name ?? "condition"}`}
             title="Remove condition"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-sev-critical/40 hover:bg-sev-critical/10 hover:text-sev-critical"
+            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-severity-critical/40 hover:bg-severity-critical/10 hover:text-severity-critical"
           >
             <X className="size-3" />
           </button>
@@ -496,7 +496,7 @@ export function RuleConditions({
           onClick={add}
           className={cn(
             "group flex min-h-[160px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-muted-foreground transition-colors hover:text-foreground",
-            invalid ? "border-sev-critical" : "border-border"
+            invalid ? "border-severity-critical" : "border-border"
           )}
         >
           <div className="flex size-10 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary">
@@ -518,7 +518,7 @@ export function RuleConditions({
       )}
 
       {invalid && conditions.length === 0 && (
-        <p className="mt-1 text-xs text-sev-critical">Add at least one condition.</p>
+        <p className="mt-1 text-xs text-severity-critical">Add at least one condition.</p>
       )}
 
       {editing && (

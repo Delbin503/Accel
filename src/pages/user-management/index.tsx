@@ -101,7 +101,7 @@ function RoleBadge({ role, withIcon = true }: { role: UserRole; withIcon?: boole
 const STATUS_STYLES: Record<UserStatus, { bg: string; text: string; dot: string }> = {
   active:    { bg: "bg-success/15 border-success/30",           text: "text-success",      dot: "bg-success" },
   pending:   { bg: "bg-info/15 border-info/30",                 text: "text-info",         dot: "bg-info" },
-  suspended: { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", dot: "bg-sev-critical" },
+  suspended: { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical", dot: "bg-severity-critical" },
 };
 
 function StatusPill({ status }: { status: UserStatus }) {
@@ -164,7 +164,7 @@ const KPI_CONFIGS: {
   { key: "owners",    label: "Owner",           sub: "Full control — billing & ownership", accent: "success",  getValue: (i) => i.filter((u) => u.role === "owner").length },
   { key: "admins",    label: "Admins",          sub: "Can grant any permission",       accent: "info",         getValue: (i) => i.filter((u) => u.role === "admin").length },
   { key: "users",     label: "Members",         sub: "Site-scoped daily members",      accent: "warning",      getValue: (i) => i.filter((u) => u.role === "user").length },
-  { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "sev-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
+  { key: "suspended", label: "Suspended Users", sub: "Sign-in blocked",                accent: "severity-critical", getValue: (i) => i.filter((u) => u.status === "suspended").length },
 ];
 
 /* ── Multi-select dropdown ───────────────────────────────────────────────── */
@@ -387,9 +387,9 @@ function StatCard({ label, value, valueClass, sub }: { label: string; value: Rea
   const accent: KpiAccent =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
-    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
-    valueClass?.includes("text-purple")       ? "purple" :
+    valueClass?.includes("text-violet")       ? "violet" :
     "primary";
   return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
@@ -398,14 +398,14 @@ const ACTIVITY_CHIP_STYLES: Record<string, string> = {
   auth:          "bg-success/15 text-success",
   events:        "bg-info/15 text-info",
   cases:         "bg-warning/15 text-warning",
-  authorization: "bg-purple-soft text-purple",
+  authorization: "bg-violet/15 text-violet",
   models:        "bg-info/15 text-info",
   user:          "bg-success/15 text-success",
   config:        "bg-warning/15 text-warning",
   "data-access": "bg-info/15 text-info",
-  license:       "bg-purple-soft text-purple",
+  license:       "bg-violet/15 text-violet",
   system:        "bg-muted text-muted-foreground",
-  maintenance:   "bg-sev-critical/15 text-sev-critical",
+  maintenance:   "bg-severity-critical/15 text-severity-critical",
 };
 
 /* ── Update User dropdown (drawer footer) ────────────────────────────────── */
@@ -475,14 +475,14 @@ function UpdateUserMenu({
 
 function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspension; onReinstate: () => void }) {
   return (
-    <div className="rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] p-4">
+    <div className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
-          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-sev-critical/30 bg-sev-critical/10">
-            <Ban className="size-4 text-sev-critical" />
+          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/30 bg-severity-critical/10">
+            <Ban className="size-4 text-severity-critical" />
           </div>
           <div>
-            <p className="text-base font-bold text-sev-critical">Account Suspended</p>
+            <p className="text-base font-bold text-severity-critical">Account Suspended</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Sign-in is blocked. Active sessions are revoked on next refresh.
             </p>
@@ -498,14 +498,14 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
           Reinstate
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-sev-critical/15 pt-3">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended From</p>
           <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.startedAtDisplay}</p>
         </div>
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Ends</p>
-          <p className="mt-0.5 text-sm font-semibold text-sev-critical">{suspension.endsAtDisplay}</p>
+          <p className="mt-0.5 text-sm font-semibold text-severity-critical">{suspension.endsAtDisplay}</p>
         </div>
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended By</p>
@@ -517,7 +517,7 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
         </div>
       </div>
       {suspension.note && (
-        <div className="mt-3 rounded-lg border border-sev-critical/15 bg-card px-3 py-2.5">
+        <div className="mt-3 rounded-lg border border-severity-critical/15 bg-card px-3 py-2.5">
           <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
           <p className="text-sm leading-relaxed text-foreground">{suspension.note}</p>
         </div>
@@ -538,14 +538,14 @@ function DeletedAccountInfoCard({
   onRestore: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] p-4">
+    <div className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
-          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-sev-critical/30 bg-sev-critical/10">
-            <Trash2 className="size-4 text-sev-critical" />
+          <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/30 bg-severity-critical/10">
+            <Trash2 className="size-4 text-severity-critical" />
           </div>
           <div>
-            <p className="text-base font-bold text-sev-critical">Account Deleted</p>
+            <p className="text-base font-bold text-severity-critical">Account Deleted</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               This account is removed from active access. Restore it to make the user active again.
             </p>
@@ -561,10 +561,10 @@ function DeletedAccountInfoCard({
           Restore
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-sev-critical/15 pt-3">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted On</p>
-          <p className="mt-0.5 text-sm font-semibold text-sev-critical">{deletedAtDisplay}</p>
+          <p className="mt-0.5 text-sm font-semibold text-severity-critical">{deletedAtDisplay}</p>
         </div>
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted By</p>
@@ -699,7 +699,7 @@ export function UserDrawer({
                       ? "text-success"
                       : user.slaMetPct >= 75
                       ? "text-warning"
-                      : "text-sev-critical"
+                      : "text-severity-critical"
                   }
                 />
                 <StatCard label="Sign-ins" value={user.signIns30d} sub="Last 30 days" />
@@ -917,7 +917,7 @@ export function UserDrawer({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+                  className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
                   onClick={onDelete}
                 >
                   <Trash2 className="size-3.5" />
@@ -1035,7 +1035,7 @@ export function InviteUsersModal({
                   >
                     <div className="mb-0.5 flex items-center justify-between gap-1">
                       <RoleBadge role={r} withIcon={false} />
-                      <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                      <span className={cn("font-mono text-3xs font-bold", isLow ? "text-severity-critical" : "text-success")}>
                         {s.available} left
                       </span>
                     </div>
@@ -1117,9 +1117,9 @@ export function InviteUsersModal({
               value={departments.join(", ")}
               onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
               placeholder="e.g. Security Operations"
-              className={errors.departments ? "border-sev-critical/60" : undefined}
+              className={errors.departments ? "border-severity-critical/60" : undefined}
             />
-            {errors.departments && <p className="mt-1 text-xs text-sev-critical">{errors.departments}</p>}
+            {errors.departments && <p className="mt-1 text-xs text-severity-critical">{errors.departments}</p>}
           </div>
 
           {/* Emails */}
@@ -1130,8 +1130,8 @@ export function InviteUsersModal({
               </label>
               {parsed.valid.length > 0 && (
                 <span className="text-2xs text-muted-foreground">
-                  <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>{parsed.valid.length}</strong> valid
-                  {parsed.invalid.length > 0 && <> · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid</>}
+                  <strong className={cn(overSeat ? "text-severity-critical" : "text-success")}>{parsed.valid.length}</strong> valid
+                  {parsed.invalid.length > 0 && <> · <strong className="text-severity-critical">{parsed.invalid.length}</strong> invalid</>}
                   {parsed.duplicates.length > 0 && <> · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate</>}
                 </span>
               )}
@@ -1143,15 +1143,15 @@ export function InviteUsersModal({
               rows={2}
               className={cn(
                 "w-full",
-                parsed.invalid.length > 0 && "border-sev-critical/40 focus:border-sev-critical"
+                parsed.invalid.length > 0 && "border-severity-critical/40 focus:border-severity-critical"
               )}
             />
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
-            {errors.emails && <p className="mt-1 text-xs text-sev-critical">{errors.emails}</p>}
+            {errors.emails && <p className="mt-1 text-xs text-severity-critical">{errors.emails}</p>}
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.05] px-2.5 py-1.5 text-xs text-severity-critical">
                 <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:</p>
@@ -1161,10 +1161,10 @@ export function InviteUsersModal({
             )}
           </div>
 
-          {errors.sites && <p className="text-xs text-sev-critical">{errors.sites}</p>}
+          {errors.sites && <p className="text-xs text-severity-critical">{errors.sites}</p>}
 
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
+            <div className="flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.06] px-2.5 py-1.5 text-xs text-severity-critical">
               <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (
@@ -1275,7 +1275,7 @@ function SeatPill({
           ))}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Available</span>
-            <span className={cn("font-mono font-semibold", available === 0 ? "text-sev-critical" : "text-success")}>{available}</span>
+            <span className={cn("font-mono font-semibold", available === 0 ? "text-severity-critical" : "text-success")}>{available}</span>
           </div>
         </div>
         {kind !== "all" && kind !== "owner" && available === 0 && (
@@ -1543,8 +1543,8 @@ export function ChangeRoleModal({
                 </div>
               </div>
             )}
-            <div className="flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5">
-              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+            <div className="flex items-start gap-2 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3 py-2.5">
+              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
               <div>
                 <p className="text-sm font-semibold text-foreground">You are transferring ownership</p>
                 <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
@@ -1726,7 +1726,7 @@ export function ChangeRoleModal({
                     </p>
                     <div className="mt-1.5 flex items-center gap-2 text-2xs">
                       <span className="text-muted-foreground">
-                        <strong className={cn(u.available === 0 ? "text-sev-critical" : "text-success")}>
+                        <strong className={cn(u.available === 0 ? "text-severity-critical" : "text-success")}>
                           {u.available}
                         </strong> available · {u.assigned}/{u.total} used
                       </span>
@@ -2297,9 +2297,9 @@ export function SuspendUserModal({
             />
           </div>
 
-          <div className="rounded-lg border border-sev-critical/25 bg-sev-critical/[0.05] px-3 py-2.5">
+          <div className="rounded-lg border border-severity-critical/25 bg-severity-critical/[0.05] px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
-              <Ban className="mr-1 inline-block size-3 text-sev-critical align-text-bottom" />
+              <Ban className="mr-1 inline-block size-3 text-severity-critical align-text-bottom" />
               Suspending blocks sign-in immediately. Active sessions revoke on next refresh.
             </p>
           </div>

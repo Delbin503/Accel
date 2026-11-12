@@ -226,7 +226,7 @@ export function DrawZoneModal({
           >
             <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px)" }} />
-            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-sev-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
+            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
               LIVE
             </span>
             <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">{cameraName}</span>
@@ -439,7 +439,7 @@ export function DrawZoneModal({
                         <Pencil className="size-3" />
                       </button>
                       <button onClick={() => { onRemoveZone(z.id); if (isEditing) setEditingZoneId(null); }}
-                        className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-sev-critical/40 hover:text-sev-critical"
+                        className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-severity-critical/40 hover:text-severity-critical"
                         title="Remove zone">
                         <Trash2 className="size-3" />
                       </button>

@@ -21,7 +21,7 @@ export function isStrongPassword(pw: string): boolean {
 const LABELS = ["Too short", "Weak", "Fair", "Good", "Strong"] as const;
 const COLORS = [
   "bg-muted",
-  "bg-sev-critical",
+  "bg-severity-critical",
   "bg-warning",
   "bg-info",
   "bg-success",

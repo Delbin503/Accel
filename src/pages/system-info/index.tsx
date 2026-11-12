@@ -112,12 +112,12 @@ function StatusBadge({ status }: { status: "operational" | "degraded" | "outage"
   const cfg = {
     operational: { bg: "bg-success/15 border-success/30",        text: "text-success",      label: "Operational" },
     degraded:    { bg: "bg-warning/15 border-warning/30",        text: "text-warning",      label: "Degraded"    },
-    outage:      { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", label: "Outage"      },
+    outage:      { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical", label: "Outage"      },
   }[status];
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", cfg.bg, cfg.text)}>
       <span className={cn("size-1.5 rounded-full",
-        status === "operational" ? "animate-pulse bg-success" : status === "degraded" ? "bg-warning" : "bg-sev-critical")} />
+        status === "operational" ? "animate-pulse bg-success" : status === "degraded" ? "bg-warning" : "bg-severity-critical")} />
       {cfg.label}
     </span>
   );

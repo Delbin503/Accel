@@ -105,7 +105,7 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
   const pct = total ? Math.round((used / total) * 100) : 0;
   const full = pct >= 90;
   const parts = [
-    { key: "used", label: "Used", gb: used, share: pct, fill: full ? "bg-sev-critical" : "bg-info", round: "rounded-l-full" },
+    { key: "used", label: "Used", gb: used, share: pct, fill: full ? "bg-severity-critical" : "bg-info", round: "rounded-l-full" },
     { key: "left", label: "Left", gb: left, share: 100 - pct, fill: "bg-success", round: "rounded-r-full" },
   ];
 
@@ -113,7 +113,7 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
     // Mirrors the shared KpiCard look (accent dot + neutral value); custom only for the usage bar.
     <div className="relative flex h-[120px] min-w-0 flex-col rounded-xl border border-border bg-card p-4">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="size-1.5 shrink-0 rounded-full bg-purple" />
+        <span className="size-1.5 shrink-0 rounded-full bg-violet" />
         <span className="truncate text-base font-medium text-muted-foreground">Storage Total</span>
       </div>
       <div className="mt-2 truncate text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">{fmtGb(total)}</div>
@@ -279,7 +279,7 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                           {bookmarked ? "Remove bookmark" : "Bookmark"}
                         </button>
                         <div className="my-1 border-t border-border" />
-                        <button onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-sev-critical hover:bg-sev-critical/10")}>
+                        <button onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-severity-critical hover:bg-severity-critical/10")}>
                           <Trash2 className="size-3.5" />
                           Delete
                         </button>
@@ -561,7 +561,7 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
             variant="outline"
             disabled={bookmarked}
             aria-label={bookmarked ? `${rec.id} is bookmarked and cannot be deleted` : "Delete recording"}
-            className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+            className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
             onClick={onDelete}
           >
             <Trash2 className="size-3.5" />
@@ -1108,7 +1108,7 @@ export default function RecordingsPage({
               recording={selectedIds.size === 1 ? source.find((r) => selectedIds.has(r.id)) ?? null : null}
               onEnhance={(r) => navigate(enhancePath, { state: { recordingId: r.id } })}
             />
-            <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+            <Button variant="outline" className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
               onClick={() => requestDelete([...selectedIds])}>
               <Trash2 className="size-3.5" />
               Delete {selectedIds.size}

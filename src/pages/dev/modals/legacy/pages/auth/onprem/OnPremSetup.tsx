@@ -168,7 +168,7 @@ export function MemberModal({
                       <span
                         className={cn(
                           "font-mono text-3xs font-bold",
-                          isLow ? "text-sev-critical" : "text-success"
+                          isLow ? "text-severity-critical" : "text-success"
                         )}
                       >
                         {s.available} left
@@ -225,14 +225,14 @@ export function MemberModal({
               </label>
               {parsed.valid.length > 0 && (
                 <span className="text-2xs text-muted-foreground">
-                  <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>
+                  <strong className={cn(overSeat ? "text-severity-critical" : "text-success")}>
                     {parsed.valid.length}
                   </strong>{" "}
                   valid
                   {parsed.invalid.length > 0 && (
                     <>
                       {" "}
-                      · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid
+                      · <strong className="text-severity-critical">{parsed.invalid.length}</strong> invalid
                     </>
                   )}
                   {parsed.duplicates.length > 0 && (
@@ -252,7 +252,7 @@ export function MemberModal({
               className={cn(
                 "w-full text-base",
                 parsed.invalid.length > 0
-                  ? "border-sev-critical/40 focus:border-sev-critical"
+                  ? "border-severity-critical/40 focus:border-severity-critical"
                   : "focus:border-primary"
               )}
             />
@@ -260,7 +260,7 @@ export function MemberModal({
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.05] px-2.5 py-1.5 text-xs text-severity-critical">
                 <AlertCircle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">
@@ -276,7 +276,7 @@ export function MemberModal({
           </div>
 
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
+            <div className="flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.06] px-2.5 py-1.5 text-xs text-severity-critical">
               <AlertCircle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (

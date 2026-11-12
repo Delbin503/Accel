@@ -293,7 +293,7 @@ export const LEGACY_CONFIRMS: Record<string, (close: () => void) => React.ReactN
       onConfirm={close}
       size="lg"
     >
-      <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
+      <div className="rounded-lg border border-severity-critical/30 bg-severity-critical/[0.05] p-3 text-sm">
         <p className="mb-2 font-semibold text-foreground">What happens when it ends</p>
         <ul className="space-y-1.5 text-muted-foreground">
           {[
@@ -302,7 +302,7 @@ export const LEGACY_CONFIRMS: Record<string, (close: () => void) => React.ReactN
             "Recordings are retained for 30 days, then deleted",
           ].map((t) => (
             <li key={t} className="flex items-start gap-2">
-              <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+              <X className="mt-0.5 size-3.5 flex-shrink-0 text-severity-critical" />
               <span>{t}</span>
             </li>
           ))}
@@ -351,7 +351,7 @@ export const LEGACY_CONFIRMS: Record<string, (close: () => void) => React.ReactN
       onConfirm={close}
       size="lg"
     >
-      <div className="rounded-lg border border-sev-critical/30 bg-sev-critical/[0.05] p-3 text-sm">
+      <div className="rounded-lg border border-severity-critical/30 bg-severity-critical/[0.05] p-3 text-sm">
         <p className="mb-2 font-semibold text-foreground">What happens immediately</p>
         <ul className="space-y-1.5 text-muted-foreground">
           {[
@@ -360,7 +360,7 @@ export const LEGACY_CONFIRMS: Record<string, (close: () => void) => React.ReactN
             "Recordings are retained for 30 days, then deleted",
           ].map((t) => (
             <li key={t} className="flex items-start gap-2">
-              <X className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+              <X className="mt-0.5 size-3.5 flex-shrink-0 text-severity-critical" />
               <span>{t}</span>
             </li>
           ))}

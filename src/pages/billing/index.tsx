@@ -72,14 +72,14 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
 
 const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string; chip: string }> = {
   starter:      { bg: "bg-info/10",       border: "border-info/40",       text: "text-info",       chip: "bg-info/15 text-info"           },
-  professional: { bg: "bg-purple/10",     border: "border-purple/40",     text: "text-purple",     chip: "bg-purple/15 text-purple"        },
+  professional: { bg: "bg-violet/10",     border: "border-violet/40",     text: "text-violet",     chip: "bg-violet/15 text-violet"        },
   enterprise:   { bg: "bg-success/10",    border: "border-success/40",    text: "text-success",    chip: "bg-success/15 text-success"      },
 };
 
 const INVOICE_STATUS = {
   paid:    { bg: "bg-success/15 border-success/30",           text: "text-success",      icon: CheckCircle2, label: "Paid"    },
   pending: { bg: "bg-warning/15 border-warning/30",           text: "text-warning",      icon: Clock,        label: "Pending" },
-  failed:  { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical", icon: AlertCircle,  label: "Failed"  },
+  failed:  { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical", icon: AlertCircle,  label: "Failed"  },
 };
 
 /* ── Charges for a cycle ───────────────────────────────────────────────────── */
@@ -132,7 +132,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
 }) {
   const brandColors: Record<string, string> = {
     Visa: "text-info",
-    Mastercard: "text-sev-critical",
+    Mastercard: "text-severity-critical",
     Amex: "text-success",
   };
   return (
@@ -162,7 +162,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
         )}
         {canRemove && (
           <button onClick={onRemove}
-            className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10">
+            className="flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10">
             <Trash2 className="size-3" />
           </button>
         )}
@@ -225,23 +225,23 @@ export function AddCardModal({ open, onClose, onSave }: {
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
             <Input value={cardName} onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }} placeholder="Delbin Arkar" className="h-9 text-base" aria-invalid={!!errors.cardName} />
-            {errors.cardName && <p className="mt-1 text-xs text-sev-critical">{errors.cardName}</p>}
+            {errors.cardName && <p className="mt-1 text-xs text-severity-critical">{errors.cardName}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
             <Input value={cardNumber} onChange={(e) => { setCardNumber(formatCard(e.target.value)); setErrors((p) => ({ ...p, cardNumber: undefined })); }} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cardNumber} />
-            {errors.cardNumber && <p className="mt-1 text-xs text-sev-critical">{errors.cardNumber}</p>}
+            {errors.cardNumber && <p className="mt-1 text-xs text-severity-critical">{errors.cardNumber}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
               <Input value={expiry} onChange={(e) => { setExpiry(formatExpiry(e.target.value)); setErrors((p) => ({ ...p, expiry: undefined })); }} placeholder="MM/YY" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.expiry} />
-              {errors.expiry && <p className="mt-1 text-xs text-sev-critical">{errors.expiry}</p>}
+              {errors.expiry && <p className="mt-1 text-xs text-severity-critical">{errors.expiry}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
               <Input value={cvc} onChange={(e) => { setCvc(e.target.value.replace(/\D/g, "").slice(0, 4)); setErrors((p) => ({ ...p, cvc: undefined })); }} placeholder="123" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cvc} />
-              {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
+              {errors.cvc && <p className="mt-1 text-xs text-severity-critical">{errors.cvc}</p>}
             </div>
           </div>
         </ModalBody>
@@ -273,7 +273,7 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
 
   if (!invoice) return null;
   const total = invoice.amount + Math.round(invoice.amount * 0.07);
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
@@ -283,8 +283,8 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
           description={<>Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.</>}
         />
         <ModalBody className="space-y-3">
-          <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3 text-sm">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+          <div className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
             <p className="text-muted-foreground">
               The previous charge of <strong className="text-foreground">${total.toLocaleString()}</strong> failed.
               Select a card below — or update your card details — and we'll try again.
@@ -351,7 +351,7 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
   const color = PLAN_COLORS[tier];
   const Icon = PLAN_ICONS[tier];
   const price = cycle === "annual" ? plan.pricePerYear : plan.pricePerMonth;
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()}>
@@ -448,7 +448,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
   const annual = cycleCharges(tier, seats, "annual");
   const saving = monthly * 12 - annual.total;
   const dueToday = annual.total - credit;
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()}>
@@ -586,7 +586,7 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute right-0 top-0 flex h-full w-[min(560px,90vw)] flex-col overflow-hidden bg-card shadow-2xl">
+      <div className="absolute right-0 top-0 flex h-full w-[min(560px,90vw)] flex-col overflow-hidden bg-card shadow-modal">
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex items-start gap-2.5">
             <div className={cn("flex size-9 items-center justify-center rounded-lg border", planColor.border, planColor.bg)}>
@@ -609,13 +609,13 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
 
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
           {invoice.status === "failed" && (
-            <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3">
-              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+            <div className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3">
+              <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
               <div className="min-w-0 flex-1 text-sm">
-                <p className="font-semibold text-sev-critical">Payment failed</p>
+                <p className="font-semibold text-severity-critical">Payment failed</p>
                 <p className="mt-0.5 text-muted-foreground">The charge for this invoice could not be processed. Please update your payment method and retry.</p>
               </div>
-              <Button size="sm" variant="outline" onClick={onRetryPayment} className="flex-shrink-0 gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10">
+              <Button size="sm" variant="outline" onClick={onRetryPayment} className="flex-shrink-0 gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10">
                 <RefreshCw className="size-3.5" /> Retry
               </Button>
             </div>
@@ -781,7 +781,7 @@ function BillingDetailsSection({ className }: { className?: string }) {
                 <Mail className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input value={draft.email} onChange={(e) => patch("email", e.target.value)} className="h-9 pl-9 text-base" placeholder="billing@company.com" aria-invalid={!!errors.email} />
               </div>
-              {errors.email && <p className="mt-1 text-xs text-sev-critical">{errors.email}</p>}
+              {errors.email && <p className="mt-1 text-xs text-severity-critical">{errors.email}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company / Organisation</label>
@@ -789,7 +789,7 @@ function BillingDetailsSection({ className }: { className?: string }) {
                 <Building2 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input value={draft.company} onChange={(e) => patch("company", e.target.value)} className="h-9 pl-9 text-base" placeholder="Acme Corp Pte Ltd" aria-invalid={!!errors.company} />
               </div>
-              {errors.company && <p className="mt-1 text-xs text-sev-critical">{errors.company}</p>}
+              {errors.company && <p className="mt-1 text-xs text-severity-critical">{errors.company}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tax ID / VAT Number (Optional)</label>
@@ -798,12 +798,12 @@ function BillingDetailsSection({ className }: { className?: string }) {
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Street Address</label>
               <Input value={draft.address} onChange={(e) => patch("address", e.target.value)} className="h-9 text-base" placeholder="8 Marina Boulevard" aria-invalid={!!errors.address} />
-              {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
+              {errors.address && <p className="mt-1 text-xs text-severity-critical">{errors.address}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">City</label>
               <Input value={draft.city} onChange={(e) => patch("city", e.target.value)} className="h-9 text-base" placeholder="Singapore" aria-invalid={!!errors.city} />
-              {errors.city && <p className="mt-1 text-xs text-sev-critical">{errors.city}</p>}
+              {errors.city && <p className="mt-1 text-xs text-severity-critical">{errors.city}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">State / Province (Optional)</label>
@@ -812,7 +812,7 @@ function BillingDetailsSection({ className }: { className?: string }) {
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Postcode</label>
               <Input value={draft.postcode} onChange={(e) => patch("postcode", e.target.value)} className="h-9 text-base" placeholder="018984" aria-invalid={!!errors.postcode} />
-              {errors.postcode && <p className="mt-1 text-xs text-sev-critical">{errors.postcode}</p>}
+              {errors.postcode && <p className="mt-1 text-xs text-severity-critical">{errors.postcode}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
@@ -910,7 +910,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
                     {inv.status === "failed" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onRetry(inv); }}
-                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-sev-critical hover:bg-sev-critical/10"
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-severity-critical hover:bg-severity-critical/10"
                       >
                         <RefreshCw className="size-2.5" /> Retry
                       </button>
@@ -1374,10 +1374,10 @@ export default function BillingPage() {
       {tab === "overview" && accountStatus === "cancelled" && (
         <div className="flex flex-col gap-4">
           {/* No active plan — same banner layout as the current-plan banner */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg border border-sev-critical/40 bg-background/40">
-                <Ban className="size-5 text-sev-critical" />
+              <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/40 bg-background/40">
+                <Ban className="size-5 text-severity-critical" />
               </div>
               <div className="min-w-0">
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Subscription</p>
@@ -1475,7 +1475,7 @@ export default function BillingPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => setCancelOpen(true)}
-                    className="gap-1.5 border-sev-critical/30 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+                    className="gap-1.5 border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
                   >
                     <XCircle className="size-3.5" /> Cancel subscription
                   </Button>
@@ -1521,7 +1521,7 @@ export default function BillingPage() {
             <KpiCard label="Active Sites" value={usageSites.length} sub={`On ${activePlan.name} plan`} accent="primary" />
             <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users assigned`} accent="info" />
             <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${usageSites.length} sites`} accent="warning" />
-            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} accent="purple" />
+            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} accent="violet" />
           </KpiGrid>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">

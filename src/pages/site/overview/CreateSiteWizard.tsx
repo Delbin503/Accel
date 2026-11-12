@@ -226,7 +226,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   Site Name
                 </label>
                 <Input value={name} onChange={(e) => { setName(e.target.value); setErrors((er) => ({ ...er, name: undefined })); }} placeholder="e.g. Astra HQ" className="h-9 text-base" aria-invalid={!!errors.name} />
-                {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+                {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -234,7 +234,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   Address
                 </label>
                 <Input value={address} onChange={(e) => { setAddress(e.target.value); setErrors((er) => ({ ...er, address: undefined })); }} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" aria-invalid={!!errors.address} />
-                {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
+                {errors.address && <p className="mt-1 text-xs text-severity-critical">{errors.address}</p>}
               </div>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -316,13 +316,13 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                     Add
                   </Button>
                 </div>
-                {errors.area && <p className="mt-1 text-xs text-sev-critical">{errors.area}</p>}
+                {errors.area && <p className="mt-1 text-xs text-severity-critical">{errors.area}</p>}
                 <p className="mt-1 text-2xs text-muted-foreground">Press Enter to add quickly</p>
               </div>
 
               <div>
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Areas ({areas.length}) <span className={cn("ml-1 normal-case", areas.length === 0 ? "text-sev-critical" : "text-success")}>
+                  Areas ({areas.length}) <span className={cn("ml-1 normal-case", areas.length === 0 ? "text-severity-critical" : "text-success")}>
                     {areas.length === 0 ? "· at least one required" : "· ready"}
                   </span>
                 </p>
@@ -347,7 +347,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                           ))}
                         </div>
                         <button onClick={() => removeArea(a.id)}
-                          className="flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
+                          className="flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
                           aria-label="Remove area">
                           <Trash2 className="size-3" />
                         </button>

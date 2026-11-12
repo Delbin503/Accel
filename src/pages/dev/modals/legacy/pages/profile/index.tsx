@@ -60,7 +60,7 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
                 {showCurrent ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
-            {errors.current && <p className="mt-1 text-xs text-sev-critical">{errors.current}</p>}
+            {errors.current && <p className="mt-1 text-xs text-severity-critical">{errors.current}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
@@ -72,7 +72,7 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
             </div>
             {/* Same strength meter the sign-up flow uses, instead of a rules checklist. */}
             <PasswordStrengthBar className="mt-1.5" password={next} />
-            {errors.next && <p className="mt-1 text-xs text-sev-critical">{errors.next}</p>}
+            {errors.next && <p className="mt-1 text-xs text-severity-critical">{errors.next}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
@@ -82,7 +82,7 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
                 {showConfirm ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
-            {errors.confirm && <p className="mt-1 text-xs text-sev-critical">{errors.confirm}</p>}
+            {errors.confirm && <p className="mt-1 text-xs text-severity-critical">{errors.confirm}</p>}
           </div>
         </ModalBody>
         <ModalFooter>
@@ -137,7 +137,7 @@ export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">6-digit verification code</label>
             <Input value={code} aria-invalid={!!errors.code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); if (errors.code) setErrors((p) => ({ ...p, code: undefined })); }} placeholder="000000" maxLength={6}
               className="h-10 text-center font-mono text-xl tracking-[0.5em]" />
-            {errors.code && <p className="mt-1 text-xs text-sev-critical">{errors.code}</p>}
+            {errors.code && <p className="mt-1 text-xs text-severity-critical">{errors.code}</p>}
           </div>
         </ModalBody>
         <ModalFooter>

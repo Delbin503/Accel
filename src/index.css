@@ -97,12 +97,18 @@
   --color-accent:              var(--accent);
   --color-accent-foreground:   var(--accent-foreground);
   --color-destructive:         var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border:              var(--border);
   --color-input:               var(--input);
   --color-ring:                var(--ring);
 
   /* ── Severity & status semantic tokens ───────────────────────────────────
-     Generates: text-sev-critical, bg-sev-critical-soft, border-sev-critical…  */
+     Generates: text-severity-critical, bg-severity-critical/15, border-severity-critical…  */
+  --color-severity-critical: var(--severity-critical);
+  --color-severity-high:     var(--severity-high);
+  --color-severity-medium:   var(--severity-medium);
+  --color-severity-low:      var(--severity-low);
+  /* DEPRECATED sev-* — renamed to severity-*; kept for prototypes/ and in-flight work */
   --color-sev-critical:      var(--sev-critical);
   --color-sev-critical-soft: var(--sev-critical-soft);
   --color-sev-high:          var(--sev-high);
@@ -117,6 +123,8 @@
   --color-warning-soft:      var(--warning-soft);
   --color-info:              var(--info);
   --color-info-soft:         var(--info-soft);
+  --color-violet:            var(--violet);   /* categorical tone: AI/model, vehicles, NVR, action-taken */
+  /* DEPRECATED — prototypes/ and in-flight work only; use bg-violet / bg-violet/15 */
   --color-purple:            var(--purple);
   --color-purple-soft:       var(--purple-soft);
 
@@ -137,6 +145,11 @@
   --color-sidebar-border:             var(--sidebar-border);
   --color-sidebar-ring:               var(--sidebar-ring);
 
+  /* Elevation — shadow-raised / shadow-floating / shadow-modal (values in :root/.dark) */
+  --shadow-raised:  var(--elevation-raised);
+  --shadow-floating: var(--elevation-floating);
+  --shadow-modal:   var(--elevation-modal);
+
   /* Radius scale */
   --radius-sm:  calc(var(--radius) * 0.6);
   --radius-md:  calc(var(--radius) * 0.8);
@@ -148,128 +161,198 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Light mode tokens  (applied when <html class="light">)
+   Token tiers
+     1. PRIMITIVES — raw values. The only place a literal colour may appear.
+        Never use them in components; they have no Tailwind utilities.
+     2. SEMANTIC   — roles (surface, brand, feedback, severity). Always
+        var(--primitive) references. The only tier that changes per theme.
+     3. COMPONENT  — sidebar-* and chart-*: reference semantic tokens
+        (chart-2…5 reference primitives — a categorical palette has no role).
+   Contexts that can't read CSS vars (print, PDF, email) use the paper
+   palette in src/lib/tokens.ts — keep its roles aligned with these.
+   Naming: primitives --palette-{hue}-{step} · semantic --{role}[-{state}]
+   · severity --severity-{level} · component --{component}-{role}
+   · scales --{category}-{size|intent} (text-sm, z-modal, duration-fast).
    ───────────────────────────────────────────────────────────────────────── */
+
+/* ── 1. Primitives (theme-independent) ─────────────────────────────────── */
 :root {
-  --background:             hsl(0 0% 97%);
-  --foreground:             hsl(0 0% 10%);
-  --card:                   hsl(0 0% 100%);
-  --card-foreground:        hsl(0 0% 10%);
-  --popover:                hsl(0 0% 100%);
-  --popover-foreground:     hsl(0 0% 10%);
-  --primary:                hsl(20 95% 55%);
-  --primary-foreground:     hsl(0 0% 100%);
-  --primary-hover:          hsl(20 95% 48%);   /* ~7 pts darker — hover state    */
-  --primary-active:         hsl(20 95% 40%);   /* ~15 pts darker — pressed state  */
-  --primary-muted:          hsl(20 95% 55% / 0.08); /* subtle tint on light surfaces */
-  --secondary:              hsl(0 0% 92%);
-  --secondary-foreground:   hsl(0 0% 15%);
-  --muted:                  hsl(0 0% 92%);
-  --muted-foreground:       hsl(0 0% 40%);
-  --accent:                 hsl(20 95% 95%);
-  --accent-foreground:      hsl(20 80% 30%);
-  --destructive:            hsl(0 84% 60%);
-  --border:                 hsl(0 0% 85%);
-  --input:                  hsl(0 0% 85%);
-  --ring:                   hsl(20 95% 55%);
-  --radius:                 0.5rem;
+  /* Neutrals — step = (100 − lightness) × 10, so palette-neutral-930 is 7% lightness */
+  --palette-neutral-0:    hsl(0 0% 100%);
+  --palette-neutral-30:   hsl(0 0% 97%);
+  --palette-neutral-40:   hsl(0 0% 96%);
+  --palette-neutral-50:   hsl(0 0% 95%);
+  --palette-neutral-80:   hsl(0 0% 92%);
+  --palette-neutral-100:  hsl(0 0% 90%);
+  --palette-neutral-150:  hsl(0 0% 85%);
+  --palette-neutral-400:  hsl(0 0% 60%);
+  --palette-neutral-600:  hsl(0 0% 40%);
+  --palette-neutral-850:  hsl(0 0% 15%);
+  --palette-neutral-870:  hsl(0 0% 13%);
+  --palette-neutral-900:  hsl(0 0% 10%);
+  --palette-neutral-910:  hsl(0 0% 9%);
+  --palette-neutral-920:  hsl(0 0% 8%);
+  --palette-neutral-930:  hsl(0 0% 7%);
 
-  /* Severity tokens */
-  --sev-critical:      hsl(0 84% 60%);
-  --sev-critical-soft: hsl(0 84% 60% / 0.12);
-  --sev-high:          hsl(21 95% 55%);
-  --sev-high-soft:     hsl(21 95% 55% / 0.12);
-  --sev-medium:        hsl(40 96% 50%);
-  --sev-medium-soft:   hsl(40 96% 50% / 0.12);
-  --sev-low:           hsl(214 87% 60%);
-  --sev-low-soft:      hsl(214 87% 60% / 0.12);
-  --success:           hsl(142 70% 45%);
-  --success-soft:      hsl(142 70% 45% / 0.12);
-  --warning:           hsl(40 96% 50%);
-  --warning-soft:      hsl(40 96% 50% / 0.12);
-  --info:              hsl(214 87% 60%);
-  --info-soft:         hsl(214 87% 60% / 0.12);
-  --purple:            hsl(270 95% 65%);
-  --purple-soft:       hsl(270 95% 65% / 0.12);
+  /* Brand orange */
+  --palette-orange-50:    hsl(20 95% 95%);
+  --palette-orange-300:   hsl(20 95% 75%);
+  --palette-orange-500:   hsl(20 95% 55%);
+  --palette-orange-600:   hsl(20 95% 48%);
+  --palette-orange-700:   hsl(20 95% 40%);
+  --palette-orange-800:   hsl(20 80% 30%);
+  --palette-orange-950:   hsl(20 80% 12%);
 
-  /* Chart — warm palette anchored on orange primary */
-  --chart-1: hsl(20 95% 55%);
-  --chart-2: hsl(199 89% 48%);
-  --chart-3: hsl(158 64% 40%);
-  --chart-4: hsl(262 80% 58%);
-  --chart-5: hsl(40 96% 50%);
+  /* Feedback / severity hues.
+     500 = bright, for dark surfaces. 600/700 = ink weight that clears
+     4.5:1 as text on white — used by the light theme. */
+  --palette-red-500:       hsl(0 84% 60%);
+  --palette-red-550:       hsl(0 70% 55%);    /* dark-theme destructive — softened */
+  --palette-red-600:       hsl(0 74% 48%);
+  --palette-tangerine-500: hsl(30 95% 52%);   /* severity-high — deliberately off the brand hue */
+  --palette-tangerine-700: hsl(17 88% 40%);
+  --palette-amber-500:     hsl(40 96% 50%);
+  --palette-amber-700:     hsl(35 92% 33%);
+  --palette-green-500:     hsl(142 70% 45%);
+  --palette-green-700:     hsl(142 72% 29%);
+  --palette-blue-500:      hsl(214 87% 60%);
+  --palette-blue-600:      hsl(214 80% 45%);
+  --palette-violet-500:    hsl(270 95% 65%);
+  --palette-violet-600:    hsl(270 75% 55%);
 
-  /* Sidebar */
-  --sidebar:                    hsl(0 0% 96%);
-  --sidebar-foreground:         hsl(0 0% 10%);
-  --sidebar-primary:            hsl(20 95% 55%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent:             hsl(0 0% 90%);
-  --sidebar-accent-foreground:  hsl(0 0% 15%);
-  --sidebar-border:             hsl(0 0% 85%);
-  --sidebar-ring:               hsl(20 95% 55%);
+  /* Categorical (charts) */
+  --palette-sky-600:      hsl(199 89% 48%);
+  --palette-emerald-600:  hsl(158 64% 40%);
+  --palette-indigo-500:   hsl(262 80% 58%);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Dark mode tokens  (applied when <html class="dark"> — the default)
-   ───────────────────────────────────────────────────────────────────────── */
+/* ── 2. Semantic + 3. Component — base (light) values; .dark overrides ── */
+:root {
+  /* Surfaces */
+  --background:             var(--palette-neutral-30);
+  --foreground:             var(--palette-neutral-900);
+  --card:                   var(--palette-neutral-0);
+  --card-foreground:        var(--foreground);
+  --popover:                var(--card);
+  --popover-foreground:     var(--foreground);
+  --muted:                  var(--palette-neutral-80);
+  --muted-foreground:       var(--palette-neutral-600);
+  --secondary:              var(--muted);      /* shadcn needs both names — same role */
+  --secondary-foreground:   var(--palette-neutral-850);
+  --accent:                 var(--palette-orange-50);  /* shadcn "accent" = hover/selected tint */
+  --accent-foreground:      var(--palette-orange-800);
+  --border:                 var(--palette-neutral-150);
+  --input:                  var(--border);
+  --radius:                 0.5rem;
+
+  /* Brand / action */
+  --primary:                var(--palette-orange-500);
+  --primary-foreground:     var(--palette-neutral-0);
+  --primary-hover:          var(--palette-orange-600);
+  --primary-active:         var(--palette-orange-700);
+  --ring:                   var(--primary);
+  /* Action colour for destructive buttons. Not aliased to severity-critical:
+     it is softened in dark mode, while the alarm signal stays full strength. */
+  --destructive:            var(--palette-red-600);
+  --destructive-foreground: var(--palette-neutral-0);
+
+  /* Feedback — ink weights in light so text-* clears 4.5:1 on white;
+     .dark switches to the bright 500s. Fills/dots use the same token. */
+  --success:           var(--palette-green-700);
+  --warning:           var(--palette-amber-700);
+  --info:              var(--palette-blue-600);
+  --violet:            var(--palette-violet-600);   /* categorical tone, no single role */
+
+  /* Severity — medium/low are explicit aliases of warning/info */
+  --severity-critical: var(--palette-red-600);
+  --severity-high:     var(--palette-tangerine-700);
+  --severity-medium:   var(--warning);
+  --severity-low:      var(--info);
+  /* DEPRECATED — renamed to severity-* */
+  --sev-critical:      var(--severity-critical);
+  --sev-high:          var(--severity-high);
+  --sev-medium:        var(--severity-medium);
+  --sev-low:           var(--severity-low);
+
+  /* Tints — use opacity modifiers on the base token, from this scale:
+       /5  hover wash on rows    /10 subtle fill (chips, selected rows)
+       /15 status tint (badges)  /20–/30 tint borders
+     DEPRECATED: the *-soft and primary-muted tokens below are kept only for
+     prototypes/ and in-flight work. Use bg-success/15, bg-primary/10 instead. */
+  --soft-alpha:        12%;
+  --primary-muted:     color-mix(in srgb, var(--primary) 8%, transparent);
+  --success-soft:      color-mix(in srgb, var(--success) var(--soft-alpha), transparent);
+  --warning-soft:      color-mix(in srgb, var(--warning) var(--soft-alpha), transparent);
+  --info-soft:         color-mix(in srgb, var(--info) var(--soft-alpha), transparent);
+  --purple:            var(--violet);       /* renamed → --violet */
+  --purple-soft:       color-mix(in srgb, var(--violet) var(--soft-alpha), transparent);
+  --sev-critical-soft: color-mix(in srgb, var(--severity-critical) var(--soft-alpha), transparent);
+  --sev-high-soft:     color-mix(in srgb, var(--severity-high) var(--soft-alpha), transparent);
+  --sev-medium-soft:   var(--warning-soft);
+  --sev-low-soft:      var(--info-soft);
+
+  /* Elevation — Tailwind utilities shadow-raised / shadow-floating / shadow-modal.
+       raised  → cards, inputs, tabs, segmented controls (resting on the page)
+       floating → popovers, dropdowns, tooltips, toasts, floating panels
+       modal   → dialogs, sheets, drawers, auth cards */
+  --elevation-raised:  0 1px 2px 0 hsl(0 0% 0% / 0.06);
+  --elevation-floating: 0 4px 12px -2px hsl(0 0% 0% / 0.10), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
+  --elevation-modal:   0 20px 48px -12px hsl(0 0% 0% / 0.25);
+
+  /* Component: chart — anchored on brand, same in both themes */
+  --chart-1: var(--primary);
+  --chart-2: var(--palette-sky-600);
+  --chart-3: var(--palette-emerald-600);
+  --chart-4: var(--palette-indigo-500);
+  --chart-5: var(--palette-amber-500);
+
+  /* Component: sidebar */
+  --sidebar:                    var(--palette-neutral-40);
+  --sidebar-foreground:         var(--foreground);
+  --sidebar-primary:            var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent:             var(--palette-neutral-100);
+  --sidebar-accent-foreground:  var(--secondary-foreground);
+  --sidebar-border:             var(--border);
+  --sidebar-ring:               var(--ring);
+}
+
+/* ── Dark theme (<html class="dark"> — the default) ────────────────────────
+   Overrides semantic/component tokens only — never primitives. Everything
+   not listed here (brand, chart, aliases) is identical in dark. */
 .dark {
-  --background:             hsl(0 0% 7%);
-  --foreground:             hsl(0 0% 95%);
-  --card:                   hsl(0 0% 9%);
-  --card-foreground:        hsl(0 0% 95%);
-  --popover:                hsl(0 0% 9%);
-  --popover-foreground:     hsl(0 0% 95%);
-  --primary:                hsl(20 95% 55%);
-  --primary-foreground:     hsl(0 0% 100%);
-  --primary-hover:          hsl(20 95% 48%);   /* same as light — hue/sat unchanged */
-  --primary-active:         hsl(20 95% 40%);   /* same as light — hue/sat unchanged */
-  --primary-muted:          hsl(20 95% 55% / 0.12); /* slightly more visible on dark surfaces */
-  --secondary:              hsl(0 0% 13%);
-  --secondary-foreground:   hsl(0 0% 95%);
-  --muted:                  hsl(0 0% 13%);
-  --muted-foreground:       hsl(0 0% 60%);
-  --accent:                 hsl(20 80% 12%);
-  --accent-foreground:      hsl(20 95% 75%);
-  --destructive:            hsl(0 70% 55%);
-  --border:                 hsl(0 0% 15%);
-  --input:                  hsl(0 0% 15%);
-  --ring:                   hsl(20 95% 55%);
+  --background:             var(--palette-neutral-930);
+  --foreground:             var(--palette-neutral-50);
+  --card:                   var(--palette-neutral-910);
+  --muted:                  var(--palette-neutral-870);
+  --muted-foreground:       var(--palette-neutral-400);
+  --secondary-foreground:   var(--foreground);
+  --accent:                 var(--palette-orange-950);
+  --accent-foreground:      var(--palette-orange-300);
+  --border:                 var(--palette-neutral-850);
+  --destructive:            var(--palette-red-550);
 
-  /* Severity tokens — same hues, dark mode unchanged */
-  --sev-critical:      hsl(0 84% 60%);
-  --sev-critical-soft: hsl(0 84% 60% / 0.15);
-  --sev-high:          hsl(21 95% 55%);
-  --sev-high-soft:     hsl(21 95% 55% / 0.15);
-  --sev-medium:        hsl(40 96% 50%);
-  --sev-medium-soft:   hsl(40 96% 50% / 0.15);
-  --sev-low:           hsl(214 87% 60%);
-  --sev-low-soft:      hsl(214 87% 60% / 0.15);
-  --success:           hsl(142 70% 45%);
-  --success-soft:      hsl(142 70% 45% / 0.15);
-  --warning:           hsl(40 96% 50%);
-  --warning-soft:      hsl(40 96% 50% / 0.15);
-  --info:              hsl(214 87% 60%);
-  --info-soft:         hsl(214 87% 60% / 0.15);
-  --purple:            hsl(270 95% 65%);
-  --purple-soft:       hsl(270 95% 65% / 0.15);
+  /* Feedback + severity — bright values read well on dark surfaces */
+  --success:                var(--palette-green-500);
+  --warning:                var(--palette-amber-500);
+  --info:                   var(--palette-blue-500);
+  --violet:                 var(--palette-violet-500);
+  --severity-critical:      var(--palette-red-500);
+  --severity-high:          var(--palette-tangerine-500);
 
-  /* Chart — same palette, dark mode needs no adjustments */
-  --chart-1: hsl(20 95% 55%);
-  --chart-2: hsl(199 89% 48%);
-  --chart-3: hsl(158 64% 40%);
-  --chart-4: hsl(262 80% 58%);
-  --chart-5: hsl(40 96% 50%);
+  /* Deprecated tints (see :root) */
+  --soft-alpha:             15%;
+  --primary-muted:          color-mix(in srgb, var(--primary) 12%, transparent);
+
+  /* Elevation — black shadows vanish on dark surfaces; go deeper */
+  --elevation-raised:  0 1px 2px 0 hsl(0 0% 0% / 0.40);
+  --elevation-floating: 0 8px 24px -4px hsl(0 0% 0% / 0.55), 0 2px 6px -2px hsl(0 0% 0% / 0.40);
+  --elevation-modal:   0 24px 64px -12px hsl(0 0% 0% / 0.70);
 
   /* Sidebar — 1% lighter than card so it reads as a separate surface */
-  --sidebar:                    hsl(0 0% 8%);
-  --sidebar-foreground:         hsl(0 0% 95%);
-  --sidebar-primary:            hsl(20 95% 55%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent:             hsl(0 0% 13%);
-  --sidebar-accent-foreground:  hsl(0 0% 95%);
-  --sidebar-border:             hsl(0 0% 13%);
-  --sidebar-ring:               hsl(20 95% 55%);
+  --sidebar:                var(--palette-neutral-920);
+  --sidebar-accent:         var(--palette-neutral-870);
+  --sidebar-border:         var(--palette-neutral-870);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

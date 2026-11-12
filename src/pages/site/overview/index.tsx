@@ -71,8 +71,8 @@ function CameraHealthCell({ cameras }: { cameras: CameraData[] }) {
         {online}<span className="text-muted-foreground/60">/{total}</span>
       </span>
       {offline > 0 && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-sev-critical">
-          <span className="size-1 rounded-full bg-sev-critical" />
+        <span className="inline-flex items-center gap-1 rounded-full border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-severity-critical">
+          <span className="size-1 rounded-full bg-severity-critical" />
           {offline} offline
         </span>
       )}
@@ -343,7 +343,7 @@ export default function SiteOverviewPage({
                 className={cn(
                   "inline-flex cursor-default items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm",
                   atSiteLimit
-                    ? "border-sev-critical/30 bg-sev-critical/10 text-sev-critical"
+                    ? "border-severity-critical/30 bg-severity-critical/10 text-severity-critical"
                     : "border-border bg-card text-muted-foreground"
                 )}
               >
@@ -353,7 +353,7 @@ export default function SiteOverviewPage({
                   </>
                 ) : (
                   <>
-                    <strong className={cn(atSiteLimit ? "text-sev-critical" : "text-foreground")}>
+                    <strong className={cn(atSiteLimit ? "text-severity-critical" : "text-foreground")}>
                       {sitesRemaining}
                     </strong>{" "}
                     of {siteLimit} sites left
@@ -513,7 +513,7 @@ export default function SiteOverviewPage({
                             </button>
                             <div className="my-1 border-t border-border" />
                             <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10">
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
                               <Trash2 className="size-3.5" />
                               Delete Site
                             </button>

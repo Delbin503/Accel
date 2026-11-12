@@ -206,7 +206,7 @@ function FormField({ label, children, span = 1, hint, error }: { label: string; 
         {label}
       </label>
       {children}
-      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
+      {error && <p className="mt-1 text-xs text-severity-critical">{error}</p>}
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
@@ -225,7 +225,7 @@ function TextInput({ value, onChange, mono, placeholder, type = "text", disabled
         "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
         mono && "font-mono",
         disabled && "cursor-not-allowed opacity-60",
-        invalid && "border-sev-critical"
+        invalid && "border-severity-critical"
       )}
     />
   );
@@ -243,7 +243,7 @@ function FormSelect({ value, onChange, options, disabled, invalid }: { value: st
       onValueChange={(v) => onChange(v === FORM_SELECT_EMPTY ? "" : v)}
       disabled={disabled}
     >
-      <SelectTrigger className={cn("h-9 w-full text-base", invalid && "border-sev-critical")} aria-invalid={invalid || undefined}>
+      <SelectTrigger className={cn("h-9 w-full text-base", invalid && "border-severity-critical")} aria-invalid={invalid || undefined}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -477,7 +477,7 @@ export function CameraFormModal({
                   aria-invalid={!!errors.password || undefined}
                   className={cn(
                     "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                    errors.password && "border-sev-critical"
+                    errors.password && "border-severity-critical"
                   )}
                 />
                 <button
@@ -650,7 +650,7 @@ export function CameraFormModal({
                       })}
                     </div>
                     {fields.scheduleDays.length === 0 && (
-                      <p className="mt-1 text-xs text-sev-critical">Select at least one day.</p>
+                      <p className="mt-1 text-xs text-severity-critical">Select at least one day.</p>
                     )}
                   </div>
 
@@ -671,7 +671,7 @@ export function CameraFormModal({
                     </FormField>
                   </div>
                   {fields.scheduleStart >= fields.scheduleEnd && (
-                    <p className="mt-1 text-xs text-sev-critical">End time must be after start time.</p>
+                    <p className="mt-1 text-xs text-severity-critical">End time must be after start time.</p>
                   )}
                 </>
               )}

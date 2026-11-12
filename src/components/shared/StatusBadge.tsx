@@ -12,14 +12,16 @@ const statusBadgeVariants = cva(
   {
     variants: {
       tone: {
-        critical: "border-sev-critical/30 bg-sev-critical/15 text-sev-critical",
-        high: "border-sev-high/30 bg-sev-high/15 text-sev-high",
-        medium: "border-sev-medium/30 bg-sev-medium/15 text-sev-medium",
-        low: "border-sev-low/30 bg-sev-low/15 text-sev-low",
+        critical: "border-severity-critical/30 bg-severity-critical/15 text-severity-critical",
+        high: "border-severity-high/30 bg-severity-high/15 text-severity-high",
+        medium: "border-severity-medium/30 bg-severity-medium/15 text-severity-medium",
+        low: "border-severity-low/30 bg-severity-low/15 text-severity-low",
         success: "border-success/30 bg-success/15 text-success",
         warning: "border-warning/30 bg-warning/15 text-warning",
         info: "border-info/30 bg-info/15 text-info",
-        purple: "border-purple/30 bg-purple/15 text-purple",
+        violet: "border-violet/30 bg-violet/15 text-violet",
+        /** @deprecated Renamed to "violet" — kept for prototypes and in-flight pages. */
+        purple: "border-violet/30 bg-violet/15 text-violet",
         primary: "border-primary/30 bg-primary/15 text-primary",
         neutral: "border-border bg-muted text-muted-foreground",
       },
@@ -29,14 +31,15 @@ const statusBadgeVariants = cva(
 );
 
 const DOT_TONE: Record<NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>, string> = {
-  critical: "bg-sev-critical",
-  high: "bg-sev-high",
-  medium: "bg-sev-medium",
-  low: "bg-sev-low",
+  critical: "bg-severity-critical",
+  high: "bg-severity-high",
+  medium: "bg-severity-medium",
+  low: "bg-severity-low",
   success: "bg-success",
   warning: "bg-warning",
   info: "bg-info",
-  purple: "bg-purple",
+  violet: "bg-violet",
+  purple: "bg-violet",
   primary: "bg-primary",
   neutral: "bg-muted-foreground",
 };

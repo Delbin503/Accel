@@ -19,9 +19,9 @@ export interface AccountProfile {
 /* Role pill — mirrors the dashboard RoleBadge palette. */
 function RolePill({ role }: { role: InviteContext["role"] }) {
   const styles: Record<InviteContext["role"], string> = {
-    owner: "bg-success-soft text-success",
-    admin: "bg-primary-muted text-primary",
-    user: "bg-warning-soft text-warning",
+    owner: "bg-success/15 text-success",
+    admin: "bg-primary/10 text-primary",
+    user: "bg-warning/15 text-warning",
   };
   return (
     <span
@@ -59,7 +59,7 @@ function passwordStrength(pw: string): { score: number; label: string; barClass:
   if (pw.length >= 12 && score >= 3) score = 4;
   const meta = [
     { label: "Too short", barClass: "bg-muted", textClass: "text-muted-foreground" },
-    { label: "Weak", barClass: "bg-sev-critical", textClass: "text-sev-critical" },
+    { label: "Weak", barClass: "bg-severity-critical", textClass: "text-severity-critical" },
     { label: "Fair", barClass: "bg-warning", textClass: "text-warning" },
     { label: "Good", barClass: "bg-success", textClass: "text-success" },
     { label: "Strong", barClass: "bg-success", textClass: "text-success" },
@@ -119,7 +119,7 @@ export function AccountSetup({
 
       {/* Identity chip — same layout as the live app's Edit User modal header. */}
       <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
-        <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-muted text-sm font-bold text-primary">
+        <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
           {initials(invite.email)}
         </div>
         <div className="min-w-0 flex-1">
@@ -141,11 +141,11 @@ export function AccountSetup({
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="e.g. Delbin"
                 autoComplete="given-name"
-                className={cn(inputClass, "pl-9", submitted && !firstNameValid && "border-sev-critical")}
+                className={cn(inputClass, "pl-9", submitted && !firstNameValid && "border-severity-critical")}
               />
             </div>
             {submitted && !firstNameValid && (
-              <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+              <p className="mt-1 flex items-center gap-1 text-2xs text-severity-critical">
                 <CircleAlert className="size-3" /> Enter your first name.
               </p>
             )}
@@ -161,11 +161,11 @@ export function AccountSetup({
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="e.g. Arkar"
                 autoComplete="family-name"
-                className={cn(inputClass, "pl-9", submitted && !lastNameValid && "border-sev-critical")}
+                className={cn(inputClass, "pl-9", submitted && !lastNameValid && "border-severity-critical")}
               />
             </div>
             {submitted && !lastNameValid && (
-              <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+              <p className="mt-1 flex items-center gap-1 text-2xs text-severity-critical">
                 <CircleAlert className="size-3" /> Enter your last name.
               </p>
             )}
@@ -183,10 +183,10 @@ export function AccountSetup({
             value={departments}
             onChange={setDepartments}
             placeholder="Select departments"
-            className={submitted && departments.length === 0 ? "border-sev-critical" : undefined}
+            className={submitted && departments.length === 0 ? "border-severity-critical" : undefined}
           />
           {submitted && departments.length === 0 && (
-            <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+            <p className="mt-1 flex items-center gap-1 text-2xs text-severity-critical">
               <CircleAlert className="size-3" /> Select at least one department.
             </p>
           )}
@@ -202,7 +202,7 @@ export function AccountSetup({
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
               autoComplete="new-password"
-              className={cn(inputClass, "pr-10", submitted && !pwLongEnough && "border-sev-critical")}
+              className={cn(inputClass, "pr-10", submitted && !pwLongEnough && "border-severity-critical")}
             />
             <button
               type="button"
@@ -242,10 +242,10 @@ export function AccountSetup({
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="Re-enter your password"
             autoComplete="new-password"
-            className={cn(inputClass, confirm.length > 0 && !pwMatches && "border-sev-critical")}
+            className={cn(inputClass, confirm.length > 0 && !pwMatches && "border-severity-critical")}
           />
           {confirm.length > 0 && !pwMatches && (
-            <p className="mt-1 flex items-center gap-1 text-2xs text-sev-critical">
+            <p className="mt-1 flex items-center gap-1 text-2xs text-severity-critical">
               <CircleAlert className="size-3" /> Passwords don't match.
             </p>
           )}

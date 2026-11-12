@@ -122,7 +122,7 @@ function StatusPill({ status }: { status: NvrStatus }) {
 const BAND_STYLES: Record<StorageBand, { bar: string; text: string; label: string }> = {
   healthy:  { bar: "bg-success",      text: "text-success",      label: "Healthy" },
   warning:  { bar: "bg-warning",      text: "text-warning",      label: "Warning" },
-  critical: { bar: "bg-sev-critical", text: "text-sev-critical", label: "Critical" },
+  critical: { bar: "bg-severity-critical", text: "text-severity-critical", label: "Critical" },
 };
 
 function StorageBar({ used, total }: { used: number; total: number }) {
@@ -150,7 +150,7 @@ function StorageDonut({ usedPct, band, size = 140 }: { usedPct: number; band: St
   const r = (size - 28) / 2;
   const c = 2 * Math.PI * r;
   const dash = (usedPct / 100) * c;
-  const colour = band === "critical" ? "var(--sev-critical)" : band === "warning" ? "var(--warning)" : "var(--success)";
+  const colour = band === "critical" ? "var(--severity-critical)" : band === "warning" ? "var(--warning)" : "var(--success)";
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
@@ -189,7 +189,7 @@ const KPI_CONFIGS: {
   { key: "online",           label: "Online",           sub: "Recording active",      accent: "success",      getValue: (i) => i.filter((n) => n.status === "online").length },
   { key: "offline",          label: "Offline",          sub: "No recent contact",     accent: "muted",        getValue: (i) => i.filter((n) => n.status === "offline").length },
   { key: "degraded",         label: "Degraded",         sub: "Partial functionality", accent: "warning",      getValue: (i) => i.filter((n) => n.status === "degraded").length },
-  { key: "storage-critical", label: "Storage Critical", sub: "≥ 90% utilised",        accent: "sev-critical", getValue: (i) => i.filter((n) => storageBandFor(n.usedStorageGb, n.totalStorageGb) === "critical").length },
+  { key: "storage-critical", label: "Storage Critical", sub: "≥ 90% utilised",        accent: "severity-critical", getValue: (i) => i.filter((n) => storageBandFor(n.usedStorageGb, n.totalStorageGb) === "critical").length },
 ];
 
 /* ── Multi-select filter dropdown ─────────────────────────────────────────── */
@@ -428,9 +428,9 @@ function StatCard({ icon, label, value, valueClass, sub }: {
   const accent: KpiAccent =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
-    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
-    valueClass?.includes("text-purple")       ? "purple" :
+    valueClass?.includes("text-violet")       ? "violet" :
     "primary";
   return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
@@ -540,7 +540,7 @@ export function NvrDrawer({
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <StatusPill status={nvr.status} />
                 {nvr.status === "offline" && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-sev-critical/30 bg-sev-critical/10 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-severity-critical/30 bg-severity-critical/10 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-severity-critical">
                     <AlertTriangle className="size-3" />
                     NVR is offline
                   </span>
@@ -681,7 +681,7 @@ export function NvrDrawer({
                           BAND_STYLES[band].text,
                           band === "healthy" ? "border-success/30 bg-success/10" :
                           band === "warning" ? "border-warning/30 bg-warning/10" :
-                          "border-sev-critical/30 bg-sev-critical/10"
+                          "border-severity-critical/30 bg-severity-critical/10"
                         )}
                       >
                         {BAND_STYLES[band].label}
@@ -713,7 +713,7 @@ export function NvrDrawer({
                   <div>
                     <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Est. Time Remaining</p>
                     <p className={cn("mt-0.5 text-md font-bold",
-                      estDaysRemaining < 7 ? "text-sev-critical" : estDaysRemaining < 30 ? "text-warning" : "text-success"
+                      estDaysRemaining < 7 ? "text-severity-critical" : estDaysRemaining < 30 ? "text-warning" : "text-success"
                     )}>
                       {estDaysRemaining} days
                     </p>
@@ -721,8 +721,8 @@ export function NvrDrawer({
                 </div>
 
                 {band === "critical" && (
-                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2.5 text-xs text-muted-foreground">
-                    <AlertTriangle className="size-3.5 flex-shrink-0 text-sev-critical" />
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3 py-2.5 text-xs text-muted-foreground">
+                    <AlertTriangle className="size-3.5 flex-shrink-0 text-severity-critical" />
                     Auto-cleanup is deleting recordings older than the retention window. Events older than that lose replayable footage.
                   </div>
                 )}
@@ -744,10 +744,10 @@ export function NvrDrawer({
                 Recording Statistics by Channel ({linkedChannels.length})
               </SectionTitle>
               {nvr.status === "offline" && (
-                <div className="mb-2 flex items-start gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2 text-xs">
-                  <AlertTriangle className="size-3.5 flex-shrink-0 text-sev-critical" />
+                <div className="mb-2 flex items-start gap-2 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3 py-2 text-xs">
+                  <AlertTriangle className="size-3.5 flex-shrink-0 text-severity-critical" />
                   <p className="text-muted-foreground">
-                    <strong className="text-sev-critical">Recording Disabled:</strong> This NVR is currently offline and recording is paused until it reconnects.
+                    <strong className="text-severity-critical">Recording Disabled:</strong> This NVR is currently offline and recording is paused until it reconnects.
                   </p>
                 </div>
               )}
@@ -919,7 +919,7 @@ export function NvrDrawer({
                               onClick={() => onUnlink(ch.channel)}
                               title="Unlink camera"
                               aria-label="Unlink camera"
-                              className="flex size-7 items-center justify-center rounded-md border border-sev-critical/30 text-sev-critical transition-colors hover:bg-sev-critical/10"
+                              className="flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical transition-colors hover:bg-severity-critical/10"
                             >
                               <Unlink className="size-3.5" />
                             </button>
@@ -962,7 +962,7 @@ export function NvrDrawer({
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+            className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
             onClick={onDelete}
           >
             <Trash2 className="size-3.5" />
@@ -2239,7 +2239,7 @@ export default function NvrDevicesPage({
                           <div className="my-1 border-t border-border" />
                           <button
                             onClick={() => { openDrawer(n.id); setTimeout(() => setModal({ kind: "delete" }), 100); }}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete

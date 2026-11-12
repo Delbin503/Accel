@@ -110,7 +110,7 @@ export function AcceptOwnershipModal({
             </div>
 
             {/* What changes — the consequence box used by the app's confirm dialogs. */}
-            <div className="rounded-lg border border-primary/25 bg-primary-muted p-3 text-sm">
+            <div className="rounded-lg border border-primary/25 bg-primary/10 p-3 text-sm">
               <p className="mb-2 font-semibold text-foreground">As Owner you take over</p>
               <ul className="space-y-1.5 text-muted-foreground">
                 {OWNER_TAKES_OVER.map((item) => (

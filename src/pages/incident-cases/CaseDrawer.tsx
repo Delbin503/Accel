@@ -50,6 +50,7 @@ import type { AnyEntity } from "@/types/entities";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { PRINT_CALLOUT, PRINT_NEUTRAL, PRINT_SEVERITY, PRINT_TONE, type PrintTone } from "@/lib/tokens";
 
 /* ── Section heading ─────────────────────────────────────────────────────── */
 
@@ -127,7 +128,7 @@ function LinkedEventCard({
     <div
       onClick={onView}
       className="grid cursor-pointer grid-cols-[140px_1fr] gap-3 rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30 hover:-translate-y-px"
-      style={{ borderLeftColor: `var(--sev-${event.severity})` }}
+      style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       <LinkedThumb event={event} />
 
@@ -141,8 +142,8 @@ function LinkedEventCard({
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-purple" />
+          <span className="inline-flex items-center gap-1 rounded border border-violet/20 bg-violet/15 px-1.5 py-px font-mono text-2xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-violet" />
             {event.model}
           </span>
         </div>
@@ -204,7 +205,7 @@ export function ChangeStatusModal({
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
                   picked === opt.value
-                    ? "border-primary bg-primary-muted"
+                    ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
@@ -345,7 +346,7 @@ export function ReassignModal({
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border px-4 py-2.5 text-left transition-colors",
                   picked.id === a.id
-                    ? "border-primary bg-primary-muted"
+                    ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
@@ -511,10 +512,10 @@ export function LinkNewIncidentsModal({
                     className={cn(
                       "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
                       sel
-                        ? "border-primary bg-primary-muted"
+                        ? "border-primary bg-primary/10"
                         : "border-border bg-muted/20 hover:border-primary"
                     )}
-                    style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${e.severity})` }}
+                    style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${e.severity})` }}
                   >
                     <div
                       className={cn(
@@ -632,11 +633,11 @@ export function EditCaseModal({
               onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
               className={cn(
                 "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                titleErr && "border-sev-critical"
+                titleErr && "border-severity-critical"
               )}
               placeholder="Case title..."
             />
-            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
+            {titleErr && <p className="mt-1 text-xs text-severity-critical">{titleErr}</p>}
           </div>
 
           <div>
@@ -651,13 +652,13 @@ export function EditCaseModal({
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-xs font-semibold transition-colors",
                     severity === opt.value
-                      ? "border-primary bg-primary-muted text-primary"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary"
                   )}
                 >
                   <span
                     className="size-2.5 rounded-full"
-                    style={{ background: `var(--sev-${opt.value})` }}
+                    style={{ background: `var(--severity-${opt.value})` }}
                   />
                   {opt.label}
                 </button>
@@ -727,31 +728,24 @@ export function DeleteCaseModal({
 
 /* ── PDF export ──────────────────────────────────────────────────────────── */
 
-/** Print palette — the app's tokens resolved to fixed values for paper. */
-const PRINT_SEVERITY: Record<string, { fg: string; bg: string }> = {
-  critical: { fg: "#b91c1c", bg: "#fef2f2" },
-  high:     { fg: "#c2410c", bg: "#fff7ed" },
-  medium:   { fg: "#b45309", bg: "#fffbeb" },
-  low:      { fg: "#15803d", bg: "#f0fdf4" },
-};
-
-const PRINT_STATUS: Record<string, { fg: string; bg: string }> = {
-  open:           { fg: "#1d4ed8", bg: "#eff6ff" },
-  "in-review":    { fg: "#b45309", bg: "#fffbeb" },
-  "action-taken": { fg: "#6d28d9", bg: "#f5f3ff" },
-  closed:         { fg: "#15803d", bg: "#f0fdf4" },
+/** Print palette — paper-weight tokens from lib/tokens (screen vars can't reach a print window). */
+const PRINT_STATUS: Record<string, PrintTone> = {
+  open:           PRINT_TONE.info,
+  "in-review":    PRINT_TONE.warning,
+  "action-taken": PRINT_TONE.violet,
+  closed:         PRINT_TONE.success,
 };
 
 /** Timeline dot colour per activity kind — mirrors ACTIVITY_DOT on screen. */
 const PRINT_ACTIVITY: Record<ActivityType, string> = {
-  created:      "#6d28d9",
-  acknowledged: "#15803d",
-  status:       "#1d4ed8",
-  note:         "#b45309",
-  reassign:     "#6d28d9",
-  link:         "#1d4ed8",
-  sla:          "#b91c1c",
-  edit:         "#6b7280",
+  created:      PRINT_TONE.violet.fg,
+  acknowledged: PRINT_TONE.success.fg,
+  status:       PRINT_TONE.info.fg,
+  note:         PRINT_TONE.warning.fg,
+  reassign:     PRINT_TONE.violet.fg,
+  link:         PRINT_TONE.info.fg,
+  sla:          PRINT_TONE.danger.fg,
+  edit:         PRINT_NEUTRAL.muted,
 };
 
 /** Escapes case-authored text — notes and titles land in the report as markup. */
@@ -773,8 +767,8 @@ function handleExportPDF(
     return;
   }
 
-  const sev = PRINT_SEVERITY[c.severity] ?? { fg: "#111827", bg: "#f3f4f6" };
-  const status = PRINT_STATUS[c.status] ?? { fg: "#111827", bg: "#f3f4f6" };
+  const sev = PRINT_SEVERITY[c.severity] ?? PRINT_TONE.neutral;
+  const status = PRINT_STATUS[c.status] ?? PRINT_TONE.neutral;
   const statusLabel = STATUS_CONFIG[c.status].label;
 
   const exportedAt = new Date().toLocaleString("en-SG", {
@@ -793,7 +787,7 @@ function handleExportPDF(
 
   const evRows = events
     .map((e, i) => {
-      const c2 = PRINT_SEVERITY[e.severity] ?? { fg: "#111827", bg: "#f3f4f6" };
+      const c2 = PRINT_SEVERITY[e.severity] ?? PRINT_TONE.neutral;
       return `
       <tr>
         <td class="num">${i + 1}</td>
@@ -810,7 +804,7 @@ function handleExportPDF(
   const activityRows = c.activity
     .map(
       (a) => `
-      <li class="event" style="--dot:${PRINT_ACTIVITY[a.type] ?? "#6b7280"}">
+      <li class="event" style="--dot:${PRINT_ACTIVITY[a.type] ?? PRINT_NEUTRAL.muted}">
         <div class="event-meta">${esc(a.timestampDisplay)} · ${esc(a.elapsed)}</div>
         <div class="event-title">${esc(a.title)}</div>
         ${a.description ? `<div class="event-desc">${esc(a.description)}</div>` : ""}
@@ -830,7 +824,7 @@ function handleExportPDF(
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      color: #111827; background: #fff;
+      color: ${PRINT_NEUTRAL.ink}; background: ${PRINT_NEUTRAL.paper};
       font-size: 12px; line-height: 1.55;
       padding: 40px 44px;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
@@ -838,15 +832,15 @@ function handleExportPDF(
 
     /* ── Masthead ── */
     .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
-      border-bottom: 3px solid #111827; padding-bottom: 14px; }
+      border-bottom: 3px solid ${PRINT_NEUTRAL.ink}; padding-bottom: 14px; }
     .brand { display: flex; align-items: center; gap: 9px; }
-    .brand svg { width: 26px; height: 26px; color: #ea580c; }
+    .brand svg { width: 26px; height: 26px; color: ${PRINT_NEUTRAL.brand}; }
     .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
-    .brand-sub { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: #6b7280; font-weight: 700; margin-top: 1px; }
+    .brand-sub { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: ${PRINT_NEUTRAL.muted}; font-weight: 700; margin-top: 1px; }
     .doc-type { text-align: right; }
-    .doc-type .kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6b7280; font-weight: 700; }
+    .doc-type .kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: ${PRINT_NEUTRAL.muted}; font-weight: 700; }
     .doc-type .ref { font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
-    .doc-type .when { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+    .doc-type .when { font-size: 10px; color: ${PRINT_NEUTRAL.faint}; margin-top: 2px; }
 
     /* ── Title block ── */
     .title-block { margin: 22px 0 18px; }
@@ -855,55 +849,55 @@ function handleExportPDF(
       font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em;
       white-space: nowrap; }
     h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
-    .subject { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .subject { font-size: 11px; color: ${PRINT_NEUTRAL.muted}; margin-top: 4px; }
 
     /* ── Summary table ── */
-    .facts { width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
-    .facts tr + tr { border-top: 1px solid #e5e7eb; }
+    .facts { width: 100%; border: 1px solid ${PRINT_NEUTRAL.ruleSubtle}; border-radius: 6px; overflow: hidden; }
+    .facts tr + tr { border-top: 1px solid ${PRINT_NEUTRAL.ruleSubtle}; }
     .facts th, .facts td { padding: 8px 12px; text-align: left; vertical-align: top; font-size: 11px; }
-    .facts th { width: 122px; background: #f9fafb; border-right: 1px solid #e5e7eb;
-      font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; font-weight: 700; }
+    .facts th { width: 122px; background: ${PRINT_NEUTRAL.fillSubtle}; border-right: 1px solid ${PRINT_NEUTRAL.ruleSubtle};
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: ${PRINT_NEUTRAL.muted}; font-weight: 700; }
 
     /* ── Sections ── */
-    h2 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #374151;
-      font-weight: 800; border-bottom: 1px solid #d1d5db; padding-bottom: 5px; margin: 26px 0 11px; }
-    h2 .count { color: #9ca3af; font-weight: 700; }
-    .notes { border-left: 3px solid #fbbf24; background: #fffbeb; padding: 11px 14px;
-      font-size: 11.5px; color: #78350f; white-space: pre-wrap; }
-    .empty { color: #9ca3af; font-style: italic; font-size: 11px; }
+    h2 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: ${PRINT_NEUTRAL.inkStrong};
+      font-weight: 800; border-bottom: 1px solid ${PRINT_NEUTRAL.rule}; padding-bottom: 5px; margin: 26px 0 11px; }
+    h2 .count { color: ${PRINT_NEUTRAL.faint}; font-weight: 700; }
+    .notes { border-left: 3px solid ${PRINT_CALLOUT.rule}; background: ${PRINT_CALLOUT.bg}; padding: 11px 14px;
+      font-size: 11.5px; color: ${PRINT_CALLOUT.ink}; white-space: pre-wrap; }
+    .empty { color: ${PRINT_NEUTRAL.faint}; font-style: italic; font-size: 11px; }
 
     /* ── Incidents table ── */
     table.data { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-    table.data th { text-align: left; padding: 7px 9px; background: #f3f4f6;
-      border-bottom: 1.5px solid #d1d5db; font-size: 9px; text-transform: uppercase;
-      letter-spacing: 0.06em; color: #4b5563; font-weight: 800; }
-    table.data td { padding: 7px 9px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
+    table.data th { text-align: left; padding: 7px 9px; background: ${PRINT_NEUTRAL.fill};
+      border-bottom: 1.5px solid ${PRINT_NEUTRAL.rule}; font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: ${PRINT_NEUTRAL.body}; font-weight: 800; }
+    table.data td { padding: 7px 9px; border-bottom: 1px solid ${PRINT_NEUTRAL.fill}; vertical-align: top;
       overflow-wrap: anywhere; }
-    table.data tr:last-child td { border-bottom: 1px solid #e5e7eb; }
-    .num { color: #9ca3af; width: 22px; }
+    table.data tr:last-child td { border-bottom: 1px solid ${PRINT_NEUTRAL.ruleSubtle}; }
+    .num { color: ${PRINT_NEUTRAL.faint}; width: 22px; }
     .mono { font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
     .nowrap { white-space: nowrap; }
-    .tally { margin-top: 7px; font-size: 10px; color: #6b7280; }
+    .tally { margin-top: 7px; font-size: 10px; color: ${PRINT_NEUTRAL.muted}; }
 
     /* ── Activity timeline ── */
     ol.timeline { list-style: none; padding-left: 4px; }
-    li.event { position: relative; padding: 0 0 13px 19px; border-left: 1.5px solid #d1d5db; }
+    li.event { position: relative; padding: 0 0 13px 19px; border-left: 1.5px solid ${PRINT_NEUTRAL.rule}; }
     li.event:last-child { border-left-color: transparent; padding-bottom: 0; }
     li.event::before { content: ""; position: absolute; left: -5.5px; top: 3px;
-      width: 9px; height: 9px; border-radius: 50%; background: #fff;
+      width: 9px; height: 9px; border-radius: 50%; background: ${PRINT_NEUTRAL.paper};
       border: 2px solid var(--dot); }
-    .event-meta { font-size: 9.5px; color: #9ca3af; font-family: ui-monospace, Menlo, monospace; }
+    .event-meta { font-size: 9.5px; color: ${PRINT_NEUTRAL.faint}; font-family: ui-monospace, Menlo, monospace; }
     .event-title { font-size: 11.5px; font-weight: 700; margin-top: 1px; }
-    .event-desc { font-size: 10.5px; color: #4b5563; margin-top: 2px; }
+    .event-desc { font-size: 10.5px; color: ${PRINT_NEUTRAL.body}; margin-top: 2px; }
 
     /* ── Footer ── */
     .signoff { margin-top: 26px; display: flex; gap: 40px; }
     .sign { flex: 1; }
-    .sign .line { border-bottom: 1px solid #9ca3af; height: 30px; }
+    .sign .line { border-bottom: 1px solid ${PRINT_NEUTRAL.faint}; height: 30px; }
     .sign .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
-      color: #6b7280; font-weight: 700; margin-top: 5px; }
-    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e5e7eb;
-      display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; }
+      color: ${PRINT_NEUTRAL.muted}; font-weight: 700; margin-top: 5px; }
+    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid ${PRINT_NEUTRAL.ruleSubtle};
+      display: flex; justify-content: space-between; font-size: 9.5px; color: ${PRINT_NEUTRAL.faint}; }
 
     /* Keep a section and its heading together across a page break. */
     h2, li.event, .signoff { break-inside: avoid; }
@@ -951,7 +945,7 @@ function handleExportPDF(
       <th>Status</th><td style="color:${status.fg};font-weight:700">${esc(statusLabel)}</td>
     </tr>
     <tr>
-      <th>Assigned To</th><td>${esc(c.assignedTo.name)} <span class="mono" style="color:#9ca3af">${esc(c.assignedTo.id)}</span></td>
+      <th>Assigned To</th><td>${esc(c.assignedTo.name)} <span class="mono" style="color:${PRINT_NEUTRAL.faint}">${esc(c.assignedTo.id)}</span></td>
       <th>Linked Incidents</th><td>${events.length}</td>
     </tr>
     <tr>
@@ -1022,9 +1016,9 @@ const ACTIVITY_DOT: Record<ActivityType, string> = {
   acknowledged: "border-success",
   status: "border-info",
   note: "border-warning",
-  reassign: "border-purple",
+  reassign: "border-violet",
   link: "border-info",
-  sla: "border-sev-critical",
+  sla: "border-severity-critical",
   edit: "border-muted-foreground",
 };
 
@@ -1059,7 +1053,7 @@ function ActivityItem({
         <p
           className={cn(
             "text-base font-semibold leading-snug",
-            isSla ? "text-sev-critical" : "text-foreground"
+            isSla ? "text-severity-critical" : "text-foreground"
           )}
         >
           {isSla && (
@@ -1559,7 +1553,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
               {caseData.notes && (
                 <div>
                   <SectionTitle>Case Notes</SectionTitle>
-                  <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-3.5 text-base leading-relaxed text-foreground">
+                  <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-3.5 text-base leading-relaxed text-foreground">
                     {caseData.notes}
                   </div>
                 </div>

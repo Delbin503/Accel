@@ -105,7 +105,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform", checked ? "translate-x-[18px]" : "translate-x-0.5")} />
+      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform", checked ? "translate-x-[18px]" : "translate-x-0.5")} />
     </button>
   );
 }
@@ -239,8 +239,8 @@ export default function SettingsPage() {
             </Button>
           </div>
           {/* Owners delete the account outright; everyone else can only ask them to. */}
-          <div className="flex items-start gap-3 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3.5 py-3">
-            <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+          <div className="flex items-start gap-3 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3.5 py-3">
+            <Trash2 className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
             <div className="min-w-0 flex-1">
               <p className="text-base font-semibold text-foreground">
                 {isOwner ? "Delete account" : "Request account deletion"}
@@ -275,7 +275,7 @@ export default function SettingsPage() {
                     description: `${ownerName} has been emailed at ${ownerEmail}.`,
                   });
                 }}
-                className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+                className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
               >
                 <Send className="size-3.5" />
                 {requestSent ? "Request sent" : "Request deletion"}

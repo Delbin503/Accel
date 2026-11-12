@@ -64,10 +64,10 @@ const KPI_CONFIGS: {
 }[] = [
   { key: "all",          label: "Total Cases",  accent: "primary",      getValue: (c) => c.length,                                       sub: "All time across all sites" },
   { key: "open",         label: "Open",         accent: "info",         getValue: (c) => c.filter((x) => x.status === "open").length,         sub: "Awaiting action" },
-  { key: "in-review",    label: "In Review",    accent: "sev-medium",   getValue: (c) => c.filter((x) => x.status === "in-review").length,    sub: "Under investigation" },
-  { key: "action-taken", label: "Action Taken", accent: "purple",       getValue: (c) => c.filter((x) => x.status === "action-taken").length, sub: "Mitigation underway" },
+  { key: "in-review",    label: "In Review",    accent: "severity-medium",   getValue: (c) => c.filter((x) => x.status === "in-review").length,    sub: "Under investigation" },
+  { key: "action-taken", label: "Action Taken", accent: "violet",       getValue: (c) => c.filter((x) => x.status === "action-taken").length, sub: "Mitigation underway" },
   { key: "closed",       label: "Closed",       accent: "success",      getValue: (c) => c.filter((x) => x.status === "closed").length,       sub: "Resolved cases" },
-  { key: "critical",     label: "Critical",     accent: "sev-critical", getValue: (c) => c.filter((x) => x.severity === "critical").length,   sub: "Immediate threat" },
+  { key: "critical",     label: "Critical",     accent: "severity-critical", getValue: (c) => c.filter((x) => x.severity === "critical").length,   sub: "Immediate threat" },
 ];
 
 /* ─── Filter dropdown ────────────────────────────────────────────────────── */
@@ -151,9 +151,9 @@ function FilterDropdown({
 /* ─── Filter panel ───────────────────────────────────────────────────────── */
 
 const SEVERITY_OPTIONS = [
-  { value: "critical", label: "Critical", color: "var(--sev-critical)" },
-  { value: "medium", label: "Medium", color: "var(--sev-medium)" },
-  { value: "low", label: "Low", color: "var(--sev-low)" },
+  { value: "critical", label: "Critical", color: "var(--severity-critical)" },
+  { value: "medium", label: "Medium", color: "var(--severity-medium)" },
+  { value: "low", label: "Low", color: "var(--severity-low)" },
 ] as const;
 
 const SITE_OPTIONS = [
@@ -265,7 +265,7 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
   return (
     <tr
       onClick={onClick}
-      style={{ boxShadow: `inset 3px 0 0 var(--sev-${c.severity})` }}
+      style={{ boxShadow: `inset 3px 0 0 var(--severity-${c.severity})` }}
       className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
     >
       <td className="px-4 py-3">

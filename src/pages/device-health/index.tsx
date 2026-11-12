@@ -139,7 +139,7 @@ function HealthPill({ status }: { status: HealthStatus }) {
 
 const TYPE_STYLES: Record<DeviceType, { bg: string; text: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
   camera: { bg: "bg-info/10 border-info/20",        text: "text-info",   icon: Video,     label: "Camera" },
-  nvr:    { bg: "bg-purple-soft border-purple/20",  text: "text-purple", icon: HardDrive, label: "NVR" },
+  nvr:    { bg: "bg-violet/15 border-violet/20",  text: "text-violet", icon: HardDrive, label: "NVR" },
 };
 
 function TypePill({ type }: { type: DeviceType }) {
@@ -164,7 +164,7 @@ function TypePill({ type }: { type: DeviceType }) {
 const DISK_BAND_STYLES: Record<NonNullable<DeviceRow["diskBand"]>, { bar: string; text: string }> = {
   healthy:  { bar: "bg-success",      text: "text-success" },
   warning:  { bar: "bg-warning",  text: "text-warning" },
-  critical: { bar: "bg-sev-critical", text: "text-sev-critical" },
+  critical: { bar: "bg-severity-critical", text: "text-severity-critical" },
 };
 
 function DiskBar({ pct, band, display }: { pct: number; band: DeviceRow["diskBand"]; display: string }) {

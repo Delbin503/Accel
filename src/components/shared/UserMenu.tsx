@@ -141,7 +141,7 @@ export function UserMenu({ className }: UserMenuProps) {
 
           <div className="p-1">
             <DropdownMenuItem
-              className="gap-2 px-2.5 py-2 text-base text-sev-critical focus:text-sev-critical"
+              className="gap-2 px-2.5 py-2 text-base text-severity-critical focus:text-severity-critical"
               onClick={() => setSignOutOpen(true)}
             >
               <LogOut className="size-4" />

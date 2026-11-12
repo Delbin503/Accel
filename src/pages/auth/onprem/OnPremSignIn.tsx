@@ -119,7 +119,7 @@ export default function OnPremSignInPage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
+            <div className="flex items-center gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.08] px-3 py-2 text-sm text-severity-critical">
               <AlertCircle className="size-3.5 flex-shrink-0" />
               {error}
             </div>

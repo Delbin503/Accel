@@ -177,7 +177,7 @@ function ModalContent({ size, className, onInteractOutside, ...props }: ModalCon
 }
 
 /**
- * `model` is the app-wide purple accent for anything model/AI-derived (it
+ * `model` is the app-wide violet accent for anything model/AI-derived (it
  * matches the `MODEL` badge), kept as a named tone so pages don't hand-colour
  * header icons.
  */
@@ -201,7 +201,7 @@ const TONE_ICON: Record<ModalTone, string> = {
   destructive: "text-destructive",
   warning: "text-warning",
   success: "text-success",
-  model: "text-purple",
+  model: "text-violet",
 };
 
 export interface ModalHeaderProps {

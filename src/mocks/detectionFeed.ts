@@ -523,9 +523,9 @@ export const DATE_GROUPS = [
 
 export const FILTER_OPTIONS = {
   severity: [
-    { value: "critical", label: "Critical", color: "var(--sev-critical)" },
-    { value: "medium", label: "Medium", color: "var(--sev-medium)" },
-    { value: "low", label: "Low", color: "var(--sev-low)" },
+    { value: "critical", label: "Critical", color: "var(--severity-critical)" },
+    { value: "medium", label: "Medium", color: "var(--severity-medium)" },
+    { value: "low", label: "Low", color: "var(--severity-low)" },
   ],
   type: [
     { value: "movement", label: "Asset movement" },

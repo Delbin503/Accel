@@ -79,7 +79,7 @@ function Field({ label, error, hint, className, children }: {
       <label className={LABEL}>{label}</label>
       {children}
       {error ? (
-        <p className="mt-1 text-xs text-sev-critical">{error}</p>
+        <p className="mt-1 text-xs text-severity-critical">{error}</p>
       ) : hint ? (
         <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
       ) : null}

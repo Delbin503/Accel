@@ -40,7 +40,7 @@ export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (nameErr) setNameErr(null); }} aria-invalid={!!nameErr} className="h-9 text-base" />
-            {nameErr && <p className="mt-1 text-xs text-sev-critical">{nameErr}</p>}
+            {nameErr && <p className="mt-1 text-xs text-severity-critical">{nameErr}</p>}
           </div>
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
@@ -111,13 +111,13 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
               aria-invalid={!!errors.name} placeholder="e.g. Astra HQ" className="h-9 text-base" />
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
             <Input value={address} onChange={(e) => { setAddress(e.target.value); if (errors.address) setErrors((p) => ({ ...p, address: undefined })); }}
               aria-invalid={!!errors.address} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
-            {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
+            {errors.address && <p className="mt-1 text-xs text-severity-critical">{errors.address}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
@@ -186,7 +186,7 @@ export function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: Site
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button disabled={confirm.trim() !== site.name}
             onClick={onConfirm}
-            className="gap-1.5 border-sev-critical/40 bg-sev-critical/15 text-sev-critical hover:bg-sev-critical/25">
+            className="gap-1.5 border-severity-critical/40 bg-severity-critical/15 text-severity-critical hover:bg-severity-critical/25">
             <Trash2 className="size-3.5" />
             Delete Site
           </Button>

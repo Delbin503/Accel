@@ -37,9 +37,9 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
           <div
             className={cn(
               "absolute border-2",
-              box.variant === "person"  ? "border-info bg-info-soft"
-              : box.variant === "vehicle" ? "border-purple bg-purple-soft"
-              : "border-primary bg-primary-muted"
+              box.variant === "person"  ? "border-info bg-info/15"
+              : box.variant === "vehicle" ? "border-violet bg-violet/15"
+              : "border-primary bg-primary/10"
             )}
             style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
           />
@@ -47,7 +47,7 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
             className={cn(
               "absolute -translate-y-full rounded-sm px-1 py-0.5 text-3xs font-semibold text-white",
               box.variant === "person"  ? "bg-info"
-              : box.variant === "vehicle" ? "bg-purple"
+              : box.variant === "vehicle" ? "bg-violet"
               : "bg-primary"
             )}
             style={{ top: box.top, left: box.left }}
@@ -107,7 +107,7 @@ const ENTITY_CARD: Record<
 > = {
   default: { label: "Asset Box",   accent: "text-primary", getId: (e) => e.assetId },
   person:  { label: "Person Box",  accent: "text-info",    getId: (e) => e.personId },
-  vehicle: { label: "Vehicle Box", accent: "text-purple",  getId: (e) => e.vehicleId },
+  vehicle: { label: "Vehicle Box", accent: "text-violet",  getId: (e) => e.vehicleId },
 };
 
 export function DetectionConfidenceSection({ event }: { event: DetectionEvent }) {
@@ -160,8 +160,8 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
           {entityCards.map((card) => {
             const scoreAccent =
               card.score >= 85 ? "success" :
-              card.score >= 70 ? "sev-medium" :
-              "sev-critical";
+              card.score >= 70 ? "severity-medium" :
+              "severity-critical";
             return (
               <SharedKpiCard key={card.variant}
                 compact
@@ -247,7 +247,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
               {/* Bar */}
               <div className="flex h-2 w-full overflow-hidden rounded-full">
                 <div className="bg-primary" style={{ width: `${eval_.trainPct}%` }} />
-                <div className="bg-purple" style={{ width: `${eval_.valPct}%` }} />
+                <div className="bg-violet" style={{ width: `${eval_.valPct}%` }} />
                 <div className="bg-success" style={{ width: `${eval_.testPct}%` }} />
               </div>
               {/* Legend */}
@@ -257,7 +257,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
                   Train ({eval_.trainPct}%)
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="size-2 rounded-full bg-purple" />
+                  <span className="size-2 rounded-full bg-violet" />
                   Val ({eval_.valPct}%)
                 </span>
                 <span className="flex items-center gap-1">
@@ -277,10 +277,10 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
 
 function ModelCard({ event }: { event: DetectionEvent }) {
   return (
-    <div className="rounded-lg border border-purple-soft bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
+    <div className="rounded-lg border border-violet/15 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
       <div className="mb-2 flex items-center gap-2">
-        <Settings className="size-4 text-purple" />
-        <span className="font-mono text-base font-bold text-purple">{event.model}</span>
+        <Settings className="size-4 text-violet" />
+        <span className="font-mono text-base font-bold text-violet">{event.model}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
         <div>
@@ -354,7 +354,7 @@ function DetailGrid({ event }: { event: DetectionEvent }) {
 
 function VlmBlock({ text }: { text: string }) {
   return (
-    <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
+    <div className="relative rounded-lg border border-violet/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
       {parseEventText(text)}
     </div>
   );
@@ -547,13 +547,13 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <div>
             <SectionTitle
               aside={
-                <span className="rounded bg-purple-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-purple">
+                <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
                   AI-generated · 8s clip
                 </span>
               }
             >
               <span className="flex items-center gap-2">
-                <Sparkles className="size-3.5 text-purple" />
+                <Sparkles className="size-3.5 text-violet" />
                 VLM Reasoning
               </span>
             </SectionTitle>
@@ -564,7 +564,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <div>
             <SectionTitle
               aside={
-                <button className="text-2xs text-purple hover:underline">View model →</button>
+                <button className="text-2xs text-violet hover:underline">View model →</button>
               }
             >
               Detected By
@@ -638,7 +638,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+            className="ml-auto text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
             onClick={() => {
               onClose();
               onDismiss();

@@ -148,7 +148,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
 const SEV_BADGE: Record<RuleSeverity, { bg: string; text: string; dot: string; label: string }> = {
   low:      { bg: "bg-info/15",         text: "text-info",         dot: "bg-info",         label: "Low" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      label: "Medium" },
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", label: "Critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", dot: "bg-severity-critical", label: "Critical" },
 };
 
 function SeverityBadge({ severity }: { severity: RuleSeverity }) {
@@ -333,7 +333,7 @@ function TagInput({
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
           {filteredSuggestions.length > 0 && (
             <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
@@ -520,7 +520,7 @@ function UploadDropzone({
       }}
       className={cn(
         "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 text-center transition-colors hover:border-primary/40",
-        invalid ? "border-sev-critical" : "border-border"
+        invalid ? "border-severity-critical" : "border-border"
       )}
     >
       <UploadCloud className="size-7 text-muted-foreground" />
@@ -534,7 +534,7 @@ function UploadDropzone({
               onChange("");
             }}
             aria-label="Remove file"
-            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-sev-critical"
+            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-severity-critical"
           >
             <X className="size-3.5" />
           </button>
@@ -601,7 +601,7 @@ export function CreateModelModal({
               className="h-10 text-base"
               aria-invalid={!!errors.name}
             />
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -618,7 +618,7 @@ export function CreateModelModal({
               className="w-full resize-none"
               aria-invalid={!!errors.desc}
             />
-            {errors.desc && <p className="mt-1 text-xs text-sev-critical">{errors.desc}</p>}
+            {errors.desc && <p className="mt-1 text-xs text-severity-critical">{errors.desc}</p>}
           </div>
         </ModalBody>
 
@@ -789,7 +789,7 @@ export function AddStepModal({
               aria-invalid={!!errors.actionLabel}
             />
             {errors.actionLabel && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.actionLabel}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.actionLabel}</p>
             )}
           </div>
 
@@ -807,7 +807,7 @@ export function AddStepModal({
               className="h-10 text-base"
               aria-invalid={!!errors.label}
             />
-            {errors.label && <p className="mt-1 text-xs text-sev-critical">{errors.label}</p>}
+            {errors.label && <p className="mt-1 text-xs text-severity-critical">{errors.label}</p>}
           </div>
 
           <div>
@@ -826,7 +826,7 @@ export function AddStepModal({
               invalid={!!errors.modelFile}
             />
             {errors.modelFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.modelFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.modelFile}</p>
             )}
           </div>
 
@@ -846,7 +846,7 @@ export function AddStepModal({
               invalid={!!errors.manifestFile}
             />
             {errors.manifestFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.manifestFile}</p>
             )}
           </div>
 
@@ -869,7 +869,7 @@ export function AddStepModal({
               aria-invalid={!!errors.batchSize}
             />
             {errors.batchSize ? (
-              <p className="mt-1 text-xs text-sev-critical">{errors.batchSize}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.batchSize}</p>
             ) : (
               <p className="mt-1 text-2xs text-muted-foreground">
                 Frames processed per inference pass ({BATCH_SIZE_MIN}–{BATCH_SIZE_MAX}). Higher uses
@@ -1028,8 +1028,8 @@ function CustomizeStepsDrawer({
         if (accepting) onDropRemove();
       }}
       className={cn(
-        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-2xl transition-colors duration-[var(--duration-fast)] ease-standard",
-        over ? "border-sev-critical bg-sev-critical/5" : "border-border"
+        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-modal transition-colors duration-[var(--duration-fast)] ease-standard",
+        over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
       <div className="border-b border-border px-4 py-3.5">
@@ -1057,7 +1057,7 @@ function CustomizeStepsDrawer({
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
-            over ? "border-sev-critical text-sev-critical" : "border-border text-muted-foreground"
+            over ? "border-severity-critical text-severity-critical" : "border-border text-muted-foreground"
           )}>
             <X className="size-3.5" />
             Drop here to remove
@@ -1096,7 +1096,7 @@ function HoverActions({ children, align = "center" }: { children: React.ReactNod
   return (
     <div
       className={cn(
-        "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-sm group-hover:flex",
+        "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-raised group-hover:flex",
         align === "top" ? "top-1.5" : "top-1/2 -translate-y-1/2"
       )}
     >
@@ -1122,7 +1122,7 @@ function IconAction({
       title={title}
       className={cn(
         "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
-        tone === "danger" ? "hover:bg-sev-critical/10 hover:text-sev-critical" : "hover:bg-primary/10 hover:text-primary"
+        tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary"
       )}
     >
       <Icon className="size-3" />
@@ -1184,7 +1184,7 @@ function SequenceItem({
       {editable && (
         <button
           onClick={onRemoveFromSequence}
-          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
+          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
           title="Remove from sequence (moves to Customize)"
         >
           <X className="size-3" />
@@ -1222,7 +1222,7 @@ function SourceBadge({
       className={cn(
         "inline-flex max-w-[180px] items-center gap-1 rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
         isModel
-          ? "border-purple/30 bg-purple/10 text-purple"
+          ? "border-violet/30 bg-violet/10 text-violet"
           : "border-info/30 bg-info/10 text-info"
       )}
     >
@@ -1306,7 +1306,7 @@ function ExtractedRuleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-purple/20 bg-purple/[0.04] px-3 py-2.5">
+    <div className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1463,7 +1463,7 @@ export function ExtractRulesPrompt({
             />
             <ModalBody className="text-sm text-muted-foreground">
               Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
-              tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
+              tagged <span className="font-semibold text-violet">Model</span>. You can edit or remove them afterwards.
             </ModalBody>
             <ModalFooter>
               <Button size="sm" onClick={onConfirm} className="gap-1.5">
@@ -1847,7 +1847,7 @@ function ModelDetailPanel({
               variant="outline"
               size="sm"
               onClick={() => setShowDeleteModal(true)}
-              className="gap-1.5 text-sev-critical hover:border-sev-critical/40 hover:bg-sev-critical/10 hover:text-sev-critical"
+              className="gap-1.5 text-severity-critical hover:border-severity-critical/40 hover:bg-severity-critical/10 hover:text-severity-critical"
             >
               <Trash2 className="size-3.5" />
               Delete

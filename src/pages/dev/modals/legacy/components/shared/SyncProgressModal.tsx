@@ -141,7 +141,7 @@ export function SyncProgressModal({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+            className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
           >
             <X className="size-3.5" />
             {cancelLabel}

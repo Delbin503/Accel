@@ -10,7 +10,7 @@ const meta: Meta<typeof StatusBadge> = {
       control: "select",
       options: [
         "critical", "high", "medium", "low", "success",
-        "warning", "info", "purple", "primary", "neutral",
+        "warning", "info", "violet", "primary", "neutral",
       ],
     },
     dot: { control: "boolean" },
@@ -40,7 +40,7 @@ export const CaseStatuses: Story = {
     <div className="flex flex-wrap gap-2">
       <StatusBadge tone="info">Open</StatusBadge>
       <StatusBadge tone="warning">In Review</StatusBadge>
-      <StatusBadge tone="purple">Action Taken</StatusBadge>
+      <StatusBadge tone="violet">Action Taken</StatusBadge>
       <StatusBadge tone="success">Closed</StatusBadge>
     </div>
   ),

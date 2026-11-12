@@ -57,9 +57,9 @@ export const SYSTEM_HEALTH_PRESENTATION: Record<
   },
   critical: {
     label: "Attention Needed",
-    dot: "bg-sev-critical",
-    text: "text-sev-critical",
-    pill: "border-sev-critical/40 bg-sev-critical/10 text-sev-critical",
+    dot: "bg-severity-critical",
+    text: "text-severity-critical",
+    pill: "border-severity-critical/40 bg-severity-critical/10 text-severity-critical",
   },
 };
 

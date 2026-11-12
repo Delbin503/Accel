@@ -65,7 +65,7 @@ export const Donut: Story = {
       <DonutChart
         data={[
           { name: "Online", value: 11, color: "var(--success)" },
-          { name: "Offline", value: 3, color: "var(--sev-critical)" },
+          { name: "Offline", value: 3, color: "var(--severity-critical)" },
         ]}
         centerLabel={
           <div className="text-center">

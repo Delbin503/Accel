@@ -69,7 +69,7 @@ export function DismissCopy({ event, bulkCount, onClose }: {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-left text-base text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:border-ring dark:bg-input/30"
+                  className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-left text-base text-foreground shadow-raised outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:border-ring dark:bg-input/30"
                 >
                   <span className="truncate">{picked.label}</span>
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground" />

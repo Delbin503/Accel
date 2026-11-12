@@ -161,7 +161,7 @@ export default function ActivityLogsPage() {
       <KpiGrid cols={3}>
         <KpiCard label="Today"        value={todayCount} sub="Recorded today"   accent="success" />
         <KpiCard label="Success"      value={successCount} sub="Successful actions" accent="success" />
-        <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="sev-critical" />
+        <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="severity-critical" />
       </KpiGrid>
 
       {/* Unified date bar — shared canonical design */}
@@ -284,7 +284,7 @@ export default function ActivityLogsPage() {
                       Success
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-sev-critical">
+                    <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-severity-critical">
                       <XCircle className="size-2.5" />
                       Failed
                     </span>

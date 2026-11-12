@@ -32,7 +32,7 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
 
 const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string; chip: string }> = {
   starter:      { bg: "bg-info/10",       border: "border-info/40",       text: "text-info",       chip: "bg-info/15 text-info"           },
-  professional: { bg: "bg-purple/10",     border: "border-purple/40",     text: "text-purple",     chip: "bg-purple/15 text-purple"        },
+  professional: { bg: "bg-violet/10",     border: "border-violet/40",     text: "text-violet",     chip: "bg-violet/15 text-violet"        },
   enterprise:   { bg: "bg-success/10",    border: "border-success/40",    text: "text-success",    chip: "bg-success/15 text-success"      },
 };
 
@@ -110,23 +110,23 @@ export function AddCardModal({ open, onClose, onSave }: {
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
             <Input value={cardName} onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }} placeholder="Delbin Arkar" className="h-9 text-base" aria-invalid={!!errors.cardName} />
-            {errors.cardName && <p className="mt-1 text-xs text-sev-critical">{errors.cardName}</p>}
+            {errors.cardName && <p className="mt-1 text-xs text-severity-critical">{errors.cardName}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
             <Input value={cardNumber} onChange={(e) => { setCardNumber(formatCard(e.target.value)); setErrors((p) => ({ ...p, cardNumber: undefined })); }} placeholder="1234 5678 9012 3456" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cardNumber} />
-            {errors.cardNumber && <p className="mt-1 text-xs text-sev-critical">{errors.cardNumber}</p>}
+            {errors.cardNumber && <p className="mt-1 text-xs text-severity-critical">{errors.cardNumber}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
               <Input value={expiry} onChange={(e) => { setExpiry(formatExpiry(e.target.value)); setErrors((p) => ({ ...p, expiry: undefined })); }} placeholder="MM/YY" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.expiry} />
-              {errors.expiry && <p className="mt-1 text-xs text-sev-critical">{errors.expiry}</p>}
+              {errors.expiry && <p className="mt-1 text-xs text-severity-critical">{errors.expiry}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
               <Input value={cvc} onChange={(e) => { setCvc(e.target.value.replace(/\D/g, "").slice(0, 4)); setErrors((p) => ({ ...p, cvc: undefined })); }} placeholder="123" className="h-9 font-mono text-base" inputMode="numeric" aria-invalid={!!errors.cvc} />
-              {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
+              {errors.cvc && <p className="mt-1 text-xs text-severity-critical">{errors.cvc}</p>}
             </div>
           </div>
         </ModalBody>
@@ -159,7 +159,7 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
 
   if (!invoice) return null;
   const total = invoice.amount + Math.round(invoice.amount * 0.07);
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
@@ -169,8 +169,8 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
           description={<>Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.</>}
         />
         <ModalBody className="space-y-3">
-          <div className="flex items-start gap-3 rounded-lg border border-sev-critical/40 bg-sev-critical/[0.06] p-3 text-sm">
-            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-sev-critical" />
+          <div className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
             <p className="text-muted-foreground">
               The previous charge of <strong className="text-foreground">${total.toLocaleString()}</strong> failed.
               Select a card below — or update your card details — and we'll try again.
@@ -238,7 +238,7 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
   const color = PLAN_COLORS[tier];
   const Icon = PLAN_ICONS[tier];
   const price = cycle === "annual" ? plan.pricePerYear : plan.pricePerMonth;
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()}>
@@ -336,7 +336,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
   const annual = cycleCharges(tier, seats, "annual");
   const saving = monthly * 12 - annual.total;
   const dueToday = annual.total - credit;
-  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-sev-critical", Amex: "text-success" };
+  const brandColors: Record<string, string> = { Visa: "text-info", Mastercard: "text-severity-critical", Amex: "text-success" };
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()}>

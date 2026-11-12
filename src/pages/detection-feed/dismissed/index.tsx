@@ -31,11 +31,11 @@ import { RestoreDismissedModal } from "./RestoreDismissedModal";
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
 const REASON_STYLES: Record<FpReason, { chip: string; bar: string }> = {
-  "wrong-class":     { chip: "bg-sev-medium-soft text-sev-medium",  bar: "bg-sev-medium" },
-  "wrong-person":    { chip: "bg-sev-high-soft text-sev-high",      bar: "bg-sev-high" },
-  "known-exemption": { chip: "bg-success-soft text-success",        bar: "bg-success" },
-  "staged":          { chip: "bg-info-soft text-info",              bar: "bg-info" },
-  "threshold":       { chip: "bg-purple-soft text-purple",          bar: "bg-purple" },
+  "wrong-class":     { chip: "bg-severity-medium/15 text-severity-medium",  bar: "bg-severity-medium" },
+  "wrong-person":    { chip: "bg-severity-high/15 text-severity-high",      bar: "bg-severity-high" },
+  "known-exemption": { chip: "bg-success/15 text-success",        bar: "bg-success" },
+  "staged":          { chip: "bg-info/15 text-info",              bar: "bg-info" },
+  "threshold":       { chip: "bg-violet/15 text-violet",          bar: "bg-violet" },
   "other":           { chip: "bg-muted text-muted-foreground",      bar: "bg-muted-foreground" },
 };
 
@@ -65,8 +65,8 @@ const KPI_CONFIGS: {
 }[] = [
   { key: "all",             label: "Total Dismissed", getValue: (i) => i.length,                                                              sub: "Last 30 days",            accent: "primary" },
   { key: "known-exemption", label: "Known Exemptions",getValue: (i) => i.filter((d) => d.reason === "known-exemption").length,               sub: "Authorized activities",   accent: "success" },
-  { key: "wrong-class",     label: "Model Errors",    getValue: (i) => i.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length, sub: "Wrong class or person", accent: "sev-medium" },
-  { key: "threshold",       label: "Tuning Needed",   getValue: (i) => i.filter((d) => d.reason === "threshold").length,                     sub: "Threshold too sensitive", accent: "purple" },
+  { key: "wrong-class",     label: "Model Errors",    getValue: (i) => i.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length, sub: "Wrong class or person", accent: "severity-medium" },
+  { key: "threshold",       label: "Tuning Needed",   getValue: (i) => i.filter((d) => d.reason === "threshold").length,                     sub: "Threshold too sensitive", accent: "violet" },
   { key: "other",           label: "Others",          getValue: (i) => i.filter((d) => d.reason === "staged" || d.reason === "other").length, sub: "Staged events & other",  accent: "info" },
 ];
 
@@ -233,9 +233,9 @@ function ActiveFilterBar({
   if (allActive.length === 0 && !search) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-muted px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
       {search && (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
           "{search}"
           <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
             <X className="size-2.5" />
@@ -243,7 +243,7 @@ function ActiveFilterBar({
         </span>
       )}
       {allActive.map(({ group, value, label }) => (
-        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
+        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
           {label}
           <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
             <X className="size-2.5" />
@@ -281,7 +281,7 @@ function DismissedRow({
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4"
       )}
-      style={{ borderLeftColor: `var(--sev-${event.severity})` }}
+      style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       {/* Thumbnail with bounding boxes — same as Detection Feed */}
       <div className="self-start">
@@ -306,7 +306,7 @@ function DismissedRow({
                 className={cn(
                   "absolute border-2",
                   box.variant === "person"  ? "border-info bg-info/10"
-                  : box.variant === "vehicle" ? "border-purple bg-purple/10"
+                  : box.variant === "vehicle" ? "border-violet bg-violet/10"
                   : "border-primary bg-primary/10"
                 )}
                 style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
@@ -315,7 +315,7 @@ function DismissedRow({
                 className={cn(
                   "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
                   box.variant === "person"  ? "bg-info"
-                  : box.variant === "vehicle" ? "bg-purple"
+                  : box.variant === "vehicle" ? "bg-violet"
                   : "bg-primary"
                 )}
                 style={{ top: box.top, left: box.left }}
@@ -347,8 +347,8 @@ function DismissedRow({
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-purple hover:text-purple">
-            <span className="size-1.5 rounded-full bg-purple" />
+          <span className="inline-flex items-center gap-1 rounded border border-violet/20 bg-violet/15 px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-violet hover:text-violet">
+            <span className="size-1.5 rounded-full bg-violet" />
             {event.model}
           </span>
         </div>
@@ -575,7 +575,7 @@ export default function DismissedEventsPage() {
 
       {/* ── Bulk-restore selection bar ───────────────────────────────────── */}
       {selectedIds.size > 0 && (
-        <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-2xl">
+        <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-modal">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CheckSquare className="size-3.5" />

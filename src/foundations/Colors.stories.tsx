@@ -56,14 +56,14 @@ export const Palette: Story = {
       </Group>
 
       <Group title="Status & Severity">
-        <Swatch token="bg-sev-critical" bg="bg-sev-critical" />
-        <Swatch token="bg-sev-high" bg="bg-sev-high" />
-        <Swatch token="bg-sev-medium" bg="bg-sev-medium" />
-        <Swatch token="bg-sev-low" bg="bg-sev-low" />
+        <Swatch token="bg-severity-critical" bg="bg-severity-critical" />
+        <Swatch token="bg-severity-high" bg="bg-severity-high" />
+        <Swatch token="bg-severity-medium" bg="bg-severity-medium" />
+        <Swatch token="bg-severity-low" bg="bg-severity-low" />
         <Swatch token="bg-success" bg="bg-success" />
         <Swatch token="bg-warning" bg="bg-warning" />
         <Swatch token="bg-info" bg="bg-info" />
-        <Swatch token="bg-purple" bg="bg-purple" />
+        <Swatch token="bg-violet" bg="bg-violet" />
       </Group>
 
       <section className="space-y-3">

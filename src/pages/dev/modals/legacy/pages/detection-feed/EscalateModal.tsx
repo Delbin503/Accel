@@ -60,7 +60,7 @@ function AssigneeSearchSelect({ value, onChange }: { value: CaseAssignee; onChan
         />
       </div>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-card shadow-floating">
           {filtered.length === 0 ? (
             <p className="px-3 py-3 text-center text-sm italic text-muted-foreground">No assignees match "{query}".</p>
           ) : (
@@ -99,9 +99,9 @@ const SLA_BY_SEVERITY: Record<
 };
 
 const SEV_OPTION_STYLES: Record<Severity, string> = {
-  critical: "bg-sev-critical-soft text-sev-critical border-sev-critical",
-  medium: "bg-sev-medium-soft text-sev-medium border-sev-medium",
-  low: "bg-sev-low-soft text-sev-low border-sev-low",
+  critical: "bg-severity-critical/15 text-severity-critical border-severity-critical",
+  medium: "bg-severity-medium/15 text-severity-medium border-severity-medium",
+  low: "bg-severity-low/15 text-severity-low border-severity-low",
 };
 
 interface EscalateModalProps {
@@ -162,7 +162,7 @@ export function EscalateModal({
         <ModalBody className="space-y-4">
           {/* Bulk banner */}
           {isBulk && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary-muted p-3">
+            <div className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary/10 p-3">
               <Layers className="mt-0.5 size-4 flex-shrink-0 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-primary">
@@ -187,7 +187,7 @@ export function EscalateModal({
               className="text-base"
               placeholder="Describe the incident..."
             />
-            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
+            {titleErr && <p className="mt-1 text-xs text-severity-critical">{titleErr}</p>}
           </div>
 
           {/* Severity + Assignee */}

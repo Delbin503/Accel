@@ -52,7 +52,7 @@ import { RuleConditions } from "./RuleConditions";
 const SEV_BADGE: Record<RuleSeverity, { bg: string; text: string; dot: string; label: string }> = {
   low:      { bg: "bg-info/15",         text: "text-info",         dot: "bg-info",         label: "Low" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      label: "Medium" },
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", label: "Critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", dot: "bg-severity-critical", label: "Critical" },
 };
 
 function SeverityBadge({ severity }: { severity: RuleSeverity }) {
@@ -315,7 +315,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
         <MoreHorizontal className="size-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-xl">
+        <div className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-floating">
           <button
             onClick={() => { setOpen(false); onEdit(); }}
             className="flex w-full items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -326,7 +326,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
           <div className="my-1 h-px bg-border" />
           <button
             onClick={() => { setOpen(false); onDelete(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-base text-sev-critical hover:bg-sev-critical/10"
+            className="flex w-full items-center gap-2 px-3 py-2 text-base text-severity-critical hover:bg-severity-critical/10"
           >
             <Trash2 className="size-3.5" />
             Delete Rule
@@ -375,7 +375,7 @@ function TagInput({
       <div
         className={cn(
           "flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary",
-          invalid && "border-sev-critical"
+          invalid && "border-severity-critical"
         )}
         onClick={() => { ref.current?.focus(); setOpen(true); }}
       >
@@ -409,7 +409,7 @@ function TagInput({
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
           {filteredSuggestions.length > 0 && (
             <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
@@ -448,7 +448,7 @@ function TagInput({
 const SEV_OPTS: { sev: RuleSeverity; label: string; active: string; dot: string }[] = [
   { sev: "low",      label: "Low",      active: "border-info/50 bg-info/10 text-info",                         dot: "bg-info" },
   { sev: "medium",   label: "Medium",   active: "border-warning/50 bg-warning/10 text-warning",                dot: "bg-warning" },
-  { sev: "critical", label: "Critical", active: "border-sev-critical/50 bg-sev-critical/10 text-sev-critical", dot: "bg-sev-critical" },
+  { sev: "critical", label: "Critical", active: "border-severity-critical/50 bg-severity-critical/10 text-severity-critical", dot: "bg-severity-critical" },
 ];
 
 /* ── Builder state ───────────────────────────────────────────────────────── */
@@ -604,7 +604,7 @@ function RuleBuilder({
                   className="h-10 text-base"
                   aria-invalid={!!s.errors.name}
                 />
-                {s.errors.name && <p className="mt-1 text-xs text-sev-critical">{s.errors.name}</p>}
+                {s.errors.name && <p className="mt-1 text-xs text-severity-critical">{s.errors.name}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -619,7 +619,7 @@ function RuleBuilder({
                   aria-invalid={!!s.errors.description}
                 />
                 {s.errors.description && (
-                  <p className="mt-1 text-xs text-sev-critical">{s.errors.description}</p>
+                  <p className="mt-1 text-xs text-severity-critical">{s.errors.description}</p>
                 )}
               </div>
             </div>
@@ -636,7 +636,7 @@ function RuleBuilder({
                   suggestions={existingTags}
                   invalid={!!s.errors.tags}
                 />
-                {s.errors.tags && <p className="mt-1 text-xs text-sev-critical">{s.errors.tags}</p>}
+                {s.errors.tags && <p className="mt-1 text-xs text-severity-critical">{s.errors.tags}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-base font-semibold text-foreground">

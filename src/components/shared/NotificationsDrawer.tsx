@@ -10,7 +10,7 @@ import { useNotificationsStore, type NotificationItem, type NotificationKind } f
 import { TruncatedText } from "./TruncatedText";
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
-  incident: { bg: "bg-sev-critical/15", text: "text-sev-critical", icon: AlertTriangle, label: "Incident" },
+  incident: { bg: "bg-severity-critical/15", text: "text-severity-critical", icon: AlertTriangle, label: "Incident" },
   case:     { bg: "bg-primary/15",      text: "text-primary",      icon: FolderOpen,    label: "Case" },
   system:   { bg: "bg-info/15",         text: "text-info",         icon: Server,        label: "System" },
   user:     { bg: "bg-success/15",      text: "text-success",      icon: UsersIcon,     label: "Team" },
@@ -128,7 +128,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
             <Bell className="size-4 text-primary" />
             Notifications
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-sev-critical px-1.5 py-0.5 text-2xs font-bold text-white">
+              <span className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-white">
                 {unreadCount}
               </span>
             )}

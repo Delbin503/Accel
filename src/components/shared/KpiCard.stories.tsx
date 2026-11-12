@@ -12,12 +12,12 @@ const meta: Meta<typeof KpiCard> = {
         "primary",
         "success",
         "warning",
-        "sev-critical",
-        "sev-medium",
-        "sev-low",
+        "severity-critical",
+        "severity-medium",
+        "severity-low",
         "info",
         "secondary",
-        "purple",
+        "violet",
         "muted",
       ],
     },
@@ -42,7 +42,7 @@ export const Accents: Story = {
       <KpiCard label="Primary" value={142} sub="All time" accent="primary" />
       <KpiCard label="Success" value={98} sub="Resolved" accent="success" />
       <KpiCard label="Warning" value={17} sub="Pending" accent="warning" />
-      <KpiCard label="Critical" value={3} sub="Unresolved" accent="sev-critical" />
+      <KpiCard label="Critical" value={3} sub="Unresolved" accent="severity-critical" />
       <KpiCard label="Info" value={24} sub="Informational" accent="info" />
     </KpiGrid>
   ),
@@ -51,7 +51,7 @@ export const Accents: Story = {
 export const Clickable: Story = {
   render: () => (
     <KpiGrid cols={4}>
-      <KpiCard label="Total Cameras" value="11 / 14" sub="3 offline" accent="sev-critical" onClick={() => {}} />
+      <KpiCard label="Total Cameras" value="11 / 14" sub="3 offline" accent="severity-critical" onClick={() => {}} />
       <KpiCard label="Online" value={8} sub="Streaming" accent="success" onClick={() => {}} active />
       <KpiCard label="Offline" value={3} sub="Check required" accent="warning" onClick={() => {}} />
       <KpiCard label="Alerts Today" value={21} sub="Last 24 hours" accent="info" onClick={() => {}} />
@@ -64,7 +64,7 @@ export const Compact: Story = {
     <KpiGrid cols={4}>
       <KpiCard compact label="Cameras" value="11 / 14" accent="primary" />
       <KpiCard compact label="Online" value={8} accent="success" />
-      <KpiCard compact label="Offline" value={3} accent="sev-critical" />
+      <KpiCard compact label="Offline" value={3} accent="severity-critical" />
       <KpiCard compact label="Alerts" value={21} accent="warning" />
     </KpiGrid>
   ),
@@ -75,7 +75,7 @@ export const ActiveFilter: Story = {
     label: "Critical Alerts",
     value: 3,
     sub: "Click to clear filter",
-    accent: "sev-critical",
+    accent: "severity-critical",
     active: true,
     onClick: () => {},
   },
@@ -90,7 +90,7 @@ export const WithTrend: Story = {
         label="Critical Events"
         value={14}
         sub="vs prior"
-        accent="sev-critical"
+        accent="severity-critical"
         trend={{ value: "8.0%", direction: "up", sentiment: "negative" }}
       />
     </KpiGrid>

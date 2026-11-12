@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { cn } from "@/lib/utils";
 
 const meta: Meta = {
-  title: "Foundations/Motion & Z-index",
+  title: "Foundations/Motion, Elevation & Z-index",
   parameters: { layout: "fullscreen" },
 };
 
@@ -17,6 +18,12 @@ const DURATIONS = [
 const EASING = [
   { token: "ease-standard", use: "Most transitions" },
   { token: "ease-emphasized", use: "Entrances / attention" },
+];
+
+const ELEVATION = [
+  { token: "shadow-raised", use: "Cards, inputs, tabs, toggles — resting on the page" },
+  { token: "shadow-floating", use: "Popovers, dropdowns, tooltips, toasts, floating bars" },
+  { token: "shadow-modal", use: "Dialogs, sheets, drawers" },
 ];
 
 const ZINDEX = [
@@ -55,6 +62,29 @@ export const Motion: Story = {
           <div key={e.token} className="flex items-center gap-6 px-5 py-3.5">
             <code className="w-44 shrink-0 font-mono text-sm text-secondary">{e.token}</code>
             <span className="text-base text-foreground">{e.use}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+export const Elevation: Story = {
+  render: () => (
+    <div className="space-y-6 p-8">
+      <div>
+        <h2 className="text-lg font-bold text-foreground">Elevation</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Three theme-aware levels (deeper in dark mode). Use these instead of{" "}
+          <code className="font-mono text-xs">shadow-sm</code> …{" "}
+          <code className="font-mono text-xs">shadow-2xl</code>, which vanish on dark surfaces.
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-6">
+        {ELEVATION.map((e) => (
+          <div key={e.token} className={cn("rounded-xl border border-border bg-card p-5", e.token)}>
+            <code className="font-mono text-sm text-foreground">{e.token}</code>
+            <p className="mt-2 text-sm text-muted-foreground">{e.use}</p>
           </div>
         ))}
       </div>

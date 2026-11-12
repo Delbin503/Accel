@@ -14,8 +14,8 @@ export const STATUS_CONFIG: Record<CaseStatus, { label: string; badge: string; d
   },
   "action-taken": {
     label: "Action Taken",
-    badge: "bg-purple/15 border-purple/30 text-purple",
-    dot: "bg-purple",
+    badge: "bg-violet/15 border-violet/30 text-violet",
+    dot: "bg-violet",
   },
   closed: {
     label: "Closed",
@@ -27,7 +27,7 @@ export const STATUS_CONFIG: Record<CaseStatus, { label: string; badge: string; d
 const STATUS_TONE: Record<CaseStatus, StatusBadgeProps["tone"]> = {
   open: "info",
   "in-review": "warning",
-  "action-taken": "purple",
+  "action-taken": "violet",
   closed: "success",
 };
 

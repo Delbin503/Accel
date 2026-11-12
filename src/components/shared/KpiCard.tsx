@@ -30,24 +30,34 @@ export type KpiAccent =
   | "primary"
   | "success"
   | "warning"
+  | "severity-critical"
+  | "severity-medium"
+  | "severity-low"
+  | "info"
+  | "secondary"
+  | "violet"
+  /** @deprecated Renamed to "violet" — kept for prototypes and in-flight pages. */
+  | "purple"
+  /** @deprecated Renamed to "severity-*" — kept for prototypes and in-flight pages. */
   | "sev-critical"
   | "sev-medium"
   | "sev-low"
-  | "info"
-  | "secondary"
-  | "purple"
   | "muted";
 
 const ACCENT_DOT: Record<KpiAccent, string> = {
   primary:        "bg-primary",
   success:        "bg-success",
   warning:        "bg-warning",
-  "sev-critical": "bg-sev-critical",
-  "sev-medium":   "bg-sev-medium",
-  "sev-low":      "bg-sev-low",
+  "severity-critical": "bg-severity-critical",
+  "severity-medium":   "bg-severity-medium",
+  "severity-low":      "bg-severity-low",
   info:           "bg-info",
   secondary:      "bg-secondary",
-  purple:         "bg-purple",
+  violet:         "bg-violet",
+  purple:         "bg-violet",
+  "sev-critical": "bg-severity-critical",
+  "sev-medium":   "bg-severity-medium",
+  "sev-low":      "bg-severity-low",
   muted:          "bg-muted-foreground/40",
 };
 
@@ -66,7 +76,7 @@ const TREND_ICON = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
 
 const TREND_TONE = {
   positive: "text-success",
-  negative: "text-sev-critical",
+  negative: "text-severity-critical",
   neutral:  "text-muted-foreground",
 } as const;
 
@@ -120,7 +130,7 @@ export function KpiCard({
         "transition-colors duration-[var(--duration-fast)] ease-standard",
         // Fixed height keeps cards uniform across pages/drawers — matches the KPI skeletons.
         compact ? "h-[104px] p-3.5" : "h-[120px] p-4",
-        active ? "border-primary bg-primary-muted" : "border-border",
+        active ? "border-primary bg-primary/10" : "border-border",
         onClick && !active && "hover:border-muted-foreground/30 hover:bg-accent/40",
         className
       )}

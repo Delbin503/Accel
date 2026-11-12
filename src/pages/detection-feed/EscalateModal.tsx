@@ -32,9 +32,9 @@ const SLA_BY_SEVERITY: Record<
 };
 
 const SEV_OPTION_STYLES: Record<Severity, string> = {
-  critical: "bg-sev-critical-soft text-sev-critical border-sev-critical",
-  medium: "bg-sev-medium-soft text-sev-medium border-sev-medium",
-  low: "bg-sev-low-soft text-sev-low border-sev-low",
+  critical: "bg-severity-critical/15 text-severity-critical border-severity-critical",
+  medium: "bg-severity-medium/15 text-severity-medium border-severity-medium",
+  low: "bg-severity-low/15 text-severity-low border-severity-low",
 };
 
 interface EscalateModalProps {
@@ -112,7 +112,7 @@ export function EscalateModal({
               className="h-9 text-base"
               placeholder="Describe the incident..."
             />
-            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
+            {titleErr && <p className="mt-1 text-xs text-severity-critical">{titleErr}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

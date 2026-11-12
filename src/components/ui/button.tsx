@@ -8,7 +8,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        // Accel: hover/pressed use the primary-hover / primary-active state tokens
+        // (shadcn only darkened <a> buttons, so <button> had no hover feedback).
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

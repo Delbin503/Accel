@@ -113,7 +113,7 @@ export function ScrubTrack({
         <div className={cn("absolute inset-x-0 rounded-full bg-white/25", size === "sm" ? "h-[3px]" : "h-1")} />
         {/* Watched region up to the playhead */}
         <div
-          className={cn("absolute left-0 rounded-full bg-sev-critical", size === "sm" ? "h-[3px]" : "h-1")}
+          className={cn("absolute left-0 rounded-full bg-severity-critical", size === "sm" ? "h-[3px]" : "h-1")}
           style={{ width: `${pct}%` }}
         />
         {/* Event markers */}
@@ -125,7 +125,7 @@ export function ScrubTrack({
               "absolute size-1.5 -translate-x-1/2 rounded-full",
               m.tone === "info" && "bg-info",
               m.tone === "warning" && "bg-warning",
-              m.tone === "critical" && "bg-sev-critical"
+              m.tone === "critical" && "bg-severity-critical"
             )}
             style={{ left: `${((BUFFER_SEC - m.at) / BUFFER_SEC) * 100}%` }}
           />
@@ -133,7 +133,7 @@ export function ScrubTrack({
         {/* Playhead */}
         <span
           className={cn(
-            "absolute -translate-x-1/2 rounded-full bg-sev-critical transition-transform",
+            "absolute -translate-x-1/2 rounded-full bg-severity-critical transition-transform",
             dragging ? "scale-125" : "scale-0 group-hover/track:scale-100",
             size === "sm" ? "size-2.5" : "size-3"
           )}

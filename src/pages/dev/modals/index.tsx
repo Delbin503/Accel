@@ -413,7 +413,7 @@ export default function ModalGalleryPage() {
                   <span
                     key={col.label}
                     className={cn(
-                      "absolute -translate-x-1/2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm",
+                      "absolute -translate-x-1/2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-raised",
                       col.side
                     )}
                   >
@@ -441,7 +441,7 @@ export default function ModalGalleryPage() {
           )}
           {/* Reminder strip. Pointer-inert while the modal holds focus, so it
               only ever advertises the keyboard controls. */}
-          <div className="pointer-events-none fixed bottom-4 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-full border border-border bg-card/95 px-3 py-1.5 shadow-lg">
+          <div className="pointer-events-none fixed bottom-4 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-full border border-border bg-card/95 px-3 py-1.5 shadow-floating">
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-mono text-2xs text-foreground">{active.name}</span>
               {legacy && (

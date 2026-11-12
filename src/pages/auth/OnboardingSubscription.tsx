@@ -293,7 +293,7 @@ export default function OnboardingSubscriptionPage({
                   onChange={(e) => { setCardName(e.target.value); setErrors((p) => ({ ...p, cardName: undefined })); }}
                   aria-invalid={!!errors.cardName}
                   placeholder="Full name as shown on card" className="h-10 text-base" />
-                {errors.cardName && <p className="mt-1 text-xs text-sev-critical">{errors.cardName}</p>}
+                {errors.cardName && <p className="mt-1 text-xs text-severity-critical">{errors.cardName}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card number</label>
@@ -304,7 +304,7 @@ export default function OnboardingSubscriptionPage({
                     aria-invalid={!!errors.cardNumber}
                     placeholder="1234 5678 9012 3456" className="h-10 pl-9 font-mono text-base" inputMode="numeric" />
                 </div>
-                {errors.cardNumber && <p className="mt-1 text-xs text-sev-critical">{errors.cardNumber}</p>}
+                {errors.cardNumber && <p className="mt-1 text-xs text-severity-critical">{errors.cardNumber}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -313,7 +313,7 @@ export default function OnboardingSubscriptionPage({
                     onChange={(e) => { setExpiry(formatExpiry(e.target.value)); setErrors((p) => ({ ...p, expiry: undefined })); }}
                     aria-invalid={!!errors.expiry}
                     placeholder="MM/YY" className="h-10 font-mono text-base" inputMode="numeric" />
-                  {errors.expiry && <p className="mt-1 text-xs text-sev-critical">{errors.expiry}</p>}
+                  {errors.expiry && <p className="mt-1 text-xs text-severity-critical">{errors.expiry}</p>}
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
@@ -321,12 +321,12 @@ export default function OnboardingSubscriptionPage({
                     onChange={(e) => { setCvc(e.target.value.replace(/\D/g, "").slice(0, 4)); setErrors((p) => ({ ...p, cvc: undefined })); }}
                     aria-invalid={!!errors.cvc}
                     placeholder="123" className="h-10 font-mono text-base" inputMode="numeric" />
-                  {errors.cvc && <p className="mt-1 text-xs text-sev-critical">{errors.cvc}</p>}
+                  {errors.cvc && <p className="mt-1 text-xs text-severity-critical">{errors.cvc}</p>}
                 </div>
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
+                <div className="flex items-center gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.08] px-3 py-2 text-sm text-severity-critical">
                   <AlertCircle className="size-3.5 flex-shrink-0" />
                   {error}
                 </div>

@@ -94,7 +94,7 @@ function CameraTile({
               <div className={cn("absolute border-[1.5px]",
                 inlineBox.color === "info" && "border-info",
                 inlineBox.color === "warning" && "border-warning",
-                inlineBox.color === "critical" && "border-sev-critical")}
+                inlineBox.color === "critical" && "border-severity-critical")}
                 style={{
                   left: `${inlineBox.x * 100}%`, top: `${inlineBox.y * 100}%`,
                   width: `${inlineBox.w * 100}%`, height: `${inlineBox.h * 100}%`,
@@ -104,14 +104,14 @@ function CameraTile({
         ) : (
           <>
             <img src={OFFLINE_FRAME} alt="" aria-hidden className="absolute inset-0 size-full scale-[1.18] object-cover opacity-40" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-severity-critical/80">
               <AlertTriangle className="size-5" />
               <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
             </div>
           </>
         )}
         {isOnline && (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-sev-critical/95 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white">
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-severity-critical/95 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white">
             LIVE
           </span>
         )}
@@ -124,7 +124,7 @@ function CameraTile({
         {pinned && (
           <span title="Pinned"
             className={cn(
-              "absolute z-10 inline-flex items-center justify-center rounded-full bg-primary text-white shadow",
+              "absolute z-10 inline-flex items-center justify-center rounded-full bg-primary text-white shadow-raised",
               detectionCount && detectionCount > 0 ? "right-9 top-2 size-5" : "right-2 top-2 size-5"
             )}
           >
@@ -208,12 +208,12 @@ function HeroView({
             ) : (
               <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }} />
             )}
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-sev-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
               <span className="size-1.5 animate-pulse rounded-full bg-white" />
               LIVE
             </span>
             <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
-              {camera.id} · <span className="inline-flex items-center gap-1 text-sev-critical"><span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />REC</span> · <span className="text-info">AI</span>
+              {camera.id} · <span className="inline-flex items-center gap-1 text-severity-critical"><span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />REC</span> · <span className="text-info">AI</span>
             </span>
             <div className="absolute left-3 bottom-3 rounded bg-black/60 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
               {now.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(",", " ·")}
@@ -224,9 +224,9 @@ function HeroView({
           <div className="border-t border-border bg-background/40 px-4 py-3">
             <div className="relative h-8 w-full">
               <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-warning/20" />
-              <div className="absolute inset-y-0 right-0 w-px bg-sev-critical" />
+              <div className="absolute inset-y-0 right-0 w-px bg-severity-critical" />
               {events.map((e, i) => {
-                const colors = ["bg-info", "bg-warning", "bg-sev-critical", "bg-info"];
+                const colors = ["bg-info", "bg-warning", "bg-severity-critical", "bg-info"];
                 const left = 10 + (i * 14);
                 return (
                   <span key={e.id} className={cn("absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full ring-2 ring-card", colors[i % colors.length])}
@@ -298,7 +298,7 @@ function HeroView({
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="cursor-default text-xs text-muted-foreground">
-                  <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on{offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
+                  <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on{offlineCount > 0 && <> · <strong className="text-severity-critical">{offlineCount}</strong> off</>}
                 </p>
               </TooltipTrigger>
               <TooltipContent>
@@ -527,7 +527,7 @@ function LayoutSwitcher({
                       <LayoutGrid className="size-3" />
                     </button>
                     <button onClick={() => { if (layouts.length > 1) onDelete(l.id); }} disabled={layouts.length <= 1} title="Delete"
-                      className="flex size-6 items-center justify-center rounded text-sev-critical hover:bg-sev-critical/10 disabled:opacity-30 disabled:hover:bg-transparent">
+                      className="flex size-6 items-center justify-center rounded text-severity-critical hover:bg-severity-critical/10 disabled:opacity-30 disabled:hover:bg-transparent">
                       <Trash2 className="size-3" />
                     </button>
                   </>
@@ -908,7 +908,7 @@ function CustomView({
                         <GripVertical className="size-3.5" />
                       </button>
                       <button onClick={() => removeTile(tile.id)}
-                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-sev-critical/80"
+                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-severity-critical/80"
                         title="Remove">
                         <Trash2 className="size-3" />
                       </button>

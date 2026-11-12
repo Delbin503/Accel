@@ -47,7 +47,7 @@ function StatusPill({ status }: { status: NvrStatus }) {
 const BAND_STYLES: Record<StorageBand, { bar: string; text: string; label: string }> = {
   healthy:  { bar: "bg-success",      text: "text-success",      label: "Healthy" },
   warning:  { bar: "bg-warning",      text: "text-warning",      label: "Warning" },
-  critical: { bar: "bg-sev-critical", text: "text-sev-critical", label: "Critical" },
+  critical: { bar: "bg-severity-critical", text: "text-severity-critical", label: "Critical" },
 };
 
 /* ── Channel storage helpers ─────────────────────────────────────────────── */
@@ -560,7 +560,7 @@ export function CleanupRunningModal({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+            className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
           >
             <X className="size-3.5" />
             Cancel Cleanup
@@ -613,7 +613,7 @@ export function CleanupCompletedModal({
             </div>
             <div className="flex items-center justify-between text-base">
               <span className="text-muted-foreground">Space Freed:</span>
-              <span className="font-mono font-semibold text-sev-critical">- {freed.toLocaleString()} GB</span>
+              <span className="font-mono font-semibold text-severity-critical">- {freed.toLocaleString()} GB</span>
             </div>
             <div className="flex items-center justify-between border-t border-border pt-2 text-base">
               <span className="text-muted-foreground">Current Storage:</span>
@@ -927,7 +927,7 @@ function CleanupAgePicker({
           </button>
         ))}
       </div>
-      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
+      {error && <p className="mt-1 text-xs text-severity-critical">{error}</p>}
     </div>
   );
 }
@@ -973,7 +973,7 @@ function CleanupChannelPicker({
               className={cn(
                 "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-left text-base transition-colors hover:border-primary",
                 open ? "border-primary" : "border-input",
-                error && "border-sev-critical",
+                error && "border-severity-critical",
                 value.length === 0 && "text-muted-foreground"
               )}
             >
@@ -1037,7 +1037,7 @@ function CleanupChannelPicker({
           {value.length} channel{value.length === 1 ? "" : "s"} selected
         </p>
       )}
-      {error && <p className="mt-1 text-xs text-sev-critical">{error}</p>}
+      {error && <p className="mt-1 text-xs text-severity-critical">{error}</p>}
     </div>
   );
 }
@@ -1123,15 +1123,15 @@ export function AddNvrModal({
                 placeholder="e.g. FedEx Changi · NVR-A"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.name && "border-sev-critical"
+                  errors.name && "border-severity-critical"
                 )}
               />
-              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+              {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
             </div>
             <div className="col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Model</label>
               <Select value={fields.model} onValueChange={(v) => set("model", v)}>
-                <SelectTrigger className={cn("h-9 w-full font-mono", errors.model && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full font-mono", errors.model && "border-severity-critical")}>
                   <SelectValue placeholder="Select an NVR model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1142,12 +1142,12 @@ export function AddNvrModal({
                   <SelectItem value="Uniview NVR308-32E2">Uniview NVR308-32E2 (32-ch)</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.model && <p className="mt-1 text-xs text-sev-critical">{errors.model}</p>}
+              {errors.model && <p className="mt-1 text-xs text-severity-critical">{errors.model}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
-                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-severity-critical")}>
                   <SelectValue placeholder="Select a site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1156,12 +1156,12 @@ export function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.siteId && <p className="mt-1 text-xs text-sev-critical">{errors.siteId}</p>}
+              {errors.siteId && <p className="mt-1 text-xs text-severity-critical">{errors.siteId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
-                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-severity-critical")}>
                   <SelectValue placeholder="Select an area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1170,7 +1170,7 @@ export function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.areaId && <p className="mt-1 text-xs text-sev-critical">{errors.areaId}</p>}
+              {errors.areaId && <p className="mt-1 text-xs text-severity-critical">{errors.areaId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -1180,10 +1180,10 @@ export function AddNvrModal({
                 placeholder="10.10.0.10"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.ipAddress && "border-sev-critical"
+                  errors.ipAddress && "border-severity-critical"
                 )}
               />
-              {errors.ipAddress && <p className="mt-1 text-xs text-sev-critical">{errors.ipAddress}</p>}
+              {errors.ipAddress && <p className="mt-1 text-xs text-severity-critical">{errors.ipAddress}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port (Optional)</label>
@@ -1204,10 +1204,10 @@ export function AddNvrModal({
                 autoComplete="off"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.username && "border-sev-critical"
+                  errors.username && "border-severity-critical"
                 )}
               />
-              {errors.username && <p className="mt-1 text-xs text-sev-critical">{errors.username}</p>}
+              {errors.username && <p className="mt-1 text-xs text-severity-critical">{errors.username}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</label>
@@ -1220,7 +1220,7 @@ export function AddNvrModal({
                   autoComplete="new-password"
                   className={cn(
                     "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                    errors.password && "border-sev-critical"
+                    errors.password && "border-severity-critical"
                   )}
                 />
                 <button
@@ -1232,12 +1232,12 @@ export function AddNvrModal({
                   {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs text-sev-critical">{errors.password}</p>}
+              {errors.password && <p className="mt-1 text-xs text-severity-critical">{errors.password}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Channel Count</label>
               <Select value={fields.channelCount} onValueChange={(v) => set("channelCount", v)}>
-                <SelectTrigger className={cn("h-9 w-full", errors.channelCount && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.channelCount && "border-severity-critical")}>
                   <SelectValue placeholder="Select channels" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1246,7 +1246,7 @@ export function AddNvrModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.channelCount && <p className="mt-1 text-xs text-sev-critical">{errors.channelCount}</p>}
+              {errors.channelCount && <p className="mt-1 text-xs text-severity-critical">{errors.channelCount}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
@@ -1257,10 +1257,10 @@ export function AddNvrModal({
                 placeholder="8000"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.totalStorageGb && "border-sev-critical"
+                  errors.totalStorageGb && "border-severity-critical"
                 )}
               />
-              {errors.totalStorageGb && <p className="mt-1 text-xs text-sev-critical">{errors.totalStorageGb}</p>}
+              {errors.totalStorageGb && <p className="mt-1 text-xs text-severity-critical">{errors.totalStorageGb}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days) (Optional)</label>
@@ -1278,7 +1278,7 @@ export function AddNvrModal({
                 value={fields.cleanupSchedule}
                 onValueChange={(v) => set("cleanupSchedule", v as NvrData["cleanupSchedule"])}
               >
-                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-severity-critical")}>
                   <SelectValue placeholder="Select cleanup mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1286,7 +1286,7 @@ export function AddNvrModal({
                   <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}
+              {errors.cleanupSchedule && <p className="mt-1 text-xs text-severity-critical">{errors.cleanupSchedule}</p>}
             </div>
             {fields.cleanupSchedule === "auto-age" && (
               <CleanupAgePicker
@@ -1460,15 +1460,15 @@ export function EditNvrModal({
                 placeholder="e.g. FedEx Changi · NVR-A"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.name && "border-sev-critical"
+                  errors.name && "border-severity-critical"
                 )}
               />
-              {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+              {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site</label>
               <Select value={fields.siteId} onValueChange={(v) => set("siteId", v)}>
-                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.siteId && "border-severity-critical")}>
                   <SelectValue placeholder="Select a site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1477,12 +1477,12 @@ export function EditNvrModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.siteId && <p className="mt-1 text-xs text-sev-critical">{errors.siteId}</p>}
+              {errors.siteId && <p className="mt-1 text-xs text-severity-critical">{errors.siteId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area</label>
               <Select value={fields.areaId} onValueChange={(v) => set("areaId", v)}>
-                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.areaId && "border-severity-critical")}>
                   <SelectValue placeholder="Select an area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1491,7 +1491,7 @@ export function EditNvrModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.areaId && <p className="mt-1 text-xs text-sev-critical">{errors.areaId}</p>}
+              {errors.areaId && <p className="mt-1 text-xs text-severity-critical">{errors.areaId}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP Address</label>
@@ -1501,10 +1501,10 @@ export function EditNvrModal({
                 placeholder="10.10.0.10"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.ipAddress && "border-sev-critical"
+                  errors.ipAddress && "border-severity-critical"
                 )}
               />
-              {errors.ipAddress && <p className="mt-1 text-xs text-sev-critical">{errors.ipAddress}</p>}
+              {errors.ipAddress && <p className="mt-1 text-xs text-severity-critical">{errors.ipAddress}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">HTTP Port (Optional)</label>
@@ -1525,10 +1525,10 @@ export function EditNvrModal({
                 autoComplete="off"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.username && "border-sev-critical"
+                  errors.username && "border-severity-critical"
                 )}
               />
-              {errors.username && <p className="mt-1 text-xs text-sev-critical">{errors.username}</p>}
+              {errors.username && <p className="mt-1 text-xs text-severity-critical">{errors.username}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</label>
@@ -1541,7 +1541,7 @@ export function EditNvrModal({
                   autoComplete="new-password"
                   className={cn(
                     "h-9 w-full rounded-md border border-input bg-background px-3 pr-9 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                    errors.password && "border-sev-critical"
+                    errors.password && "border-severity-critical"
                   )}
                 />
                 <button
@@ -1553,7 +1553,7 @@ export function EditNvrModal({
                   {showEditPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs text-sev-critical">{errors.password}</p>}
+              {errors.password && <p className="mt-1 text-xs text-severity-critical">{errors.password}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Storage (GB)</label>
@@ -1564,10 +1564,10 @@ export function EditNvrModal({
                 placeholder="8000"
                 className={cn(
                   "h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                  errors.totalStorageGb && "border-sev-critical"
+                  errors.totalStorageGb && "border-severity-critical"
                 )}
               />
-              {errors.totalStorageGb && <p className="mt-1 text-xs text-sev-critical">{errors.totalStorageGb}</p>}
+              {errors.totalStorageGb && <p className="mt-1 text-xs text-severity-critical">{errors.totalStorageGb}</p>}
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retention (days) (Optional)</label>
@@ -1585,7 +1585,7 @@ export function EditNvrModal({
                 value={fields.cleanupSchedule}
                 onValueChange={(v) => set("cleanupSchedule", v as NvrFormFields["cleanupSchedule"])}
               >
-                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-sev-critical")}>
+                <SelectTrigger className={cn("h-9 w-full", errors.cleanupSchedule && "border-severity-critical")}>
                   <SelectValue placeholder="Select cleanup mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1593,7 +1593,7 @@ export function EditNvrModal({
                   <SelectItem value="auto-channel">Auto · Channel based</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.cleanupSchedule && <p className="mt-1 text-xs text-sev-critical">{errors.cleanupSchedule}</p>}
+              {errors.cleanupSchedule && <p className="mt-1 text-xs text-severity-critical">{errors.cleanupSchedule}</p>}
             </div>
             {fields.cleanupSchedule === "auto-age" && (
               <CleanupAgePicker

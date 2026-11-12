@@ -79,7 +79,7 @@ import type { DeploymentData } from "@/types/deployments";
 const STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: string; label: string }> = {
   online:              { bg: "bg-success/15 border-success/30",           text: "text-success",          dot: "bg-success",          label: "Online" },
   offline:             { bg: "bg-muted border-border",                    text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline" },
-  "connection-failed": { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed" },
+  "connection-failed": { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical",     dot: "bg-severity-critical",     label: "Failed" },
 };
 
 /** Masked credential with a reveal toggle — kept hidden by default so the drawer
@@ -142,7 +142,7 @@ const KPI_CONFIGS: {
   { key: "all",               label: "Total Cameras",     sub: "Across all sites",        accent: "primary",      getValue: (i) => i.length },
   { key: "online",            label: "Online",            sub: "Streaming + healthy",     accent: "success",      getValue: (i) => i.filter((c) => c.status === "online").length },
   { key: "offline",           label: "Offline",           sub: "Last seen > threshold",   accent: "muted",        getValue: (i) => i.filter((c) => c.status === "offline").length },
-  { key: "connection-failed", label: "Connection Failed", sub: "RTSP unreachable",        accent: "sev-critical", getValue: (i) => i.filter((c) => c.status === "connection-failed").length },
+  { key: "connection-failed", label: "Connection Failed", sub: "RTSP unreachable",        accent: "severity-critical", getValue: (i) => i.filter((c) => c.status === "connection-failed").length },
   { key: "unlinked",          label: "Unlinked to NVR",   sub: "Events have no footage",  accent: "warning",      getValue: (i) => !i ? 0 : i.filter((c) => !c.nvrId).length },
 ];
 
@@ -360,13 +360,13 @@ function StatCard({
   valueClass?: string;
   sub?: string;
 }) {
-  // Derive accent from valueClass (text-success / text-info / text-sev-critical / text-warning).
+  // Derive accent from valueClass (text-success / text-info / text-severity-critical / text-warning).
   const accent: KpiAccent =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
-    valueClass?.includes("text-sev-critical") ? "sev-critical" :
+    valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
-    valueClass?.includes("text-purple")       ? "purple" :
+    valueClass?.includes("text-violet")       ? "violet" :
     "primary";
   return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
 }
@@ -374,7 +374,7 @@ function StatCard({
 /* ── Deployment status pill (mini, drawer-only) ──────────────────────────── */
 
 // Status colors mirror the Model Deployment History KPI cards exactly:
-//   active=success  paused=warning  pending=info  stopped=muted  failed=sev-critical
+//   active=success  paused=warning  pending=info  stopped=muted  failed=severity-critical
 /* ── Draw zone modal ─────────────────────────────────────────────────────── */
 
 /* ── Camera Drawer ───────────────────────────────────────────────────────── */
@@ -407,7 +407,7 @@ function CameraDrawerSkeleton() {
 function CameraDrawerError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-muted-foreground">
-      <AlertTriangle className="size-8 text-sev-critical" />
+      <AlertTriangle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load camera details.</p>
       <p className="text-xs">The feed and configuration for this camera are unavailable.</p>
       <Button variant="outline" size="sm" className="mt-1 gap-1.5" onClick={onRetry}>
@@ -739,7 +739,7 @@ export function CameraDrawer({
                   </div>
                 )}
                 <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
-                  <span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />
+                  <span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />
                   Live
                 </div>
                 <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/80 backdrop-blur-sm">
@@ -761,13 +761,13 @@ export function CameraDrawer({
                 value={camera.status === "offline" ? "—" : `${networkSignalPercent(camera.id, camera.status)}%`}
                 valueClass={
                   camera.status === "online" ? "text-success"
-                  : camera.status === "connection-failed" ? "text-sev-critical"
+                  : camera.status === "connection-failed" ? "text-severity-critical"
                   : "text-muted-foreground"
                 }
                 icon={<Radio className={cn(
                   "size-3",
                   camera.status === "online" ? "text-success"
-                  : camera.status === "connection-failed" ? "text-sev-critical"
+                  : camera.status === "connection-failed" ? "text-severity-critical"
                   : "text-muted-foreground"
                 )} />}
                 sub={camera.lastSeenDisplay}
@@ -886,7 +886,7 @@ export function CameraDrawer({
                   <button
                     onClick={() => onUnlinkNvr(camera.id)}
                     title="Unlink NVR"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-sev-critical/30 px-2.5 py-1 text-xs font-semibold text-sev-critical transition-colors hover:bg-sev-critical/10"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-severity-critical/30 px-2.5 py-1 text-xs font-semibold text-severity-critical transition-colors hover:bg-severity-critical/10"
                   >
                     <Unlink className="size-3" />
                     Unlink
@@ -1041,7 +1041,7 @@ export function CameraDrawer({
                 Clear selection
               </Button>
               <div className="mx-1 h-4 w-px bg-border" />
-              <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+              <Button variant="outline" className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
                 onClick={() => {
                   const count = selectedRecordingIds.size;
                   setSelectedRecordingIds(new Set());
@@ -1070,7 +1070,7 @@ export function CameraDrawer({
             <Button
               variant="outline"
               size="sm"
-              className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+              className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
               onClick={onDelete}
             >
               <Trash2 className="size-3.5" />
@@ -1915,7 +1915,7 @@ export default function CamerasPage({
                           <div className="my-1 border-t border-border" />
                           <button
                             onClick={() => setModal({ kind: "delete", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
+                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete

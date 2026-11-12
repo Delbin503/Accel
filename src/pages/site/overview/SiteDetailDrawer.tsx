@@ -64,9 +64,9 @@ const HOLD_TO_MOVE_MS = 220;
 
 
 const CAMERA_STATUS_STYLES: Record<CameraStatus, { bg: string; text: string; dot: string; label: string; icon: React.ElementType; markerFill: string }> = {
-  online:              { bg: "bg-success/15 border-success/30",            text: "text-success",          dot: "bg-success",          label: "Online",  icon: Wifi,    markerFill: "#22C55E" },
+  online:              { bg: "bg-success/15 border-success/30",            text: "text-success",          dot: "bg-success",          label: "Online",  icon: Wifi,    markerFill: "var(--success)" },
   offline:             { bg: "bg-muted border-border",                     text: "text-muted-foreground", dot: "bg-muted-foreground", label: "Offline", icon: WifiOff, markerFill: "#9CA3AF" },
-  "connection-failed": { bg: "bg-sev-critical/15 border-sev-critical/30",  text: "text-sev-critical",     dot: "bg-sev-critical",     label: "Failed",  icon: WifiOff, markerFill: "#E15554" },
+  "connection-failed": { bg: "bg-severity-critical/15 border-severity-critical/30",  text: "text-severity-critical",     dot: "bg-severity-critical",     label: "Failed",  icon: WifiOff, markerFill: "var(--severity-critical)" },
 };
 
 function uid(prefix: string) {
@@ -100,7 +100,7 @@ function CameraMarker({
     <g transform={`translate(${cx} ${cy})`}>
       {/* Pulsing ring for selected */}
       {isSelected && (
-        <circle cx={0} cy={0} r={bodyR + 1.4} fill="none" stroke="#DD7224" strokeWidth={0.45} strokeDasharray="0.9 0.7">
+        <circle cx={0} cy={0} r={bodyR + 1.4} fill="none" stroke="var(--primary)" strokeWidth={0.45} strokeDasharray="0.9 0.7">
           <animate attributeName="r" values={`${bodyR + 1.1};${bodyR + 1.9};${bodyR + 1.1}`} dur="2s" repeatCount="indefinite" />
         </circle>
       )}
@@ -175,8 +175,8 @@ function RotationHandle({ cx, cy, rotation, onChange }: { cx: number; cy: number
         handle's own hit area) in an invisible shield and make the marker
         impossible to grab.
       */}
-      <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#DD7224" strokeOpacity={0.35} strokeWidth={0.3} strokeDasharray="0.6 0.6" pointerEvents="none" />
-      <line x1={cx} y1={cy} x2={hx} y2={hy} stroke="#DD7224" strokeWidth={0.3} strokeOpacity={0.8} pointerEvents="none" />
+      <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--primary)" strokeOpacity={0.35} strokeWidth={0.3} strokeDasharray="0.6 0.6" pointerEvents="none" />
+      <line x1={cx} y1={cy} x2={hx} y2={hy} stroke="var(--primary)" strokeWidth={0.3} strokeOpacity={0.8} pointerEvents="none" />
       {/* Invisible grab target — generous next to the 1.6-unit dot it fronts. */}
       <circle
         ref={handleRef}
@@ -186,7 +186,7 @@ function RotationHandle({ cx, cy, rotation, onChange }: { cx: number; cy: number
         onMouseDown={onMouseDown}
         style={{ cursor: "grab" }}
       />
-      <circle cx={hx} cy={hy} r={1.6} fill="#DD7224" stroke="#fff" strokeWidth={0.35} pointerEvents="none" />
+      <circle cx={hx} cy={hy} r={1.6} fill="var(--primary)" stroke="#fff" strokeWidth={0.35} pointerEvents="none" />
     </g>
   );
 }
@@ -323,7 +323,7 @@ function FloorPlanCanvas({
             type="button"
             onClick={onDeleteFloorPlan}
             title="Remove floor plan"
-            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm transition-colors hover:bg-sev-critical/80"
+            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm transition-colors hover:bg-severity-critical/80"
           >
             <Trash2 className="size-3" />
           </button>
@@ -385,7 +385,7 @@ function FloorPlanCanvas({
               <line x1={0} y1={-2.2} x2={0} y2={2} stroke="#444" strokeWidth={0.2} pointerEvents="none" />
               <g onClick={(e) => { e.stopPropagation(); onAreaDelete(a.id); setAreaMenu(null); }} style={{ cursor: "pointer" }}>
                 <rect x={0} y={-2.2} width={8} height={4.2} fill="transparent" />
-                <text x={4} y={0.7} fontSize="2.2" fill="#E15554" textAnchor="middle" pointerEvents="none">Delete</text>
+                <text x={4} y={0.7} fontSize="2.2" fill="var(--destructive)" textAnchor="middle" pointerEvents="none">Delete</text>
               </g>
             </g>
           );
@@ -532,7 +532,7 @@ export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Area Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (nameErr) setNameErr(null); }} aria-invalid={!!nameErr} className="h-9 text-base" />
-            {nameErr && <p className="mt-1 text-xs text-sev-critical">{nameErr}</p>}
+            {nameErr && <p className="mt-1 text-xs text-severity-critical">{nameErr}</p>}
           </div>
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
@@ -606,13 +606,13 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Name</label>
             <Input value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
               aria-invalid={!!errors.name} placeholder="e.g. Astra HQ" className="h-9 text-base" />
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Address</label>
             <Input value={address} onChange={(e) => { setAddress(e.target.value); if (errors.address) setErrors((p) => ({ ...p, address: undefined })); }}
               aria-invalid={!!errors.address} placeholder="8 Marina Boulevard, Singapore 018984" className="h-9 text-base" />
-            {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
+            {errors.address && <p className="mt-1 text-xs text-severity-critical">{errors.address}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timezone</label>
@@ -877,7 +877,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
             <Edit3 className="size-3.5" />
             Edit Site
           </Button>
-          <Button variant="outline" className="ml-auto gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+          <Button variant="outline" className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
             onClick={() => setDeleteSiteOpen(true)}>
             <Trash2 className="size-3.5" />
             Delete Site
@@ -929,7 +929,7 @@ function OverviewTab({
           {siteCameras.map((c) => {
             const p = site.cameraPlacements[c.id];
             if (!p) return null;
-            const col = c.status === "online" ? "#22C55E" : "#9CA3AF";
+            const col = c.status === "online" ? "var(--success)" : "#9CA3AF";
             return <CameraMarker key={c.id} cx={p.x * 100} cy={p.y * 100} rotation={p.rotation} color={col} isSelected={false} scale={0.55}
               fovAngle={p.fovAngle ?? 90} range={p.range ?? 14} />;
           })}
@@ -1021,9 +1021,9 @@ function OverviewTab({
       <div>
         <SiteSectionTitle
           aside={
-            <span className="inline-flex items-center gap-1.5 rounded bg-success-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
+            <span className="inline-flex items-center gap-1.5 rounded bg-success/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
               <span className={cn("size-1.5 rounded-full",
-                failed > 0 ? "bg-sev-critical" :
+                failed > 0 ? "bg-severity-critical" :
                 offlineOnly > 0 ? "bg-muted-foreground" :
                 "bg-success"
               )} />
@@ -1040,7 +1040,7 @@ function OverviewTab({
           {([
             { key: "online",  label: "Online",  dot: "bg-success",          accent: "text-success",       items: camerasByStatus.online },
             { key: "offline", label: "Offline", dot: "bg-muted-foreground", accent: "text-muted-foreground", items: camerasByStatus.offline },
-            { key: "failed",  label: "Failed",  dot: "bg-sev-critical",     accent: "text-sev-critical",  items: camerasByStatus.failed },
+            { key: "failed",  label: "Failed",  dot: "bg-severity-critical",     accent: "text-severity-critical",  items: camerasByStatus.failed },
           ] as const).map((row, i) => {
             const expanded = expandedStatus === row.key;
             const disabled = row.items.length === 0;
@@ -1108,11 +1108,11 @@ function OverviewTab({
             {siteNvrs.map((n) => {
               const linkedChannels = n.channels.filter((ch) => ch.cameraId).length;
               const usagePct = n.totalStorageGb > 0 ? Math.round((n.usedStorageGb / n.totalStorageGb) * 100) : 0;
-              const usageTone = usagePct >= 90 ? "text-sev-critical" : usagePct >= 70 ? "text-warning" : "text-success";
+              const usageTone = usagePct >= 90 ? "text-severity-critical" : usagePct >= 70 ? "text-warning" : "text-success";
               const statusTone =
                 n.status === "online" ? { dot: "bg-success",      txt: "text-success",      label: "Online" } :
                 n.status === "offline" ? { dot: "bg-muted-foreground", txt: "text-muted-foreground", label: "Offline" } :
-                                         { dot: "bg-sev-critical", txt: "text-sev-critical", label: "Degraded" };
+                                         { dot: "bg-severity-critical", txt: "text-severity-critical", label: "Degraded" };
               const expanded = expandedStatus === `nvr-${n.id}`;
               return (
                 <div key={n.id} className="overflow-hidden rounded-lg border border-border bg-card">
@@ -1409,7 +1409,7 @@ export function FloorPlanModal({
                         <Edit3 className="size-3" />
                       </button>
                       <button onClick={() => onDeleteArea(a.id)}
-                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-sev-critical/10 hover:text-sev-critical"
+                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-severity-critical/10 hover:text-severity-critical"
                         title="Delete area">
                         <Trash2 className="size-3" />
                       </button>
@@ -1498,7 +1498,7 @@ export function FloorPlanModal({
                             </span>
                           </p>
                           <div className="flex justify-end">
-                            <Button variant="outline" className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10"
+                            <Button variant="outline" className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
                               onClick={() => onRemovePlacement(c.id)}>
                               <Trash2 className="size-3" />
                               Remove from plan

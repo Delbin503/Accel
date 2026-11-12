@@ -242,7 +242,7 @@ function NavLeaf({ item }: { item: NavItem }) {
           // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
           "group-data-[collapsible=icon]:pl-1.5!",
           isActive &&
-            "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+            "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
         )}
       >
         <SidebarLink href={item.href}>
@@ -286,7 +286,7 @@ function NavParent({ item }: { item: NavItem }) {
               // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
               "group-data-[collapsible=icon]:pl-1.5!",
               isAnyChildActive &&
-                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
             )}
           >
             <item.icon
@@ -315,7 +315,7 @@ function NavParent({ item }: { item: NavItem }) {
                     className={cn(
                       "rounded-md transition-colors",
                       childActive &&
-                        "bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                        "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
                     )}
                   >
                     <SidebarLink href={child.href}>
@@ -345,7 +345,7 @@ function NavParent({ item }: { item: NavItem }) {
             className={cn(
               "relative rounded-md border-l-2 border-transparent transition-colors",
               isAnyChildActive &&
-                "border-primary bg-primary-muted text-primary hover:bg-primary-muted hover:text-primary"
+                "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
             )}
           >
             <item.icon
@@ -441,7 +441,7 @@ function SidebarEdgeToggle() {
           aria-label={label}
           aria-expanded={!isCollapsed}
           className={cn(
-            "fixed top-3 z-[calc(var(--z-sticky)+1)] hidden size-6 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-sidebar text-muted-foreground shadow-sm md:flex",
+            "fixed top-3 z-[calc(var(--z-sticky)+1)] hidden size-6 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-sidebar text-muted-foreground shadow-raised md:flex",
             "transition-[left,color,background-color] duration-200 ease-linear hover:bg-muted hover:text-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             isCollapsed ? "left-(--sidebar-width-icon)" : "left-(--sidebar-width)"

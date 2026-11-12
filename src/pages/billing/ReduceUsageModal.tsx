@@ -97,8 +97,8 @@ export function ReduceUsageModal({ tier, currentTier, sites, members, onClose }:
           {items.map((it) => (
             <section key={it.key} className="overflow-hidden rounded-lg border border-border">
               <div className="flex items-start gap-3 px-3 py-3">
-                <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-md border border-sev-critical/30 bg-sev-critical/10">
-                  <it.icon className="size-4 text-sev-critical" />
+                <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-md border border-severity-critical/30 bg-severity-critical/10">
+                  <it.icon className="size-4 text-severity-critical" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">

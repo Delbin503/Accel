@@ -40,8 +40,8 @@ export default function AccountSuspendedPage() {
     <AuthLayout hideBrand>
       <div>
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-sev-critical/30 bg-sev-critical/15">
-            <ShieldOff className="size-7 text-sev-critical" />
+          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-severity-critical/30 bg-severity-critical/15">
+            <ShieldOff className="size-7 text-severity-critical" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Account suspended

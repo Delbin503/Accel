@@ -42,10 +42,10 @@ function CaseOption({
       className={cn(
         "flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-all",
         selected
-          ? "border-primary bg-primary-muted"
+          ? "border-primary bg-primary/10"
           : "border-border bg-muted/20 hover:border-primary"
       )}
-      style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${c.severity})` }}
+      style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${c.severity})` }}
     >
       {/* Radio circle */}
       <span

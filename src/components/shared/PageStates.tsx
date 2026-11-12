@@ -55,8 +55,8 @@ export function ListErrorState({
   message?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-sev-critical/30 bg-sev-critical/[0.04] py-20 text-center">
-      <CircleAlert className="size-10 text-sev-critical/70" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-severity-critical/30 bg-severity-critical/[0.04] py-20 text-center">
+      <CircleAlert className="size-10 text-severity-critical/70" />
       <div>
         <p className="text-md font-semibold text-foreground">{title}</p>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>

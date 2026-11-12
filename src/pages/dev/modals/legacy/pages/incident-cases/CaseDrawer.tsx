@@ -61,7 +61,7 @@ export function ChangeStatusModal({
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
                   picked === opt.value
-                    ? "border-primary bg-primary-muted"
+                    ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
@@ -205,7 +205,7 @@ export function ReassignModal({
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border px-4 py-2.5 text-left transition-colors",
                   picked.id === a.id
-                    ? "border-primary bg-primary-muted"
+                    ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
@@ -374,10 +374,10 @@ export function LinkNewIncidentsModal({
                     className={cn(
                       "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
                       sel
-                        ? "border-primary bg-primary-muted"
+                        ? "border-primary bg-primary/10"
                         : "border-border bg-muted/20 hover:border-primary"
                     )}
-                    style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${e.severity})` }}
+                    style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${e.severity})` }}
                   >
                     <div
                       className={cn(
@@ -498,11 +498,11 @@ export function EditCaseModal({
               onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
               className={cn(
                 "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
-                titleErr && "border-sev-critical"
+                titleErr && "border-severity-critical"
               )}
               placeholder="Case title..."
             />
-            {titleErr && <p className="mt-1 text-xs text-sev-critical">{titleErr}</p>}
+            {titleErr && <p className="mt-1 text-xs text-severity-critical">{titleErr}</p>}
           </div>
 
           <div>
@@ -517,13 +517,13 @@ export function EditCaseModal({
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-xs font-semibold transition-colors",
                     severity === opt.value
-                      ? "border-primary bg-primary-muted text-primary"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary"
                   )}
                 >
                   <span
                     className="size-2.5 rounded-full"
-                    style={{ background: `var(--sev-${opt.value})` }}
+                    style={{ background: `var(--severity-${opt.value})` }}
                   />
                   {opt.label}
                 </button>

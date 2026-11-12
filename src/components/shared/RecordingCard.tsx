@@ -8,7 +8,7 @@ import type { RecordingDisplay } from "@/mocks/recordings";
 const MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; dot: string; label: string }> = {
   continuous: { bg: "bg-primary/10 border-primary/20", text: "text-primary", dot: "bg-primary", label: "Continuous" },
   event:      { bg: "bg-info/10 border-info/20",       text: "text-info",    dot: "bg-info",    label: "Event" },
-  scheduled:  { bg: "bg-purple-soft border-purple/20", text: "text-purple",  dot: "bg-purple",  label: "Scheduled" },
+  scheduled:  { bg: "bg-violet/15 border-violet/20", text: "text-violet",  dot: "bg-violet",  label: "Scheduled" },
 };
 
 /** `pill` draws it like User Management's status pill, for the recordings list. */
@@ -59,7 +59,7 @@ export function RecordingCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-md",
+        "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-floating",
         selected ? "border-primary" : "border-border hover:border-primary/40",
         className
       )}

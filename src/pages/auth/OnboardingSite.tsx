@@ -132,7 +132,7 @@ export default function OnboardingSitePage() {
                 aria-invalid={!!errors.name}
                 placeholder="e.g. Astra HQ, FedEx Changi" className="h-10 pl-9 text-base" />
             </div>
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
 
           <div>
@@ -146,7 +146,7 @@ export default function OnboardingSitePage() {
                 aria-invalid={!!errors.address}
                 placeholder="123 Anson Road, Singapore 079914" className="h-10 pl-9 text-base" />
             </div>
-            {errors.address && <p className="mt-1 text-xs text-sev-critical">{errors.address}</p>}
+            {errors.address && <p className="mt-1 text-xs text-severity-critical">{errors.address}</p>}
           </div>
 
           <div>
@@ -183,7 +183,7 @@ export default function OnboardingSitePage() {
               {areas.map((a) => (
                 <div key={a.id} className={cn(
                   "flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5",
-                  errors.areas && !a.name.trim() && "border-sev-critical"
+                  errors.areas && !a.name.trim() && "border-severity-critical"
                 )}>
                   <span className="size-3 flex-shrink-0 rounded-full" style={{ background: a.color }} />
                   <Input value={a.name} onChange={(e) => renameArea(a.id, e.target.value)}
@@ -191,18 +191,18 @@ export default function OnboardingSitePage() {
                     placeholder="Area name" className="h-8 flex-1 border-0 bg-transparent text-base focus-visible:ring-0" />
                   <button onClick={() => removeArea(a.id)}
                     disabled={areas.length === 1}
-                    className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-sev-critical disabled:opacity-30"
+                    className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-severity-critical disabled:opacity-30"
                     title="Remove area">
                     <Trash2 className="size-3" />
                   </button>
                 </div>
               ))}
             </div>
-            {errors.areas && <p className="mt-1 text-xs text-sev-critical">{errors.areas}</p>}
+            {errors.areas && <p className="mt-1 text-xs text-severity-critical">{errors.areas}</p>}
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.08] px-3 py-2 text-sm text-sev-critical">
+            <div className="flex items-center gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.08] px-3 py-2 text-sm text-severity-critical">
               <AlertCircle className="size-3.5 flex-shrink-0" />
               {error}
             </div>

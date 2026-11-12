@@ -22,7 +22,7 @@ export interface RecordingTypeDef {
   /** Open question carried from the requirements sheet. */
   note?: string;
   /** Colour token suffix — drives chips, bars and dots. */
-  tone: "info" | "purple" | "warning" | "success";
+  tone: "info" | "violet" | "warning" | "success";
 }
 
 export const RECORDING_TYPES: RecordingTypeDef[] = [
@@ -52,7 +52,7 @@ export const RECORDING_TYPES: RecordingTypeDef[] = [
     minFps: 24,
     alwaysOn: false,
     note: "Timebound or manual trigger — the window below is the timebound case.",
-    tone: "purple",
+    tone: "violet",
   },
   {
     id: "motion",
@@ -113,7 +113,7 @@ export const DEFAULT_CONFIG: Record<RecordingTypeId, RecordingTypeConfig> = {
 
 export const TONE_CLASSES: Record<RecordingTypeDef["tone"], { chip: string; bar: string; dot: string }> = {
   info:    { chip: "border-info/30 bg-info/10 text-info",          bar: "bg-info",    dot: "bg-info" },
-  purple:  { chip: "border-purple/30 bg-purple/10 text-purple",    bar: "bg-purple",  dot: "bg-purple" },
+  violet:  { chip: "border-violet/30 bg-violet/10 text-violet",    bar: "bg-violet",  dot: "bg-violet" },
   warning: { chip: "border-warning/30 bg-warning/10 text-warning", bar: "bg-warning", dot: "bg-warning" },
   success: { chip: "border-success/30 bg-success/10 text-success", bar: "bg-success", dot: "bg-success" },
 };

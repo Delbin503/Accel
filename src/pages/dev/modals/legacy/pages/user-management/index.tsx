@@ -174,7 +174,7 @@ export function InviteUsersModal({
                   >
                     <div className="mb-0.5 flex items-center justify-between gap-1">
                       <RoleBadge role={r} withIcon={false} />
-                      <span className={cn("font-mono text-3xs font-bold", isLow ? "text-sev-critical" : "text-success")}>
+                      <span className={cn("font-mono text-3xs font-bold", isLow ? "text-severity-critical" : "text-success")}>
                         {s.available} left
                       </span>
                     </div>
@@ -256,9 +256,9 @@ export function InviteUsersModal({
               value={departments.join(", ")}
               onChange={(e) => setDepartments(e.target.value.split(",").map((department) => department.trim()).filter(Boolean))}
               placeholder="e.g. Security Operations"
-              className={errors.departments ? "border-sev-critical/60" : undefined}
+              className={errors.departments ? "border-severity-critical/60" : undefined}
             />
-            {errors.departments && <p className="mt-1 text-xs text-sev-critical">{errors.departments}</p>}
+            {errors.departments && <p className="mt-1 text-xs text-severity-critical">{errors.departments}</p>}
           </div>
 
           {/* Emails */}
@@ -269,8 +269,8 @@ export function InviteUsersModal({
               </label>
               {parsed.valid.length > 0 && (
                 <span className="text-2xs text-muted-foreground">
-                  <strong className={cn(overSeat ? "text-sev-critical" : "text-success")}>{parsed.valid.length}</strong> valid
-                  {parsed.invalid.length > 0 && <> · <strong className="text-sev-critical">{parsed.invalid.length}</strong> invalid</>}
+                  <strong className={cn(overSeat ? "text-severity-critical" : "text-success")}>{parsed.valid.length}</strong> valid
+                  {parsed.invalid.length > 0 && <> · <strong className="text-severity-critical">{parsed.invalid.length}</strong> invalid</>}
                   {parsed.duplicates.length > 0 && <> · <strong className="text-warning">{parsed.duplicates.length}</strong> duplicate</>}
                 </span>
               )}
@@ -282,15 +282,15 @@ export function InviteUsersModal({
               rows={2}
               className={cn(
                 "w-full",
-                parsed.invalid.length > 0 && "border-sev-critical/40 focus:border-sev-critical"
+                parsed.invalid.length > 0 && "border-severity-critical/40 focus:border-severity-critical"
               )}
             />
             <p className="mt-0.5 text-2xs text-muted-foreground/70">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
-            {errors.emails && <p className="mt-1 text-xs text-sev-critical">{errors.emails}</p>}
+            {errors.emails && <p className="mt-1 text-xs text-severity-critical">{errors.emails}</p>}
             {parsed.invalid.length > 0 && (
-              <div className="mt-2 flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.05] px-2.5 py-1.5 text-xs text-sev-critical">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.05] px-2.5 py-1.5 text-xs text-severity-critical">
                 <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{parsed.invalid.length} invalid email{parsed.invalid.length === 1 ? "" : "s"}:</p>
@@ -300,10 +300,10 @@ export function InviteUsersModal({
             )}
           </div>
 
-          {errors.sites && <p className="text-xs text-sev-critical">{errors.sites}</p>}
+          {errors.sites && <p className="text-xs text-severity-critical">{errors.sites}</p>}
 
           {(noSeats || overSeat) && (
-            <div className="flex items-start gap-2 rounded-md border border-sev-critical/30 bg-sev-critical/[0.06] px-2.5 py-1.5 text-xs text-sev-critical">
+            <div className="flex items-start gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.06] px-2.5 py-1.5 text-xs text-severity-critical">
               <AlertTriangle className="mt-0.5 size-3 flex-shrink-0" />
               <div>
                 {noSeats ? (
@@ -765,9 +765,9 @@ export function SuspendUserModal({
             />
           </div>
 
-          <div className="rounded-lg border border-sev-critical/25 bg-sev-critical/[0.05] px-3 py-2.5">
+          <div className="rounded-lg border border-severity-critical/25 bg-severity-critical/[0.05] px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
-              <Ban className="mr-1 inline-block size-3 text-sev-critical align-text-bottom" />
+              <Ban className="mr-1 inline-block size-3 text-severity-critical align-text-bottom" />
               Suspending blocks sign-in immediately. Active sessions revoke on next refresh.
             </p>
           </div>

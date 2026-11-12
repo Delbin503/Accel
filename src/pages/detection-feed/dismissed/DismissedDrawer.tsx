@@ -19,11 +19,11 @@ import type { AnyEntity } from "@/types/entities";
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
 const REASON_CHIP: Record<FpReason, string> = {
-  "wrong-class":     "bg-sev-medium-soft text-sev-medium",
-  "wrong-person":    "bg-sev-high-soft text-sev-high",
-  "known-exemption": "bg-success-soft text-success",
-  "staged":          "bg-info-soft text-info",
-  "threshold":       "bg-purple-soft text-purple",
+  "wrong-class":     "bg-severity-medium/15 text-severity-medium",
+  "wrong-person":    "bg-severity-high/15 text-severity-high",
+  "known-exemption": "bg-success/15 text-success",
+  "staged":          "bg-info/15 text-info",
+  "threshold":       "bg-violet/15 text-violet",
   "other":           "bg-muted text-muted-foreground",
 };
 
@@ -52,7 +52,7 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
             className={cn(
               "absolute border-2 opacity-60",
               box.variant === "person"  ? "border-info bg-info/10"
-              : box.variant === "vehicle" ? "border-purple bg-purple/10"
+              : box.variant === "vehicle" ? "border-violet bg-violet/10"
               : "border-primary bg-primary/10"
             )}
             style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
@@ -61,7 +61,7 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
             className={cn(
               "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-white opacity-60",
               box.variant === "person"  ? "bg-info"
-              : box.variant === "vehicle" ? "bg-purple"
+              : box.variant === "vehicle" ? "bg-violet"
               : "bg-primary"
             )}
             style={{ top: box.top, left: box.left }}
@@ -146,10 +146,10 @@ function DetailGrid({ item }: { item: DismissedEvent }) {
 function ModelCard({ item }: { item: DismissedEvent }) {
   const { event } = item;
   return (
-    <div className="rounded-lg border border-purple-soft bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
+    <div className="rounded-lg border border-violet/15 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(0_0%_9%))] p-4">
       <div className="mb-2 flex items-center gap-2">
-        <Settings className="size-4 text-purple" />
-        <span className="font-mono text-base font-bold text-purple">{event.model}</span>
+        <Settings className="size-4 text-violet" />
+        <span className="font-mono text-base font-bold text-violet">{event.model}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
         <div><span className="font-semibold text-muted-foreground/70">Model ID: </span>{event.useCaseId}</div>
@@ -217,11 +217,11 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
             <div>
               <SectionTitle>
                 <span className="flex items-center gap-2">
-                  <MessageSquare className="size-3.5 text-sev-medium" />
+                  <MessageSquare className="size-3.5 text-severity-medium" />
                   Operator Notes
                 </span>
               </SectionTitle>
-              <div className="rounded-lg border border-sev-medium/25 bg-sev-medium-soft p-4 text-base leading-relaxed text-foreground">
+              <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-4 text-base leading-relaxed text-foreground">
                 {item.notes}
               </div>
             </div>
@@ -240,17 +240,17 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
             <div>
               <SectionTitle
                 aside={
-                  <span className="rounded bg-purple-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-purple">
+                  <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
                     AI-generated · 8s clip
                   </span>
                 }
               >
                 <span className="flex items-center gap-2">
-                  <Sparkles className="size-3.5 text-purple" />
+                  <Sparkles className="size-3.5 text-violet" />
                   VLM Reasoning
                 </span>
               </SectionTitle>
-              <div className="relative rounded-lg border border-purple/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
+              <div className="relative rounded-lg border border-violet/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
                 {parseEventText(event.vlmReasoning)}
               </div>
             </div>

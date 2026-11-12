@@ -229,7 +229,7 @@ export function ConditionModal({
               </p>
             )}
             {errors.templateId && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.templateId}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.templateId}</p>
             )}
           </div>
 
@@ -253,7 +253,7 @@ export function ConditionModal({
               Object classes and confidence are always carried. Add the rest as the event needs them.
             </p>
             {errors.parameters && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.parameters}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.parameters}</p>
             )}
           </div>
 
@@ -271,7 +271,7 @@ export function ConditionModal({
               mono
             />
             {errors.objectClasses && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.objectClasses}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.objectClasses}</p>
             )}
           </div>
 
@@ -296,7 +296,7 @@ export function ConditionModal({
               <span className="shrink-0 text-base text-muted-foreground">%</span>
             </div>
             {errors.confidence && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.confidence}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.confidence}</p>
             )}
           </div>
 

@@ -27,7 +27,7 @@ export function parseEventText(text: string): React.ReactNode {
     }
     if (part.startsWith("!!") && part.endsWith("!!")) {
       return (
-        <span key={i} className="font-semibold text-sev-medium">
+        <span key={i} className="font-semibold text-severity-medium">
           {part.slice(2, -2)}
         </span>
       );
@@ -51,7 +51,7 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
 /* ── Severity left-border class ──────────────────────────────────────────── */
 
 export const SEVERITY_BORDER: Record<Severity, string> = {
-  critical: "border-l-sev-critical",
-  medium: "border-l-sev-medium",
-  low: "border-l-sev-low",
+  critical: "border-l-severity-critical",
+  medium: "border-l-severity-medium",
+  low: "border-l-severity-low",
 };

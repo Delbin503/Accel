@@ -69,7 +69,7 @@ function ChoiceDropdown<T extends string>({ value, options, onChange }: {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-left text-base text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:border-ring dark:bg-input/30"
+          className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-left text-base text-foreground shadow-raised outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:border-ring dark:bg-input/30"
         >
           <span className="truncate">{picked.label}</span>
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
@@ -106,9 +106,9 @@ const SLA_BY_SEVERITY: Record<Severity, { acknowledge: string; action: string; r
 };
 
 const SEV_SELECTED: Record<Severity, string> = {
-  critical: "border-sev-critical bg-sev-critical-soft text-sev-critical",
-  medium: "border-sev-medium bg-sev-medium-soft text-sev-medium",
-  low: "border-sev-low bg-sev-low-soft text-sev-low",
+  critical: "border-severity-critical bg-severity-critical/15 text-severity-critical",
+  medium: "border-severity-medium bg-severity-medium/15 text-severity-medium",
+  low: "border-severity-low bg-severity-low/15 text-severity-low",
 };
 
 export function EscalateCopy({ event, bulkCount, onClose }: {
