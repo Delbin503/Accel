@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "node scripts/check-tokens.mjs && eslint .",
+    "lint:tokens": "node scripts/check-tokens.mjs",
+    "lint:prune": "eslint . --prune-suppressions",
     "preview": "vite preview",
     "prototype": "vite --config prototypes/vite.config.ts",
     "storybook": "storybook dev -p 6006",

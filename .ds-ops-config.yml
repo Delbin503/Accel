@@ -1,0 +1,63 @@
+# Design System Ops configuration — read by the /design-system-ops:* skills.
+# Full reference: ~/.claude/skills/design-system-ops/ds-ops-config.example.yml
+# Roadmap: DESIGN-SYSTEM-ROADMAP.md
+
+system:
+  name: "Accel"
+  component_count: 78             # ui 26 · shared 43 · charts 4 · layout 3 · custom 2
+  framework: react
+  styling: tailwind               # Tailwind v4, CSS-first config (@theme in src/index.css)
+  theming: true                   # light + dark (.dark on <html>; dark is the default)
+  component_paths:
+    - src/components/ui           # shadcn primitives (we own the code)
+    - src/components/shared       # app composites — mix of design-system and app-only (see roadmap Phase 3)
+    - src/components/custom
+    - src/components/charts
+    - src/components/layout
+  tokens:
+    - src/index.css               # palette → semantic → component tiers; naming rules in its header
+    - src/lib/tokens.ts           # paper palette for print/PDF/email (can't read CSS vars)
+  token_format: custom
+  category_model: functional
+
+severity:
+  hardcoded_color: critical       # theming is active — a raw colour breaks dark mode
+  hardcoded_spacing: medium
+  hardcoded_typography: high      # type scale is enforced by ESLint
+  wrong_tier_reference: critical  # primitives (--palette-*) are internal to index.css
+  missing_interaction_state: high
+  missing_aria: critical
+  naming_violation: high          # naming rules are formalised (index.css header, CLAUDE.md)
+  tier_leakage: critical
+  specification_gap: medium
+
+integrations:
+  figma:
+    enabled: false                # no Figma library yet — roadmap Phase 7
+  chromatic:
+    enabled: false                # addon installed, not wired up — roadmap Phase 5
+    project_token_env: "CHROMATIC_PROJECT_TOKEN"
+  storybook:
+    enabled: true
+    url: ""
+    static_path: "storybook-static"
+  style_dictionary:
+    enabled: false                # adopt only when a second platform needs tokens — roadmap Phase 7
+  code_tokens: "src/index.css"
+
+recurring:
+  output_directory: ".ds-ops-reports/"
+  naming_pattern: "{skill}-{date}"
+  comparison_mode: "summary"
+  retain_count: 8
+
+gates:
+  token_compliance:
+    wrong_tier_blocks_release: true
+    hardcoded_color_blocks_release: true
+  accessibility:
+    keyboard_blocks_release: true
+    contrast_blocks_release: true
+
+cicd:
+  platform: bitbucket

@@ -219,6 +219,12 @@ The design uses CSS variable-backed tokens. Always use those.
 <span className="text-red-500" />
 ```
 
+### Guardrails — `npm run lint` enforces the above
+
+`npm run lint` runs `scripts/check-tokens.mjs` (token naming and tier rules in `src/index.css`) and ESLint, which bans in app code: Tailwind palette colours (`bg-red-500`, `bg-neutral-950`), raw `white`/`black`, `shadow-sm` … `shadow-2xl`, deprecated names (`sev-*`, `purple`, `*-soft`, `primary-muted`), arbitrary `z-[N]`, `rounded-[Npx]` and `text-[Npx]`, and `var(--palette-*)`.
+
+Violations that predate a rule are baselined in `eslint-suppressions.json`. **Never add to it** — fix the code instead. After fixing old violations, run `npm run lint:prune` to shrink the baseline.
+
 ### `cn()` for conditional classes
 
 ```tsx

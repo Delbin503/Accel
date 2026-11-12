@@ -31,7 +31,7 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 **Why:** ~115 files of token work are uncommitted and mixed with in-progress feature work (run-analysis, email templates). Every day this sits, separating them gets harder.
 
 - [x] Commit token work only, leaving run-analysis/email-template/website files unstaged: `ac79a97` (tokens + migrations) and `6b60b13` (docs). Kept as one code commit, because the three rounds touched the same files and depend on each other
-- [ ] Push to your branch
+- [x] Push to your branch: Bitbucket `design-updates-nov-6` (`c59ac0f..68db341`)
 
 **Done when:** `git status` shows only your feature work, and the token commits stand alone.
 **Then →** Phase 1.
@@ -42,17 +42,26 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 
 **Why:** without enforcement, every new screen (human- or AI-written) erodes the tokens. Everything after this phase is protected by it.
 
-- [ ] Extend ESLint `no-restricted-syntax` (same mechanism as the `text-[Npx]` ban) to block in `className`:
+- [x] Extend ESLint `no-restricted-syntax` (same mechanism as the `text-[Npx]` ban) to block in `className`:
   - Tailwind's built-in colours: `bg|text|border-(red|neutral|orange|…)-NNN`, `bg-white`, `text-black`
   - Old shadow sizes `shadow-sm … shadow-2xl`
   - Deprecated names: `sev-*`, `purple`, `*-soft`, `primary-muted`
   - Arbitrary `z-[N]` and `rounded-[Npx]`
-- [ ] Block `var(--palette-*)` anywhere outside `src/index.css`
-- [ ] Add a stylelint `custom-property-pattern` for `index.css` matching the naming rules in its header
-- [ ] Record the current violation count as a baseline (don't fix yet; Phase 2 does)
-- [ ] Add a `.ds-ops-config.yml` so design-system-ops skills know the stack (copy from `~/.claude/skills/design-system-ops/ds-ops-config.example.yml`)
+- [x] Block `var(--palette-*)` anywhere outside `src/index.css`
+- [x] ~~stylelint `custom-property-pattern`~~ → `scripts/check-tokens.mjs` (`npm run lint:tokens`). No new dependency, and it also checks tier placement, `.dark` overrides and broken `var()` references, which a name pattern can't
+- [x] Record the current violation count as a baseline (don't fix yet; Phase 2 does). `eslint-suppressions.json`: **226 in 41 files**
+  | Rule | Count | Where |
+  |---|---|---|
+  | Raw `white`/`black` | 110 | camera/video overlays, auth screens |
+  | Deprecated `sev-*` | 64 | 58 in run-analysis (WIP), 6 KpiCard aliases |
+  | Tailwind palette | 20 | `bg-neutral-9xx` overlays, DrawZoneModal, RecordingCard |
+  | Deprecated `purple` / `*-soft` | 11 | run-analysis (WIP), KpiCard alias |
+  | `rounded-[Npx]` | 7 | shadcn chart/checkbox internals |
+  | `text-[Npx]` | 6 | pre-existing |
+  | `z-[N]` / old shadows | 8 | AppLayout, model-management, auth logo glow |
+- [x] Add a `.ds-ops-config.yml` so design-system-ops skills know the stack
 
-**Done when:** `npm run lint` fails on a new `bg-red-500` or `shadow-lg`, and existing violations are listed with a count.
+**Done when:** `npm run lint` fails on a new `bg-red-500` or `shadow-lg`, and existing violations are listed with a count. ✅ *Done 2026-11-13.*
 **Then →** Phase 2.
 
 ---
@@ -62,7 +71,7 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 **Why:** tokens are the foundation for everything else. Fix them before documenting or packaging, so they aren't renamed twice.
 
 - [ ] **Contrast:** run `/design-system-ops:theme-audit`. Known gaps: light `text-primary` 2.99:1 (≈1,100 uses; add a darker text-only brand ink), dark `violet` 4.43:1, dark `destructive` 4.09:1
-- [ ] **Hardcoded values:** run `/design-system-ops:token-compliance`, then fix the Phase 1 baseline: ~20 raw palette classes (mostly camera overlays → add a `camera-overlay` token set), `z-10/50/[100]`, `duration-200`, `rounded-[1px]`
+- [ ] **Hardcoded values:** run `/design-system-ops:token-compliance`, then burn down the Phase 1 baseline (226 in `eslint-suppressions.json`). Biggest chunk: 130 raw `white`/`black`/`neutral-9xx` classes on camera overlays → add a `camera-overlay` token set. Then `z-[N]`, `rounded-[Npx]`, `duration-200`. Run `npm run lint:prune` after each batch
 - [ ] **Tier-3 audit items:** define `--radius-xs`; delete unused `src/App.css`; route `bg-camera-feed` gradient through palette tokens; add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) from the documented rhythm
 - [ ] **Remove deprecated aliases.** Prerequisite: your run-analysis work is merged. Migrate `prototypes/` (47 files) and run-analysis, then delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases)
 - [ ] Re-run `/design-system-ops:token-audit` to confirm

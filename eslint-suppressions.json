@@ -1,0 +1,207 @@
+{
+  "src/components/layout/AppLayout.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/shared/DrawZoneModal.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "src/components/shared/KpiCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "src/components/shared/NotificationsDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/shared/PlaybackControls.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "src/components/shared/RecordingCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "src/components/ui/chart.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/components/ui/checkbox.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/ui/dialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/ui/sheet.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/ui/tooltip.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/AuthLayout.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/OnboardingProgress.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/OnboardingSubscription.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/SignIn.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/auth/SignUp.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/auth/onprem/OnPremSetup.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/onprem/OnPremSignIn.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/auth/onprem/OnPremSignInVerify.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/billing/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/dashboard/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/detection-feed/EventDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "src/pages/detection-feed/dismissed/DismissedDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "src/pages/detection-feed/dismissed/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "src/pages/detection-feed/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "src/pages/incident-cases/CaseDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/incident-cases/EntityDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/live-monitoring/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "src/pages/model-deployment/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/pages/model-management/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "src/pages/profile/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/recordings/RecordingPlayerModal.tsx": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "src/pages/rules-library/RuleConditions.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/rules-library/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/run-analysis/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 90
+    }
+  },
+  "src/pages/site/cameras/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "src/pages/site/overview/CreateSiteWizard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "src/pages/site/overview/SiteDetailDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "src/pages/site/overview/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/pages/video-enhancement/CropOverlay.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "src/pages/video-enhancement/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  }
+}
