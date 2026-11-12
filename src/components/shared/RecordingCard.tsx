@@ -16,14 +16,14 @@ export function RecordingModeChip({ mode, pill }: { mode: RecordingDisplay["mode
   const s = MODE_STYLES[mode];
   if (pill) {
     return (
-      <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
-        <span className={cn("size-1.5 shrink-0 rounded-full", s.dot)} />
+      <span data-slot="recording-mode-chip" className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
+        <span data-slot="recording-mode-chip-dot" className={cn("size-1.5 shrink-0 rounded-full", s.dot)} />
         {s.label}
       </span>
     );
   }
   return (
-    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
+    <span data-slot="recording-mode-chip" className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", s.bg, s.text)}>
       {s.label}
     </span>
   );
@@ -58,6 +58,7 @@ export function RecordingCard({
   const isDrawer = variant === "drawer";
   return (
     <div
+      data-slot="recording-card"
       className={cn(
         "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-card text-left transition-all hover:-translate-y-px hover:shadow-floating",
         selected ? "border-primary" : "border-border hover:border-primary/40",
@@ -65,9 +66,10 @@ export function RecordingCard({
       )}
     >
       <button
+        data-slot="recording-card-checkbox"
         onClick={(e) => { e.stopPropagation(); onToggle?.(); }}
         className={cn(
-          "absolute left-2.5 top-2.5 z-20 flex size-5 items-center justify-center rounded border-2 transition-colors",
+          "absolute left-2.5 top-2.5 z-[var(--z-sticky)] flex size-5 items-center justify-center rounded border-2 transition-colors",
           selected ? "border-primary bg-primary" : "border-media-foreground/60 bg-scrim/40 opacity-0 hover:border-media-foreground group-hover:opacity-100",
           selected && "opacity-100"
         )}
@@ -76,43 +78,45 @@ export function RecordingCard({
         {selected && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
       </button>
 
-      <button onClick={onOpen} className="flex flex-col items-stretch text-left">
-        <div className="relative aspect-video w-full overflow-hidden bg-media-raised">
+      <button data-slot="recording-card-trigger" onClick={onOpen} className="flex flex-col items-stretch text-left">
+        <div data-slot="recording-card-thumbnail" className="relative aspect-video w-full overflow-hidden bg-media-raised">
           <div
+            data-slot="recording-card-vignette"
             className="absolute inset-0"
             style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }}
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-scrim/40 backdrop-blur-sm transition-transform group-hover:scale-110">
+          <div data-slot="recording-card-play-overlay" className="absolute inset-0 flex items-center justify-center">
+            <div data-slot="recording-card-play" className="flex size-10 items-center justify-center rounded-full bg-scrim/40 backdrop-blur-sm transition-transform group-hover:scale-110">
               <Play className="size-4 text-media-foreground" />
             </div>
           </div>
-          <div className="absolute right-2.5 top-2.5 rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-2xs text-media-foreground/90 backdrop-blur-sm">
+          <div data-slot="recording-card-duration" className="absolute right-2.5 top-2.5 rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-2xs text-media-foreground/90 backdrop-blur-sm">
             {r.durationDisplay}
           </div>
-          <div className={cn("absolute top-2.5 transition-all", selected ? "left-9" : "left-2.5 group-hover:left-9")}>
+          <div data-slot="recording-card-mode" className={cn("absolute top-2.5 transition-all", selected ? "left-9" : "left-2.5 group-hover:left-9")}>
             <RecordingModeChip mode={r.mode} />
           </div>
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-media-foreground/90">
-            <span className="rounded bg-scrim/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
-            <span className="rounded bg-scrim/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
+          <div data-slot="recording-card-meta" className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-media-foreground/90">
+            <span data-slot="recording-card-start" className="rounded bg-scrim/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
+            <span data-slot="recording-card-size" className="rounded bg-scrim/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
           </div>
         </div>
 
-        <div className="p-3.5">
-          <div className="mb-1 flex items-start justify-between gap-2">
+        <div data-slot="recording-card-body" className="p-3.5">
+          <div data-slot="recording-card-header" className="mb-1 flex items-start justify-between gap-2">
             <TruncatedText
+              data-slot="recording-card-title"
               text={isDrawer ? `Recording · ${r.dateLabel}` : r.cameraName}
               className="text-base font-bold text-foreground transition-colors group-hover:text-primary-ink"
             />
-            <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
+            <p data-slot="recording-card-id" className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
           </div>
-          <p className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <p data-slot="recording-card-location" className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="size-2.5" />
             {isDrawer ? r.areaName : `${r.areaName} · ${r.siteName}`}
           </p>
-          <div className="flex items-center justify-end border-t border-border/60 pt-2">
-            <span className="font-mono text-2xs text-muted-foreground">
+          <div data-slot="recording-card-footer" className="flex items-center justify-end border-t border-border/60 pt-2">
+            <span data-slot="recording-card-footer-value" className="font-mono text-2xs text-muted-foreground">
               {isDrawer ? r.durationDisplay : r.dateLabel}
             </span>
           </div>

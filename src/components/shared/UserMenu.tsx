@@ -40,12 +40,13 @@ function ProfileRoleBadge({ role }: { role: UserRole }) {
   const Icon = s.icon;
   return (
     <span
+      data-slot="profile-role-badge"
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
         s.classes
       )}
     >
-      <Icon className="size-3" />
+      <Icon data-slot="profile-role-badge-icon" className="size-3" />
       {s.label}
     </span>
   );
@@ -82,18 +83,19 @@ export function UserMenu({ className }: UserMenuProps) {
           <button
             type="button"
             aria-label="Open account menu"
+            data-slot="user-menu"
             className={cn(
               "flex h-8 items-center gap-2 rounded-full border border-transparent pl-0.5 pr-1.5 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               className
             )}
           >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-fill text-2xs font-bold text-primary-foreground">
+            <span data-slot="user-menu-avatar" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-fill text-2xs font-bold text-primary-foreground">
               {user.initials}
             </span>
 
-            <span className="hidden min-w-0 flex-col items-start leading-tight md:flex">
-              <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
-              <span className="truncate text-2xs text-muted-foreground">
+            <span data-slot="user-menu-identity" className="hidden min-w-0 flex-col items-start leading-tight md:flex">
+              <span data-slot="user-menu-name" className="truncate text-sm font-medium text-foreground">{user.name}</span>
+              <span data-slot="user-menu-role" className="truncate text-2xs text-muted-foreground">
                 {PROFILE_ROLE_STYLES[user.role].label}
               </span>
             </span>
@@ -103,22 +105,22 @@ export function UserMenu({ className }: UserMenuProps) {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-64 p-0">
-          <div className="border-b border-border px-3 py-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-fill text-sm font-bold text-primary-foreground">
+          <div data-slot="user-menu-header" className="border-b border-border px-3 py-3">
+            <div data-slot="user-menu-profile" className="flex items-center gap-2.5">
+              <div data-slot="user-menu-header-avatar" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-fill text-sm font-bold text-primary-foreground">
                 {user.initials}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-bold text-foreground">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                <div className="mt-1">
+              <div data-slot="user-menu-details" className="min-w-0 flex-1">
+                <p data-slot="user-menu-header-name" className="truncate text-base font-bold text-foreground">{user.name}</p>
+                <p data-slot="user-menu-email" className="truncate text-xs text-muted-foreground">{user.email}</p>
+                <div data-slot="user-menu-role-badge" className="mt-1">
                   <ProfileRoleBadge role={user.role} />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-1">
+          <div data-slot="user-menu-links" className="p-1">
             <DropdownMenuItem className="gap-2 px-2.5 py-2 text-base" onClick={() => go("/profile")}>
               <User className="size-4 text-muted-foreground" />
               My Profile
@@ -139,7 +141,7 @@ export function UserMenu({ className }: UserMenuProps) {
 
           <DropdownMenuSeparator className="my-0" />
 
-          <div className="p-1">
+          <div data-slot="user-menu-sign-out" className="p-1">
             <DropdownMenuItem
               className="gap-2 px-2.5 py-2 text-base text-severity-critical focus:text-severity-critical"
               onClick={() => setSignOutOpen(true)}

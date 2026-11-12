@@ -6,6 +6,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+// Accel: layer names + tokens — data-slot on the built-in close button/icon/label; z-index via --z-modal; content text size/colour made explicit (was inherited 16px/24px from body).
 // Accel: shadow-raised/floating/modal are theme-aware elevation tokens (index.css),
 // replacing Tailwind's shadow-xs…2xl sizes, which vanish on the dark theme.
 
@@ -39,7 +40,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-scrim/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[var(--z-modal)] bg-scrim/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className
       )}
       {...props}
@@ -63,7 +64,7 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-background shadow-modal transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-[var(--duration-slow)] data-[state=open]:animate-in data-[state=open]:duration-500",
+          "fixed z-[var(--z-modal)] flex flex-col gap-4 bg-background text-lg/6 text-foreground shadow-modal transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-[var(--duration-slow)] data-[state=open]:animate-in data-[state=open]:duration-500",
           side === "right" &&
             "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&
@@ -78,9 +79,9 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
-            <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+          <SheetPrimitive.Close data-slot="sheet-content-close" className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
+            <XIcon data-slot="sheet-close-icon" className="size-4" />
+            <span data-slot="sheet-close-label" className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>

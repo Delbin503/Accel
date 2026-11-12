@@ -17,7 +17,7 @@ export function DeploymentModeSwitcher() {
   const isOnPrem = location.pathname.startsWith("/on-premise");
 
   return (
-    <div className="mb-6 flex items-center gap-1 rounded-lg border border-border bg-card/40 p-1 backdrop-blur-sm">
+    <div data-slot="deployment-mode-switcher" className="mb-6 flex items-center gap-1 rounded-lg border border-border bg-card/40 p-1 backdrop-blur-sm">
       <Segment
         to="/signin"
         active={!isOnPrem}
@@ -51,6 +51,7 @@ function Segment({
 }) {
   return (
     <Link
+      data-slot="deployment-mode-switcher-segment"
       to={to}
       className={cn(
         "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-2 text-center transition-all",
@@ -60,11 +61,12 @@ function Segment({
       )}
       aria-current={active ? "page" : undefined}
     >
-      <span className="flex items-center gap-1.5 text-sm font-bold">
+      <span data-slot="deployment-mode-switcher-segment-label" className="flex items-center gap-1.5 text-sm font-bold">
         {icon}
         {label}
       </span>
       <span
+        data-slot="deployment-mode-switcher-segment-hint"
         className={cn(
           "text-3xs font-semibold uppercase tracking-wider",
           active ? "text-primary-foreground/85" : "text-muted-foreground/70"

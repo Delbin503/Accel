@@ -158,6 +158,7 @@ function ModalContent({ size, className, onInteractOutside, ...props }: ModalCon
   const uniform = React.useContext(ModalUniformWidthContext) && size !== "full";
   return (
     <DialogContent
+      data-slot="modal-content"
       className={cn(
         modalVariants({ size }),
         regularFrame && "w-[550px] max-h-[70vh]",
@@ -231,6 +232,7 @@ function ModalHeader({
   const plain = React.useContext(ModalChromeContext) === "plain";
   return (
     <DialogHeader
+      data-slot="modal-header"
       className={cn(
         "flex-shrink-0 px-5 py-4",
         plain ? "pb-0 text-left" : "border-b border-border",
@@ -238,6 +240,7 @@ function ModalHeader({
       )}
     >
       <DialogTitle
+        data-slot="modal-title"
         className={cn(
           "flex items-center gap-2 pr-8 font-bold",
           // Titles stay neutral; a red action button carries any danger.
@@ -248,7 +251,7 @@ function ModalHeader({
         {title}
       </DialogTitle>
       {description ? (
-        <DialogDescription className={plain ? "sr-only" : "mt-0.5 text-sm text-muted-foreground"}>
+        <DialogDescription data-slot="modal-description" className={plain ? "sr-only" : "mt-0.5 text-sm text-muted-foreground"}>
           {description}
         </DialogDescription>
       ) : null}
@@ -260,6 +263,7 @@ function ModalHeader({
 function ModalSubheader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-slot="modal-subheader"
       className={cn(
         "flex-shrink-0 border-b border-border bg-background/40 px-5 py-3",
         className
@@ -276,6 +280,7 @@ function ModalBody({ className, ...props }: React.ComponentProps<"div">) {
   const plain = React.useContext(ModalChromeContext) === "plain";
   return (
     <div
+      data-slot="modal-body"
       className={cn("flex-1 overflow-y-auto px-5 py-4", plain && "pt-0 [&_label>svg]:hidden", className)}
       {...props}
     />
@@ -291,6 +296,7 @@ function ModalFooter({
   const tidy = useTidy();
   return (
     <div
+      data-slot="modal-footer"
       className={cn(
         "flex flex-shrink-0 items-center gap-2 border-t border-border px-5 py-3.5",
         align === "between" ? "justify-between" : "justify-end",

@@ -15,7 +15,7 @@ function useModifierKey(): string {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-sans text-2xs font-medium text-muted-foreground">
+    <kbd data-slot="kbd" className="rounded border border-border bg-muted px-1.5 py-0.5 font-sans text-2xs font-medium text-muted-foreground">
       {children}
     </kbd>
   );
@@ -31,6 +31,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
     <>
       {/* Full field — from md up, where there is room for it. */}
       <button
+        data-slot="global-search-trigger"
         type="button"
         onClick={() => openPalette("search")}
         aria-label="Search"
@@ -42,8 +43,8 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
           className
         )}
       >
-        <Search className="size-4 shrink-0 text-muted-foreground" />
-        <span className="flex-1 truncate text-base text-muted-foreground">
+        <Search data-slot="global-search-trigger-icon" className="size-4 shrink-0 text-muted-foreground" />
+        <span data-slot="global-search-trigger-placeholder" className="flex-1 truncate text-base text-muted-foreground">
           Search cameras, cases, rules…
         </span>
         <Kbd>{mod} K</Kbd>
@@ -51,6 +52,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
 
       {/* Compact icon — below md the header has no room for a field. */}
       <button
+        data-slot="global-search-trigger-compact"
         type="button"
         onClick={() => openPalette("search")}
         aria-label="Search"
@@ -76,6 +78,7 @@ export function QuickActionsTrigger({ className }: { className?: string }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          data-slot="quick-actions-trigger"
           type="button"
           onClick={() => openPalette("actions")}
           aria-label="Quick actions"
@@ -90,7 +93,7 @@ export function QuickActionsTrigger({ className }: { className?: string }) {
           <Zap className="size-4" />
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="flex items-center gap-1.5">
+      <TooltipContent data-slot="quick-actions-trigger-tooltip" side="bottom" className="flex items-center gap-1.5">
         Quick actions
         <Kbd>{mod} J</Kbd>
       </TooltipContent>

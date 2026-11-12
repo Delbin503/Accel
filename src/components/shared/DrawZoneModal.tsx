@@ -187,29 +187,31 @@ export function DrawZoneModal({
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="xl">
+      <ModalContent data-slot="draw-zone-modal" size="xl">
         <ModalHeader
           title={title ?? (isEditingInitialZone ? "Edit Detection Zones" : "Add Detection Zone")}
-          description={<>{subtitle ?? ( <> {isEditingInitialZone ? "View, draw and edit" : "Draw and configure"} boundary zones on{" "} <strong className="text-foreground">{cameraName}</strong>. </> )}{" "} Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.</>}
+          description={<>{subtitle ?? ( <> {isEditingInitialZone ? "View, draw and edit" : "Draw and configure"} boundary zones on{" "} <strong data-slot="draw-zone-modal-description-camera" className="text-foreground">{cameraName}</strong>. </> )}{" "} Drag on empty canvas to create a new zone · click any zone to edit it · drag corner handles to resize.</>}
         />
-        <ModalBody>
+        <ModalBody data-slot="draw-zone-modal-body">
           {/* Camera switcher — zones are stored per camera */}
           {cameraPicker && cameraPicker.cameras.length > 1 && (
-            <div className="mb-3 flex items-center gap-2.5">
+            <div data-slot="draw-zone-modal-camera-picker" className="mb-3 flex items-center gap-2.5">
               <label
+                data-slot="draw-zone-modal-camera-picker-label"
                 htmlFor="zone-camera-picker"
                 className="flex-shrink-0 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60"
               >
                 Camera
               </label>
               <select
+                data-slot="draw-zone-modal-camera-picker-select"
                 id="zone-camera-picker"
                 value={cameraPicker.activeId}
                 onChange={(e) => cameraPicker.onChange(e.target.value)}
                 className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {cameraPicker.cameras.map((c) => (
-                  <option key={c.id} value={c.id}>
+                  <option data-slot="draw-zone-modal-camera-option" key={c.id} value={c.id}>
                     {c.name} — {c.zoneCount} zone{c.zoneCount === 1 ? "" : "s"}
                   </option>
                 ))}
@@ -219,22 +221,23 @@ export function DrawZoneModal({
 
           {/* Camera canvas — bigger so zones are easier to manipulate */}
           <div
+            data-slot="draw-zone-modal-canvas"
             ref={containerRef}
             onMouseDown={onMouseDownContainer}
             className="relative aspect-video w-full cursor-crosshair select-none overflow-hidden rounded-lg border-2 border-border bg-media"
             style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }}
           >
-            <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            <div data-slot="draw-zone-modal-canvas-scanlines" className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px)" }} />
-            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-status-foreground">
+            <span data-slot="draw-zone-modal-canvas-live" className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-status-foreground">
               LIVE
             </span>
-            <span className="pointer-events-none absolute right-3 top-3 rounded bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">{cameraName}</span>
+            <span data-slot="draw-zone-modal-canvas-camera" className="pointer-events-none absolute right-3 top-3 rounded bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">{cameraName}</span>
 
             {/* Empty-state hint */}
             {existingZones.length === 0 && !draft && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="rounded-lg border border-dashed border-media-foreground/30 bg-scrim/40 px-4 py-2 text-center text-xs text-media-foreground/70 backdrop-blur-sm">
+              <div data-slot="draw-zone-modal-canvas-empty" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div data-slot="draw-zone-modal-canvas-empty-hint" className="rounded-lg border border-dashed border-media-foreground/30 bg-scrim/40 px-4 py-2 text-center text-xs text-media-foreground/70 backdrop-blur-sm">
                   Click and drag anywhere on the canvas to draw a new zone
                 </div>
               </div>
@@ -248,6 +251,7 @@ export function DrawZoneModal({
               const isEditing = editingZoneId === z.id;
               return (
                 <div
+                  data-slot="draw-zone-modal-zone"
                   key={z.id}
                   data-existing-zone
                   onMouseDown={(e) => {
@@ -272,7 +276,7 @@ export function DrawZoneModal({
                     width: `${w * 100}%`, height: `${h * 100}%`,
                   }}
                 >
-                  <span className={cn(
+                  <span data-slot="draw-zone-modal-zone-label" className={cn(
                     "absolute -top-5 left-0 rounded px-1.5 py-px font-mono text-2xs font-bold",
                     isEditing ? "bg-warning text-status-foreground" : "bg-info text-status-foreground"
                   )}>
@@ -281,7 +285,8 @@ export function DrawZoneModal({
                   {/* Corner resize handle (only when editing) */}
                   {isEditing && (
                     <div onMouseDown={(e) => resizeBox(e, { x: x0, y: y0 }, (nw, nh) => resizeExistingZone(z.id, nw, nh))}
-                      className="absolute -bottom-1.5 -right-1.5 z-10 size-4 cursor-nwse-resize rounded-sm border-2 border-warning bg-warning"
+                      data-slot="draw-zone-modal-zone-handle"
+                      className="absolute -bottom-1.5 -right-1.5 z-[var(--z-dropdown)] size-4 cursor-nwse-resize rounded-sm border-2 border-warning bg-warning"
                       title="Resize" />
                   )}
                 </div>
@@ -291,6 +296,7 @@ export function DrawZoneModal({
             {/* Draft (new) zone */}
             {draft && draft.w > 0 && draft.h > 0 && (
               <div
+                data-slot="draw-zone-modal-draft"
                 data-zone-box
                 onMouseDown={(e) => dragBox(e, draft, (nx, ny) => setDraft((d) => d && ({ ...d, x: nx, y: ny })))}
                 className="absolute cursor-move border-2 border-primary bg-primary/20 ring-2 ring-primary/40"
@@ -299,11 +305,12 @@ export function DrawZoneModal({
                   width: `${draft.w * 100}%`, height: `${draft.h * 100}%`,
                 }}
               >
-                <span className="absolute -top-5 left-0 rounded bg-primary-fill px-1.5 py-px text-2xs font-bold text-primary-foreground">
+                <span data-slot="draw-zone-modal-draft-label" className="absolute -top-5 left-0 rounded bg-primary-fill px-1.5 py-px text-2xs font-bold text-primary-foreground">
                   {label || "New zone"}
                 </span>
                 <div onMouseDown={(e) => resizeBox(e, draft, (nw, nh) => setDraft((d) => d && ({ ...d, w: nw, h: nh })))}
-                  className="absolute -bottom-1.5 -right-1.5 z-10 size-4 cursor-nwse-resize rounded-sm border-2 border-primary bg-primary"
+                  data-slot="draw-zone-modal-draft-handle"
+                  className="absolute -bottom-1.5 -right-1.5 z-[var(--z-dropdown)] size-4 cursor-nwse-resize rounded-sm border-2 border-primary bg-primary"
                   title="Resize" />
               </div>
             )}
@@ -311,13 +318,14 @@ export function DrawZoneModal({
 
           {/* Copy this camera's zones to the rest of the selection */}
           {applyToAll && cameraPicker && cameraPicker.cameras.length > 1 && (
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-              <p className="min-w-0 text-sm text-muted-foreground">
+            <div data-slot="draw-zone-modal-apply-all" className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+              <p data-slot="draw-zone-modal-apply-all-text" className="min-w-0 text-sm text-muted-foreground">
                 Reuse this layout on the other{" "}
-                <strong className="text-foreground">{cameraPicker.cameras.length - 1}</strong> camera
+                <strong data-slot="draw-zone-modal-apply-all-count" className="text-foreground">{cameraPicker.cameras.length - 1}</strong> camera
                 {cameraPicker.cameras.length - 1 === 1 ? "" : "s"}.
               </p>
               <Button
+                data-slot="draw-zone-modal-apply-all-action"
                 variant="outline"
                 size="sm"
                 onClick={applyToAll.onClick}
@@ -331,23 +339,23 @@ export function DrawZoneModal({
           )}
 
           {/* Both editor cards always render when applicable so user can draw AND edit names simultaneously */}
-          <div className="mt-4 space-y-3">
+          <div data-slot="draw-zone-modal-editors" className="mt-4 space-y-3">
             {/* New zone form — appears when user has dragged a draft */}
             {draft && (
-              <div className="grid grid-cols-1 gap-3 rounded-lg border border-primary/40 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-primary-ink">
+              <div data-slot="draw-zone-modal-new-zone" className="grid grid-cols-1 gap-3 rounded-lg border border-primary/40 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
+                <div data-slot="draw-zone-modal-new-zone-field">
+                  <label data-slot="draw-zone-modal-new-zone-label" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-primary-ink">
                     <Plus className="-mt-0.5 mr-1 inline size-3" /> Name your new zone
                   </label>
-                  <Input value={label} onChange={(e) => setLabel(e.target.value)}
+                  <Input data-slot="draw-zone-modal-new-zone-input" value={label} onChange={(e) => setLabel(e.target.value)}
                     autoFocus placeholder="e.g. Entrance, Counter, Loading Dock…"
                     onKeyDown={(e) => { if (e.key === "Enter" && label.trim() && draft.w >= 0.05) commit(); }}
                     className="h-9 text-base" />
-                  <p className="mt-1 text-2xs text-muted-foreground">
+                  <p data-slot="draw-zone-modal-new-zone-box" className="mt-1 text-2xs text-muted-foreground">
                     Box: [{draft.x.toFixed(2)}, {draft.y.toFixed(2)}, {(draft.x + draft.w).toFixed(2)}, {(draft.y + draft.h).toFixed(2)}]
                   </p>
                 </div>
-                <div className="flex items-end gap-1.5">
+                <div data-slot="draw-zone-modal-new-zone-actions" className="flex items-end gap-1.5">
                   <Button variant="ghost" size="sm" onClick={() => { setDraft(null); setLabel(""); }}>Discard</Button>
                   <Button disabled={!label.trim() || draft.w < 0.05 || draft.h < 0.05} onClick={commit} className="gap-1.5">
                     <Check className="size-3.5" />
@@ -359,18 +367,18 @@ export function DrawZoneModal({
 
             {/* Rename form — appears when user clicked an existing zone */}
             {editingZone && (
-              <div className="rounded-lg border border-warning/40 bg-warning/[0.06] p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-warning">
+              <div data-slot="draw-zone-modal-rename" className="rounded-lg border border-warning/40 bg-warning/[0.06] p-3">
+                <div data-slot="draw-zone-modal-rename-header" className="mb-2 flex items-center justify-between">
+                  <label data-slot="draw-zone-modal-rename-label" className="text-xs font-semibold uppercase tracking-wider text-warning">
                     <Pencil className="-mt-0.5 mr-1 inline size-3" />
                     Renaming zone {existingZones.findIndex((z) => z.id === editingZone.id) + 1}
                   </label>
-                  <span className="font-mono text-2xs text-muted-foreground">
+                  <span data-slot="draw-zone-modal-rename-box" className="font-mono text-2xs text-muted-foreground">
                     [{editingZone.box.map((n) => n.toFixed(2)).join(", ")}]
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input value={editingLabel} onChange={(e) => setEditingLabel(e.target.value)}
+                <div data-slot="draw-zone-modal-rename-actions" className="flex items-center gap-2">
+                  <Input data-slot="draw-zone-modal-rename-input" value={editingLabel} onChange={(e) => setEditingLabel(e.target.value)}
                     autoFocus placeholder="Zone name"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && editingLabel.trim()) {
@@ -388,7 +396,7 @@ export function DrawZoneModal({
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditingZoneId(null)}>Cancel</Button>
                 </div>
-                <p className="mt-2 text-2xs text-muted-foreground">
+                <p data-slot="draw-zone-modal-rename-hint" className="mt-2 text-2xs text-muted-foreground">
                   You can also drag the highlighted zone on the canvas to reposition · drag its corner handle to resize.
                 </p>
               </div>
@@ -396,39 +404,40 @@ export function DrawZoneModal({
 
             {/* Default hint when nothing is being drawn or edited */}
             {!draft && !editingZone && (
-              <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3 text-center text-xs text-muted-foreground">
+              <div data-slot="draw-zone-modal-hint" className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3 text-center text-xs text-muted-foreground">
                 Drag on the canvas above to create a new zone · click any existing zone (or its row below) to rename it.
               </div>
             )}
           </div>
 
           {/* Existing zones list — click on row OR canvas to edit */}
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div data-slot="draw-zone-modal-zones" className="mt-4">
+            <p data-slot="draw-zone-modal-zones-title" className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Current zones ({existingZones.length})
             </p>
             {existingZones.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm italic text-muted-foreground">
+              <p data-slot="draw-zone-modal-zones-empty" className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm italic text-muted-foreground">
                 No zones drawn yet. Draw one on the canvas above.
               </p>
             ) : (
-              <div className="space-y-1.5">
+              <div data-slot="draw-zone-modal-zones-list" className="space-y-1.5">
                 {existingZones.map((z, i) => {
                   const isEditing = editingZoneId === z.id;
                   return (
-                    <div key={z.id}
+                    <div data-slot="draw-zone-modal-zones-row" key={z.id}
                       className={cn(
                         "flex items-center gap-2 rounded-lg border bg-background px-3 py-2 transition-colors",
                         isEditing ? "border-warning bg-warning/[0.04]" : "border-border"
                       )}>
-                      <span className={cn("font-mono text-2xs font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
-                      <span className="rounded bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{z.id}</span>
-                      <span className="flex-1 text-base font-semibold text-foreground">{z.label}</span>
-                      <span className="hidden font-mono text-2xs text-muted-foreground/70 sm:inline">
+                      <span data-slot="draw-zone-modal-zones-row-index" className={cn("font-mono text-2xs font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
+                      <span data-slot="draw-zone-modal-zones-row-id" className="rounded bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{z.id}</span>
+                      <span data-slot="draw-zone-modal-zones-row-label" className="flex-1 text-base font-semibold text-foreground">{z.label}</span>
+                      <span data-slot="draw-zone-modal-zones-row-box" className="hidden font-mono text-2xs text-muted-foreground/70 sm:inline">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
                       {/* Explicit Edit + Delete buttons (always visible) */}
                       <button
+                        data-slot="draw-zone-modal-zones-row-edit"
                         onClick={() => { setEditingZoneId(z.id); setEditingLabel(z.label); }}
                         className={cn(
                           "flex size-7 items-center justify-center rounded border transition-colors",
@@ -438,7 +447,7 @@ export function DrawZoneModal({
                         title="Rename zone">
                         <Pencil className="size-3" />
                       </button>
-                      <button onClick={() => { onRemoveZone(z.id); if (isEditing) setEditingZoneId(null); }}
+                      <button data-slot="draw-zone-modal-zones-row-remove" onClick={() => { onRemoveZone(z.id); if (isEditing) setEditingZoneId(null); }}
                         className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-severity-critical/40 hover:text-severity-critical"
                         title="Remove zone">
                         <Trash2 className="size-3" />
@@ -452,12 +461,12 @@ export function DrawZoneModal({
         </ModalBody>
 
         {primaryAction && (
-          <ModalFooter align="between" className="gap-3">
-            <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">{existingZones.length}</strong> zone
+          <ModalFooter data-slot="draw-zone-modal-footer" align="between" className="gap-3">
+            <p data-slot="draw-zone-modal-footer-summary" className="text-sm text-muted-foreground">
+              <strong data-slot="draw-zone-modal-footer-count" className="text-foreground">{existingZones.length}</strong> zone
               {existingZones.length === 1 ? "" : "s"} defined
             </p>
-            <div className="flex items-center gap-2">
+            <div data-slot="draw-zone-modal-footer-actions" className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={onClose}>
                 Back
               </Button>

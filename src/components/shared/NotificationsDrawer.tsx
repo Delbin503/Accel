@@ -120,28 +120,29 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
+        data-slot="notifications-drawer"
         side="right"
         className="flex w-[min(440px,92vw)] max-w-[95vw] flex-col gap-0 p-0"
       >
-        <SheetHeader className="flex-shrink-0 border-b border-border px-5 py-4">
-          <SheetTitle className="inline-flex items-center gap-2 pr-8 text-base font-bold">
+        <SheetHeader data-slot="notifications-drawer-header" className="flex-shrink-0 border-b border-border px-5 py-4">
+          <SheetTitle data-slot="notifications-drawer-title" className="inline-flex items-center gap-2 pr-8 text-base font-bold">
             <Bell className="size-4 text-primary-ink" />
             Notifications
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-status-foreground">
+              <span data-slot="notifications-drawer-unread-count" className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-status-foreground">
                 {unreadCount}
               </span>
             )}
           </SheetTitle>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <p data-slot="notifications-drawer-summary" className="mt-0.5 text-sm text-muted-foreground">
             {filtered.length} of {items.length} shown
           </p>
         </SheetHeader>
 
         {/* Filter bar */}
-        <div className="flex flex-shrink-0 flex-col gap-2 border-b border-border px-5 py-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <span className="inline-flex flex-shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div data-slot="notifications-drawer-filters" className="flex flex-shrink-0 flex-col gap-2 border-b border-border px-5 py-3">
+          <div data-slot="notifications-drawer-date-pills" className="flex items-center gap-1.5 overflow-x-auto">
+            <span data-slot="notifications-drawer-date-label" className="inline-flex flex-shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Calendar className="size-3" />
               Date
             </span>
@@ -149,6 +150,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
               const active = range === p.key;
               return (
                 <button
+                  data-slot="notifications-drawer-date-pill"
                   key={p.key}
                   onClick={() => setRange(p.key)}
                   className={cn(
@@ -166,10 +168,11 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
 
           {/* Custom date range — collapsible. Two date inputs side by side. */}
           {range === "custom" && (
-            <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
-              <label className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wider text-2xs">From</span>
+            <div data-slot="notifications-drawer-custom-range" className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
+              <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">From</span>
                 <input
+                  data-slot="notifications-drawer-custom-input"
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
@@ -177,9 +180,10 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                   className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
                 />
               </label>
-              <label className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wider text-2xs">To</span>
+              <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">To</span>
                 <input
+                  data-slot="notifications-drawer-custom-input"
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
@@ -189,9 +193,9 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
               </label>
             </div>
           )}
-          <div className="flex items-center justify-between gap-2">
-            <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <input
+          <div data-slot="notifications-drawer-toolbar" className="flex items-center justify-between gap-2">
+            <label data-slot="notifications-drawer-unread-toggle" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <input data-slot="notifications-drawer-unread-checkbox"
                 type="checkbox"
                 checked={showUnreadOnly}
                 onChange={(e) => setShowUnreadOnly(e.target.checked)}
@@ -200,6 +204,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
               Unread only
             </label>
             <button
+              data-slot="notifications-drawer-mark-all"
               onClick={markAllRead}
               disabled={unreadCount === 0}
               className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary-ink transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
@@ -211,66 +216,68 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto">
+        <div data-slot="notifications-drawer-list" className="flex-1 overflow-y-auto">
           {grouped.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-muted-foreground">
+            <div data-slot="notifications-drawer-empty" className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-muted-foreground">
               <Bell className="size-8 opacity-30" />
-              <p className="text-base font-medium">No notifications match the current filters.</p>
-              <p className="text-xs">Try widening the date range or unchecking "Unread only".</p>
+              <p data-slot="notifications-drawer-empty-title" className="text-base font-medium">No notifications match the current filters.</p>
+              <p data-slot="notifications-drawer-empty-description" className="text-xs">Try widening the date range or unchecking "Unread only".</p>
             </div>
           ) : (
             grouped.map(([day, group]) => (
-              <div key={day}>
-                <div className="sticky top-0 z-10 border-b border-border bg-card/95 px-5 py-1.5 text-2xs font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
+              <div data-slot="notifications-drawer-group" key={day}>
+                <div data-slot="notifications-drawer-group-heading" className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-card/95 px-5 py-1.5 text-2xs font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
                   {fmtGroupHeading(day)}
                 </div>
-                <ul className="divide-y divide-border/60">
+                <ul data-slot="notifications-drawer-group-items" className="divide-y divide-border/60">
                   {group.map((n) => {
                     const k = KIND_STYLES[n.kind];
                     const Icon = k.icon;
                     return (
-                      <li key={n.id}>
+                      <li data-slot="notifications-drawer-item" key={n.id}>
                         <button
+                          data-slot="notifications-drawer-item-button"
                           onClick={() => handleClick(n)}
                           className={cn(
                             "group flex w-full items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40",
                             !n.read && "bg-primary/[0.03]"
                           )}
                         >
-                          <div className={cn(
+                          <div data-slot="notifications-drawer-item-icon" className={cn(
                             "flex size-8 flex-shrink-0 items-center justify-center rounded-lg",
                             k.bg, k.text
                           )}>
                             <Icon className="size-4" />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className={cn(
+                          <div data-slot="notifications-drawer-item-body" className="min-w-0 flex-1">
+                            <div data-slot="notifications-drawer-item-meta" className="flex items-center gap-2">
+                              <span data-slot="notifications-drawer-item-kind" className={cn(
                                 "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
                                 k.bg, k.text, "border-current/30"
                               )}>
                                 {k.label}
                               </span>
-                              <span className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
+                              <span data-slot="notifications-drawer-item-time" className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
                               {!n.read && (
-                                <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary-ink">
-                                  <span className="size-1.5 rounded-full bg-primary" />
+                                <span data-slot="notifications-drawer-item-new" className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary-ink">
+                                  <span data-slot="notifications-drawer-item-new-dot" className="size-1.5 rounded-full bg-primary" />
                                   New
                                 </span>
                               )}
                             </div>
-                            <p className={cn(
+                            <p data-slot="notifications-drawer-item-title" className={cn(
                               "mt-1 text-base font-semibold",
                               n.read ? "text-foreground" : "text-foreground"
                             )}>
                               {n.title}
                             </p>
                             <TruncatedText
+                              data-slot="notifications-drawer-item-description"
                               text={n.description}
                               className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
                             />
                             {n.href && (
-                              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
+                              <span data-slot="notifications-drawer-item-link" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
                                 Open <ArrowUpRight className="size-3" />
                               </span>
                             )}
@@ -285,11 +292,11 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           )}
         </div>
 
-        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-5 py-3">
-          <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">{unreadCount}</strong> unread
+        <div data-slot="notifications-drawer-footer" className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-5 py-3">
+          <p data-slot="notifications-drawer-footer-summary" className="text-xs text-muted-foreground">
+            <strong data-slot="notifications-drawer-footer-count" className="text-foreground">{unreadCount}</strong> unread
           </p>
-          <Button variant="outline" onClick={onClose}>Close</Button>
+          <Button data-slot="notifications-drawer-close" variant="outline" onClick={onClose}>Close</Button>
         </div>
       </SheetContent>
     </Sheet>

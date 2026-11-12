@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 export function ProgressRow({ progress, label }: { progress: number; label: React.ReactNode }) {
   const done = progress >= 100;
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between gap-3 text-xs">
-        <span className="min-w-0 truncate text-muted-foreground">{label}</span>
-        <span className={cn("font-mono font-semibold tabular-nums", done ? "text-success" : "text-foreground")}>
+    <div data-slot="progress-row" className="space-y-2">
+      <div data-slot="progress-row-header" className="flex items-baseline justify-between gap-3 text-xs">
+        <span data-slot="progress-row-label" className="min-w-0 truncate text-muted-foreground">{label}</span>
+        <span data-slot="progress-row-value" className={cn("font-mono font-semibold tabular-nums", done ? "text-success" : "text-foreground")}>
           {progress}%
         </span>
       </div>

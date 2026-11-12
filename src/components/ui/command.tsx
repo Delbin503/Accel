@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Accel: layer names + tokens — data-slot on the search icon layer.
+
 /**
  * shadcn `Command` (cmdk) — the primitive behind the global ⌘K palette.
  * Deviations from the stock generator, all deliberate:
@@ -82,7 +84,7 @@ function CommandInput({
       className="flex h-11 items-center gap-2 border-b border-border px-3"
       cmdk-input-wrapper=""
     >
-      <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+      <SearchIcon data-slot="command-input-icon" className="size-4 shrink-0 text-muted-foreground" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(

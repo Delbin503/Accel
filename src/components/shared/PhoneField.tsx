@@ -25,11 +25,12 @@ export function PhoneField({
   );
 
   return (
-    <div className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
+    <div data-slot="phone-field" className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
       <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(""); }}>
         <PopoverTrigger asChild>
           <button
             type="button"
+            data-slot="phone-field-dial-code"
             className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
           >
             {dialCode}
@@ -37,30 +38,31 @@ export function PhoneField({
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
-          <div className="relative mb-1">
+          <div data-slot="phone-field-search" className="relative mb-1">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <input data-slot="phone-field-search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search country or code"
               className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="max-h-56 overflow-y-auto">
+          <div data-slot="phone-field-list" className="max-h-56 overflow-y-auto">
             {list.length === 0 ? (
-              <p className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>
+              <p data-slot="phone-field-empty" className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>
             ) : (
               list.map((c) => (
                 <button
                   key={c.code}
+                  data-slot="phone-field-option"
                   onClick={() => { onDialCode(c.code); setOpen(false); setQuery(""); }}
                   className={cn(
                     "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60",
                     c.code === dialCode && "bg-primary/10"
                   )}
                 >
-                  <span className="truncate text-foreground">{c.name}</span>
-                  <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">{c.code}</span>
+                  <span data-slot="phone-field-option-name" className="truncate text-foreground">{c.name}</span>
+                  <span data-slot="phone-field-option-code" className="flex-shrink-0 font-mono text-xs text-muted-foreground">{c.code}</span>
                 </button>
               ))
             )}
@@ -72,6 +74,7 @@ export function PhoneField({
         onChange={(e) => onNumber(e.target.value)}
         placeholder="9123 4567"
         inputMode="tel"
+        data-slot="phone-field-input"
         className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
       />
     </div>

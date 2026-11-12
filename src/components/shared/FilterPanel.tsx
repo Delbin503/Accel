@@ -30,13 +30,14 @@ const FilterPanel = React.forwardRef<HTMLDivElement, FilterPanelProps>(
   ) => (
     <div
       ref={ref}
+      data-slot="filter-panel"
       className={cn("rounded-xl border border-border bg-card p-3", className)}
       {...props}
     >
-      <div className={cn("grid gap-2", columnsClassName)}>{children}</div>
+      <div data-slot="filter-panel-controls" className={cn("grid gap-2", columnsClassName)}>{children}</div>
       {active && onClear && (
-        <div className="mt-2 flex justify-end">
-          <Button variant="ghost" size="xs" onClick={onClear}>
+        <div data-slot="filter-panel-actions" className="mt-2 flex justify-end">
+          <Button data-slot="filter-panel-clear" variant="ghost" size="xs" onClick={onClear}>
             <X /> Clear all
           </Button>
         </div>

@@ -36,7 +36,7 @@ export function TruncatedText({ text, title, children, className, ...props }: Tr
   }, [text, title]);
 
   const node = (
-    <span ref={ref} className={cn(!hasLineClamp && "block truncate", className)} {...props}>
+    <span data-slot="truncated-text" ref={ref} className={cn(!hasLineClamp && "block truncate", className)} {...props}>
       {children ?? text}
     </span>
   );

@@ -5,6 +5,7 @@ import { CheckIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+// Accel: layer names + tokens — data-slot on the check icon layer.
 // Accel: radius — rounded-xs / rounded-sm tokens replace arbitrary rounded-[Npx].
 
 // Accel: solid fills under labels use primary-fill and orange text uses
@@ -30,7 +31,7 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current transition-none"
       >
-        <CheckIcon className="size-3.5" />
+        <CheckIcon data-slot="checkbox-indicator-icon" className="size-3.5" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

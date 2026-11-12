@@ -58,11 +58,12 @@ export function ScrubTrack({
   }
 
   return (
-    <div className={cn("relative w-full select-none", className)}>
+    <div data-slot="scrub-track" className={cn("relative w-full select-none", className)}>
       {/* Preview bubble — the frame you would land on, like a scrub preview. */}
       {(dragging || hoverPct !== null) && (
         <div
-          className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded bg-scrim/85 px-1.5 py-0.5 font-mono text-3xs text-media-foreground"
+          data-slot="scrub-track-preview"
+          className="pointer-events-none absolute -top-7 z-[var(--z-dropdown)] -translate-x-1/2 rounded bg-scrim/85 px-1.5 py-0.5 font-mono text-3xs text-media-foreground"
           style={{ left: `${dragging ? pct : (hoverPct ?? 0)}%` }}
         >
           {dragging
@@ -73,6 +74,7 @@ export function ScrubTrack({
 
       <div
         ref={ref}
+        data-slot="scrub-track-rail"
         role="slider"
         tabIndex={0}
         aria-label={label}
@@ -110,9 +112,10 @@ export function ScrubTrack({
         )}
       >
         {/* Buffer */}
-        <div className={cn("absolute inset-x-0 rounded-full bg-media-foreground/25", size === "sm" ? "h-[3px]" : "h-1")} />
+        <div data-slot="scrub-track-buffer" className={cn("absolute inset-x-0 rounded-full bg-media-foreground/25", size === "sm" ? "h-[3px]" : "h-1")} />
         {/* Watched region up to the playhead */}
         <div
+          data-slot="scrub-track-progress"
           className={cn("absolute left-0 rounded-full bg-severity-critical", size === "sm" ? "h-[3px]" : "h-1")}
           style={{ width: `${pct}%` }}
         />
@@ -120,6 +123,7 @@ export function ScrubTrack({
         {markers.map((m) => (
           <span
             key={m.label + m.at}
+            data-slot="scrub-track-marker"
             title={m.label}
             className={cn(
               "absolute size-1.5 -translate-x-1/2 rounded-full",
@@ -132,6 +136,7 @@ export function ScrubTrack({
         ))}
         {/* Playhead */}
         <span
+          data-slot="scrub-track-playhead"
           className={cn(
             "absolute -translate-x-1/2 rounded-full bg-severity-critical transition-transform",
             dragging ? "scale-125" : "scale-0 group-hover/track:scale-100",
@@ -160,12 +165,13 @@ export function ChipRow<T extends string | number>({
   label: string;
 }) {
   return (
-    <div>
-      <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <div className="flex flex-wrap gap-1">
+    <div data-slot="chip-row">
+      <p data-slot="chip-row-label" className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <div data-slot="chip-row-options" className="flex flex-wrap gap-1">
         {options.map((o) => (
           <button
             key={String(o)}
+            data-slot="chip-row-option"
             type="button"
             onClick={() => onChange(o)}
             aria-pressed={o === value}
@@ -197,6 +203,7 @@ export function IconButton({ label, onClick, children, compact, disabled, active
   return (
     <button
       type="button"
+      data-slot="icon-button"
       aria-label={label}
       title={label}
       disabled={disabled}
@@ -268,6 +275,7 @@ export function ZoomSurface({ zoom, onChange, onExit, compact }: {
   return (
     <div
       ref={ref}
+      data-slot="zoom-surface"
       tabIndex={0}
       role="slider"
       aria-label="Zoom level"
@@ -321,13 +329,14 @@ export function ZoomSurface({ zoom, onChange, onExit, compact }: {
         }
       }}
       className={cn(
-        "absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ring-2 ring-inset ring-primary/70",
+        "absolute inset-0 z-[var(--z-dropdown)] flex flex-col items-center justify-center gap-1 ring-2 ring-inset ring-primary/70",
         "focus-visible:outline-none",
         atMax ? "cursor-zoom-out" : "cursor-zoom-in"
       )}
     >
       {/* The live readout — the percentage the operator is steering. */}
       <span
+        data-slot="zoom-surface-readout"
         className={cn(
           "rounded-md bg-scrim/75 font-mono font-bold text-media-foreground backdrop-blur-sm",
           compact ? "px-1.5 py-0.5 text-2xs" : "px-2.5 py-1 text-lg"
@@ -336,7 +345,7 @@ export function ZoomSurface({ zoom, onChange, onExit, compact }: {
         {zoomPercent(zoom)}
       </span>
       {!compact && (
-        <span className="rounded bg-scrim/65 px-2 py-0.5 text-2xs font-semibold text-media-foreground/80 backdrop-blur-sm">
+        <span data-slot="zoom-surface-hint" className="rounded bg-scrim/65 px-2 py-0.5 text-2xs font-semibold text-media-foreground/80 backdrop-blur-sm">
           Scroll or {atMin ? "+" : atMax ? "−" : "+ / −"} to zoom · arrows to pan · Esc to exit
         </span>
       )}
@@ -361,6 +370,7 @@ export function PlaybackSettingsMenu({
         <button
           type="button"
           aria-label="Playback settings"
+          data-slot="playback-settings-menu-trigger"
           onClick={(e) => e.stopPropagation()}
           className={cn(
             "inline-flex items-center justify-center rounded-md text-media-foreground/85 transition-colors hover:bg-media-foreground/15 hover:text-media-foreground",

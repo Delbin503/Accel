@@ -56,23 +56,23 @@ export function SyncProgressModal({
       <ModalContent size="sm" showCloseButton={false}>
         <ModalHeader title={done ? "Sync complete" : title} />
         <ModalBody className="space-y-4">
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p data-slot="sync-progress-modal-message" className="text-sm leading-relaxed text-muted-foreground">
             {done ? (
-              <><strong className="text-foreground">{deviceLabel}</strong> is synced. Changes are being applied.</>
+              <><strong data-slot="sync-progress-modal-device" className="text-foreground">{deviceLabel}</strong> is synced. Changes are being applied.</>
             ) : (
               <>
-                Syncing <strong className="text-foreground">{deviceLabel}</strong>. Keep this window open until it
+                Syncing <strong data-slot="sync-progress-modal-device" className="text-foreground">{deviceLabel}</strong>. Keep this window open until it
                 finishes.
               </>
             )}
           </p>
           <ProgressRow progress={progress} label={done ? "All steps complete" : `${stages[stageIndex]}…`} />
-          <ul className="space-y-2">
+          <ul data-slot="sync-progress-modal-stages" className="space-y-2">
             {stages.map((stage, i) => {
               const stageDone = done || i < stageIndex;
               const active = !done && i === stageIndex;
               return (
-                <li key={stage} className="flex items-center gap-2 text-sm">
+                <li key={stage} data-slot="sync-progress-modal-stage" className="flex items-center gap-2 text-sm">
                   {stageDone ? (
                     <CheckCircle2 className="size-3.5 shrink-0 text-success" />
                   ) : active ? (
@@ -81,6 +81,7 @@ export function SyncProgressModal({
                     <CircleDot className="size-3.5 shrink-0 text-muted-foreground/40" />
                   )}
                   <span
+                    data-slot="sync-progress-modal-stage-label"
                     className={cn(
                       "truncate",
                       active ? "font-semibold text-foreground" : stageDone ? "text-muted-foreground" : "text-muted-foreground/50"

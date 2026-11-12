@@ -53,8 +53,8 @@ export interface StatusBadgeProps
 
 const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(
   ({ tone = "neutral", dot = true, className, children, ...props }, ref) => (
-    <span ref={ref} className={cn(statusBadgeVariants({ tone }), className)} {...props}>
-      {dot && <span className={cn("size-1.5 shrink-0 rounded-full", DOT_TONE[tone ?? "neutral"])} />}
+    <span data-slot="status-badge" ref={ref} className={cn(statusBadgeVariants({ tone }), className)} {...props}>
+      {dot && <span data-slot="status-badge-dot" className={cn("size-1.5 shrink-0 rounded-full", DOT_TONE[tone ?? "neutral"])} />}
       {children}
     </span>
   )

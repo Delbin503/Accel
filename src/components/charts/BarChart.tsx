@@ -23,7 +23,7 @@ function BarChart({ data, xKey, series, stacked, showLegend, className }: BarCha
   const config = toChartConfig(series);
   const last = series.length - 1;
   return (
-    <ChartContainer config={config} className={cn("h-64 w-full", className)}>
+    <ChartContainer data-slot="bar-chart" config={config} className={cn("h-64 w-full", className)}>
       <ReBarChart accessibilityLayer data={data} margin={{ left: 4, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey={xKey} {...AXIS_PROPS} />

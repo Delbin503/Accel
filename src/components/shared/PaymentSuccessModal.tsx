@@ -56,33 +56,33 @@ export function PaymentSuccessModal({
         {receipt && (
           <ModalBody className="flex flex-col gap-5 px-6 pb-2 pt-7">
             {/* Hero: tick, headline, amount */}
-            <div className="flex flex-col items-center text-center">
-              <div className="relative flex size-16 items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-success/10" />
-                <span className="absolute inset-2 rounded-full bg-success/15" />
-                <span className="relative flex size-9 items-center justify-center rounded-full bg-success text-background">
+            <div data-slot="payment-success-modal-hero" className="flex flex-col items-center text-center">
+              <div data-slot="payment-success-modal-icon" className="relative flex size-16 items-center justify-center">
+                <span data-slot="payment-success-modal-icon-halo-outer" className="absolute inset-0 rounded-full bg-success/10" />
+                <span data-slot="payment-success-modal-icon-halo-inner" className="absolute inset-2 rounded-full bg-success/15" />
+                <span data-slot="payment-success-modal-icon-core" className="relative flex size-9 items-center justify-center rounded-full bg-success text-background">
                   <Check className="size-5" strokeWidth={3} />
                 </span>
               </div>
-              <p className="mt-4 text-lg font-bold text-foreground">Payment successful</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">Your {receipt.planName} subscription is now active.</p>
-              <p className="mt-4 font-mono text-4xl font-bold tracking-tight text-foreground">{receipt.amount}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p data-slot="payment-success-modal-title" className="mt-4 text-lg font-bold text-foreground">Payment successful</p>
+              <p data-slot="payment-success-modal-description" className="mt-0.5 text-sm text-muted-foreground">Your {receipt.planName} subscription is now active.</p>
+              <p data-slot="payment-success-modal-amount" className="mt-4 font-mono text-4xl font-bold tracking-tight text-foreground">{receipt.amount}</p>
+              <p data-slot="payment-success-modal-date" className="mt-1 text-xs text-muted-foreground">
                 Paid on {receipt.date}
                 {receipt.renews && <> · Renews {receipt.renews}</>}
               </p>
             </div>
 
             {/* Receipt — a ticket with a dashed tear line */}
-            <div className="rounded-xl border border-border bg-muted/30">
-              <dl className="space-y-2.5 px-4 py-3.5 text-sm">
+            <div data-slot="payment-success-modal-receipt" className="rounded-xl border border-border bg-muted/30">
+              <dl data-slot="payment-success-modal-receipt-details" className="space-y-2.5 px-4 py-3.5 text-sm">
                 <Row label="Plan" value={receipt.planName} />
                 <Row label="Billing" value={receipt.cycle === "annual" ? "Annual" : "Monthly"} />
                 {receipt.card && (
                   <Row
                     label="Paid with"
                     value={
-                      <span className="inline-flex items-center gap-1.5">
+                      <span data-slot="payment-success-modal-card" className="inline-flex items-center gap-1.5">
                         <CreditCard className="size-4 text-muted-foreground" />
                         {receipt.card}
                       </span>
@@ -90,15 +90,15 @@ export function PaymentSuccessModal({
                   />
                 )}
               </dl>
-              <dl className="border-t border-dashed border-border px-4 py-3 text-sm">
-                <Row label="Invoice" value={<span className="font-mono">{receipt.reference}</span>} />
+              <dl data-slot="payment-success-modal-receipt-reference" className="border-t border-dashed border-border px-4 py-3 text-sm">
+                <Row label="Invoice" value={<span data-slot="payment-success-modal-reference-value" className="font-mono">{receipt.reference}</span>} />
               </dl>
             </div>
 
             {receipt.email && (
-              <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <p data-slot="payment-success-modal-email" className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <Mail className="size-3.5" />
-                Receipt sent to <span className="font-medium text-foreground">{receipt.email}</span>
+                Receipt sent to <span data-slot="payment-success-modal-email-address" className="font-medium text-foreground">{receipt.email}</span>
               </p>
             )}
           </ModalBody>
@@ -120,9 +120,9 @@ export function PaymentSuccessModal({
 
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium text-foreground">{value}</dd>
+    <div data-slot="payment-success-modal-row" className="flex items-center justify-between gap-3">
+      <dt data-slot="payment-success-modal-row-label" className="text-muted-foreground">{label}</dt>
+      <dd data-slot="payment-success-modal-row-value" className="text-right font-medium text-foreground">{value}</dd>
     </div>
   );
 }

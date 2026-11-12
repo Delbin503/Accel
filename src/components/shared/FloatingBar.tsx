@@ -37,9 +37,10 @@ export function FloatingBar({ children, className }: {
 
   return (
     <>
-      <div ref={anchorRef} aria-hidden className="h-0 w-full" />
+      <div ref={anchorRef} data-slot="floating-bar-anchor" aria-hidden className="h-0 w-full" />
       {box && (
         <div
+          data-slot="floating-bar"
           className={cn("fixed bottom-6 z-[var(--z-sticky)]", className)}
           style={{ left: box.left, width: box.width }}
         >

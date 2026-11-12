@@ -13,6 +13,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
 
   return (
     <Button
+      data-slot="theme-toggle"
       variant="ghost"
       size="icon"
       onClick={toggleTheme}

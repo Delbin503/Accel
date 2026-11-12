@@ -42,15 +42,15 @@ export function SetupCompleteModal({
 
         <ModalBody className="flex flex-col items-center py-6 text-center">
           {/* Server icon with success ring */}
-          <div className="relative mb-5 flex size-20 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-success/40" />
-            <div className="absolute inset-1.5 rounded-full border border-success/25" />
-            <div className="relative flex size-12 items-center justify-center rounded-xl border border-success/40 bg-success/10">
+          <div data-slot="setup-complete-modal-icon" className="relative mb-5 flex size-20 items-center justify-center">
+            <div data-slot="setup-complete-modal-ring-outer" className="absolute inset-0 rounded-full border-2 border-success/40" />
+            <div data-slot="setup-complete-modal-ring-inner" className="absolute inset-1.5 rounded-full border border-success/25" />
+            <div data-slot="setup-complete-modal-icon-core" className="relative flex size-12 items-center justify-center rounded-xl border border-success/40 bg-success/10">
               <Check className="size-6 text-success" strokeWidth={2.5} />
             </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-2xs font-bold uppercase tracking-wider text-success">
+          <span data-slot="setup-complete-modal-badge" className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-2xs font-bold uppercase tracking-wider text-success">
             System Setup Complete
           </span>
         </ModalBody>

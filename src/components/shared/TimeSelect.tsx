@@ -93,12 +93,13 @@ function Column<T extends string | number>({
   }, []);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col">
-      <div className="mb-1 px-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div data-slot="time-select-column" className="flex min-w-0 flex-1 flex-col">
+      <div data-slot="time-select-column-label" className="mb-1 px-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
       <div
         ref={listRef}
+        data-slot="time-select-column-list"
         role="listbox"
         aria-label={label}
         className="h-44 overflow-y-auto rounded-md border border-border bg-background p-1"
@@ -108,6 +109,7 @@ function Column<T extends string | number>({
           return (
             <button
               key={String(o)}
+              data-slot="time-select-option"
               type="button"
               role="option"
               aria-selected={active}
@@ -172,19 +174,21 @@ export function TimeSelect({
       <PopoverTrigger asChild>
         <button
           type="button"
+          data-slot="time-select"
           disabled={disabled}
           aria-label={ariaLabel}
           aria-invalid={invalid || undefined}
           className={cn(
-            "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-base whitespace-nowrap shadow-raised transition-[color,box-shadow] outline-none",
+            "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-base text-foreground whitespace-nowrap shadow-raised transition-[color,box-shadow] outline-none",
             "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
             "disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 dark:hover:bg-input/50",
             invalid && "border-severity-critical",
             className
           )}
         >
-          <Clock className="size-4 shrink-0 text-muted-foreground" />
+          <Clock data-slot="time-select-icon" className="size-4 shrink-0 text-muted-foreground" />
           <span
+            data-slot="time-select-value"
             className={cn(
               "min-w-0 flex-1 truncate text-left tabular-nums",
               !value && "text-muted-foreground"
@@ -202,17 +206,17 @@ export function TimeSelect({
         className="z-[var(--z-modal)] w-auto min-w-60 p-3"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="flex gap-2">
+        <div data-slot="time-select-columns" className="flex gap-2">
           <Column label="Hour" options={HOURS} value={draft.hour12} onSelect={(h) => set({ hour12: h })} format={pad} />
           <Column label="Min" options={minutes} value={draft.minute} onSelect={(m) => set({ minute: m })} format={pad} />
           <Column label="AM/PM" options={MERIDIEMS} value={draft.meridiem} onSelect={(m) => set({ meridiem: m })} />
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
-          <span className="text-sm tabular-nums text-muted-foreground">
+        <div data-slot="time-select-footer" className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+          <span data-slot="time-select-preview" className="text-sm tabular-nums text-muted-foreground">
             {formatTimeOfDay(serializeParts(draft))}
           </span>
-          <div className="flex gap-1.5">
+          <div data-slot="time-select-actions" className="flex gap-1.5">
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Cancel
             </Button>

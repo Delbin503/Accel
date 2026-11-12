@@ -21,6 +21,7 @@ const OVERALL_COPY: Record<SystemHealth, string> = {
 function HealthDot({ health, className }: { health: SystemHealth; className?: string }) {
   return (
     <span
+      data-slot="health-dot"
       className={cn(
         "size-2 shrink-0 rounded-full",
         SYSTEM_HEALTH_PRESENTATION[health].dot,
@@ -46,15 +47,16 @@ function StatusRow({ icon: Icon, label, group, onSelect }: StatusRowProps) {
   return (
     <button
       type="button"
+      data-slot="status-row"
       onClick={onSelect}
       className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <Icon data-slot="status-row-icon" className="size-4 shrink-0 text-muted-foreground" />
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base text-foreground">{label}</p>
+      <div data-slot="status-row-text" className="min-w-0 flex-1">
+        <p data-slot="status-row-label" className="truncate text-base text-foreground">{label}</p>
         {(group.degraded > 0 || offline > 0) && (
-          <p className="truncate text-2xs text-muted-foreground">
+          <p data-slot="status-row-detail" className="truncate text-2xs text-muted-foreground">
             {[
               offline > 0 ? `${offline} offline` : null,
               group.degraded > 0 ? `${group.degraded} degraded` : null,
@@ -65,7 +67,7 @@ function StatusRow({ icon: Icon, label, group, onSelect }: StatusRowProps) {
         )}
       </div>
 
-      <span className="shrink-0 text-sm font-medium tabular-nums text-muted-foreground">
+      <span data-slot="status-row-count" className="shrink-0 text-sm font-medium tabular-nums text-muted-foreground">
         {group.online} / {group.total}
       </span>
       <HealthDot health={group.health} />
@@ -102,6 +104,7 @@ export function SystemStatusMenu({ className, forcedHealth }: SystemStatusMenuPr
       <PopoverTrigger asChild>
         <button
           type="button"
+          data-slot="system-status-menu"
           aria-label={`System status — ${overall.label}`}
           className={cn(
             "flex h-8 items-center gap-2 rounded-full border border-border bg-card/60 px-3 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -109,7 +112,7 @@ export function SystemStatusMenu({ className, forcedHealth }: SystemStatusMenuPr
           )}
         >
           <HealthDot health={status.overall} />
-          <span className="hidden text-sm font-medium text-foreground sm:inline">
+          <span data-slot="system-status-menu-label" className="hidden text-sm font-medium text-foreground sm:inline">
             {overall.label}
           </span>
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
@@ -118,26 +121,27 @@ export function SystemStatusMenu({ className, forcedHealth }: SystemStatusMenuPr
 
       <PopoverContent align="end" className="w-72 p-0">
         {/* Overall roll-up */}
-        <div className="border-b border-border px-3 py-3">
-          <p className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">
+        <div data-slot="system-status-menu-summary" className="border-b border-border px-3 py-3">
+          <p data-slot="system-status-menu-eyebrow" className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">
             System Status
           </p>
-          <div className="mt-2 flex items-center gap-2">
+          <div data-slot="system-status-menu-overall" className="mt-2 flex items-center gap-2">
             <HealthDot health={status.overall} />
-            <p className={cn("text-md font-medium", overall.text)}>{OVERALL_COPY[status.overall]}</p>
+            <p data-slot="system-status-menu-overall-label" className={cn("text-md font-medium", overall.text)}>{OVERALL_COPY[status.overall]}</p>
           </div>
         </div>
 
         {/* Per-class breakdown */}
-        <div className="p-1">
+        <div data-slot="system-status-menu-rows" className="p-1">
           <StatusRow icon={Cctv} label="Cameras" group={status.cameras} onSelect={() => go("/device-health")} />
           <StatusRow icon={HardDrive} label="NVRs" group={status.nvrs} onSelect={() => go("/device-health")} />
           <StatusRow icon={Server} label="Servers" group={status.servers} onSelect={() => go("/system-info")} />
         </div>
 
-        <div className="border-t border-border p-1">
+        <div data-slot="system-status-menu-footer" className="border-t border-border p-1">
           <button
             type="button"
+            data-slot="system-status-menu-link"
             onClick={() => go("/device-health")}
             className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-base font-medium text-primary-ink transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

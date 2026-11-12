@@ -3,6 +3,7 @@ import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
 import { cn } from "@/lib/utils"
+// Accel: layer names + tokens — data-slot names on tooltip/legend inner layers (chart-tooltip-*, chart-legend-*).
 // Accel: radius — rounded-xs / rounded-sm tokens replace arbitrary rounded-[Npx].
 
 // Accel: shadow-raised/floating/modal are theme-aware elevation tokens (index.css),
@@ -163,7 +164,7 @@ function ChartTooltipContent({
 
     if (labelFormatter) {
       return (
-        <div className={cn("font-medium", labelClassName)}>
+        <div data-slot="chart-tooltip-label" className={cn("font-medium", labelClassName)}>
           {labelFormatter(value, payload)}
         </div>
       )
@@ -173,7 +174,7 @@ function ChartTooltipContent({
       return null
     }
 
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>
+    return <div data-slot="chart-tooltip-label" className={cn("font-medium", labelClassName)}>{value}</div>
   }, [
     label,
     labelFormatter,
@@ -191,14 +192,14 @@ function ChartTooltipContent({
   const nestLabel = payload.length === 1 && indicator !== "dot"
 
   return (
-    <div
+    <div data-slot="chart-tooltip"
       className={cn(
         "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-floating",
         className
       )}
     >
       {!nestLabel ? tooltipLabel : null}
-      <div className="grid gap-1.5">
+      <div data-slot="chart-tooltip-items" className="grid gap-1.5">
         {payload
           .filter((item) => item.type !== "none")
           .map((item, index) => {
@@ -207,7 +208,7 @@ function ChartTooltipContent({
             const indicatorColor = color ?? item.payload?.fill ?? item.color
 
             return (
-              <div
+              <div data-slot="chart-tooltip-item"
                 key={index}
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
@@ -222,7 +223,7 @@ function ChartTooltipContent({
                       <itemConfig.icon />
                     ) : (
                       !hideIndicator && (
-                        <div
+                        <div data-slot="chart-tooltip-indicator"
                           className={cn(
                             "shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)",
                             {
@@ -242,20 +243,20 @@ function ChartTooltipContent({
                         />
                       )
                     )}
-                    <div
+                    <div data-slot="chart-tooltip-item-body"
                       className={cn(
                         "flex flex-1 justify-between leading-none",
                         nestLabel ? "items-end" : "items-center"
                       )}
                     >
-                      <div className="grid gap-1.5">
+                      <div data-slot="chart-tooltip-item-label" className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">
+                        <span data-slot="chart-tooltip-item-name" className="text-muted-foreground">
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-mono font-medium text-foreground tabular-nums">
+                        <span data-slot="chart-tooltip-item-value" className="font-mono font-medium text-foreground tabular-nums">
                           {typeof item.value === "number"
                             ? item.value.toLocaleString()
                             : String(item.value)}
@@ -291,7 +292,7 @@ function ChartLegendContent({
   }
 
   return (
-    <div
+    <div data-slot="chart-legend"
       className={cn(
         "flex items-center justify-center gap-4",
         verticalAlign === "top" ? "pb-3" : "pt-3",
@@ -305,7 +306,7 @@ function ChartLegendContent({
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
           return (
-            <div
+            <div data-slot="chart-legend-item"
               key={index}
               className={cn(
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
@@ -314,7 +315,7 @@ function ChartLegendContent({
               {itemConfig?.icon && !hideIcon ? (
                 <itemConfig.icon />
               ) : (
-                <div
+                <div data-slot="chart-legend-indicator"
                   className="h-2 w-2 shrink-0 rounded-xs"
                   style={{
                     backgroundColor: item.color,

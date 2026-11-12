@@ -5,6 +5,7 @@ import { Avatar as AvatarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+// Accel: layer names + tokens — z-index uses the --z-* scale token (same value as before).
 // Accel: solid fills under labels use primary-fill and orange text uses
 // primary-ink — the bright --primary fails WCAG AA there (2.99:1).
 
@@ -62,7 +63,7 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
     <span
       data-slot="avatar-badge"
       className={cn(
-        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary-fill text-primary-foreground ring-2 ring-background select-none",
+        "absolute right-0 bottom-0 z-[var(--z-dropdown)] inline-flex items-center justify-center rounded-full bg-primary-fill text-primary-foreground ring-2 ring-background select-none",
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",

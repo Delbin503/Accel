@@ -16,6 +16,7 @@ export function NotificationsBell({ className }: NotificationsBellProps) {
   return (
     <>
       <Button
+        data-slot="notifications-bell"
         variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
@@ -24,7 +25,7 @@ export function NotificationsBell({ className }: NotificationsBellProps) {
       >
         <Bell className="size-4" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-destructive-foreground">
+          <span data-slot="notifications-bell-count" className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-destructive-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

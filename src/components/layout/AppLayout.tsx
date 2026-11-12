@@ -17,6 +17,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 function SkipToContent() {
   return (
     <a
+      data-slot="app-layout-skip-link"
       href="#main-content"
       className="fixed left-4 top-4 z-[var(--z-tooltip)] -translate-y-20 rounded-md bg-primary-fill px-4 py-2 text-sm font-medium text-primary-foreground transition-transform focus:translate-y-0"
     >
@@ -29,14 +30,14 @@ function SkipToContent() {
 
 function TopBar() {
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+    <header data-slot="app-layout-top-bar" className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
       {/* Desktop collapses from the sidebar's own edge button; on mobile the
           sidebar is a sheet, so it needs this trigger to open. */}
       <SidebarTrigger
         className="text-muted-foreground hover:text-foreground md:hidden"
         aria-label="Toggle sidebar"
       />
-      <div className="mx-2 flex flex-1 justify-end md:justify-center">
+      <div data-slot="app-layout-search" className="mx-2 flex flex-1 justify-end md:justify-center">
         <GlobalSearchTrigger />
       </div>
       <QuickActionsTrigger />
@@ -44,7 +45,7 @@ function TopBar() {
       <SystemStatusMenu />
 <DownloadsIndicator />
       <NotificationsBell />
-      <div className="mx-1 h-5 w-px shrink-0 bg-border" />
+      <div data-slot="app-layout-divider" className="mx-1 h-5 w-px shrink-0 bg-border" />
       <UserMenu />
     </header>
   );
@@ -59,14 +60,15 @@ export function AppLayout() {
         <SkipToContent />
         <CommandPalette />
 
-        <div className="flex min-h-screen w-full bg-background">
+        <div data-slot="app-layout" className="flex min-h-screen w-full bg-background">
           <AppSidebar />
 
           {/* Main column */}
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div data-slot="app-layout-main-column" className="flex min-w-0 flex-1 flex-col">
             <TopBar />
 
             <main
+              data-slot="app-layout-main"
               id="main-content"
               tabIndex={-1}
               className="flex-1 overflow-auto p-6 focus:outline-none"

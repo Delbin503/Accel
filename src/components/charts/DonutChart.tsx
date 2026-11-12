@@ -29,7 +29,7 @@ function DonutChart({ data, centerLabel, className }: DonutChartProps) {
     data.map((d, i) => [d.name, { label: d.name, color: d.color ?? CHART_PALETTE[i % CHART_PALETTE.length] }])
   );
   return (
-    <div className={cn("relative", className)}>
+    <div data-slot="donut-chart" className={cn("relative", className)}>
       <ChartContainer config={config} className="mx-auto aspect-square h-56">
         <PieChart>
           <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
@@ -41,7 +41,7 @@ function DonutChart({ data, centerLabel, className }: DonutChartProps) {
         </PieChart>
       </ChartContainer>
       {centerLabel && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div data-slot="donut-chart-center-label" className="pointer-events-none absolute inset-0 flex items-center justify-center">
           {centerLabel}
         </div>
       )}

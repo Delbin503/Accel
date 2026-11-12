@@ -51,30 +51,30 @@ function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <Table className={className}>
-      <TableHeader>
-        <TableRow>
+    <Table data-slot="data-table" className={className}>
+      <TableHeader data-slot="data-table-header">
+        <TableRow data-slot="data-table-header-row">
           {columns.map((col) => (
-            <TableHead key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
+            <TableHead data-slot="data-table-head" key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
               {col.header}
             </TableHead>
           ))}
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody data-slot="data-table-body">
         {isLoading ? (
           Array.from({ length: skeletonRows }).map((_, i) => (
-            <TableRow key={`sk-${i}`}>
+            <TableRow data-slot="data-table-skeleton-row" key={`sk-${i}`}>
               {columns.map((col) => (
-                <TableCell key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
+                <TableCell data-slot="data-table-cell" key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
             </TableRow>
           ))
         ) : data.length === 0 ? (
-          <TableRow className="hover:bg-transparent">
-            <TableCell colSpan={columns.length} className="p-0">
+          <TableRow data-slot="data-table-empty-row" className="hover:bg-transparent">
+            <TableCell data-slot="data-table-empty-cell" colSpan={columns.length} className="p-0">
               <EmptyState
                 icon={empty?.icon}
                 title={empty?.title ?? "No results"}
@@ -85,12 +85,13 @@ function DataTable<T>({
         ) : (
           data.map((row) => (
             <TableRow
+              data-slot="data-table-row"
               key={getRowId(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(onRowClick && "cursor-pointer")}
             >
               {columns.map((col) => (
-                <TableCell key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
+                <TableCell data-slot="data-table-cell" key={col.key} className={cn(col.align && alignClass[col.align], col.className)}>
                   {col.cell ? col.cell(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
                 </TableCell>
               ))}

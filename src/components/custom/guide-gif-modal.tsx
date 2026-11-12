@@ -43,7 +43,7 @@ export function GuideGifModal({
       <ModalContent size="sm">
         <ModalHeader title={title} description={description} />
         <ModalBody>
-          <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-xl border border-border bg-card">
+          <div data-slot="guide-gif-modal-frame" className="relative flex h-52 items-center justify-center overflow-hidden rounded-xl border border-border bg-card">
             {renderFrame(frame)}
           </div>
         </ModalBody>

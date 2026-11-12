@@ -37,11 +37,12 @@ export function PasswordStrengthBar({
   if (!password) return null;
   const score = scorePassword(password);
   return (
-    <div className={cn("space-y-1", className)}>
-      <div className="flex gap-1">
+    <div data-slot="password-strength-bar" className={cn("space-y-1", className)}>
+      <div data-slot="password-strength-bar-segments" className="flex gap-1">
         {[0, 1, 2, 3].map((i) => (
           <span
             key={i}
+            data-slot="password-strength-bar-segment"
             className={cn(
               "h-1 flex-1 rounded-full transition-colors",
               i < score ? COLORS[score] : "bg-muted/60"
@@ -50,6 +51,7 @@ export function PasswordStrengthBar({
         ))}
       </div>
       <p
+        data-slot="password-strength-bar-label"
         className={cn(
           "flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider",
           score >= 4

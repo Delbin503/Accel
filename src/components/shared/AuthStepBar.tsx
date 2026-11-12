@@ -19,14 +19,15 @@ const STEPS: { key: AuthStepKey; label: string }[] = [
 export function AuthStepBar({ current }: { current: AuthStepKey }) {
   const idx = STEPS.findIndex((s) => s.key === current);
   return (
-    <div className="mx-auto flex w-full max-w-[640px] items-center gap-1.5 sm:gap-2">
+    <div data-slot="auth-step-bar" className="mx-auto flex w-full max-w-[640px] items-center gap-1.5 sm:gap-2">
       {STEPS.map((s, i) => {
         const done = i < idx;
         const active = i === idx;
         return (
           <React.Fragment key={s.key}>
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div data-slot="auth-step-bar-step" className="flex shrink-0 items-center gap-1.5">
               <span
+                data-slot="auth-step-bar-step-index"
                 className={cn(
                   "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
                   done
@@ -39,6 +40,7 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
                 {done ? <Check className="size-3" strokeWidth={3} /> : i + 1}
               </span>
               <span
+                data-slot="auth-step-bar-step-label"
                 className={cn(
                   "hidden text-xs font-semibold transition-colors sm:inline",
                   done
@@ -53,6 +55,7 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
             </div>
             {i < STEPS.length - 1 && (
               <span
+                data-slot="auth-step-bar-connector"
                 className={cn(
                   "h-px flex-1 transition-colors",
                   done

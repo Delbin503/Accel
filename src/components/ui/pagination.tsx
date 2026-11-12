@@ -8,6 +8,8 @@ import {
 import { cn } from "@/lib/utils"
 import { buttonVariants, type Button } from "@/components/ui/button"
 
+// Accel: layer names + tokens — data-slot on prev/next/ellipsis icons and labels.
+
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
@@ -76,8 +78,8 @@ function PaginationPrevious({
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       {...props}
     >
-      <ChevronLeftIcon />
-      <span className="hidden sm:block">Previous</span>
+      <ChevronLeftIcon data-slot="pagination-previous-icon" />
+      <span data-slot="pagination-previous-label" className="hidden sm:block">Previous</span>
     </PaginationLink>
   )
 }
@@ -93,8 +95,8 @@ function PaginationNext({
       className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
       {...props}
     >
-      <span className="hidden sm:block">Next</span>
-      <ChevronRightIcon />
+      <span data-slot="pagination-next-label" className="hidden sm:block">Next</span>
+      <ChevronRightIcon data-slot="pagination-next-icon" />
     </PaginationLink>
   )
 }
@@ -110,8 +112,8 @@ function PaginationEllipsis({
       className={cn("flex size-9 items-center justify-center", className)}
       {...props}
     >
-      <MoreHorizontalIcon className="size-4" />
-      <span className="sr-only">More pages</span>
+      <MoreHorizontalIcon data-slot="pagination-ellipsis-icon" className="size-4" />
+      <span data-slot="pagination-ellipsis-label" className="sr-only">More pages</span>
     </span>
   )
 }

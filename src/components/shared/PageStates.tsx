@@ -27,13 +27,13 @@ export function ListLoadingState({
         ))}
       </KpiGrid>
       <Skeleton className="h-11 w-full rounded-lg" />
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border bg-muted/30 px-4 py-3">
+      <div data-slot="list-loading-state-table" className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="list-loading-state-table-header" className="border-b border-border bg-muted/30 px-4 py-3">
           <Skeleton className="h-3 w-40" />
         </div>
-        <div className="divide-y divide-border/60">
+        <div data-slot="list-loading-state-table-body" className="divide-y divide-border/60">
           {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+            <div key={i} data-slot="list-loading-state-row" className="flex items-center gap-4 px-4 py-3.5">
               {Array.from({ length: columns }).map((__, j) => (
                 <Skeleton key={j} className={cn("h-4", j === 1 ? "flex-[2]" : "flex-1")} />
               ))}
@@ -55,11 +55,11 @@ export function ListErrorState({
   message?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-severity-critical/30 bg-severity-critical/[0.04] py-20 text-center">
-      <CircleAlert className="size-10 text-severity-critical/70" />
-      <div>
-        <p className="text-md font-semibold text-foreground">{title}</p>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>
+    <div data-slot="list-error-state" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-severity-critical/30 bg-severity-critical/[0.04] py-20 text-center">
+      <CircleAlert data-slot="list-error-state-icon" className="size-10 text-severity-critical/70" />
+      <div data-slot="list-error-state-text">
+        <p data-slot="list-error-state-title" className="text-md font-semibold text-foreground">{title}</p>
+        <p data-slot="list-error-state-message" className="mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>
       </div>
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>

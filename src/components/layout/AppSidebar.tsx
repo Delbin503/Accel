@@ -189,6 +189,7 @@ function AccelLogo() {
 
   return (
     <div
+      data-slot="app-sidebar-logo"
       className={cn(
         "flex items-center py-1",
         isCollapsed ? "justify-center px-0" : "px-2"
@@ -198,6 +199,7 @@ function AccelLogo() {
           viewBox narrows to it and the wordmark is left out. It shrinks a step
           too, clear of the edge toggle that straddles the rail's border. */}
       <svg
+        data-slot="app-sidebar-logo-mark"
         viewBox={isCollapsed ? "12 7 42 41" : "12 7 105 41"}
         role="img"
         aria-label="Accel"
@@ -247,9 +249,10 @@ function NavLeaf({ item }: { item: NavItem }) {
       >
         <SidebarLink href={item.href}>
           <item.icon
+            data-slot="app-sidebar-item-icon"
             className={cn("size-4 shrink-0", isActive ? "text-primary-ink" : "text-muted-foreground")}
           />
-          <span>{item.label}</span>
+          <span data-slot="app-sidebar-item-label">{item.label}</span>
         </SidebarLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -290,17 +293,18 @@ function NavParent({ item }: { item: NavItem }) {
             )}
           >
             <item.icon
+            data-slot="app-sidebar-item-icon"
               className={cn(
                 "size-4 shrink-0",
                 isAnyChildActive ? "text-primary-ink" : "text-muted-foreground"
               )}
             />
-            <span className="sr-only">{item.label}</span>
+            <span data-slot="app-sidebar-item-label" className="sr-only">{item.label}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
 
         {open && (
-          <div className="-mx-1 my-0.5 flex flex-col items-center gap-1 rounded-lg border border-primary/40 px-1 py-1">
+          <div data-slot="app-sidebar-rail-group" className="-mx-1 my-0.5 flex flex-col items-center gap-1 rounded-lg border border-primary/40 px-1 py-1">
             {item.children?.map((child) => {
               const childActive =
                 location.pathname === child.href ||
@@ -320,12 +324,13 @@ function NavParent({ item }: { item: NavItem }) {
                   >
                     <SidebarLink href={child.href}>
                       <child.icon
+            data-slot="app-sidebar-item-icon"
                         className={cn(
                           "size-4 shrink-0",
                           childActive ? "text-primary-ink" : "text-muted-foreground"
                         )}
                       />
-                      <span>{child.label}</span>
+                      <span data-slot="app-sidebar-item-label">{child.label}</span>
                     </SidebarLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -349,13 +354,15 @@ function NavParent({ item }: { item: NavItem }) {
             )}
           >
             <item.icon
+            data-slot="app-sidebar-item-icon"
               className={cn(
                 "size-4 shrink-0",
                 isAnyChildActive ? "text-primary-ink" : "text-muted-foreground"
               )}
             />
-            <span>{item.label}</span>
+            <span data-slot="app-sidebar-item-label">{item.label}</span>
             <ChevronDown
+              data-slot="app-sidebar-item-chevron"
               className={cn(
                 "ml-auto size-3.5 shrink-0 text-muted-foreground transition-transform duration-[var(--duration-normal)]",
                 open && "rotate-180"
@@ -382,12 +389,13 @@ function NavParent({ item }: { item: NavItem }) {
                   >
                     <SidebarLink href={child.href}>
                       <child.icon
+            data-slot="app-sidebar-item-icon"
                         className={cn(
                           "size-4 shrink-0",
                           childActive ? "text-primary-ink" : "text-muted-foreground"
                         )}
                       />
-                      <span>{child.label}</span>
+                      <span data-slot="app-sidebar-item-label">{child.label}</span>
                     </SidebarLink>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -407,12 +415,12 @@ function SigmawaveFooter() {
   if (state === "collapsed") return null;
 
   return (
-    <div className="px-4 pb-3 pt-1 text-center">
-      <div className="flex items-center justify-center gap-1.5">
-        <p className="text-2xs text-muted-foreground/60">Powered by</p>
-        <img src={sigmawaveLogo} alt="Sigmawave" className="h-3 w-auto" />
+    <div data-slot="app-sidebar-credits" className="px-4 pb-3 pt-1 text-center">
+      <div data-slot="app-sidebar-credits-row" className="flex items-center justify-center gap-1.5">
+        <p data-slot="app-sidebar-credits-label" className="text-2xs text-muted-foreground/60">Powered by</p>
+        <img data-slot="app-sidebar-credits-logo" src={sigmawaveLogo} alt="Sigmawave" className="h-3 w-auto" />
       </div>
-      <p className="mt-1 text-2xs leading-relaxed text-muted-foreground/60">Version 1.01</p>
+      <p data-slot="app-sidebar-version" className="mt-1 text-2xs leading-relaxed text-muted-foreground/60">Version 1.01</p>
     </div>
   );
 }
@@ -436,6 +444,7 @@ function SidebarEdgeToggle() {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          data-slot="app-sidebar-edge-toggle"
           type="button"
           onClick={toggleSidebar}
           aria-label={label}

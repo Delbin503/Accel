@@ -22,7 +22,7 @@ export interface AreaChartProps {
 function AreaChart({ data, xKey, series, stacked, showLegend, className }: AreaChartProps) {
   const config = toChartConfig(series);
   return (
-    <ChartContainer config={config} className={cn("h-64 w-full", className)}>
+    <ChartContainer data-slot="area-chart" config={config} className={cn("h-64 w-full", className)}>
       <ReAreaChart accessibilityLayer data={data} margin={{ left: 4, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey={xKey} {...AXIS_PROPS} />

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  */
 export function CoinIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" className={cn(className)} aria-hidden="true" role="img">
+    <svg data-slot="coin-icon" viewBox="0 0 48 48" className={cn(className)} aria-hidden="true" role="img">
       <circle cx="24" cy="24" r="22" fill="#F5821F" stroke="#0B0B0B" strokeWidth="2.5" />
       <circle cx="24" cy="24" r="18" fill="none" stroke="#0B0B0B" strokeWidth="1.2" />
       {/* Accel mark: play triangle + swoosh + tail */}

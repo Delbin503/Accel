@@ -24,9 +24,9 @@ export function RequireRole({
   if (!user || !roles.includes(user.role)) {
     if (inline) {
       return (
-        <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
-          <ShieldAlert className="size-8" />
-          <p className="text-sm font-medium">You don't have access to this area.</p>
+        <div data-slot="require-role" className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+          <ShieldAlert data-slot="require-role-icon" className="size-8" />
+          <p data-slot="require-role-message" className="text-sm font-medium">You don't have access to this area.</p>
         </div>
       );
     }

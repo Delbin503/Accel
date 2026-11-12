@@ -42,6 +42,7 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          data-slot="filter-dropdown"
           type="button"
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
@@ -50,8 +51,9 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
             className
           )}
         >
-          <TruncatedText text={displayLabel} className="font-medium" />
+          <TruncatedText data-slot="filter-dropdown-value" text={displayLabel} className="font-medium" />
           <ChevronDown
+            data-slot="filter-dropdown-icon"
             className={cn(
               "size-3.5 shrink-0 text-muted-foreground transition-transform",
               open && "rotate-180"
@@ -59,17 +61,19 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-1.5">
+      <PopoverContent data-slot="filter-dropdown-content" align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
             <button
+              data-slot="filter-dropdown-option"
               key={opt.value}
               type="button"
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <span
+                data-slot="filter-dropdown-option-check"
                 className={cn(
                   "flex size-3.5 shrink-0 items-center justify-center rounded border transition-colors",
                   checked ? "border-primary bg-primary" : "border-muted-foreground/40"
@@ -79,6 +83,7 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
               </span>
               {opt.color && (
                 <span
+                  data-slot="filter-dropdown-option-swatch"
                   className="size-1.5 shrink-0 rounded-full"
                   style={{ background: opt.color }}
                 />

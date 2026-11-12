@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  */
 const Toolbar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-wrap items-center gap-2", className)} {...props} />
+    <div data-slot="toolbar" ref={ref} className={cn("flex flex-wrap items-center gap-2", className)} {...props} />
   )
 );
 Toolbar.displayName = "Toolbar";
@@ -23,9 +23,10 @@ export interface ToolbarSearchProps
 
 const ToolbarSearch = React.forwardRef<HTMLInputElement, ToolbarSearchProps>(
   ({ value, onChange, placeholder = "Search…", className, ...props }, ref) => (
-    <div className={cn("relative w-full sm:w-64", className)}>
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+    <div data-slot="toolbar-search" className={cn("relative w-full sm:w-64", className)}>
+      <Search data-slot="toolbar-search-icon" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
+        data-slot="toolbar-search-input"
         ref={ref}
         value={value}
         onChange={(e) => onChange(e.target.value)}

@@ -77,24 +77,25 @@ interface RowProps {
 
 function Row({ icon: Icon, label, sublabel, badge, value, onSelect, pin }: RowProps) {
   return (
-    <CommandItem value={value} onSelect={onSelect} className="group gap-2.5">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
+    <CommandItem data-slot="command-palette-row" value={value} onSelect={onSelect} className="group gap-2.5">
+      <Icon data-slot="command-palette-row-icon" className="size-4 shrink-0 text-muted-foreground" />
 
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-base text-foreground">{label}</span>
+      <span data-slot="command-palette-row-text" className="flex min-w-0 flex-1 flex-col">
+        <span data-slot="command-palette-row-label" className="truncate text-base text-foreground">{label}</span>
         {sublabel && (
-          <span className="truncate text-2xs text-muted-foreground">{sublabel}</span>
+          <span data-slot="command-palette-row-sublabel" className="truncate text-2xs text-muted-foreground">{sublabel}</span>
         )}
       </span>
 
       {badge && (
-        <StatusBadge tone="neutral" dot={false} className="shrink-0">
+        <StatusBadge data-slot="command-palette-row-badge" tone="neutral" dot={false} className="shrink-0">
           {badge}
         </StatusBadge>
       )}
 
       {pin && (
         <button
+          data-slot="command-palette-row-pin"
           type="button"
           aria-label={pin.pinned ? `Unpin ${label}` : `Pin ${label}`}
           onClick={(e) => {
@@ -118,11 +119,11 @@ function Row({ icon: Icon, label, sublabel, badge, value, onSelect, pin }: RowPr
 
 function ResultsSkeleton() {
   return (
-    <div className="space-y-2 px-4 py-3" aria-busy="true" aria-label="Searching">
+    <div data-slot="command-palette-skeleton" className="space-y-2 px-4 py-3" aria-busy="true" aria-label="Searching">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-2.5">
+        <div data-slot="command-palette-skeleton-row" key={i} className="flex items-center gap-2.5">
           <Skeleton className="size-4 rounded-md" />
-          <div className="flex-1 space-y-1">
+          <div data-slot="command-palette-skeleton-text" className="flex-1 space-y-1">
             <Skeleton className="h-3 w-1/3" />
             <Skeleton className="h-2 w-1/2" />
           </div>
@@ -134,10 +135,10 @@ function ResultsSkeleton() {
 
 function SearchError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-4 py-10 text-muted-foreground">
-      <CircleAlert className="size-5 text-destructive" />
-      <p className="text-sm">Search is unavailable right now.</p>
-      <Button size="sm" variant="outline" onClick={onRetry}>
+    <div data-slot="command-palette-error" className="flex flex-col items-center gap-2 px-4 py-10 text-muted-foreground">
+      <CircleAlert data-slot="command-palette-error-icon" className="size-5 text-destructive" />
+      <p data-slot="command-palette-error-message" className="text-sm">Search is unavailable right now.</p>
+      <Button data-slot="command-palette-error-retry" size="sm" variant="outline" onClick={onRetry}>
         Try again
       </Button>
     </div>
@@ -146,10 +147,10 @@ function SearchError({ onRetry }: { onRetry: () => void }) {
 
 function NoResults({ term }: { term: string }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 px-4 py-10 text-muted-foreground">
-      <Search className="size-5" />
-      <p className="text-sm">No matches for “{term}”.</p>
-      <p className="text-2xs">Try a shorter term, or scope it with cam: site: case: rule:</p>
+    <div data-slot="command-palette-empty" className="flex flex-col items-center gap-1.5 px-4 py-10 text-muted-foreground">
+      <Search data-slot="command-palette-empty-icon" className="size-5" />
+      <p data-slot="command-palette-empty-title" className="text-sm">No matches for “{term}”.</p>
+      <p data-slot="command-palette-empty-description" className="text-2xs">Try a shorter term, or scope it with cam: site: case: rule:</p>
     </div>
   );
 }
@@ -255,6 +256,7 @@ export function CommandPalette() {
       shouldFilter={false}
     >
       <CommandInput
+        data-slot="command-palette-input"
         value={query}
         onValueChange={setQuery}
         placeholder={
@@ -264,12 +266,12 @@ export function CommandPalette() {
         }
       />
 
-      <CommandList>
+      <CommandList data-slot="command-palette-list">
         {/* Idle — recents, pins, and the action catalogue. */}
         {idle && (
           <>
             {mode === "search" && showRecents && recents.length > 0 && (
-              <CommandGroup heading="Recent">
+              <CommandGroup data-slot="command-palette-group" heading="Recent">
                 {recents.map((r) => (
                   <Row
                     key={r.key}
@@ -285,7 +287,7 @@ export function CommandPalette() {
             )}
 
             {pinnedActions.length > 0 && (
-              <CommandGroup heading="Pinned">
+              <CommandGroup data-slot="command-palette-group" heading="Pinned">
                 {pinnedActions.map((a) => (
                   <Row
                     key={a.id}
@@ -300,9 +302,9 @@ export function CommandPalette() {
               </CommandGroup>
             )}
 
-            <CommandSeparator />
+            <CommandSeparator data-slot="command-palette-separator" />
 
-            <CommandGroup heading="All actions">
+            <CommandGroup data-slot="command-palette-group" heading="All actions">
               {actions.map((a) => (
                 <Row
                   key={a.id}
@@ -324,7 +326,7 @@ export function CommandPalette() {
         {showResults && (
           <>
             {matchedActions.length > 0 && (
-              <CommandGroup heading="Actions">
+              <CommandGroup data-slot="command-palette-group" heading="Actions">
                 {matchedActions.map((a) => (
                   <Row
                     key={a.id}
@@ -340,7 +342,7 @@ export function CommandPalette() {
             )}
 
             {search.groups.map((group) => (
-              <CommandGroup key={group.type} heading={group.label}>
+              <CommandGroup data-slot="command-palette-group" key={group.type} heading={group.label}>
                 {group.results.map((r) => (
                   <Row
                     key={r.key}
@@ -377,13 +379,13 @@ export function CommandPalette() {
       </CommandList>
 
       {/* Footer — keyboard contract, always visible. */}
-      <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-2xs text-muted-foreground">
-        <span className="flex items-center gap-3">
-          <span>↑↓ navigate</span>
-          <span>↵ open</span>
-          <span>esc close</span>
+      <div data-slot="command-palette-footer" className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-2xs text-muted-foreground">
+        <span data-slot="command-palette-footer-hints" className="flex items-center gap-3">
+          <span data-slot="command-palette-footer-hint">↑↓ navigate</span>
+          <span data-slot="command-palette-footer-hint">↵ open</span>
+          <span data-slot="command-palette-footer-hint">esc close</span>
         </span>
-        <span className="hidden items-center gap-1.5 sm:flex">
+        <span data-slot="command-palette-footer-scope" className="hidden items-center gap-1.5 sm:flex">
           <History className="size-3" />
           Scope with cam: site: case: rule: model: user:
         </span>

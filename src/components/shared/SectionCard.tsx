@@ -43,41 +43,43 @@ const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
     const sz = SIZES[size];
     return collapsible ? (
     <Collapsible
+      data-slot="section-card"
       ref={ref}
       defaultOpen={defaultOpen}
       className={cn("group/section overflow-hidden rounded-xl border border-border bg-card", className)}
       {...props}
     >
-      <div className="flex items-center gap-3 border-b border-border group-data-[state=closed]/section:border-b-0">
-        <CollapsibleTrigger className={cn("flex min-w-0 flex-1 items-center gap-3 text-left", sz.header)}>
-          <div className="min-w-0 flex-1">
-            <h3 className={cn("truncate text-foreground", sz.title)}>{title}</h3>
+      <div data-slot="section-card-header" className="flex items-center gap-3 border-b border-border group-data-[state=closed]/section:border-b-0">
+        <CollapsibleTrigger data-slot="section-card-trigger" className={cn("flex min-w-0 flex-1 items-center gap-3 text-left", sz.header)}>
+          <div data-slot="section-card-heading" className="min-w-0 flex-1">
+            <h3 data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</h3>
             {description && (
-              <p className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
+              <p data-slot="section-card-description" className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
             )}
           </div>
-          <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-[var(--duration-fast)] ease-standard group-data-[state=closed]/section:-rotate-90" />
+          <ChevronDown data-slot="section-card-chevron" className="size-4 shrink-0 text-muted-foreground transition-transform duration-[var(--duration-fast)] ease-standard group-data-[state=closed]/section:-rotate-90" />
         </CollapsibleTrigger>
-        {action && <div className={cn("shrink-0", sz.action)}>{action}</div>}
+        {action && <div data-slot="section-card-actions" className={cn("shrink-0", sz.action)}>{action}</div>}
       </div>
-      <CollapsibleContent className={cn(!flushBody && sz.body, bodyClassName)}>{children}</CollapsibleContent>
+      <CollapsibleContent data-slot="section-card-content" className={cn(!flushBody && sz.body, bodyClassName)}>{children}</CollapsibleContent>
     </Collapsible>
   ) : (
     <div
+      data-slot="section-card"
       ref={ref}
       className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}
       {...props}
     >
-      <div className={cn("flex items-center justify-between gap-3 border-b border-border", sz.header)}>
-        <div className="min-w-0">
-          <h3 className={cn("truncate text-foreground", sz.title)}>{title}</h3>
+      <div data-slot="section-card-header" className={cn("flex items-center justify-between gap-3 border-b border-border", sz.header)}>
+        <div data-slot="section-card-heading" className="min-w-0">
+          <h3 data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</h3>
           {description && (
-            <p className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
+            <p data-slot="section-card-description" className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
           )}
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div data-slot="section-card-actions" className="shrink-0">{action}</div>}
       </div>
-      <div className={cn(!flushBody && sz.body, bodyClassName)}>{children}</div>
+      <div data-slot="section-card-content" className={cn(!flushBody && sz.body, bodyClassName)}>{children}</div>
     </div>
   );
   }

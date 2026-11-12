@@ -68,10 +68,11 @@ function OtpField({
   }
 
   return (
-    <div id={id} role="group" aria-label={ariaLabel} onPaste={onPaste} className={cn("flex items-center gap-2", className)}>
+    <div data-slot="otp-field" id={id} role="group" aria-label={ariaLabel} onPaste={onPaste} className={cn("flex items-center gap-2", className)}>
       {digits.map((d, i) => (
         <input
           key={i}
+          data-slot="otp-field-slot"
           ref={(el) => {
             refs.current[i] = el;
           }}

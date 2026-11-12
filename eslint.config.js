@@ -81,6 +81,29 @@ const designSystemGuardrails = [
   ),
 ]
 
+// Pages compose existing components — they never hand-roll a primitive that
+// the design system already has. Need something new? Ask first (CLAUDE.md →
+// "Building page UI"), then add it to src/components and the registry.
+const RAW_TO_COMPONENT = {
+  button: 'Button (components/ui/button)',
+  input: 'Input, OtpField, PhoneField, TimeSelect or ModalTextInput',
+  select: 'Select, ChoiceDropdown, FilterDropdown or DepartmentSelect',
+  textarea: 'Textarea (components/ui/textarea)',
+  table: 'DataTable (components/shared) or Table (components/ui/table)',
+  dialog: 'Modal / Dialog / Sheet',
+}
+const pageGuardrails = [
+  ...designSystemGuardrails,
+  ...Object.entries(RAW_TO_COMPONENT).map(([tag, use]) => ({
+    selector: `JSXOpeningElement[name.name='${tag}']`,
+    message: `Pages use existing components, not a raw <${tag}>. Use ${use}. If none fits, ask before creating a new component (CLAUDE.md → "Building page UI").`,
+  })),
+  {
+    selector: "ImportDeclaration[source.value=/^(@radix-ui|radix-ui)/]",
+    message: 'Pages import components from @/components/*, never Radix directly. If a primitive is missing, ask before adding it to components/ui.',
+  },
+]
+
 export default defineConfig([
   // legacy/ holds generated, frozen copies of pre-redesign modals for the Modal
   // Gallery's compare view; they keep the lint debt they had when frozen.
@@ -104,6 +127,13 @@ export default defineConfig([
     ignores: ['src/**/*.stories.{ts,tsx}', 'src/foundations/**', '.storybook/**'],
     rules: {
       'no-restricted-syntax': designSystemGuardrails,
+    },
+  },
+  {
+    // Pages: everything above, plus "use existing components only".
+    files: ['src/pages/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': pageGuardrails,
     },
   },
 ])

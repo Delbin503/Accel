@@ -23,6 +23,7 @@ export function CoachMark({ active, message, side = "bottom", align = "center", 
     <Popover open={active}>
       <PopoverAnchor asChild>
         <span
+          data-slot="coach-mark"
           className={cn(
             "relative inline-flex rounded-[var(--radius-md)]",
             active && "ring-2 ring-primary ring-offset-2 ring-offset-background animate-pulse",
@@ -41,7 +42,7 @@ export function CoachMark({ active, message, side = "bottom", align = "center", 
           onInteractOutside={(e) => e.preventDefault()}
           className="z-[var(--z-tooltip)] w-max max-w-[220px] border-primary/40 bg-primary/15 p-2.5 text-foreground backdrop-blur-sm"
         >
-          <p className="text-xs font-semibold leading-snug">{message}</p>
+          <p data-slot="coach-mark-message" className="text-xs font-semibold leading-snug">{message}</p>
         </PopoverContent>
       )}
     </Popover>

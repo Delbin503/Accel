@@ -96,12 +96,13 @@ export function DateRangeBar({
 
   return (
     <div
+      data-slot="date-range-bar"
       className={cn(
         "flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5",
         className
       )}
     >
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <span data-slot="date-range-bar-label" className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Calendar className="size-3.5" />
         {label}
       </span>
@@ -110,6 +111,7 @@ export function DateRangeBar({
         const isActive = active === p.key;
         return (
           <button
+            data-slot="date-range-bar-preset"
             key={p.key}
             type="button"
             onClick={() => onSelect(p.key)}
@@ -124,6 +126,7 @@ export function DateRangeBar({
         <Popover open={customOpen} onOpenChange={setCustomOpen}>
           <PopoverTrigger asChild>
             <button
+              data-slot="date-range-bar-custom-trigger"
               type="button"
               className={cn(
                 "inline-flex items-center gap-1.5",
@@ -135,16 +138,17 @@ export function DateRangeBar({
               {customLabel}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <PopoverContent data-slot="date-range-bar-custom" align="start" className="w-72 p-3">
+            <p data-slot="date-range-bar-custom-title" className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Custom range
             </p>
-            <div className="space-y-2">
-              <div>
-                <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div data-slot="date-range-bar-custom-fields" className="space-y-2">
+              <div data-slot="date-range-bar-custom-field">
+                <label data-slot="date-range-bar-custom-field-label" className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                   From
                 </label>
                 <input
+                  data-slot="date-range-bar-custom-input"
                   type="date"
                   value={localFrom}
                   max={localTo || undefined}
@@ -155,11 +159,12 @@ export function DateRangeBar({
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div data-slot="date-range-bar-custom-field">
+                <label data-slot="date-range-bar-custom-field-label" className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                   To
                 </label>
                 <input
+                  data-slot="date-range-bar-custom-input"
                   type="date"
                   value={localTo}
                   min={localFrom || undefined}
@@ -170,7 +175,7 @@ export function DateRangeBar({
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                 />
               </div>
-              <div className="flex justify-end gap-1.5 pt-1">
+              <div data-slot="date-range-bar-custom-actions" className="flex justify-end gap-1.5 pt-1">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -200,7 +205,7 @@ export function DateRangeBar({
       )}
 
       {showingLabel && (
-        <span className="ml-auto text-xs text-muted-foreground">
+        <span data-slot="date-range-bar-showing" className="ml-auto text-xs text-muted-foreground">
           {showingLabel}
         </span>
       )}

@@ -2,9 +2,30 @@
 
 **Goal:** a design system that can be reused in other products and survives redesigns, new themes and new platforms without a rewrite.
 
-**How to use this:** work top to bottom. Each phase ends with a **Done when** check. Don't start the next phase until it passes, because later phases build on earlier ones. Tick boxes as you go. To continue, ask Claude: *"next step on the design system roadmap"*.
+**How to use this:** work top to bottom. Each phase ends with a **Done when** check. Tick boxes as you go. To continue, ask Claude: *"next step on the design system roadmap"*.
 
 Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 days (one person; rough).
+
+---
+
+## ▶ Start here (next session)
+
+*Updated 2026-11-13, end of day.*
+
+**State of the branch:** Phases 0–2 are committed and pushed (Bitbucket `design-updates-nov-6`, last push `02d6687`). **Today's later work is NOT committed yet** (Phase 2A below): layer names on every component, the slot/registry checks and the page guardrails. Your own WIP (`run-analysis/index.tsx`, `runAnalysisReport.ts`, email templates, website files) is still uncommitted and was never touched.
+
+**Do these in order:**
+
+1. **Commit + push Phase 2A** (S): ask Claude *"commit the layer-naming and guardrail work"*. It stages only design-system files and leaves your WIP alone.
+2. **Phase 2B: bring the prototypes in line** (M). The prototypes are the main UI, and they currently bypass most guardrails (see the audit below).
+3. **Phase 2C: name page sections** (S–M). The decision was to name sections, not every element.
+4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
+5. Then **Phase 3** (component APIs).
+
+**Open questions for you** (none block the steps above):
+- Dialogs, sheets and popovers render text at the browser default **16px**, because `body` sets no font size. Was 16px intended, or should it be the 13px `text-base`? It's a one-line fix either way.
+- `DepartmentSelect` uses v3 syntax `w-[--radix-popover-trigger-width]`, which Tailwind v4 ignores, so the dropdown width is probably wrong. Fix it?
+- Brand artwork (coin icon, sidebar logo, draw-zone placeholder) keeps raw hex. Add brand tokens, or leave it as artwork?
 
 ---
 
@@ -12,17 +33,26 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 | Layer | Status | Evidence |
 |---|---|---|
-| Tokens | 🟡 Functional | Three tiers in `src/index.css` (palette → semantic → component); light/dark; elevation; naming rules. Open: contrast gaps, deprecated aliases, tier-3 audit items |
+| Tokens | 🟢 Strong | 3 tiers (`--palette-*` → semantic → component), light/dark, elevation, media, fill/ink tokens; **0 WCAG AA text failures**; `npm run lint:tokens` |
+| Guardrails (app `src/`) | 🟢 Strong | ESLint bans off-system classes; pages can't hand-roll primitives; component registry; every component element named. Debt baselined (572) |
+| Layer naming | 🟢 Strong (components) / 🟠 pages | 693 named layers across 76 component files; pages unnamed (Phase 2C) |
+| **Prototypes (the main UI)** | 🔴 Weak | Not covered by guardrails. 1,171 token issues + 388 raw elements, mostly in `PRD_Phase_1_3` (Phase 2B) |
 | Primitives (`components/ui`) | 🟢 Strong | 26 shadcn components, 24 with stories |
-| App composites (`components/shared`) | 🟠 Weak | 43 components, **10 with stories**. Generic pieces (KpiCard, StatusBadge, OtpField) mixed with app-only ones (UserMenu, RequireRole, NotificationsBell) |
-| Other component folders | 🟠 Weak | `custom` 0/2 stories, `layout` 0/3, `charts` 1 story for 4 charts |
-| Prop vocabulary | 🟠 Weak | Same concept, different names: `StatusBadge tone=`, `KpiCard accent=`, `Button variant=` |
-| Guardrails | 🟠 Weak | ESLint blocks `text-[Npx]` only. Nothing blocks raw palette, old shadows or deprecated names |
-| Tests | 🔴 Absent | 0 test files. Storybook a11y and Chromatic addons installed but not wired into CI |
-| Reuse outside this app | 🔴 Absent | Design system lives inside the app's `src/`; `prototypes/` imports by path |
-| Design ↔ code | 🔴 Absent | No Figma library linked (`SHARED_CONTEXT.md` placeholder) |
+| App composites (`components/shared`) | 🟠 Weak | 43 components, 10 with stories; design-system and app-only pieces mixed |
+| Prop vocabulary | 🟠 Weak | `StatusBadge tone=`, `KpiCard accent=`, `Button variant=` |
+| Tests | 🔴 Absent | 0 test files; Storybook a11y + Chromatic addons not wired to CI |
+| Reuse outside this app | 🔴 Absent | Design system lives in the app's `src/` |
+| Design ↔ code | 🔴 Absent | No Figma library linked |
 
 Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token findings + remediation log).
+
+**Lint commands:** `npm run lint` runs everything below, then ESLint:
+- `lint:tokens`: naming and tier rules in `index.css`
+- `lint:slots`: every component element has a `data-slot`
+- `lint:components`: component registry
+- `lint:prune`: shrinks the ESLint baseline after you fix debt
+
+ESLint still reports **226 problems that predate this work** (mostly React-hooks rules). These are separate from the design-system guardrails, which are at 0.
 
 ---
 
@@ -81,12 +111,88 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
   - Bug fixed: "Most popular" badge in onboarding was white on light grey (invisible in light mode)
   - Remaining 124: 114 in `run-analysis/index.tsx` (WIP), 7 `KpiCard` deprecated aliases, 3 auth logo glows (coloured `shadow-secondary`, accepted exception)
 - [x] **Tier-3 audit items:** `--radius-xs` defined; `src/App.css` deleted; `bg-camera-feed` routed through `--camera-feed-from/to` → palette. *Spacing role tokens moved to Phase 3*: components don't follow one rhythm yet (SectionCard alone mixes px-4/px-5 and four py values), so they get named when component APIs are unified
-- [ ] **Remove deprecated aliases.** ⏸ *Blocked:* needs your run-analysis work committed first. Then migrate `prototypes/` (47 files) and run-analysis, and delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases)
+- [ ] **Remove deprecated aliases.** ⏸ *Blocked on:* (a) your run-analysis work being committed, and (b) Phase 2B migrating the prototypes. Then delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases) and run `npm run lint:prune`
 - [x] Re-check: `npm run lint:tokens` passes (223 tokens, 40 primitives); contrast matrix shows 0 AA failures; typecheck and production build pass
 
 **Done when:** theme-audit shows no AA failures in either theme; lint baseline from Phase 1 is zero; `grep -r DEPRECATED src/index.css` returns nothing.
 *Status 2026-11-13:* contrast ✅ · baseline zero outside WIP and accepted exceptions ✅ · deprecated aliases ⏸ (waiting on run-analysis). Phase 3 can start; finish the alias removal whenever run-analysis lands.
 **Then →** Phase 3.
+
+---
+
+## Phase 2A: Layer naming + component guardrails · M — ✅ done, ⚠ not committed
+
+**Why:** every element should say what it is (inspector, tests, design imports), and new pages must be built from existing components, not hand-rolled.
+
+- [x] Every HTML element in all 76 component files has a `data-slot`, shadcn-style: root `kpi-card`, parts `kpi-card-value`. **693 named layers.** Charts got `area-chart` / `bar-chart` / `line-chart`
+- [x] Text: every text element has a type-scale size and a colour token, on itself or its component root
+- [x] Leftover `z-50` / `z-10` / `min-w-[16px]` in components → tokens (same stacking)
+- [x] `scripts/check-slots.mjs` (`npm run lint:slots`): fails on an unnamed element, a name that isn't kebab-case, or a name that doesn't start with its component's name
+- [x] **Page guardrail (ESLint, `src/pages/**`):**
+  - Raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<dialog>` are errors; the message names the component to use
+  - Direct Radix imports are errors
+  - Existing debt (384 buttons, 47 inputs, 19 tables) is baselined
+- [x] **Component registry:** `src/components/registry.json` lists the 78 approved components. `scripts/check-components.mjs` (`npm run lint:components`) fails on any unregistered component file or folder
+- [x] **CLAUDE.md, "0. Building page UI":** look in the registry and Storybook first, then compose. If nothing fits, **stop and ask** with a proposal (name, folder, props, why existing ones don't fit). After approval: build it, add `data-slot` + a story, then register it
+- [ ] **Commit + push** (next session, step 1)
+
+**Done when:** `npm run lint` shows the token, slot and registry checks passing, with 0 guardrail errors. ✅
+
+---
+
+## Phase 2B: Prototypes follow the system · M
+
+**Why:** the prototypes in `prototypes/` are the main UI. They load the real tokens (`proto.css` imports `src/index.css`) and reuse `src` components (155 `ui` imports, 136 `shared`, 65 wrapped `src/pages`). But ESLint guardrails don't cover `prototypes/` at all, so they still use old names and raw values. Deprecated aliases keep them rendering.
+
+**Audit (2026-11-13), 121 files:**
+
+| Issue | Count | Fix |
+|---|---|---|
+| Deprecated `sev-*` | 465 | codemod → `severity-*` (mechanical) |
+| Raw `<button>` / `<input>` / `<table>` / `<select>` | 388 | → `Button` / `Input` / `DataTable` / `Select` (manual, page by page) |
+| Bare `text-primary` (fails AA in light) | 209 | codemod → `text-primary-ink` |
+| Arbitrary `text-[Npx]` | 122 | → type-scale tokens (mapping in CLAUDE.md) |
+| Raw `white` / `black` | 90 | → media tokens or `status-foreground` (same rules as Phase 2) |
+| Hex / rgb literals | 81 | → tokens; email templates and PDF use `src/lib/tokens.ts` |
+| Deprecated `purple` / `*-soft` / `primary-muted` | 77 | codemod → `violet`, `/15`, `/10` |
+| Tailwind palette (`bg-red-500`…) | 60 | → semantic tokens |
+| Old shadows / `z-[N]` / `rounded-[Npx]` | 67 | → elevation / z / radius tokens |
+
+By prototype:
+- **`PRD_Phase_1_3`: 715** (its own ~28k lines: assessment, re-ID, AAR dashboards)
+- `PRD_Detection_Feed` 113, `PRD_Live_Monitoring` 33, `PRD_Dashboard` 27, `PRD_Invite_Signup` 26, `PRD_Interactive_Demo` 23
+- 20 more at ≤12 each; these are mostly thin wrappers around real `src/pages`
+- `PRD_Billing` and `PRD_Training_Assessment` are already clean
+
+Steps:
+- [ ] Extend ESLint guardrails to `prototypes/**` (same `pageGuardrails`) and baseline the current debt, so prototypes stop getting worse immediately (S)
+- [ ] Codemods (same scripts as Phase 2): `sev-*` → `severity-*`, `purple` → `violet`, `*-soft` → `/15`, `primary-muted` → `/10`, `text-primary` → `text-primary-ink`, solid labelled `bg-primary` → `bg-primary-fill`, raw black/white on media → media tokens (M)
+- [ ] `text-[Npx]` → type-scale tokens; hex/rgb, palette, shadow, z and radius leftovers → tokens. Screenshot-check each prototype in light and dark (M)
+- [ ] Raw elements → components, starting with `PRD_Phase_1_3`. Anything that genuinely needs a new component goes through the "ask first" rule (L, can overlap with Phase 3)
+- [ ] `npm run lint:prune` after each batch
+
+**Done when:** the prototypes' guardrail baseline is 0 for token and deprecated-name rules (raw elements may still be burning down), and every prototype renders correctly in both themes.
+
+---
+
+## Phase 2C: Name page sections · S–M
+
+**Why:** components are fully named. Pages need a root and region names so any area can be found in the inspector, in tests or in design imports. Naming every one of the ~5,500 page elements would mostly name layout glue, so the decision was **sections only**.
+
+- [ ] Every page (`src/pages/**` + prototype pages) gets a root `data-slot="{page}-page"` and region names, e.g.:
+  ```
+  detection-feed-page
+  ├─ detection-feed-page-header    (PageHeader)
+  ├─ detection-feed-page-kpis      (KpiCard × 6)
+  ├─ detection-feed-page-filters   (DateRangeBar, FilterPanel)
+  ├─ detection-feed-page-list
+  └─ detection-feed-page-event
+  ```
+  About 5–15 names per page, ~400–800 in total
+- [ ] Extend `scripts/check-slots.mjs`: every page file names its root `*-page`
+- [ ] Raw elements inside pages get named automatically as they're migrated to components (Phase 2B / 3)
+
+**Done when:** every page has a named root and named regions, and the slot check enforces it.
 
 ---
 
@@ -105,6 +211,8 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
   - Codemod the call sites (`/design-system-ops:codemod-generator`)
 - [ ] Run `/design-system-ops:naming-audit` on component names
 - [ ] Add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) once components share one rhythm (moved from Phase 2)
+- [ ] Migrate raw `<button>` / `<input>` / `<table>` in `src/pages` to components (baseline: 384 / 47 / 19). Each migrated element gets its name for free
+- [ ] Split `registry.json` into `design-system` vs `app` groups to match the folder split
 - [ ] Write a decision tree for overlapping pieces (Modal vs Dialog vs Sheet; ChoiceDropdown vs Select vs FilterDropdown) with `/design-system-ops:component-decision-tree`
 
 **Done when:** every component is in exactly one of design system / app; every design-system component uses the shared prop vocabulary; there's a written "which one do I use" decision tree.
@@ -190,7 +298,10 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 
 | When | Decision | Recommendation |
 |---|---|---|
-| Phase 2 | Light-mode brand text: darker ink for text only, or darken `--primary` everywhere? | Text-only ink (`--primary-text`); buttons keep the bright brand orange |
+| ~~Phase 2~~ | ~~Brand orange contrast~~ | ✅ Decided: `primary-fill` for labelled fills, `primary-ink` for text |
+| ~~Phase 2A~~ | ~~Page naming depth~~ | ✅ Decided: name page sections, not every element |
+| Now | Dialog/sheet/popover text: keep 16px or use 13px `text-base`? | Probably 13px (matches the rest of the app). Check one dialog first |
+| Phase 2B | Should email templates and PDF use the token pipeline? | Yes, via `src/lib/tokens.ts`; generate it later with Style Dictionary (Phase 7) |
 | Phase 3 | `tone` vs `accent` vs `variant` naming | `variant` = style, `tone` = semantic colour, `size` = scale |
 | Phase 6 | Monorepo package vs published npm package | Monorepo `packages/ui` first; publish later only if a separate repo needs it |
 | Phase 7 | Is Figma the design source of truth? | If designers work in Figma: yes, sync variables from code tokens. If not: code-first, Storybook as the reference |
@@ -201,8 +312,8 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 ## Critical path
 
 ```
-0 Commit → 1 Guardrails → 2 Finish tokens → 3 Component APIs → 4 Docs → 5 Quality gates → 6 Package → 7 Futureproof
-                              ↑ needs run-analysis work merged (to remove deprecated aliases)
+0 ✅ → 1 ✅ → 2 ✅* → 2A ✅ (commit!) → 2B Prototypes → 2C Page sections → 3 Component APIs → 4 Docs → 5 Quality gates → 6 Package → 7 Futureproof
+                ↑ *deprecated-alias removal waits on run-analysis commit + 2B
 ```
 
-Rough total: **~4–6 weeks** part-time (one person), most of it in Phases 3–6. Phases 0–2 (~1 week) give the biggest protection for the least effort.
+Rough remaining effort: **~4–5 weeks** part-time (one person). Next session's work (commit, 2B guardrails + codemods, 2C) is about 2–3 days and gets the main UI, the prototypes, fully onto the system.

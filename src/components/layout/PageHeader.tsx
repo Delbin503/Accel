@@ -9,7 +9,7 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 function PageHeader({ children, className, ...props }: PageHeaderProps) {
   return (
-    <div
+    <div data-slot="page-header"
       className={cn("flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between", className)}
       {...props}
     >
@@ -26,7 +26,7 @@ function PageHeaderContent({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("flex flex-col gap-0.5", className)} {...props}>
+    <div data-slot="page-header-content" className={cn("flex flex-col gap-0.5", className)} {...props}>
       {children}
     </div>
   );
@@ -40,7 +40,7 @@ function PageHeaderTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h1
+    <h1 data-slot="page-header-title"
       className={cn("text-xl font-semibold tracking-tight text-foreground", className)}
       {...props}
     >
@@ -57,7 +57,7 @@ function PageHeaderDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn("text-sm text-muted-foreground", className)} {...props}>
+    <p data-slot="page-header-description" className={cn("text-sm text-muted-foreground", className)} {...props}>
       {children}
     </p>
   );
@@ -71,7 +71,7 @@ function PageHeaderActions({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
+    <div data-slot="page-header-actions"
       className={cn("flex shrink-0 items-center gap-2 pt-0.5 sm:pt-0", className)}
       {...props}
     >
@@ -88,7 +88,7 @@ function PageHeaderMeta({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
+    <div data-slot="page-header-meta"
       className={cn("flex flex-wrap items-center gap-2 text-xs text-muted-foreground", className)}
       {...props}
     >

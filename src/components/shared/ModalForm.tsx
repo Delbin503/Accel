@@ -30,8 +30,8 @@ const LABEL = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-
 /** A plain heading over a group of fields. */
 export function ModalFormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
-      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/80">{title}</p>
+    <section data-slot="modal-form-section" className="space-y-3">
+      <p data-slot="modal-form-section-title" className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/80">{title}</p>
       {children}
     </section>
   );
@@ -46,13 +46,13 @@ export function ModalField({ label, error, hint, className, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className={className}>
-      <label className={LABEL}>{label}</label>
+    <div data-slot="modal-field" className={className}>
+      <label data-slot="modal-field-label" className={LABEL}>{label}</label>
       {children}
       {error ? (
-        <p className="mt-1 text-xs text-severity-critical">{error}</p>
+        <p data-slot="modal-field-error" className="mt-1 text-xs text-severity-critical">{error}</p>
       ) : hint ? (
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        <p data-slot="modal-field-hint" className="mt-1 text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );
@@ -60,7 +60,7 @@ export function ModalField({ label, error, hint, className, children }: {
 
 /** Two fields side by side. */
 export function ModalFieldPair({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-3">{children}</div>;
+  return <div data-slot="modal-field-pair" className="grid grid-cols-2 gap-3">{children}</div>;
 }
 
 export function ModalTextInput({ value, onChange, placeholder, mono, type, invalid, disabled }: {
@@ -74,6 +74,7 @@ export function ModalTextInput({ value, onChange, placeholder, mono, type, inval
 }) {
   return (
     <Input
+      data-slot="modal-text-input"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -92,8 +93,9 @@ export function ModalPasswordInput({ value, onChange, invalid }: {
 }) {
   const [show, setShow] = React.useState(false);
   return (
-    <div className="relative">
+    <div data-slot="modal-password-input" className="relative">
       <Input
+        data-slot="modal-password-input-field"
         type={show ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -103,6 +105,7 @@ export function ModalPasswordInput({ value, onChange, invalid }: {
         className="h-9 pr-9 font-mono text-base"
       />
       <button
+        data-slot="modal-password-input-toggle"
         type="button"
         onClick={() => setShow((v) => !v)}
         aria-label={show ? "Hide password" : "Show password"}
@@ -126,12 +129,12 @@ export function ModalSelect({ value, onChange, placeholder, options, invalid, di
 }) {
   return (
     <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="h-9 w-full text-base" aria-invalid={invalid || undefined} aria-label={ariaLabel}>
+      <SelectTrigger data-slot="modal-select" className="h-9 w-full text-base" aria-invalid={invalid || undefined} aria-label={ariaLabel}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent position="popper" className="max-h-72">
+      <SelectContent data-slot="modal-select-content" position="popper" className="max-h-72">
         {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
+          <SelectItem data-slot="modal-select-item" key={o.value} value={o.value}>
             {o.label}
           </SelectItem>
         ))}
@@ -149,9 +152,10 @@ export function OptionChips<T extends string | number>({ value, options, onChang
 }) {
   const isOn = (v: T) => (multi ? (value as T[]).includes(v) : value === v);
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div data-slot="option-chips" className="flex flex-wrap gap-1.5">
       {options.map((o) => (
         <button
+          data-slot="option-chips-item"
           key={String(o.value)}
           type="button"
           aria-pressed={isOn(o.value)}
@@ -182,20 +186,21 @@ export function CheckRow({ checked, disabled, onToggle, title, meta, aside, labe
   label: string;
 }) {
   return (
-    <li>
+    <li data-slot="check-row">
       <label
+        data-slot="check-row-label"
         className={cn(
           "flex items-start gap-3 px-3 py-2.5 transition-colors duration-[var(--duration-fast)] ease-standard",
           disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
           checked ? "bg-accent" : !disabled && "hover:bg-muted/40"
         )}
       >
-        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => onToggle()} aria-label={label} className="mt-0.5" />
-        <span className="min-w-0 flex-1">
-          <span className={cn("block truncate text-sm font-medium", checked ? "text-primary-ink" : "text-foreground")}>{title}</span>
-          {meta ? <span className="mt-0.5 block truncate font-mono text-2xs text-muted-foreground">{meta}</span> : null}
+        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => onToggle()} aria-label={label} className="mt-0.5" data-slot="check-row-checkbox" />
+        <span data-slot="check-row-body" className="min-w-0 flex-1">
+          <span data-slot="check-row-title" className={cn("block truncate text-sm font-medium", checked ? "text-primary-ink" : "text-foreground")}>{title}</span>
+          {meta ? <span data-slot="check-row-meta" className="mt-0.5 block truncate font-mono text-2xs text-muted-foreground">{meta}</span> : null}
         </span>
-        {aside ? <span className="shrink-0 self-center">{aside}</span> : null}
+        {aside ? <span data-slot="check-row-aside" className="shrink-0 self-center">{aside}</span> : null}
       </label>
     </li>
   );
@@ -209,9 +214,9 @@ export function CheckList({ head, children, empty }: {
   empty?: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div data-slot="check-list" className="overflow-hidden rounded-lg border border-border">
       {head}
-      {empty ?? <ul className="max-h-56 divide-y divide-border/60 overflow-y-auto">{children}</ul>}
+      {empty ?? <ul data-slot="check-list-items" className="max-h-56 divide-y divide-border/60 overflow-y-auto">{children}</ul>}
     </div>
   );
 }
@@ -225,10 +230,10 @@ export function CheckListSelectAll({ checked, onToggle, count, disabled }: {
   disabled?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5">
-      <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => onToggle()} aria-label="Select all" />
-      <span className="text-sm font-medium text-foreground">Select all</span>
-      <span className="ml-auto text-xs text-muted-foreground">{count}</span>
+    <label data-slot="check-list-select-all" className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5">
+      <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => onToggle()} aria-label="Select all" data-slot="check-list-select-all-checkbox" />
+      <span data-slot="check-list-select-all-label" className="text-sm font-medium text-foreground">Select all</span>
+      <span data-slot="check-list-select-all-count" className="ml-auto text-xs text-muted-foreground">{count}</span>
     </label>
   );
 }
@@ -239,14 +244,14 @@ export function ModalSearchInput({ value, onChange, placeholder }: {
   placeholder: string;
 }) {
   return (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="h-9 pl-9 text-base" />
+    <div data-slot="modal-search-input" className="relative">
+      <Search data-slot="modal-search-input-icon" className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <Input data-slot="modal-search-input-field" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="h-9 pl-9 text-base" />
     </div>
   );
 }
 
 /** Centered muted line for an empty CheckList. */
 export function CheckListEmpty({ children }: { children: React.ReactNode }) {
-  return <p className="px-4 py-8 text-center text-sm text-muted-foreground">{children}</p>;
+  return <p data-slot="check-list-empty" className="px-4 py-8 text-center text-sm text-muted-foreground">{children}</p>;
 }

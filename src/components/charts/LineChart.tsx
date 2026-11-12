@@ -21,7 +21,7 @@ export interface LineChartProps {
 function LineChart({ data, xKey, series, showLegend, className }: LineChartProps) {
   const config = toChartConfig(series);
   return (
-    <ChartContainer config={config} className={cn("h-64 w-full", className)}>
+    <ChartContainer data-slot="line-chart" config={config} className={cn("h-64 w-full", className)}>
       <ReLineChart accessibilityLayer data={data} margin={{ left: 4, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey={xKey} {...AXIS_PROPS} />

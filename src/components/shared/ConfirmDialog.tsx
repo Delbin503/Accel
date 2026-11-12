@@ -56,16 +56,17 @@ function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent size={size} className={cn(className)}>
+      <ModalContent data-slot="confirm-dialog" size={size} className={cn(className)}>
         {/* Neutral title; the description is the body's one "Are you sure…" line. */}
         <ModalHeader title={title} />
-        <ModalBody className="space-y-3">
-          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+        <ModalBody data-slot="confirm-dialog-body" className="space-y-3">
+          <p data-slot="confirm-dialog-description" className="text-sm leading-relaxed text-muted-foreground">{description}</p>
           {children}
         </ModalBody>
         {/* One action — the ✕ / Esc close, so there is no Cancel button. */}
-        <ModalFooter>
+        <ModalFooter data-slot="confirm-dialog-footer">
           <Button
+            data-slot="confirm-dialog-action"
             size="sm"
             variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}

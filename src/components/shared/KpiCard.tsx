@@ -123,6 +123,7 @@ export function KpiCard({
 
   return (
     <Tag
+      data-slot="kpi-card"
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={cn(
@@ -136,13 +137,13 @@ export function KpiCard({
       )}
     >
       {/* Label row — the accent dot replaces the old coloured top stroke */}
-      <div className="flex min-w-0 items-center gap-2">
-        <span className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[accent])} />
-        <TruncatedText className={cn("min-w-0 flex-1 font-medium text-muted-foreground", compact ? "text-sm" : "text-base")}>
+      <div data-slot="kpi-card-header" className="flex min-w-0 items-center gap-2">
+        <span data-slot="kpi-card-accent" className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[accent])} />
+        <TruncatedText data-slot="kpi-card-label" className={cn("min-w-0 flex-1 font-medium text-muted-foreground", compact ? "text-sm" : "text-base")}>
           {label}
         </TruncatedText>
         {active && (
-          <span className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider text-primary-ink">
+          <span data-slot="kpi-card-badge" className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider text-primary-ink">
             Active
           </span>
         )}
@@ -150,6 +151,7 @@ export function KpiCard({
 
       {/* Value — neutral and prominent; leading-tight keeps descenders unclipped */}
       <div
+        data-slot="kpi-card-value"
         className={cn(
           "font-semibold leading-tight tracking-tight tabular-nums text-foreground",
           compact ? "mt-1.5 text-xl" : "mt-2 text-2xl"
@@ -160,15 +162,15 @@ export function KpiCard({
 
       {/* Footer — trend on the left, meta on the right */}
       {(trend || sub) && (
-        <div className="mt-auto flex min-w-0 items-center gap-2 pt-2 text-xs leading-tight">
+        <div data-slot="kpi-card-footer" className="mt-auto flex min-w-0 items-center gap-2 pt-2 text-xs leading-tight">
           {trend && TrendIcon && (
-            <span className={cn("inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums", TREND_TONE[sentiment])}>
+            <span data-slot="kpi-card-trend" className={cn("inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums", TREND_TONE[sentiment])}>
               <TrendIcon className="size-3" aria-hidden />
               {trend.value}
             </span>
           )}
           {sub && (
-            <TruncatedText className={cn("min-w-0 flex-1 text-muted-foreground", trend && "text-right")}>
+            <TruncatedText data-slot="kpi-card-sub" className={cn("min-w-0 flex-1 text-muted-foreground", trend && "text-right")}>
               {sub}
             </TruncatedText>
           )}
@@ -202,5 +204,5 @@ export function KpiGrid({
     5: "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5",
     6: "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6",
   };
-  return <div className={cn(gridClass[cols], className)}>{children}</div>;
+  return <div data-slot="kpi-grid" className={cn(gridClass[cols], className)}>{children}</div>;
 }

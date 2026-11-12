@@ -46,6 +46,17 @@ src/
 > - **`components/charts/`** — `AreaChart`, `BarChart`, `LineChart`, `DonutChart`.
 > - **`lib/formatters.ts`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.
 
+### 0. Building page UI — existing components only (ask before creating new ones)
+
+Pages in `src/pages/` are **composed from the approved components** in `src/components/registry.json` — never hand-rolled.
+
+1. **Look first.** Check `src/components/registry.json`, Storybook (`npm run storybook`) and the catalogue below for a component that fits — including its variants/props.
+2. **Compose.** Build the page from those components. Small page-local helpers are fine *only* if they just arrange existing components; no new styled primitives (no raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<dialog>`, no direct Radix imports — lint blocks these in pages).
+3. **Nothing fits? STOP and ask the user before writing it.** Say what's missing, which existing components you considered and why they don't fit, and propose: name, folder (`ui` / `shared` / `charts` / `layout` / `custom`), props, and variants. Do not create the component until the user approves.
+4. **After approval:** build it in `src/components/<folder>/` following the conventions below (CVA, `cn()`, tokens), name every element with `data-slot` (`{component}-{part}`), add a `.stories.tsx`, and add it to `src/components/registry.json`.
+
+`npm run lint` enforces this: unregistered component files fail (`lint:components`), unnamed elements fail (`lint:slots`), raw primitives in pages fail (ESLint). Existing page debt is baselined in `eslint-suppressions.json` — never add to it.
+
 ### 1. Prefer shadcn components from `components/ui/`
 
 Always reach for a shadcn primitive first. Check `components/ui/` before building anything new.
@@ -224,7 +235,7 @@ The design uses CSS variable-backed tokens. Always use those.
 
 ### Guardrails — `npm run lint` enforces the above
 
-`npm run lint` runs `scripts/check-tokens.mjs` (token naming and tier rules in `src/index.css`) and ESLint, which bans in app code: Tailwind palette colours (`bg-red-500`, `bg-neutral-950`), raw `white`/`black`, `shadow-sm` … `shadow-2xl`, deprecated names (`sev-*`, `purple`, `*-soft`, `primary-muted`), arbitrary `z-[N]`, `rounded-[Npx]` and `text-[Npx]`, and `var(--palette-*)`.
+`npm run lint` runs `scripts/check-tokens.mjs` (token naming and tier rules in `src/index.css`), `scripts/check-slots.mjs` (every element in a component has a `data-slot`), `scripts/check-components.mjs` (component registry) and ESLint, which bans in app code: Tailwind palette colours (`bg-red-500`, `bg-neutral-950`), raw `white`/`black`, `shadow-sm` … `shadow-2xl`, deprecated names (`sev-*`, `purple`, `*-soft`, `primary-muted`), arbitrary `z-[N]`, `rounded-[Npx]` and `text-[Npx]`, and `var(--palette-*)`.
 
 Violations that predate a rule are baselined in `eslint-suppressions.json`. **Never add to it** — fix the code instead. After fixing old violations, run `npm run lint:prune` to shrink the baseline.
 

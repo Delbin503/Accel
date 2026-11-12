@@ -6,6 +6,7 @@ import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+// Accel: layer names + tokens — data-slot on the indicator icon layer.
 // Accel: solid fills under labels use primary-fill and orange text uses
 // primary-ink — the bright --primary fails WCAG AA there (2.99:1).
 
@@ -42,7 +43,7 @@ function RadioGroupItem({
         data-slot="radio-group-indicator"
         className="relative flex items-center justify-center"
       >
-        <CircleIcon className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 fill-primary" />
+        <CircleIcon data-slot="radio-group-indicator-icon" className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 fill-primary" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )
