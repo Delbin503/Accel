@@ -102,7 +102,7 @@ function CameraTile({
   return (
     <div
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-neutral-950 text-left transition-all",
+        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
         checked
           ? "border-primary shadow-[0_0_0_2px_var(--primary)]"
           : active
@@ -133,7 +133,7 @@ function CameraTile({
         ) : (
           <>
             <OfflineFrameLayer />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-media/70 text-severity-critical/80">
               <AlertTriangle className="size-5" />
               <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
             </div>
@@ -151,7 +151,7 @@ function CameraTile({
             "absolute left-2 top-2 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity duration-[var(--duration-fast)] ease-standard",
             checked
               ? "border-primary bg-primary opacity-100"
-              : "border-white/60 bg-black/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              : "border-media-foreground/60 bg-scrim/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           )}
         >
           {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
@@ -160,8 +160,8 @@ function CameraTile({
         {isOnline && (
           <span
             className={cn(
-              "absolute top-2 z-10 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white transition-all",
-              live ? "bg-sev-critical/95" : "bg-black/70",
+              "absolute top-2 z-10 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-media-foreground transition-all",
+              live ? "bg-severity-critical/95" : "bg-scrim/70",
               checked ? "left-9" : "left-2 group-hover:left-9"
             )}
           >
@@ -170,13 +170,13 @@ function CameraTile({
         )}
 
         {count > 0 && (
-          <span className="absolute right-2 top-2 z-10 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-neutral-900">
+          <span className="absolute right-2 top-2 z-10 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-status-foreground">
             {count}
           </span>
         )}
 
         <span className={cn(
-          "absolute bottom-2 left-2 z-10 rounded bg-black/60 px-1.5 py-0.5 font-mono text-white/90 backdrop-blur-sm transition-opacity group-hover:opacity-0",
+          "absolute bottom-2 left-2 z-10 rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-media-foreground/90 backdrop-blur-sm transition-opacity group-hover:opacity-0",
           compact ? "text-3xs" : "text-2xs",
           !live && "opacity-0"
         )}>
@@ -223,7 +223,7 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
   return (
     <span className={cn(
       "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-semibold",
-      active ? "border-primary/40 bg-primary/15 text-primary"
+      active ? "border-primary/40 bg-primary/15 text-primary-ink"
         : muted ? "border-border bg-muted text-muted-foreground"
           : "border-warning/30 bg-warning/15 text-warning"
     )}>
@@ -272,7 +272,7 @@ function HeroView({
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="group relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
+          <div className="group relative aspect-[16/9] w-full overflow-hidden bg-media">
             <CameraFrameLayer camera={camera} zoom={pb.zoom} />
             {zoomArmed && (
               <ZoomSurface
@@ -290,23 +290,23 @@ function HeroView({
               className={cn(
                 "absolute left-3 top-3 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity",
                 checked ? "border-primary bg-primary opacity-100"
-                  : "border-white/60 bg-black/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  : "border-media-foreground/60 bg-scrim/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               )}
             >
               {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
             </button>
             <span className={cn(
-              "absolute top-3 z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white transition-all",
-              live ? "bg-sev-critical/95" : "bg-black/70",
+              "absolute top-3 z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground transition-all",
+              live ? "bg-severity-critical/95" : "bg-scrim/70",
               checked ? "left-10" : "left-3 group-hover:left-10"
             )}>
-              {live && <span className="size-1.5 animate-pulse rounded-full bg-white" />}
+              {live && <span className="size-1.5 animate-pulse rounded-full bg-status-foreground" />}
               {live ? "Live" : "Playback"}
             </span>
-            <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
-              {camera.id} · <span className="inline-flex items-center gap-1 text-sev-critical"><span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />REC</span> · <span className="text-info">AI</span>
+            <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">
+              {camera.id} · <span className="inline-flex items-center gap-1 text-severity-critical"><span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />REC</span> · <span className="text-info">AI</span>
             </span>
-            <div className="absolute bottom-16 left-3 z-10 rounded bg-black/60 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
+            <div className="absolute bottom-16 left-3 z-10 rounded bg-scrim/60 px-2 py-1 font-mono text-xs text-media-foreground/90 backdrop-blur-sm">
               {new Date(now.getTime() - pb.offsetSec * 1000)
                 .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
                 .replace(",", " ·")}
@@ -355,7 +355,7 @@ function HeroView({
             </p>
             <p className="text-xs text-muted-foreground">
               <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on
-              {offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
+              {offlineCount > 0 && <> · <strong className="text-severity-critical">{offlineCount}</strong> off</>}
             </p>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -523,9 +523,9 @@ function SyncGrid({
         </div>
         <span className={cn(
           "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-2xs font-semibold",
-          pb.offsetSec <= 0 ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" : "border-warning/30 bg-warning/10 text-warning"
+          pb.offsetSec <= 0 ? "border-severity-critical/40 bg-severity-critical/10 text-severity-critical" : "border-warning/30 bg-warning/10 text-warning"
         )}>
-          <span className={cn("size-1.5 rounded-full", pb.offsetSec <= 0 ? "animate-pulse bg-sev-critical" : "bg-warning")} />
+          <span className={cn("size-1.5 rounded-full", pb.offsetSec <= 0 ? "animate-pulse bg-severity-critical" : "bg-warning")} />
           {pb.offsetSec <= 0 ? "LIVE" : `−${fmtOffset(pb.offsetSec)} · ${timestampAt(now, pb.offsetSec)}`}
         </span>
       </div>
@@ -555,7 +555,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
   return (
     <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
         <span className="text-base font-semibold text-foreground">
@@ -592,7 +592,7 @@ function SyncPlaybackBar({
       {/* Shared timeline */}
       <div className="flex items-center gap-3">
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">−06:00:00</span>
-        <div className="flex-1 rounded-md bg-neutral-950 px-2 py-2">
+        <div className="flex-1 rounded-md bg-media px-2 py-2">
           <ScrubTrack offsetSec={pb.offsetSec} onChange={(v) => onChange({ offsetSec: v })} now={now} label="Synchronised playback position" />
         </div>
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">LIVE</span>
@@ -600,7 +600,7 @@ function SyncPlaybackBar({
 
       <div className="mt-2.5 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <SlidersHorizontal className="size-3.5" />
           </div>
           <div className="leading-tight">
@@ -627,7 +627,7 @@ function SyncPlaybackBar({
             <TooltipTrigger asChild>
               <button aria-label={pb.playing ? "Pause all" : "Play all"}
                 onClick={() => onChange({ playing: !pb.playing })}
-                className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground hover:opacity-90">
+                className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary-fill text-primary-foreground hover:opacity-90">
                 {pb.playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
               </button>
             </TooltipTrigger>
@@ -828,7 +828,7 @@ export function SyncPlaybackMonitoring({
               return (
                 <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description} disabled={inSync}
                   className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
-                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                    active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                   <Icon className="size-3.5" />
                   {vm.label}
                 </button>
@@ -851,7 +851,7 @@ export function SyncPlaybackMonitoring({
             className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
         </div>
         {checkedIds.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary-ink">
             <CheckSquare className="size-3" />
             {checkedIds.length} selected
           </span>
@@ -860,7 +860,7 @@ export function SyncPlaybackMonitoring({
 
       <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
         <strong className="text-foreground">{siteLabel}</strong> · {filteredCameras.length} cameras total · {onlineCount} online
-        {inSync && <> · <strong className="text-primary">{checkedCameras.length} in synchronised playback</strong></>}
+        {inSync && <> · <strong className="text-primary-ink">{checkedCameras.length} in synchronised playback</strong></>}
       </div>
 
       {inSync ? (

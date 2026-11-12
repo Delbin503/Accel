@@ -56,9 +56,9 @@ const SENSOR_SPOT: Record<SensorId, { cls: string; x: number; y: number; labelCl
 };
 
 const LEVEL: Record<Level, { text: string; panel: string; stroke: string; bar: string }> = {
-  critical: { text: "text-sev-critical", panel: "border-sev-critical/40 bg-sev-critical/[0.06]", stroke: "stroke-sev-critical", bar: "bg-sev-critical" },
-  medium: { text: "text-sev-medium", panel: "border-sev-medium/40 bg-sev-medium/[0.06]", stroke: "stroke-sev-medium", bar: "bg-sev-medium" },
-  low: { text: "text-sev-low", panel: "border-sev-low/40 bg-sev-low/[0.06]", stroke: "stroke-sev-low", bar: "bg-sev-low" },
+  critical: { text: "text-severity-critical", panel: "border-severity-critical/40 bg-severity-critical/[0.06]", stroke: "stroke-severity-critical", bar: "bg-severity-critical" },
+  medium: { text: "text-severity-medium", panel: "border-severity-medium/40 bg-severity-medium/[0.06]", stroke: "stroke-severity-medium", bar: "bg-severity-medium" },
+  low: { text: "text-severity-low", panel: "border-severity-low/40 bg-severity-low/[0.06]", stroke: "stroke-severity-low", bar: "bg-severity-low" },
 };
 
 const STAGES = [
@@ -90,8 +90,8 @@ function Stepper({ stage, canReach, onGo }: { stage: number; canReach: (n: numbe
               <span
                 className={cn(
                   "flex size-6 shrink-0 items-center justify-center rounded-full border text-2xs font-bold transition-colors",
-                  current && "border-primary bg-primary text-primary-foreground",
-                  done && "border-primary/40 bg-primary/15 text-primary",
+                  current && "border-primary bg-primary-fill text-primary-foreground",
+                  done && "border-primary/40 bg-primary/15 text-primary-ink",
                   !current && !done && "border-border bg-card text-muted-foreground"
                 )}
               >
@@ -196,8 +196,8 @@ function HouseScene({
               aria-label={`${ev.device} — ${on ? "selected, click to remove" : "click to add its signal"}`}
               onClick={() => onToggle(ev.id)}
               className={cn(
-                "relative flex size-10 items-center justify-center rounded-full border-2 shadow-lg transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:text-foreground"
+                "relative flex size-10 items-center justify-center rounded-full border-2 shadow-floating transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                on ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:text-foreground"
               )}
             >
               <Icon className="size-4" />
@@ -208,7 +208,7 @@ function HouseScene({
               )}
             </button>
             <span className={cn("pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-background/90 px-1.5 py-0.5 text-2xs font-semibold", spot.labelCls, on ? "text-foreground" : "text-muted-foreground")}>
-              {contextOn && on && <span className="mr-1 font-mono text-primary">{ev.time}</span>}
+              {contextOn && on && <span className="mr-1 font-mono text-primary-ink">{ev.time}</span>}
               {ev.device}
             </span>
           </div>
@@ -254,7 +254,7 @@ function Timeline({ selected }: { selected: SensorId[] }) {
           <div className="min-w-0 flex-1">
             <p className="flex items-center justify-between gap-2 text-sm font-semibold text-foreground">
               <span className="truncate">{ev.device}</span>
-              <span className="shrink-0 font-mono text-2xs font-normal text-primary">{ev.time}</span>
+              <span className="shrink-0 font-mono text-2xs font-normal text-primary-ink">{ev.time}</span>
             </p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" /> {ev.place} · {ev.raw}</p>
           </div>
@@ -305,7 +305,7 @@ function AssessmentCard({ a }: { a: Assessment }) {
           const Icon = SENSOR_ICON[s.sensor];
           return (
             <li key={s.sensor} className="flex items-start gap-2 text-sm text-foreground">
-              <Icon className="mt-0.5 size-3.5 shrink-0 text-primary" /> {s.text}
+              <Icon className="mt-0.5 size-3.5 shrink-0 text-primary-ink" /> {s.text}
             </li>
           );
         })}
@@ -342,7 +342,7 @@ function IncidentRecord({ a, selected, response }: { a: Assessment; selected: Se
     <div className="overflow-hidden rounded-lg border border-border bg-background animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]" aria-live="polite">
       <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
         <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"><FileText className="size-3" /> Incident record</p>
-        <span className="font-mono text-2xs text-primary">{INCIDENT_ID}</span>
+        <span className="font-mono text-2xs text-primary-ink">{INCIDENT_ID}</span>
       </div>
       <dl className="divide-y divide-border/60">
         {rows.map((row) => (
@@ -453,7 +453,7 @@ export function HouseDemo() {
         {/* What the current stage reveals */}
         <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           <div className="border-b border-border px-4 py-3">
-            <p className="text-2xs font-semibold uppercase tracking-wider text-primary">Stage {meta.n} of {STAGES.length}</p>
+            <p className="text-2xs font-semibold uppercase tracking-wider text-primary-ink">Stage {meta.n} of {STAGES.length}</p>
             <h2 className="mt-0.5 text-lg font-bold text-foreground">{meta.title}</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
           </div>
@@ -510,14 +510,14 @@ export function HouseDemo() {
                           on ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"
                         )}
                       >
-                        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border", on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground")}>
+                        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border", on ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-card text-muted-foreground")}>
                           <Icon className="size-4" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-semibold text-foreground">{r.label}</span>
                           <span className="block text-xs text-muted-foreground">{r.hint}</span>
                         </span>
-                        {on && <Check className="size-4 shrink-0 text-primary" strokeWidth={3} />}
+                        {on && <Check className="size-4 shrink-0 text-primary-ink" strokeWidth={3} />}
                       </button>
                     );
                   })}

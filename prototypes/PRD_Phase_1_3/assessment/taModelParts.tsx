@@ -37,7 +37,7 @@ export function ActivitiesPicker({
   }
 
   return (
-    <div className={cn("rounded-lg border bg-background p-2.5", invalid ? "border-sev-critical" : "border-border")}>
+    <div className={cn("rounded-lg border bg-background p-2.5", invalid ? "border-severity-critical" : "border-border")}>
       <div className="flex flex-wrap gap-1.5">
         {options.map((a) => {
           const on = value.includes(a);
@@ -49,7 +49,7 @@ export function ActivitiesPicker({
               onClick={() => toggle(a)}
               className={cn(
                 "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-medium transition-colors",
-                on ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:text-foreground",
               )}
             >
               {on && <Check className="size-3" strokeWidth={3} />}
@@ -124,7 +124,7 @@ export function AssessmentFields({
           onChange={(k) => onChange({ useCase: k, activities: value.useCase === k ? value.activities : USE_CASES[k].defaultActivities })}
         />
         {errors?.useCase ? (
-          <p className="mt-1 text-xs text-sev-critical">{errors.useCase}</p>
+          <p className="mt-1 text-xs text-severity-critical">{errors.useCase}</p>
         ) : (
           <p className="mt-1 text-2xs text-muted-foreground">
             Sets who is assessed and what an attempt is. Camera and pose settings come from System Configuration › Camera Defaults.
@@ -141,7 +141,7 @@ export function AssessmentFields({
             onChange={(activities) => onChange({ ...value, activities })}
           />
           {errors?.activities ? (
-            <p className="mt-1 text-xs text-sev-critical">{errors.activities}</p>
+            <p className="mt-1 text-xs text-severity-critical">{errors.activities}</p>
           ) : (
             <p className="mt-1 text-2xs text-muted-foreground">
               {value.activities.length} selected · sessions pick from these.
@@ -170,7 +170,7 @@ export function AssessmentSummary({ info }: { info: AssessmentInfo }) {
         <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Activities · {info.activities.length}</p>
         <div className="mt-1 flex flex-wrap gap-1">
           {info.activities.map((a) => (
-            <span key={a} className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{a}</span>
+            <span key={a} className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary-ink">{a}</span>
           ))}
         </div>
       </div>
@@ -186,7 +186,7 @@ export function AssessmentCriteriaColumn({ info }: { info: AssessmentInfo }) {
     <div className="h-[460px] space-y-3 overflow-y-auto pr-1">
       <div className="rounded-xl border border-border bg-background p-3">
         <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-          <Target className="size-4 text-primary" />
+          <Target className="size-4 text-primary-ink" />
           Criteria
         </p>
         <div className="divide-y divide-border/60">
@@ -200,7 +200,7 @@ export function AssessmentCriteriaColumn({ info }: { info: AssessmentInfo }) {
       </div>
       <div className="rounded-xl border border-border bg-background p-3">
         <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-          <ClipboardList className="size-4 text-primary" />
+          <ClipboardList className="size-4 text-primary-ink" />
           {info.useCase === "physio" ? "Compensations to detect" : "Faults to detect"}
         </p>
         <div className="flex flex-wrap gap-1">

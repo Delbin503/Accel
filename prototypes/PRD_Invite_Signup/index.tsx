@@ -27,7 +27,7 @@ function RestartButton({ onRestart }: { onRestart: () => void }) {
     <button
       onClick={onRestart}
       title="Restart flow"
-      className="fixed top-2 right-16 z-[100] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-lg transition-opacity hover:opacity-100 hover:text-foreground"
+      className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-floating transition-opacity hover:opacity-100 hover:text-foreground"
     >
       <RotateCcw className="size-3.5" />
       Restart flow
@@ -106,7 +106,7 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
           <main className="flex-1 overflow-auto p-6">
             <div className="mx-auto max-w-2xl py-10">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-primary-muted text-primary">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
                   <LayoutDashboard className="size-5" />
                 </div>
                 <div>

@@ -77,7 +77,7 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform",
+      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform",
         checked ? "translate-x-[18px]" : "translate-x-0.5")} />
     </button>
   );
@@ -136,7 +136,7 @@ function GeneralSection() {
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization Name</label>
             <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} aria-invalid={!orgName.trim()} className="h-9 text-base" />
-            {!orgName.trim() && <p className="mt-1 text-xs text-sev-critical">Organization name is required.</p>}
+            {!orgName.trim() && <p className="mt-1 text-xs text-severity-critical">Organization name is required.</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization ID</label>
@@ -200,7 +200,7 @@ function GeneralSection() {
                 <button key={opt} onClick={() => setTimeFormat(opt)}
                   className={cn(
                     "flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    timeFormat === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                    timeFormat === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "24h" ? "24-hour (15:30)" : "12-hour (3:30 PM)"}
                 </button>
@@ -214,7 +214,7 @@ function GeneralSection() {
                 <button key={opt} onClick={() => setWeekStart(opt)}
                   className={cn(
                     "relative flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    weekStart === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                    weekStart === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "mon" ? "Monday" : "Sunday"}
                   {opt === "mon" && (
@@ -352,7 +352,7 @@ function UserAccessSection() {
                       <td key={r} className="px-3 py-3 text-center">
                         <button onClick={() => toggle(r, p.key)} disabled={r === "owner"}
                           className={cn("inline-flex size-5 items-center justify-center rounded border transition-colors",
-                            checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+                            checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-background",
                             r === "owner" && "cursor-not-allowed opacity-60")}>
                           {checked && <Check className="size-3" strokeWidth={3} />}
                         </button>
@@ -375,7 +375,7 @@ function UserAccessSection() {
 /* ── SLA ─────────────────────────────────────────────────────────────── */
 
 const SEVERITY_OPTS: { key: "critical" | "medium" | "low"; label: string; bg: string; text: string; description: string }[] = [
-  { key: "critical", label: "Critical", bg: "bg-sev-critical/15", text: "text-sev-critical", description: "Highest priority — immediate escalation required" },
+  { key: "critical", label: "Critical", bg: "bg-severity-critical/15", text: "text-severity-critical", description: "Highest priority — immediate escalation required" },
   { key: "medium",   label: "Medium",   bg: "bg-warning/15",      text: "text-warning",      description: "Standard review — investigate within window" },
   { key: "low",      label: "Low",      bg: "bg-info/15",         text: "text-info",         description: "Lowest priority — routine triage" },
 ];
@@ -422,7 +422,7 @@ function UnitToggle({ value, onChange, disabled }: { value: Unit; onChange: (u: 
           onClick={() => onChange(u)}
           className={cn(
             "rounded px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-50",
-            value === u ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            value === u ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {u === "min" ? "Mins" : "Hours"}
@@ -816,7 +816,7 @@ function NvrDefaultsSection() {
                   className={cn(
                     "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
                     retentionDays === d
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-primary-fill text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   )}
                 >
@@ -966,10 +966,10 @@ function SecuritySection() {
                 </div>
 
                 {draft.length > 0 && !draftValid && (
-                  <p className="mt-1 text-xs text-sev-critical">Enter a valid IPv4 address or CIDR range.</p>
+                  <p className="mt-1 text-xs text-severity-critical">Enter a valid IPv4 address or CIDR range.</p>
                 )}
                 {draftValid && draftDuplicate && (
-                  <p className="mt-1 text-xs text-sev-critical">That range is already on the allowlist.</p>
+                  <p className="mt-1 text-xs text-severity-critical">That range is already on the allowlist.</p>
                 )}
 
                 {ipRanges.length === 0 ? (
@@ -1069,11 +1069,11 @@ export function TaSystemConfig({ initialSection = "camera-defaults" }: { initial
             return (
               <button key={s.key} onClick={() => setSection(s.key)}
                 className={cn("flex items-start gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors",
-                  active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary" : "")} />
+                  active ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary/70" : "text-muted-foreground/70")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground/70")}>{s.description}</p>
                 </div>
               </button>
             );

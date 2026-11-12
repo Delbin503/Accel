@@ -41,10 +41,10 @@ import { useDeviceMode, type DeviceMode } from "../assessment/deviceState";
 
 const TOOLTIP_STYLE = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 };
 const AXIS = { stroke: "var(--muted-foreground)", fontSize: 9, tickLine: false, axisLine: false } as const;
-const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "sev-critical");
-const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-critical": "text-sev-critical" } as const;
-const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "sev-critical": "bg-sev-critical/15" } as const;
-const TONE_DOT = { success: "bg-success", warning: "bg-warning", "sev-critical": "bg-sev-critical" } as const;
+const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "severity-critical");
+const TONE_TEXT = { success: "text-success", warning: "text-warning", "severity-critical": "text-severity-critical" } as const;
+const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "severity-critical": "bg-severity-critical/15" } as const;
+const TONE_DOT = { success: "bg-success", warning: "bg-warning", "severity-critical": "bg-severity-critical" } as const;
 const repTone = (r: Rep) => gradeTone(gradeOf(repScore(r)));
 
 type Review = "confirmed" | "dismissed";
@@ -192,7 +192,7 @@ function Delta({ now, before, lowerIsBetter = false, unit = "", digits = 0 }: { 
   const better = lowerIsBetter ? d < 0 : d > 0;
   const Arrow = d > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-sev-critical")}>
+    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-severity-critical")}>
       <Arrow className="size-3" />
       {d > 0 ? "+" : "−"}{Math.abs(d).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })}{unit} vs {PREVIOUS.date}
     </span>
@@ -221,16 +221,16 @@ function SummaryStrip({ name, device }: { name: string; device: DeviceMode }) {
     { label: "Volume", value: `${s.volume.toLocaleString()} kg`, info: "Load × reps across every set.", delta: <Delta now={s.volume} before={PREVIOUS.volume} unit=" kg" /> },
     { label: "Avg bar speed", value: `${sp.avgVel.toFixed(2)} m/s`, tone: "text-info", est, info: `Mean speed of the bar on the way up, averaged over every rep. ${speedSource} Last session was at ${PREVIOUS.load} kg.`, delta: est ? estSub : <Delta now={+sp.avgVel.toFixed(2)} before={PREVIOUS.avgVel} unit=" m/s" digits={2} /> },
     {
-      label: "Est. 1RM", value: `${sp.e1rm} kg`, tone: "text-purple",
+      label: "Est. 1RM", value: `${sp.e1rm} kg`, tone: "text-violet",
       info: est ? "Estimated one-rep max from the load and reps done (load × (1 + reps ÷ 30)). Needs no bar speed sensor." : "Estimated one-rep max from the load and how fast the first rep of each set moved (load–velocity profile).",
       delta: est ? <span className="text-muted-foreground">From load × reps</span> : <Delta now={sp.e1rm} before={PREVIOUS.e1rm} unit=" kg" />,
     },
-    { label: "Velocity loss", value: `${sp.velLoss}%`, tone: lossBad ? "text-sev-critical" : "text-success", est, info: `How much slower the last rep was than the first, in the worst set. Above ${TARGET.velLoss}% form usually breaks down.${est ? ` ${speedSource}` : ""}`, delta: est ? estSub : <Delta now={sp.velLoss} before={PREVIOUS.velLoss} unit="%" lowerIsBetter /> },
+    { label: "Velocity loss", value: `${sp.velLoss}%`, tone: lossBad ? "text-severity-critical" : "text-success", est, info: `How much slower the last rep was than the first, in the worst set. Above ${TARGET.velLoss}% form usually breaks down.${est ? ` ${speedSource}` : ""}`, delta: est ? estSub : <Delta now={sp.velLoss} before={PREVIOUS.velLoss} unit="%" lowerIsBetter /> },
   ];
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{initialsOf(name)}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{initialsOf(name)}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-bold text-foreground">{name}</p>
           <p className="truncate font-mono text-2xs text-muted-foreground">{LIFTER.id}</p>
@@ -305,7 +305,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
   const step = (d: number) => onPhase(PHASE_ORDER[Math.max(0, Math.min(PHASE_ORDER.length - 1, PHASE_ORDER.indexOf(phase) + d))]);
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
     <button type="button" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
       <Icon className="size-3.5" />
     </button>
   );
@@ -341,7 +341,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </RepFrame>
         {tool !== "none" && (
-          <p className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-3xs text-white">
+          <p className="pointer-events-none absolute bottom-2 left-2 rounded bg-scrim/70 px-1.5 py-0.5 text-3xs text-media-foreground">
             {tool === "line" ? "Click two points to draw a line" : "Click three points · the middle one is the corner"}
           </p>
         )}
@@ -362,7 +362,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
           {PHASES.map((p) => (
             <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => { setPlaying(false); onPhase(p.key); }}
               className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
-                p.key === phase ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {p.label}
             </button>
           ))}
@@ -404,7 +404,7 @@ function checksFor(r: Rep): CheckRow[] {
   ];
 }
 
-const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-sev-critical" } as const;
+const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-severity-critical" } as const;
 
 function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
   className?: string; rep: Rep; device: DeviceMode; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (id: string) => void;
@@ -432,7 +432,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
               className={cn("flex items-center justify-between gap-1 rounded-md border px-2 py-1 transition-colors duration-[var(--duration-fast)]",
                 active ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40")}>
               <span className={cn("text-2xs font-semibold", active ? "text-foreground" : "text-muted-foreground")}>Set {s}</span>
-              <span className={cn("font-mono text-3xs", loss > TARGET.velLoss ? "text-sev-critical" : "text-muted-foreground")}>{est && "≈"}−{loss}%</span>
+              <span className={cn("font-mono text-3xs", loss > TARGET.velLoss ? "text-severity-critical" : "text-muted-foreground")}>{est && "≈"}−{loss}%</span>
             </button>
           );
         })}
@@ -447,7 +447,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
               <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                 Rep {r.rep}
                 {r.id === BEST_REP && <span title="Best rep" className="size-1.5 rounded-full bg-success" />}
-                {r.id === WEAKEST_REP && <span title="Weakest rep" className="size-1.5 rounded-full bg-sev-critical" />}
+                {r.id === WEAKEST_REP && <span title="Weakest rep" className="size-1.5 rounded-full bg-severity-critical" />}
               </span>
               <span className={cn("font-mono text-3xs font-semibold", TONE_TEXT[repTone(r)])}>{repScore(r)}</span>
             </button>
@@ -458,18 +458,18 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
         <span className="truncate">
           {repLabel(rep)}: <span className="font-semibold text-foreground" title={repEst ? "Speed estimated from video" : undefined}>{score}/100 · {repEst && "≈"}{velIn(rep, device).toFixed(2)} m/s</span> · {met}/{measured.length} met
         </span>
-        {tag && <span className={cn("ml-auto shrink-0 rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", rep.id === BEST_REP ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{tag}</span>}
+        {tag && <span className={cn("ml-auto shrink-0 rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", rep.id === BEST_REP ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>}
       </p>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
           {checks.map((c) => (
-            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok === false ? "bg-sev-critical/[0.07]" : "bg-background")}>
+            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok === false ? "bg-severity-critical/[0.07]" : "bg-background")}>
               {c.ok === null ? <CircleMinus className="size-4 shrink-0 text-muted-foreground" aria-label="Not measured" />
                 : c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" />
-                : <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />}
+                : <CircleX className="size-4 shrink-0 text-severity-critical" aria-label="Not met" />}
               <span className={cn("shrink-0 text-xs font-semibold", c.ok === null ? "text-muted-foreground" : "text-foreground")}>{c.label}</span>
               {c.ok === null && <InfoTip text="Knee cave is read from the front. Add the optional front camera to this rack to measure it." />}
-              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok === false ? "text-sev-critical" : "text-muted-foreground")}>{c.note}</span>
+              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok === false ? "text-severity-critical" : "text-muted-foreground")}>{c.note}</span>
             </li>
           ))}
         </ul>
@@ -545,12 +545,12 @@ function BarPathPanel({ className, rep, device, onSelect }: { className?: string
         {cells.map(([k, v, bad, span]) => (
           <div key={k} className={cn("min-w-0", span)}>
             <dt className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
-            <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{v}</dd>
+            <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-severity-critical" : "text-foreground")}>{v}</dd>
           </div>
         ))}
       </dl>
       <ul className="mt-1.5 flex shrink-0 flex-wrap gap-x-3 gap-y-0.5 text-3xs text-muted-foreground">
-        <li className="flex items-center gap-1"><span className={cn("h-0.5 w-3 rounded-full", rep.drift > TARGET.drift ? "bg-sev-critical" : "bg-primary")} />Rep {rep.rep}</li>
+        <li className="flex items-center gap-1"><span className={cn("h-0.5 w-3 rounded-full", rep.drift > TARGET.drift ? "bg-severity-critical" : "bg-primary")} />Rep {rep.rep}</li>
         <li className="flex items-center gap-1"><span className="h-0.5 w-3 rounded-full bg-muted-foreground/50" />Set {rep.set}</li>
         <li className="flex items-center gap-1"><span className="h-1.5 w-3 rounded-sm bg-success/20" />±{TARGET.drift} cm</li>
       </ul>
@@ -607,7 +607,7 @@ function SignalsPanel({ className, rep, phase, device, onSelect }: { className?:
         </LineChart>
       </MiniChart>
       )}
-      <MiniChart title="Hip & knee" value={`Hip ${atBottom.hip}° · knee ${atBottom.knee}°`} legend={<><Swatch c="bg-warning" />Hip <Swatch c="bg-purple" />Knee · joint angle °</>}>
+      <MiniChart title="Hip & knee" value={`Hip ${atBottom.hip}° · knee ${atBottom.knee}°`} legend={<><Swatch c="bg-warning" />Hip <Swatch c="bg-violet" />Knee · joint angle °</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -26, bottom: -6 }} {...SYNC}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           {xAxis}
@@ -615,7 +615,7 @@ function SignalsPanel({ className, rep, phase, device, onSelect }: { className?:
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v, n) => [`${v}°`, n === "hip" ? "Hip" : "Knee"]} />
           {marks}
           <Line type="monotone" dataKey="hip" stroke="var(--warning)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-          <Line type="monotone" dataKey="knee" stroke="var(--purple)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="knee" stroke="var(--violet)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
       <MiniChart title="Torso lean" value={`${rep.lean}°${rep.hipRise > TARGET.hipRise ? ` · hips +${rep.hipRise}°` : ""}`} bad={leanBad || rep.hipRise > TARGET.hipRise}
@@ -628,22 +628,22 @@ function SignalsPanel({ className, rep, phase, device, onSelect }: { className?:
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v) => [`${v}°`, "Torso lean"]} />
           <ReferenceLine y={TARGET.lean} stroke="var(--success)" strokeDasharray="3 3" />
           {marks}
-          <Line type="monotone" dataKey="lean" stroke={leanBad || rep.hipRise > TARGET.hipRise ? "var(--sev-critical)" : "var(--success)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="lean" stroke={leanBad || rep.hipRise > TARGET.hipRise ? "var(--severity-critical)" : "var(--success)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
       <MiniChart title={`Set ${rep.set} speed`} est={setEst} value={`Rep ${rep.rep} ${setEst ? "≈" : ""}${lossText(loss)}%`} bad={velLossIn(rep.set, device) > TARGET.velLoss}
-        legend={<><Swatch c="bg-primary" />Picked <span className="ml-2.5 mr-1 inline-block w-2.5 border-t border-dashed border-sev-critical align-middle" />Stop at −{TARGET.velLoss}% ({stop} m/s)</>}>
+        legend={<><Swatch c="bg-primary" />Picked <span className="ml-2.5 mr-1 inline-block w-2.5 border-t border-dashed border-severity-critical align-middle" />Stop at −{TARGET.velLoss}% ({stop} m/s)</>}>
         <BarChart data={setReps.map((r) => ({ id: r.id, rep: r.rep, vel: vel(r), loss: repLossIn(r, device) }))} margin={{ top: 4, right: 4, left: -26, bottom: -6 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           <XAxis dataKey="rep" {...AXIS} tickFormatter={(v) => `R${v}`} />
           <YAxis domain={[0, 0.7]} ticks={[0, 0.2, 0.4, 0.6]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)", opacity: 0.4 }} labelFormatter={(v) => `Rep ${v}`}
             formatter={(v, _n, p) => [`${v} m/s · ${lossText((p?.payload as { loss?: number } | undefined)?.loss ?? 0)}%`, setEst ? "Mean speed (est.)" : "Mean speed"]} />
-          <ReferenceLine y={stop} stroke="var(--sev-critical)" strokeDasharray="3 3" />
+          <ReferenceLine y={stop} stroke="var(--severity-critical)" strokeDasharray="3 3" />
           <Bar dataKey="vel" radius={[3, 3, 0, 0]} isAnimationActive={false} className="cursor-pointer"
             onClick={(d) => { const id = (d as { payload?: { id?: string } }).payload?.id; if (id) onSelect(id); }}>
             {setReps.map((r) => (
-              <Cell key={r.id} fill={r.id === rep.id ? "var(--primary)" : vel(r) < stop ? "var(--sev-critical)" : "var(--muted-foreground)"} fillOpacity={r.id === rep.id ? 1 : 0.45} />
+              <Cell key={r.id} fill={r.id === rep.id ? "var(--primary)" : vel(r) < stop ? "var(--severity-critical)" : "var(--muted-foreground)"} fillOpacity={r.id === rep.id ? 1 : 0.45} />
             ))}
           </Bar>
         </BarChart>
@@ -665,7 +665,7 @@ function MiniChart({ title, value, bad, est, legend, empty, children }: {
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         {est && <EstTag className="shrink-0" />}
-        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
+        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
       </div>
       <div className="relative min-h-16 flex-1">
         {empty ?? <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>}
@@ -698,7 +698,7 @@ function FundamentalsPanel({ className }: { className?: string }) {
             </div>
             <span className="w-12 shrink-0 text-right font-mono text-3xs">
               <span className="font-semibold text-foreground">{f.score}</span>{" "}
-              <span className={f.score >= f.previous ? "text-success" : "text-sev-critical"}>{f.score >= f.previous ? "+" : "−"}{Math.abs(f.score - f.previous)}</span>
+              <span className={f.score >= f.previous ? "text-success" : "text-severity-critical"}>{f.score >= f.previous ? "+" : "−"}{Math.abs(f.score - f.previous)}</span>
             </span>
           </li>
         ))}
@@ -723,21 +723,21 @@ function CoachingPanel({ className, device, onSee }: { className?: string; devic
         {faults.map((f, i) => (
           <div key={f.key} className="rounded-lg border border-border bg-background p-2">
             <div className="flex items-center gap-2">
-              <span className="grid size-4 shrink-0 place-items-center rounded bg-sev-critical/15 font-mono text-3xs font-bold text-sev-critical">{i + 1}</span>
+              <span className="grid size-4 shrink-0 place-items-center rounded bg-severity-critical/15 font-mono text-3xs font-bold text-severity-critical">{i + 1}</span>
               <span className="min-w-0 truncate text-xs font-bold text-foreground">{f.label}</span>
               <InfoTip text={`${f.what} First seen in set ${f.firstSet}.`} />
               <span className="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">
                 {f.count}/{REPS.length} reps
                 {noSensor
-                  ? f.scoreCost > 0 && <> · <span className="text-sev-critical">−{f.scoreCost} pts</span></>
-                  : f.velCost > 0 && <> · <span className="text-sev-critical">−{f.velCost.toFixed(2)} m/s</span>{f.velCostEst && <EstTag className="ml-1" />}</>}
+                  ? f.scoreCost > 0 && <> · <span className="text-severity-critical">−{f.scoreCost} pts</span></>
+                  : f.velCost > 0 && <> · <span className="text-severity-critical">−{f.velCost.toFixed(2)} m/s</span>{f.velCostEst && <EstTag className="ml-1" />}</>}
               </span>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className="rounded-md border-l-2 border-warning bg-warning/10 px-2 py-0.5 text-2xs font-semibold text-foreground">“{f.cue}”</span>
               <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-2xs text-muted-foreground"><Dumbbell className="size-3" />{f.drill}</span>
               {f.example && (
-                <button type="button" onClick={() => onSee(f.example!, f.key)} className="ml-auto text-2xs font-semibold text-primary hover:underline">
+                <button type="button" onClick={() => onSee(f.example!, f.key)} className="ml-auto text-2xs font-semibold text-primary-ink hover:underline">
                   See rep {f.example} →
                 </button>
               )}
@@ -887,8 +887,8 @@ function CompareSection({ device }: { device: DeviceMode }) {
                     <td className="py-1 pr-2 font-sans text-xs text-foreground">
                       {r.label}{(r.est?.[0] || r.est?.[1]) && <EstTag className="ml-1" />}
                     </td>
-                    <td className={cn("py-1 pr-2 text-right", r.na?.[0] ? "text-muted-foreground" : r.bad?.(r.a) ? "text-sev-critical" : "text-foreground")}>{value(r.a, 0)}</td>
-                    <td className={cn("py-1 pr-2 text-right", r.na?.[1] ? "text-muted-foreground" : r.bad?.(r.b) ? "text-sev-critical" : "text-foreground")}>{value(r.b, 1)}</td>
+                    <td className={cn("py-1 pr-2 text-right", r.na?.[0] ? "text-muted-foreground" : r.bad?.(r.a) ? "text-severity-critical" : "text-foreground")}>{value(r.a, 0)}</td>
+                    <td className={cn("py-1 pr-2 text-right", r.na?.[1] ? "text-muted-foreground" : r.bad?.(r.b) ? "text-severity-critical" : "text-foreground")}>{value(r.b, 1)}</td>
                     <td className="py-1 pr-2 text-right text-muted-foreground">{na || d === 0 ? "—" : signed(d, dg)}</td>
                     <td className="py-1 text-right text-muted-foreground">{na ? <NeedsDevice device="sensor" className="font-sans" /> : r.target ?? "—"}</td>
                   </tr>
@@ -911,7 +911,7 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
     ["Down", "Descent, s"], ["Up", "Ascent, s"], ["Lockout", "Hip angle at the top, °"], ["Knee", "Knee tracking — needs front camera"], ["Faults", "AI findings"],
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
-  const red = (bad: boolean) => (bad ? "text-sev-critical" : "text-muted-foreground");
+  const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -958,7 +958,7 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
                   <td className={cn(cell, "font-sans")}>
                     {faults.length ? (
                       <span className="flex flex-wrap gap-1">
-                        {faults.map((f) => <span key={f.key} className="rounded bg-sev-critical/10 px-1 py-px text-3xs font-semibold text-sev-critical">{FAULTS[f.key].label}</span>)}
+                        {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
                   </td>
@@ -1040,7 +1040,7 @@ function ProgressSection({ device }: { device: DeviceMode }) {
                   <p className="truncate text-3xs font-semibold uppercase text-muted-foreground">{m.title}</p>
                 )}
                 <p className="font-mono text-md font-bold text-foreground">{z.toFixed(m.digits)}{m.unit}</p>
-                <p className={cn("truncate text-3xs", better ? "text-success" : "text-sev-critical")}>{signed(z - a, m.digits)}{m.unit} since {first.date}</p>
+                <p className={cn("truncate text-3xs", better ? "text-success" : "text-severity-critical")}>{signed(z - a, m.digits)}{m.unit} since {first.date}</p>
               </div>
               <div className="h-12 min-w-0 flex-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1048,7 +1048,7 @@ function ProgressSection({ device }: { device: DeviceMode }) {
                     {m.band && <ReferenceArea y1={m.band[0]} y2={m.band[1]} fill="var(--success)" fillOpacity={0.1} strokeOpacity={0} />}
                     <YAxis hide domain={[(v: number) => v - m.pad, (v: number) => v + m.pad]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(_, p) => String(p?.[0]?.payload?.date ?? "")} formatter={(v) => [`${v}${m.unit}`, m.title]} />
-                    <Line type="monotone" dataKey={m.key} stroke={better ? "var(--success)" : "var(--sev-critical)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey={m.key} stroke={better ? "var(--success)" : "var(--severity-critical)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

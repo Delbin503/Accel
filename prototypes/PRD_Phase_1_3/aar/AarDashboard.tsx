@@ -42,9 +42,9 @@ const FOLLOW_THROUGH = 2;
 
 const shotByN = (n: number) => SHOTS.find((s) => s.n === n)!;
 const STATS_ALL = statsFor(SHOTS);
-const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "sev-critical");
-const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-critical": "text-sev-critical" } as const;
-const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "sev-critical": "bg-sev-critical/15" } as const;
+const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "severity-critical");
+const TONE_TEXT = { success: "text-success", warning: "text-warning", "severity-critical": "text-severity-critical" } as const;
+const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "severity-critical": "bg-severity-critical/15" } as const;
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 
@@ -90,7 +90,7 @@ export function AarDashboard() {
           <Tabs value={mode} onValueChange={(v) => switchMode(v as Mode)}>
             <TabsList className="h-8">
               <TabsTrigger value="live" className="gap-1.5 px-2.5 text-xs">
-                <span className={cn("size-1.5 rounded-full", live && !complete ? "animate-pulse bg-sev-critical" : "bg-muted-foreground/50")} />
+                <span className={cn("size-1.5 rounded-full", live && !complete ? "animate-pulse bg-severity-critical" : "bg-muted-foreground/50")} />
                 Live
               </TabsTrigger>
               <TabsTrigger value="review" className="px-2.5 text-xs">Results</TabsTrigger>
@@ -236,7 +236,7 @@ function Delta({ now, before, lowerIsBetter = false, unit = "", label }: { now: 
   const Arrow = d > 0 ? TrendingUp : TrendingDown;
   const abs = Math.abs(d) % 1 ? Math.abs(d).toFixed(1) : String(Math.abs(d));
   return (
-    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-sev-critical")}>
+    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-severity-critical")}>
       <Arrow className="size-3" />
       {d > 0 ? "+" : "−"}{abs}{unit}{label && ` vs ${label}`}
     </span>
@@ -255,16 +255,16 @@ function SummaryStrip({ shots, live, complete }: { shots: Shot[]; live: boolean;
   const kpis: { label: string; value: string; tone?: string; info: string; delta?: React.ReactNode }[] = [
     { label: "Points", value: `${s.points} / ${live ? SHOTS.length * 10 : s.maxPoints}`, tone: "text-success", info: "Up to 10 a shot, by distance from the aim point.", delta: !live && <Delta now={s.points} before={PREVIOUS.points} /> },
     { label: "Hits", value: `${s.hits} / ${s.shots}`, info: `Shots inside the ${MISS_MM} mm scoring area.`, delta: !live && <Delta now={s.hits} before={SHOTS.length - PREVIOUS.misses} /> },
-    { label: "Missed", value: String(s.misses), tone: s.misses ? "text-sev-critical" : undefined, info: `Shots outside ${MISS_MM} mm of the aim point.`, delta: !live && <Delta now={s.misses} before={PREVIOUS.misses} lowerIsBetter /> },
+    { label: "Missed", value: String(s.misses), tone: s.misses ? "text-severity-critical" : undefined, info: `Shots outside ${MISS_MM} mm of the aim point.`, delta: !live && <Delta now={s.misses} before={PREVIOUS.misses} lowerIsBetter /> },
     { label: "Mean radius", value: group ? `${s.meanRadius.toFixed(1)} mm` : "—", tone: "text-info", info: "Average distance of each shot from the centre of the group. Measures consistency, not aim.", delta: !live && <Delta now={s.meanRadius} before={PREVIOUS.meanRadius} lowerIsBetter unit=" mm" /> },
-    { label: "CEP (50%)", value: group ? `${s.cep50.toFixed(1)} mm` : "—", tone: "text-purple", info: "Radius of a circle around the group centre that holds half the shots.", delta: !live && <Delta now={s.cep50} before={PREVIOUS.cep50} lowerIsBetter unit=" mm" /> },
+    { label: "CEP (50%)", value: group ? `${s.cep50.toFixed(1)} mm` : "—", tone: "text-violet", info: "Radius of a circle around the group centre that holds half the shots.", delta: !live && <Delta now={s.cep50} before={PREVIOUS.cep50} lowerIsBetter unit=" mm" /> },
     { label: "Group size", value: group ? `${s.groupMm.toFixed(1)} mm` : "—", tone: "text-warning", info: "Distance between the two shots farthest apart.", delta: !live && <Delta now={s.groupMm} before={PREVIOUS.groupMm} lowerIsBetter unit=" mm" /> },
   ];
 
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{FIRER.initials}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{FIRER.initials}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-bold text-foreground" title={`${FIRER.name} · ${FIRER.id} · ${FIRER.unit}`}>{FIRER.name}</p>
           <p className="truncate font-mono text-2xs text-muted-foreground" title={`${SESSION_INFO.date} · ${SESSION_INFO.weapon} · ${SESSION_INFO.distance} · prone`}>
@@ -370,7 +370,7 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
                 title={`Shot ${s.n} · ${fmtClip(s.at)}`}
                 className={cn(
                   "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-card transition-transform enabled:hover:scale-150",
-                  !reached ? "bg-muted-foreground/30" : s.n === shown.n ? "bg-foreground" : points(s) === 10 ? "bg-success" : isHit(s) ? "bg-info" : "bg-sev-critical"
+                  !reached ? "bg-muted-foreground/30" : s.n === shown.n ? "bg-foreground" : points(s) === 10 ? "bg-success" : isHit(s) ? "bg-info" : "bg-severity-critical"
                 )}
                 style={{ left: pct(s.at) }}
               />
@@ -418,19 +418,19 @@ function CctvFrame({ shot, live, clock }: { shot: Shot; live: boolean; clock: st
     <div className="absolute inset-0">
       <img src={laneCctv} alt={`${SESSION.lane} prone firing position, side camera`} draggable={false} className="absolute inset-0 size-full object-cover" />
       <div
-        className={cn("absolute border-2", fault ? "border-sev-critical" : "border-success")}
+        className={cn("absolute border-2", fault ? "border-severity-critical" : "border-success")}
         style={{ left: `${FIRER_BOX.x0 * 100}%`, top: `${FIRER_BOX.y0 * 100}%`, width: `${(FIRER_BOX.x1 - FIRER_BOX.x0) * 100}%`, height: `${(FIRER_BOX.y1 - FIRER_BOX.y0) * 100}%` }}
       >
-        <span className={cn("absolute -top-4 left-[-2px] whitespace-nowrap rounded-t px-1 font-mono text-3xs font-bold text-white", fault ? "bg-sev-critical" : "bg-success")}>
+        <span className={cn("absolute -top-4 left-[-2px] whitespace-nowrap rounded-t px-1 font-mono text-3xs font-bold text-media-foreground", fault ? "bg-severity-critical" : "bg-success")}>
           FIRER · {fault ? "FAULT" : "TRACKED"}
         </span>
       </div>
       <div className="absolute left-2 top-2 flex items-center gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white">
-          <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
+        <span className="inline-flex items-center gap-1 rounded bg-scrim/70 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-media-foreground">
+          <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
           {live ? "Live" : "Playback"}
         </span>
-        <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-3xs text-white/90">Cam-10 · {clock}</span>
+        <span className="rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-3xs text-media-foreground/90">Cam-10 · {clock}</span>
       </div>
     </div>
   );
@@ -449,7 +449,7 @@ function TargetPanel({ className, shots, focus, live, onSelect }: { className?: 
     <Panel className={className} title="Target Board" meta={`${shots.length}/${SHOTS.length} shots · ${RING_MM} mm rings`}>
       <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
         <svg viewBox={`${-HALF} ${-HALF} ${HALF * 2} ${HALF * 2}`} className="block size-full max-h-full" role="img" aria-label={`Target board, ${s.hits} hits and ${s.misses} misses`}>
-          <rect x={-HALF} y={-HALF} width={HALF * 2} height={HALF * 2} rx="1.5" fill="var(--sev-critical)" fillOpacity="0.05" />
+          <rect x={-HALF} y={-HALF} width={HALF * 2} height={HALF * 2} rx="1.5" fill="var(--severity-critical)" fillOpacity="0.05" />
           {[5, 4, 3, 2, 1].map((k) => (
             <circle key={k} r={k * RING_MM} fill="var(--primary)" fillOpacity={0.04 + (6 - k) * 0.03} stroke="var(--border)" vectorEffect="non-scaling-stroke" />
           ))}
@@ -470,7 +470,7 @@ function TargetPanel({ className, shots, focus, live, onSelect }: { className?: 
           {shots.map((shot) => {
             const hit = isHit(shot);
             const active = live ? shot === latest : shot.n === focus.n;
-            const fill = !hit ? "var(--sev-critical)" : points(shot) === 10 ? "var(--success)" : "var(--info)";
+            const fill = !hit ? "var(--severity-critical)" : points(shot) === 10 ? "var(--success)" : "var(--info)";
             return (
               <g
                 key={shot.n}
@@ -500,7 +500,7 @@ function TargetPanel({ className, shots, focus, live, onSelect }: { className?: 
       <ul className="mt-1 flex shrink-0 flex-wrap gap-x-3 gap-y-0.5 text-3xs text-muted-foreground">
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-success" />10</li>
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-info" />9–6</li>
-        <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-sev-critical" />Miss</li>
+        <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-severity-critical" />Miss</li>
         <li className="flex items-center gap-1"><span className="size-2 rounded-full border border-dashed border-foreground/60" />CEP</li>
       </ul>
     </Panel>
@@ -558,9 +558,9 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
                 <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                   #{s.n}
                   {s.n === BEST_SHOT && <span title="Best shot" className="size-1.5 rounded-full bg-success" />}
-                  {s.n === WEAKEST_SHOT && <span title="Weakest shot" className="size-1.5 rounded-full bg-sev-critical" />}
+                  {s.n === WEAKEST_SHOT && <span title="Weakest shot" className="size-1.5 rounded-full bg-severity-critical" />}
                 </span>
-                <span className={cn("font-mono text-3xs font-semibold", !hit ? "text-sev-critical" : points(s) === 10 ? "text-success" : "text-info")}>
+                <span className={cn("font-mono text-3xs font-semibold", !hit ? "text-severity-critical" : points(s) === 10 ? "text-success" : "text-info")}>
                   {hit ? `${points(s)} pts` : "Miss"}
                 </span>
               </button>
@@ -569,9 +569,9 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
         </div>
       )}
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
-        <span>Shot {shot.n}: <span className={cn("font-semibold", !fired ? "text-foreground" : isHit(shot) ? "text-foreground" : "text-sev-critical")}>{status}</span> · {passed}/{checks.length} met</span>
+        <span>Shot {shot.n}: <span className={cn("font-semibold", !fired ? "text-foreground" : isHit(shot) ? "text-foreground" : "text-severity-critical")}>{status}</span> · {passed}/{checks.length} met</span>
         {!live && tag && (
-          <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", shot.n === BEST_SHOT ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{tag}</span>
+          <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", shot.n === BEST_SHOT ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>
         )}
       </p>
       <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
@@ -580,7 +580,7 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
             key={c.label}
             className={cn(
               "flex min-h-0 flex-1 items-center gap-2 rounded-md px-2",
-              c.ok === false ? "bg-sev-critical/[0.07]" : "bg-background"
+              c.ok === false ? "bg-severity-critical/[0.07]" : "bg-background"
             )}
           >
             {c.ok === null ? (
@@ -588,10 +588,10 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
             ) : c.ok ? (
               <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" />
             ) : (
-              <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />
+              <CircleX className="size-4 shrink-0 text-severity-critical" aria-label="Not met" />
             )}
             <span className="shrink-0 text-xs font-semibold text-foreground">{c.label}</span>
-            <span className={cn("ml-auto line-clamp-2 text-right font-mono text-2xs leading-tight", c.ok === false ? "text-sev-critical" : "text-muted-foreground")}>{c.note}</span>
+            <span className={cn("ml-auto line-clamp-2 text-right font-mono text-2xs leading-tight", c.ok === false ? "text-severity-critical" : "text-muted-foreground")}>{c.note}</span>
           </li>
         ))}
       </ul>
@@ -610,7 +610,7 @@ function ShotNotes({ shot }: { shot: Shot }) {
     <ul className="flex flex-col gap-0.5">
       {items.map((t) => (
         <li key={t} className="flex items-start gap-1.5 text-2xs leading-snug text-foreground">
-          <span className={cn("mt-1 size-1 shrink-0 rounded-full", ok ? "bg-success" : "bg-sev-critical")} />
+          <span className={cn("mt-1 size-1 shrink-0 rounded-full", ok ? "bg-success" : "bg-severity-critical")} />
           {t}
         </li>
       ))}
@@ -619,7 +619,7 @@ function ShotNotes({ shot }: { shot: Shot }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
       {well.length > 0 && <><p className="text-3xs font-bold uppercase tracking-wider text-success">What went well</p>{list(well, true)}</>}
-      {wrong.length > 0 && <><p className="text-3xs font-bold uppercase tracking-wider text-sev-critical">What went wrong</p>{list(wrong, false)}</>}
+      {wrong.length > 0 && <><p className="text-3xs font-bold uppercase tracking-wider text-severity-critical">What went wrong</p>{list(wrong, false)}</>}
       {drills.length > 0 && (
         <div className="rounded-md border-l-2 border-warning bg-warning/10 px-2 py-1.5">
           <p className="text-3xs font-bold uppercase tracking-wider text-warning">Home drills · no rifle · 15 min a day</p>
@@ -653,15 +653,15 @@ function ShotTable({ selected, onSelect }: { selected: number; onSelect: (n: num
                 tabIndex={0}
                 onClick={() => onSelect(s.n)}
                 onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
-                className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted", !hit && "bg-sev-critical/[0.05]")}
+                className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted", !hit && "bg-severity-critical/[0.05]")}
               >
                 <td className={cn(cell, "font-semibold text-foreground")}>{s.n}</td>
-                <td className={cn(cell, hit ? "text-foreground" : "text-sev-critical")}>{hit ? points(s) : "Miss"}</td>
+                <td className={cn(cell, hit ? "text-foreground" : "text-severity-critical")}>{hit ? points(s) : "Miss"}</td>
                 <td className={cn(cell, "text-muted-foreground")}>{radius(s).toFixed(1)}</td>
-                <td className={cn(cell, firedInPause(s) ? "text-muted-foreground" : "text-sev-critical")}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</td>
-                <td className={cn(cell, s.wobbleMm > WOBBLE_LIMIT_MM ? "text-sev-critical" : "text-muted-foreground")}>{s.wobbleMm.toFixed(1)}</td>
-                <td className={cn(cell, flinched(s) ? "text-sev-critical" : "text-muted-foreground")}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</td>
-                <td className={cn(cell, settled(s) ? "text-muted-foreground" : "text-sev-critical")}>{s.settleMm.toFixed(1)}</td>
+                <td className={cn(cell, firedInPause(s) ? "text-muted-foreground" : "text-severity-critical")}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</td>
+                <td className={cn(cell, s.wobbleMm > WOBBLE_LIMIT_MM ? "text-severity-critical" : "text-muted-foreground")}>{s.wobbleMm.toFixed(1)}</td>
+                <td className={cn(cell, flinched(s) ? "text-severity-critical" : "text-muted-foreground")}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</td>
+                <td className={cn(cell, settled(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.settleMm.toFixed(1)}</td>
                 <td className={cn(cell, "text-muted-foreground")}>{s.muzzlePeakMm}/{s.shoulderPeakMm}</td>
               </tr>
             );
@@ -740,7 +740,7 @@ function SignalsPanel({ className, shot, rel }: { className?: string; shot: Shot
           <XAxis dataKey="t" type="number" domain={WINDOW} ticks={TICKS} {...AXIS} />
           <YAxis domain={[0, 1.4]} ticks={[0, 1]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v) => [Number(v).toFixed(2), "Chest"]} />
-          <ReferenceLine x={0} stroke={rel >= 0 ? (inPause ? "var(--success)" : "var(--sev-critical)") : "var(--border)"} strokeWidth={2} />
+          <ReferenceLine x={0} stroke={rel >= 0 ? (inPause ? "var(--success)" : "var(--severity-critical)") : "var(--border)"} strokeWidth={2} />
           <Line type="monotone" dataKey="chest" stroke="var(--info)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
@@ -756,13 +756,13 @@ function SignalsPanel({ className, shot, rel }: { className?: string; shot: Shot
         </LineChart>
       </MiniChart>
       <MiniChart title="Flinch" empty={rel < -0.5 ? "Read as the shot breaks" : undefined} value={rel >= 0 ? (shot.flinchMm === null ? "Not measured" : `${shot.flinchMm.toFixed(1)} mm max`) : "At the break"} bad={rel >= 0 && flinched(shot)}
-        legend={<><Swatch c="bg-sev-critical" />Limit {FLINCH_LIMIT_MM} mm · {flinchCount}</>}>
+        legend={<><Swatch c="bg-severity-critical" />Limit {FLINCH_LIMIT_MM} mm · {flinchCount}</>}>
         <LineChart data={flinchData} margin={{ top: 4, right: 4, left: -30, bottom: -6 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           <XAxis dataKey="ms" type="number" domain={[-500, 100]} ticks={[-400, -200, 0]} {...AXIS} />
           <YAxis domain={[-5, 12]} ticks={[0, 5, 10]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} ms`} formatter={(v) => [`${Number(v).toFixed(1)} mm`, "Deviation"]} />
-          <ReferenceLine y={FLINCH_LIMIT_MM} stroke="var(--sev-critical)" strokeDasharray="4 3" />
+          <ReferenceLine y={FLINCH_LIMIT_MM} stroke="var(--severity-critical)" strokeDasharray="4 3" />
           <Line type="monotone" dataKey="dev" stroke="var(--primary)" strokeWidth={1.6} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
@@ -781,7 +781,7 @@ function MiniChart({ title, value, bad, legend, empty, children }: {
     <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
-        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
+        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
       </div>
       <div className="relative min-h-16 flex-1">
         <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
@@ -799,7 +799,7 @@ function RecoilChart({ shot, rel }: { shot: Shot; rel: number }) {
   return (
     <>
       <div className="flex shrink-0 flex-wrap gap-x-3 gap-y-0.5 text-3xs text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-sev-critical" />Muzzle {shot.muzzlePeakMm} mm</span>
+        <span className="flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-severity-critical" />Muzzle {shot.muzzlePeakMm} mm</span>
         <span className="flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-info" />Shoulder {shot.shoulderPeakMm} mm</span>
         <span className="flex items-center gap-1"><span className="h-2 w-0.5 bg-success" />Bolt carrier</span>
         <span className="flex items-center gap-1"><span className="h-2 w-0.5 bg-warning" />Ejection</span>
@@ -815,7 +815,7 @@ function RecoilChart({ shot, rel }: { shot: Shot; rel: number }) {
             {rel >= 0.1 && shot.cues.bolt && <ReferenceLine x={0.1} stroke="var(--success)" />}
             {rel >= 0.2 && shot.cues.ejection && <ReferenceLine x={0.2} stroke="var(--warning)" />}
             <Line type="monotone" dataKey="shoulder" stroke="var(--info)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-            <Line type="monotone" dataKey="muzzle" stroke="var(--sev-critical)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="muzzle" stroke="var(--severity-critical)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
         {shown.length === 0 && <p className="absolute inset-0 grid place-items-center text-2xs text-muted-foreground">Starts 8 s before shot {shot.n}</p>}
@@ -831,10 +831,10 @@ function RecoilChart({ shot, rel }: { shot: Shot; rel: number }) {
 const CUE_TONE: Record<CueKey, string> = {
   flash:    "bg-info",          /* blue   */
   recoil:   "bg-chart-4",       /* violet */
-  shoulder: "bg-sev-critical",  /* red    — fault */
+  shoulder: "bg-severity-critical",  /* red    — fault */
   bolt:     "bg-success",       /* green  */
   ejection: "bg-chart-2",       /* cyan   */
-  posture:  "bg-sev-high",      /* orange — fault */
+  posture:  "bg-severity-high",      /* orange — fault */
 };
 
 /* Event markers — the old panel: each cue the analyser picked up, per shot.
@@ -849,7 +849,7 @@ function EventMarkers({ selected }: { selected: number }) {
             <tr>
               <th className="sticky left-0 z-20 min-w-28 bg-card pr-2 text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</th>
               {SHOTS.map((s) => (
-                <th key={s.n} className={cn("w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary" : isHit(s) ? "text-muted-foreground" : "text-sev-critical")}>{s.n}</th>
+                <th key={s.n} className={cn("w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary-ink" : isHit(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.n}</th>
               ))}
             </tr>
           </thead>
@@ -899,7 +899,7 @@ function FundamentalsPanel({ className, shots, live }: { className?: string; sho
     >
       <p className="mb-1.5 shrink-0 text-2xs text-muted-foreground">
         Factors met, all shots <span className="font-mono font-semibold text-foreground">{total.met}/{total.of}</span>
-        {!live && <span className={cn("font-mono font-semibold", delta >= 0 ? "text-success" : "text-sev-critical")}> {delta >= 0 ? "▲ +" : "▼ −"}{Math.abs(delta)}</span>}
+        {!live && <span className={cn("font-mono font-semibold", delta >= 0 ? "text-success" : "text-severity-critical")}> {delta >= 0 ? "▲ +" : "▼ −"}{Math.abs(delta)}</span>}
       </p>
       <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1.5">
         {factors.map((f) => {
@@ -925,7 +925,7 @@ function FundamentalsPanel({ className, shots, live }: { className?: string; sho
               </div>
               <div className="w-9 shrink-0 text-right leading-tight">
                 <p className="font-mono text-sm font-bold text-foreground">{any ? f.score : "—"}</p>
-                {!live && any && <p className={cn("font-mono text-3xs font-semibold", d >= 0 ? "text-success" : "text-sev-critical")}>{d >= 0 ? "▲ +" : "▼ −"}{Math.abs(d)}</p>}
+                {!live && any && <p className={cn("font-mono text-3xs font-semibold", d >= 0 ? "text-success" : "text-severity-critical")}>{d >= 0 ? "▲ +" : "▼ −"}{Math.abs(d)}</p>}
               </div>
             </li>
           );
@@ -965,7 +965,7 @@ function GradesTable({ shots, full = false }: { shots: Shot[]; full?: boolean })
                 <td className={cn(cell, "font-mono text-muted-foreground")}>{f.met}/{f.of}</td>
                 <td className={cell}><span className="flex items-center gap-1 font-mono text-foreground"><GradeBadge score={f.score} size="sm" />{f.score}</span></td>
                 <td className={cell}><span className="flex items-center gap-1 font-mono text-muted-foreground"><GradeBadge score={f.prev} size="sm" />{f.prev}</span></td>
-                <td className={cn(cell, "font-mono font-semibold", d >= 0 ? "text-success" : "text-sev-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</td>
+                <td className={cn(cell, "font-mono font-semibold", d >= 0 ? "text-success" : "text-severity-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</td>
               </tr>
             );
           })}
@@ -980,8 +980,8 @@ function GradesTable({ shots, full = false }: { shots: Shot[]; full?: boolean })
         </p>
       )}
       {down.map((f) => (
-        <p key={f.key} className="rounded-md bg-sev-critical/10 px-2 py-1 text-2xs leading-snug text-foreground">
-          <strong className="text-sev-critical">▼ Got worse:</strong> {f.label.toLowerCase()} −{f.prev - f.score}; {f.of - f.met} of {f.of} shots missed it. Make this the focus next session.
+        <p key={f.key} className="rounded-md bg-severity-critical/10 px-2 py-1 text-2xs leading-snug text-foreground">
+          <strong className="text-severity-critical">▼ Got worse:</strong> {f.label.toLowerCase()} −{f.prev - f.score}; {f.of - f.met} of {f.of} shots missed it. Make this the focus next session.
         </p>
       ))}
     </div>
@@ -999,7 +999,7 @@ const PANEL_ID: Record<string, string> = {
 
 function SeeLink({ r, onOpen }: { r: (typeof RANKED_RECS)[number]; onOpen: (n: number, id: string) => void }) {
   return (
-    <button type="button" onClick={() => r.shots[0] && onOpen(r.shots[0], PANEL_ID[r.panel] ?? "aar-analysis")} className="shrink-0 text-3xs font-semibold text-primary hover:underline">
+    <button type="button" onClick={() => r.shots[0] && onOpen(r.shots[0], PANEL_ID[r.panel] ?? "aar-analysis")} className="shrink-0 text-3xs font-semibold text-primary-ink hover:underline">
       See {r.panel}
     </button>
   );
@@ -1013,7 +1013,7 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
       title="Coaching"
       meta="By points lost a shot"
       action={
-        <button type="button" onClick={() => document.getElementById("aar-report")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="text-2xs font-semibold text-primary hover:underline">
+        <button type="button" onClick={() => document.getElementById("aar-report")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="text-2xs font-semibold text-primary-ink hover:underline">
           Full report ↓
         </button>
       }
@@ -1021,11 +1021,11 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
     >
       <ol className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden" aria-label="Top two things to work on">
         {recs.map((r, i) => (
-          <li key={r.key} className={cn("shrink-0 rounded-lg border bg-background px-2.5 py-1.5", i === 0 ? "border-sev-critical/35" : "border-border")}>
+          <li key={r.key} className={cn("shrink-0 rounded-lg border bg-background px-2.5 py-1.5", i === 0 ? "border-severity-critical/35" : "border-border")}>
             <div className="flex items-center gap-2">
-              <span className={cn("grid size-4 shrink-0 place-items-center rounded-full text-3xs font-bold", i === 0 ? "bg-sev-critical/15 text-sev-critical" : "bg-muted text-muted-foreground")}>{i + 1}</span>
+              <span className={cn("grid size-4 shrink-0 place-items-center rounded-full text-3xs font-bold", i === 0 ? "bg-severity-critical/15 text-severity-critical" : "bg-muted text-muted-foreground")}>{i + 1}</span>
               <span className="line-clamp-2 text-xs font-semibold leading-tight text-foreground">{r.title}</span>
-              <span className="ml-auto shrink-0 font-mono text-3xs font-semibold text-sev-critical">−{r.cost.toFixed(1)} pts</span>
+              <span className="ml-auto shrink-0 font-mono text-3xs font-semibold text-severity-critical">−{r.cost.toFixed(1)} pts</span>
             </div>
             <p className="mt-0.5 flex items-start gap-1 text-2xs leading-snug text-muted-foreground">
               <Dumbbell className="mt-px size-3 shrink-0" />
@@ -1063,7 +1063,7 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
         </div>
         <div className="flex min-w-0 flex-col justify-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5">
           <p className="truncate text-2xs text-muted-foreground" title={`${PEERS.betterThanPct}% of ${PEERS.group} scored lower`}>
-            Beat <span className="font-mono text-md font-bold text-primary">{PEERS.betterThanPct}%</span> of {PEERS.group}
+            Beat <span className="font-mono text-md font-bold text-primary-ink">{PEERS.betterThanPct}%</span> of {PEERS.group}
           </p>
           <p className="truncate font-mono text-3xs text-muted-foreground">{PEERS.rank}th of {PEERS.of} · avg {PEERS.average}</p>
           <div className="flex flex-wrap gap-1 overflow-hidden [max-height:38px]">
@@ -1098,10 +1098,10 @@ function AllRecommendations({ onSelect, onOpen }: { onSelect: (n: number) => voi
         {top && <> Biggest loss: <strong>{top.short}</strong> ({shotsText(top.shots)}){next && <>, then {next.short} ({shotsText(next.shots)})</>}.</>}
       </p>
       {RANKED_RECS.map((r, i) => (
-        <div key={r.key} className={cn("shrink-0 rounded-lg border bg-background px-2.5 py-1.5", i === 0 ? "border-sev-critical/35" : "border-border")}>
+        <div key={r.key} className={cn("shrink-0 rounded-lg border bg-background px-2.5 py-1.5", i === 0 ? "border-severity-critical/35" : "border-border")}>
           <div className="flex items-start gap-2">
             <span className="text-xs font-semibold leading-tight text-foreground">{i + 1}. {r.title}</span>
-            <span className="ml-auto shrink-0 font-mono text-3xs font-semibold text-sev-critical">−{r.cost.toFixed(1)} pts</span>
+            <span className="ml-auto shrink-0 font-mono text-3xs font-semibold text-severity-critical">−{r.cost.toFixed(1)} pts</span>
           </div>
           <p className="text-2xs text-muted-foreground">{r.evidence} · avg {r.withAvg.toFixed(1)} vs {r.withoutAvg.toFixed(1)} pts without</p>
           <p className="mt-0.5 flex items-start gap-1 text-2xs leading-snug text-foreground"><Dumbbell className="mt-px size-3 shrink-0 text-muted-foreground" />{r.drill}</p>
@@ -1134,7 +1134,7 @@ function Standing() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
       <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
-        <span className="font-mono text-2xl font-bold text-primary">{PEERS.betterThanPct}%</span>
+        <span className="font-mono text-2xl font-bold text-primary-ink">{PEERS.betterThanPct}%</span>
         <p className="text-2xs leading-snug text-muted-foreground">of {PEERS.group} scored lower this session. You placed <strong className="text-foreground">{PEERS.rank}th of {PEERS.of}</strong>.</p>
       </div>
       <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1237,7 +1237,7 @@ function LiveCuesPanel({ className, shot, rel, fired }: { className?: string; sh
             <li key={`${c.n}-${c.key}`} className="flex items-center gap-2 rounded-md bg-background px-2 py-1">
               <span className="font-mono text-2xs font-bold text-foreground">#{c.n}</span>
               <span className="truncate text-xs text-foreground first-letter:uppercase">{c.text}</span>
-              <CircleX className="ml-auto size-3.5 shrink-0 text-sev-critical" />
+              <CircleX className="ml-auto size-3.5 shrink-0 text-severity-critical" />
             </li>
           ))
         )}
@@ -1275,7 +1275,7 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
             <SelectContent position="popper" className="max-h-72">
               {SHOTS.map((s) => (
                 <SelectItem key={s.n} value={String(s.n)} className="font-mono text-2xs">
-                  <span className={cn(!isHit(s) && "text-sev-critical")}>
+                  <span className={cn(!isHit(s) && "text-severity-critical")}>
                     Shot #{s.n} · {isHit(s) ? `${points(s)} pts` : "Miss"}
                   </span>
                 </SelectItem>
@@ -1307,7 +1307,7 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-info" />Before the shot · sway and its ellipse</span>
               <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" />After the shot · where the muzzle went</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-sev-critical" />Flinch over {FLINCH_LIMIT_MM} mm, or ends over {SETTLE_LIMIT_MM} mm off aim</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-severity-critical" />Flinch over {FLINCH_LIMIT_MM} mm, or ends over {SETTLE_LIMIT_MM} mm off aim</span>
             </div>
           </Panel>
         </div>
@@ -1359,7 +1359,7 @@ function Stat({ label, value, bad, info }: { label: string; value: string; bad?:
   return (
     <div className="min-w-0 rounded-lg border border-border bg-background px-2.5 py-1.5">
       <dt className="flex items-center gap-1 truncate text-2xs text-muted-foreground">{label}{info && <InfoTip text={info} />}</dt>
-      <dd className={cn("mt-0.5 truncate font-mono text-sm font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{value}</dd>
+      <dd className={cn("mt-0.5 truncate font-mono text-sm font-semibold", bad ? "text-severity-critical" : "text-foreground")}>{value}</dd>
     </div>
   );
 }
@@ -1383,7 +1383,7 @@ function BreathingDetail({ shot }: { shot: Shot }) {
               <XAxis dataKey="t" type="number" domain={DETAIL_WINDOW} ticks={DETAIL_TICKS} {...AXIS} />
               <YAxis domain={[0, 1.4]} ticks={[0, 0.5, 1]} {...AXIS} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v) => [Number(v).toFixed(2), "Chest"]} />
-              <ReferenceLine x={0} stroke={inPause ? "var(--success)" : "var(--sev-critical)"} strokeWidth={2} />
+              <ReferenceLine x={0} stroke={inPause ? "var(--success)" : "var(--severity-critical)"} strokeWidth={2} />
               <Line type="monotone" dataKey="chest" stroke="var(--info)" strokeWidth={1.8} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -1445,7 +1445,7 @@ function FlinchDetail({ shot }: { shot: Shot }) {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
               <XAxis dataKey="ms" type="number" domain={[-500, 100]} ticks={[-400, -200, 0]} {...AXIS} />
               <YAxis domain={[-5, 12]} ticks={[-5, 0, 5, 10]} {...AXIS} />
-              <ReferenceLine y={FLINCH_LIMIT_MM} stroke="var(--sev-critical)" strokeDasharray="4 3" />
+              <ReferenceLine y={FLINCH_LIMIT_MM} stroke="var(--severity-critical)" strokeDasharray="4 3" />
               {measured.filter((s) => s.n !== shot.n).map((s) => (
                 <Line key={s.n} type="monotone" dataKey={`s${s.n}`} stroke="var(--muted-foreground)" strokeOpacity={0.4} strokeWidth={1} dot={false} isAnimationActive={false} />
               ))}
@@ -1454,7 +1454,7 @@ function FlinchDetail({ shot }: { shot: Shot }) {
           </ResponsiveContainer>
         </div>
         <p className="mt-1 flex flex-wrap gap-x-3 text-3xs text-muted-foreground">
-          <span><Swatch c="bg-primary" />Selected shot</span><span><Swatch c="bg-muted-foreground/40" />Other shots</span><span><Swatch c="bg-sev-critical" />Limit {FLINCH_LIMIT_MM} mm</span><span className="ml-auto">ms from the shot</span>
+          <span><Swatch c="bg-primary" />Selected shot</span><span><Swatch c="bg-muted-foreground/40" />Other shots</span><span><Swatch c="bg-severity-critical" />Limit {FLINCH_LIMIT_MM} mm</span><span className="ml-auto">ms from the shot</span>
         </p>
         <dl className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
           <Stat label="Max deviation" value={shot.flinchMm === null ? "n/a" : `${shot.flinchMm.toFixed(1)} mm`} bad={flinched(shot)} />
@@ -1479,8 +1479,8 @@ function ShotCard({ shot, kind, onSelect }: { shot: Shot; kind: "best" | "weakes
       meta={best ? "Best of session" : "Weakest of session"}
       action={
         <div className="flex items-center gap-2">
-          <span className={cn("rounded px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider", best ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{best ? "Good shot" : "Bad shot"}</span>
-          <button type="button" onClick={() => onSelect(shot.n)} className="text-2xs font-semibold text-primary hover:underline">Review</button>
+          <span className={cn("rounded px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider", best ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{best ? "Good shot" : "Bad shot"}</span>
+          <button type="button" onClick={() => onSelect(shot.n)} className="text-2xs font-semibold text-primary-ink hover:underline">Review</button>
         </div>
       }
       bodyClassName="gap-3"
@@ -1500,7 +1500,7 @@ function ShotCard({ shot, kind, onSelect }: { shot: Shot; kind: "best" | "weakes
                 <ReferenceArea y1={-1.5} y2={1.5} fill="var(--success)" fillOpacity={0.1} strokeOpacity={0} />
                 <XAxis dataKey="t" type="number" domain={WINDOW} ticks={TICKS} {...AXIS} />
                 <YAxis domain={[-8, 8]} ticks={[-6, 0, 6]} {...AXIS} />
-                <ReferenceLine x={0} stroke={flinched(shot) ? "var(--sev-critical)" : "var(--success)"} strokeWidth={2} />
+                <ReferenceLine x={0} stroke={flinched(shot) ? "var(--severity-critical)" : "var(--success)"} strokeWidth={2} />
                 <Line type="monotone" dataKey="lr" stroke="var(--foreground)" strokeWidth={1.4} dot={false} isAnimationActive={false} />
                 <Line type="monotone" dataKey="ud" stroke="var(--warning)" strokeWidth={1.4} dot={false} isAnimationActive={false} />
               </LineChart>
@@ -1518,7 +1518,7 @@ function ShotCard({ shot, kind, onSelect }: { shot: Shot; kind: "best" | "weakes
                 ))}
                 <XAxis dataKey="t" type="number" domain={WINDOW} ticks={TICKS} {...AXIS} />
                 <YAxis domain={[0, 1.4]} ticks={[0, 1]} {...AXIS} />
-                <ReferenceLine x={0} stroke={firedInPause(shot) ? "var(--success)" : "var(--sev-critical)"} strokeWidth={2} />
+                <ReferenceLine x={0} stroke={firedInPause(shot) ? "var(--success)" : "var(--severity-critical)"} strokeWidth={2} />
                 <Line type="monotone" dataKey="chest" stroke="var(--info)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -1530,10 +1530,10 @@ function ShotCard({ shot, kind, onSelect }: { shot: Shot; kind: "best" | "weakes
         <p className="mb-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">{best ? "Factors met" : "Factors not met"}</p>
         <ul className="grid gap-1">
           {checks.map((c) => (
-            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok === false ? "bg-sev-critical/[0.07]" : "bg-background")}>
-              {c.ok === false ? <CircleX className="size-4 shrink-0 text-sev-critical" /> : <CircleCheck className="size-4 shrink-0 text-success" />}
+            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok === false ? "bg-severity-critical/[0.07]" : "bg-background")}>
+              {c.ok === false ? <CircleX className="size-4 shrink-0 text-severity-critical" /> : <CircleCheck className="size-4 shrink-0 text-success" />}
               <span className="text-xs font-semibold text-foreground">{c.label}</span>
-              <span className={cn("ml-auto text-right font-mono text-2xs", c.ok === false ? "text-sev-critical" : "text-muted-foreground")}>{c.note}</span>
+              <span className={cn("ml-auto text-right font-mono text-2xs", c.ok === false ? "text-severity-critical" : "text-muted-foreground")}>{c.note}</span>
             </li>
           ))}
         </ul>
@@ -1558,7 +1558,7 @@ function PreviousVsCurrent() {
                 <div className="h-2 rounded-sm bg-muted"><div className="h-full rounded-sm bg-muted-foreground/40" style={{ width: `${f.prev}%` }} /></div>
                 <div className="h-3 rounded-sm bg-muted"><div className="h-full rounded-sm bg-foreground" style={{ width: `${f.score}%` }} /></div>
               </div>
-              <span className={cn("text-right font-mono text-xs font-semibold", d >= 0 ? "text-success" : "text-sev-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</span>
+              <span className={cn("text-right font-mono text-xs font-semibold", d >= 0 ? "text-success" : "text-severity-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</span>
             </div>
           );
         })}

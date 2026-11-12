@@ -120,7 +120,7 @@ function CameraTile({
     <div
       data-panel-camera={panelAnchor}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-neutral-950 text-left transition-all",
+        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
         checked
           ? "border-primary shadow-[0_0_0_2px_var(--primary)]"
           : active
@@ -143,7 +143,7 @@ function CameraTile({
         ) : (
           <>
             <OfflineFrameLayer />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-sev-critical/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-media/70 text-severity-critical/80">
               <AlertTriangle className="size-5" />
               <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
             </div>
@@ -172,7 +172,7 @@ function CameraTile({
             "absolute left-2 top-2 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity duration-[var(--duration-fast)] ease-standard",
             checked
               ? "border-primary bg-primary opacity-100"
-              : "border-white/60 bg-black/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              : "border-media-foreground/60 bg-scrim/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           )}
         >
           {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
@@ -181,8 +181,8 @@ function CameraTile({
         {isOnline && (
           <span
             className={cn(
-              "absolute top-2 z-10 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white transition-all",
-              live ? "bg-sev-critical/95" : "bg-black/70",
+              "absolute top-2 z-10 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-media-foreground transition-all",
+              live ? "bg-severity-critical/95" : "bg-scrim/70",
               checked ? "left-9" : "left-2 group-hover:left-9"
             )}
           >
@@ -191,7 +191,7 @@ function CameraTile({
         )}
 
         {count > 0 && (
-          <span className="absolute right-2 top-2 z-10 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-neutral-900">
+          <span className="absolute right-2 top-2 z-10 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-status-foreground">
             {count}
           </span>
         )}
@@ -200,7 +200,7 @@ function CameraTile({
 
         <span className={cn(
           "absolute bottom-2 left-2 z-10 rounded px-1.5 py-0.5 font-mono backdrop-blur-sm transition-opacity group-hover:opacity-0",
-          active ? "bg-primary font-semibold text-primary-foreground" : "bg-black/60 text-white/90",
+          active ? "bg-primary-fill font-semibold text-primary-foreground" : "bg-scrim/60 text-media-foreground/90",
           compact ? "text-3xs" : "text-2xs",
           !live && "opacity-0"
         )}>
@@ -342,7 +342,7 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
   return (
     <span className={cn(
       "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-semibold",
-      active ? "border-primary/40 bg-primary/15 text-primary"
+      active ? "border-primary/40 bg-primary/15 text-primary-ink"
         : muted ? "border-border bg-muted text-muted-foreground"
           : "border-warning/30 bg-warning/15 text-warning"
     )}>
@@ -421,7 +421,7 @@ function SidePanel({
               {t === "tracking" && <><Crosshair className="size-3.5" /> Tracking</>}
               {t === "detections" && <><Radar className="size-3.5" /> Detections</>}
               {t === "tracking" && trackCount > 0 && (
-                <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackCount}</span>
+                <span className="rounded-full bg-severity-critical/15 px-1.5 text-3xs font-bold text-severity-critical">{trackCount}</span>
               )}
               {t === "detections" && detectionCount > 0 && (
                 <span className="rounded-full bg-warning/15 px-1.5 text-3xs font-bold text-warning">{detectionCount}</span>
@@ -452,7 +452,7 @@ function SidePanel({
                 </p>
                 <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">{cameras.length}</strong> · <strong className="text-success">{onlineCount}</strong> on
-                  {offlineCount > 0 && <> · <strong className="text-sev-critical">{offlineCount}</strong> off</>}
+                  {offlineCount > 0 && <> · <strong className="text-severity-critical">{offlineCount}</strong> off</>}
                 </p>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -552,9 +552,9 @@ function SyncGrid({
         </div>
         <span className={cn(
           "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-2xs font-semibold",
-          pb.offsetSec <= 0 ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" : "border-warning/30 bg-warning/10 text-warning"
+          pb.offsetSec <= 0 ? "border-severity-critical/40 bg-severity-critical/10 text-severity-critical" : "border-warning/30 bg-warning/10 text-warning"
         )}>
-          <span className={cn("size-1.5 rounded-full", pb.offsetSec <= 0 ? "animate-pulse bg-sev-critical" : "bg-warning")} />
+          <span className={cn("size-1.5 rounded-full", pb.offsetSec <= 0 ? "animate-pulse bg-severity-critical" : "bg-warning")} />
           {pb.offsetSec <= 0 ? "LIVE" : `−${fmtOffset(pb.offsetSec)} · ${timestampAt(now, pb.offsetSec)}`}
         </span>
       </div>
@@ -595,7 +595,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
   return (
     <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
         <span className="text-base font-semibold text-foreground">
@@ -632,7 +632,7 @@ function SyncPlaybackBar({
       {/* Shared timeline */}
       <div className="flex items-center gap-3">
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">−06:00:00</span>
-        <div className="flex-1 rounded-md bg-neutral-950 px-2 py-2">
+        <div className="flex-1 rounded-md bg-media px-2 py-2">
           <ScrubTrack offsetSec={pb.offsetSec} onChange={(v) => onChange({ offsetSec: v })} now={now} label="Synchronised playback position" />
         </div>
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">LIVE</span>
@@ -640,7 +640,7 @@ function SyncPlaybackBar({
 
       <div className="mt-2.5 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <SlidersHorizontal className="size-3.5" />
           </div>
           <div className="leading-tight">
@@ -667,7 +667,7 @@ function SyncPlaybackBar({
             <TooltipTrigger asChild>
               <button aria-label={pb.playing ? "Pause all" : "Play all"}
                 onClick={() => onChange({ playing: !pb.playing })}
-                className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground hover:opacity-90">
+                className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary-fill text-primary-foreground hover:opacity-90">
                 {pb.playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
               </button>
             </TooltipTrigger>
@@ -1034,12 +1034,12 @@ export function ReidLiveMonitoring({
             aria-pressed={panelOpen}
             aria-expanded={panelOpen}
             title={`${panelOpen ? "Hide" : "Show"} the ${panelName} panel`}
-            className={cn("gap-1.5", panelOpen && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary")}
+            className={cn("gap-1.5", panelOpen && "border-primary/50 bg-primary/10 text-primary-ink hover:bg-primary/15 hover:text-primary-ink")}
           >
             {panelOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
             {panelName}
             {trackStates.length > 0 && (
-              <span className="rounded-full bg-sev-critical/15 px-1.5 text-3xs font-bold text-sev-critical">{trackStates.length}</span>
+              <span className="rounded-full bg-severity-critical/15 px-1.5 text-3xs font-bold text-severity-critical">{trackStates.length}</span>
             )}
           </Button>
         </PageHeader.Actions>
@@ -1081,7 +1081,7 @@ export function ReidLiveMonitoring({
             className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
         </div>
         {checkedIds.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary-ink">
             <CheckSquare className="size-3" />
             {checkedIds.length} selected
           </span>
@@ -1092,21 +1092,21 @@ export function ReidLiveMonitoring({
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         {mapView && shownMap ? (
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="inline-flex items-center gap-1 rounded-md border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-sev-critical">
+            <span className="inline-flex items-center gap-1 rounded-md border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-severity-critical">
               <Crosshair className="size-3" /> Map view
             </span>
             <span>
               <strong className="text-foreground">{mapLabel(shownMap)}</strong> · {wallCameras.length} camera
               {wallCameras.length === 1 ? "" : "s"} on this map · {onlineCount} online
             </span>
-            <button type="button" onClick={() => setPanelTab(homeTab)} className="text-xs font-semibold text-primary hover:underline">
+            <button type="button" onClick={() => setPanelTab(homeTab)} className="text-xs font-semibold text-primary-ink hover:underline">
               Show all cameras
             </button>
           </span>
         ) : (
           <span>
             <strong className="text-foreground">{siteLabel}</strong> · {filteredCameras.length} cameras total · {onlineCount} online
-            {inSync && <> · <strong className="text-primary">{checkedCameras.length} in synchronised playback</strong></>}
+            {inSync && <> · <strong className="text-primary-ink">{checkedCameras.length} in synchronised playback</strong></>}
           </span>
         )}
         {!inSync && pageCount > 1 && (

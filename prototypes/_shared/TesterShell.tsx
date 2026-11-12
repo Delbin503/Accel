@@ -63,7 +63,7 @@ export function TesterShell({
         aria-label={visible ? "Hide the state tester" : "Show the state tester"}
         title={visible ? "Hide the state tester" : "Show the state tester"}
         className={cn(
-          "fixed bottom-3 left-3 z-[var(--z-tooltip)] flex size-8 items-center justify-center rounded-full border shadow-lg",
+          "fixed bottom-3 left-3 z-[var(--z-tooltip)] flex size-8 items-center justify-center rounded-full border shadow-floating",
           "transition-[color,background-color,border-color,opacity] duration-[var(--duration-normal)] ease-standard",
           visible
             ? "border-warning/50 bg-warning/15 text-warning hover:bg-warning/25"

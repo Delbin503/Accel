@@ -30,7 +30,7 @@ export function Phase13Index() {
               className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-start gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary-ink">
                   <Icon className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -53,7 +53,7 @@ export function Phase13Index() {
                 ))}
               </ul>
 
-              <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary">
+              <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary-ink">
                 Open page
                 <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
               </span>
@@ -73,7 +73,7 @@ export function Phase13Index() {
           className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:max-w-[calc(50%-0.375rem)]"
         >
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary-ink">
               <ScanFace className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
@@ -85,7 +85,7 @@ export function Phase13Index() {
             Person re-identification as its own module, with its own Live Monitoring, Model Management
             and Model Deployment. Move between them from the module's sidebar.
           </p>
-          <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary">
+          <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary-ink">
             Open module
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
@@ -95,7 +95,7 @@ export function Phase13Index() {
           className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:max-w-[calc(50%-0.375rem)]"
         >
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary-ink">
               <ClipboardCheck className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
@@ -108,7 +108,7 @@ export function Phase13Index() {
             Management, pose settings in Camera Defaults, external devices under Site, and sessions with
             their results and reports on one page.
           </p>
-          <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary">
+          <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary-ink">
             Open module
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
@@ -189,7 +189,7 @@ export function ReidNotInModule() {
         The {REID_TITLE} covers <strong className="text-foreground">{REID_PAGES.map((p) => p.title).join(", ")}</strong>.
       </p>
       <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
-        <Link to={REID_PAGES[0].path} className="text-primary hover:underline">Go to {REID_PAGES[0].title}</Link>
+        <Link to={REID_PAGES[0].path} className="text-primary-ink hover:underline">Go to {REID_PAGES[0].title}</Link>
         <span className="text-muted-foreground/40">·</span>
         <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">Back to Phase 1.3</Link>
       </div>
@@ -210,7 +210,7 @@ export function TaNotInModule() {
         The {TA_TITLE} covers <strong className="text-foreground">{TA_PAGES.map((p) => p.title).join(", ")}</strong>.
       </p>
       <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
-        <Link to={TA_ROUTES.dashboard} className="text-primary hover:underline">Go to Dashboard</Link>
+        <Link to={TA_ROUTES.dashboard} className="text-primary-ink hover:underline">Go to Dashboard</Link>
         <span className="text-muted-foreground/40">·</span>
         <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">Back to Phase 1.3</Link>
       </div>

@@ -31,7 +31,7 @@ function Segmented<T extends string | number>({
           onClick={() => onChange(o.value)}
           className={cn(
             "inline-flex h-full flex-1 items-center justify-center rounded px-2.5 text-sm font-semibold transition-colors",
-            o.value === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            o.value === value ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
         >
           {o.label}
@@ -59,7 +59,7 @@ function ModeCard({
         {active && <span className="size-1.5 rounded-full bg-primary" />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className={cn("flex items-center gap-1.5 text-base font-semibold", active ? "text-primary" : "text-foreground")}>
+        <p className={cn("flex items-center gap-1.5 text-base font-semibold", active ? "text-primary-ink" : "text-foreground")}>
           <Icon className="size-4" />
           {title}
         </p>
@@ -103,7 +103,7 @@ export function TaPoseDefaults() {
               onClick={() => setUc(k)}
               className={cn(
                 "inline-flex h-full items-center rounded px-3 text-sm font-semibold transition-colors",
-                uc === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                uc === k ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               {USE_CASES[k].label}
@@ -170,12 +170,12 @@ export function TaPoseDefaults() {
         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <div>
             <p className="flex items-center gap-1.5 text-base font-bold text-foreground">
-              <Cctv className="size-4 text-primary" />
+              <Cctv className="size-4 text-primary-ink" />
               Camera requirements · per {u.unit}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">Set by {s.mode.toUpperCase()} pose at {s.fps} fps. {pos.why}</p>
           </div>
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
             {need} camera{need === 1 ? "" : "s"} required
           </span>
         </div>
@@ -187,7 +187,7 @@ export function TaPoseDefaults() {
               <div key={name} className="rounded-lg border border-border bg-card px-3 py-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-foreground">{name.replace(" (optional)", "")}</p>
-                  <span className={cn("rounded-full px-2 py-px text-2xs font-semibold", required ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("rounded-full px-2 py-px text-2xs font-semibold", required ? "bg-primary/10 text-primary-ink" : "bg-muted text-muted-foreground")}>
                     {required ? "Required" : "Optional"}
                   </span>
                 </div>

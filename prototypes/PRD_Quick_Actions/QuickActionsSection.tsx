@@ -217,7 +217,7 @@ export function QuickActionsSection() {
                   className={cn(
                     "size-8 rounded-md border text-base transition-colors duration-[var(--duration-fast)] ease-standard",
                     n === maxPins
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary-ink"
                       : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
@@ -258,7 +258,7 @@ export function QuickActionsSection() {
                   className={cn(
                     "rounded-md border px-2.5 py-1 text-sm transition-colors duration-[var(--duration-fast)] ease-standard",
                     r.value === role
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary-ink"
                       : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >

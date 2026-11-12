@@ -61,7 +61,7 @@ function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | nul
       }}
       aria-label="Back to top"
       title="Back to top"
-      className="fixed bottom-6 right-6 z-[90] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-colors hover:border-primary hover:text-primary"
+      className="fixed bottom-6 right-6 z-[var(--z-tooltip)] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-floating transition-colors hover:border-primary hover:text-primary-ink"
     >
       <ArrowUp className="size-5" />
     </button>
@@ -116,7 +116,7 @@ function NotInPrototype() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
-      <p className="text-[12px]">This prototype only covers <strong className="text-foreground">Recordings</strong>.</p>
+      <p className="text-sm">This prototype only covers <strong className="text-foreground">Recordings</strong>.</p>
     </div>
   );
 }

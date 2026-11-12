@@ -37,11 +37,11 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
 const REASON_STYLES: Record<FpReason, { chip: string; bar: string }> = {
-  "wrong-class":     { chip: "bg-sev-medium-soft text-sev-medium",  bar: "bg-sev-medium" },
-  "wrong-person":    { chip: "bg-sev-high-soft text-sev-high",      bar: "bg-sev-high" },
-  "known-exemption": { chip: "bg-success-soft text-success",        bar: "bg-success" },
-  "staged":          { chip: "bg-info-soft text-info",              bar: "bg-info" },
-  "threshold":       { chip: "bg-purple-soft text-purple",          bar: "bg-purple" },
+  "wrong-class":     { chip: "bg-severity-medium/15 text-severity-medium",  bar: "bg-severity-medium" },
+  "wrong-person":    { chip: "bg-severity-high/15 text-severity-high",      bar: "bg-severity-high" },
+  "known-exemption": { chip: "bg-success/15 text-success",        bar: "bg-success" },
+  "staged":          { chip: "bg-info/15 text-info",              bar: "bg-info" },
+  "threshold":       { chip: "bg-violet/15 text-violet",          bar: "bg-violet" },
   "other":           { chip: "bg-muted text-muted-foreground",      bar: "bg-muted-foreground" },
 };
 
@@ -49,7 +49,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        "inline-flex items-center rounded px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider",
         REASON_STYLES[reason].chip
       )}
     >
@@ -71,8 +71,8 @@ const KPI_CONFIGS: {
 }[] = [
   { key: "all",             label: "Total Dismissed", getValue: (i) => i.length,                                                              sub: "Last 30 days",            accent: "primary" },
   { key: "known-exemption", label: "Known Exemptions",getValue: (i) => i.filter((d) => d.reason === "known-exemption").length,               sub: "Authorized activities",   accent: "success" },
-  { key: "wrong-class",     label: "Model Errors",    getValue: (i) => i.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length, sub: "Wrong class or person", accent: "sev-medium" },
-  { key: "threshold",       label: "Tuning Needed",   getValue: (i) => i.filter((d) => d.reason === "threshold").length,                     sub: "Threshold too sensitive", accent: "purple" },
+  { key: "wrong-class",     label: "Model Errors",    getValue: (i) => i.filter((d) => d.reason === "wrong-class" || d.reason === "wrong-person").length, sub: "Wrong class or person", accent: "severity-medium" },
+  { key: "threshold",       label: "Tuning Needed",   getValue: (i) => i.filter((d) => d.reason === "threshold").length,                     sub: "Threshold too sensitive", accent: "violet" },
   { key: "other",           label: "Others",          getValue: (i) => i.filter((d) => d.reason === "staged" || d.reason === "other").length, sub: "Staged events & other",  accent: "info" },
 ];
 
@@ -143,9 +143,9 @@ function FilterDropdown({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-[13px] transition-colors hover:border-primary",
+            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -161,7 +161,7 @@ function FilterDropdown({
             <button
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -212,15 +212,15 @@ function FilterPanel({
       >
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Filters</span>
+          <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All reasons", "All sites", "All areas", "All models"].map((l) => (
-                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                <span key={l} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                   {l}
                 </span>
               ))}
@@ -231,7 +231,7 @@ function FilterPanel({
           {activeCount > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); onClearAll(); }}
-              className="text-[12px] text-muted-foreground underline hover:text-primary"
+              className="text-sm text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>
@@ -254,7 +254,7 @@ function FilterPanel({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by ID, operator, notes, camera..."
-              className="h-9 w-full pl-9 text-[13px]"
+              className="h-9 w-full pl-9 text-base"
             />
           </div>
           {/* 4 dropdowns */}
@@ -266,7 +266,7 @@ function FilterPanel({
               { key: "model"  as const, label: "Model",       opts: DISMISSED_FILTER_OPTIONS.model },
             ].map(({ key, label, opts }) => (
               <div key={key}>
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </div>
                 <FilterDropdown
@@ -308,7 +308,7 @@ function DismissedRow({
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4"
       )}
-      style={{ borderLeftColor: `var(--sev-${event.severity})` }}
+      style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       {/* Thumbnail with bounding boxes — same as Detection Feed */}
       <div className="self-start">
@@ -318,7 +318,7 @@ function DismissedRow({
             onClick={(e) => { e.stopPropagation(); onToggle(event.id); }}
             className={cn(
               "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border transition-colors",
-              selected ? "border-primary bg-primary" : "border-white/50 bg-black/50 hover:border-primary"
+              selected ? "border-primary bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary"
             )}
           >
             {selected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -329,16 +329,16 @@ function DismissedRow({
                 className={cn(
                   "absolute border-2",
                   box.variant === "person"  ? "border-info bg-info/10"
-                  : box.variant === "vehicle" ? "border-purple bg-purple/10"
+                  : box.variant === "vehicle" ? "border-violet bg-violet/10"
                   : "border-primary bg-primary/10"
                 )}
                 style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
               />
               <span
                 className={cn(
-                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-[9px] font-semibold text-white",
+                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-media-foreground",
                   box.variant === "person"  ? "bg-info"
-                  : box.variant === "vehicle" ? "bg-purple"
+                  : box.variant === "vehicle" ? "bg-violet"
                   : "bg-primary"
                 )}
                 style={{ top: box.top, left: box.left }}
@@ -347,7 +347,7 @@ function DismissedRow({
               </span>
             </React.Fragment>
           ))}
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-[10px] text-white">
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-scrim/75 px-1 py-px font-mono text-2xs text-media-foreground">
             {event.time.slice(0, 5)}
           </span>
         </div>
@@ -357,28 +357,28 @@ function DismissedRow({
       <div className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
-          <span className="text-[13px] font-semibold text-foreground">{event.typeLabel}</span>
+          <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           {/* DISMISSED badge — replaces the "Escalated" badge from the Detection Feed card */}
-          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
             <span className="size-1.5 rounded-full bg-muted-foreground/60" />
             Dismissed
           </span>
           <ReasonChip reason={item.reason} />
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary-ink"
           >
             {event.useCaseId}
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-purple/20 bg-purple-soft px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:border-purple hover:text-purple">
-            <span className="size-1.5 rounded-full bg-purple" />
+          <span className="inline-flex items-center gap-1 rounded border border-violet/20 bg-violet/15 px-1.5 py-px font-mono text-2xs text-muted-foreground hover:border-violet hover:text-violet">
+            <span className="size-1.5 rounded-full bg-violet" />
             {event.model}
           </span>
         </div>
-        <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mb-2 text-base leading-relaxed text-muted-foreground">
           {parseEventText(event.summary)}
         </p>
-        <div className="flex flex-wrap items-center gap-3.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-2.5" />
             {event.siteDisplay} · {event.areaDisplay} · {event.camera}
@@ -389,9 +389,9 @@ function DismissedRow({
       {/* Right rail — dismissed by + when (no action buttons) */}
       <div className="col-span-2 flex items-center justify-end gap-2 border-t border-border/40 pt-2 sm:col-span-1 sm:flex-col sm:items-end sm:self-start sm:border-t-0 sm:pt-0">
         <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
-          <p className="mt-0.5 text-[12px] font-medium text-foreground">{item.dismissedBy}</p>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{item.dismissedAtDisplay}</p>
+          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground">{item.dismissedBy}</p>
+          <p className="mt-0.5 font-mono text-2xs text-muted-foreground">{item.dismissedAtDisplay}</p>
         </div>
       </div>
     </div>
@@ -491,7 +491,7 @@ export default function DismissedEventsPage({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-[13px]"
+            className="gap-1.5 text-base"
             onClick={() => navigate("/detection-feed")}
           >
             <ArrowLeft className="size-3.5" />
@@ -532,12 +532,12 @@ export default function DismissedEventsPage({
       {/* ── Results bar ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             <strong className="text-foreground">{visible.length}</strong> events
             {hasFilters && <span className="ml-1 text-muted-foreground/70">match current filters</span>}
           </p>
           {restoredIds.size > 0 && (
-            <span className="flex items-center gap-1.5 text-[12px] text-success">
+            <span className="flex items-center gap-1.5 text-sm text-success">
               <RotateCcw className="size-3" />
               {restoredIds.size} restored
               <button onClick={() => setRestoredIds(new Set())} className="text-success/60 hover:text-success">
@@ -550,7 +550,7 @@ export default function DismissedEventsPage({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-[12px] text-foreground focus:border-primary focus:outline-none"
+            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
@@ -570,7 +570,7 @@ export default function DismissedEventsPage({
           <p className="text-sm font-medium">No dismissed events match your filters</p>
           {(hasFilters || forced === "empty") && (
             <button
-              className="text-[12px] text-primary hover:underline"
+              className="text-sm text-primary-ink hover:underline"
               onClick={() => { if (forced === "empty") onResolveForced(); setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
             >
               Clear all filters
@@ -593,12 +593,12 @@ export default function DismissedEventsPage({
 
       {/* ── Bulk-restore action bar ──────────────────────────────────────── */}
       {selectedIds.size > 0 && forced === "normal" && (
-        <div className="fixed inset-x-6 bottom-6 z-50 mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-2xl">
+        <div className="fixed inset-x-6 bottom-6 z-50 mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-modal">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <CheckSquare className="size-3.5" />
             </div>
-            <span className="text-[13px] font-semibold text-foreground">
+            <span className="text-base font-semibold text-foreground">
               {selectedIds.size} event{selectedIds.size === 1 ? "" : "s"} selected
             </span>
           </div>

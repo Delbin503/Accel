@@ -18,7 +18,7 @@ const OPTIONS: { key: ForcedState; label: string }[] = [
 export function StateTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
-      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+      <span className="inline-flex items-center gap-1 text-2xs font-bold uppercase tracking-wider text-warning">
         <FlaskConical className="size-3" />
         Dev · State
       </span>
@@ -28,7 +28,7 @@ export function StateTester({ value, onChange }: { value: ForcedState; onChange:
             key={o.key}
             onClick={() => onChange(o.key)}
             className={cn(
-              "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+              "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
               value === o.key
                 ? "bg-warning/20 text-warning"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"

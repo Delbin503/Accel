@@ -10,7 +10,7 @@ import {
 export type View = "face" | "dtl";
 
 const OK = "var(--success)";
-const BAD = "var(--sev-critical)";
+const BAD = "var(--severity-critical)";
 const HUD = "rgb(255 255 255 / 0.62)";
 const GHOST = "var(--info)";
 
@@ -345,7 +345,7 @@ export function Dispersion({ swings, focus, onSelect, className }: { swings: Swi
       <text x={x(0)} y={H + 7} textAnchor="middle" fontSize="4" fill="var(--muted-foreground)" className="font-mono">target</text>
       {swings.map((s) => {
         const shape = shapeOf(s);
-        const fill = shape === "Slice" || shape === "Hook" ? "var(--sev-critical)" : shape === "Fade" || shape === "Draw" ? "var(--info)" : "var(--success)";
+        const fill = shape === "Slice" || shape === "Hook" ? "var(--severity-critical)" : shape === "Fade" || shape === "Draw" ? "var(--info)" : "var(--success)";
         const active = s.n === focus;
         return (
           <g key={s.n} transform={`translate(${x(s.offline)} ${y(s.carry)})`} role="button" tabIndex={0} className="cursor-pointer outline-none"

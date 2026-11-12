@@ -43,8 +43,8 @@ export function RuleSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-20 text-muted-foreground">
-      <AlertCircle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
+      <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load detection rules.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
     </div>
@@ -56,7 +56,7 @@ export function EmptyState({ onCreate }: { onCreate: () => void }) {
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <ScrollText className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No rules yet</p>
-      <p className="text-[12px]">Create your first detection rule, or start from a saved template.</p>
+      <p className="text-sm">Create your first detection rule, or start from a saved template.</p>
       <Button size="sm" className="mt-1" onClick={onCreate}>Add Rule</Button>
     </div>
   );
@@ -67,7 +67,7 @@ export function NoResultsState({ onClear }: { onClear: () => void }) {
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <SearchX className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No rules match your filters</p>
-      <p className="text-[12px]">Try a different search term, severity, or tag — or clear the active filters.</p>
+      <p className="text-sm">Try a different search term, severity, or tag — or clear the active filters.</p>
       <Button variant="outline" size="sm" className="mt-1" onClick={onClear}>Clear filters</Button>
     </div>
   );

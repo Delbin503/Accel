@@ -49,13 +49,13 @@ const ALL = "__all__";
 const VERDICT: Record<Verdict, { label: string; box: string; text: string }> = {
   good: { label: "good", box: "border-success/40 bg-success/[0.06]", text: "text-success" },
   usable: { label: "usable", box: "border-warning/40 bg-warning/[0.06]", text: "text-warning" },
-  poor: { label: "poor", box: "border-sev-critical/40 bg-sev-critical/[0.06]", text: "text-sev-critical" },
+  poor: { label: "poor", box: "border-severity-critical/40 bg-severity-critical/[0.06]", text: "text-severity-critical" },
 };
 
 const VERDICT_FILL: Record<Verdict, string> = {
   good: "fill-success",
   usable: "fill-warning",
-  poor: "fill-sev-critical",
+  poor: "fill-severity-critical",
 };
 
 /* ── Camera frame ─────────────────────────────────────────────────────── */
@@ -67,8 +67,8 @@ function Marker({ m, state }: { m: SceneMarker; state: "idle" | "used" | "droppe
   return (
     <g transform={`translate(${m.u * VB_W} ${m.v * VB_H}) rotate(${m.rot})`}>
       {/* White sheet, black border, 4×4 bit field — a printed ArUco tag. */}
-      <rect x={-s * 0.75} y={-s * 0.75} width={s * 1.5} height={s * 1.5} className="fill-neutral-100" />
-      <rect x={-s / 2} y={-s / 2} width={s} height={s} className="fill-neutral-950" />
+      <rect x={-s * 0.75} y={-s * 0.75} width={s * 1.5} height={s * 1.5} className="fill-media-foreground/95" />
+      <rect x={-s / 2} y={-s / 2} width={s} height={s} className="fill-media" />
       {m.bits.map((on, i) =>
         on ? (
           <rect
@@ -77,7 +77,7 @@ function Marker({ m, state }: { m: SceneMarker; state: "idle" | "used" | "droppe
             y={-inner / 2 + Math.floor(i / 4) * cell}
             width={cell}
             height={cell}
-            className="fill-neutral-100"
+            className="fill-media-foreground/95"
           />
         ) : null
       )}
@@ -89,14 +89,14 @@ function Marker({ m, state }: { m: SceneMarker; state: "idle" | "used" | "droppe
           height={s * 1.9}
           fill="none"
           strokeWidth={4}
-          className={state === "used" ? "stroke-success" : "stroke-sev-critical"}
+          className={state === "used" ? "stroke-success" : "stroke-severity-critical"}
         />
       )}
       {state === "dropped" && (
         <path
           d={`M${-s * 0.95} ${-s * 0.95} L${s * 0.95} ${s * 0.95} M${s * 0.95} ${-s * 0.95} L${-s * 0.95} ${s * 0.95}`}
           strokeWidth={4}
-          className="stroke-sev-critical"
+          className="stroke-severity-critical"
         />
       )}
     </g>
@@ -108,12 +108,12 @@ function MarkerLabel({ m, error }: { m: SceneMarker; error?: number }) {
     <text
       x={m.u * VB_W + m.size * 1.15}
       y={m.v * VB_H - m.size * 0.35}
-      className="fill-purple font-mono"
+      className="fill-violet font-mono"
       fontSize={20}
       fontWeight={700}
     >
       {m.id}
-      <tspan className="fill-purple/80" fontWeight={500} fontSize={16}>
+      <tspan className="fill-violet/80" fontWeight={500} fontSize={16}>
         {error === undefined ? ` (${m.x.toFixed(2)}, ${m.y.toFixed(2)} m)` : ` ${error.toFixed(1)} cm`}
       </tspan>
     </text>
@@ -145,10 +145,10 @@ function CameraFrame({
       className="block h-auto w-full"
     >
       {/* Room: back wall, floor in perspective, a few desks — enough to read as a CCTV frame. */}
-      <rect width={VB_W} height={VB_H} className="fill-neutral-900" />
-      <rect width={VB_W} height={300} className="fill-neutral-800" />
-      <path d={`M0 ${VB_H} L${VB_W} ${VB_H} L1250 300 L350 300 Z`} className="fill-neutral-700" />
-      <g className="stroke-neutral-600" strokeWidth={2} opacity={0.5}>
+      <rect width={VB_W} height={VB_H} className="fill-media-raised" />
+      <rect width={VB_W} height={300} className="fill-media-foreground/10" />
+      <path d={`M0 ${VB_H} L${VB_W} ${VB_H} L1250 300 L350 300 Z`} className="fill-media-foreground/20" />
+      <g className="stroke-media-foreground/30" strokeWidth={2} opacity={0.5}>
         {Array.from({ length: 9 }, (_, i) => {
           const x = 350 + (i * 900) / 8;
           return <line key={`r${i}`} x1={x} y1={300} x2={(i * VB_W) / 8} y2={VB_H} />;
@@ -158,11 +158,11 @@ function CameraFrame({
           return <line key={`h${y}`} x1={350 - 350 * t} y1={y} x2={1250 + 350 * t} y2={y} />;
         })}
       </g>
-      <g className="fill-neutral-600">
+      <g className="fill-media-foreground/30">
         <path d="M0 330 L230 300 L250 520 L0 600 Z" />
         <path d="M1600 320 L1370 300 L1350 500 L1600 570 Z" />
-        <rect x={620} y={210} width={140} height={90} rx={4} className="fill-neutral-700" />
-        <rect x={860} y={225} width={180} height={75} rx={4} className="fill-neutral-700" />
+        <rect x={620} y={210} width={140} height={90} rx={4} className="fill-media-foreground/20" />
+        <rect x={860} y={225} width={180} height={75} rx={4} className="fill-media-foreground/20" />
       </g>
 
       {/* Zone — the used markers joined into the camera's floor boundary. */}
@@ -187,10 +187,10 @@ function CameraFrame({
       ))}
 
       {/* CCTV burn-in */}
-      <text x={40} y={70} className="fill-neutral-100 font-mono" fontSize={40} fontWeight={600}>
+      <text x={40} y={70} className="fill-media-foreground/95 font-mono" fontSize={40} fontWeight={600}>
         09-29-2026 Tue 17:16:{seconds}
       </text>
-      <text x={VB_W - 40} y={VB_H - 40} textAnchor="end" className="fill-neutral-100 font-mono" fontSize={38} fontWeight={600}>
+      <text x={VB_W - 40} y={VB_H - 40} textAnchor="end" className="fill-media-foreground/95 font-mono" fontSize={38} fontWeight={600}>
         {camera.name}
       </text>
       {placement && (
@@ -202,8 +202,8 @@ function CameraFrame({
 
       {placing && (
         <g>
-          <rect width={VB_W} height={VB_H} className="fill-neutral-950/40" />
-          <text x={VB_W / 2} y={VB_H / 2} textAnchor="middle" className="fill-neutral-100" fontSize={40} fontWeight={600}>
+          <rect width={VB_W} height={VB_H} className="fill-media/40" />
+          <text x={VB_W / 2} y={VB_H / 2} textAnchor="middle" className="fill-media-foreground/95" fontSize={40} fontWeight={600}>
             {placingLabel}
           </text>
         </g>
@@ -340,7 +340,7 @@ function MarkerTable({
                   </td>
                   <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "x", "floor x") : pos.x.toFixed(3)}</td>
                   <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "y", "floor y") : pos.y.toFixed(3)}</td>
-                  <td className={cn("px-3 py-2 text-right font-mono", dropped && !editing && "text-sev-critical")}>
+                  <td className={cn("px-3 py-2 text-right font-mono", dropped && !editing && "text-severity-critical")}>
                     {editing ? cellInput(m.id, "error", "fit error") : `${placement.errors[m.id].toFixed(1)} cm`}
                   </td>
                   <td className="px-3 py-2">
@@ -350,7 +350,7 @@ function MarkerTable({
                         onBoundary
                           ? "border-success/40 bg-success/10 text-success"
                           : dropped
-                            ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical"
+                            ? "border-severity-critical/40 bg-severity-critical/10 text-severity-critical"
                             : "border-border bg-muted text-muted-foreground"
                       )}
                     >
@@ -621,9 +621,9 @@ export function ReidCalibrationDrawer({
 
               {/* Body */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="bg-neutral-950 p-3">
+                <div className="bg-media p-3">
                   {offline ? (
-                    <div className="flex aspect-video flex-col items-center justify-center gap-2 text-neutral-400">
+                    <div className="flex aspect-video flex-col items-center justify-center gap-2 text-media-foreground/60">
                       <VideoOff className="size-6" />
                       <p className="text-sm">{camera.name} is offline — it calibrates when it reconnects.</p>
                     </div>
@@ -695,7 +695,7 @@ export function ReidCalibrationDrawer({
                   size="sm"
                   onClick={runAutoPlace}
                   disabled={offline || !!placingId}
-                  className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                  className="gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
                 >
                   {placingId === camera.id ? <LoaderCircle className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
                   Auto-Place Markers

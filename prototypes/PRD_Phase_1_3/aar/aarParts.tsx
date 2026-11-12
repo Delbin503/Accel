@@ -10,7 +10,7 @@ import { FLINCH_LIMIT_MM, SESSION, SETTLE_LIMIT_MM, SHOTS, flinched, swayPath, t
    where it breaks down), the stance angles, and a sight-picture inset with the
    aim estimated at the break from muzzle direction and impact. */
 const OK = "var(--success)";
-const BAD = "var(--sev-critical)";
+const BAD = "var(--severity-critical)";
 const HUD = "rgb(255 255 255 / 0.62)";
 
 export function PostureFrame({ shot, live, clock, className }: { shot: Shot; live?: boolean; clock: string; className?: string }) {
@@ -112,7 +112,7 @@ export function WobblePlot({ shot, w }: { shot: Shot; w: SwayWindow }) {
   const before = w.rms !== undefined;
   const atShot = w.t === 0;
   const bad = atShot ? (shot.flinchMm ?? 0) > FLINCH_LIMIT_MM : !before && (w.offAimMm ?? 0) > SETTLE_LIMIT_MM;
-  const color = bad ? "var(--sev-critical)" : before ? "var(--info)" : "var(--primary)";
+  const color = bad ? "var(--severity-critical)" : before ? "var(--info)" : "var(--primary)";
   const scale = 40 / SPAN;
   const d = pts.map((p, i) => `${i ? "L" : "M"}${(p.x * scale).toFixed(1)} ${(-p.y * scale).toFixed(1)}`).join(" ");
   const last = pts[pts.length - 1];
@@ -127,9 +127,9 @@ export function WobblePlot({ shot, w }: { shot: Shot; w: SwayWindow }) {
       : `${w.offAimMm?.toFixed(1)} mm off`;
 
   return (
-    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border bg-background p-1", bad ? "border-sev-critical/40" : "border-border")}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border bg-background p-1", bad ? "border-severity-critical/40" : "border-border")}>
       <span className="font-mono text-3xs font-semibold text-foreground">{label}</span>
-      <span className={cn("truncate font-mono text-3xs", bad ? "text-sev-critical" : "text-muted-foreground")}>{detail}</span>
+      <span className={cn("truncate font-mono text-3xs", bad ? "text-severity-critical" : "text-muted-foreground")}>{detail}</span>
       <svg viewBox="-44 -44 88 88" className="block min-h-0 w-full flex-1" role="img" aria-label={`${label}: ${detail}`}>
         {[10, 20, 30, 40].map((r) => (
           <circle key={r} r={r} fill="none" stroke="var(--border)" strokeOpacity={r === 40 ? 1 : 0.6} />
@@ -139,7 +139,7 @@ export function WobblePlot({ shot, w }: { shot: Shot; w: SwayWindow }) {
         {before && w.ringMm !== undefined && (
           <ellipse rx={(w.ringMm / 2) * scale} ry={(w.ringMm / 2) * 0.42 * scale} transform="rotate(-37)" fill={color} fillOpacity="0.12" stroke={color} strokeWidth="1.2" />
         )}
-        {atShot && <circle r={FLINCH_LIMIT_MM * scale} fill="none" stroke="var(--sev-critical)" strokeOpacity="0.6" strokeDasharray="3 2" />}
+        {atShot && <circle r={FLINCH_LIMIT_MM * scale} fill="none" stroke="var(--severity-critical)" strokeOpacity="0.6" strokeDasharray="3 2" />}
         <path d={d} fill="none" stroke={color} strokeWidth="1.3" strokeLinejoin="round" />
         <circle cx={last.x * scale} cy={-last.y * scale} r="2.4" fill={color} stroke="var(--card)" />
       </svg>

@@ -44,8 +44,8 @@ export function CameraTableSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-16 text-muted-foreground">
-      <AlertCircle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+      <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load cameras.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
     </div>
@@ -57,7 +57,7 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
       <Cctv className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No cameras yet</p>
-      <p className="text-[12px]">Add a camera to configure RTSP feeds, NVR linkage, and boundary zones.</p>
+      <p className="text-sm">Add a camera to configure RTSP feeds, NVR linkage, and boundary zones.</p>
       <Button size="sm" onClick={onAdd} className="mt-1 gap-1.5">
         <Plus className="size-4" /> Add Camera
       </Button>

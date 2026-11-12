@@ -52,10 +52,10 @@ const openFindings = (reviews: Reviews) => REPS.flatMap((r) => findingsFor(r).fi
 
 const repTone = (r: Rep, device: DeviceMode) => {
   const n = failedChecks(r, device);
-  return n === 0 ? "success" : n === 1 ? "warning" : "sev-critical";
+  return n === 0 ? "success" : n === 1 ? "warning" : "severity-critical";
 };
-const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-critical": "text-sev-critical" } as const;
-const TONE_DOT = { success: "bg-success", warning: "bg-warning", "sev-critical": "bg-sev-critical" } as const;
+const TONE_TEXT = { success: "text-success", warning: "text-warning", "severity-critical": "text-severity-critical" } as const;
+const TONE_DOT = { success: "bg-success", warning: "bg-warning", "severity-critical": "bg-severity-critical" } as const;
 
 const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
 const SIGNED_AT = "11 Nov · 10:48";
@@ -218,7 +218,7 @@ function Delta({ now, before, lowerIsBetter = false, unit = "", digits = 0 }: { 
   const better = lowerIsBetter ? d < 0 : d > 0;
   const Arrow = d > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-sev-critical")}>
+    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-severity-critical")}>
       <Arrow className="size-3" />
       {d > 0 ? "+" : "−"}{Math.abs(d).toFixed(digits)}{unit} vs {PREVIOUS.date}
     </span>
@@ -246,7 +246,7 @@ function MiniChart({ title, value, bad, legend, children }: { title: string; val
     <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
-        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
+        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
       </div>
       <div className="relative min-h-16 flex-1">
         <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
@@ -292,7 +292,7 @@ function SummaryStrip({ name, open, device }: { name: string; open: number; devi
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.5fr)_minmax(0,1.6fr)_repeat(5,minmax(0,0.95fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{initialsOf(name)}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{initialsOf(name)}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-bold text-foreground">{name}</p>
           <p className="truncate text-2xs text-muted-foreground">{PATIENT.side} knee · wk {PATIENT.week}</p>
@@ -318,7 +318,7 @@ function SummaryStrip({ name, open, device }: { name: string; open: number; devi
           <InfoTip text={`Most the right knee bent today (best of ${repsOf("rom").length} reps), against week 1 and the patient's goal. The left knee bends to ${HEALTHY.flex}°.`} />
         </p>
         <div className="mt-0.5 flex items-baseline gap-2">
-          <span className="text-lg font-bold leading-tight text-primary">{TODAY.flex}°</span>
+          <span className="text-lg font-bold leading-tight text-primary-ink">{TODAY.flex}°</span>
           <span className="truncate text-3xs text-muted-foreground">wk 1 {BASELINE.flex}° · goal {LIMIT.goalFlex}°</span>
         </div>
         <p className="truncate text-3xs"><Delta now={TODAY.flex} before={PREVIOUS.flex} unit="°" /></p>
@@ -396,7 +396,7 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
           {MOMENT_ORDER.map((m) => (
             <button key={m} type="button" role="tab" aria-selected={m === moment} onClick={() => { setPlaying(false); onMoment(m); }}
               className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
-                m === moment ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                m === moment ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {MOMENTS[rep.ex][m]}
             </button>
           ))}
@@ -413,7 +413,7 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
             const to = rs[rs.length - 1].at + 25;
             return (
               <div key={ex} className={cn("absolute inset-y-0 rounded-md", ex === rep.ex ? "bg-primary/10" : "bg-muted/60")} style={{ left: pct(from), width: pct(to - from) }}>
-                <span className={cn("absolute left-1 top-0 truncate text-3xs font-semibold", ex === rep.ex ? "text-primary" : "text-muted-foreground")}>{EXERCISES[ex].short}</span>
+                <span className={cn("absolute left-1 top-0 truncate text-3xs font-semibold", ex === rep.ex ? "text-primary-ink" : "text-muted-foreground")}>{EXERCISES[ex].short}</span>
               </div>
             );
           })}
@@ -443,7 +443,7 @@ function RepPicker({ rep, device, onSelect }: { rep: Rep; device: DeviceMode; on
       {EX_ORDER.map((ex, i) => (
         <React.Fragment key={ex}>
           {i > 0 && <span aria-hidden className="mx-1 w-px shrink-0 self-stretch bg-border" />}
-          <span className={cn("flex shrink-0 items-center pr-0.5 text-3xs font-semibold uppercase tracking-wider", ex === rep.ex ? "text-primary" : "text-muted-foreground")}>
+          <span className={cn("flex shrink-0 items-center pr-0.5 text-3xs font-semibold uppercase tracking-wider", ex === rep.ex ? "text-primary-ink" : "text-muted-foreground")}>
             {EXERCISES[ex].short}
           </span>
           {repsOf(ex).map((r) => {
@@ -474,7 +474,7 @@ function ReviewPanel({ className, rep, reviews, device, onReview, onSelect }: {
   const findings = findingsFor(rep);
   const best = rep.id === TODAY.bestRom;
   return (
-    <Panel className={className} title="Rep Review" meta="Pick a rep" action={<span className="flex items-center gap-1.5 text-3xs text-muted-foreground"><span className="size-1.5 rounded-full bg-success" />all met<span className="size-1.5 rounded-full bg-warning" />1 missed<span className="size-1.5 rounded-full bg-sev-critical" />2+</span>}>
+    <Panel className={className} title="Rep Review" meta="Pick a rep" action={<span className="flex items-center gap-1.5 text-3xs text-muted-foreground"><span className="size-1.5 rounded-full bg-success" />all met<span className="size-1.5 rounded-full bg-warning" />1 missed<span className="size-1.5 rounded-full bg-severity-critical" />2+</span>}>
       <RepPicker rep={rep} device={device} onSelect={onSelect} />
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
         <span className="truncate">{repName(rep)}: <span className="font-semibold text-foreground">{rep.flex}° · {met}/{scored.length} checks met</span></span>
@@ -489,10 +489,10 @@ function ReviewPanel({ className, rep, reviews, device, onReview, onSelect }: {
               <NeedsDevice device={PLATE} className="ml-auto truncate text-right text-2xs" />
             </li>
           ) : (
-            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-0.5", c.ok ? "bg-background" : "bg-sev-critical/[0.07]")}>
-              {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />}
+            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-0.5", c.ok ? "bg-background" : "bg-severity-critical/[0.07]")}>
+              {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-severity-critical" aria-label="Not met" />}
               <span className="shrink-0 text-xs font-semibold text-foreground">{c.label}</span>
-              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok ? "text-muted-foreground" : "text-sev-critical")}>{c.note}</span>
+              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok ? "text-muted-foreground" : "text-severity-critical")}>{c.note}</span>
             </li>
           ))}
         </ul>
@@ -636,16 +636,16 @@ function SignalsPanel({ className, rep, moment, device, onSelect }: { className?
         </LineChart>
       </MiniChart>
       <MiniChart title="Compensations" value={`${rep.hipHike.toFixed(1)} cm · ${rep.trunkLean}°`} bad={rep.hipHike > LIMIT.hipHike || rep.trunkLean > LIMIT.trunkLean}
-        legend={<><Swatch c="bg-sev-high" />Hip hike cm <Swatch c="bg-chart-2" />Trunk lean °</>}>
+        legend={<><Swatch c="bg-severity-high" />Hip hike cm <Swatch c="bg-chart-2" />Trunk lean °</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -28, bottom: -6 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           <XAxis dataKey="t" type="number" domain={[0, T]} ticks={tTicks} {...AXIS} unit="s" />
           <YAxis domain={[0, 12]} ticks={[0, 4, 8, 12]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v, n) => (n === "hike" ? [`${v} cm`, "Hip hike"] : [`${v}°`, "Trunk lean"])} />
-          <ReferenceLine y={LIMIT.hipHike} stroke="var(--sev-high)" strokeDasharray="3 3" strokeOpacity={0.6} />
+          <ReferenceLine y={LIMIT.hipHike} stroke="var(--severity-high)" strokeDasharray="3 3" strokeOpacity={0.6} />
           <ReferenceLine y={LIMIT.trunkLean} stroke="var(--chart-2)" strokeDasharray="3 3" strokeOpacity={0.6} />
           <ReferenceLine x={now} stroke="var(--primary)" strokeWidth={2} />
-          <Line type="monotone" dataKey="hike" stroke="var(--sev-high)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="hike" stroke="var(--severity-high)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line type="monotone" dataKey="lean" stroke="var(--chart-2)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
@@ -690,7 +690,7 @@ function MeasuresPanel({ className, device }: { className?: string; device: Devi
                 <span className="truncate text-xs font-semibold text-foreground">{m.title}</span>
                 <InfoTip text={`${m.label}: ${m.info}`} />
                 <span className="ml-auto shrink-0 font-mono text-xs font-semibold text-foreground">{measureFmt(m.key, m.now)}</span>
-                <span className={cn("w-8 shrink-0 text-right font-mono text-3xs", m.now === m.last ? "text-muted-foreground" : better ? "text-success" : "text-sev-critical")}>
+                <span className={cn("w-8 shrink-0 text-right font-mono text-3xs", m.now === m.last ? "text-muted-foreground" : better ? "text-success" : "text-severity-critical")}>
                   {m.now === m.last ? "=" : `${m.now > m.last ? "+" : "−"}${+Math.abs(m.now - m.last).toFixed(m.digits ?? 0)}`}
                 </span>
               </div>
@@ -725,8 +725,8 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
         <div className="rounded-lg border border-border bg-background p-2">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="flex items-center gap-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="size-3 text-primary" />
-              Suggested: <span className="text-primary">{PLAN_LABEL[suggestion.plan]}</span>
+              <Sparkles className="size-3 text-primary-ink" />
+              Suggested: <span className="text-primary-ink">{PLAN_LABEL[suggestion.plan]}</span>
             </span>
             <div className="ml-auto">
               <PanelTabs value={plan} onChange={onPlan} tabs={(["progress", "hold", "regress"] as Plan[]).map((p) => [p, PLAN_LABEL[p]])} />
@@ -784,7 +784,7 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
               <li className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-2 py-0.5">
                 <span className="truncate text-xs font-semibold text-foreground">Step-ups</span>
                 <span className="shrink-0 font-mono text-3xs text-muted-foreground">3 × 8 · 10 cm</span>
-                <span className="ml-auto shrink-0 rounded bg-primary/15 px-1 text-3xs font-bold uppercase text-primary">New</span>
+                <span className="ml-auto shrink-0 rounded bg-primary/15 px-1 text-3xs font-bold uppercase text-primary-ink">New</span>
               </li>
             )}
           </ul>
@@ -897,7 +897,7 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
     ["Hold", "Hold at end range, s"], ["Hip", "Hip hike, cm"], ["Trunk", "Trunk lean, °"], ["L–R", "Left–right difference, %"], ["Checks", "Checks met"], ["Findings", "AI findings"],
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
-  const red = (bad: boolean) => (bad ? "text-sev-critical" : "text-muted-foreground");
+  const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -923,7 +923,7 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
                   className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.id === selected && "bg-muted")}>
                   <td className={cn(cell, "font-sans font-semibold text-foreground")}>{repName(r)}</td>
                   <td className={cn(cell, "text-muted-foreground")}>{fmtClock(r.at)}</td>
-                  <td className={cn(cell, "font-semibold", r.flex >= need ? "text-foreground" : "text-sev-critical")}>{r.flex}</td>
+                  <td className={cn(cell, "font-semibold", r.flex >= need ? "text-foreground" : "text-severity-critical")}>{r.flex}</td>
                   <td className={cn(cell, red(r.lag > LIMIT.lag))}>{r.lag}</td>
                   <td className={cn(cell, r.ex === "rom" ? red(r.speed > LIMIT.romSpeed) : r.ex === "sts" ? red(r.hold < LIMIT.stsLower) : "text-muted-foreground")}>
                     {r.ex === "rom" ? `${r.speed}°/s` : r.ex === "sts" ? `${r.hold.toFixed(1)} s` : "—"}
@@ -938,7 +938,7 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
                   <td className={cn(cell, "font-sans")}>
                     {fs.length ? (
                       <span className="flex flex-wrap gap-1">
-                        {fs.map((f) => <span key={f.key} className="rounded bg-sev-critical/10 px-1 py-px text-3xs font-semibold text-sev-critical">{FAULTS[f.key].label}</span>)}
+                        {fs.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
                   </td>
@@ -993,7 +993,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
     {
       label: open.length ? `Review ${open.length} AI finding${open.length === 1 ? "" : "s"} under ${REVIEW_BELOW}%` : "AI findings reviewed",
       done: open.length === 0,
-      action: open.length ? <button type="button" onClick={() => onSelect(open[0].rep.id)} className="text-2xs font-semibold text-primary hover:underline">Show {repName(open[0].rep).toLowerCase()} →</button> : undefined,
+      action: open.length ? <button type="button" onClick={() => onSelect(open[0].rep.id)} className="text-2xs font-semibold text-primary-ink hover:underline">Show {repName(open[0].rep).toLowerCase()} →</button> : undefined,
     },
     { label: approved ? `Programme change approved (${PLAN_LABEL[plan].toLowerCase()})` : "Approve the programme change", done: approved },
   ];

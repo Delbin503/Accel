@@ -59,7 +59,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 /* ── Severity styles ─────────────────────────────────────────────────── */
 
 const SEV_STYLES = {
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", label: "Critical", dot: "bg-sev-critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", label: "Critical", dot: "bg-severity-critical" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      label: "Medium",   dot: "bg-warning" },
   low:      { bg: "bg-info/15",         text: "text-info",         label: "Low",      dot: "bg-info" },
 };
@@ -112,7 +112,7 @@ const SITE_COLOR_MAP: Record<string, string> = {
   "Astra HQ":        "var(--success)",
   "FedEx Changi":    "var(--info)",
 };
-const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--sev-critical)", "var(--primary)"];
+const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--severity-critical)", "var(--primary)"];
 function siteColor(siteName: string, idx: number) {
   return SITE_COLOR_MAP[siteName] ?? SITE_FALLBACK_COLORS[idx % SITE_FALLBACK_COLORS.length];
 }
@@ -169,7 +169,7 @@ function SiteChipRow({
             {s.name}
             <span className={cn(
               "rounded-full px-1 py-px font-mono text-3xs",
-              isActive ? "bg-white/10" : "bg-muted text-muted-foreground"
+              isActive ? "bg-media-foreground/10" : "bg-muted text-muted-foreground"
             )}>
               {s.count}
             </span>
@@ -206,7 +206,7 @@ function SiteMultiSelect({
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
               ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              : "border-primary bg-primary/10 text-primary"
+              : "border-primary bg-primary/10 text-primary-ink"
           )}
         >
           <Filter className="size-3" />
@@ -219,7 +219,7 @@ function SiteMultiSelect({
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
           <button
             onClick={() => onChange([])}
-            className="text-2xs font-semibold uppercase tracking-wider text-primary hover:underline"
+            className="text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
           >
             All
           </button>
@@ -236,7 +236,7 @@ function SiteMultiSelect({
                 <span
                   className={cn(
                     "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
-                    checked ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                    checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-input"
                   )}
                 >
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
@@ -516,21 +516,21 @@ export default function DashboardPage({
           className={cn(
             "flex items-start gap-3 rounded-xl border px-4 py-3",
             systemStatus === "critical"
-              ? "border-sev-critical/40 bg-sev-critical/[0.06]"
+              ? "border-severity-critical/40 bg-severity-critical/[0.06]"
               : "border-warning/40 bg-warning/[0.06]"
           )}
         >
           <TriangleAlert
             className={cn(
               "mt-0.5 size-4 flex-shrink-0",
-              systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+              systemStatus === "critical" ? "text-severity-critical" : "text-warning"
             )}
           />
           <div className="min-w-0 flex-1 text-base">
             <span
               className={cn(
                 "font-semibold",
-                systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+                systemStatus === "critical" ? "text-severity-critical" : "text-warning"
               )}
             >
               Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
@@ -618,7 +618,7 @@ export default function DashboardPage({
               label="NVR Devices"
               value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
               sub={`${nvrTotal - nvrOnline} offline`}
-              accent="purple"
+              accent="violet"
               onClick={() => navigate("/site/nvr")}
             />
           </KpiGrid>
@@ -640,7 +640,7 @@ export default function DashboardPage({
               label="Open Cases"
               value={casesOpen}
               sub={`${casesEscalated} critical`}
-              accent="sev-critical"
+              accent="severity-critical"
               onClick={() => navigate("/incidents")}
             />
           </div>
@@ -760,7 +760,7 @@ export default function DashboardPage({
                           <div className="border-t border-border bg-muted/20 px-3 py-2.5">
                             <button
                               onClick={() => navigate("/detection-feed")}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                             >
                               View feed for this site
                               <ArrowUpRight className="size-3" />
@@ -829,7 +829,7 @@ export default function DashboardPage({
                       <p className="mt-0.5 text-2xs text-muted-foreground">{z.site}</p>
                       <div className="mt-1.5 flex items-center gap-3 text-2xs">
                         <span className="font-mono"><strong className="text-foreground">{z.total}</strong> incidents</span>
-                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{z.counts.critical}</span>
+                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-severity-critical" />{z.counts.critical}</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{z.counts.medium}</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{z.counts.low}</span>
                       </div>
@@ -843,7 +843,7 @@ export default function DashboardPage({
                           <Video className="size-3 flex-shrink-0 text-muted-foreground" />
                           <TruncatedText text={cs.camera} className="min-w-0 flex-1 text-sm font-semibold text-foreground" />
                           <span className="inline-flex items-center gap-1.5 text-2xs text-muted-foreground">
-                            {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{cs.critical}</span>}
+                            {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-severity-critical" />{cs.critical}</span>}
                             {cs.medium   > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{cs.medium}</span>}
                             {cs.low      > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{cs.low}</span>}
                             <span className="ml-1 font-mono font-bold text-foreground">{cs.total}</span>
@@ -854,7 +854,7 @@ export default function DashboardPage({
                     <div className="border-t border-border px-3 py-2">
                       <button
                         onClick={() => navigate("/detection-feed")}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
                       </button>
@@ -880,7 +880,7 @@ export default function DashboardPage({
               const sv = SEV_STYLES[e.severity];
               return (
                 <div key={e.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2"
-                  style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${e.severity})` }}>
+                  style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${e.severity})` }}>
                   <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                     {sv.label}
                   </span>
@@ -962,7 +962,7 @@ export default function DashboardPage({
                     cursor={{ fill: "var(--muted)", opacity: 0.4 }}
                   />
                   <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="offline" stackId="a" fill="var(--sev-critical)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="offline" stackId="a" fill="var(--severity-critical)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -973,7 +973,7 @@ export default function DashboardPage({
               Online
             </span>
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <span className="size-2 rounded-sm bg-sev-critical" />
+              <span className="size-2 rounded-sm bg-severity-critical" />
               Offline
             </span>
           </div>

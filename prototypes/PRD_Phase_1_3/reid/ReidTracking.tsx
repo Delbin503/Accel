@@ -161,7 +161,7 @@ export function TrackMap({
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${mapLabel(map)} with ${states.length} weapon${states.length === 1 ? "" : "s"}${focused ? `, ${focused.track.id} selected` : ""}`} className="block h-auto w-full">
-      <rect width={W} height={H} className="fill-neutral-900" />
+      <rect width={W} height={H} className="fill-media-raised" />
 
       {zoneMarks.map((m) => {
         const on = m.id === litCamera;
@@ -171,14 +171,14 @@ export function TrackMap({
             points={m.zone.map((p) => `${px(p.x)},${py(p.y)}`).join(" ")}
             strokeWidth={on ? (full ? 3 : 2) : 1}
             strokeLinejoin="round"
-            className={on ? "fill-neutral-700 stroke-neutral-100" : "fill-neutral-800 stroke-neutral-600"}
+            className={on ? "fill-media-foreground/20 stroke-media-foreground/95" : "fill-media-foreground/10 stroke-media-foreground/30"}
           />
         );
       })}
       {zoneMarks.map((m) => (
         <g key={m.id}>
           <text x={m.lx} y={m.ly} textAnchor="middle" dominantBaseline="middle" fontSize={camFs} fontWeight={700}
-            className={cn("font-mono", m.id === litCamera ? "fill-neutral-100" : "fill-neutral-500")}>
+            className={cn("font-mono", m.id === litCamera ? "fill-media-foreground/95" : "fill-media-foreground/45")}>
             {m.id.replace("Cam-", "C")}
           </text>
           {persons && (
@@ -194,8 +194,8 @@ export function TrackMap({
 
       {poses.map(({ id, pose }) => (
         <g key={id}>
-          <path d="M -9 -7 L 11 0 L -9 7 Z" transform={`translate(${px(pose.x)} ${py(pose.y)}) rotate(${(Math.atan2(-pose.dy, pose.dx) * 180) / Math.PI})`} className="fill-neutral-400" />
-          <text x={px(pose.x)} y={py(pose.y) + 22} textAnchor="middle" fontSize={12} className="fill-neutral-400 font-mono">{id}</text>
+          <path d="M -9 -7 L 11 0 L -9 7 Z" transform={`translate(${px(pose.x)} ${py(pose.y)}) rotate(${(Math.atan2(-pose.dy, pose.dx) * 180) / Math.PI})`} className="fill-media-foreground/60" />
+          <text x={px(pose.x)} y={py(pose.y) + 22} textAnchor="middle" fontSize={12} className="fill-media-foreground/60 font-mono">{id}</text>
         </g>
       ))}
 
@@ -209,7 +209,7 @@ export function TrackMap({
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeDasharray={faded(st) ? (full ? "6 6" : "3 3") : undefined}
-          className="fill-none stroke-sev-critical"
+          className="fill-none stroke-severity-critical"
           opacity={faded(st) ? 0.3 : 0.85}
         />
       ))}
@@ -229,18 +229,18 @@ export function TrackMap({
           >
             {st === focused && (
               <>
-                <circle r={t} className="animate-pulse fill-sev-critical/20 stroke-none" />
+                <circle r={t} className="animate-pulse fill-severity-critical/20 stroke-none" />
                 {/* Target brackets, so the selection reads even where trails cross. */}
                 <path
                   d={`M ${-t} ${-t / 2} V ${-t} H ${-t / 2} M ${t / 2} ${-t} H ${t} V ${-t / 2} M ${t} ${t / 2} V ${t} H ${t / 2} M ${-t / 2} ${t} H ${-t} V ${t / 2}`}
                   fill="none"
                   strokeWidth={full ? 2.5 : 1.5}
-                  className="stroke-neutral-100"
+                  className="stroke-media-foreground/95"
                 />
               </>
             )}
             <circle r={r} strokeWidth={st === focused ? (full ? 2.5 : 1.5) : 1.5}
-              className={cn("fill-sev-critical", st === focused ? "stroke-neutral-100" : "stroke-neutral-950")} />
+              className={cn("fill-severity-critical", st === focused ? "stroke-media-foreground/95" : "stroke-media")} />
           </g>
         );
       })}
@@ -254,11 +254,11 @@ export function TrackMap({
         const ly = Math.max(box.y, Math.min(y, box.y + box.h));
         return (
           <g key={`l-${st.track.id}`} opacity={faded(st) ? 0.45 : 1} className={cn(onPick && "cursor-pointer")} onClick={() => onPick?.(st.track.id)}>
-            {box.far && <line x1={x} y1={y} x2={lx} y2={ly} strokeWidth={1} className="stroke-sev-critical" />}
+            {box.far && <line x1={x} y1={y} x2={lx} y2={ly} strokeWidth={1} className="stroke-severity-critical" />}
             <rect x={box.x} y={box.y} width={box.w} height={box.h} rx={full ? 5 : 3} strokeWidth={1}
-              className={sel ? "fill-sev-critical stroke-neutral-100" : "fill-neutral-950 stroke-sev-critical"} />
+              className={sel ? "fill-severity-critical stroke-media-foreground/95" : "fill-media stroke-severity-critical"} />
             <text x={box.x + box.w / 2} y={box.y + box.h / 2} textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight={700}
-              className={cn("font-mono", sel ? "fill-neutral-50" : "fill-sev-critical")}>
+              className={cn("font-mono", sel ? "fill-media-foreground" : "fill-severity-critical")}>
               {chipText(st)}
             </text>
           </g>
@@ -299,8 +299,8 @@ export function WeaponBadges({
               "inline-flex items-center gap-1 rounded-md border font-mono font-bold backdrop-blur-sm transition-colors",
               size === "md" ? "px-2 py-0.5 text-2xs" : "px-1.5 py-px text-3xs",
               pinned
-                ? "border-sev-critical bg-sev-critical text-white"
-                : "border-sev-critical/60 bg-black/70 text-sev-critical hover:bg-sev-critical hover:text-white"
+                ? "border-severity-critical bg-severity-critical text-status-foreground"
+                : "border-severity-critical/60 bg-scrim/70 text-severity-critical hover:bg-severity-critical hover:text-status-foreground"
             )}
           >
             <Crosshair className={size === "md" ? "size-3" : "size-2.5"} />
@@ -322,10 +322,10 @@ export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: Reid
       onClick={onPin}
       className={cn(
         "flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors",
-        pinned ? "border-sev-critical/50 bg-sev-critical/10" : "border-border bg-background hover:border-primary/40"
+        pinned ? "border-severity-critical/50 bg-severity-critical/10" : "border-border bg-background hover:border-primary/40"
       )}
     >
-      <Crosshair className={cn("size-4 flex-shrink-0", pinned ? "text-sev-critical" : st.cameraId ? "text-warning" : "text-muted-foreground")} />
+      <Crosshair className={cn("size-4 flex-shrink-0", pinned ? "text-severity-critical" : st.cameraId ? "text-warning" : "text-muted-foreground")} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-foreground">
           <span className="font-mono">{st.track.id}</span>
@@ -336,7 +336,7 @@ export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: Reid
           {map ? ` · ${map.name}` : ""}
         </p>
       </div>
-      <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded", pinned ? "text-sev-critical" : "text-muted-foreground")} aria-hidden>
+      <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded", pinned ? "text-severity-critical" : "text-muted-foreground")} aria-hidden>
         {pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
       </span>
     </button>
@@ -439,10 +439,10 @@ export function TrackingPanel({
               <TrackMap map={shownMap} states={focus} focusId={pinnedId ?? focus[0]?.track.id ?? null} highlightCameraId={heroCameraId} size="mini" />
             </button>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-sev-critical" /> last {TRAIL_SEC} s</span>
-              <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-neutral-100 bg-neutral-700" /> camera in view</span>
+              <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-severity-critical" /> last {TRAIL_SEC} s</span>
+              <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-media-foreground/95 bg-media-raised" /> camera in view</span>
               {hiddenCount > 0 && (
-                <button type="button" onClick={onExpand} className="ml-auto font-semibold text-primary hover:underline">
+                <button type="button" onClick={onExpand} className="ml-auto font-semibold text-primary-ink hover:underline">
                   +{hiddenCount} more on this map
                 </button>
               )}

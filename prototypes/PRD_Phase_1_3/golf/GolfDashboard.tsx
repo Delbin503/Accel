@@ -32,10 +32,10 @@ import { Dispersion, DrawLayer, SwingFrame, type Mark, type Tool, type View } fr
 
 const TOOLTIP_STYLE = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 };
 const AXIS = { stroke: "var(--muted-foreground)", fontSize: 9, tickLine: false, axisLine: false } as const;
-const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "sev-critical");
-const TONE_TEXT = { success: "text-success", warning: "text-warning", "sev-critical": "text-sev-critical" } as const;
-const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "sev-critical": "bg-sev-critical/15" } as const;
-const TONE_DOT = { success: "bg-success", warning: "bg-warning", "sev-critical": "bg-sev-critical" } as const;
+const gradeTone = (g: string) => (g === "A" || g === "B" ? "success" : g === "C" ? "warning" : "severity-critical");
+const TONE_TEXT = { success: "text-success", warning: "text-warning", "severity-critical": "text-severity-critical" } as const;
+const TONE_FILL = { success: "bg-success/15", warning: "bg-warning/15", "severity-critical": "bg-severity-critical/15" } as const;
+const TONE_DOT = { success: "bg-success", warning: "bg-warning", "severity-critical": "bg-severity-critical" } as const;
 
 /* The bay's launch monitor gives the ball and club numbers; the cameras give
    everything about the body. It can be connected, missing for the whole
@@ -191,7 +191,7 @@ function Delta({ now, before, lowerIsBetter = false, unit = "", digits = 1 }: { 
   const Arrow = d > 0 ? TrendingUp : TrendingDown;
   const abs = Math.abs(d) % 1 ? Math.abs(d).toFixed(digits) : String(Math.abs(d));
   return (
-    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-sev-critical")}>
+    <span className={cn("inline-flex items-center gap-1", better ? "text-success" : "text-severity-critical")}>
       <Arrow className="size-3" />
       {d > 0 ? "+" : "−"}{abs}{unit} vs {PREVIOUS.date}
     </span>
@@ -223,7 +223,7 @@ function SummaryStrip({ reviews, golfer, monitor }: { reviews: Reviews; golfer: 
     { label: "X-factor", value: `${Math.round(s.xFactor)}°`, tone: inRange(s.xFactor, TARGET.xFactor) ? "text-success" : "text-warning", info: "Average gap between chest and pelvis turn at the top, from the cameras.", delta: <Delta now={+s.xFactor.toFixed(1)} before={PREVIOUS.xFactor} unit="°" /> },
     { label: "Sway", value: `${s.sway.toFixed(1)} cm`, tone: s.sway <= TARGET.pelvisSway[1] ? "text-success" : "text-warning", info: "Average pelvis shift away from the target at the top, from the cameras.", delta: <Delta now={+s.sway.toFixed(1)} before={PREVIOUS.sway} lowerIsBetter unit=" cm" /> },
   ] : [
-    { label: "Club speed", value: `${s.clubSpeed.toFixed(1)} mph`, tone: "text-purple", info: `Average club head speed at impact, from the launch monitor${mode === "offline" ? ` (swings ${WITH_BALL}: it went offline at ${OFFLINE_AT}).${vsLast(s.clubSpeed - PREVIOUS.clubSpeed, " mph")}` : "."}`, delta: ballNote(<Delta now={+s.clubSpeed.toFixed(1)} before={PREVIOUS.clubSpeed} unit=" mph" />) },
+    { label: "Club speed", value: `${s.clubSpeed.toFixed(1)} mph`, tone: "text-violet", info: `Average club head speed at impact, from the launch monitor${mode === "offline" ? ` (swings ${WITH_BALL}: it went offline at ${OFFLINE_AT}).${vsLast(s.clubSpeed - PREVIOUS.clubSpeed, " mph")}` : "."}`, delta: ballNote(<Delta now={+s.clubSpeed.toFixed(1)} before={PREVIOUS.clubSpeed} unit=" mph" />) },
     { label: "Carry", value: `${Math.round(s.carry)} yd`, tone: "text-foreground", info: `Average carry distance, from the launch monitor${mode === "offline" ? ` (swings ${WITH_BALL}: it went offline at ${OFFLINE_AT}).${vsLast(Math.round(s.carry) - PREVIOUS.carry, " yd")}` : "."}`, delta: ballNote(<Delta now={Math.round(s.carry)} before={PREVIOUS.carry} unit=" yd" />) },
   ];
   const kpis: { label: string; value: string; tone?: string; info: string; delta: React.ReactNode }[] = [
@@ -236,7 +236,7 @@ function SummaryStrip({ reviews, golfer, monitor }: { reviews: Reviews; golfer: 
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary">{golfer.initials}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{golfer.initials}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-bold text-foreground">{golfer.name}</p>
           <p className="truncate font-mono text-2xs text-muted-foreground">{GOLFER.id} · HCP {GOLFER.handicap}</p>
@@ -294,7 +294,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
   const pct = (sec: number) => `${(sec / SESSION.lengthSec) * 100}%`;
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
     <button type="button" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
       <Icon className="size-3.5" />
     </button>
   );
@@ -327,7 +327,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </SwingFrame>
         {tool !== "none" && (
-          <p className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-3xs text-white">
+          <p className="pointer-events-none absolute bottom-2 left-2 rounded bg-scrim/70 px-1.5 py-0.5 text-3xs text-media-foreground">
             {tool === "line" ? "Click two points to draw a line" : "Click three points · the middle one is the corner"}
           </p>
         )}
@@ -348,7 +348,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
           {PHASES.map((p) => (
             <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => { setPlaying(false); onPhase(p.key); }}
               className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
-                p.key === phase ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {p.label}
             </button>
           ))}
@@ -395,7 +395,7 @@ function checksFor(s: Swing, ball: boolean): CheckRow[] {
   ];
 }
 
-const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-sev-critical" } as const;
+const CONF_TONE = { High: "text-foreground", Medium: "text-warning", Low: "text-severity-critical" } as const;
 
 function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
   className?: string; swing: Swing; ball: boolean; reviews: Reviews; onReview: (k: string, r: Review) => void; onSelect: (n: number) => void;
@@ -425,7 +425,7 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
               <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                 #{s.n}
                 {s.n === BEST_SWING && <span title="Best swing" className="size-1.5 rounded-full bg-success" />}
-                {s.n === WEAKEST_SWING && <span title="Weakest swing" className="size-1.5 rounded-full bg-sev-critical" />}
+                {s.n === WEAKEST_SWING && <span title="Weakest swing" className="size-1.5 rounded-full bg-severity-critical" />}
               </span>
               <span className={cn("font-mono text-3xs font-semibold", TONE_TEXT[gradeTone(gradeOf(sc))])}>{sc}</span>
             </button>
@@ -434,7 +434,7 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
       </div>
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
         <span>Swing {swing.n}: <span className="font-semibold text-foreground">{score}/100{ball && ` · ${swing.carry} yd · ${shapeOf(swing)}`}</span> · {met}/{scored} met</span>
-        {tag && <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", swing.n === BEST_SWING ? "bg-success/15 text-success" : "bg-sev-critical/15 text-sev-critical")}>{tag}</span>}
+        {tag && <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", swing.n === BEST_SWING ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>}
       </p>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
@@ -445,10 +445,10 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
               <NeedsDevice device={DEVICE} className="ml-auto truncate text-right text-2xs" />
             </li>
           ) : (
-            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok ? "bg-background" : "bg-sev-critical/[0.07]")}>
-              {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-sev-critical" aria-label="Not met" />}
+            <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok ? "bg-background" : "bg-severity-critical/[0.07]")}>
+              {c.ok ? <CircleCheck className="size-4 shrink-0 text-success" aria-label="Met" /> : <CircleX className="size-4 shrink-0 text-severity-critical" aria-label="Not met" />}
               <span className="shrink-0 text-xs font-semibold text-foreground">{c.label}</span>
-              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok ? "text-muted-foreground" : "text-sev-critical")}>{c.note}</span>
+              <span className={cn("ml-auto truncate text-right font-mono text-2xs", c.ok ? "text-muted-foreground" : "text-severity-critical")}>{c.note}</span>
             </li>
           ))}
         </ul>
@@ -530,7 +530,7 @@ function BallPanel({ className, swing, monitor, onSelect }: { className?: string
           {cells.map(([k, v, bad]) => (
             <div key={k} className="min-w-0">
               <dt className="truncate text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
-              <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-sev-critical" : "text-foreground")}>{v}</dd>
+              <dd className={cn("truncate font-mono text-xs font-semibold", bad ? "text-severity-critical" : "text-foreground")}>{v}</dd>
             </div>
           ))}
         </dl>
@@ -546,7 +546,7 @@ function BallPanel({ className, swing, monitor, onSelect }: { className?: string
       <ul className="mt-1.5 flex shrink-0 flex-wrap gap-x-3 gap-y-0.5 text-3xs text-muted-foreground">
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-success" />Straight</li>
         <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-info" />Draw / fade</li>
-        <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-sev-critical" />Slice / hook</li>
+        <li className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-severity-critical" />Slice / hook</li>
       </ul>
     </Panel>
   );
@@ -556,7 +556,7 @@ function BallPanel({ className, swing, monitor, onSelect }: { className?: string
 
 const SYNC = { syncId: "golf-signals", syncMethod: "value" } as const;
 const T_TICKS = [-1.5, -1, -0.5, 0];
-const SEQ_TONE = { pelvis: "var(--info)", chest: "var(--warning)", arms: "var(--purple)", club: "var(--foreground)" } as const;
+const SEQ_TONE = { pelvis: "var(--info)", chest: "var(--warning)", arms: "var(--violet)", club: "var(--foreground)" } as const;
 
 function SignalsPanel({ className, swing, phase, mode }: { className?: string; swing: Swing; phase: Phase; mode: DeviceMode }) {
   const series = React.useMemo(() => swingSeries(swing), [swing]);
@@ -589,7 +589,7 @@ function SignalsPanel({ className, swing, phase, mode }: { className?: string; s
         </LineChart>
       </MiniChart>
       <MiniChart title="Sequence" value={inSequence(swing) ? "In order" : "Out of order"} bad={!inSequence(swing)}
-        legend={<><Swatch c="bg-info" />Pelvis <Swatch c="bg-warning" />Chest <Swatch c="bg-purple" />Arms <Swatch c="bg-foreground" />Club ÷2</>}>
+        legend={<><Swatch c="bg-info" />Pelvis <Swatch c="bg-warning" />Chest <Swatch c="bg-violet" />Arms <Swatch c="bg-foreground" />Club ÷2</>}>
         <LineChart data={seq} margin={{ top: 4, right: 4, left: -24, bottom: -6 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
           <XAxis dataKey="ms" type="number" domain={[-320, 80]} ticks={[-300, -200, -100, 0]} {...AXIS} />
@@ -610,11 +610,11 @@ function SignalsPanel({ className, swing, phase, mode }: { className?: string; s
           <YAxis domain={[20, 42]} ticks={[25, 30, 35, 40]} {...AXIS} />
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v) => [`${v}°`, "Forward bend"]} />
           {marks}
-          <Line type="monotone" dataKey="spine" stroke={lostBad ? "var(--sev-critical)" : "var(--success)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="spine" stroke={lostBad ? "var(--severity-critical)" : "var(--success)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
       <MiniChart title="Sway & hips" value={`Sway ${swing.pelvisSway.toFixed(1)} · hips ${swing.pelvisThrust.toFixed(1)} cm`} bad={thrustBad || swing.pelvisSway > TARGET.pelvisSway[1]}
-        legend={<><Swatch c="bg-chart-2" />Side to side <Swatch c="bg-sev-high" />Toward ball · cm</>}>
+        legend={<><Swatch c="bg-chart-2" />Side to side <Swatch c="bg-severity-high" />Toward ball · cm</>}>
         <LineChart data={series} margin={{ top: 4, right: 4, left: -28, bottom: -6 }} {...SYNC}>
           <ReferenceArea y1={0} y2={TARGET.pelvisThrust[1]} fill="var(--success)" fillOpacity={0.08} strokeOpacity={0} />
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
@@ -623,7 +623,7 @@ function SignalsPanel({ className, swing, phase, mode }: { className?: string; s
           <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `${v} s`} formatter={(v, n) => [`${v} cm`, n === "sway" ? "Side to side" : "Toward ball"]} />
           {marks}
           <Line type="monotone" dataKey="sway" stroke="var(--chart-2)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-          <Line type="monotone" dataKey="thrust" stroke="var(--sev-high)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="thrust" stroke="var(--severity-high)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
         </LineChart>
       </MiniChart>
     </Panel>
@@ -639,7 +639,7 @@ function MiniChart({ title, value, bad, legend, children }: { title: string; val
     <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
-        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-sev-critical" : "text-muted-foreground")}>{value}</span>
+        <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
       </div>
       <div className="relative min-h-16 flex-1">
         <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
@@ -672,7 +672,7 @@ function FundamentalsPanel({ className }: { className?: string }) {
             </div>
             <span className="w-14 shrink-0 text-right font-mono text-3xs">
               <span className="font-semibold text-foreground">{f.score}</span>{" "}
-              <span className={f.score >= f.previous ? "text-success" : "text-sev-critical"}>{f.score >= f.previous ? "+" : "−"}{Math.abs(f.score - f.previous)}</span>
+              <span className={f.score >= f.previous ? "text-success" : "text-severity-critical"}>{f.score >= f.previous ? "+" : "−"}{Math.abs(f.score - f.previous)}</span>
             </span>
           </li>
         ))}
@@ -696,10 +696,10 @@ function CoachingPanel({ className, monitor, onSee }: { className?: string; moni
         {faults.map((f, i) => (
           <div key={f.key} className="rounded-lg border border-border bg-background p-2">
             <div className="flex items-baseline gap-2">
-              <span className="grid size-4 shrink-0 place-items-center rounded bg-sev-critical/15 font-mono text-3xs font-bold text-sev-critical">{i + 1}</span>
+              <span className="grid size-4 shrink-0 place-items-center rounded bg-severity-critical/15 font-mono text-3xs font-bold text-severity-critical">{i + 1}</span>
               <span className="text-xs font-bold text-foreground">{f.label}</span>
               <span className="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">
-                {f.count}/{SWINGS.length} swings{cost(f) && <> · <span className="text-sev-critical">{cost(f)}</span></>}
+                {f.count}/{SWINGS.length} swings{cost(f) && <> · <span className="text-severity-critical">{cost(f)}</span></>}
               </span>
             </div>
             <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">{f.what}</p>
@@ -707,7 +707,7 @@ function CoachingPanel({ className, monitor, onSee }: { className?: string; moni
               <p className="text-2xs leading-snug text-foreground"><strong>{f.drillName}:</strong> {f.drill}</p>
             </div>
             {f.example !== undefined && (
-              <button type="button" onClick={() => onSee(f.example!, f.key)} className="mt-1 text-2xs font-semibold text-primary hover:underline">
+              <button type="button" onClick={() => onSee(f.example!, f.key)} className="mt-1 text-2xs font-semibold text-primary-ink hover:underline">
                 See swing {f.example} →
               </button>
             )}
@@ -798,7 +798,7 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
           <div role="tablist" aria-label="Sync at" className="flex gap-1">
             {PHASES.map((p) => (
               <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => setPhase(p.key)}
-                className={cn("rounded px-2 py-0.5 text-2xs font-semibold transition-colors", p.key === phase ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                className={cn("rounded px-2 py-0.5 text-2xs font-semibold transition-colors", p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 {p.label}
               </button>
             ))}
@@ -837,8 +837,8 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
                 return (
                   <tr key={r.label} className="border-b border-border/60 last:border-0 font-mono text-2xs">
                     <td className="py-1 pr-2 font-sans text-xs text-foreground">{r.label}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.a) ? "text-sev-critical" : "text-foreground")}>{val(r.a)}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.b) ? "text-sev-critical" : "text-foreground")}>{val(r.b)}</td>
+                    <td className={cn("py-1 pr-2 text-right", out(r.a) ? "text-severity-critical" : "text-foreground")}>{val(r.a)}</td>
+                    <td className={cn("py-1 pr-2 text-right", out(r.b) ? "text-severity-critical" : "text-foreground")}>{val(r.b)}</td>
                     <td className="py-1 pr-2 text-right text-muted-foreground">{d === null || Math.abs(d) < 0.05 ? "—" : signed(d, r.digits ?? 1)}</td>
                     <td className="py-1 text-right text-muted-foreground">{r.target ? `${r.target[0]}–${r.target[1]}` : "—"}</td>
                   </tr>
@@ -865,7 +865,7 @@ function SwingTable({ selected, onSelect, monitor }: { selected: number; onSelec
     ...(mode === "none" ? [] : BALL_COLS), ["Faults", "AI findings"],
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
-  const red = (bad: boolean) => (bad ? "text-sev-critical" : "text-muted-foreground");
+  const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -913,7 +913,7 @@ function SwingTable({ selected, onSelect, monitor }: { selected: number; onSelec
                   <td className={cn(cell, "font-sans")}>
                     {faults.length ? (
                       <span className="flex flex-wrap gap-1">
-                        {faults.map((f) => <span key={f.key} className="rounded bg-sev-critical/10 px-1 py-px text-3xs font-semibold text-sev-critical">{FAULTS[f.key].label}</span>)}
+                        {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
                   </td>
@@ -976,7 +976,7 @@ function ProgressSection({ monitor }: { monitor: Monitor }) {
               <div className="w-28 shrink-0">
                 <p className="truncate text-3xs font-semibold uppercase text-muted-foreground">{m.title}</p>
                 <p className="font-mono text-md font-bold text-foreground">{last}{m.unit}</p>
-                <p className={cn("text-3xs", better ? "text-success" : "text-sev-critical")}>{signed(last - first)}{m.unit} since {LESSONS[0].date}</p>
+                <p className={cn("text-3xs", better ? "text-success" : "text-severity-critical")}>{signed(last - first)}{m.unit} since {LESSONS[0].date}</p>
               </div>
               <div className="h-12 min-w-0 flex-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -984,7 +984,7 @@ function ProgressSection({ monitor }: { monitor: Monitor }) {
                     {m.band && <ReferenceArea y1={m.band[0]} y2={m.band[1]} fill="var(--success)" fillOpacity={0.1} strokeOpacity={0} />}
                     <YAxis hide domain={["dataMin - 2", "dataMax + 2"]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(_, p) => String(p?.[0]?.payload?.date ?? "")} formatter={(v) => [`${v}${m.unit}`, m.title]} />
-                    <Line type="monotone" dataKey={m.key} stroke={better ? "var(--success)" : "var(--sev-critical)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey={m.key} stroke={better ? "var(--success)" : "var(--severity-critical)"} strokeWidth={1.6} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

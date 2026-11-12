@@ -39,7 +39,7 @@ export function ReidMapPanel() {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-        <MapPinned className="size-4 shrink-0 text-primary" />
+        <MapPinned className="size-4 shrink-0 text-primary-ink" />
         <span className="text-base font-bold text-foreground">Re-ID Map</span>
         <span className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-success">
           <span className="size-1.5 animate-pulse rounded-full bg-success" />Live
@@ -84,7 +84,7 @@ export function ReidMapPanel() {
                 h-full fills the two rows beside the map instead of leaving the
                 card's fixed height stranded in a taller column. */}
             <KpiCard label="Persons" value={personTotal} sub="inside the map now" accent="info" className="h-full min-h-[120px] bg-background" />
-            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="sev-critical" className="h-full min-h-[120px] bg-background" />
+            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="severity-critical" className="h-full min-h-[120px] bg-background" />
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
@@ -93,14 +93,14 @@ export function ReidMapPanel() {
               onClick={() => setOpen(true)}
               aria-label="Enlarge map"
               // Capped in height when wide, so the panel stays compact; the map keeps its shape, centred.
-              className="block w-full overflow-hidden rounded-lg border border-border bg-neutral-900 transition-colors hover:border-primary/50 @3xl:h-72 @3xl:[&>svg]:h-full"
+              className="block w-full overflow-hidden rounded-lg border border-border bg-media-raised transition-colors hover:border-primary/50 @3xl:h-72 @3xl:[&>svg]:h-full"
             >
               <TrackMap map={map} states={onMap} focusId={pinned?.track.id ?? null} size="mini" persons={persons} />
             </button>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-muted-foreground">
               <span className="flex items-center gap-1"><Users className="size-3 text-info" />people in each camera's zone</span>
-              <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-sev-critical" />weapon, last {TRAIL_SEC} s</span>
-              {pinned && <span className="flex items-center gap-1"><span className="size-2 rounded-full border border-neutral-100 bg-sev-critical" />{pinned.track.id} selected</span>}
+              <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-severity-critical" />weapon, last {TRAIL_SEC} s</span>
+              {pinned && <span className="flex items-center gap-1"><span className="size-2 rounded-full border border-media-foreground/95 bg-severity-critical" />{pinned.track.id} selected</span>}
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export function ReidMapPanel() {
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons on this map · {onMap.length}</p>
                 {pinned && (
-                  <button type="button" onClick={() => setPinnedId(null)} className="text-2xs font-semibold text-primary hover:underline">Clear selection</button>
+                  <button type="button" onClick={() => setPinnedId(null)} className="text-2xs font-semibold text-primary-ink hover:underline">Clear selection</button>
                 )}
               </div>
               {/* The same rows as the enlarged map's list; picking one highlights it on the map. */}

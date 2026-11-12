@@ -89,7 +89,7 @@ function DeviceModal({
     if (Object.keys(e).length === 0) onConfirm(f);
   }
 
-  const err = (k: keyof DeviceForm) => errors[k] && <p className="mt-1 text-xs text-sev-critical">{errors[k]}</p>;
+  const err = (k: keyof DeviceForm) => errors[k] && <p className="mt-1 text-xs text-severity-critical">{errors[k]}</p>;
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
@@ -303,7 +303,7 @@ function DeviceDrawer({
             )}
           </div>
 
-          <button onClick={onRemove} className="inline-flex items-center gap-1.5 text-sm font-semibold text-sev-critical hover:underline">
+          <button onClick={onRemove} className="inline-flex items-center gap-1.5 text-sm font-semibold text-severity-critical hover:underline">
             <Trash2 className="size-3.5" />
             Remove device
           </button>
@@ -394,10 +394,10 @@ export function TaExternalDevices() {
     toast.success(`${id} removed`, { description: "Deployments that used it keep running on cameras only." });
   }
 
-  const KPIS: { key: KpiKey; label: string; sub: string; accent: "primary" | "success" | "warning" | "info" | "sev-critical"; value: number }[] = [
+  const KPIS: { key: KpiKey; label: string; sub: string; accent: "primary" | "success" | "warning" | "info" | "severity-critical"; value: number }[] = [
     { key: "all", label: "Total devices", sub: "Across all sites", accent: "primary", value: devices.length },
     { key: "online", label: "Online", sub: "Sending readings", accent: "success", value: devices.filter((d) => d.status === "online").length },
-    { key: "offline", label: "Offline", sub: "Not responding", accent: "sev-critical", value: devices.filter((d) => d.status === "offline").length },
+    { key: "offline", label: "Offline", sub: "Not responding", accent: "severity-critical", value: devices.filter((d) => d.status === "offline").length },
     { key: "pairing", label: "Pairing", sub: "Waiting for first reading", accent: "warning", value: devices.filter((d) => d.status === "pairing").length },
     { key: "in-sessions", label: "Used in sessions", sub: "Data joins results", accent: "info", value: devices.filter((d) => d.useInSessions).length },
   ];
@@ -434,7 +434,7 @@ export function TaExternalDevices() {
 
       <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> {filtered.length === 1 ? "device" : "devices"} match current filters
-        {hasFilters && <button onClick={clearAll} className="ml-2 text-muted-foreground underline hover:text-primary">Clear all</button>}
+        {hasFilters && <button onClick={clearAll} className="ml-2 text-muted-foreground underline hover:text-primary-ink">Clear all</button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -467,10 +467,10 @@ export function TaExternalDevices() {
               <tbody className="divide-y divide-border/60">
                 {filtered.map((d) => (
                   <tr key={d.id} onClick={() => setDrawerId(d.id)} className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
-                    <td className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary">{d.id}</span></td>
+                    <td className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{d.id}</span></td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-foreground group-hover:text-primary">{d.name}</span>
+                        <span className="font-semibold text-foreground group-hover:text-primary-ink">{d.name}</span>
                         <span className="font-mono text-xs text-muted-foreground">{d.model}</span>
                       </div>
                     </td>
@@ -514,7 +514,7 @@ export function TaExternalDevices() {
                             <Pencil className="size-3.5 text-muted-foreground" />Edit device
                           </button>
                           <div className="my-1 border-t border-border" />
-                          <button onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10">
+                          <button onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
                             <Trash2 className="size-3.5" />Remove
                           </button>
                         </PopoverContent>

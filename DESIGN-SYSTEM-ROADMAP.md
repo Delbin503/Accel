@@ -16,8 +16,8 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 **Do these in order:**
 
-1. **Commit + push Phase 2A** (S): ask Claude *"commit the layer-naming and guardrail work"*. It stages only design-system files and leaves your WIP alone.
-2. **Phase 2B: bring the prototypes in line** (M). The prototypes are the main UI, and they currently bypass most guardrails (see the audit below).
+1. ~~Commit + push Phase 2A~~ ✅ `d70e0b7`
+2. **Phase 2B: prototypes.** Token work is done (2026-11-14) and needs committing. Left: migrating raw elements (383)
 3. **Phase 2C: name page sections** (S–M). The decision was to name sections, not every element.
 4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
 5. Then **Phase 3** (component APIs).
@@ -36,7 +36,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 | Tokens | 🟢 Strong | 3 tiers (`--palette-*` → semantic → component), light/dark, elevation, media, fill/ink tokens; **0 WCAG AA text failures**; `npm run lint:tokens` |
 | Guardrails (app `src/`) | 🟢 Strong | ESLint bans off-system classes; pages can't hand-roll primitives; component registry; every component element named. Debt baselined (572) |
 | Layer naming | 🟢 Strong (components) / 🟠 pages | 693 named layers across 76 component files; pages unnamed (Phase 2C) |
-| **Prototypes (the main UI)** | 🔴 Weak | Not covered by guardrails. 1,171 token issues + 388 raw elements, mostly in `PRD_Phase_1_3` (Phase 2B) |
+| **Prototypes (the main UI)** | 🟡 Functional | Guardrails + type-check cover them; token issues 1,171 → 0. Left: 383 raw elements (Phase 2B) |
 | Primitives (`components/ui`) | 🟢 Strong | 26 shadcn components, 24 with stories |
 | App composites (`components/shared`) | 🟠 Weak | 43 components, 10 with stories; design-system and app-only pieces mixed |
 | Prop vocabulary | 🟠 Weak | `StatusBadge tone=`, `KpiCard accent=`, `Button variant=` |
@@ -134,7 +134,7 @@ ESLint still reports **226 problems that predate this work** (mostly React-hooks
   - Existing debt (384 buttons, 47 inputs, 19 tables) is baselined
 - [x] **Component registry:** `src/components/registry.json` lists the 78 approved components. `scripts/check-components.mjs` (`npm run lint:components`) fails on any unregistered component file or folder
 - [x] **CLAUDE.md, "0. Building page UI":** look in the registry and Storybook first, then compose. If nothing fits, **stop and ask** with a proposal (name, folder, props, why existing ones don't fit). After approval: build it, add `data-slot` + a story, then register it
-- [ ] **Commit + push** (next session, step 1)
+- [x] **Commit + push**: `d70e0b7`
 
 **Done when:** `npm run lint` shows the token, slot and registry checks passing, with 0 guardrail errors. ✅
 
@@ -165,10 +165,11 @@ By prototype:
 - `PRD_Billing` and `PRD_Training_Assessment` are already clean
 
 Steps:
-- [ ] Extend ESLint guardrails to `prototypes/**` (same `pageGuardrails`) and baseline the current debt, so prototypes stop getting worse immediately (S)
-- [ ] Codemods (same scripts as Phase 2): `sev-*` → `severity-*`, `purple` → `violet`, `*-soft` → `/15`, `primary-muted` → `/10`, `text-primary` → `text-primary-ink`, solid labelled `bg-primary` → `bg-primary-fill`, raw black/white on media → media tokens (M)
-- [ ] `text-[Npx]` → type-scale tokens; hex/rgb, palette, shadow, z and radius leftovers → tokens. Screenshot-check each prototype in light and dark (M)
-- [ ] Raw elements → components, starting with `PRD_Phase_1_3`. Anything that genuinely needs a new component goes through the "ask first" rule (L, can overlap with Phase 3)
+- [x] ESLint guardrails now cover `prototypes/**` (same `pageGuardrails` as pages). Added `npm run typecheck:prototypes` (`tsconfig.protocheck.json`), since prototypes weren't type-checked at all; 1 error predates this work (`RecordingSchedule.tsx`)
+- [x] Codemods across 88 files (~1,070 fixes): `sev-*` → `severity-*` (467), `text-primary` → `text-primary-ink` (207), `purple` → `violet` (63), labelled `bg-primary` → `bg-primary-fill` (41), black/white on media → media tokens (96), old shadows → elevation (46), `*-soft` / `primary-muted` → opacity (15)
+- [x] `text-[Npx]` → type scale (122). `z-[90]`/`z-[100]` tester chrome → `--z-tooltip` (16 wrappers). Re-ID floor-plan and scene SVG greys → media tokens at matching opacity. Chart `var(--purple)` → `var(--violet)`. **Token violations in prototypes: 0** (except 6 in your email-template WIP)
+- [ ] Screenshot pass of every prototype in light and dark. Phase 1.3 index and Re-ID live monitoring checked so far
+- [ ] Raw elements → components: **383 baselined** (343 buttons, 26 inputs, 18 tables, 1 select), mostly `PRD_Phase_1_3`. Anything that genuinely needs a new component goes through the "ask first" rule (L, can overlap with Phase 3)
 - [ ] `npm run lint:prune` after each batch
 
 **Done when:** the prototypes' guardrail baseline is 0 for token and deprecated-name rules (raw elements may still be burning down), and every prototype renders correctly in both themes.

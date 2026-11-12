@@ -13,9 +13,9 @@ import { agoLabel, plainSummary, type LiveDetection } from "./liveDetections";
 const SEVERITY_LABEL: Record<Severity, string> = { critical: "Critical", medium: "Medium", low: "Low" };
 
 const SEVERITY_EDGE: Record<Severity, string> = {
-  critical: "before:bg-sev-critical",
-  medium: "before:bg-sev-medium",
-  low: "before:bg-sev-low",
+  critical: "before:bg-severity-critical",
+  medium: "before:bg-severity-medium",
+  low: "before:bg-severity-low",
 };
 
 function whereLabel(d: LiveDetection) {
@@ -39,12 +39,12 @@ export function DetectionsPanel({ detections, now, onOpen, onLocate }: {
       <div className="flex-shrink-0 border-b border-border px-3 py-3">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            <span className="size-1.5 animate-pulse rounded-full bg-sev-critical" />
+            <span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />
             Live detections
           </p>
           <p className="text-xs text-muted-foreground">
             <strong className="text-foreground">{detections.length}</strong>
-            {critical > 0 && <> · <strong className="text-sev-critical">{critical}</strong> critical</>}
+            {critical > 0 && <> · <strong className="text-severity-critical">{critical}</strong> critical</>}
           </p>
         </div>
         <p className="mt-2 text-2xs text-muted-foreground">
@@ -149,7 +149,7 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
           key={d.id}
           role="status"
           className={cn(
-            "relative w-full overflow-hidden rounded-xl border border-border bg-card shadow-lg transition-colors hover:border-primary/40",
+            "relative w-full overflow-hidden rounded-xl border border-border bg-card shadow-floating transition-colors hover:border-primary/40",
             "before:absolute before:inset-y-0 before:left-0 before:w-1",
             SEVERITY_EDGE[d.event.severity],
             "animate-in fade-in-0 slide-in-from-bottom-2 duration-[var(--duration-normal)]"
@@ -187,7 +187,7 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
           <button
             type="button"
             onClick={onShowAll}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-foreground shadow-sm hover:border-primary/40"
+            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-foreground shadow-raised hover:border-primary/40"
           >
             +{hidden} more
           </button>
@@ -196,7 +196,7 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
           <button
             type="button"
             onClick={onClearAll}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-muted-foreground shadow-sm hover:text-foreground"
+            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-muted-foreground shadow-raised hover:text-foreground"
           >
             Clear all
           </button>

@@ -35,7 +35,7 @@ export function LoadingPreview() {
   return (
     <AuthLayout>
       <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card/40 px-6 py-12 text-center backdrop-blur-sm">
-        <LoaderCircle className="size-8 animate-spin text-primary" />
+        <LoaderCircle className="size-8 animate-spin text-primary-ink" />
         <div>
           <h1 className="text-xl font-bold text-foreground">Working…</h1>
           <p className="mt-1 text-base text-muted-foreground">
@@ -50,8 +50,8 @@ export function LoadingPreview() {
 export function ErrorPreview({ onRetry }: { onRetry: () => void }) {
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] px-6 py-12 text-center">
-        <AlertCircle className="size-8 text-sev-critical" />
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] px-6 py-12 text-center">
+        <AlertCircle className="size-8 text-severity-critical" />
         <div>
           <h1 className="text-xl font-bold text-foreground">Something went wrong</h1>
           <p className="mt-1 text-base text-muted-foreground">

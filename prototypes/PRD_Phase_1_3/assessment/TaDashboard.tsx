@@ -92,7 +92,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 /* ── Severity styles ─────────────────────────────────────────────────── */
 
 const SEV_STYLES = {
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", label: "Critical", dot: "bg-sev-critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", label: "Critical", dot: "bg-severity-critical" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      label: "Medium",   dot: "bg-warning" },
   low:      { bg: "bg-info/15",         text: "text-info",         label: "Low",      dot: "bg-info" },
 };
@@ -145,7 +145,7 @@ const SITE_COLOR_MAP: Record<string, string> = {
   "Astra HQ":        "var(--success)",
   "FedEx Changi":    "var(--info)",
 };
-const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--sev-critical)", "var(--primary)"];
+const SITE_FALLBACK_COLORS = ["var(--info)", "var(--success)", "var(--warning)", "var(--secondary)", "var(--severity-critical)", "var(--primary)"];
 function siteColor(siteName: string, idx: number) {
   return SITE_COLOR_MAP[siteName] ?? SITE_FALLBACK_COLORS[idx % SITE_FALLBACK_COLORS.length];
 }
@@ -202,7 +202,7 @@ function SiteChipRow({
             {s.name}
             <span className={cn(
               "rounded-full px-1 py-px font-mono text-3xs",
-              isActive ? "bg-white/10" : "bg-muted text-muted-foreground"
+              isActive ? "bg-media-foreground/10" : "bg-muted text-muted-foreground"
             )}>
               {s.count}
             </span>
@@ -239,7 +239,7 @@ function SiteMultiSelect({
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
               ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              : "border-primary bg-primary/10 text-primary"
+              : "border-primary bg-primary/10 text-primary-ink"
           )}
         >
           <Filter className="size-3" />
@@ -252,7 +252,7 @@ function SiteMultiSelect({
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
           <button
             onClick={() => onChange([])}
-            className="text-2xs font-semibold uppercase tracking-wider text-primary hover:underline"
+            className="text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
           >
             All
           </button>
@@ -269,7 +269,7 @@ function SiteMultiSelect({
                 <span
                   className={cn(
                     "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
-                    checked ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                    checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-input"
                   )}
                 >
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
@@ -402,9 +402,9 @@ function PanelFrame({
       )}
 
       {/* Name tag, so a panel is identifiable at a glance while editing. */}
-      <span className="pointer-events-none absolute -top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-md border border-border bg-background/90 px-2 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
+      <span className="pointer-events-none absolute -top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-md border border-border bg-background/90 px-2 py-1 text-xs font-semibold text-foreground shadow-raised backdrop-blur-sm">
         <GripVertical className="size-3.5 text-muted-foreground" />
-        <Icon className="size-3.5 text-primary" />
+        <Icon className="size-3.5 text-primary-ink" />
         {def.title}
       </span>
 
@@ -412,7 +412,7 @@ function PanelFrame({
       {selected && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute -top-4 right-3 z-20 flex cursor-default items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+          className="absolute -top-4 right-3 z-20 flex cursor-default items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-floating"
         >
           <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={!canMoveUp}
             onClick={() => onMove(-1)} aria-label={`Move ${def.title} up`}>
@@ -424,7 +424,7 @@ function PanelFrame({
           </Button>
           <div className="mx-0.5 h-4 w-px bg-border" />
           <Button variant="ghost" size="sm"
-            className="h-7 gap-1.5 px-2 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+            className="h-7 gap-1.5 px-2 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
             onClick={onRemove}>
             <EyeOff className="size-3.5" />
             Remove
@@ -471,8 +471,8 @@ function PanelDrawer({
         onDropRemove(e);
       }}
       className={cn(
-        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-2xl transition-colors duration-[var(--duration-fast)] ease-standard",
-        over ? "border-sev-critical bg-sev-critical/5" : "border-border"
+        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-modal transition-colors duration-[var(--duration-fast)] ease-standard",
+        over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
       <div className="border-b border-border px-4 py-3.5">
@@ -491,7 +491,7 @@ function PanelDrawer({
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
-            over ? "border-sev-critical text-sev-critical" : "border-border text-muted-foreground"
+            over ? "border-severity-critical text-severity-critical" : "border-border text-muted-foreground"
           )}>
             <EyeOff className="size-3.5" />
             Drop here to remove
@@ -517,7 +517,7 @@ function PanelDrawer({
                 className="group/item flex cursor-grab items-start gap-2.5 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/40 active:cursor-grabbing"
               >
                 <GripVertical className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-ink">
                   <Icon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -647,7 +647,7 @@ function DashboardCanvas({
               onDrop={(e) => { e.preventDefault(); dropAt(null, "after"); }}
               className={cn(
                 "flex items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-6 text-xs font-semibold transition-colors @2xl/canvas:col-span-2",
-                drop?.target === null ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
+                drop?.target === null ? "border-primary bg-primary/5 text-primary-ink" : "border-border text-muted-foreground"
               )}
             >
               <Plus className="size-3.5" />
@@ -984,7 +984,7 @@ export function TaDashboard({
               sub={`${camTotal - camOnline} offline`} accent="success" onClick={() => navigate("/site/cameras")} />
             <KpiCard label="NVR Devices"
               value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
-              sub={`${nvrTotal - nvrOnline} offline`} accent="purple" onClick={() => navigate("/site/nvr")} />
+              sub={`${nvrTotal - nvrOnline} offline`} accent="violet" onClick={() => navigate("/site/nvr")} />
           </div>
         </div>
         <div className="hidden w-px self-stretch bg-border @2xl:block" />
@@ -993,7 +993,7 @@ export function TaDashboard({
           <div className="grid grid-cols-2 gap-3">
             <KpiCard label="Events" value={eventsInRange} sub={dateLabel} accent="info"
               onClick={() => navigate("/detection-feed")} />
-            <KpiCard label="Open Cases" value={casesOpen} sub={`${casesEscalated} critical`} accent="sev-critical"
+            <KpiCard label="Open Cases" value={casesOpen} sub={`${casesEscalated} critical`} accent="severity-critical"
               onClick={() => navigate("/incidents")} />
           </div>
         </div>
@@ -1130,7 +1130,7 @@ export function TaDashboard({
                       <div className="border-t border-border bg-muted/20 px-3 py-2.5">
                         <button
                           onClick={() => navigate("/detection-feed")}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                         >
                           View feed for this site
                           <ArrowUpRight className="size-3" />
@@ -1196,7 +1196,7 @@ export function TaDashboard({
                       <p className="mt-0.5 text-2xs text-muted-foreground">{z.site}</p>
                       <div className="mt-1.5 flex items-center gap-3 text-2xs">
                         <span className="font-mono"><strong className="text-foreground">{z.total}</strong> incidents</span>
-                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{z.counts.critical}</span>
+                        <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-severity-critical" />{z.counts.critical}</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{z.counts.medium}</span>
                         <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{z.counts.low}</span>
                       </div>
@@ -1210,7 +1210,7 @@ export function TaDashboard({
                           <Video className="size-3 flex-shrink-0 text-muted-foreground" />
                           <TruncatedText text={cs.camera} className="min-w-0 flex-1 text-sm font-semibold text-foreground" />
                           <span className="inline-flex items-center gap-1.5 text-2xs text-muted-foreground">
-                            {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-sev-critical" />{cs.critical}</span>}
+                            {cs.critical > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-severity-critical" />{cs.critical}</span>}
                             {cs.medium   > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-warning" />{cs.medium}</span>}
                             {cs.low      > 0 && <span className="inline-flex items-center gap-0.5"><span className="size-1.5 rounded-full bg-info" />{cs.low}</span>}
                             <span className="ml-1 font-mono font-bold text-foreground">{cs.total}</span>
@@ -1221,7 +1221,7 @@ export function TaDashboard({
                     <div className="border-t border-border px-3 py-2">
                       <button
                         onClick={() => navigate("/detection-feed")}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
                       </button>
@@ -1246,7 +1246,7 @@ export function TaDashboard({
             const sv = SEV_STYLES[e.severity];
             return (
               <div key={e.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2"
-                style={{ borderLeftWidth: 3, borderLeftColor: `var(--sev-${e.severity})` }}>
+                style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${e.severity})` }}>
                 <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                   {sv.label}
                 </span>
@@ -1327,7 +1327,7 @@ export function TaDashboard({
                   cursor={{ fill: "var(--muted)", opacity: 0.4 }}
                 />
                 <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="var(--sev-critical)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="offline" stackId="a" fill="var(--severity-critical)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1338,7 +1338,7 @@ export function TaDashboard({
             Online
           </span>
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <span className="size-2 rounded-sm bg-sev-critical" />
+            <span className="size-2 rounded-sm bg-severity-critical" />
             Offline
           </span>
         </div>
@@ -1426,18 +1426,18 @@ export function TaDashboard({
           className={cn(
             "flex items-start gap-3 rounded-xl border px-4 py-3",
             systemStatus === "critical"
-              ? "border-sev-critical/40 bg-sev-critical/[0.06]"
+              ? "border-severity-critical/40 bg-severity-critical/[0.06]"
               : "border-warning/40 bg-warning/[0.06]"
           )}
         >
           <TriangleAlert
             className={cn(
               "mt-0.5 size-4 flex-shrink-0",
-              systemStatus === "critical" ? "text-sev-critical" : "text-warning"
+              systemStatus === "critical" ? "text-severity-critical" : "text-warning"
             )}
           />
           <div className="min-w-0 flex-1 text-base">
-            <span className={cn("font-semibold", systemStatus === "critical" ? "text-sev-critical" : "text-warning")}>
+            <span className={cn("font-semibold", systemStatus === "critical" ? "text-severity-critical" : "text-warning")}>
               Alert · {statusPresentation.label}
             </span>
             <span className="ml-1 text-muted-foreground">
@@ -1487,8 +1487,8 @@ export function TaDashboard({
 
       {/* Edit bar — stays on screen while the operator scrolls the panels. */}
       {editing && (
-        <div className="sticky top-0 z-[var(--z-sticky)] flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-lg">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="sticky top-0 z-[var(--z-sticky)] flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-floating">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <Pencil className="size-4" />
           </div>
           <div className="min-w-60 flex-1">

@@ -9,7 +9,7 @@ import {
    joint), and the range-of-motion gauge. */
 
 const OK = "var(--success)";
-const BAD = "var(--sev-critical)";
+const BAD = "var(--severity-critical)";
 const WARN = "var(--warning)";
 const GHOST = "var(--info)";
 const HUD = "rgb(255 255 255 / 0.62)";

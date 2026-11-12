@@ -70,17 +70,17 @@ export default function QuickActionsConfigPage() {
                 className={cn(
                   "flex items-start gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors duration-[var(--duration-fast)] ease-standard",
                   active
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-primary-ink"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active && "text-primary")} />
+                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active && "text-primary-ink")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
                   <p
                     className={cn(
                       "mt-0.5 text-2xs leading-snug",
-                      active ? "text-primary/70" : "text-muted-foreground/70"
+                      active ? "text-primary-ink/70" : "text-muted-foreground/70"
                     )}
                   >
                     {s.description}

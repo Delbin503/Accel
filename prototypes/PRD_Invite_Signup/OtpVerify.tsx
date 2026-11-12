@@ -104,14 +104,14 @@ export function OtpVerify({
               aria-label={`Digit ${i + 1}`}
               className={cn(
                 "h-12 w-11 rounded-md border bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/30",
-                error ? "border-sev-critical" : "border-input"
+                error ? "border-severity-critical" : "border-input"
               )}
             />
           ))}
         </div>
 
         {error && (
-          <p className="mt-3 flex items-center gap-1 text-2xs text-sev-critical">
+          <p className="mt-3 flex items-center gap-1 text-2xs text-severity-critical">
             <CircleAlert className="size-3" /> That code isn't valid. Check your email and try again.
           </p>
         )}
@@ -122,7 +122,7 @@ export function OtpVerify({
 
         <p className="text-sm text-muted-foreground">
           Didn't get a code?{" "}
-          <button type="button" className="font-medium text-primary underline hover:text-primary-hover">
+          <button type="button" className="font-medium text-primary-ink underline hover:text-primary-hover">
             Resend code
           </button>
         </p>

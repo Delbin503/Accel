@@ -24,8 +24,8 @@ export function SkeletonList() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-16 text-muted-foreground">
-      <AlertCircle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+      <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load detection events.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
     </div>
@@ -51,7 +51,7 @@ export function ListFooter({
     );
   }
   return (
-    <p className="flex items-center justify-center gap-1.5 py-3 text-center text-[12px] text-muted-foreground">
+    <p className="flex items-center justify-center gap-1.5 py-3 text-center text-sm text-muted-foreground">
       <CheckCheck className="size-3.5 text-success" /> You're all caught up.
     </p>
   );

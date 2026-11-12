@@ -8,7 +8,7 @@ import {
    pose and the traced bar path, and the bar path plot. */
 
 const OK = "var(--success)";
-const BAD = "var(--sev-critical)";
+const BAD = "var(--severity-critical)";
 const HUD = "rgb(255 255 255 / 0.62)";
 const GHOST = "var(--info)";
 

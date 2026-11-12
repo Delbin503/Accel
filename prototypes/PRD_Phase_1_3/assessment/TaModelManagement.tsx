@@ -132,9 +132,9 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
           className="group relative flex size-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-primary/40 bg-primary/10 transition-all hover:border-primary hover:bg-primary/15"
           title="Change icon"
         >
-          <IconComp className="size-5 text-primary" />
-          <span className="absolute inset-0 flex items-center justify-center rounded-[10px] bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-            <Edit2 className="size-3 text-white" />
+          <IconComp className="size-5 text-primary-ink" />
+          <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-scrim/50 opacity-0 transition-opacity group-hover:opacity-100">
+            <Edit2 className="size-3 text-media-foreground" />
           </span>
         </button>
       </PopoverTrigger>
@@ -150,7 +150,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
               className={cn(
                 "flex items-center justify-center rounded-lg border p-2 transition-all hover:border-primary/40 hover:bg-primary/10",
                 current === key
-                  ? "border-primary/50 bg-primary/15 text-primary"
+                  ? "border-primary/50 bg-primary/15 text-primary-ink"
                   : "border-transparent bg-muted text-muted-foreground"
               )}
               title={key}
@@ -169,7 +169,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
 const SEV_BADGE: Record<RuleSeverity, { bg: string; text: string; dot: string; label: string }> = {
   low:      { bg: "bg-info/15",         text: "text-info",         dot: "bg-info",         label: "Low" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      label: "Medium" },
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", label: "Critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", dot: "bg-severity-critical", label: "Critical" },
 };
 
 function SeverityBadge({ severity }: { severity: RuleSeverity }) {
@@ -203,7 +203,7 @@ function FileTypeBadge({ fileName }: { fileName: string }) {
         "rounded border px-1.5 py-px font-mono text-2xs font-bold uppercase",
         ext === "json"
           ? "border-info/30 bg-info/10 text-info"
-          : "border-primary/30 bg-primary/10 text-primary"
+          : "border-primary/30 bg-primary/10 text-primary-ink"
       )}
     >
       {ext}
@@ -257,7 +257,7 @@ function MoreTagsPopover({
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink transition-colors hover:bg-primary/20"
         >
           {label ?? `+${hiddenTags.length} more`}
         </span>
@@ -268,7 +268,7 @@ function MoreTagsPopover({
         onClick={(e) => e.stopPropagation()}
         sideOffset={6}
         align="start"
-        className="z-[100] w-56 p-3"
+        className="z-[var(--z-popover)] w-56 p-3"
       >
         <p className="mb-2 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
           All Tags · {allTags.length}
@@ -354,7 +354,7 @@ function TagInput({
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
           {filteredSuggestions.length > 0 && (
             <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
@@ -375,7 +375,7 @@ function TagInput({
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
               <button
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary hover:bg-primary/10"
+                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary-ink hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
@@ -449,14 +449,14 @@ function ModelCard({
               selected ? "border-primary/30 bg-primary/10" : "border-border bg-muted"
             )}
           >
-            <IconComp className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
+            <IconComp className={cn("size-4", selected ? "text-primary-ink" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
             <TruncatedText
               text={model.name}
               className={cn(
                 "text-base font-bold",
-                selected ? "text-primary" : "text-foreground"
+                selected ? "text-primary-ink" : "text-foreground"
               )}
             />
             <p className="font-mono text-xs text-muted-foreground">{model.id}</p>
@@ -467,7 +467,7 @@ function ModelCard({
             {model.sequenceIds.length} Steps
           </span>
           {!model.assessment && (
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary-ink">
               {model.attachedRuleIds.length + model.extractedRules.length} Rules
             </span>
           )}
@@ -508,7 +508,7 @@ function CategoryChip({ category }: { category: ModelCategory }) {
     <span
       className={cn(
         "whitespace-nowrap rounded-full border px-2 py-0.5 text-2xs font-semibold",
-        reid ? "border-purple/40 bg-purple/10 text-purple" : "border-border bg-muted text-muted-foreground"
+        reid ? "border-violet/40 bg-violet/10 text-violet" : "border-border bg-muted text-muted-foreground"
       )}
     >
       {category}
@@ -563,7 +563,7 @@ function UploadDropzone({
       }}
       className={cn(
         "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed bg-background px-4 py-5 text-center transition-colors hover:border-primary/40",
-        invalid ? "border-sev-critical" : "border-border"
+        invalid ? "border-severity-critical" : "border-border"
       )}
     >
       <UploadCloud className="size-7 text-muted-foreground" />
@@ -577,7 +577,7 @@ function UploadDropzone({
               onChange("");
             }}
             aria-label="Remove file"
-            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-sev-critical"
+            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-severity-critical"
           >
             <X className="size-3.5" />
           </button>
@@ -649,7 +649,7 @@ export function CreateModelModal({
               className="h-10 text-base"
               aria-invalid={!!errors.name}
             />
-            {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-base font-semibold text-foreground">
@@ -672,7 +672,7 @@ export function CreateModelModal({
               </SelectContent>
             </Select>
             {errors.category ? (
-              <p className="mt-1 text-xs text-sev-critical">{errors.category}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.category}</p>
             ) : forAssessment ? (
               <p className="mt-1 text-2xs text-muted-foreground">
                 Scores people against criteria, so it needs no detection rules.
@@ -694,7 +694,7 @@ export function CreateModelModal({
               className="w-full resize-none"
               aria-invalid={!!errors.desc}
             />
-            {errors.desc && <p className="mt-1 text-xs text-sev-critical">{errors.desc}</p>}
+            {errors.desc && <p className="mt-1 text-xs text-severity-critical">{errors.desc}</p>}
           </div>
         </ModalBody>
 
@@ -819,7 +819,7 @@ export function AddStepModal({
         {uploading ? (
           <ModalBody className="space-y-4" data-upload-progress={pct}>
             <div className="flex items-center gap-2.5">
-              <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary" />
+              <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary-ink" />
               <span className="text-base font-semibold text-foreground">{label}</span>
               <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
                 {pct}%
@@ -868,7 +868,7 @@ export function AddStepModal({
               aria-invalid={!!errors.actionLabel}
             />
             {errors.actionLabel && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.actionLabel}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.actionLabel}</p>
             )}
           </div>
 
@@ -886,7 +886,7 @@ export function AddStepModal({
               className="h-10 text-base"
               aria-invalid={!!errors.label}
             />
-            {errors.label && <p className="mt-1 text-xs text-sev-critical">{errors.label}</p>}
+            {errors.label && <p className="mt-1 text-xs text-severity-critical">{errors.label}</p>}
           </div>
 
           <div>
@@ -905,7 +905,7 @@ export function AddStepModal({
               invalid={!!errors.modelFile}
             />
             {errors.modelFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.modelFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.modelFile}</p>
             )}
           </div>
 
@@ -925,7 +925,7 @@ export function AddStepModal({
               invalid={!!errors.manifestFile}
             />
             {errors.manifestFile && (
-              <p className="mt-1 text-xs text-sev-critical">{errors.manifestFile}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.manifestFile}</p>
             )}
           </div>
 
@@ -948,7 +948,7 @@ export function AddStepModal({
               aria-invalid={!!errors.batchSize}
             />
             {errors.batchSize ? (
-              <p className="mt-1 text-xs text-sev-critical">{errors.batchSize}</p>
+              <p className="mt-1 text-xs text-severity-critical">{errors.batchSize}</p>
             ) : (
               <p className="mt-1 text-2xs text-muted-foreground">
                 Frames processed per inference pass ({BATCH_SIZE_MIN}–{BATCH_SIZE_MAX}). Higher uses
@@ -1120,8 +1120,8 @@ function CustomizeStepsDrawer({
         if (accepting) onDropRemove();
       }}
       className={cn(
-        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-2xl transition-colors duration-[var(--duration-fast)] ease-standard",
-        over ? "border-sev-critical bg-sev-critical/5" : "border-border"
+        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-modal transition-colors duration-[var(--duration-fast)] ease-standard",
+        over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
       <div className="border-b border-border px-4 py-3.5">
@@ -1149,7 +1149,7 @@ function CustomizeStepsDrawer({
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
-            over ? "border-sev-critical text-sev-critical" : "border-border text-muted-foreground"
+            over ? "border-severity-critical text-severity-critical" : "border-border text-muted-foreground"
           )}>
             <X className="size-3.5" />
             Drop here to remove
@@ -1188,7 +1188,7 @@ function HoverActions({ children, align = "center" }: { children: React.ReactNod
   return (
     <div
       className={cn(
-        "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-sm group-hover:flex",
+        "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-raised group-hover:flex",
         align === "top" ? "top-1.5" : "top-1/2 -translate-y-1/2"
       )}
     >
@@ -1214,7 +1214,7 @@ function IconAction({
       title={title}
       className={cn(
         "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
-        tone === "danger" ? "hover:bg-sev-critical/10 hover:text-sev-critical" : "hover:bg-primary/10 hover:text-primary"
+        tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary-ink"
       )}
     >
       <Icon className="size-3" />
@@ -1263,7 +1263,7 @@ function SequenceItem({
       {editable && (
         <GripVertical className="hidden size-3.5 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
       )}
-      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
+      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary-ink">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
@@ -1276,7 +1276,7 @@ function SequenceItem({
       {editable && (
         <button
           onClick={onRemoveFromSequence}
-          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
+          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
           title="Remove from sequence (moves to Customize)"
         >
           <X className="size-3" />
@@ -1314,7 +1314,7 @@ function SourceBadge({
       className={cn(
         "inline-flex max-w-[180px] items-center gap-1 rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider",
         isModel
-          ? "border-purple/30 bg-purple/10 text-purple"
+          ? "border-violet/30 bg-violet/10 text-violet"
           : "border-info/30 bg-info/10 text-info"
       )}
     >
@@ -1398,7 +1398,7 @@ function ExtractedRuleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-purple/20 bg-purple/[0.04] px-3 py-2.5">
+    <div className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1465,7 +1465,7 @@ function EditProgress({ sequenceCount, rulesCount, activityCount }: { sequenceCo
             <div
               className={cn(
                 "flex size-7 items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                it.done ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground"
+                it.done ? "border-primary/40 bg-primary/10 text-primary-ink" : "border-border bg-muted text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" />
@@ -1559,7 +1559,7 @@ export function ExtractRulesPrompt({
             />
             <ModalBody className="text-sm text-muted-foreground">
               Extracted rules are added to this model's <strong className="text-foreground">Detection Rules</strong>,
-              tagged <span className="font-semibold text-purple">Model</span>. You can edit or remove them afterwards.
+              tagged <span className="font-semibold text-violet">Model</span>. You can edit or remove them afterwards.
             </ModalBody>
             <ModalFooter>
               <Button size="sm" onClick={onConfirm} className="gap-1.5">
@@ -1912,7 +1912,7 @@ function ModelDetailPanel({
         <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-              {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary" })}
+              {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary-ink" })}
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1944,7 +1944,7 @@ function ModelDetailPanel({
               variant="outline"
               size="sm"
               onClick={() => setShowDeleteModal(true)}
-              className="gap-1.5 text-sev-critical hover:border-sev-critical/40 hover:bg-sev-critical/10 hover:text-sev-critical"
+              className="gap-1.5 text-severity-critical hover:border-severity-critical/40 hover:bg-severity-critical/10 hover:text-severity-critical"
             >
               <Trash2 className="size-3.5" />
               Delete
@@ -2037,7 +2037,7 @@ function ModelDetailPanel({
                     size="sm"
                     onClick={() => setCustomizeOpen((v) => !v)}
                     aria-pressed={customizeOpen}
-                    className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary")}
+                    className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary-ink")}
                   >
                     <SlidersHorizontal className="size-3" />
                     Customize
@@ -2053,7 +2053,7 @@ function ModelDetailPanel({
                     onClick={() => setShowAddStep(true)}
                     // Primary-tinted so the panel's main "add" action is findable
                     // without competing with Save Changes.
-                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
                   >
                     <Plus className="size-3" />
                     Add Step
@@ -2136,7 +2136,7 @@ function ModelDetailPanel({
                     variant="outline"
                     size="sm"
                     onClick={() => setAddRuleOpen(true)}
-                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
                   >
                     <Plus className="size-3" />
                     Add Rule
@@ -2640,7 +2640,7 @@ export function TaModelManagement() {
                 <div className="mt-1 border-t border-border pt-1.5">
                   <button
                     onClick={() => setTagFilter([])}
-                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary"
+                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary-ink"
                   >
                     Remove all
                   </button>

@@ -118,7 +118,7 @@ export function TilePlayerBar({
     <div
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        "absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-2 pb-1.5 pt-6",
+        "absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-scrim/90 via-scrim/70 to-transparent px-2 pb-1.5 pt-6",
         compact ? "gap-0.5" : "gap-1"
       )}
     >
@@ -159,20 +159,20 @@ export function TilePlayerBar({
           disabled={live}
           className={cn(
             "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-3xs font-bold uppercase tracking-wider transition-colors",
-            live ? "text-white/90" : "bg-white/15 text-white hover:bg-sev-critical"
+            live ? "text-media-foreground/90" : "bg-media-foreground/15 text-status-foreground hover:bg-severity-critical"
           )}
         >
-          <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
+          <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
           {live ? "Live" : `−${fmtOffset(pb.offsetSec)}`}
         </button>
 
         {!live && !compact && (
-          <span className="font-mono text-3xs text-white/70">{timestampAt(now, pb.offsetSec)}</span>
+          <span className="font-mono text-3xs text-media-foreground/70">{timestampAt(now, pb.offsetSec)}</span>
         )}
 
         <div className="ml-auto flex items-center gap-0.5">
           {pb.speed !== 1 && (
-            <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
+            <span className="rounded bg-media-foreground/15 px-1 font-mono text-3xs font-semibold text-media-foreground">{pb.speed}×</span>
           )}
 
           {onExpand ? (
@@ -184,7 +184,7 @@ export function TilePlayerBar({
           ) : (
             <>
               {zoomed && (
-                <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">
+                <span className="rounded bg-media-foreground/15 px-1 font-mono text-3xs font-semibold text-media-foreground">
                   {zoomPercent(pb.zoom)}
                 </span>
               )}
@@ -250,14 +250,14 @@ function ExpandedPlayer({
         </div>
         <span className={cn(
           "mr-8 shrink-0 rounded-md border px-2 py-1 font-mono text-2xs font-semibold",
-          live ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical" : "border-warning/30 bg-warning/10 text-warning"
+          live ? "border-severity-critical/40 bg-severity-critical/10 text-severity-critical" : "border-warning/30 bg-warning/10 text-warning"
         )}>
           {live ? "LIVE" : `−${fmtOffset(pb.offsetSec)} · ${timestampAt(now, pb.offsetSec)}`}
         </span>
       </div>
 
       <div className="overflow-y-auto p-5">
-        <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-neutral-950">
+        <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-media">
           {isOnline ? (
             <>
               <CameraFrameLayer camera={camera} zoom={pb.zoom} />
@@ -268,11 +268,11 @@ function ExpandedPlayer({
                   onExit={() => setZoomArmed(false)}
                 />
               )}
-              <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-                <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-sev-critical" : "bg-white/60")} />
+              <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-scrim/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground/90 backdrop-blur-sm">
+                <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
                 {live ? "Live" : "Playback"}
               </span>
-              <div className="absolute bottom-16 left-3 z-10 rounded bg-black/60 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
+              <div className="absolute bottom-16 left-3 z-10 rounded bg-scrim/60 px-2 py-1 font-mono text-xs text-media-foreground/90 backdrop-blur-sm">
                 {new Date(now.getTime() - pb.offsetSec * 1000)
                   .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
                   .replace(",", " ·")}
@@ -288,7 +288,7 @@ function ExpandedPlayer({
               />
             </>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sev-critical/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-severity-critical/80">
               <span className="text-2xs font-bold uppercase tracking-widest">Camera offline</span>
               <p className="text-sm text-muted-foreground">No stream to play for {camera.id}.</p>
             </div>

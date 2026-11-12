@@ -97,13 +97,13 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
       modelsLabel="—"
       left={
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
-          <AlertCircle className="size-6 text-sev-critical" />
+          <AlertCircle className="size-6 text-severity-critical" />
           <p className="text-sm">Couldn't load.</p>
         </div>
       }
       right={
         <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-          <AlertCircle className="size-8 text-sev-critical" />
+          <AlertCircle className="size-8 text-severity-critical" />
           <p className="text-sm text-foreground">Couldn't load detection models.</p>
           <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
         </div>
@@ -126,7 +126,7 @@ export function EmptyState({ onCreate }: { onCreate: () => void }) {
         <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
           <Boxes className="size-10 opacity-30" />
           <p className="text-sm font-medium text-foreground">No models yet</p>
-          <p className="text-[12px]">Create a model to upload files and build a verification sequence.</p>
+          <p className="text-sm">Create a model to upload files and build a verification sequence.</p>
           <Button size="sm" className="mt-1" onClick={onCreate}>Add New Model</Button>
         </div>
       }
@@ -143,7 +143,7 @@ export function NoResultsState({ onClear }: { onClear: () => void }) {
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <SearchX className="size-8 opacity-30" />
           <p className="text-center text-sm font-medium text-foreground">No models match your filters</p>
-          <p className="px-4 text-center text-[12px]">Try a different search term or clear the active tag filters.</p>
+          <p className="px-4 text-center text-sm">Try a different search term or clear the active tag filters.</p>
           <Button variant="outline" size="sm" className="mt-1" onClick={onClear}>Clear filters</Button>
         </div>
       }

@@ -130,8 +130,9 @@ export default defineConfig([
     },
   },
   {
-    // Pages: everything above, plus "use existing components only".
-    files: ['src/pages/**/*.{ts,tsx}'],
+    // Pages and prototypes: everything above, plus "use existing components only".
+    // Prototypes are the main UI and load the real tokens + components.
+    files: ['src/pages/**/*.{ts,tsx}', 'prototypes/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': pageGuardrails,
     },

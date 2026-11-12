@@ -39,7 +39,7 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
-        <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} accent="sev-critical" onClick={() => go()} />
+        <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} accent="severity-critical" onClick={() => go()} />
         <KpiCard label="Total participants" value={participants} sub={`${u.people[0].toUpperCase()}${u.people.slice(1)} across all sessions`} accent="primary" onClick={() => go()} />
         <KpiCard label="Scheduled" value={scheduled.length} sub={scheduled[0] ? `Next: ${scheduled[0].date}` : "Nothing booked"} accent="info" onClick={() => go()} />
         <KpiCard label="Complete" value={complete.length} sub={`${complete.reduce((n, s) => n + s.flagged, 0)} flagged ${u.items}`} accent="success" onClick={() => go("results")} />
@@ -64,7 +64,7 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
         <div className="flex flex-col rounded-lg border border-border bg-background">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <p className="text-sm font-semibold text-foreground">Live & upcoming</p>
-            <button type="button" onClick={() => go()} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+            <button type="button" onClick={() => go()} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline">
               All sessions <ArrowRight className="size-3" />
             </button>
           </div>

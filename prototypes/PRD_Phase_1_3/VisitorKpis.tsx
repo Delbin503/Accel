@@ -7,14 +7,14 @@ import { type VisitorStats } from "./visitorStats";
    168 out of 163, not two categories. These cards name each side, give it its
    own colour, and show the balance as a bar. */
 
-type StatTone = "primary" | "success" | "warning" | "info" | "purple" | "muted";
+type StatTone = "primary" | "success" | "warning" | "info" | "violet" | "muted";
 
 const TONE_BAR: Record<StatTone, string> = {
   primary: "bg-primary",
   success: "bg-success",
   warning: "bg-warning",
   info: "bg-info",
-  purple: "bg-purple",
+  violet: "bg-violet",
   muted: "bg-muted-foreground",
 };
 
@@ -189,7 +189,7 @@ export function VisitorKpis({
       stacked={statusColumns}
       parts={[
         { label: "Male", value: stats.male, tone: "info" },
-        { label: "Female", value: stats.female, tone: "purple" },
+        { label: "Female", value: stats.female, tone: "violet" },
       ]}
     />,
     <SplitStat
@@ -199,7 +199,7 @@ export function VisitorKpis({
       parts={[
         { label: "Adult", value: stats.adult, tone: "warning" },
         { label: "Child", value: stats.child, tone: "info" },
-        { label: "Elderly", value: stats.elderly, tone: "purple" },
+        { label: "Elderly", value: stats.elderly, tone: "violet" },
       ]}
     />,
     <SplitStat

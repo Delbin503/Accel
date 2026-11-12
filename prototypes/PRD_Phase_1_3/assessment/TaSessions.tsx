@@ -103,7 +103,7 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {chips.map((l) => (
@@ -173,10 +173,10 @@ function SessionCells({ s }: { s: TaSession }) {
   return (
     <>
       <td className="whitespace-nowrap px-4 py-3">
-        <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary">{s.id}</span>
+        <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{s.id}</span>
       </td>
       <td className="min-w-[160px] px-4 py-3">
-        <p className="font-semibold text-foreground group-hover:text-primary">{s.name}</p>
+        <p className="font-semibold text-foreground group-hover:text-primary-ink">{s.name}</p>
         <p className="text-xs text-muted-foreground">{s.coach}</p>
       </td>
       <td className="px-4 py-3"><UseCaseChip uc={s.useCase} /></td>
@@ -284,9 +284,9 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                 return (
                   <button key={k} type="button" role="radio" aria-checked={on} onClick={() => pickUc(k)}
                     className={cn("flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors", on ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
-                    <Icon className={cn("mt-0.5 size-4", on ? "text-primary" : "text-muted-foreground")} />
+                    <Icon className={cn("mt-0.5 size-4", on ? "text-primary-ink" : "text-muted-foreground")} />
                     <span>
-                      <span className={cn("block text-base font-semibold", on ? "text-primary" : "text-foreground")}>{USE_CASES[k].label}</span>
+                      <span className={cn("block text-base font-semibold", on ? "text-primary-ink" : "text-foreground")}>{USE_CASES[k].label}</span>
                       <span className="block text-xs text-muted-foreground">{USE_CASES[k].full} · {USE_CASES[k].units}</span>
                     </span>
                   </button>
@@ -329,7 +329,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                   return (
                     <button key={un} type="button" aria-pressed={on} onClick={() => setUnits((cur) => (on ? cur.filter((x) => x !== un) : [...cur, un]))}
                       className={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors",
-                        on ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-primary/30")}>
+                        on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-background text-muted-foreground hover:border-primary/30")}>
                       {on && <Check className="size-3" strokeWidth={3} />}
                       {un}
                       {dev && <span title={`${dev.id} · ${dev.type}`}><Radio className="size-3 text-info" /></span>}
@@ -392,14 +392,14 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                 {(["Live", "Recorded"] as const).map((v) => (
                   <button key={v} type="button" role="radio" aria-checked={source === v} onClick={() => setSource(v)}
                     className={cn("rounded-lg border px-3 py-2 text-left transition-colors", source === v ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
-                    <span className={cn("block text-sm font-semibold", source === v ? "text-primary" : "text-foreground")}>{v}</span>
+                    <span className={cn("block text-sm font-semibold", source === v ? "text-primary-ink" : "text-foreground")}>{v}</span>
                     <span className="block text-2xs text-muted-foreground">{v === "Live" ? "Analyse as it happens" : "Footage the VMS recorded"}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
-          {error && <p className="text-sm text-sev-critical">{error}</p>}
+          {error && <p className="text-sm text-severity-critical">{error}</p>}
         </ModalBody>
         <ModalFooter>
           <Button size="sm" onClick={create} className="gap-1.5" disabled={!deployed}>
@@ -461,7 +461,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
     <div className="flex flex-col gap-4">
       <KpiGrid cols={3}>
         <KpiCard label="Total Sessions" value={allSessions.length} sub="Last 2 weeks" accent="primary" onClick={() => setKpi("all")} />
-        <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" accent="sev-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
+        <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" accent="severity-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
         <KpiCard label="Scheduled" value={sessions.filter((s) => s.status === "scheduled").length} sub="Coming up" accent="info" active={kpi === "scheduled"} onClick={() => setKpi(kpi === "scheduled" ? "all" : "scheduled")} />
       </KpiGrid>
 
@@ -487,7 +487,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
 
       <p className="px-1 text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); setStatuses([]); setKpi("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
+        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); setStatuses([]); setKpi("all"); }} className="ml-2 underline hover:text-primary-ink">Clear all</button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -612,8 +612,8 @@ function GroupResults({ session }: { session: TaSession }) {
       </div>
 
       {session.status === "live" && (
-        <div className="flex items-center gap-2 rounded-lg border border-sev-critical/30 bg-sev-critical/[0.06] px-3 py-2 text-sm text-foreground">
-          <span className="size-2 animate-pulse rounded-full bg-sev-critical" />
+        <div className="flex items-center gap-2 rounded-lg border border-severity-critical/30 bg-severity-critical/[0.06] px-3 py-2 text-sm text-foreground">
+          <span className="size-2 animate-pulse rounded-full bg-severity-critical" />
           Live · results update as each {u.item} is analysed.
         </div>
       )}
@@ -644,17 +644,17 @@ function GroupResults({ session }: { session: TaSession }) {
               {rows.map((p) => (
                 <tr key={p.name} onClick={() => open(p)} className={cn("group text-base", p.attempts > 0 && "cursor-pointer hover:bg-muted/20")}>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-foreground group-hover:text-primary">{p.name}</p>
+                    <p className="font-semibold text-foreground group-hover:text-primary-ink">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.detail}</p>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{p.unit}</td>
                   <td className="px-4 py-3 text-foreground">{p.attempts || "—"}</td>
                   <td className="px-4 py-3 font-semibold text-foreground">{p.score}</td>
-                  <td className={cn("px-4 py-3", p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-sev-critical" : "text-muted-foreground")}>{p.change}</td>
+                  <td className={cn("px-4 py-3", p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-severity-critical" : "text-muted-foreground")}>{p.change}</td>
                   <td className="px-4 py-3 text-foreground">{p.topFault}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     {p.attempts > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground group-hover:text-primary">{TA_ANALYSIS[session.useCase].label}<ChevronRight className="size-4" /></span>
+                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{TA_ANALYSIS[session.useCase].label}<ChevronRight className="size-4" /></span>
                     ) : (
                       <span className="text-xs text-muted-foreground">No {u.items} yet</span>
                     )}
@@ -767,7 +767,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
 
       <p className="px-1 text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); onSession("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
+        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); onSession("all"); }} className="ml-2 underline hover:text-primary-ink">Clear all</button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -837,7 +837,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
       {selected.size > 0 && (
         <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
             <span className="text-base font-semibold text-foreground">{selected.size} session{selected.size === 1 ? "" : "s"} selected</span>
@@ -886,7 +886,7 @@ export function TaSessions() {
               return (
                 <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
                   className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                    tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                    tab === t.key ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                   <Icon className="size-3.5" />
                   {t.label}
                 </button>

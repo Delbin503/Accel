@@ -30,8 +30,8 @@ export function DashboardSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-24 text-muted-foreground">
-      <AlertCircle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-24 text-muted-foreground">
+      <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load the dashboard.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
     </div>

@@ -77,7 +77,7 @@ export function DeviceMissing({ device, unit, what, className }: { device: strin
       <Unplug className="size-5 text-muted-foreground" />
       <p className="text-sm font-semibold text-foreground">No {device.toLowerCase()} on {unit}</p>
       <p className="max-w-64 text-xs text-muted-foreground">{what}</p>
-      <Link to={TA_ROUTES.devices} className="text-xs font-semibold text-primary hover:underline">Pair a device →</Link>
+      <Link to={TA_ROUTES.devices} className="text-xs font-semibold text-primary-ink hover:underline">Pair a device →</Link>
     </div>
   );
 }

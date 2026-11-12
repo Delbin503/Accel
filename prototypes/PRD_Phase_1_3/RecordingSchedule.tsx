@@ -45,7 +45,7 @@ function Toggle({ checked, onChange, label, disabled }: {
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform",
+      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform",
         checked ? "translate-x-[18px]" : "translate-x-0.5")} />
     </button>
   );
@@ -400,7 +400,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
     <div className="rounded-lg border border-border bg-background px-3.5 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Schedule</span>
-        <button type="button" onClick={copyMonday} className="flex items-center gap-1 text-2xs font-semibold text-primary hover:underline">
+        <button type="button" onClick={copyMonday} className="flex items-center gap-1 text-2xs font-semibold text-primary-ink hover:underline">
           <Copy className="size-3" />Copy Monday to all days
         </button>
       </div>
@@ -478,7 +478,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
                   {hoursLabel(siteHours.start, siteHours.end)} · site hours
                 </span>
                 <button type="button" onClick={() => onChange({ ...config, source: "custom" })}
-                  className="text-2xs font-semibold text-primary hover:underline">
+                  className="text-2xs font-semibold text-primary-ink hover:underline">
                   Set hours per day
                 </button>
               </div>
@@ -488,7 +488,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
                 <TimeSelect value={day.end} onChange={(v) => setDay(activeDay, { end: v })} aria-label={`${d.label} end time`} />
                 {!allDaySite && (
                   <button type="button" onClick={() => onChange({ ...config, source: "site" })}
-                    className="col-span-2 text-left text-2xs font-semibold text-primary hover:underline">
+                    className="col-span-2 text-left text-2xs font-semibold text-primary-ink hover:underline">
                     Use the site's hours on every day instead
                   </button>
                 )}

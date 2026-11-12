@@ -55,7 +55,7 @@ Pages in `src/pages/` are **composed from the approved components** in `src/comp
 3. **Nothing fits? STOP and ask the user before writing it.** Say what's missing, which existing components you considered and why they don't fit, and propose: name, folder (`ui` / `shared` / `charts` / `layout` / `custom`), props, and variants. Do not create the component until the user approves.
 4. **After approval:** build it in `src/components/<folder>/` following the conventions below (CVA, `cn()`, tokens), name every element with `data-slot` (`{component}-{part}`), add a `.stories.tsx`, and add it to `src/components/registry.json`.
 
-`npm run lint` enforces this: unregistered component files fail (`lint:components`), unnamed elements fail (`lint:slots`), raw primitives in pages fail (ESLint). Existing page debt is baselined in `eslint-suppressions.json` — never add to it.
+The same lint rules apply to `prototypes/` (the main UI) — run `npm run typecheck:prototypes` too, since `tsc -b` doesn't cover them. `npm run lint` enforces this: unregistered component files fail (`lint:components`), unnamed elements fail (`lint:slots`), raw primitives in pages fail (ESLint). Existing page debt is baselined in `eslint-suppressions.json` — never add to it.
 
 ### 1. Prefer shadcn components from `components/ui/`
 

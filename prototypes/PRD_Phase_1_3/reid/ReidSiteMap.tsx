@@ -25,7 +25,7 @@ import { mapLabel, type ReidMap } from "./reidMaps";
 const GROUP_TONES = [
   { fill: "fill-primary/25", stroke: "stroke-primary", swatch: "bg-primary", text: "fill-primary" },
   { fill: "fill-info/25", stroke: "stroke-info", swatch: "bg-info", text: "fill-info" },
-  { fill: "fill-purple/25", stroke: "stroke-purple", swatch: "bg-purple", text: "fill-purple" },
+  { fill: "fill-violet/25", stroke: "stroke-violet", swatch: "bg-violet", text: "fill-violet" },
   { fill: "fill-success/25", stroke: "stroke-success", swatch: "bg-success", text: "fill-success" },
 ];
 
@@ -68,10 +68,10 @@ export function SiteMapCanvas({
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Site map with every camera's zone" className={cn("mx-auto block h-auto max-h-[58vh] w-full", className)}>
-      <rect width={W} height={H} className="fill-neutral-900" />
+      <rect width={W} height={H} className="fill-media-raised" />
 
       {/* 1 m grid */}
-      <g className="stroke-neutral-800" strokeWidth={1}>
+      <g className="stroke-media-foreground/10" strokeWidth={1}>
         {Array.from({ length: Math.floor(maxX) - gridStart + 1 }, (_, i) => gridStart + i).map((x) => (
           <line key={`gx${x}`} x1={px(x)} y1={0} x2={px(x)} y2={H} />
         ))}
@@ -98,7 +98,7 @@ export function SiteMapCanvas({
 
       {/* Markers — used ones bright, the rest faint */}
       {SITE_MARKERS.map((m) => (
-        <g key={m.id} className={used.has(m.id) ? "stroke-neutral-100" : "stroke-neutral-600"} strokeWidth={2}>
+        <g key={m.id} className={used.has(m.id) ? "stroke-media-foreground/95" : "stroke-media-foreground/30"} strokeWidth={2}>
           <line x1={px(m.x) - 6} y1={py(m.y)} x2={px(m.x) + 6} y2={py(m.y)} />
           <line x1={px(m.x)} y1={py(m.y) - 6} x2={px(m.x)} y2={py(m.y) + 6} />
           <text
@@ -106,7 +106,7 @@ export function SiteMapCanvas({
             y={py(m.y) - 8}
             fontSize={13}
             stroke="none"
-            className={cn("font-mono", used.has(m.id) ? "fill-neutral-200" : "fill-neutral-600")}
+            className={cn("font-mono", used.has(m.id) ? "fill-media-foreground/90" : "fill-media-foreground/30")}
           >
             {m.id}
           </text>
@@ -120,7 +120,7 @@ export function SiteMapCanvas({
         const cx = outline.reduce((s, m) => s + m.x, 0) / outline.length;
         const cy = outline.reduce((s, m) => s + m.y, 0) / outline.length;
         return (
-          <text key={c.id} x={px(cx)} y={py(cy)} textAnchor="middle" dominantBaseline="middle" fontSize={24} fontWeight={800} className="fill-neutral-50 font-mono">
+          <text key={c.id} x={px(cx)} y={py(cy)} textAnchor="middle" dominantBaseline="middle" fontSize={24} fontWeight={800} className="fill-media-foreground font-mono">
             {c.id.replace("Cam-", "C")}
           </text>
         );
@@ -135,7 +135,7 @@ export function SiteMapCanvas({
         return (
           <g key={camera.id}>
             <path d="M -9 -7 L 11 0 L -9 7 Z" transform={`translate(${x} ${y}) rotate(${ang})`} className={cn(tone.text)} />
-            <text x={x} y={y + 22} textAnchor="middle" fontSize={12} className="fill-neutral-400 font-mono">
+            <text x={x} y={y + 22} textAnchor="middle" fontSize={12} className="fill-media-foreground/60 font-mono">
               {camera.id}
             </text>
           </g>
@@ -148,7 +148,7 @@ export function SiteMapCanvas({
         <path d={`M ${px(0) + 46} ${py(0) - 6} L ${px(0) + 56} ${py(0)} L ${px(0) + 46} ${py(0) + 6}`} fill="none" className="stroke-primary" />
         <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(0) - 46} className="stroke-info" />
         <path d={`M ${px(0) - 6} ${py(0) - 46} L ${px(0)} ${py(0) - 56} L ${px(0) + 6} ${py(0) - 46}`} fill="none" className="stroke-info" />
-        <circle cx={px(0)} cy={py(0)} r={4} className="fill-neutral-100" stroke="none" />
+        <circle cx={px(0)} cy={py(0)} r={4} className="fill-media-foreground/95" stroke="none" />
       </g>
     </svg>
   );
@@ -207,7 +207,7 @@ export function ReidSiteMapModal({
             </span>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border bg-neutral-900">
+          <div className="overflow-hidden rounded-lg border border-border bg-media-raised">
             <SiteMapCanvas
               cameras={cameras}
               usedByCamera={usedByCamera}
@@ -285,7 +285,7 @@ export function ReidZoneMapCard({ map, cameras }: { map: ReidMap; cameras: Camer
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-md font-semibold text-foreground">
-            <MapIcon className="size-4 text-primary" />
+            <MapIcon className="size-4 text-primary-ink" />
             {mapLabel(map)}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -320,7 +320,7 @@ export function ReidZoneMapCard({ map, cameras }: { map: ReidMap; cameras: Camer
         </DropdownMenu>
       </div>
 
-      <div ref={ref} className="bg-neutral-900">
+      <div ref={ref} className="bg-media-raised">
         <SiteMapCanvas cameras={mapCameras} usedByCamera={map.used} positionsByCamera={map.positions} />
       </div>
 

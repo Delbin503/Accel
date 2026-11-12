@@ -27,7 +27,7 @@ export function StateTester({
   return (
     <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
       <div className="flex items-center gap-2">
-        <span className="inline-flex w-12 items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+        <span className="inline-flex w-12 items-center gap-1 text-2xs font-bold uppercase tracking-wider text-warning">
           <FlaskConical className="size-3" />
           Screen
         </span>
@@ -37,7 +37,7 @@ export function StateTester({
               key={o.key}
               onClick={() => onScreen(o.key)}
               className={cn(
-                "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
                 screen === o.key && asyncMode === "idle"
                   ? "bg-warning/20 text-warning"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -49,14 +49,14 @@ export function StateTester({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="w-12 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Async</span>
+        <span className="w-12 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Async</span>
         <div className="flex items-center gap-1">
           {ASYNC_OPTIONS.map((o) => (
             <button
               key={o.key}
               onClick={() => onAsync(o.key)}
               className={cn(
-                "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
                 asyncMode === o.key ? "bg-warning/20 text-warning" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >

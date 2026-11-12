@@ -13,7 +13,7 @@ export function QuickActionsTips() {
   const setQuery = useCommandPaletteStore((s) => s.setQuery);
 
   return (
-    <div className="w-64 rounded-xl border border-border bg-card p-3 shadow-lg">
+    <div className="w-64 rounded-xl border border-border bg-card p-3 shadow-floating">
       <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Quick Actions prototype
       </p>
@@ -57,7 +57,7 @@ export function QuickActionsTips() {
               openPalette("search");
               setQuery(q);
             }}
-            className="rounded-md border border-border px-1.5 py-0.5 font-mono text-2xs text-muted-foreground hover:border-primary hover:text-primary"
+            className="rounded-md border border-border px-1.5 py-0.5 font-mono text-2xs text-muted-foreground hover:border-primary hover:text-primary-ink"
           >
             {q}
           </button>
