@@ -87,7 +87,7 @@ export function UserMenu({ className }: UserMenuProps) {
               className
             )}
           >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-bold text-primary-foreground">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-fill text-2xs font-bold text-primary-foreground">
               {user.initials}
             </span>
 
@@ -105,7 +105,7 @@ export function UserMenu({ className }: UserMenuProps) {
         <DropdownMenuContent align="end" className="w-64 p-0">
           <div className="border-b border-border px-3 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-fill text-sm font-bold text-primary-foreground">
                 {user.initials}
               </div>
               <div className="min-w-0 flex-1">

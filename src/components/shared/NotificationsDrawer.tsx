@@ -11,7 +11,7 @@ import { TruncatedText } from "./TruncatedText";
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
   incident: { bg: "bg-severity-critical/15", text: "text-severity-critical", icon: AlertTriangle, label: "Incident" },
-  case:     { bg: "bg-primary/15",      text: "text-primary",      icon: FolderOpen,    label: "Case" },
+  case:     { bg: "bg-primary/15",      text: "text-primary-ink",      icon: FolderOpen,    label: "Case" },
   system:   { bg: "bg-info/15",         text: "text-info",         icon: Server,        label: "System" },
   user:     { bg: "bg-success/15",      text: "text-success",      icon: UsersIcon,     label: "Team" },
   billing:  { bg: "bg-warning/15",      text: "text-warning",      icon: CreditCard,    label: "Billing" },
@@ -125,10 +125,10 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
       >
         <SheetHeader className="flex-shrink-0 border-b border-border px-5 py-4">
           <SheetTitle className="inline-flex items-center gap-2 pr-8 text-base font-bold">
-            <Bell className="size-4 text-primary" />
+            <Bell className="size-4 text-primary-ink" />
             Notifications
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-white">
+              <span className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-status-foreground">
                 {unreadCount}
               </span>
             )}
@@ -154,7 +154,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                   className={cn(
                     "flex-shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
                     active
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary-ink"
                       : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                   )}
                 >
@@ -202,7 +202,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
             <button
               onClick={markAllRead}
               disabled={unreadCount === 0}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary-ink transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
             >
               <CheckCheck className="size-3" />
               Mark all as read
@@ -253,7 +253,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                               </span>
                               <span className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
                               {!n.read && (
-                                <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary">
+                                <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary-ink">
                                   <span className="size-1.5 rounded-full bg-primary" />
                                   New
                                 </span>
@@ -270,7 +270,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                               className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
                             />
                             {n.href && (
-                              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
                                 Open <ArrowUpRight className="size-3" />
                               </span>
                             )}

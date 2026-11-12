@@ -138,7 +138,7 @@ export default function SignInVerifyPage() {
             }
             className="group block w-full text-center text-sm text-muted-foreground"
           >
-            Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
+            Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
           </button>
         </form>
       </div>

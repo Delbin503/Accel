@@ -116,7 +116,7 @@ function Column<T extends string | number>({
               className={cn(
                 "flex w-full items-center justify-between gap-1 rounded px-2 py-1 text-base tabular-nums transition-colors duration-[var(--duration-fast)] ease-standard",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active ? "bg-primary/15 font-semibold text-primary" : "text-foreground hover:bg-muted"
+                active ? "bg-primary/15 font-semibold text-primary-ink" : "text-foreground hover:bg-muted"
               )}
             >
               {format(o)}

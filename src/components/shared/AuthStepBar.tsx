@@ -30,9 +30,9 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
                 className={cn(
                   "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
                   done
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary-fill text-primary-foreground"
                     : active
-                      ? "border-primary bg-primary/15 text-primary"
+                      ? "border-primary bg-primary/15 text-primary-ink"
                       : "border-border text-muted-foreground/70"
                 )}
               >
@@ -42,7 +42,7 @@ export function AuthStepBar({ current }: { current: AuthStepKey }) {
                 className={cn(
                   "hidden text-xs font-semibold transition-colors sm:inline",
                   done
-                    ? "text-primary"
+                    ? "text-primary-ink"
                     : active
                       ? "text-foreground"
                       : "text-muted-foreground/70"

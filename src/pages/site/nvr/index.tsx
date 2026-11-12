@@ -223,7 +223,7 @@ function FilterDropdown({
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -302,7 +302,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -578,7 +578,7 @@ export function NvrDrawer({
                 onClick={() => setTab(key)}
                 className={cn(
                   "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
-                  tab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  tab === key ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="size-3.5" />
@@ -640,7 +640,7 @@ export function NvrDrawer({
                   [
                     ["Device Type",   "NVR"],
                     ["NVR Name",      nvr.name],
-                    ["NVR ID",        <span className="font-mono text-xs text-primary">{nvr.id}</span>],
+                    ["NVR ID",        <span className="font-mono text-xs text-primary-ink">{nvr.id}</span>],
                     ["Status",        <StatusPill status={nvr.status} />],
                     ["Manufacturer",  nvr.model.split(" ")[0] || "—"],
                     ["Model",         <span className="font-mono text-xs">{nvr.model}</span>],
@@ -930,7 +930,7 @@ export function NvrDrawer({
                               onClick={() => onLinkCamera(ch.channel)}
                               title="Link camera"
                               aria-label="Link camera"
-                              className="flex size-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+                              className="flex size-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-primary-ink transition-colors hover:bg-primary/20"
                             >
                               <Link2 className="size-3.5" />
                             </button>
@@ -2120,7 +2120,7 @@ export default function NvrDevicesPage({
         {hasFilters && (
           <button
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary"
+            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
           </button>
@@ -2177,13 +2177,13 @@ export default function NvrDevicesPage({
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {n.id}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-foreground transition-colors group-hover:text-primary">
+                        <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                           {n.name}
                         </span>
                         <span className="font-mono text-xs text-muted-foreground">{n.model}</span>

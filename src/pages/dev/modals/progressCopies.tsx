@@ -147,7 +147,7 @@ export function SyncProgressCopy({ title, deviceLabel, stages, onClose }: {
               {stageDone ? (
                 <CheckCircle2 className="size-3.5 shrink-0 text-success" />
               ) : active ? (
-                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-primary" />
+                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-primary-ink" />
               ) : (
                 <CircleDot className="size-3.5 shrink-0 text-muted-foreground/40" />
               )}

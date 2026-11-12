@@ -192,11 +192,14 @@ token; arbitrary pixel sizes are blocked by ESLint (`no-restricted-syntax`).
 
 ### Other token scales
 
-- **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-dropdown/sticky/overlay/drawer/modal/toast/tooltip`). Never `z-[100]`.
+- **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-dropdown/sticky/overlay/drawer/modal/popover/toast/tooltip` — `popover` for menus opened inside a modal or drawer). Never `z-[100]`.
 - **Motion** — durations `--duration-fast` / `--duration-normal` / `--duration-slow` (e.g. `duration-[var(--duration-normal)]`) + `ease-standard` / `ease-emphasized`.
 - **Icon sizes** — `size-3` (badges), `size-4` (buttons/inputs/rows), `size-5` (section/empty-state), `size-6+` (hero only).
 - **Elevation** — `shadow-raised` (cards, inputs, tabs), `shadow-floating` (popovers, dropdowns, tooltips, toasts), `shadow-modal` (dialogs, sheets, drawers). Theme-aware. Never `shadow-sm` … `shadow-2xl`.
 - **Tints** — opacity modifiers on the base token: `/5` row hover wash, `/10` subtle fill (chips, selected rows), `/15` status tint (badges), `/20`–`/30` tint borders. The `*-soft` and `primary-muted` tokens are deprecated.
+- **Brand orange** — `bg-primary-fill` for solid fills that carry a label (with `text-primary-foreground`); `text-primary-ink` for orange text. Bare `bg-primary` / `text-primary` fail WCAG AA there — keep `--primary` for rings, tints (`bg-primary/10`), borders, dots and charts.
+- **Labels on solid status fills** — `bg-success` / `bg-severity-critical/95` … take `text-status-foreground` (white in light, near-black in dark).
+- **Media** — video, camera tiles, snapshots, floor plans are dark in both themes: `bg-media`, `bg-media-raised`, `bg-scrim/60`, `text-media-foreground/85`, `bg-camera-feed`. Never raw `black`/`white`.
 - **Color tiers** — `src/index.css` has primitives (`--palette-orange-500`, `--palette-neutral-930`…) → semantic tokens → sidebar/chart component tokens. Components use semantic tokens only, never primitives. `violet` is a categorical tone (AI/model, vehicles, NVR, action-taken) — `purple` is its deprecated old name. Severity is `severity-critical/high/medium/low` (`sev-*` is the deprecated old name). Print/PDF/email HTML that can't read CSS vars uses the paper palette in `src/lib/tokens.ts`.
 
 ### Semantic color tokens — never raw Tailwind palette colors

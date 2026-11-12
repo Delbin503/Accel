@@ -77,11 +77,11 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
       )}
       <div
         className={cn(
-          "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border border-white/80",
-          selected ? "bg-primary border-primary" : "bg-black/60"
+          "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border border-media-foreground/80",
+          selected ? "bg-primary border-primary" : "bg-scrim/60"
         )}
       >
-        {selected && <Check className="size-2.5 text-white" strokeWidth={3} />}
+        {selected && <Check className="size-2.5 text-media-foreground" strokeWidth={3} />}
       </div>
       {/* Only events without a captured frame need the synthetic overlay. */}
       {!frame && event.bboxes.map((box, i) => (
@@ -97,10 +97,10 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
+              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-status-foreground",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-violet"
-              : "bg-primary"
+              : "bg-primary-fill text-primary-foreground"
             )}
             style={{ top: box.top, left: box.left }}
           >
@@ -108,7 +108,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
           </span>
         </React.Fragment>
       ))}
-      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
+      <span className="absolute bottom-1.5 left-1.5 rounded bg-scrim/75 px-1 py-px font-mono text-2xs text-media-foreground">
         {event.time.slice(0, 5)}
       </span>
     </div>
@@ -166,7 +166,7 @@ function EventCard({
           )}
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary-ink"
           >
             {event.useCaseId}
           </span>
@@ -262,7 +262,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -350,7 +350,7 @@ function SelectionBar({
     <div className="fixed inset-x-6 bottom-6 z-50 mx-auto flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       {/* Count badge */}
       <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
         <span className="text-base font-semibold text-foreground">
@@ -738,7 +738,7 @@ export default function DetectionFeedPage() {
           {(hasActiveFilters || dateActive) && (
             <button
               onClick={clearFilters}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>

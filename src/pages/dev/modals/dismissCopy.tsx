@@ -86,7 +86,7 @@ export function DismissCopy({ event, bulkCount, onClose }: {
                       className="group/reason py-2 pl-2 data-[state=checked]:bg-accent [&>span:first-child]:hidden"
                     >
                       <span className="min-w-0">
-                        <span className="block text-sm text-foreground group-data-[state=checked]/reason:text-primary">
+                        <span className="block text-sm text-foreground group-data-[state=checked]/reason:text-primary-ink">
                           {r.label}
                         </span>
                         <span className="block text-2xs text-muted-foreground">{r.description}</span>

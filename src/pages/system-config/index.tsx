@@ -191,7 +191,7 @@ function GeneralSection() {
                 <button key={opt} onClick={() => setTimeFormat(opt)}
                   className={cn(
                     "flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    timeFormat === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                    timeFormat === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "24h" ? "24-hour (15:30)" : "12-hour (3:30 PM)"}
                 </button>
@@ -205,7 +205,7 @@ function GeneralSection() {
                 <button key={opt} onClick={() => setWeekStart(opt)}
                   className={cn(
                     "relative flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    weekStart === opt ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                    weekStart === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "mon" ? "Monday" : "Sunday"}
                   {opt === "mon" && (
@@ -343,7 +343,7 @@ function UserAccessSection() {
                       <td key={r} className="px-3 py-3 text-center">
                         <button onClick={() => toggle(r, p.key)} disabled={r === "owner"}
                           className={cn("inline-flex size-5 items-center justify-center rounded border transition-colors",
-                            checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+                            checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-background",
                             r === "owner" && "cursor-not-allowed opacity-60")}>
                           {checked && <Check className="size-3" strokeWidth={3} />}
                         </button>
@@ -413,7 +413,7 @@ function UnitToggle({ value, onChange, disabled }: { value: Unit; onChange: (u: 
           onClick={() => onChange(u)}
           className={cn(
             "rounded px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-50",
-            value === u ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            value === u ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {u === "min" ? "Mins" : "Hours"}
@@ -807,7 +807,7 @@ function NvrDefaultsSection() {
                   className={cn(
                     "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
                     retentionDays === d
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-primary-fill text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   )}
                 >
@@ -1058,11 +1058,11 @@ export default function SystemConfigPage() {
             return (
               <button key={s.key} onClick={() => setSection(s.key)}
                 className={cn("flex items-start gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors",
-                  active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary" : "")} />
+                  active ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary/70" : "text-muted-foreground/70")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground/70")}>{s.description}</p>
                 </div>
               </button>
             );

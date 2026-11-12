@@ -91,12 +91,12 @@ function ExpandableTags({ tags }: { tags: string[] }) {
           <PopoverTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
-              className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary hover:bg-primary/15"
+              className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink hover:bg-primary/15"
             >
               +{rest.length} more tags
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" sideOffset={6} className="z-[100] w-64 p-3">
+          <PopoverContent align="start" sideOffset={6} className="z-[var(--z-popover)] w-64 p-3">
             <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               All Tags
             </p>
@@ -146,7 +146,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="truncate font-medium" />
@@ -230,7 +230,7 @@ function RuleFilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -430,7 +430,7 @@ function TagInput({
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
               <button
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary hover:bg-primary/10"
+                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary-ink hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
@@ -932,7 +932,7 @@ export default function RulesLibraryPage({
           {(search || hasActiveFilters) && (
             <button
               onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>
@@ -1023,7 +1023,7 @@ export default function RulesLibraryPage({
                   >
                     {/* Rule ID */}
                     <td className="px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {rule.id}
                       </span>
                     </td>
@@ -1031,7 +1031,7 @@ export default function RulesLibraryPage({
                     {/* Rule Name + Severity badge */}
                     <td className="px-4 py-3">
                       <div className="flex flex-col items-start gap-1.5">
-                        <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+                        <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                           {rule.name}
                         </span>
                         <SeverityBadge severity={rule.severity} />

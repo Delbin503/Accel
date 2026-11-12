@@ -59,10 +59,10 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-white opacity-60",
+              "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-status-foreground opacity-60",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-violet"
-              : "bg-primary"
+              : "bg-primary-fill text-primary-foreground"
             )}
             style={{ top: box.top, left: box.left }}
           >
@@ -71,18 +71,18 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
         </React.Fragment>
       ))}
       {/* Dismissed overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-        <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-3 py-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
+      <div className="absolute inset-0 flex items-center justify-center bg-scrim/30">
+        <div className="flex items-center gap-2 rounded-full border border-media-foreground/20 bg-scrim/60 px-3 py-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wider text-media-foreground/70">
             Dismissed
           </span>
           <ReasonChip reason={item.reason} />
         </div>
       </div>
-      <button className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-primary/80 hover:text-white">
-        <Play className="size-4 fill-white/60" />
+      <button className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-media-foreground/10 text-media-foreground/60 transition-colors hover:bg-primary/80 hover:text-media-foreground">
+        <Play className="size-4 fill-media-foreground/60" />
       </button>
-      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-2xs text-white">
+      <span className="absolute bottom-2.5 left-3 rounded bg-scrim/75 px-1.5 py-0.5 font-mono text-2xs text-media-foreground">
         {event.time}
       </span>
     </div>
@@ -116,10 +116,10 @@ function DetailGrid({ item }: { item: DismissedEvent }) {
     ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
     ["Detection Type", event.typeLabel],
     ...(event.assetId
-      ? [["Asset ID", <span className="font-mono text-xs text-primary">{event.assetId}</span>] as [string, React.ReactNode]]
+      ? [["Asset ID", <span className="font-mono text-xs text-primary-ink">{event.assetId}</span>] as [string, React.ReactNode]]
       : []),
     ...(event.personId
-      ? [["Person ID", <span className="font-mono text-xs text-primary">{event.personId}</span>] as [string, React.ReactNode]]
+      ? [["Person ID", <span className="font-mono text-xs text-primary-ink">{event.personId}</span>] as [string, React.ReactNode]]
       : []),
     ["Area", event.areaDisplay],
     ["Camera", event.camera],

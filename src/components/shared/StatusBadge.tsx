@@ -22,7 +22,7 @@ const statusBadgeVariants = cva(
         violet: "border-violet/30 bg-violet/15 text-violet",
         /** @deprecated Renamed to "violet" — kept for prototypes and in-flight pages. */
         purple: "border-violet/30 bg-violet/15 text-violet",
-        primary: "border-primary/30 bg-primary/15 text-primary",
+        primary: "border-primary/30 bg-primary/15 text-primary-ink",
         neutral: "border-border bg-muted text-muted-foreground",
       },
     },

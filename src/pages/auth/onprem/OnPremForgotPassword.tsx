@@ -152,7 +152,7 @@ export default function OnPremForgotPasswordPage() {
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Remembered it?{" "}
-              <Link to="/on-premise/signin" className="font-semibold text-primary hover:underline">
+              <Link to="/on-premise/signin" className="font-semibold text-primary-ink hover:underline">
                 Sign in
               </Link>
             </p>
@@ -196,7 +196,7 @@ export default function OnPremForgotPasswordPage() {
                 }
                 className="group block w-full text-center text-sm text-muted-foreground"
               >
-                Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
+                Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
               </button>
             </form>
           </>

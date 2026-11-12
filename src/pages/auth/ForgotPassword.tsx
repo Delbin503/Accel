@@ -174,7 +174,7 @@ export default function ForgotPasswordPage() {
               Remembered it?{" "}
               <Link
                 to="/signin"
-                className="font-semibold text-primary hover:underline"
+                className="font-semibold text-primary-ink hover:underline"
               >
                 Sign in
               </Link>
@@ -232,7 +232,7 @@ export default function ForgotPasswordPage() {
                 className="group block w-full text-center text-sm text-muted-foreground"
               >
                 Didn't get it?{" "}
-                <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
+                <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
               </button>
             </form>
           </>

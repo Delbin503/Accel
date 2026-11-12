@@ -154,7 +154,7 @@ export const ACTIVITY_KIND_STYLES: Record<ActivityKind, { bg: string; text: stri
   camera:        { bg: "bg-info/15",      text: "text-info" },
   rule:          { bg: "bg-violet/15",  text: "text-violet" },
   model:         { bg: "bg-info/15",      text: "text-info" },
-  deployment:    { bg: "bg-primary/15",   text: "text-primary" },
+  deployment:    { bg: "bg-primary/15",   text: "text-primary-ink" },
   case:          { bg: "bg-warning/15",   text: "text-warning" },
   event:         { bg: "bg-warning/15",   text: "text-warning" },
   analysis:      { bg: "bg-info/15",      text: "text-info" },

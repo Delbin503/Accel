@@ -129,10 +129,10 @@ function ClipFrame({ src, filter }: { src: string | undefined; filter: string })
     );
   }
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-neutral-700 via-neutral-800 to-neutral-950" style={{ filter }}>
-      <div className="absolute left-[12%] top-[22%] size-24 rounded-full bg-neutral-500/40 blur-xl" />
-      <div className="absolute right-[18%] bottom-[18%] h-28 w-40 rounded-lg bg-neutral-400/25" />
-      <div className="absolute inset-x-0 top-1/2 h-px bg-neutral-500/40" />
+    <div className="absolute inset-0 bg-camera-feed" style={{ filter }}>
+      <div className="absolute left-[12%] top-[22%] size-24 rounded-full bg-media-foreground/15 blur-xl" />
+      <div className="absolute right-[18%] bottom-[18%] h-28 w-40 rounded-lg bg-media-foreground/10" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-media-foreground/15" />
     </div>
   );
 }
@@ -360,7 +360,7 @@ export function VideoEnhancement() {
           {/* Crop mode toolbar — shape, then cancel or save */}
           {draft && (
             <div className="flex flex-wrap items-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
-              <Crop className="size-4 text-primary" />
+              <Crop className="size-4 text-primary-ink" />
               <span className="text-sm font-semibold text-foreground">
                 {draft.editingId ? `Editing ${savedCrops.find((c) => c.id === draft.editingId)?.name}` : "Crop mode"}
               </span>
@@ -375,7 +375,7 @@ export function VideoEnhancement() {
                     className={cn(
                       "rounded-md border px-2 py-0.5 text-xs font-medium transition-colors duration-[var(--duration-fast)] ease-standard",
                       draft.aspect === a.id
-                        ? "border-primary bg-primary/10 text-primary"
+                        ? "border-primary bg-primary/10 text-primary-ink"
                         : "border-border text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -389,7 +389,7 @@ export function VideoEnhancement() {
             </div>
           )}
 
-          <div className="bg-black p-4">
+          <div className="bg-media p-4">
             <div className="relative mx-auto aspect-video w-full overflow-hidden rounded-lg">
               {/* Drawing shows the whole frame; otherwise a crop that is on shows only what it keeps. */}
               {activeCrop && !draft ? (
@@ -402,12 +402,12 @@ export function VideoEnhancement() {
 
               {/* Hidden while drawing so it never sits under the box's size label. */}
               {!draft && (
-                <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/70 px-1.5 py-px text-2xs text-white">
+                <span className="pointer-events-none absolute left-2 top-2 rounded bg-scrim/70 px-1.5 py-px text-2xs text-media-foreground">
                   {file.id} · {recording.cameraName}
                 </span>
               )}
               {activeCrop && !draft && (
-                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
+                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded bg-primary-fill px-1.5 py-px text-2xs font-bold text-primary-foreground">
                   <Crop className="size-3" />
                   {activeCrop.name}
                 </span>
@@ -484,7 +484,7 @@ export function VideoEnhancement() {
                     return (
                       <li key={c.id} className={cn("flex items-center gap-2 px-3 py-2", on && "bg-primary/5")}>
                         <div className="min-w-0 flex-1">
-                          <p className={cn("truncate text-sm font-semibold", on ? "text-primary" : "text-foreground")}>{c.name}</p>
+                          <p className={cn("truncate text-sm font-semibold", on ? "text-primary-ink" : "text-foreground")}>{c.name}</p>
                           <p className="font-mono text-2xs text-muted-foreground">{describeRect(c.rect)}</p>
                         </div>
                         <Button
@@ -544,7 +544,7 @@ export function VideoEnhancement() {
                         )}
                       >
                         <div className="min-w-0 flex-1">
-                          <p className={cn("truncate font-mono text-sm", active ? "font-semibold text-primary" : "text-foreground")}>
+                          <p className={cn("truncate font-mono text-sm", active ? "font-semibold text-primary-ink" : "text-foreground")}>
                             {f.id}
                           </p>
                           <p className="mt-0.5 whitespace-nowrap font-mono text-2xs text-muted-foreground">
@@ -562,7 +562,7 @@ export function VideoEnhancement() {
 
           <div className="rounded-xl border border-border bg-card p-3">
             <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="mt-0.5 size-3 flex-shrink-0 text-primary" />
+              <Sparkles className="mt-0.5 size-3 flex-shrink-0 text-primary-ink" />
               Enhancements are non-destructive — they are stored alongside the clip and applied
               on playback or when exporting. The original recording is untouched.
             </p>

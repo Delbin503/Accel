@@ -139,7 +139,7 @@ export function SystemStatusMenu({ className, forcedHealth }: SystemStatusMenuPr
           <button
             type="button"
             onClick={() => go("/device-health")}
-            className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-base font-medium text-primary transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-base font-medium text-primary-ink transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             View System Health
             <ArrowRight className="size-4" />

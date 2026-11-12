@@ -60,7 +60,7 @@ function ClassMultiSelect({
               {values.map((v) => (
                 <span
                   key={v}
-                  className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-px font-mono text-2xs font-semibold text-primary"
+                  className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-px font-mono text-2xs font-semibold text-primary-ink"
                 >
                   {v}
                   <X
@@ -215,7 +215,7 @@ function AddParamMenu({
           disabled={disabled}
           title={disabled ? "Every parameter is already on this class" : "Add a parameter"}
           aria-label="Add a parameter"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary/50 hover:text-primary disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary/50 hover:text-primary-ink disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Plus className="size-3.5" />
         </button>
@@ -279,7 +279,7 @@ function ClassCard({
                 !open && "-rotate-90"
               )}
             />
-            <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-px font-mono text-2xs font-semibold text-primary">
+            <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-px font-mono text-2xs font-semibold text-primary-ink">
               {cls}
             </span>
             <span className="min-w-0 flex-1 truncate text-2xs text-muted-foreground">

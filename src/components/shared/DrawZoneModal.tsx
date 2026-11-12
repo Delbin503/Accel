@@ -221,20 +221,20 @@ export function DrawZoneModal({
           <div
             ref={containerRef}
             onMouseDown={onMouseDownContainer}
-            className="relative aspect-video w-full cursor-crosshair select-none overflow-hidden rounded-lg border-2 border-border bg-neutral-950"
+            className="relative aspect-video w-full cursor-crosshair select-none overflow-hidden rounded-lg border-2 border-border bg-media"
             style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }}
           >
             <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px)" }} />
-            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
+            <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-status-foreground">
               LIVE
             </span>
-            <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">{cameraName}</span>
+            <span className="pointer-events-none absolute right-3 top-3 rounded bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">{cameraName}</span>
 
             {/* Empty-state hint */}
             {existingZones.length === 0 && !draft && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="rounded-lg border border-dashed border-white/30 bg-black/40 px-4 py-2 text-center text-xs text-white/70 backdrop-blur-sm">
+                <div className="rounded-lg border border-dashed border-media-foreground/30 bg-scrim/40 px-4 py-2 text-center text-xs text-media-foreground/70 backdrop-blur-sm">
                   Click and drag anywhere on the canvas to draw a new zone
                 </div>
               </div>
@@ -274,7 +274,7 @@ export function DrawZoneModal({
                 >
                   <span className={cn(
                     "absolute -top-5 left-0 rounded px-1.5 py-px font-mono text-2xs font-bold",
-                    isEditing ? "bg-warning text-neutral-900" : "bg-info text-white"
+                    isEditing ? "bg-warning text-status-foreground" : "bg-info text-status-foreground"
                   )}>
                     {i + 1}. {z.label}{isEditing && " · editing"}
                   </span>
@@ -299,7 +299,7 @@ export function DrawZoneModal({
                   width: `${draft.w * 100}%`, height: `${draft.h * 100}%`,
                 }}
               >
-                <span className="absolute -top-5 left-0 rounded bg-primary px-1.5 py-px text-2xs font-bold text-primary-foreground">
+                <span className="absolute -top-5 left-0 rounded bg-primary-fill px-1.5 py-px text-2xs font-bold text-primary-foreground">
                   {label || "New zone"}
                 </span>
                 <div onMouseDown={(e) => resizeBox(e, draft, (nw, nh) => setDraft((d) => d && ({ ...d, w: nw, h: nh })))}
@@ -322,7 +322,7 @@ export function DrawZoneModal({
                 size="sm"
                 onClick={applyToAll.onClick}
                 disabled={applyToAll.disabled}
-                className="flex-shrink-0 gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                className="flex-shrink-0 gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
               >
                 <CopyCheck className="size-3.5" />
                 Apply to all cameras
@@ -336,7 +336,7 @@ export function DrawZoneModal({
             {draft && (
               <div className="grid grid-cols-1 gap-3 rounded-lg border border-primary/40 bg-primary/[0.04] p-3 sm:grid-cols-[1fr_auto]">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-primary">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-primary-ink">
                     <Plus className="-mt-0.5 mr-1 inline size-3" /> Name your new zone
                   </label>
                   <Input value={label} onChange={(e) => setLabel(e.target.value)}

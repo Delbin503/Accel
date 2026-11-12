@@ -38,7 +38,7 @@ function FilterDropdown({ label, options, selected, onChange }: {
         <button className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
-          hasValue ? "text-primary" : "text-muted-foreground"
+          hasValue ? "text-primary-ink" : "text-muted-foreground"
         )}>
           <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
@@ -88,7 +88,7 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All sites", "All areas", "All cameras", "All types", "All bookmarks"].map((l) => (

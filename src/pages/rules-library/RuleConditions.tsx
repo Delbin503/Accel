@@ -78,7 +78,7 @@ function MultiSelect({
                       mono && "font-mono",
                       locked
                         ? "border-border bg-muted text-muted-foreground"
-                        : "border-primary/30 bg-primary/10 text-primary"
+                        : "border-primary/30 bg-primary/10 text-primary-ink"
                     )}
                   >
                     {label}
@@ -123,7 +123,7 @@ function MultiSelect({
                   checked ? "border-primary bg-primary" : "border-border"
                 )}
               >
-                {checked && <span className="size-1.5 rounded-[1px] bg-primary-foreground" />}
+                {checked && <span className="size-1.5 rounded-xs bg-primary-foreground" />}
               </span>
               <span className={cn("flex-1", mono && "font-mono text-sm")}>{o.label}</span>
               {locked && <span className="text-2xs text-muted-foreground">always</span>}
@@ -434,7 +434,7 @@ function ConditionCard({
             onClick={onEdit}
             aria-label={`Edit ${template?.name ?? "condition"}`}
             title="Edit condition"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary-ink"
           >
             <Pencil className="size-3" />
           </button>
@@ -499,7 +499,7 @@ export function RuleConditions({
             invalid ? "border-severity-critical" : "border-border"
           )}
         >
-          <div className="flex size-10 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary">
+          <div className="flex size-10 items-center justify-center rounded-full border border-border transition-colors group-hover:border-primary group-hover:bg-primary/10 group-hover:text-primary-ink">
             <Plus className="size-4" />
           </div>
           <p className="text-base">Add your first condition</p>

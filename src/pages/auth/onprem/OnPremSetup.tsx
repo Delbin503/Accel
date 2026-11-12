@@ -206,7 +206,7 @@ function WizardShell({
         <div className="flex items-center justify-between gap-4">
           <Link to="/on-premise/signin" className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
-              <Play className="size-3 fill-white text-white" />
+              <Play className="size-3 fill-media-foreground text-media-foreground" />
             </div>
             <p className="text-md font-bold tracking-tight">Accel</p>
             <span className="ml-1 hidden rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary sm:inline">
@@ -461,7 +461,7 @@ export default function OnPremSetupPage({
 
           {licenseStatus === "validating" && (
             <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/40 px-3 py-2.5 text-sm text-muted-foreground">
-              <LoaderCircle className="size-4 animate-spin text-primary" />
+              <LoaderCircle className="size-4 animate-spin text-primary-ink" />
               Validating license…
             </div>
           )}
@@ -698,7 +698,7 @@ export default function OnPremSetupPage({
                     <div
                       className={cn(
                         "flex items-center gap-1.5 text-sm font-bold",
-                        selected ? "text-primary" : "text-foreground"
+                        selected ? "text-primary-ink" : "text-foreground"
                       )}
                     >
                       <Icon className="size-3.5" />

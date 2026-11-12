@@ -180,7 +180,7 @@ function FilterDropdown({
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -265,7 +265,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -676,7 +676,7 @@ export function CameraDrawer({
                   className={cn(
                     "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                     tab === key
-                      ? "text-primary"
+                      ? "text-primary-ink"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -707,7 +707,7 @@ export function CameraDrawer({
           <div className="flex-1 space-y-5 overflow-y-auto p-5">
             {/* Live feed */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-              <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
+              <div className="relative aspect-video w-full overflow-hidden bg-media-raised">
                 {camera.status === "online" ? (
                   <>
                     <img
@@ -715,7 +715,7 @@ export function CameraDrawer({
                       alt={`Live feed — ${camera.siteName} / ${camera.areaName}`}
                       className="absolute inset-0 size-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-scrim/40 via-transparent to-scrim/50" />
                   </>
                 ) : (
                   <div
@@ -728,8 +728,8 @@ export function CameraDrawer({
                 )}
                 {camera.status === "online" ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
-                      <Play className="size-5 text-white" />
+                    <div className="flex size-12 items-center justify-center rounded-full bg-scrim/40 backdrop-blur-sm">
+                      <Play className="size-5 text-media-foreground" />
                     </div>
                   </div>
                 ) : (
@@ -738,11 +738,11 @@ export function CameraDrawer({
                     <p className="text-xs">Feed unavailable</p>
                   </div>
                 )}
-                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-scrim/50 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground backdrop-blur-sm">
                   <span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />
                   Live
                 </div>
-                <div className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/80 backdrop-blur-sm">
+                <div className="absolute bottom-3 left-3 rounded bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/80 backdrop-blur-sm">
                   {camera.siteName} / {camera.areaName}
                 </div>
               </div>
@@ -753,7 +753,7 @@ export function CameraDrawer({
               <StatCard
                 label="Recordings"
                 value={recordings.length}
-                icon={<FileVideo className="size-3 text-primary" />}
+                icon={<FileVideo className="size-3 text-primary-ink" />}
                 sub="Last 14 days"
               />
               <StatCard
@@ -799,7 +799,7 @@ export function CameraDrawer({
                 {(
                   [
                     ["Camera Name",     camera.name],
-                    ["Camera ID",       <span className="font-mono text-xs text-primary">{camera.id}</span>],
+                    ["Camera ID",       <span className="font-mono text-xs text-primary-ink">{camera.id}</span>],
                     ["Status",          <StatusPill status={camera.status} />],
                     ["Last Activity",   camera.lastSeenDisplay],
                     ["Site Location",   camera.siteName],
@@ -873,7 +873,7 @@ export function CameraDrawer({
                     <div className="min-w-0 flex-1">
                       <TruncatedText
                         text={camera.nvrName}
-                        className="text-base font-semibold text-foreground transition-colors group-hover:text-primary"
+                        className="text-base font-semibold text-foreground transition-colors group-hover:text-primary-ink"
                       />
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {nvr.model} · {camera.nvrId} · Channel {camera.channel} · IP {nvr.ipAddress}
@@ -932,7 +932,7 @@ export function CameraDrawer({
                     className={cn(
                       "rounded-md border px-2.5 py-1 text-sm font-semibold transition-colors",
                       recordingDate === f.key
-                        ? "border-primary bg-primary text-primary-foreground"
+                        ? "border-primary bg-primary-fill text-primary-foreground"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                     )}
                   >
@@ -1027,7 +1027,7 @@ export function CameraDrawer({
         {camera && phase === "idle" && tab === "recordings" && selectedRecordingIds.size > 0 && (
           <div className="absolute inset-x-4 bottom-20 z-40 mx-auto flex max-w-[640px] flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
             <div className="flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
                 <Check className="size-3.5" strokeWidth={3} />
               </div>
               <span className="text-base font-semibold text-foreground">
@@ -1769,7 +1769,7 @@ export default function CamerasPage({
         {hasFilters && (
           <button
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary"
+            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
           </button>
@@ -1826,12 +1826,12 @@ export default function CamerasPage({
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {c.id}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary">
+                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                         {c.name}
                       </span>
                     </td>

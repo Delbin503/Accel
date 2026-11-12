@@ -192,7 +192,7 @@ export default function SettingsPage() {
                   disabled={v === "system"}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-lg border bg-background px-3 py-4 transition-colors disabled:opacity-50",
-                    active ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    active ? "border-primary bg-primary/5 text-primary-ink" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   )}
                 >
                   <Icon className="size-5" />

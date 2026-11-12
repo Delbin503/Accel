@@ -84,7 +84,7 @@ function ChoiceDropdown<T extends string>({ value, options, onChange }: {
               className="group/choice py-2 pl-2 data-[state=checked]:bg-accent [&>span:first-child]:hidden"
             >
               <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3">
-                <span className="truncate text-sm text-foreground group-data-[state=checked]/choice:text-primary">
+                <span className="truncate text-sm text-foreground group-data-[state=checked]/choice:text-primary-ink">
                   {o.label}
                 </span>
                 {o.hint ? <span className="shrink-0 font-mono text-2xs text-muted-foreground">{o.hint}</span> : null}
@@ -256,7 +256,7 @@ export function LinkCaseCopy({ eventIds, eventSite, eventSiteDisplay, onClose }:
                       />
                       <span className="min-w-0 flex-1 space-y-1">
                         <span className="flex items-center justify-between gap-3">
-                          <span className={cn("truncate text-sm font-medium", on ? "text-primary" : "text-foreground")}>
+                          <span className={cn("truncate text-sm font-medium", on ? "text-primary-ink" : "text-foreground")}>
                             {c.title}
                           </span>
                           <SeverityBadge severity={c.severity} />

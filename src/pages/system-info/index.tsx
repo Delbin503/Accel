@@ -131,7 +131,7 @@ function SectionCard({ title, icon: Icon, children, action }: {
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
-            <Icon className="size-3.5 text-primary" />
+            <Icon className="size-3.5 text-primary-ink" />
           </div>
           <h2 className="text-md font-bold text-foreground">{title}</h2>
         </div>

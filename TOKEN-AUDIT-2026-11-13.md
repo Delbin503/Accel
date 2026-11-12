@@ -22,6 +22,11 @@ Accel's semantic layer is strong. It is well named, theme-aware for surfaces, an
 > - `shadow-overlay` → `shadow-floating` (`--elevation-floating`), so it no longer collides with `--z-overlay` (the backdrop layer). 14 refs.
 > - Naming rules are written into the index.css header and CLAUDE.md.
 
+> **Roadmap Phase 2, 2026-11-13: contrast and hardcoded values.**
+> - Contrast: 29 AA failures across both themes → 0. Status inks re-tuned; brand orange split into `primary-fill` (labelled fills) and `primary-ink` (text); `status-foreground` for labels on solid status fills. This closes the brand-orange and dark violet/destructive observations above.
+> - TA-12 ✅ media tokens replace raw black/white/neutral on video surfaces; z, radius, text-px and duration stragglers tokenised; `bg-camera-feed` uses palette tokens.
+> - TA-11 ✅ `src/App.css` deleted. TA-06 (spacing) moved to roadmap Phase 3.
+
 *Baseline audit — no `.ds-ops-config.yml`, so default severities apply. Trend analysis will be available from the next run.*
 
 ---

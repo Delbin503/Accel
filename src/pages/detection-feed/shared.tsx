@@ -16,7 +16,7 @@ export function parseEventText(text: string): React.ReactNode {
       return (
         <span
           key={i}
-          className="cursor-pointer rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs font-medium text-primary hover:border-primary"
+          className="cursor-pointer rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs font-medium text-primary-ink hover:border-primary"
         >
           {part.slice(2, -2)}
         </span>

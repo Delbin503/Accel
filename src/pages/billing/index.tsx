@@ -147,7 +147,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
         <div className="flex items-center gap-2">
           <p className="text-base font-bold text-foreground">{card.brand} ···· {card.last4}</p>
           {card.isDefault && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">
               <Star className="size-2.5" /> Default
             </span>
           )}
@@ -309,7 +309,7 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
                   <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
                 </div>
                 {card.isDefault && (
-                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
               </button>
             ))}
@@ -400,7 +400,7 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
                   <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
                 </div>
                 {card.isDefault && (
-                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
               </button>
             ))}
@@ -543,7 +543,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
                   <p className="text-2xs text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear}</p>
                 </div>
                 {card.isDefault && (
-                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary">Default</span>
+                  <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
               </button>
             ))}
@@ -585,7 +585,7 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/40 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute right-0 top-0 flex h-full w-[min(560px,90vw)] flex-col overflow-hidden bg-card shadow-modal">
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex items-start gap-2.5">
@@ -624,7 +624,7 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Invoice number</p>
-              <p className="mt-0.5 font-mono text-sm text-primary">{invoice.id}</p>
+              <p className="mt-0.5 font-mono text-sm text-primary-ink">{invoice.id}</p>
             </div>
             <div>
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{dateLabel}</p>
@@ -893,9 +893,9 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
               >
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{inv.issuedDisplay}</td>
                 <td className="whitespace-nowrap px-4 py-3">
-                  <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{inv.id}</span>
+                  <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{inv.id}</span>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:text-primary">{inv.periodDisplay}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:text-primary-ink">{inv.periodDisplay}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
@@ -919,7 +919,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-right font-mono text-sm font-bold text-foreground">${inv.amount.toLocaleString()}</td>
                 <td className="px-3 py-3 text-right">
-                  <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                  <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
                 </td>
               </tr>
               );
@@ -962,7 +962,7 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">{activeCount} active</span>
           ) : (
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {["All statuses", "All sites"].map((l) => (
@@ -1017,7 +1017,7 @@ function PlanCard({ tier, cycle, previous, current = false, currentTier, onSelec
       current ? cn(color.border, color.bg) : plan.highlight ? "border-primary/50" : "border-border"
     )}>
       {plan.highlight && (
-        <span className="absolute -top-2.5 left-5 rounded-full bg-primary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary-foreground">
+        <span className="absolute -top-2.5 left-5 rounded-full bg-primary-fill px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary-foreground">
           Most popular
         </span>
       )}
@@ -1097,7 +1097,7 @@ function BillingCycleToggle({ value, onChange }: {
             onClick={() => onChange(o.key)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
-              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             {o.label}
@@ -1136,7 +1136,7 @@ function TabSwitcher({ value, onChange }: {
           <button key={t.key} onClick={() => onChange(t.key)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
-              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}>
             {t.label}
           </button>
@@ -1546,10 +1546,10 @@ export default function BillingPage() {
                   <AcctIcon className={cn("size-4", acctColor.text)} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{activePlan.name} plan</p>
+                  <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary-ink">{activePlan.name} plan</p>
                   <p className="text-2xs text-muted-foreground">{cycleLabel} · {siteNames.length} sites</p>
                 </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
               </button>
 
               <div className="mt-3 space-y-1.5 rounded-lg border border-border bg-background px-3.5 py-3">
@@ -1591,7 +1591,7 @@ export default function BillingPage() {
               {(invoiceStatusFilter.length > 0 || invoiceSiteFilter.length > 0) && (
                 <button
                   onClick={() => { setInvoiceStatusFilter([]); setInvoiceSiteFilter([]); }}
-                  className="ml-2 text-muted-foreground underline hover:text-primary"
+                  className="ml-2 text-muted-foreground underline hover:text-primary-ink"
                 >
                   Clear all
                 </button>

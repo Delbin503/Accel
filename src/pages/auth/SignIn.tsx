@@ -50,7 +50,7 @@ export default function SignInPage() {
       <div>
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
-            <Play className="size-7 fill-white text-white" />
+            <Play className="size-7 fill-media-foreground text-media-foreground" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Welcome
@@ -121,7 +121,7 @@ export default function SignInPage() {
             </label>
             <Link
               to="/forgot-password"
-              className="text-sm font-semibold text-primary hover:underline"
+              className="text-sm font-semibold text-primary-ink hover:underline"
             >
               Forgot password?
             </Link>
@@ -155,7 +155,7 @@ export default function SignInPage() {
           Don't have an account?{" "}
           <Link
             to="/signup"
-            className={cn("font-semibold text-primary hover:underline")}
+            className={cn("font-semibold text-primary-ink hover:underline")}
           >
             Create one
           </Link>

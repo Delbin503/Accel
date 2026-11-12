@@ -62,7 +62,7 @@ export function ScrubTrack({
       {/* Preview bubble — the frame you would land on, like a scrub preview. */}
       {(dragging || hoverPct !== null) && (
         <div
-          className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded bg-black/85 px-1.5 py-0.5 font-mono text-3xs text-white"
+          className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded bg-scrim/85 px-1.5 py-0.5 font-mono text-3xs text-media-foreground"
           style={{ left: `${dragging ? pct : (hoverPct ?? 0)}%` }}
         >
           {dragging
@@ -110,7 +110,7 @@ export function ScrubTrack({
         )}
       >
         {/* Buffer */}
-        <div className={cn("absolute inset-x-0 rounded-full bg-white/25", size === "sm" ? "h-[3px]" : "h-1")} />
+        <div className={cn("absolute inset-x-0 rounded-full bg-media-foreground/25", size === "sm" ? "h-[3px]" : "h-1")} />
         {/* Watched region up to the playhead */}
         <div
           className={cn("absolute left-0 rounded-full bg-severity-critical", size === "sm" ? "h-[3px]" : "h-1")}
@@ -172,7 +172,7 @@ export function ChipRow<T extends string | number>({
             className={cn(
               "rounded-md border px-2 py-1 font-mono text-2xs font-semibold transition-colors",
               o === value
-                ? "border-primary bg-primary/15 text-primary"
+                ? "border-primary bg-primary/15 text-primary-ink"
                 : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
             )}
           >
@@ -203,7 +203,7 @@ export function IconButton({ label, onClick, children, compact, disabled, active
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
       className={cn(
         "inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-40",
-        active ? "bg-white/25 text-white" : "text-white/85 hover:bg-white/15 hover:text-white",
+        active ? "bg-media-foreground/25 text-media-foreground" : "text-media-foreground/85 hover:bg-media-foreground/15 hover:text-media-foreground",
         compact ? "size-6" : "size-7"
       )}
     >
@@ -329,14 +329,14 @@ export function ZoomSurface({ zoom, onChange, onExit, compact }: {
       {/* The live readout — the percentage the operator is steering. */}
       <span
         className={cn(
-          "rounded-md bg-black/75 font-mono font-bold text-white backdrop-blur-sm",
+          "rounded-md bg-scrim/75 font-mono font-bold text-media-foreground backdrop-blur-sm",
           compact ? "px-1.5 py-0.5 text-2xs" : "px-2.5 py-1 text-lg"
         )}
       >
         {zoomPercent(zoom)}
       </span>
       {!compact && (
-        <span className="rounded bg-black/65 px-2 py-0.5 text-2xs font-semibold text-white/80 backdrop-blur-sm">
+        <span className="rounded bg-scrim/65 px-2 py-0.5 text-2xs font-semibold text-media-foreground/80 backdrop-blur-sm">
           Scroll or {atMin ? "+" : atMax ? "−" : "+ / −"} to zoom · arrows to pan · Esc to exit
         </span>
       )}
@@ -363,7 +363,7 @@ export function PlaybackSettingsMenu({
           aria-label="Playback settings"
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "inline-flex items-center justify-center rounded-md text-white/85 transition-colors hover:bg-white/15 hover:text-white",
+            "inline-flex items-center justify-center rounded-md text-media-foreground/85 transition-colors hover:bg-media-foreground/15 hover:text-media-foreground",
             compact ? "size-6" : "size-7"
           )}
         >

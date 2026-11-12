@@ -98,8 +98,8 @@ function LinkedThumb({ event }: { event: DetectionEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
-              box.variant === "person" ? "bg-info" : "bg-primary"
+              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-status-foreground",
+              box.variant === "person" ? "bg-info" : "bg-primary-fill text-primary-foreground"
             )}
             style={{ top: box.top, left: box.left }}
           >
@@ -107,7 +107,7 @@ function LinkedThumb({ event }: { event: DetectionEvent }) {
           </span>
         </React.Fragment>
       ))}
-      <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
+      <span className="absolute bottom-1.5 left-1.5 rounded bg-scrim/75 px-1 py-px font-mono text-2xs text-media-foreground">
         {event.time.slice(0, 5)}
       </span>
     </div>
@@ -138,7 +138,7 @@ function LinkedEventCard({
           <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary-ink"
           >
             {event.useCaseId}
           </span>
@@ -321,7 +321,7 @@ export function ReassignModal({
                   className={cn(
                     "rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
                     active
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary-ink"
                       : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                   )}
                 >
@@ -350,7 +350,7 @@ export function ReassignModal({
                     : "border-border bg-muted/30 hover:border-primary"
                 )}
               >
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary-ink">
                   {a.name.charAt(0)}
                 </div>
                 <div className="flex-1">
@@ -367,7 +367,7 @@ export function ReassignModal({
                   </div>
                   <div className="font-mono text-xs text-muted-foreground">{a.id}</div>
                 </div>
-                {picked.id === a.id && <Check className="size-4 text-primary" />}
+                {picked.id === a.id && <Check className="size-4 text-primary-ink" />}
               </button>
             );
           })}
@@ -546,7 +546,7 @@ export function LinkNewIncidentsModal({
           )}
 
           {selectedIds.size > 0 && (
-            <p className="text-right text-sm font-semibold text-primary">
+            <p className="text-right text-sm font-semibold text-primary-ink">
               {selectedIds.size} incident{selectedIds.size > 1 ? "s" : ""} selected
             </p>
           )}
@@ -652,7 +652,7 @@ export function EditCaseModal({
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-xs font-semibold transition-colors",
                     severity === opt.value
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-primary bg-primary/10 text-primary-ink"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary"
                   )}
                 >
@@ -1098,7 +1098,7 @@ const ENTITY_KIND_STYLE: Record<string, { borderColor: string; chipClass: string
   },
   asset: {
     borderColor: "var(--primary)",
-    chipClass: "border-primary/25 bg-primary/10 text-primary",
+    chipClass: "border-primary/25 bg-primary/10 text-primary-ink",
     label: "Asset",
   },
   vehicle: {
@@ -1204,7 +1204,7 @@ function EntityCard({
       {entity && onViewInfo && (
         <button
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary hover:underline"
+          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary-ink hover:underline"
         >
           View Info →
         </button>
@@ -1512,7 +1512,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                     [
                       [
                         "Case ID",
-                        <span className="font-mono text-xs text-primary">{caseData.id}</span>,
+                        <span className="font-mono text-xs text-primary-ink">{caseData.id}</span>,
                       ],
                       ["Site", caseData.siteDisplay],
                       ["Status", <CaseStatusBadge status={caseData.status} />],
@@ -1520,7 +1520,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                       [
                         "Assigned To",
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xs font-bold text-primary">
+                          <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xs font-bold text-primary-ink">
                             {caseData.assignedTo.name.charAt(0)}
                           </span>
                           <TruncatedText text={caseData.assignedTo.name} className="text-sm" />
@@ -1595,7 +1595,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                             setAreaFilter("all");
                             setCameraFilter("all");
                           }}
-                          className="text-xs text-muted-foreground hover:text-primary"
+                          className="text-xs text-muted-foreground hover:text-primary-ink"
                         >
                           Clear ×
                         </button>

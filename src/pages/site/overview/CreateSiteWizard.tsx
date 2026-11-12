@@ -54,8 +54,8 @@ function StepBadge({ index, current, label }: { index: number; current: number; 
   return (
     <div className="flex items-center gap-2">
       <div className={cn("flex size-7 items-center justify-center rounded-full border text-xs font-bold transition-colors",
-        done   ? "border-primary bg-primary text-primary-foreground" :
-        active ? "border-primary bg-primary/10 text-primary" :
+        done   ? "border-primary bg-primary-fill text-primary-foreground" :
+        active ? "border-primary bg-primary/10 text-primary-ink" :
                  "border-border bg-card text-muted-foreground")}>
         {done ? <Check className="size-3.5" strokeWidth={3} /> : index + 1}
       </div>
@@ -371,10 +371,10 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
 
               {floorPlanUrl ? (
                 <div className="space-y-3">
-                  <div className="relative overflow-hidden rounded-xl border border-border bg-neutral-950">
+                  <div className="relative overflow-hidden rounded-xl border border-border bg-media">
                     <img src={floorPlanUrl} alt="Floor plan preview" className="block w-full" />
                     <button onClick={() => { setFloorPlanUrl(null); setFloorPlanName(""); }}
-                      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-white/20 bg-black/70 px-2 py-1 text-2xs font-semibold text-white backdrop-blur-sm hover:bg-black/90">
+                      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-media-foreground/20 bg-scrim/70 px-2 py-1 text-2xs font-semibold text-media-foreground backdrop-blur-sm hover:bg-scrim/90">
                       <Trash2 className="size-3" />
                       Remove
                     </button>
@@ -406,7 +406,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 <button onClick={useSampleFloorPlan}
                   className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40">
                   <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                    <ImageIcon className="size-4 text-primary" />
+                    <ImageIcon className="size-4 text-primary-ink" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground">Use Sample Blueprint</p>
@@ -459,7 +459,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 )}
               </div>
               {floorPlanUrl ? (
-                <div className="overflow-hidden rounded-xl border border-border bg-neutral-950">
+                <div className="overflow-hidden rounded-xl border border-border bg-media">
                   <img src={floorPlanUrl} alt="Floor plan preview" className="block w-full opacity-80" />
                 </div>
               ) : (

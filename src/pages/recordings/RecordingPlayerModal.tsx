@@ -103,7 +103,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
       {/* Player */}
       <div className="overflow-y-auto p-5">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="relative aspect-video w-full overflow-hidden bg-neutral-950">
+          <div className="relative aspect-video w-full overflow-hidden bg-media">
             <div
               className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
               style={{
@@ -111,8 +111,8 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 transform: zoomTransform(pb.zoom),
               }}
             />
-            <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-              <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-severity-critical" : "bg-white/60")} />
+            <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-scrim/70 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground/90 backdrop-blur-sm">
+              <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
               {isPlaying ? "Playing" : "Paused"}
             </span>
             <button
@@ -121,8 +121,8 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
               aria-label={isPlaying ? "Pause" : "Play"}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="flex size-16 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-transform hover:scale-105">
-                {isPlaying ? <Pause className="size-6 text-white" /> : <Play className="size-6 text-white" />}
+              <span className="flex size-16 items-center justify-center rounded-full bg-scrim/45 backdrop-blur-sm transition-transform hover:scale-105">
+                {isPlaying ? <Pause className="size-6 text-media-foreground" /> : <Play className="size-6 text-media-foreground" />}
               </span>
             </button>
 
@@ -135,12 +135,12 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
             )}
 
             {/* Overlay controls — the same bar the live tiles carry. */}
-            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-3 pb-2 pt-8">
-              <div className="flex items-center justify-between gap-2 text-3xs text-white/70">
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-scrim/90 via-scrim/70 to-transparent px-3 pb-2 pt-8">
+              <div className="flex items-center justify-between gap-2 text-3xs text-media-foreground/70">
                 <span className="font-mono">{recording.startsAtDisplay}</span>
                 <span className="inline-flex items-center gap-1">
                   <CircleDot className="size-3 text-success" />
-                  <strong className="text-white">{periods.length}</strong> detected period{periods.length === 1 ? "" : "s"}
+                  <strong className="text-media-foreground">{periods.length}</strong> detected period{periods.length === 1 ? "" : "s"}
                 </span>
                 <span className="font-mono">{recording.endsAtDisplay}</span>
               </div>
@@ -163,7 +163,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 }}
                 className="group/track relative flex h-4 w-full cursor-pointer items-center"
               >
-                <div className="absolute inset-x-0 h-1 rounded-full bg-white/25" />
+                <div className="absolute inset-x-0 h-1 rounded-full bg-media-foreground/25" />
                 <div className="absolute left-0 h-1 rounded-full bg-severity-critical" style={{ width: `${progress}%` }} />
                 {periods.map((p) => (
                   <span key={p.label + p.at} title={p.label}
@@ -190,16 +190,16 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 <IconButton label={pb.muted ? "Unmute" : "Mute"} onClick={() => setPb((c) => ({ ...c, muted: !c.muted }))}>
                   {pb.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                 </IconButton>
-                <span className="ml-1 font-mono text-3xs text-white/85">
+                <span className="ml-1 font-mono text-3xs text-media-foreground/85">
                   {fmtClock(currentSec)} / {recording.durationDisplay}
                 </span>
 
                 <div className="ml-auto flex items-center gap-0.5">
                   {pb.speed !== 1 && (
-                    <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">{pb.speed}×</span>
+                    <span className="rounded bg-media-foreground/15 px-1 font-mono text-3xs font-semibold text-media-foreground">{pb.speed}×</span>
                   )}
                   {isZoomed(pb.zoom) && (
-                    <span className="rounded bg-white/15 px-1 font-mono text-3xs font-semibold text-white">
+                    <span className="rounded bg-media-foreground/15 px-1 font-mono text-3xs font-semibold text-media-foreground">
                       {zoomPercent(pb.zoom)}
                     </span>
                   )}

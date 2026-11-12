@@ -73,10 +73,10 @@ export function CropOverlay({
       >
         {/* Rule-of-thirds guides */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-y-0 left-1/3 w-px bg-white/30" />
-          <div className="absolute inset-y-0 left-2/3 w-px bg-white/30" />
-          <div className="absolute inset-x-0 top-1/3 h-px bg-white/30" />
-          <div className="absolute inset-x-0 top-2/3 h-px bg-white/30" />
+          <div className="absolute inset-y-0 left-1/3 w-px bg-media-foreground/30" />
+          <div className="absolute inset-y-0 left-2/3 w-px bg-media-foreground/30" />
+          <div className="absolute inset-x-0 top-1/3 h-px bg-media-foreground/30" />
+          <div className="absolute inset-x-0 top-2/3 h-px bg-media-foreground/30" />
         </div>
         {CORNERS.map((h) => (
           <span
@@ -92,7 +92,7 @@ export function CropOverlay({
         {/* Size label sits above the box, or just inside it when the box is at the top edge. */}
         <span
           className={cn(
-            "pointer-events-none absolute left-0 rounded bg-primary px-1.5 py-px font-mono text-3xs font-bold text-primary-foreground",
+            "pointer-events-none absolute left-0 rounded bg-primary-fill px-1.5 py-px font-mono text-3xs font-bold text-primary-foreground",
             rect.y < 0.08 ? "left-1 top-1" : "-top-6"
           )}
         >

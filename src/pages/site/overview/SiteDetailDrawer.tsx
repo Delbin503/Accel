@@ -307,7 +307,7 @@ function FloorPlanCanvas({
   return (
     <div
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border-2 bg-neutral-950 select-none",
+        "relative w-full overflow-hidden rounded-xl border-2 bg-media select-none",
         tool === "draw-area" ? "border-primary cursor-crosshair" : "border-border cursor-default"
       )}
       style={{ aspectRatio: aspect }}
@@ -323,7 +323,7 @@ function FloorPlanCanvas({
             type="button"
             onClick={onDeleteFloorPlan}
             title="Remove floor plan"
-            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm transition-colors hover:bg-severity-critical/80"
+            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm transition-colors hover:bg-severity-critical/80"
           >
             <Trash2 className="size-3" />
           </button>
@@ -458,7 +458,7 @@ function FloorPlanCanvas({
         )}
       </svg>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-2xs font-semibold text-white/90 backdrop-blur-sm">
+      <div className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-scrim/65 px-2 py-1 text-2xs font-semibold text-media-foreground/90 backdrop-blur-sm">
         {tool === "draw-area" && <><Shapes className="size-3" /> Click to add points · Double-click to close shape</>}
         {tool === "select"    && (draggingCam
           ? <><MousePointer2 className="size-3" /> Moving camera — release to drop it</>
@@ -485,7 +485,7 @@ function FloorPlanEmpty({
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-card py-16">
       <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
-        <UploadCloud className="size-6 text-primary" />
+        <UploadCloud className="size-6 text-primary-ink" />
       </div>
       <h3 className="text-md font-bold text-foreground">Upload a Floor Plan</h3>
       <p className="max-w-md text-center text-sm text-muted-foreground">
@@ -936,12 +936,12 @@ function OverviewTab({
         </svg>
 
         {/* Top-left meta chip */}
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-scrim/65 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground backdrop-blur-sm">
           <ImageIcon className="size-3" />
           {site.floorPlan ? (site.floorPlan.label ?? "Floor Plan") : "No floor plan"}
         </span>
         {/* Top-right meta chip */}
-        <span className="absolute right-3 top-3 rounded bg-black/65 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
+        <span className="absolute right-3 top-3 rounded bg-scrim/65 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">
           {placedCount} / {siteCameras.length} placed
         </span>
 
@@ -953,7 +953,7 @@ function OverviewTab({
         )}
 
         <button onClick={onGoFloorPlan}
-          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/65 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/85">
+          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-scrim/65 py-2.5 text-sm font-semibold text-media-foreground backdrop-blur-sm transition-colors hover:bg-scrim/85">
           <UploadCloud className="size-3.5" />
           Open Floor Plan Editor
         </button>
@@ -991,7 +991,7 @@ function OverviewTab({
         <SiteSectionTitle>Site Details</SiteSectionTitle>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
           {([
-            ["Site ID",        <span className="font-mono text-xs text-primary">{site.id}</span>],
+            ["Site ID",        <span className="font-mono text-xs text-primary-ink">{site.id}</span>],
             ["Name",           <span>{site.name}</span>],
             ["Address",        <span>{site.address || "—"}</span>],
             ["Timezone",       <span>{timezoneLabel(site.timezone)}</span>],
@@ -1349,7 +1349,7 @@ export function FloorPlanModal({
                 onClick={() => setPanelTab(key)}
                 className={cn(
                   "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
-                  panelTab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  panelTab === key ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="size-3.5" />
@@ -1491,7 +1491,7 @@ export function FloorPlanModal({
                       {isSel && placed && placement && (
                         <div className="space-y-2 border-t border-border/60 bg-background/40 px-3.5 py-2.5">
                           <p className="flex items-start gap-1.5 text-2xs leading-relaxed text-muted-foreground">
-                            <RotateCw className="mt-px size-3 flex-shrink-0 text-primary" />
+                            <RotateCw className="mt-px size-3 flex-shrink-0 text-primary-ink" />
                             <span>
                               Facing <span className="font-mono text-foreground">{placement.rotation}°</span> — drag the orange
                               handle on the plan to change it.

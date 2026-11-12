@@ -45,7 +45,7 @@ export function DepartmentSelect({
               {value.map((dept) => (
                 <span
                   key={dept}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary-ink"
                 >
                   {dept}
                   <span
@@ -85,7 +85,7 @@ export function DepartmentSelect({
                 <span
                   className={cn(
                     "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border transition-colors",
-                    checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"
+                    checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-muted-foreground/40"
                   )}
                 >
                   {checked && <Check className="size-2.5" strokeWidth={3} />}

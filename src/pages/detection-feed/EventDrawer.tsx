@@ -45,10 +45,10 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-1 py-0.5 text-3xs font-semibold text-white",
+              "absolute -translate-y-full rounded-sm px-1 py-0.5 text-3xs font-semibold text-status-foreground",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-violet"
-              : "bg-primary"
+              : "bg-primary-fill text-primary-foreground"
             )}
             style={{ top: box.top, left: box.left }}
           >
@@ -56,10 +56,10 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
           </span>
         </React.Fragment>
       ))}
-      <button className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/90 text-white transition-colors hover:bg-primary">
-        <Play className="size-5 fill-white" />
+      <button className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/90 text-primary-foreground transition-colors hover:bg-primary-fill">
+        <Play className="size-5 fill-media-foreground" />
       </button>
-      <span className="absolute bottom-2.5 left-3 rounded bg-black/75 px-1.5 py-0.5 font-mono text-2xs text-white">
+      <span className="absolute bottom-2.5 left-3 rounded bg-scrim/75 px-1.5 py-0.5 font-mono text-2xs text-media-foreground">
         {event.time}
       </span>
     </div>
@@ -105,7 +105,7 @@ const ENTITY_CARD: Record<
   "default" | "person" | "vehicle",
   { label: string; accent: string; getId: (e: DetectionEvent) => string | undefined }
 > = {
-  default: { label: "Asset Box",   accent: "text-primary", getId: (e) => e.assetId },
+  default: { label: "Asset Box",   accent: "text-primary-ink", getId: (e) => e.assetId },
   person:  { label: "Person Box",  accent: "text-info",    getId: (e) => e.personId },
   vehicle: { label: "Vehicle Box", accent: "text-violet",  getId: (e) => e.vehicleId },
 };
@@ -326,10 +326,10 @@ function DetailGrid({ event }: { event: DetectionEvent }) {
     ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
     ["Detection Type", event.typeLabel],
     ...(event.assetId
-      ? [["Asset ID", <span className="font-mono text-xs text-primary">{event.assetId}</span>] as [string, React.ReactNode]]
+      ? [["Asset ID", <span className="font-mono text-xs text-primary-ink">{event.assetId}</span>] as [string, React.ReactNode]]
       : []),
     ...(event.personId
-      ? [["Person ID", <span className="font-mono text-xs text-primary">{event.personId}</span>] as [string, React.ReactNode]]
+      ? [["Person ID", <span className="font-mono text-xs text-primary-ink">{event.personId}</span>] as [string, React.ReactNode]]
       : []),
     ["Area", event.areaDisplay],
     ["Camera", event.camera],
@@ -364,7 +364,7 @@ function VlmBlock({ text }: { text: string }) {
 
 const EVENT_ENTITY_STYLE: Record<string, { borderColor: string; chipClass: string; label: string }> = {
   person:  { borderColor: "var(--info)",    chipClass: "border-info/25 bg-info/10 text-info",       label: "Person"  },
-  asset:   { borderColor: "var(--primary)", chipClass: "border-primary/25 bg-primary/10 text-primary", label: "Asset"   },
+  asset:   { borderColor: "var(--primary)", chipClass: "border-primary/25 bg-primary/10 text-primary-ink", label: "Asset"   },
   vehicle: { borderColor: "var(--success)", chipClass: "border-success/25 bg-success/10 text-success", label: "Vehicle" },
 };
 
@@ -461,7 +461,7 @@ export function EventEntityCard({
       {entity && onViewInfo && (
         <button
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary hover:underline"
+          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary-ink hover:underline"
         >
           View Info →
         </button>

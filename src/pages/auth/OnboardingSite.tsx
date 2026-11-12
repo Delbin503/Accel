@@ -174,7 +174,7 @@ export default function OnboardingSitePage() {
                 Areas <span className="text-muted-foreground/60">(at least 1 required)</span>
               </label>
               <button onClick={addArea}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline">
                 <Plus className="size-3" />
                 Add area
               </button>

@@ -14,7 +14,7 @@ export interface DateRangePreset {
 /* Pill style — single source of truth for the date filter look. */
 const PILL_BASE =
   "rounded-full border px-3 py-1 text-sm font-semibold transition-colors";
-const PILL_ACTIVE = "border-primary bg-primary/10 text-primary";
+const PILL_ACTIVE = "border-primary bg-primary/10 text-primary-ink";
 const PILL_INACTIVE =
   "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground";
 

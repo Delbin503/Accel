@@ -242,12 +242,12 @@ function NavLeaf({ item }: { item: NavItem }) {
           // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
           "group-data-[collapsible=icon]:pl-1.5!",
           isActive &&
-            "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+            "border-primary bg-primary/10 text-primary-ink hover:bg-primary/10 hover:text-primary-ink"
         )}
       >
         <SidebarLink href={item.href}>
           <item.icon
-            className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
+            className={cn("size-4 shrink-0", isActive ? "text-primary-ink" : "text-muted-foreground")}
           />
           <span>{item.label}</span>
         </SidebarLink>
@@ -286,13 +286,13 @@ function NavParent({ item }: { item: NavItem }) {
               // In the rail, 2px less left padding offsets the active-state border, so the icon sits dead centre.
               "group-data-[collapsible=icon]:pl-1.5!",
               isAnyChildActive &&
-                "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+                "border-primary bg-primary/10 text-primary-ink hover:bg-primary/10 hover:text-primary-ink"
             )}
           >
             <item.icon
               className={cn(
                 "size-4 shrink-0",
-                isAnyChildActive ? "text-primary" : "text-muted-foreground"
+                isAnyChildActive ? "text-primary-ink" : "text-muted-foreground"
               )}
             />
             <span className="sr-only">{item.label}</span>
@@ -315,14 +315,14 @@ function NavParent({ item }: { item: NavItem }) {
                     className={cn(
                       "rounded-md transition-colors",
                       childActive &&
-                        "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+                        "bg-primary/10 text-primary-ink hover:bg-primary/10 hover:text-primary-ink"
                     )}
                   >
                     <SidebarLink href={child.href}>
                       <child.icon
                         className={cn(
                           "size-4 shrink-0",
-                          childActive ? "text-primary" : "text-muted-foreground"
+                          childActive ? "text-primary-ink" : "text-muted-foreground"
                         )}
                       />
                       <span>{child.label}</span>
@@ -345,19 +345,19 @@ function NavParent({ item }: { item: NavItem }) {
             className={cn(
               "relative rounded-md border-l-2 border-transparent transition-colors",
               isAnyChildActive &&
-                "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+                "border-primary bg-primary/10 text-primary-ink hover:bg-primary/10 hover:text-primary-ink"
             )}
           >
             <item.icon
               className={cn(
                 "size-4 shrink-0",
-                isAnyChildActive ? "text-primary" : "text-muted-foreground"
+                isAnyChildActive ? "text-primary-ink" : "text-muted-foreground"
               )}
             />
             <span>{item.label}</span>
             <ChevronDown
               className={cn(
-                "ml-auto size-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+                "ml-auto size-3.5 shrink-0 text-muted-foreground transition-transform duration-[var(--duration-normal)]",
                 open && "rotate-180"
               )}
             />
@@ -377,14 +377,14 @@ function NavParent({ item }: { item: NavItem }) {
                     asChild
                     isActive={childActive}
                     className={cn(
-                      childActive && "text-primary"
+                      childActive && "text-primary-ink"
                     )}
                   >
                     <SidebarLink href={child.href}>
                       <child.icon
                         className={cn(
                           "size-4 shrink-0",
-                          childActive ? "text-primary" : "text-muted-foreground"
+                          childActive ? "text-primary-ink" : "text-muted-foreground"
                         )}
                       />
                       <span>{child.label}</span>
@@ -442,7 +442,7 @@ function SidebarEdgeToggle() {
           aria-expanded={!isCollapsed}
           className={cn(
             "fixed top-3 z-[calc(var(--z-sticky)+1)] hidden size-6 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-sidebar text-muted-foreground shadow-raised md:flex",
-            "transition-[left,color,background-color] duration-200 ease-linear hover:bg-muted hover:text-foreground",
+            "transition-[left,color,background-color] duration-[var(--duration-normal)] ease-linear hover:bg-muted hover:text-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             isCollapsed ? "left-(--sidebar-width-icon)" : "left-(--sidebar-width)"
           )}

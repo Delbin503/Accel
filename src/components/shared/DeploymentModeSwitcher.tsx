@@ -55,7 +55,7 @@ function Segment({
       className={cn(
         "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-2 text-center transition-all",
         active
-          ? "bg-primary text-primary-foreground shadow-raised"
+          ? "bg-primary-fill text-primary-foreground shadow-raised"
           : "text-muted-foreground hover:bg-card/70 hover:text-foreground"
       )}
       aria-current={active ? "page" : undefined}

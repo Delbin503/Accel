@@ -122,7 +122,7 @@ export function OtpVerify({
 
         <p className="text-sm text-muted-foreground">
           Didn't get a code?{" "}
-          <button type="button" className="font-medium text-primary underline hover:text-primary-hover">
+          <button type="button" className="font-medium text-primary-ink underline hover:text-primary-hover">
             Resend code
           </button>
         </p>

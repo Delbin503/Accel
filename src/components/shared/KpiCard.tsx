@@ -142,7 +142,7 @@ export function KpiCard({
           {label}
         </TruncatedText>
         {active && (
-          <span className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider text-primary">
+          <span className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider text-primary-ink">
             Active
           </span>
         )}

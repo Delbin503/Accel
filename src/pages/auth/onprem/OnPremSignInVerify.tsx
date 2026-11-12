@@ -93,7 +93,7 @@ export default function OnPremSignInVerifyPage() {
 
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
-            <Play className="size-7 fill-white text-white" />
+            <Play className="size-7 fill-media-foreground text-media-foreground" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Verify your email</h1>
           <p className="mt-2 text-base text-muted-foreground">
@@ -150,7 +150,7 @@ export default function OnPremSignInVerifyPage() {
             }
             className="group block w-full text-center text-sm text-muted-foreground"
           >
-            Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
+            Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
           </button>
         </form>
       </div>

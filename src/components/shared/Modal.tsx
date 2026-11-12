@@ -197,7 +197,7 @@ const TONE_TITLE: Record<ModalTone, string> = {
 };
 
 const TONE_ICON: Record<ModalTone, string> = {
-  default: "text-primary",
+  default: "text-primary-ink",
   destructive: "text-destructive",
   warning: "text-warning",
   success: "text-success",

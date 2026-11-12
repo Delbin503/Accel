@@ -43,7 +43,7 @@ const SEV_LABEL: Record<Severity, string> = {
 function SeverityChip({ severity }: { severity: Severity }) {
   return (
     <span
-      className="inline-flex items-center rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider text-white"
+      className="inline-flex items-center rounded px-1.5 py-px text-2xs font-bold uppercase tracking-wider text-status-foreground"
       style={{ background: `var(--severity-${severity})` }}
     >
       {SEV_LABEL[severity]}
@@ -398,7 +398,7 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
           )}
         </span>
         <button onClick={() => setShowInfo((v) => !v)}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline hover:text-primary">
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline hover:text-primary-ink">
           <Info className="size-3" />
           {showInfo ? "Hide" : "How does this work?"}
         </button>
@@ -408,7 +408,7 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
       {approvedMatch && mergeBannerVisible && (
         <div className="mb-3 flex items-start gap-2.5 rounded-lg border border-success/40 bg-success/[0.08] px-3.5 py-2.5">
           <div className="mt-px flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-success">
-            <GitMerge className="size-3 text-white" strokeWidth={3} />
+            <GitMerge className="size-3 text-media-foreground" strokeWidth={3} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground">
@@ -532,7 +532,7 @@ function AssetBody({ entity }: { entity: AssetEntity }) {
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {(
           [
-            ["Asset ID",       <span className="font-mono text-xs text-primary">{entity.id}</span>],
+            ["Asset ID",       <span className="font-mono text-xs text-primary-ink">{entity.id}</span>],
             ["Asset Title",    entity.type || "Unidentified Object"],
             ["Asset Type",     deriveAssetType(entity)],
             [
@@ -622,7 +622,7 @@ const KIND_BADGE: Record<
   asset: {
     label: "Asset",
     className:
-      "inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-px text-2xs font-bold uppercase tracking-wider text-primary",
+      "inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-px text-2xs font-bold uppercase tracking-wider text-primary-ink",
   },
   vehicle: {
     label: "Vehicle",

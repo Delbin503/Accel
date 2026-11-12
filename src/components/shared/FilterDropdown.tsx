@@ -46,7 +46,7 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground",
+            hasValue ? "text-primary-ink" : "text-muted-foreground",
             className
           )}
         >

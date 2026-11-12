@@ -194,7 +194,7 @@ export function ExportEnhancedCopy({ items, currentId, onClose }: {
                     <p className="font-mono text-2xs text-muted-foreground">
                       {rec.id} · {files.length > 1 ? `${files.length} files` : "1 file"} · {fmtSize(mb)}
                     </p>
-                    <p className={cn("text-xs", enhanced ? "text-primary" : "text-muted-foreground")}>
+                    <p className={cn("text-xs", enhanced ? "text-primary-ink" : "text-muted-foreground")}>
                       {enhanced ? applied.join(" · ") : "No enhancements yet"}
                     </p>
                   </div>

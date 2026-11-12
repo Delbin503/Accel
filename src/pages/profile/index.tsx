@@ -173,7 +173,7 @@ export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose
             <div className="flex size-44 items-center justify-center rounded-lg border border-border bg-background p-3">
               <div className="grid size-full grid-cols-12 grid-rows-12 gap-px">
                 {Array.from({ length: 144 }).map((_, i) => (
-                  <div key={i} className={cn("rounded-[1px]", ((i * 37) % 7 < 3 || i % 5 === 0) ? "bg-foreground" : "bg-transparent")} />
+                  <div key={i} className={cn("rounded-xs", ((i * 37) % 7 < 3 || i % 5 === 0) ? "bg-foreground" : "bg-transparent")} />
                 ))}
               </div>
             </div>
@@ -249,7 +249,7 @@ export default function ProfilePage() {
 
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
         <div className="relative">
-          <div className="flex size-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+          <div className="flex size-20 items-center justify-center rounded-full bg-primary-fill text-2xl font-bold text-primary-foreground">
             {initials}
           </div>
           <button className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-background text-muted-foreground transition-colors hover:text-foreground">

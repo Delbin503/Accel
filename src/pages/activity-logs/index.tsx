@@ -193,7 +193,7 @@ export default function ActivityLogsPage() {
             <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
             <span className="text-base font-semibold text-foreground">Filters</span>
             {typeFilter.length + siteFilter.length + (search ? 1 : 0) > 0 ? (
-              <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+              <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
                 {typeFilter.length + siteFilter.length + (search ? 1 : 0)} active
               </span>
             ) : (
@@ -213,7 +213,7 @@ export default function ActivityLogsPage() {
             {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
               <button
                 onClick={(e) => { e.stopPropagation(); setTypeFilter([]); setSiteFilter([]); setSearch(""); }}
-                className="text-sm text-muted-foreground underline hover:text-primary"
+                className="text-sm text-muted-foreground underline hover:text-primary-ink"
               >
                 Clear all
               </button>
@@ -380,7 +380,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
         <button className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
-          isAll ? "text-muted-foreground" : "text-primary"
+          isAll ? "text-muted-foreground" : "text-primary-ink"
         )}>
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">
             <Layers className="size-3.5 flex-shrink-0" />
@@ -434,7 +434,7 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
         <button className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
-          isAll ? "text-muted-foreground" : "text-primary"
+          isAll ? "text-muted-foreground" : "text-primary-ink"
         )}>
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">
             <Building2 className="size-3.5 flex-shrink-0" />

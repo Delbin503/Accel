@@ -201,7 +201,7 @@ function FilterDropdown({
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -284,7 +284,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -717,7 +717,7 @@ export function UserDrawer({
                     ["Last Name",     user.lastName || "—"],
                     ["Role",          <RoleBadge role={user.role} />],
                     ["Phone",         <span className="font-mono text-xs">{user.phone ?? "—"}</span>],
-                    ["User ID",       <span className="font-mono text-xs text-primary">{user.id}</span>],
+                    ["User ID",       <span className="font-mono text-xs text-primary-ink">{user.id}</span>],
                     [
                       "Department",
                       user.departments.length > 0 ? (
@@ -725,7 +725,7 @@ export function UserDrawer({
                           {user.departments.map((d) => (
                             <span
                               key={d}
-                              className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
+                              className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary-ink"
                             >
                               {d}
                             </span>
@@ -1077,7 +1077,7 @@ export function InviteUsersModal({
               <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
                 <button
                   onClick={() => setSites(sites.length === USER_SITES.length ? [] : USER_SITES.map((s) => s.value))}
-                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary hover:bg-primary/10"
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary-ink hover:bg-primary/10"
                 >
                   <span>{sites.length === USER_SITES.length ? "Clear all" : "Select all"}</span>
                   <span className="font-mono text-muted-foreground">{sites.length}/{USER_SITES.length}</span>
@@ -1095,7 +1095,7 @@ export function InviteUsersModal({
                       >
                         <span className={cn(
                           "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
-                          checked ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                          checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-input"
                         )}>
                           {checked && <Check className="size-2.5" strokeWidth={3} />}
                         </span>
@@ -1531,7 +1531,7 @@ export function ChangeRoleModal({
                     <TruncatedText text={currentOwner.fullName} className="text-sm font-semibold text-foreground" />
                   </div>
                 </div>
-                <div className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+                <div className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary-ink">
                   <ArrowRight className="size-3.5" />
                 </div>
                 <div className="flex min-w-0 items-center justify-end gap-2.5 text-right">
@@ -1576,7 +1576,7 @@ export function ChangeRoleModal({
                   <OtpField id="ownership-transfer-code" value={otp} onChange={setOtp} length={OTP_LENGTH} autoFocus />
                   <p className="mt-2 text-sm text-muted-foreground">
                     Sent to <strong className="text-foreground">{currentOwner.email}</strong> · expires in {OTP_EXPIRY_MINUTES} minutes.{" "}
-                    <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary">
+                    <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary-ink">
                       Resend code
                     </button>
                   </p>
@@ -1934,12 +1934,12 @@ export function ManageSiteModal({
             </p>
             <div className="flex items-center gap-1.5">
               <button onClick={() => setSites(USER_SITES.map((s) => s.value))}
-                className="text-xs text-muted-foreground underline hover:text-primary">
+                className="text-xs text-muted-foreground underline hover:text-primary-ink">
                 Select all
               </button>
               <span className="text-muted-foreground/40">·</span>
               <button onClick={() => setSites([])}
-                className="text-xs text-muted-foreground underline hover:text-primary">
+                className="text-xs text-muted-foreground underline hover:text-primary-ink">
                 Clear
               </button>
             </div>
@@ -2245,7 +2245,7 @@ export function SuspendUserModal({
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-xs font-semibold transition-colors",
                     preset === p
-                      ? "border-primary bg-primary/5 text-primary"
+                      ? "border-primary bg-primary/5 text-primary-ink"
                       : "border-border bg-background text-muted-foreground hover:border-primary/40"
                   )}
                 >
@@ -2553,7 +2553,7 @@ function DeletedUsersPage({
           {hasFilters && (
             <button
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>
@@ -2573,7 +2573,7 @@ function DeletedUsersPage({
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                  sort === o.key ? "text-primary" : "text-foreground"
+                  sort === o.key ? "text-primary-ink" : "text-foreground"
                 )}
               >
                 {o.label}
@@ -2622,13 +2622,13 @@ function DeletedUsersPage({
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">{u.id}</span>
+                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{u.id}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar user={u} size={32} />
                         <div className="min-w-0">
-                          <TruncatedText text={u.fullName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                          <TruncatedText text={u.fullName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
                           <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
                         </div>
                       </div>
@@ -3038,7 +3038,7 @@ export default function UserManagementPage({
             <Trash2 className="size-4" />
             Deleted Users List
             {deletedUsers.length > 0 && (
-              <span className="rounded-full bg-primary px-1.5 py-0.5 text-3xs font-bold text-primary-foreground">
+              <span className="rounded-full bg-primary-fill px-1.5 py-0.5 text-3xs font-bold text-primary-foreground">
                 {deletedUsers.length}
               </span>
             )}
@@ -3085,7 +3085,7 @@ export default function UserManagementPage({
           {hasFilters && (
             <button
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>
@@ -3105,7 +3105,7 @@ export default function UserManagementPage({
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                  sort === o.key ? "text-primary" : "text-foreground"
+                  sort === o.key ? "text-primary-ink" : "text-foreground"
                 )}
               >
                 {o.label}
@@ -3166,7 +3166,7 @@ export default function UserManagementPage({
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                           {u.id}
                         </span>
                       </td>
@@ -3176,7 +3176,7 @@ export default function UserManagementPage({
                           <div className="min-w-0">
                             <TruncatedText
                               title={u.isCurrentUser ? `${u.fullName} (You)` : u.fullName}
-                              className="font-semibold text-foreground transition-colors group-hover:text-primary"
+                              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
                             >
                               {u.fullName}
                               {u.isCurrentUser && (

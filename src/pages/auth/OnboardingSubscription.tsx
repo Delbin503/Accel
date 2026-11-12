@@ -154,7 +154,7 @@ export default function OnboardingSubscriptionPage({
               Subscribing
             </p>
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary-ink">
                 <Building2 className="size-4" />
               </div>
               <div>
@@ -189,12 +189,12 @@ export default function OnboardingSubscriptionPage({
             <div className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
               <button onClick={() => setCycle("monthly")}
                 className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                  cycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  cycle === "monthly" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                 Monthly
               </button>
               <button onClick={() => setCycle("annual")}
                 className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                  cycle === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  cycle === "annual" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                 Annual <span className="text-2xs opacity-80">(save ~17%)</span>
               </button>
             </div>
@@ -213,7 +213,7 @@ export default function OnboardingSubscriptionPage({
                       isPicked ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                     )}>
                     {p.highlight && (
-                      <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-white">
+                      <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary-foreground">
                         <Sparkles className="size-2.5" /> Most popular
                       </span>
                     )}
@@ -266,7 +266,7 @@ export default function OnboardingSubscriptionPage({
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
                   <button onClick={() => setStep("pick")}
-                    className="text-xs text-muted-foreground underline hover:text-primary">
+                    className="text-xs text-muted-foreground underline hover:text-primary-ink">
                     Change plan
                   </button>
                 </div>

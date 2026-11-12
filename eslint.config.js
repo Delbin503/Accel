@@ -60,6 +60,11 @@ const designSystemGuardrails = [
     '\\b[a-z]+-soft\\b|primary-muted',
     '*-soft and primary-muted are deprecated — use an opacity modifier: bg-success/15, bg-primary/10.',
   ),
+  // Brand orange as text fails AA on light surfaces — use the ink token.
+  ...ban(
+    '(^|[\\s:])text-primary\\b(?!-)',
+    'Use text-primary-ink for orange text (text-primary fails AA on light surfaces). On a solid primary-fill use text-primary-foreground.',
+  ),
   // Scales — use the z-index and radius tokens.
   ...ban(
     '(^|[\\s:])z-\\[[0-9]+\\]',

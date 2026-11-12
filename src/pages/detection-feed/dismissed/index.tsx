@@ -140,7 +140,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -235,22 +235,22 @@ function ActiveFilterBar({
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
       {search && (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
           "{search}"
-          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
+          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground">
             <X className="size-2.5" />
           </button>
         </span>
       )}
       {allActive.map(({ group, value, label }) => (
-        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+        <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
           {label}
-          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
+          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground">
             <X className="size-2.5" />
           </button>
         </span>
       ))}
-      <button onClick={onClearAll} className="ml-auto text-xs text-muted-foreground underline hover:text-primary">
+      <button onClick={onClearAll} className="ml-auto text-xs text-muted-foreground underline hover:text-primary-ink">
         Clear all
       </button>
     </div>
@@ -295,7 +295,7 @@ function DismissedRow({
             onClick={(e) => { e.stopPropagation(); onToggle(event.id); }}
             className={cn(
               "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border transition-colors",
-              selected ? "border-primary bg-primary" : "border-white/50 bg-black/50 hover:border-primary"
+              selected ? "border-primary bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary"
             )}
           >
             {selected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
@@ -313,10 +313,10 @@ function DismissedRow({
               />
               <span
                 className={cn(
-                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-white",
+                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-status-foreground",
                   box.variant === "person"  ? "bg-info"
                   : box.variant === "vehicle" ? "bg-violet"
-                  : "bg-primary"
+                  : "bg-primary-fill text-primary-foreground"
                 )}
                 style={{ top: box.top, left: box.left }}
               >
@@ -324,7 +324,7 @@ function DismissedRow({
               </span>
             </React.Fragment>
           ))}
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1 py-px font-mono text-2xs text-white">
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-scrim/75 px-1 py-px font-mono text-2xs text-media-foreground">
             {event.time.slice(0, 5)}
           </span>
         </div>
@@ -343,7 +343,7 @@ function DismissedRow({
           <ReasonChip reason={item.reason} />
           <span
             title={event.useCaseTitle}
-            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary"
+            className="cursor-help rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary-ink"
           >
             {event.useCaseId}
           </span>
@@ -577,7 +577,7 @@ export default function DismissedEventsPage() {
       {selectedIds.size > 0 && (
         <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-modal">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <CheckSquare className="size-3.5" />
             </div>
             <span className="text-base font-semibold text-foreground">

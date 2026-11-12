@@ -6,7 +6,7 @@ import type { RecordingDisplay } from "@/mocks/recordings";
 /* ── Mode chip ───────────────────────────────────────────────────────────── */
 
 const MODE_STYLES: Record<RecordingDisplay["mode"], { bg: string; text: string; dot: string; label: string }> = {
-  continuous: { bg: "bg-primary/10 border-primary/20", text: "text-primary", dot: "bg-primary", label: "Continuous" },
+  continuous: { bg: "bg-primary/10 border-primary/20", text: "text-primary-ink", dot: "bg-primary", label: "Continuous" },
   event:      { bg: "bg-info/10 border-info/20",       text: "text-info",    dot: "bg-info",    label: "Event" },
   scheduled:  { bg: "bg-violet/15 border-violet/20", text: "text-violet",  dot: "bg-violet",  label: "Scheduled" },
 };
@@ -68,7 +68,7 @@ export function RecordingCard({
         onClick={(e) => { e.stopPropagation(); onToggle?.(); }}
         className={cn(
           "absolute left-2.5 top-2.5 z-20 flex size-5 items-center justify-center rounded border-2 transition-colors",
-          selected ? "border-primary bg-primary" : "border-white/60 bg-black/40 opacity-0 hover:border-white group-hover:opacity-100",
+          selected ? "border-primary bg-primary" : "border-media-foreground/60 bg-scrim/40 opacity-0 hover:border-media-foreground group-hover:opacity-100",
           selected && "opacity-100"
         )}
         aria-label="Select recording for deletion"
@@ -77,25 +77,25 @@ export function RecordingCard({
       </button>
 
       <button onClick={onOpen} className="flex flex-col items-stretch text-left">
-        <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
+        <div className="relative aspect-video w-full overflow-hidden bg-media-raised">
           <div
             className="absolute inset-0"
             style={{ background: "radial-gradient(120% 80% at 50% 60%, rgba(180,140,80,0.18) 0%, rgba(60,40,20,0.1) 40%, rgba(0,0,0,0.95) 100%)" }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-transform group-hover:scale-110">
-              <Play className="size-4 text-white" />
+            <div className="flex size-10 items-center justify-center rounded-full bg-scrim/40 backdrop-blur-sm transition-transform group-hover:scale-110">
+              <Play className="size-4 text-media-foreground" />
             </div>
           </div>
-          <div className="absolute right-2.5 top-2.5 rounded bg-black/60 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-sm">
+          <div className="absolute right-2.5 top-2.5 rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-2xs text-media-foreground/90 backdrop-blur-sm">
             {r.durationDisplay}
           </div>
           <div className={cn("absolute top-2.5 transition-all", selected ? "left-9" : "left-2.5 group-hover:left-9")}>
             <RecordingModeChip mode={r.mode} />
           </div>
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-white/90">
-            <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
-            <span className="rounded bg-black/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-2xs text-media-foreground/90">
+            <span className="rounded bg-scrim/60 px-1.5 py-0.5 font-mono backdrop-blur-sm">{r.startsAtDisplay}</span>
+            <span className="rounded bg-scrim/60 px-1.5 py-0.5 backdrop-blur-sm">{r.fileSizeDisplay}</span>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export function RecordingCard({
           <div className="mb-1 flex items-start justify-between gap-2">
             <TruncatedText
               text={isDrawer ? `Recording · ${r.dateLabel}` : r.cameraName}
-              className="text-base font-bold text-foreground transition-colors group-hover:text-primary"
+              className="text-base font-bold text-foreground transition-colors group-hover:text-primary-ink"
             />
             <p className="flex-shrink-0 font-mono text-2xs text-muted-foreground">{r.id}</p>
           </div>

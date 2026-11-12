@@ -70,13 +70,22 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
 
 **Why:** tokens are the foundation for everything else. Fix them before documenting or packaging, so they aren't renamed twice.
 
-- [ ] **Contrast:** run `/design-system-ops:theme-audit`. Known gaps: light `text-primary` 2.99:1 (≈1,100 uses; add a darker text-only brand ink), dark `violet` 4.43:1, dark `destructive` 4.09:1
-- [ ] **Hardcoded values:** run `/design-system-ops:token-compliance`, then burn down the Phase 1 baseline (226 in `eslint-suppressions.json`). Biggest chunk: 130 raw `white`/`black`/`neutral-9xx` classes on camera overlays → add a `camera-overlay` token set. Then `z-[N]`, `rounded-[Npx]`, `duration-200`. Run `npm run lint:prune` after each batch
-- [ ] **Tier-3 audit items:** define `--radius-xs`; delete unused `src/App.css`; route `bg-camera-feed` gradient through palette tokens; add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) from the documented rhythm
-- [ ] **Remove deprecated aliases.** Prerequisite: your run-analysis work is merged. Migrate `prototypes/` (47 files) and run-analysis, then delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases)
-- [ ] Re-run `/design-system-ops:token-audit` to confirm
+- [x] **Contrast.** Measured every text token × surface × theme, plus status text on its own `/15` chip. 29 failures → 0.
+  - Status inks re-tuned (light darker, dark brighter); dark `destructive` and `severity-critical` share one red
+  - Brand orange: `--primary-fill` (deeper orange) for 65 labelled fills incl. Button and Badge; `--primary-ink` for orange text (285 uses codemodded). Bright `--primary` stays for rings, tints, dots and charts
+  - `--status-foreground` for labels on solid status fills, and `destructive-foreground` dark text in dark mode
+  - New guardrail: bare `text-primary` is now a lint error
+- [x] **Hardcoded values.** Baseline 226 → **124**; everything outside run-analysis WIP is fixed or deliberate.
+  - New media tokens (`media`, `media-raised`, `scrim`, `media-foreground`) replace 169 raw black/white/neutral classes on video and camera surfaces, with no visual change
+  - `z-[N]` → tokens (added `--z-popover: 55`); `rounded-[Npx]` → `rounded-xs`/`sm`/`lg`; `text-[12px]` → `text-sm`; `duration-150/200/300` → duration tokens (15)
+  - Bug fixed: "Most popular" badge in onboarding was white on light grey (invisible in light mode)
+  - Remaining 124: 114 in `run-analysis/index.tsx` (WIP), 7 `KpiCard` deprecated aliases, 3 auth logo glows (coloured `shadow-secondary`, accepted exception)
+- [x] **Tier-3 audit items:** `--radius-xs` defined; `src/App.css` deleted; `bg-camera-feed` routed through `--camera-feed-from/to` → palette. *Spacing role tokens moved to Phase 3*: components don't follow one rhythm yet (SectionCard alone mixes px-4/px-5 and four py values), so they get named when component APIs are unified
+- [ ] **Remove deprecated aliases.** ⏸ *Blocked:* needs your run-analysis work committed first. Then migrate `prototypes/` (47 files) and run-analysis, and delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases)
+- [x] Re-check: `npm run lint:tokens` passes (223 tokens, 40 primitives); contrast matrix shows 0 AA failures; typecheck and production build pass
 
 **Done when:** theme-audit shows no AA failures in either theme; lint baseline from Phase 1 is zero; `grep -r DEPRECATED src/index.css` returns nothing.
+*Status 2026-11-13:* contrast ✅ · baseline zero outside WIP and accepted exceptions ✅ · deprecated aliases ⏸ (waiting on run-analysis). Phase 3 can start; finish the alias removal whenever run-analysis lands.
 **Then →** Phase 3.
 
 ---
@@ -95,6 +104,7 @@ Reference: [TOKEN-AUDIT-2026-11-13.md](TOKEN-AUDIT-2026-11-13.md) (all token fin
   - `size` = sm/md/lg
   - Codemod the call sites (`/design-system-ops:codemod-generator`)
 - [ ] Run `/design-system-ops:naming-audit` on component names
+- [ ] Add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) once components share one rhythm (moved from Phase 2)
 - [ ] Write a decision tree for overlapping pieces (Modal vs Dialog vs Sheet; ChoiceDropdown vs Select vs FilterDropdown) with `/design-system-ops:component-decision-tree`
 
 **Done when:** every component is in exactly one of design system / app; every design-system component uses the shared prop vocabulary; there's a written "which one do I use" decision tree.

@@ -20,7 +20,7 @@ export interface AccountProfile {
 function RolePill({ role }: { role: InviteContext["role"] }) {
   const styles: Record<InviteContext["role"], string> = {
     owner: "bg-success/15 text-success",
-    admin: "bg-primary/10 text-primary",
+    admin: "bg-primary/10 text-primary-ink",
     user: "bg-warning/15 text-warning",
   };
   return (
@@ -119,7 +119,7 @@ export function AccountSetup({
 
       {/* Identity chip — same layout as the live app's Edit User modal header. */}
       <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
-        <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+        <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary-ink">
           {initials(invite.email)}
         </div>
         <div className="min-w-0 flex-1">
@@ -256,8 +256,8 @@ export function AccountSetup({
           <Checkbox id="terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} />
           <span className="text-sm text-foreground">
             I agree to the{" "}
-            <a href="#" className="font-medium text-primary underline hover:text-primary-hover">Terms of Service</a> and{" "}
-            <a href="#" className="font-medium text-primary underline hover:text-primary-hover">Privacy Policy</a>.
+            <a href="#" className="font-medium text-primary-ink underline hover:text-primary-hover">Terms of Service</a> and{" "}
+            <a href="#" className="font-medium text-primary-ink underline hover:text-primary-hover">Privacy Policy</a>.
           </span>
         </label>
 

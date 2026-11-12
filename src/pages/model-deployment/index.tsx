@@ -214,10 +214,10 @@ function ModelCard({
           "flex size-8 flex-shrink-0 items-center justify-center rounded-lg border",
           selected ? "border-primary/40 bg-primary/10" : "border-border bg-muted"
         )}>
-          <Icon className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
+          <Icon className={cn("size-4", selected ? "text-primary-ink" : "text-muted-foreground")} />
         </div>
         <div className="min-w-0 flex-1">
-          <TruncatedText text={model.name} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
+          <TruncatedText text={model.name} className={cn("text-base font-bold", selected ? "text-primary-ink" : "text-foreground")} />
           <TruncatedText text={model.description} className="line-clamp-2 text-xs text-muted-foreground" />
         </div>
       </div>
@@ -225,7 +225,7 @@ function ModelCard({
         <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
           {model.sequenceIds.length} Steps
         </span>
-        <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
+        <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary-ink">
           {model.attachedRuleIds.length} Rules
         </span>
       </div>
@@ -252,7 +252,7 @@ function SiteCard({
     >
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <TruncatedText text={site.siteName} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
+          <TruncatedText text={site.siteName} className={cn("text-base font-bold", selected ? "text-primary-ink" : "text-foreground")} />
           <p className="font-mono text-2xs text-muted-foreground">{site.siteId}</p>
         </div>
         <OnlineDot online={site.status === "online"} />
@@ -286,7 +286,7 @@ function AreaCard({
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <CheckboxBox checked={selected} />
-          <TruncatedText text={area.areaName} className={cn("text-base font-bold", selected ? "text-primary" : "text-foreground")} />
+          <TruncatedText text={area.areaName} className={cn("text-base font-bold", selected ? "text-primary-ink" : "text-foreground")} />
         </div>
         <OnlineDot online={area.status === "online"} />
       </div>
@@ -320,7 +320,7 @@ function CameraCard({
         <div className="flex min-w-0 items-center gap-2.5">
           <CheckboxBox checked={selected} />
           <div className="min-w-0">
-            <TruncatedText text={camera.name} className={cn("text-sm font-semibold", selected ? "text-primary" : "text-foreground")} />
+            <TruncatedText text={camera.name} className={cn("text-sm font-semibold", selected ? "text-primary-ink" : "text-foreground")} />
             <p className="font-mono text-2xs text-muted-foreground">{camera.id} · {camera.areaName}</p>
           </div>
         </div>
@@ -507,7 +507,7 @@ function HistoryEmpty() {
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <Cpu className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No models deployed yet</p>
-      <p className="text-[12px]">Deploy a validated model to cameras from the Deploy tab to see it here.</p>
+      <p className="text-sm">Deploy a validated model to cameras from the Deploy tab to see it here.</p>
     </div>
   );
 }
@@ -1121,7 +1121,7 @@ function HistoryView({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <TruncatedText text={m.modelName} className="text-md font-bold text-foreground group-hover:text-primary" />
+                    <TruncatedText text={m.modelName} className="text-md font-bold text-foreground group-hover:text-primary-ink" />
                     <p className="font-mono text-2xs text-muted-foreground">{m.modelId}</p>
                   </div>
                   <ModelHealthPill health={m.health} />
@@ -1147,7 +1147,7 @@ function HistoryView({
                     <Eye className="size-3" />
                     {m.totalEvents.toLocaleString()} events
                   </span>
-                  <span className="inline-flex items-center gap-1 text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="inline-flex items-center gap-1 text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
                     Open details
                     <ChevronRight className="size-3" />
                   </span>
@@ -1264,7 +1264,7 @@ export function ModelDeploymentsDrawer({
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Drawer */}
       <aside className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-modal">
@@ -1373,7 +1373,7 @@ export function ModelDeploymentsDrawer({
                         <div className="flex flex-col gap-0.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); onOpenCamera(d.cameraId); }}
-                            className="text-left font-semibold text-foreground hover:text-primary"
+                            className="text-left font-semibold text-foreground hover:text-primary-ink"
                           >
                             {d.cameraName}
                           </button>
@@ -1559,13 +1559,13 @@ export default function ModelDeploymentPage({
             <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
               <button onClick={() => setTab("deploy")}
                 className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                  tab === "deploy" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                  tab === "deploy" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <Plus className="size-3.5" />
                 Deploy
               </button>
               <button onClick={() => setTab("history")}
                 className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                  tab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                  tab === "history" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <FileText className="size-3.5" />
                 Models
               </button>

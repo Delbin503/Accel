@@ -120,7 +120,7 @@ export function LinkCaseModal({
                           />
                           <span className="min-w-0 flex-1 space-y-1">
                             <span className="flex items-center justify-between gap-3">
-                              <span className={cn("truncate text-sm font-medium", on ? "text-primary" : "text-foreground")}>
+                              <span className={cn("truncate text-sm font-medium", on ? "text-primary-ink" : "text-foreground")}>
                                 {c.title}
                               </span>
                               <SeverityBadge severity={c.severity} />

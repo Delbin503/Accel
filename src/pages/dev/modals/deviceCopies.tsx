@@ -177,7 +177,7 @@ function OptionChips<T extends string | number>({ value, options, onChange, mult
           className={cn(
             "h-8 min-w-12 rounded-md border px-3 text-sm transition-colors duration-[var(--duration-fast)] ease-standard",
             isOn(o.value)
-              ? "border-primary bg-primary/10 text-primary"
+              ? "border-primary bg-primary/10 text-primary-ink"
               : "border-input text-muted-foreground hover:border-ring hover:text-foreground"
           )}
         >
@@ -215,7 +215,7 @@ function CheckRow({ checked, disabled, onToggle, title, meta, aside, label }: {
           className="mt-0.5"
         />
         <span className="min-w-0 flex-1">
-          <span className={cn("block truncate text-sm font-medium", checked ? "text-primary" : "text-foreground")}>
+          <span className={cn("block truncate text-sm font-medium", checked ? "text-primary-ink" : "text-foreground")}>
             {title}
           </span>
           {meta ? <span className="mt-0.5 block truncate font-mono text-2xs text-muted-foreground">{meta}</span> : null}

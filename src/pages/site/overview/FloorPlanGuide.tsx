@@ -23,7 +23,7 @@ export function renderDrawAreaFrame(frame: number) {
       {pointsShown >= 2 && (
         <polygon
           points={path}
-          className={cn("transition-all duration-300", closed ? "fill-primary/20 stroke-primary" : "fill-none stroke-primary")}
+          className={cn("transition-all duration-[var(--duration-slow)]", closed ? "fill-primary/20 stroke-primary" : "fill-none stroke-primary")}
           strokeWidth={2}
           strokeLinejoin="round"
         />
@@ -71,7 +71,7 @@ export function renderPlaceCameraFrame(frame: number) {
       )}
       <g style={{ transform: `translate(${pos[0] - 10}px, ${pos[1] - 10}px)`, transition: "transform 400ms ease-out" }}>
         <foreignObject width={20} height={20} overflow="visible">
-          <div className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <div className="flex size-5 items-center justify-center rounded-full bg-primary-fill text-primary-foreground">
             <Video className="size-3" />
           </div>
         </foreignObject>

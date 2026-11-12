@@ -90,7 +90,7 @@ export default function AccountSuspendedPage() {
           Support replies within one business day at{" "}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-primary-ink hover:underline"
           >
             {SUPPORT_EMAIL}
           </a>

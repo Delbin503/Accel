@@ -59,7 +59,7 @@ export function ChoiceDropdown<T extends string>({
             >
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-sm text-foreground group-data-[state=checked]/choice:text-primary">
+                  <span className="truncate text-sm text-foreground group-data-[state=checked]/choice:text-primary-ink">
                     {o.label}
                   </span>
                   {o.hint ? <span className="shrink-0 font-mono text-2xs text-muted-foreground">{o.hint}</span> : null}

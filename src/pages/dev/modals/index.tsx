@@ -29,7 +29,7 @@ const KIND_LABELS: Record<ModalKind, string> = {
 const KIND_STYLES: Record<ModalKind, string> = {
   modal: "border-info/30 bg-info/10 text-info",
   confirm: "border-warning/30 bg-warning/10 text-warning",
-  wizard: "border-primary/30 bg-primary/10 text-primary",
+  wizard: "border-primary/30 bg-primary/10 text-primary-ink",
   drawer: "border-success/30 bg-success/10 text-success",
   progress: "border-border bg-muted text-muted-foreground",
 };
@@ -72,7 +72,7 @@ function EntryCard({ entry, onOpen }: { entry: ModalEntry; onOpen: () => void })
       className="group flex scroll-mt-6 flex-col gap-2 rounded-lg border border-border bg-card p-3 text-left transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary/40 hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-md font-semibold text-foreground group-hover:text-primary">
+        <span className="text-md font-semibold text-foreground group-hover:text-primary-ink">
           {entry.name}
         </span>
         <span className={cn("shrink-0 rounded border px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-wider", KIND_STYLES[entry.kind])}>
@@ -448,7 +448,7 @@ export default function ModalGalleryPage() {
                 <span
                   className={cn(
                     "rounded-full border px-1.5 py-px text-3xs font-semibold uppercase tracking-wider",
-                    variant === "new" ? "border-primary/40 bg-primary/15 text-primary" : "border-border text-muted-foreground"
+                    variant === "new" ? "border-primary/40 bg-primary/15 text-primary-ink" : "border-border text-muted-foreground"
                   )}
                 >
                   {VARIANT_LABEL[variant]}

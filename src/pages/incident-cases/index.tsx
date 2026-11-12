@@ -104,7 +104,7 @@ function FilterDropdown({
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -195,7 +195,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -269,7 +269,7 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
       className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
     >
       <td className="px-4 py-3">
-        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
           {c.id}
         </span>
       </td>
@@ -277,7 +277,7 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
       <td className="max-w-[260px] px-4 py-3">
         <TruncatedText
           text={c.title}
-          className="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary"
+          className="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary-ink"
         />
         <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-2.5 flex-shrink-0" />
@@ -301,7 +301,7 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
 
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary">
+          <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary-ink">
             {c.assignedTo.name.charAt(0)}
           </div>
           <div>
@@ -319,7 +319,7 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
       </td>
 
       <td className="px-4 py-3">
-        <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+        <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-ink" />
       </td>
     </tr>
   );
@@ -494,7 +494,7 @@ export default function IncidentCasesPage({
           {hasActiveFilters && (
             <button
               onClick={clearAll}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>

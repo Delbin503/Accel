@@ -63,6 +63,7 @@
   --z-overlay:  30;
   --z-drawer:   40;
   --z-modal:    50;
+  --z-popover:  55;   /* popovers/menus opened from inside a modal or drawer */
   --z-toast:    60;
   --z-tooltip:  70;
 
@@ -87,6 +88,13 @@
   --color-primary:             var(--primary);
   --color-primary-foreground:  var(--primary-foreground);
   /* Extended primary state tokens — generates bg-primary-hover, bg-primary-active, etc. */
+  --color-status-foreground:   var(--status-foreground);
+  --color-media:               var(--media);
+  --color-media-raised:        var(--media-raised);
+  --color-scrim:               var(--scrim);
+  --color-media-foreground:    var(--media-foreground);
+  --color-primary-fill:        var(--primary-fill);
+  --color-primary-ink:         var(--primary-ink);
   --color-primary-hover:       var(--primary-hover);
   --color-primary-active:      var(--primary-active);
   --color-primary-muted:       var(--primary-muted);
@@ -151,6 +159,7 @@
   --shadow-modal:   var(--elevation-modal);
 
   /* Radius scale */
+  --radius-xs:  calc(var(--radius) * 0.25);   /* 2px — swatches, tiny markers */
   --radius-sm:  calc(var(--radius) * 0.6);
   --radius-md:  calc(var(--radius) * 0.8);
   --radius-lg:  var(--radius);
@@ -193,32 +202,35 @@
   --palette-neutral-910:  hsl(0 0% 9%);
   --palette-neutral-920:  hsl(0 0% 8%);
   --palette-neutral-930:  hsl(0 0% 7%);
+  --palette-neutral-960:  hsl(0 0% 4%);
+  --palette-neutral-1000: hsl(0 0% 0%);
+  --palette-umber-900:    hsl(24 50% 11%);   /* warm dark — camera-feed placeholder */
 
   /* Brand orange */
   --palette-orange-50:    hsl(20 95% 95%);
   --palette-orange-300:   hsl(20 95% 75%);
   --palette-orange-500:   hsl(20 95% 55%);
-  --palette-orange-600:   hsl(20 95% 48%);
-  --palette-orange-700:   hsl(20 95% 40%);
+  --palette-orange-600:   hsl(20 95% 42%);   /* fills under white text — 4.5:1 */
+  --palette-orange-700:   hsl(20 95% 36%);   /* light-mode orange text; fill hover */
   --palette-orange-800:   hsl(20 80% 30%);
   --palette-orange-950:   hsl(20 80% 12%);
 
   /* Feedback / severity hues.
-     500 = bright, for dark surfaces. 600/700 = ink weight that clears
-     4.5:1 as text on white — used by the light theme. */
-  --palette-red-500:       hsl(0 84% 60%);
-  --palette-red-550:       hsl(0 70% 55%);    /* dark-theme destructive — softened */
-  --palette-red-600:       hsl(0 74% 48%);
+     500 = bright, for dark surfaces. 600/700 = ink, for the light theme.
+     Lightness is tuned so text clears WCAG AA 4.5:1 on every surface
+     (background, card, muted, sidebar) and on its own /15 tint chip. */
+  --palette-red-500:       hsl(0 84% 66%);    /* dark: destructive + severity-critical */
+  --palette-red-600:       hsl(0 74% 44%);
   --palette-tangerine-500: hsl(30 95% 52%);   /* severity-high — deliberately off the brand hue */
-  --palette-tangerine-700: hsl(17 88% 40%);
+  --palette-tangerine-700: hsl(17 88% 38%);
   --palette-amber-500:     hsl(40 96% 50%);
-  --palette-amber-700:     hsl(35 92% 33%);
+  --palette-amber-700:     hsl(35 92% 30%);
   --palette-green-500:     hsl(142 70% 45%);
-  --palette-green-700:     hsl(142 72% 29%);
-  --palette-blue-500:      hsl(214 87% 60%);
-  --palette-blue-600:      hsl(214 80% 45%);
-  --palette-violet-500:    hsl(270 95% 65%);
-  --palette-violet-600:    hsl(270 75% 55%);
+  --palette-green-700:     hsl(142 72% 27%);
+  --palette-blue-500:      hsl(214 87% 61%);
+  --palette-blue-600:      hsl(214 80% 43%);
+  --palette-violet-500:    hsl(270 95% 71%);
+  --palette-violet-600:    hsl(270 75% 53.5%);
 
   /* Categorical (charts) */
   --palette-sky-600:      hsl(199 89% 48%);
@@ -248,11 +260,18 @@
   /* Brand / action */
   --primary:                var(--palette-orange-500);
   --primary-foreground:     var(--palette-neutral-0);
-  --primary-hover:          var(--palette-orange-600);
-  --primary-active:         var(--palette-orange-700);
+  /* The bright brand orange (--primary) fails AA under white labels (2.99:1)
+     and as text on light surfaces. Solid fills that carry a label use
+     primary-fill; orange text uses primary-ink. Rings, tints, borders, dots
+     and charts keep the bright --primary. */
+  --primary-fill:           var(--palette-orange-600);
+  --primary-hover:          var(--palette-orange-700);   /* fill hover */
+  --primary-active:         var(--palette-orange-800);   /* fill pressed */
+  --primary-ink:            var(--palette-orange-700);
   --ring:                   var(--primary);
-  /* Action colour for destructive buttons. Not aliased to severity-critical:
-     it is softened in dark mode, while the alarm signal stays full strength. */
+  /* Action colour for destructive buttons. Same value as severity-critical
+     today (AA leaves no room to soften it), but a separate token: an action
+     and an alarm may need to diverge later. */
   --destructive:            var(--palette-red-600);
   --destructive-foreground: var(--palette-neutral-0);
 
@@ -299,6 +318,22 @@
   --elevation-floating: 0 4px 12px -2px hsl(0 0% 0% / 0.10), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
   --elevation-modal:   0 20px 48px -12px hsl(0 0% 0% / 0.25);
 
+  /* Text/icons on a SOLID status fill (bg-success, bg-severity-critical/95…).
+     Status fills are bright in dark mode, so labels flip to near-black there. */
+  --status-foreground: var(--palette-neutral-0);
+
+  /* Media — video players, camera tiles, snapshots, floor plans. These sit on
+     imagery that is dark in both themes, so they are NOT themed.
+       media / media-raised → solid backdrop behind a frame
+       scrim                → translucent layer over a frame (bg-scrim/60)
+       media-foreground     → text, icons, hairlines on media (text-media-foreground/85) */
+  --media:             var(--palette-neutral-960);
+  --media-raised:      var(--palette-neutral-910);
+  --scrim:             var(--palette-neutral-1000);
+  --media-foreground:  var(--palette-neutral-0);
+  --camera-feed-from:  var(--palette-umber-900);    /* bg-camera-feed placeholder gradient */
+  --camera-feed-to:    var(--palette-neutral-900);
+
   /* Component: chart — anchored on brand, same in both themes */
   --chart-1: var(--primary);
   --chart-2: var(--palette-sky-600);
@@ -330,7 +365,10 @@
   --accent:                 var(--palette-orange-950);
   --accent-foreground:      var(--palette-orange-300);
   --border:                 var(--palette-neutral-850);
-  --destructive:            var(--palette-red-550);
+  --primary-ink:            var(--primary);             /* bright orange passes on dark */
+  --status-foreground:      var(--palette-neutral-930);
+  --destructive:            var(--palette-red-500);
+  --destructive-foreground: var(--palette-neutral-930);   /* bright red needs dark text (AA) */
 
   /* Feedback + severity — bright values read well on dark surfaces */
   --success:                var(--palette-green-500);
@@ -400,7 +438,7 @@
    tiles, recording thumbnails and detection snapshots. Replaces ad-hoc
    raw-hex gradients so every camera surface is identical. */
 @utility bg-camera-feed {
-  background-image: linear-gradient(135deg, hsl(24 50% 11%) 0%, hsl(0 0% 10%) 100%);
+  background-image: linear-gradient(135deg, var(--camera-feed-from) 0%, var(--camera-feed-to) 100%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

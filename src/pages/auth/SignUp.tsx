@@ -91,7 +91,7 @@ const PLAN_ICONS: Record<CloudPlanId, React.ElementType> = {
 /* Distinct icon colours per cloud tier — the highlighted tier wears the brand accent. */
 const PLAN_COLORS: Record<CloudPlanId, { bg: string; border: string; text: string }> = {
   "starter-cloud": { bg: "bg-info/10", border: "border-info/40", text: "text-info" },
-  "standard-cloud": { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary" },
+  "standard-cloud": { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary-ink" },
   "professional-cloud": { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary" },
 };
 
@@ -202,7 +202,7 @@ function WizardShell({
       <header className="relative z-10 flex items-center justify-between gap-4 px-6 py-3 sm:px-10">
         <Link to="/signin" className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
-            <Play className="size-3 fill-white text-white" />
+            <Play className="size-3 fill-media-foreground text-media-foreground" />
           </div>
           <p className="text-md font-bold tracking-tight">Accel</p>
         </Link>
@@ -675,11 +675,11 @@ export default function SignUpPage({
             />
             <span>
               I agree to the{" "}
-              <a href="#" className="font-semibold text-primary underline">
+              <a href="#" className="font-semibold text-primary-ink underline">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="font-semibold text-primary underline">
+              <a href="#" className="font-semibold text-primary-ink underline">
                 Privacy Policy
               </a>
               .
@@ -715,7 +715,7 @@ export default function SignUpPage({
           Already have an account?{" "}
           <Link
             to="/signin"
-            className="font-semibold text-primary hover:underline"
+            className="font-semibold text-primary-ink hover:underline"
           >
             Sign in
           </Link>
@@ -775,7 +775,7 @@ export default function SignUpPage({
             className="group block w-full text-center text-sm text-muted-foreground"
           >
             Didn't get it?{" "}
-            <span className="font-semibold underline transition-colors group-hover:text-primary">Resend code</span>
+            <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
           </button>
         </form>
       </WizardShell>
@@ -811,7 +811,7 @@ export default function SignUpPage({
           >
             <span
               className={cn(
-                "absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow-raised transition-transform",
+                "absolute top-0.5 left-0.5 size-4 rounded-full bg-primary-foreground shadow-raised transition-transform",
                 cycle === "annual" && "translate-x-4"
               )}
             />
@@ -873,7 +873,7 @@ export default function SignUpPage({
                     <p className="truncate text-2xs text-muted-foreground">{p.tagline}</p>
                   </div>
                   {selected && (
-                    <CheckCircle2 className="ml-auto size-4 flex-shrink-0 text-primary" />
+                    <CheckCircle2 className="ml-auto size-4 flex-shrink-0 text-primary-ink" />
                   )}
                 </div>
 
@@ -1185,7 +1185,7 @@ export default function SignUpPage({
               <p className="text-base font-bold text-foreground">Details</p>
               <button
                 onClick={() => setPlanSubStep("payment")}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline"
               >
                 <Pencil className="size-3" /> Edit Details
               </button>
@@ -1269,11 +1269,11 @@ export default function SignUpPage({
                 />
                 <span>
                   I agree to{" "}
-                  <a href="#" className="text-primary underline">
+                  <a href="#" className="text-primary-ink underline">
                     Terms of Service
                   </a>{" "}
                   and{" "}
-                  <a href="#" className="text-primary underline">
+                  <a href="#" className="text-primary-ink underline">
                     Privacy Policy
                   </a>
                   .
@@ -1468,7 +1468,7 @@ export default function SignUpPage({
                 <tr className="text-base transition-colors hover:bg-muted/20">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary">
+                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary-ink">
                         {fullName
                           .split(" ")
                           .map((p) => p[0]?.toUpperCase())

@@ -214,7 +214,7 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                     <Checkbox checked={selected} onCheckedChange={() => onToggle(rec.id)} aria-label={`Select ${label}`} />
                   </td>
                   <td className={CELL}>
-                    <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                    <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                       {rec.id}
                     </span>
                   </td>
@@ -227,7 +227,7 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                       </span>
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <TruncatedText text={rec.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary" />
+                          <TruncatedText text={rec.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
                           {/* A bookmark keeps a recording out of any delete. */}
                           {bookmarked && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
                         </div>
@@ -367,7 +367,7 @@ function PlayRow({ rec, title, onPlay, selected, onSelect }: {
         <Checkbox checked={selected} onCheckedChange={onSelect} aria-label={`Include ${rec.id} in the export`} />
       )}
       <button onClick={onPlay} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary group-hover/row:text-primary-foreground">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary-fill group-hover/row:text-primary-foreground">
           <Play className="size-3.5" />
         </span>
         <span className="min-w-0 flex-1">
@@ -961,7 +961,7 @@ export default function RecordingsPage({
           {hasFilters && (
             <button
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary"
+              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
             </button>
@@ -979,7 +979,7 @@ export default function RecordingsPage({
               {SORT_OPTIONS.map((o) => (
                 <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
                   className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                    sort === o.key ? "text-primary" : "text-foreground")}>
+                    sort === o.key ? "text-primary-ink" : "text-foreground")}>
                   {o.label}
                   {sort === o.key && <Check className="size-3.5" />}
                 </button>
@@ -1077,7 +1077,7 @@ export default function RecordingsPage({
       {selectedIds.size > 0 && (
         <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
             <span className="text-base font-semibold text-foreground">

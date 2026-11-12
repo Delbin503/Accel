@@ -78,7 +78,7 @@ function CameraTile({
     <button
       onClick={onSelect}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-neutral-950 text-left transition-all",
+        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
         isSelected ? "border-primary shadow-[0_0_0_2px_var(--primary)]" : "border-border hover:border-primary/40"
       )}
     >
@@ -104,19 +104,19 @@ function CameraTile({
         ) : (
           <>
             <img src={OFFLINE_FRAME} alt="" aria-hidden className="absolute inset-0 size-full scale-[1.18] object-cover opacity-40" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-neutral-950/70 text-severity-critical/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-media/70 text-severity-critical/80">
               <AlertTriangle className="size-5" />
               <span className="text-2xs font-bold uppercase tracking-widest">Offline</span>
             </div>
           </>
         )}
         {isOnline && (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-severity-critical/95 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-white">
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-severity-critical/95 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-widest text-status-foreground">
             LIVE
           </span>
         )}
         {hasDetection && detectionCount !== undefined && detectionCount > 0 && (
-          <span className="absolute right-2 top-2 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-neutral-900">
+          <span className="absolute right-2 top-2 inline-flex size-5 items-center justify-center rounded-full bg-warning text-2xs font-bold text-status-foreground">
             {detectionCount}
           </span>
         )}
@@ -124,7 +124,7 @@ function CameraTile({
         {pinned && (
           <span title="Pinned"
             className={cn(
-              "absolute z-10 inline-flex items-center justify-center rounded-full bg-primary text-white shadow-raised",
+              "absolute z-10 inline-flex items-center justify-center rounded-full bg-primary-fill text-primary-foreground shadow-raised",
               detectionCount && detectionCount > 0 ? "right-9 top-2 size-5" : "right-2 top-2 size-5"
             )}
           >
@@ -140,7 +140,7 @@ function CameraTile({
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onTogglePin(); } }}
             title={pinned ? "Unpin camera" : "Pin camera"}
             className={cn(
-              "absolute z-20 inline-flex h-7 items-center gap-1 rounded-md bg-black/75 px-2 text-2xs font-semibold uppercase tracking-wider text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100",
+              "absolute z-20 inline-flex h-7 items-center gap-1 rounded-md bg-scrim/75 px-2 text-2xs font-semibold uppercase tracking-wider text-media-foreground opacity-0 backdrop-blur-sm transition-opacity duration-[var(--duration-fast)] group-hover:opacity-100",
               "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:bg-primary"
             )}
           >
@@ -148,7 +148,7 @@ function CameraTile({
             {pinned ? "Unpin" : "Pin"}
           </span>
         )}
-        <span className={cn("absolute left-2 bottom-2 rounded bg-black/60 px-1.5 py-0.5 font-mono text-white/90 backdrop-blur-sm",
+        <span className={cn("absolute left-2 bottom-2 rounded bg-scrim/60 px-1.5 py-0.5 font-mono text-media-foreground/90 backdrop-blur-sm",
           size === "sm" ? "text-3xs" : "text-2xs")}>
           {camera.id}
         </span>
@@ -198,7 +198,7 @@ function HeroView({
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-950">
+          <div className="relative aspect-[16/9] w-full overflow-hidden bg-media">
             {cameraFrame(camera.id) ? (
               <img
                 src={cameraFrame(camera.id)}
@@ -208,14 +208,14 @@ function HeroView({
             ) : (
               <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.22) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)" }} />
             )}
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-white">
-              <span className="size-1.5 animate-pulse rounded-full bg-white" />
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-severity-critical/95 px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-status-foreground">
+              <span className="size-1.5 animate-pulse rounded-full bg-status-foreground" />
               LIVE
             </span>
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-scrim/60 px-2 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">
               {camera.id} · <span className="inline-flex items-center gap-1 text-severity-critical"><span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />REC</span> · <span className="text-info">AI</span>
             </span>
-            <div className="absolute left-3 bottom-3 rounded bg-black/60 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
+            <div className="absolute left-3 bottom-3 rounded bg-scrim/60 px-2 py-1 font-mono text-xs text-media-foreground/90 backdrop-blur-sm">
               {now.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(",", " ·")}
             </div>
           </div>
@@ -371,7 +371,7 @@ function CategoryChip({ label, count, active, muted }: { label: string; count: n
   return (
     <span className={cn(
       "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-2xs font-semibold",
-      active ? "border-primary/40 bg-primary/15 text-primary" :
+      active ? "border-primary/40 bg-primary/15 text-primary-ink" :
       muted ? "border-border bg-muted text-muted-foreground" :
               "border-warning/30 bg-warning/15 text-warning"
     )}>
@@ -514,7 +514,7 @@ function LayoutSwitcher({
                       onClick={() => { onSelect(l.id); setOpen(false); }}
                       className="flex flex-1 items-center gap-1.5 rounded px-1.5 py-1 text-left text-sm hover:bg-muted/40"
                     >
-                      <Check className={cn("size-3 flex-shrink-0", isActive ? "text-primary" : "opacity-0")} strokeWidth={3} />
+                      <Check className={cn("size-3 flex-shrink-0", isActive ? "text-primary-ink" : "opacity-0")} strokeWidth={3} />
                       <TruncatedText text={l.name} className="min-w-0 flex-1 text-foreground" />
                       <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-3xs text-muted-foreground">{l.tiles.length}</span>
                     </button>
@@ -547,13 +547,13 @@ function LayoutSwitcher({
                 placeholder="Layout name…"
                 className="h-7 flex-1 text-sm"
               />
-              <button onClick={commitCreate} className="rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+              <button onClick={commitCreate} className="rounded bg-primary-fill px-2 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
                 Add
               </button>
             </div>
           ) : (
             <button onClick={() => setCreating(true)}
-              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10">
+              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-primary-ink hover:bg-primary/10">
               <Plus className="size-3" />
               New layout
             </button>
@@ -827,7 +827,7 @@ function CustomView({
                     availableCameras.map((c) => (
                       <button key={c.id} onClick={() => addTiles([c.id])}
                         className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-                        <span className="font-mono text-2xs text-primary">{c.id}</span>
+                        <span className="font-mono text-2xs text-primary-ink">{c.id}</span>
                         <TruncatedText text={c.name} />
                       </button>
                     ))
@@ -835,7 +835,7 @@ function CustomView({
                 </PopoverContent>
               </Popover>
               <button onClick={() => setEditing(false)}
-                className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                className="inline-flex items-center gap-1 rounded-md bg-primary-fill px-2.5 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
                 <Save className="size-3" />
                 Done
               </button>
@@ -855,7 +855,7 @@ function CustomView({
           <LayoutGrid className="size-10 opacity-20" />
           <p className="text-sm">No cameras in your custom layout yet.</p>
           <button onClick={() => availableCameras.length > 0 && addTiles(availableCameras.slice(0, 4).map((c) => c.id))}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary-fill px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
             <Plus className="size-3.5" />
             Add starter tiles
           </button>
@@ -903,16 +903,16 @@ function CustomView({
                   {editing && (
                     <>
                       <button
-                        className="absolute left-1.5 top-1.5 z-10 flex size-6 cursor-grab items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-black/90 active:cursor-grabbing"
+                        className="absolute left-1.5 top-1.5 z-10 flex size-6 cursor-grab items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-scrim/90 active:cursor-grabbing"
                         title="Drag to reposition" onMouseDown={(e) => e.stopPropagation()}>
                         <GripVertical className="size-3.5" />
                       </button>
                       <button onClick={() => removeTile(tile.id)}
-                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-black/70 text-white/90 backdrop-blur-sm hover:bg-severity-critical/80"
+                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-severity-critical/80"
                         title="Remove">
                         <Trash2 className="size-3" />
                       </button>
-                      <span className="absolute left-1/2 bottom-2 z-10 -translate-x-1/2 rounded bg-black/70 px-1.5 py-0.5 font-mono text-2xs text-white/85 backdrop-blur-sm">
+                      <span className="absolute left-1/2 bottom-2 z-10 -translate-x-1/2 rounded bg-scrim/70 px-1.5 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">
                         {tile.cols}×{tile.rows}
                       </span>
                       <div
@@ -1073,7 +1073,7 @@ export default function LiveMonitoringPage() {
             return (
               <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description}
                 className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                  active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <Icon className="size-3.5" />
                 {vm.label}
               </button>
@@ -1081,7 +1081,7 @@ export default function LiveMonitoringPage() {
           })}
         </div>
         {pinned.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary-ink">
             <Pin className="size-3" />
             {pinned.length} pinned
           </span>

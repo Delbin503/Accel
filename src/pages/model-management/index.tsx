@@ -111,9 +111,9 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
           className="group relative flex size-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-primary/40 bg-primary/10 transition-all hover:border-primary hover:bg-primary/15"
           title="Change icon"
         >
-          <IconComp className="size-5 text-primary" />
-          <span className="absolute inset-0 flex items-center justify-center rounded-[10px] bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-            <Edit2 className="size-3 text-white" />
+          <IconComp className="size-5 text-primary-ink" />
+          <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-scrim/50 opacity-0 transition-opacity group-hover:opacity-100">
+            <Edit2 className="size-3 text-media-foreground" />
           </span>
         </button>
       </PopoverTrigger>
@@ -129,7 +129,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
               className={cn(
                 "flex items-center justify-center rounded-lg border p-2 transition-all hover:border-primary/40 hover:bg-primary/10",
                 current === key
-                  ? "border-primary/50 bg-primary/15 text-primary"
+                  ? "border-primary/50 bg-primary/15 text-primary-ink"
                   : "border-transparent bg-muted text-muted-foreground"
               )}
               title={key}
@@ -182,7 +182,7 @@ function FileTypeBadge({ fileName }: { fileName: string }) {
         "rounded border px-1.5 py-px font-mono text-2xs font-bold uppercase",
         ext === "json"
           ? "border-info/30 bg-info/10 text-info"
-          : "border-primary/30 bg-primary/10 text-primary"
+          : "border-primary/30 bg-primary/10 text-primary-ink"
       )}
     >
       {ext}
@@ -236,7 +236,7 @@ function MoreTagsPopover({
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink transition-colors hover:bg-primary/20"
         >
           {label ?? `+${hiddenTags.length} more`}
         </span>
@@ -247,7 +247,7 @@ function MoreTagsPopover({
         onClick={(e) => e.stopPropagation()}
         sideOffset={6}
         align="start"
-        className="z-[100] w-56 p-3"
+        className="z-[var(--z-popover)] w-56 p-3"
       >
         <p className="mb-2 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
           All Tags · {allTags.length}
@@ -354,7 +354,7 @@ function TagInput({
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
               <button
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary hover:bg-primary/10"
+                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary-ink hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
@@ -428,14 +428,14 @@ function ModelCard({
               selected ? "border-primary/30 bg-primary/10" : "border-border bg-muted"
             )}
           >
-            <IconComp className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
+            <IconComp className={cn("size-4", selected ? "text-primary-ink" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
             <TruncatedText
               text={model.name}
               className={cn(
                 "text-base font-bold",
-                selected ? "text-primary" : "text-foreground"
+                selected ? "text-primary-ink" : "text-foreground"
               )}
             />
             <p className="font-mono text-xs text-muted-foreground">{model.id}</p>
@@ -445,7 +445,7 @@ function ModelCard({
           <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
             {model.sequenceIds.length} Steps
           </span>
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary-ink">
             {model.attachedRuleIds.length + model.extractedRules.length} Rules
           </span>
         </div>
@@ -740,7 +740,7 @@ export function AddStepModal({
         {uploading ? (
           <ModalBody className="space-y-4" data-upload-progress={pct}>
             <div className="flex items-center gap-2.5">
-              <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary" />
+              <LoaderCircle className="size-4 flex-shrink-0 animate-spin text-primary-ink" />
               <span className="text-base font-semibold text-foreground">{label}</span>
               <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
                 {pct}%
@@ -1122,7 +1122,7 @@ function IconAction({
       title={title}
       className={cn(
         "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
-        tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary"
+        tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary-ink"
       )}
     >
       <Icon className="size-3" />
@@ -1171,7 +1171,7 @@ function SequenceItem({
       {editable && (
         <GripVertical className="hidden size-3.5 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
       )}
-      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
+      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary-ink">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
@@ -1371,7 +1371,7 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
             <div
               className={cn(
                 "flex size-7 items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                it.done ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground"
+                it.done ? "border-primary/40 bg-primary/10 text-primary-ink" : "border-border bg-muted text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" />
@@ -1815,7 +1815,7 @@ function ModelDetailPanel({
         <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-              {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary" })}
+              {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary-ink" })}
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1922,7 +1922,7 @@ function ModelDetailPanel({
                     size="sm"
                     onClick={() => setCustomizeOpen((v) => !v)}
                     aria-pressed={customizeOpen}
-                    className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary")}
+                    className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary-ink")}
                   >
                     <SlidersHorizontal className="size-3" />
                     Customize
@@ -1938,7 +1938,7 @@ function ModelDetailPanel({
                     onClick={() => setShowAddStep(true)}
                     // Primary-tinted so the panel's main "add" action is findable
                     // without competing with Save Changes.
-                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
                   >
                     <Plus className="size-3" />
                     Add Step
@@ -2021,7 +2021,7 @@ function ModelDetailPanel({
                     variant="outline"
                     size="sm"
                     onClick={() => setAddRuleOpen(true)}
-                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary-ink hover:border-primary hover:bg-primary/20 hover:text-primary-ink"
                   >
                     <Plus className="size-3" />
                     Add Rule
@@ -2506,7 +2506,7 @@ export default function ModelManagementPage({
                 <div className="mt-1 border-t border-border pt-1.5">
                   <button
                     onClick={() => setTagFilter([])}
-                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary"
+                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary-ink"
                   >
                     Remove all
                   </button>

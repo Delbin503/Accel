@@ -172,7 +172,7 @@ function SiteChipRow({
             {s.name}
             <span className={cn(
               "rounded-full px-1 py-px font-mono text-3xs",
-              isActive ? "bg-white/10" : "bg-muted text-muted-foreground"
+              isActive ? "bg-media-foreground/10" : "bg-muted text-muted-foreground"
             )}>
               {s.count}
             </span>
@@ -209,7 +209,7 @@ function SiteMultiSelect({
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
               ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              : "border-primary bg-primary/10 text-primary"
+              : "border-primary bg-primary/10 text-primary-ink"
           )}
         >
           <Filter className="size-3" />
@@ -222,7 +222,7 @@ function SiteMultiSelect({
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
           <button
             onClick={() => onChange([])}
-            className="text-2xs font-semibold uppercase tracking-wider text-primary hover:underline"
+            className="text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
           >
             All
           </button>
@@ -239,7 +239,7 @@ function SiteMultiSelect({
                 <span
                   className={cn(
                     "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
-                    checked ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                    checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-input"
                   )}
                 >
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
@@ -736,7 +736,7 @@ export default function DashboardPage() {
                           <div className="border-t border-border bg-muted/20 px-3 py-2.5">
                             <button
                               onClick={() => navigate("/detection-feed")}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                             >
                               View feed for this site
                               <ArrowUpRight className="size-3" />
@@ -830,7 +830,7 @@ export default function DashboardPage() {
                     <div className="border-t border-border px-3 py-2">
                       <button
                         onClick={() => navigate("/detection-feed")}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
                       </button>

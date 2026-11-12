@@ -100,7 +100,7 @@ export function AcceptOwnershipModal({
                 <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Your role today</p>
                 <p className="truncate text-sm font-semibold text-foreground">{request.currentRole}</p>
               </div>
-              <div className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+              <div className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary-ink">
                 <ArrowRight className="size-3.5" />
               </div>
               <div className="min-w-0 text-right">
@@ -115,7 +115,7 @@ export function AcceptOwnershipModal({
               <ul className="space-y-1.5 text-muted-foreground">
                 {OWNER_TAKES_OVER.map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-3.5 flex-shrink-0 text-primary" />
+                    <Check className="mt-0.5 size-3.5 flex-shrink-0 text-primary-ink" />
                     <span>{item}</span>
                   </li>
                 ))}

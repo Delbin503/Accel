@@ -21,8 +21,8 @@ export function OnboardingProgress({ current }: { current: StepKey }) {
             <div key={s.key} className="flex items-center gap-2">
               <div className={cn(
                 "flex size-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
-                isDone ? "border-success bg-success text-white" :
-                isCurrent ? "border-primary bg-primary text-primary-foreground" :
+                isDone ? "border-success bg-success text-status-foreground" :
+                isCurrent ? "border-primary bg-primary-fill text-primary-foreground" :
                 "border-border bg-muted text-muted-foreground"
               )}>
                 {isDone ? <Check className="size-3" strokeWidth={3} /> : <Icon className="size-3" />}

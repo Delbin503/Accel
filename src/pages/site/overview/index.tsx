@@ -37,7 +37,7 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
 function SiteMiniThumb({ site }: { site: SiteData }) {
   if (site.floorPlan?.imageUrl) {
     return (
-      <div className="relative size-10 flex-shrink-0 overflow-hidden rounded-md border border-border bg-neutral-950">
+      <div className="relative size-10 flex-shrink-0 overflow-hidden rounded-md border border-border bg-media">
         <img src={site.floorPlan.imageUrl} alt="" className="absolute inset-0 size-full object-cover opacity-80" />
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
           {site.areas.filter((a) => a.points.length >= 3).map((a) => (
@@ -132,7 +132,7 @@ function FilterDropdown({
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
-            hasValue ? "text-primary" : "text-muted-foreground"
+            hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
@@ -193,7 +193,7 @@ function FilterPanel({
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
-            <span className="rounded-full bg-primary px-2 py-px text-xs font-semibold text-primary-foreground">
+            <span className="rounded-full bg-primary-fill px-2 py-px text-xs font-semibold text-primary-foreground">
               {activeCount} active
             </span>
           ) : (
@@ -393,7 +393,7 @@ export default function SiteOverviewPage({
         {hasFilters && (
           <button
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary"
+            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
           </button>
@@ -444,7 +444,7 @@ export default function SiteOverviewPage({
                       onClick={() => openSite(site.id)}
                       className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                           {site.id}
                         </span>
                       </td>
@@ -454,7 +454,7 @@ export default function SiteOverviewPage({
                           <div className="min-w-0">
                             <TruncatedText
                               text={site.name}
-                              className="font-semibold text-foreground transition-colors group-hover:text-primary"
+                              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
                             />
                             <TruncatedText
                               title={site.address || "No address yet"}

@@ -49,6 +49,7 @@ export const Palette: Story = {
 
       <Group title="Brand & Interactive">
         <Swatch token="bg-primary" bg="bg-primary" />
+        <Swatch token="bg-primary-fill" bg="bg-primary-fill" />
         <Swatch token="bg-primary-hover" bg="bg-primary-hover" />
         <Swatch token="bg-secondary" bg="bg-secondary" ring />
         <Swatch token="bg-destructive" bg="bg-destructive" />
@@ -66,10 +67,17 @@ export const Palette: Story = {
         <Swatch token="bg-violet" bg="bg-violet" />
       </Group>
 
+      <Group title="Media (not themed)">
+        <Swatch token="bg-media" bg="bg-media" />
+        <Swatch token="bg-media-raised" bg="bg-media-raised" />
+        <Swatch token="bg-scrim/60" bg="bg-scrim/60" ring />
+        <Swatch token="media-foreground" bg="bg-media-foreground" ring />
+      </Group>
+
       <section className="space-y-3">
         <h3 className="text-md font-bold text-foreground">Feed Surfaces</h3>
         <div className="flex flex-col gap-1.5">
-          <div className="bg-camera-feed flex h-20 w-full items-center justify-center rounded-lg text-2xs uppercase tracking-wider text-white/40">
+          <div className="bg-camera-feed flex h-20 w-full items-center justify-center rounded-lg text-2xs uppercase tracking-wider text-media-foreground/40">
             Camera / detection snapshot surface
           </div>
           <code className="font-mono text-2xs text-muted-foreground">bg-camera-feed</code>
@@ -88,7 +96,9 @@ export const Palette: Story = {
         <div className="col-span-full flex flex-col gap-2">
           <p className="text-foreground">text-foreground — primary body text</p>
           <p className="text-muted-foreground">text-muted-foreground — secondary / meta</p>
-          <p className="text-primary">text-primary — brand accent text</p>
+          <p className="text-primary-ink">text-primary-ink — orange text (AA in both themes)</p>
+          <p className="rounded bg-primary-fill px-2 py-1 text-primary-foreground">text-primary-foreground on bg-primary-fill — button labels</p>
+          <p className="rounded bg-severity-critical px-2 py-1 text-status-foreground">text-status-foreground on a solid status fill</p>
           <p className="text-destructive">text-destructive — errors</p>
         </div>
       </Group>

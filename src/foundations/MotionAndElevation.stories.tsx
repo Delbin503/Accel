@@ -32,6 +32,7 @@ const ZINDEX = [
   { token: "--z-overlay", value: "30" },
   { token: "--z-drawer", value: "40" },
   { token: "--z-modal", value: "50" },
+  { token: "--z-popover", value: "55" },
   { token: "--z-toast", value: "60" },
   { token: "--z-tooltip", value: "70" },
 ];
