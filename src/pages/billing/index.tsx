@@ -109,15 +109,15 @@ function SectionCard({ title, description, action, children, className, bodyClas
   className?: string; bodyClassName?: string;
 }) {
   return (
-    <div className={cn("flex flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
+    <div data-slot="billing-section-card" className={cn("flex flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <div data-slot="billing-section-card-header" className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-md font-bold text-foreground">{title}</h2>
           {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
       </div>
-      <div className={cn("flex-1 px-5 py-4", bodyClassName)}>{children}</div>
+      <div data-slot="billing-section-card-content" className={cn("flex-1 px-5 py-4", bodyClassName)}>{children}</div>
     </div>
   );
 }
@@ -136,7 +136,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
     Amex: "text-success",
   };
   return (
-    <div className={cn(
+    <div data-slot="payment-card-row" className={cn(
       "flex items-center gap-3 rounded-lg border bg-background p-3 transition-colors",
       card.isDefault ? "border-primary/40 bg-primary/[0.02]" : "border-border"
     )}>
@@ -283,7 +283,7 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
           description={<>Choose a card to re-attempt the charge for <strong className="text-foreground">{invoice.id}</strong>.</>}
         />
         <ModalBody className="space-y-3">
-          <div className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3 text-sm">
+          <div data-slot="retry-payment-modal-alert" className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3 text-sm">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
             <p className="text-muted-foreground">
               The previous charge of <strong className="text-foreground">${total.toLocaleString()}</strong> failed.
@@ -291,7 +291,7 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
             </p>
           </div>
 
-          <div className="space-y-1.5">
+          <div data-slot="retry-payment-modal-cards" className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment card</p>
             {cards.map((card) => (
               <button key={card.id} onClick={() => setSelected(card.id)}
@@ -362,7 +362,7 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
         />
         <ModalBody className="space-y-4">
           {/* Plan summary */}
-          <div className={cn("flex items-center gap-3 rounded-lg border p-3", color.border, color.bg)}>
+          <div data-slot="purchase-plan-modal-summary" className={cn("flex items-center gap-3 rounded-lg border p-3", color.border, color.bg)}>
             <div className={cn("flex size-10 flex-shrink-0 items-center justify-center rounded-lg border bg-background/40", color.border)}>
               <Icon className={cn("size-5", color.text)} />
             </div>
@@ -377,7 +377,7 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
           </div>
 
           {/* Payment method */}
-          <div className="space-y-1.5">
+          <div data-slot="purchase-plan-modal-payment" className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
             {cards.length === 0 && (
               <p className="rounded-lg border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">
@@ -459,7 +459,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
         />
         <ModalBody className="space-y-4">
           {/* Monthly vs annual */}
-          <div className="grid grid-cols-2 gap-2">
+          <div data-slot="switch-to-annual-modal-comparison" className="grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Now · Monthly</p>
               <p className="mt-1 font-mono text-lg font-bold text-foreground">
@@ -482,7 +482,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
           </div>
 
           {/* What's charged today */}
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
+          <div data-slot="switch-to-annual-modal-charge-summary" className="overflow-hidden rounded-lg border border-border bg-background">
             <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-2.5">
               <Icon className={cn("size-4", color.text)} />
               <p className="text-sm font-semibold text-foreground">Charged today</p>
@@ -525,7 +525,7 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
           </p>
 
           {/* Payment method */}
-          <div className="space-y-1.5">
+          <div data-slot="switch-to-annual-modal-payment" className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
             {cards.map((card) => (
               <button key={card.id} type="button" onClick={() => setSelected(card.id)}
@@ -584,10 +584,10 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
   const dateValue = invoice.status === "pending" ? invoice.dueDisplay : invoice.issuedDisplay;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-scrim/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute right-0 top-0 flex h-full w-[min(560px,90vw)] flex-col overflow-hidden bg-card shadow-modal">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+    <div data-slot="invoice-detail-drawer" className="fixed inset-0 z-50">
+      <div data-slot="invoice-detail-drawer-backdrop" className="absolute inset-0 bg-scrim/40 backdrop-blur-sm" onClick={onClose} />
+      <div data-slot="invoice-detail-drawer-panel" className="absolute right-0 top-0 flex h-full w-[min(560px,90vw)] flex-col overflow-hidden bg-card shadow-modal">
+        <div data-slot="invoice-detail-drawer-header" className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex items-start gap-2.5">
             <div className={cn("flex size-9 items-center justify-center rounded-lg border", planColor.border, planColor.bg)}>
               <PlanIcon className={cn("size-4", planColor.text)} />
@@ -607,7 +607,7 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto p-5">
+        <div data-slot="invoice-detail-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
           {invoice.status === "failed" && (
             <div className="flex items-start gap-3 rounded-lg border border-severity-critical/40 bg-severity-critical/[0.06] p-3">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-severity-critical" />
@@ -674,7 +674,7 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
           </div>
         </div>
 
-        <div className="border-t border-border px-5 py-3.5">
+        <div data-slot="invoice-detail-drawer-footer" className="border-t border-border px-5 py-3.5">
           {invoice.status === "failed" ? (
             <Button onClick={onRetryPayment} className="w-full gap-1.5">
               <RefreshCw className="size-3.5" /> Retry Payment
@@ -771,7 +771,7 @@ function BillingDetailsSection({ className }: { className?: string }) {
           ))}
         </dl>
       ) : (
-        <div className="space-y-3">
+        <div data-slot="billing-details-form" className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -857,7 +857,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
   onRetry: (inv: Invoice) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div data-slot="invoices-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/30">
@@ -956,8 +956,8 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
   const [open, setOpen] = React.useState(false);
   const activeCount = statusFilter.length + siteFilter.length;
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/30">
+    <div data-slot="invoice-filter-panel" className="rounded-xl border border-border bg-card">
+      <div data-slot="invoice-filter-panel-header" className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/30">
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
@@ -978,7 +978,7 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
         </div>
       </div>
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="invoice-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</div>
@@ -1012,7 +1012,7 @@ function PlanCard({ tier, cycle, previous, current = false, currentTier, onSelec
   const Icon = PLAN_ICONS[tier];
   const price = cycle === "annual" ? plan.pricePerYear : plan.pricePerMonth;
   return (
-    <div className={cn(
+    <div data-slot="plan-card" className={cn(
       "relative flex flex-col rounded-xl border bg-card p-5 transition-colors",
       current ? cn(color.border, color.bg) : plan.highlight ? "border-primary/50" : "border-border"
     )}>
@@ -1040,11 +1040,11 @@ function PlanCard({ tier, cycle, previous, current = false, currentTier, onSelec
           </span>
         )}
       </div>
-      <div className="mt-4 flex items-baseline gap-1">
+      <div data-slot="plan-card-price" className="mt-4 flex items-baseline gap-1">
         <span className="font-mono text-3xl font-bold text-foreground">${price.toLocaleString()}</span>
         <span className="text-sm text-muted-foreground">/{cycle === "annual" ? "yr" : "mo"} base</span>
       </div>
-      <ul className="mt-4 flex-1 space-y-1.5">
+      <ul data-slot="plan-card-features" className="mt-4 flex-1 space-y-1.5">
         {plan.features.slice(0, 5).map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
             <Check className={cn("mt-0.5 size-3.5 flex-shrink-0", color.text)} />
@@ -1085,7 +1085,7 @@ function BillingCycleToggle({ value, onChange }: {
     { key: "annual", label: "Annually" },
   ];
   return (
-    <div role="radiogroup" aria-label="Billing cycle" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+    <div data-slot="billing-cycle-toggle" role="radiogroup" aria-label="Billing cycle" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
       {options.map((o) => {
         const active = value === o.key;
         return (
@@ -1129,7 +1129,7 @@ function TabSwitcher({ value, onChange }: {
     { key: "invoices", label: "Invoices" },
   ];
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+    <div data-slot="billing-tab-switcher" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
       {tabs.map((t) => {
         const active = value === t.key;
         return (
@@ -1345,7 +1345,7 @@ export default function BillingPage() {
         </Button>
       }
     >
-      <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+      <div data-slot="billing-page-payment-methods-list" className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
         {cards.map((card) => (
           <PaymentCardRow
             key={card.id}
@@ -1360,7 +1360,7 @@ export default function BillingPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="billing-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>
@@ -1372,9 +1372,9 @@ export default function BillingPage() {
       </div>
 
       {tab === "overview" && accountStatus === "cancelled" && (
-        <div className="flex flex-col gap-4">
+        <div data-slot="billing-page-no-plan" className="flex flex-col gap-4">
           {/* No active plan — same banner layout as the current-plan banner */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
+          <div data-slot="billing-page-no-plan-banner" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
             <div className="flex items-center gap-3">
               <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/40 bg-background/40">
                 <Ban className="size-5 text-severity-critical" />
@@ -1399,7 +1399,7 @@ export default function BillingPage() {
 
           {/* Available plans — revealed on demand */}
           {showPlans && (
-            <div>
+            <div data-slot="billing-page-plans">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-md font-bold text-foreground">Available plans</h3>
                 <BillingCycleToggle value={planCycle} onChange={setPlanCycle} />
@@ -1419,7 +1419,7 @@ export default function BillingPage() {
           )}
 
           {/* Payment method stays available for when they resubscribe */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
+          <div data-slot="billing-page-payment" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
             {paymentMethodsCard}
             <BillingDetailsSection className="lg:h-full" />
           </div>
@@ -1427,9 +1427,9 @@ export default function BillingPage() {
       )}
 
       {tab === "overview" && accountStatus !== "cancelled" && (
-        <div className="flex flex-col gap-4">
+        <div data-slot="billing-page-overview" className="flex flex-col gap-4">
           {/* Current plan banner */}
-          <div className={cn(
+          <div data-slot="billing-page-plan-banner" className={cn(
             "flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4",
             cancelling ? "border-warning/40 bg-warning/[0.06]" : cn(acctColor.border, acctColor.bg)
           )}>
@@ -1486,7 +1486,7 @@ export default function BillingPage() {
 
           {/* Available plans — change plan while active */}
           {showPlans && !cancelling && (
-            <div>
+            <div data-slot="billing-page-plans-active">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-md font-bold text-foreground">Available plans</h3>
                 <p className="text-xs text-muted-foreground">Billed {cycleLabel.toLowerCase()}</p>
@@ -1508,7 +1508,7 @@ export default function BillingPage() {
           )}
 
           {cancelling && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm">
+            <div data-slot="billing-page-plan-warning" className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm">
               <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
               <p className="text-muted-foreground">
                 Your subscription is scheduled to cancel on <strong className="text-foreground">{renewsDisplay}</strong>. You'll keep full access until then — resume anytime to stay on the {activePlan.name} plan.
@@ -1524,9 +1524,9 @@ export default function BillingPage() {
             <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} accent="violet" />
           </KpiGrid>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
+          <div data-slot="billing-page-payment-grid" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
             {/* Payment Information — methods + billing details */}
-            <div className="flex flex-col gap-4">
+            <div data-slot="billing-page-payment-info" className="flex flex-col gap-4">
               {paymentMethodsCard}
               <BillingDetailsSection className="flex-1" />
             </div>
@@ -1574,8 +1574,8 @@ export default function BillingPage() {
       )}
 
       {tab === "invoices" && (
-        <div className="flex flex-col gap-3">
-          <div className="min-w-0">
+        <div data-slot="billing-page-invoices" className="flex flex-col gap-3">
+          <div data-slot="billing-page-invoices-header" className="min-w-0">
             <h2 className="text-md font-bold text-foreground">Invoices</h2>
           </div>
           <InvoiceFilterPanel
@@ -1585,7 +1585,7 @@ export default function BillingPage() {
             onSiteChange={setInvoiceSiteFilter}
           />
 
-          <div className="flex items-center justify-between px-1">
+          <div data-slot="billing-page-invoices-toolbar" className="flex items-center justify-between px-1">
             <p className="text-base text-muted-foreground">
               <strong className="text-foreground">{filteredInvoices.length}</strong> invoice{filteredInvoices.length !== 1 ? "s" : ""} match current filters
               {(invoiceStatusFilter.length > 0 || invoiceSiteFilter.length > 0) && (

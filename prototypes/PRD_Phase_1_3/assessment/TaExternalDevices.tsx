@@ -221,7 +221,7 @@ function DeviceDrawer({
     <Sheet open onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
+          <div data-slot="device-drawer-header" className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">{device.id}</span>
@@ -241,7 +241,7 @@ function DeviceDrawer({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <div data-slot="device-drawer-body" className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border bg-card px-4 py-2">
               <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pairing</p>
@@ -403,7 +403,7 @@ export function TaExternalDevices() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="ta-external-devices-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>External Devices</PageHeader.Title>
@@ -423,7 +423,7 @@ export function TaExternalDevices() {
         ))}
       </KpiGrid>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+      <div data-slot="ta-external-devices-page-filters" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by ID, name, model, address or bay…" className="h-9 pl-9 text-base" />
@@ -438,7 +438,7 @@ export function TaExternalDevices() {
       </p>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="ta-external-devices-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Radio className="size-10 opacity-20" />
           {devices.length === 0 ? (
             <>
@@ -454,7 +454,7 @@ export function TaExternalDevices() {
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="ta-external-devices-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">

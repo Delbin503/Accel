@@ -102,7 +102,7 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
   const frame = eventImage(event.id);
 
   return (
-    <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+    <div data-slot="event-thumb" className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
       {frame && (
         <img
           src={frame}
@@ -172,7 +172,7 @@ function EventCard({
   onViewCase: () => void;
 }) {
   return (
-    <div
+    <div data-slot="event-card"
       onClick={() => onOpen(event.id)}
       className={cn(
         "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30",
@@ -184,12 +184,12 @@ function EventCard({
       style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       {/* Thumbnail — row 1 col 1 */}
-      <div className="self-start" onClick={(e) => { e.stopPropagation(); onSelect(event.id); }}>
+      <div data-slot="event-card-thumb" className="self-start" onClick={(e) => { e.stopPropagation(); onSelect(event.id); }}>
         <EventThumb event={event} selected={selected} />
       </div>
 
       {/* Body — row 1 col 2 */}
-      <div className="min-w-0">
+      <div data-slot="event-card-body" className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
           <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
@@ -222,7 +222,7 @@ function EventCard({
       </div>
 
       {/* Action buttons — row 2 full-width on mobile, col 3 row 1 on desktop */}
-      <div
+      <div data-slot="event-card-actions"
         className="col-span-2 flex flex-wrap gap-1.5 sm:col-span-1 sm:flex-col sm:items-stretch sm:self-start sm:gap-1.5"
         onClick={(e) => e.stopPropagation()}
       >
@@ -366,8 +366,8 @@ function FilterPanel({
       : DATE_PRESETS.find((p) => p.key === datePreset)?.label ?? "All time";
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div
+    <div data-slot="detection-feed-filter-panel" className="rounded-xl border border-border bg-card">
+      <div data-slot="detection-feed-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
@@ -405,7 +405,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="detection-feed-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           {/* Search — second row */}
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -417,7 +417,7 @@ function FilterPanel({
             />
           </div>
           {/* Dropdowns — severity & type come from KPI cards, date from the range bar */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div data-slot="detection-feed-filter-panel-dropdowns" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { key: "site" as const, label: "Site", opts: FILTER_OPTIONS.site },
               { key: "area" as const, label: "Area", opts: AREA_OPTIONS },
@@ -459,7 +459,7 @@ function SelectionBar({
 }) {
   if (count === 0) return null;
   return (
-    <div className="fixed inset-x-6 bottom-6 z-50 mx-auto flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
+    <div data-slot="selection-bar" className="fixed inset-x-6 bottom-6 z-50 mx-auto flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       {/* Count badge */}
       <div className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
@@ -470,7 +470,7 @@ function SelectionBar({
         </span>
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center gap-1.5">
+      <div data-slot="selection-bar-actions" className="ml-auto flex flex-wrap items-center gap-1.5">
         <Button
           variant="ghost"
           size="sm"
@@ -800,7 +800,7 @@ export default function DetectionFeedPage({
   /* ─────────────────────────────────────────────────────────────────────── */
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="detection-feed-page" className="flex flex-col gap-4">
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <PageHeader>
         <PageHeader.Content>
@@ -874,7 +874,7 @@ export default function DetectionFeedPage({
       />
 
       {/* ── Feed header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-1">
+      <div data-slot="detection-feed-page-list-header" className="flex items-center justify-between px-1">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
@@ -915,7 +915,7 @@ export default function DetectionFeedPage({
 
       {/* ── Live "N new events" pill ─────────────────────────────────────── */}
       {forced === "normal" && liveCount > 0 && (
-        <button
+        <button data-slot="detection-feed-page-live-pill"
           onClick={() => {
             toast.message(`Loaded ${liveCount} new event${liveCount === 1 ? "" : "s"}`);
             setLiveCount(0);
@@ -933,7 +933,7 @@ export default function DetectionFeedPage({
       ) : forced === "error" ? (
         <ErrorState onRetry={onResolveForced} />
       ) : forced === "empty" || grouped.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="detection-feed-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Search className="size-10 opacity-20" />
           <p className="text-sm">No events match the current filters.</p>
           <Button
@@ -955,7 +955,7 @@ export default function DetectionFeedPage({
       ) : (
         <>
           {grouped.map((group) => (
-            <div key={group.key} className="space-y-2.5">
+            <div data-slot="detection-feed-page-group" key={group.key} className="space-y-2.5">
               <div className="flex items-center gap-2.5 border-b border-border pb-2">
                 <span className="text-base font-bold text-foreground">
                   {group.label} · {group.date}

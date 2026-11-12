@@ -42,7 +42,7 @@ export default function RealRuleLibrary({
     return <RulesLibraryPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="rules-library-page" className="flex flex-col gap-4">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <RuleSkeleton />}
       {forced === "noresults" && (

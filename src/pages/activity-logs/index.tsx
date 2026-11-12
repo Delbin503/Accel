@@ -144,7 +144,7 @@ export default function ActivityLogsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="activity-logs-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Activity Log</PageHeader.Title>
@@ -184,7 +184,7 @@ export default function ActivityLogsPage() {
       />
 
       {/* Filters — collapsible panel (matches all other modules) */}
-      <div className="rounded-xl border border-border bg-card">
+      <div data-slot="activity-logs-page-filters" className="rounded-xl border border-border bg-card">
         <button
           onClick={() => setFiltersOpen((v) => !v)}
           className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
@@ -227,7 +227,7 @@ export default function ActivityLogsPage() {
         </button>
 
         {filtersOpen && (
-          <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+          <div data-slot="activity-logs-page-filters-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -253,7 +253,7 @@ export default function ActivityLogsPage() {
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="activity-logs-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <ScrollText className="size-10 opacity-20" />
           <p className="text-sm">No activity events match the current filters.</p>
           <Button variant="outline" onClick={() => { setSearch(""); setDateRange("30d"); setTypeFilter([]); setSiteFilter([]); }}>
@@ -261,9 +261,9 @@ export default function ActivityLogsPage() {
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="activity-logs-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           {/* Table header */}
-          <div className="grid grid-cols-[140px_90px_90px_1fr_180px] gap-3 border-b border-border bg-muted/30 px-4 py-2.5">
+          <div data-slot="activity-logs-page-table-header" className="grid grid-cols-[140px_90px_90px_1fr_180px] gap-3 border-b border-border bg-muted/30 px-4 py-2.5">
             <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Date / Time</p>
             <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
             <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
@@ -271,9 +271,9 @@ export default function ActivityLogsPage() {
             <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Site / Source</p>
           </div>
           {/* Rows */}
-          <div>
+          <div data-slot="activity-logs-page-table-body">
             {filtered.map((l) => (
-              <div key={l.id}
+              <div data-slot="activity-logs-page-row" key={l.id}
                 className="grid grid-cols-[140px_90px_90px_1fr_180px] gap-3 border-b border-border/60 px-4 py-3 last:border-b-0 hover:bg-muted/20">
                 <div className="font-mono text-xs text-muted-foreground">{l.whenDisplay}</div>
                 <div><KindBadge kind={l.kind} /></div>
@@ -322,7 +322,7 @@ export default function ActivityLogsPage() {
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-center border-t border-border bg-muted/20 px-4 py-3">
+          <div data-slot="activity-logs-page-footer" className="flex items-center justify-center border-t border-border bg-muted/20 px-4 py-3">
             <Button variant="outline" className="gap-1.5">
               <ChevronDown className="size-3.5" />
               Load older entries

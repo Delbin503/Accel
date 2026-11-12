@@ -115,7 +115,7 @@ export function TilePlayerBar({
   const zoomed = isZoomed(pb.zoom);
 
   return (
-    <div
+    <div data-slot="tile-player-bar"
       onClick={(e) => e.stopPropagation()}
       className={cn(
         "absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-scrim/90 via-scrim/70 to-transparent px-2 pb-1.5 pt-6",
@@ -239,7 +239,7 @@ function ExpandedPlayer({
 
   return (
     <>
-      <div className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
+      <div data-slot="expanded-player-header" className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
         <div className="min-w-0">
           <DialogTitle className="text-lg font-bold text-foreground">
             {camera.name} · {camera.id}
@@ -256,7 +256,7 @@ function ExpandedPlayer({
         </span>
       </div>
 
-      <div className="overflow-y-auto p-5">
+      <div data-slot="expanded-player-body" className="overflow-y-auto p-5">
         <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-media">
           {isOnline ? (
             <>
@@ -295,7 +295,7 @@ function ExpandedPlayer({
           )}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div data-slot="expanded-player-controls" className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">
             Scroll or press + / − over the frame to zoom, arrow keys to pan.
           </p>

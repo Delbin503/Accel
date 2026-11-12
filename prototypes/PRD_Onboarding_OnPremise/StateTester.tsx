@@ -25,7 +25,7 @@ export function StateTester({
   onAsync: (a: AsyncMode) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
+    <div data-slot="onboarding-onpremise-state-tester" className="flex flex-col gap-1.5 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
       <div className="flex items-center gap-2">
         <span className="inline-flex w-12 items-center gap-1 text-2xs font-bold uppercase tracking-wider text-warning">
           <FlaskConical className="size-3" />
@@ -50,7 +50,7 @@ export function StateTester({
       </div>
       <div className="flex items-center gap-2">
         <span className="w-12 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Async</span>
-        <div className="flex items-center gap-1">
+        <div data-slot="onboarding-onpremise-state-tester-options" className="flex items-center gap-1">
           {ASYNC_OPTIONS.map((o) => (
             <button
               key={o.key}

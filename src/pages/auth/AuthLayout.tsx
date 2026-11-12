@@ -24,7 +24,7 @@ export function AuthLayout({
   brandSlot?: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen text-foreground">
+    <div data-slot="auth-layout" className="relative min-h-screen text-foreground">
       <AuthBackground />
 
       {!hideBrand && (
@@ -51,7 +51,7 @@ export function AuthLayout({
       )}
 
       <div className="flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
-        <div className={wide ? "w-full max-w-[1024px]" : "w-full max-w-[420px]"}>
+        <div data-slot="auth-layout-content" className={wide ? "w-full max-w-[1024px]" : "w-full max-w-[420px]"}>
           {children}
         </div>
       </div>

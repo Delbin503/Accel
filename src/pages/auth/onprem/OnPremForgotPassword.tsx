@@ -98,7 +98,7 @@ export default function OnPremForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      <div>
+      <div data-slot="on-prem-forgot-password-page">
         {step !== "done" && (
           <button
             onClick={() => {
@@ -119,7 +119,7 @@ export default function OnPremForgotPasswordPage() {
             <p className="mt-2 text-base text-muted-foreground">
               Enter the email assigned to your account. We'll send a 6-digit verification code.
             </p>
-            <form onSubmit={submitEmail} className="mt-6 space-y-4">
+            <form data-slot="on-prem-forgot-password-page-email-form" onSubmit={submitEmail} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Email
@@ -165,7 +165,7 @@ export default function OnPremForgotPasswordPage() {
             <p className="mt-2 text-base text-muted-foreground">
               We sent a 6-digit code to <strong className="text-foreground">{email}</strong>. Enter it below to verify.
             </p>
-            <form onSubmit={submitCode} className="mt-6 space-y-4">
+            <form data-slot="on-prem-forgot-password-page-code-form" onSubmit={submitCode} className="mt-6 space-y-4">
               <div onPaste={handleCodePaste} className="flex items-center justify-between gap-2">
                 {code.map((digit, i) => (
                   <input
@@ -206,7 +206,7 @@ export default function OnPremForgotPasswordPage() {
           <>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Create new password</h1>
             <p className="mt-2 text-base text-muted-foreground">Choose a strong password — at least 8 characters.</p>
-            <form onSubmit={submitReset} className="mt-6 space-y-4">
+            <form data-slot="on-prem-forgot-password-page-reset-form" onSubmit={submitReset} className="mt-6 space-y-4">
               <div>
                 <PasswordField
                   label="New password"
@@ -235,7 +235,7 @@ export default function OnPremForgotPasswordPage() {
         )}
 
         {step === "done" && (
-          <div className="text-center">
+          <div data-slot="on-prem-forgot-password-page-done" className="text-center">
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full border-2 border-success/50 bg-success/10">
               <CheckCircle2 className="size-7 text-success" />
             </div>

@@ -317,7 +317,7 @@ export function WeaponBadges({
 
 export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: ReidMap | undefined; pinned: boolean; onPin: () => void }) {
   return (
-    <button
+    <button data-slot="track-row"
       type="button"
       onClick={onPin}
       className={cn(
@@ -378,8 +378,8 @@ export function TrackingPanel({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-shrink-0 space-y-1.5 px-3 pb-2">
+    <div data-slot="tracking-panel" className="flex min-h-0 flex-1 flex-col">
+      <div data-slot="tracking-panel-header" className="flex-shrink-0 space-y-1.5 px-3 pb-2">
         <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
           Active weapon tracks · {states.length}
         </p>
@@ -400,7 +400,7 @@ export function TrackingPanel({
         )}
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto border-t border-border px-3 py-3">
+      <div data-slot="tracking-panel-list" className="flex-1 space-y-2 overflow-y-auto border-t border-border px-3 py-3">
         <div className="flex items-center gap-1.5">
           <Select value={shownMap?.id ?? ""} onValueChange={onPickMap}>
             <SelectTrigger className="h-8 min-w-0 flex-1 text-xs" aria-label="Re-ID map">
@@ -495,11 +495,11 @@ export function MapExpandModal({
           description={`${map.modelName} · ${map.cameraIds.length} cameras · ${onMap.length} weapon${onMap.length === 1 ? "" : "s"} on this map, trails for the last ${TRAIL_SEC} s`}
         />
         <ModalBody>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
-            <div className="overflow-hidden rounded-lg border border-border">
+          <div data-slot="map-expand-modal-content" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+            <div data-slot="map-expand-modal-map" className="overflow-hidden rounded-lg border border-border">
               <TrackMap map={map} states={onMap} focusId={pinnedId} highlightCameraId={heroCameraId} size="full" persons={persons} onPick={onPin} />
             </div>
-            <div className="space-y-2">
+            <div data-slot="map-expand-modal-list" className="space-y-2">
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons on this map</p>
               {onMap.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">

@@ -47,8 +47,8 @@ export default function SignInPage() {
 
   return (
     <AuthLayout hideBrand>
-      <div>
-        <div className="mb-6 flex flex-col items-center text-center">
+      <div data-slot="sign-in-page">
+        <div data-slot="sign-in-page-header" className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
             <Play className="size-7 fill-media-foreground text-media-foreground" />
           </div>
@@ -60,7 +60,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-4">
+        <form data-slot="sign-in-page-form" onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Email
@@ -151,7 +151,7 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p data-slot="sign-in-page-footer" className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link
             to="/signup"

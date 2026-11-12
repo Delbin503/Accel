@@ -420,15 +420,15 @@ function ConditionCard({
   ].filter(Boolean);
 
   return (
-    <div className="rounded-lg border border-border bg-background px-3.5 py-3">
-      <div className="flex items-start justify-between gap-3">
+    <div data-slot="condition-card" className="rounded-lg border border-border bg-background px-3.5 py-3">
+      <div data-slot="condition-card-header" className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold text-foreground">
             {template?.name ?? condition.templateId}
           </p>
           <p className="truncate font-mono text-2xs text-muted-foreground">{condition.templateId}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div data-slot="condition-card-actions" className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={onEdit}
@@ -481,8 +481,8 @@ export function RuleConditions({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <div data-slot="rule-conditions">
+      <div data-slot="rule-conditions-header" className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-bold text-foreground">Rule Conditions</h2>
         <Button variant="outline" size="sm" onClick={add} className="gap-1.5">
           <Plus className="size-3.5" />
@@ -505,7 +505,7 @@ export function RuleConditions({
           <p className="text-base">Add your first condition</p>
         </button>
       ) : (
-        <div className="space-y-2">
+        <div data-slot="rule-conditions-list" className="space-y-2">
           {conditions.map((c) => (
             <ConditionCard
               key={c.id}

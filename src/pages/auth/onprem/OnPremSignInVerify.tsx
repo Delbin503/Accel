@@ -81,7 +81,7 @@ export default function OnPremSignInVerifyPage() {
 
   return (
     <AuthLayout hideBrand>
-      <div>
+      <div data-slot="on-prem-sign-in-verify-page">
         <button
           type="button"
           onClick={() => navigate("/on-premise/signin")}
@@ -91,7 +91,7 @@ export default function OnPremSignInVerifyPage() {
           Back
         </button>
 
-        <div className="mb-6 flex flex-col items-center text-center">
+        <div data-slot="on-prem-sign-in-verify-page-header" className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-lg shadow-secondary/25">
             <Play className="size-7 fill-media-foreground text-media-foreground" />
           </div>
@@ -101,8 +101,8 @@ export default function OnPremSignInVerifyPage() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-4">
-          <div onPaste={onPaste} className="flex items-center justify-center gap-2">
+        <form data-slot="on-prem-sign-in-verify-page-form" onSubmit={submit} className="mt-6 space-y-4">
+          <div data-slot="on-prem-sign-in-verify-page-otp" onPaste={onPaste} className="flex items-center justify-center gap-2">
             {otp.map((d, i) => (
               <input
                 key={i}

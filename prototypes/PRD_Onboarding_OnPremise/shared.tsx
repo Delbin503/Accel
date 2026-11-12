@@ -34,7 +34,7 @@ export type AsyncMode = "idle" | "loading" | "error";
 export function LoadingPreview() {
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card/40 px-6 py-12 text-center backdrop-blur-sm">
+      <div data-slot="loading-preview" className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card/40 px-6 py-12 text-center backdrop-blur-sm">
         <LoaderCircle className="size-8 animate-spin text-primary-ink" />
         <div>
           <h1 className="text-xl font-bold text-foreground">Working…</h1>
@@ -50,7 +50,7 @@ export function LoadingPreview() {
 export function ErrorPreview({ onRetry }: { onRetry: () => void }) {
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] px-6 py-12 text-center">
+      <div data-slot="error-preview" className="flex flex-col items-center gap-4 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] px-6 py-12 text-center">
         <AlertCircle className="size-8 text-severity-critical" />
         <div>
           <h1 className="text-xl font-bold text-foreground">Something went wrong</h1>
@@ -69,7 +69,7 @@ export function DonePreview() {
   const navigate = useNavigate();
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-success/30 bg-success/[0.05] px-6 py-12 text-center">
+      <div data-slot="done-preview" className="flex flex-col items-center gap-4 rounded-xl border border-success/30 bg-success/[0.05] px-6 py-12 text-center">
         <CheckCircle2 className="size-9 text-success" />
         <div>
           <h1 className="text-xl font-bold text-foreground">Setup complete</h1>
@@ -88,7 +88,7 @@ export function DonePreview() {
 export function NotInPrototype() {
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center text-muted-foreground">
+      <div data-slot="not-in-prototype" className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center text-muted-foreground">
         <p className="text-base font-medium text-foreground">Not part of this prototype</p>
         <p className="text-sm">This prototype covers the <strong className="text-foreground">On-Premise</strong> account flow. See <strong className="text-foreground">PRD_Onboarding_Cloud</strong> for the cloud flow.</p>
       </div>

@@ -12,7 +12,7 @@ export type ScaleMode = "normal" | "many";
 
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-4">
+    <div data-slot="dashboard-page-skeleton" className="space-y-4">
       <div className="h-10 w-full animate-pulse rounded-xl bg-muted" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -30,7 +30,7 @@ export function DashboardSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-24 text-muted-foreground">
+    <div data-slot="dashboard-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-24 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load the dashboard.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -40,7 +40,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+    <div data-slot="dashboard-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <LayoutDashboard className="size-10 opacity-20" />
       <p className="text-sm">No dashboard data for the selected range.</p>
     </div>

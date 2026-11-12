@@ -37,8 +37,8 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
   const faultWord = uc === "physio" ? "compensations" : "faults";
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
+    <div data-slot="ta-use-case-panel" className="flex flex-col gap-4">
+      <div data-slot="ta-use-case-panel-kpis" className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
         <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} accent="severity-critical" onClick={() => go()} />
         <KpiCard label="Total participants" value={participants} sub={`${u.people[0].toUpperCase()}${u.people.slice(1)} across all sessions`} accent="primary" onClick={() => go()} />
         <KpiCard label="Scheduled" value={scheduled.length} sub={scheduled[0] ? `Next: ${scheduled[0].date}` : "Nothing booked"} accent="info" onClick={() => go()} />
@@ -47,7 +47,7 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
 
       <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
         {/* What the group gets wrong most */}
-        <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-background p-3">
+        <div data-slot="ta-use-case-panel-top-faults" className="flex flex-col gap-2.5 rounded-lg border border-border bg-background p-3">
           <p className="text-2xs uppercase tracking-wider text-muted-foreground">Top {faultWord}</p>
           {g.faults.slice(0, 4).map(([name, n]) => (
             <div key={name}>
@@ -61,7 +61,7 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
         </div>
 
         {/* Live and upcoming */}
-        <div className="flex flex-col rounded-lg border border-border bg-background">
+        <div data-slot="ta-use-case-panel-sessions" className="flex flex-col rounded-lg border border-border bg-background">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <p className="text-sm font-semibold text-foreground">Live & upcoming</p>
             <button type="button" onClick={() => go()} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline">

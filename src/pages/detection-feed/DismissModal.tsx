@@ -72,7 +72,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
         <ModalHeader title="Dismiss as False Positive" />
         <ModalBody className="space-y-4">
           {/* One sentence replaces the bulk banner and the "feedback retrains" banner. */}
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p data-slot="dismiss-modal-intro" className="text-sm leading-relaxed text-muted-foreground">
             {isBulk ? (
               <>
                 Are you sure you want to dismiss <strong className="text-foreground">{bulkCount} selected events</strong>?
@@ -86,7 +86,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
             )}
           </p>
 
-          <div>
+          <div data-slot="dismiss-modal-reason">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Why is this a false positive?
             </label>
@@ -98,7 +98,7 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
             />
           </div>
 
-          <div>
+          <div data-slot="dismiss-modal-notes">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Notes (Optional)
             </label>

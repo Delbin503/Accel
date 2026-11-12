@@ -289,8 +289,8 @@ function MarkerTable({
   );
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-center gap-2">
+    <div data-slot="marker-table">
+      <div data-slot="marker-table-toolbar" className="mb-2 flex flex-wrap items-center gap-2">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <CircleCheck className="size-3.5" />
           Markers intersected · {placement.boundary.length} on the boundary,{" "}
@@ -314,7 +314,7 @@ function MarkerTable({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div data-slot="marker-table-table" className="overflow-hidden rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
             <tr className="text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -561,7 +561,7 @@ export function ReidCalibrationDrawer({
         >
           {/* Header */}
           <SheetHeader className="border-b border-border bg-card px-5 py-4">
-            <div className="flex items-start justify-between gap-3">
+            <div data-slot="reid-calibration-drawer-header" className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <SheetTitle className="text-lg font-bold">Calibrate cameras</SheetTitle>
                 <SheetDescription className="mt-0.5 text-sm">
@@ -578,7 +578,7 @@ export function ReidCalibrationDrawer({
           {camera ? (
             <>
               {/* Camera picker */}
-              <div className="flex flex-wrap items-start gap-x-2 gap-y-2 border-b border-border bg-card px-5 py-3">
+              <div data-slot="reid-calibration-drawer-camera-picker" className="flex flex-wrap items-start gap-x-2 gap-y-2 border-b border-border bg-card px-5 py-3">
                 <span className="flex h-9 items-center text-sm font-semibold text-foreground">Camera</span>
                 <div className="flex flex-col gap-1">
                   <Select value={camera.id} onValueChange={setCameraId}>
@@ -620,7 +620,7 @@ export function ReidCalibrationDrawer({
               </div>
 
               {/* Body */}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div data-slot="reid-calibration-drawer-body" className="min-h-0 flex-1 overflow-y-auto">
                 <div className="bg-media p-3">
                   {offline ? (
                     <div className="flex aspect-video flex-col items-center justify-center gap-2 text-media-foreground/60">
@@ -689,7 +689,7 @@ export function ReidCalibrationDrawer({
               </div>
 
               {/* Footer */}
-              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+              <div data-slot="reid-calibration-drawer-footer" className="flex flex-wrap items-center gap-2 border-t border-border bg-card px-5 py-3.5">
                 <Button
                   variant="outline"
                   size="sm"

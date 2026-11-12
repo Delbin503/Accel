@@ -187,7 +187,7 @@ function FilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="incident-cases-filter-panel" className="rounded-xl border border-border bg-card">
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
@@ -223,7 +223,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="incident-cases-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -263,7 +263,7 @@ function FilterPanel({
 
 function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
   return (
-    <tr
+    <tr data-slot="incident-case-row"
       onClick={onClick}
       style={{ boxShadow: `inset 3px 0 0 var(--severity-${c.severity})` }}
       className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
@@ -433,7 +433,7 @@ export default function IncidentCasesPage({
   }, [cases, kpiFilter, filters, search, sortBy, datePreset, dateFrom, dateTo]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="incident-cases-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Incident Cases</PageHeader.Title>
@@ -487,7 +487,7 @@ export default function IncidentCasesPage({
       />
 
       {/* ── Table header bar ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-1">
+      <div data-slot="incident-cases-page-toolbar" className="flex items-center justify-between px-1">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong> case
           {filtered.length !== 1 ? "s" : ""} match current filters
@@ -521,7 +521,7 @@ export default function IncidentCasesPage({
           className="rounded-xl border border-dashed border-border"
         />
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="incident-cases-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <FolderOpen className="size-10 opacity-20" />
           <p className="text-sm">No cases match the current filters.</p>
           <Button
@@ -540,7 +540,7 @@ export default function IncidentCasesPage({
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="incident-cases-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse">
               <thead className="bg-muted/30">

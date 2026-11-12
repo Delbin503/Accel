@@ -195,11 +195,11 @@ function WizardShell({
   currentStep: AuthStepKey;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col text-foreground">
+    <div data-slot="sign-up-page" className="relative flex min-h-screen flex-col text-foreground">
       <AuthBackground />
 
       {/* Top bar */}
-      <header className="relative z-10 flex items-center justify-between gap-4 px-6 py-3 sm:px-10">
+      <header data-slot="sign-up-page-header" className="relative z-10 flex items-center justify-between gap-4 px-6 py-3 sm:px-10">
         <Link to="/signin" className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
             <Play className="size-3 fill-media-foreground text-media-foreground" />
@@ -218,7 +218,7 @@ function WizardShell({
       </header>
 
       {/* Body — content sits near the top, not vertically centred */}
-      <main className="relative z-10 flex flex-1 justify-center px-4 pt-6 pb-8 sm:px-6 sm:pt-10">
+      <main data-slot="sign-up-page-content" className="relative z-10 flex flex-1 justify-center px-4 pt-6 pb-8 sm:px-6 sm:pt-10">
         <div className={cn("w-full", wide ? "max-w-[1024px]" : "max-w-[440px]")}>
           {children}
         </div>
@@ -586,7 +586,7 @@ export default function SignUpPage({
           title="Create your account"
           subtitle="Start a free 30-day trial. No credit card needed yet."
         />
-        <form onSubmit={submitAccount} className="mt-7 space-y-4">
+        <form data-slot="sign-up-page-account-form" onSubmit={submitAccount} className="mt-7 space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="First name" icon={CircleUser}>
               <Input
@@ -711,7 +711,7 @@ export default function SignUpPage({
             )}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p data-slot="sign-up-page-footer" className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
             to="/signin"
@@ -738,7 +738,7 @@ export default function SignUpPage({
             </>
           }
         />
-        <form onSubmit={submitOtp} className="mt-6 space-y-5">
+        <form data-slot="sign-up-page-otp-form" onSubmit={submitOtp} className="mt-6 space-y-5">
           <div
             onPaste={otpPaste}
             className="flex items-center justify-center gap-2"
@@ -791,7 +791,7 @@ export default function SignUpPage({
           title="Select a Plan"
           subtitle="Pick the plan that fits your needs. Upgrade or add seats any time."
         />
-        <div className="mt-5 flex items-center gap-2">
+        <div data-slot="sign-up-page-billing-cycle" className="mt-5 flex items-center gap-2">
           <span
             className={cn(
               "text-sm font-semibold",
@@ -831,7 +831,7 @@ export default function SignUpPage({
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+        <div data-slot="sign-up-page-plans" className="mt-5 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
           {CLOUD_PLANS.map((p) => {
             const Icon = PLAN_ICONS[p.id];
             const color = PLAN_COLORS[p.id];
@@ -927,7 +927,7 @@ export default function SignUpPage({
           })}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/40 px-5 py-3.5 backdrop-blur-sm">
+        <div data-slot="sign-up-page-enterprise" className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/40 px-5 py-3.5 backdrop-blur-sm">
           <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground">
             <Building2 className="size-4" />
           </div>
@@ -950,7 +950,7 @@ export default function SignUpPage({
             Contact support
           </Button>
         </div>
-        <div className="mt-6 flex items-center justify-end gap-2">
+        <div data-slot="sign-up-page-plan-actions" className="mt-6 flex items-center justify-end gap-2">
           <Button variant="ghost" onClick={skipPlan} className="h-10 text-base">
             Skip
           </Button>
@@ -975,7 +975,7 @@ export default function SignUpPage({
           title="Enter your payment details"
           subtitle="We'll securely save these for future renewals."
         />
-        <form
+        <form data-slot="sign-up-page-payment-form"
           onSubmit={submitPayment}
           className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]"
         >
@@ -1179,7 +1179,7 @@ export default function SignUpPage({
           title="Let's make sure everything looks right"
           subtitle="Review your subscription before we activate it."
         />
-        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
+        <div data-slot="sign-up-page-review" className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
           <div className="rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-base font-bold text-foreground">Details</p>
@@ -1315,7 +1315,7 @@ export default function SignUpPage({
           title="Create your first site"
           subtitle="A site is a physical location with cameras. You can add more later."
         />
-        <form onSubmit={submitSite} className="mt-7 space-y-4">
+        <form data-slot="sign-up-page-site-form" onSubmit={submitSite} className="mt-7 space-y-4">
           <Field label="Site name" icon={Building2}>
             <Input
               value={siteName}
@@ -1437,11 +1437,11 @@ export default function SignUpPage({
           subtitle="Choose the type of access each team member will need. You can adjust later."
         />
 
-        <div className="mt-6">
+        <div data-slot="sign-up-page-seats" className="mt-6">
           <SeatStrip usage={seatUsage} billingCycle="Monthly" />
         </div>
 
-        <div className="mt-5 flex items-center justify-between">
+        <div data-slot="sign-up-page-members-toolbar" className="mt-5 flex items-center justify-between">
           <p className="text-base font-bold text-foreground">Members</p>
           <Button onClick={() => setInviteOpen(true)} className="h-9 gap-1.5">
             <Plus className="size-3.5" />
@@ -1449,7 +1449,7 @@ export default function SignUpPage({
           </Button>
         </div>
 
-        <div className="mt-3 flex max-h-[calc(100vh-22rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
+        <div data-slot="sign-up-page-members-list" className="mt-3 flex max-h-[calc(100vh-22rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
           <div className="flex-1 overflow-y-auto">
             <table className="w-full">
               <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">

@@ -17,12 +17,12 @@ const OPTIONS: { key: ForcedState; label: string }[] = [
 
 export function StateTester({ value, onChange }: { value: ForcedState; onChange: (s: ForcedState) => void }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
+    <div data-slot="rule-library-state-tester" className="flex items-center gap-2 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
       <span className="inline-flex items-center gap-1 text-2xs font-bold uppercase tracking-wider text-warning">
         <FlaskConical className="size-3" />
         Dev · State
       </span>
-      <div className="flex items-center gap-1">
+      <div data-slot="rule-library-state-tester-options" className="flex items-center gap-1">
         {OPTIONS.map((o) => (
           <button
             key={o.key}

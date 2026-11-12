@@ -72,8 +72,8 @@ export function ProtoBreadcrumb({
   const trail = (forced ?? protoTrail(pathname)).map((c) => (typeof c === "string" ? { label: c } : c));
 
   return (
-    <nav aria-label="Breadcrumb" className={cn("flex min-w-0 items-center gap-1", className)}>
-      <ol className="flex min-w-0 items-center gap-1">
+    <nav data-slot="proto-breadcrumb" aria-label="Breadcrumb" className={cn("flex min-w-0 items-center gap-1", className)}>
+      <ol data-slot="proto-breadcrumb-list" className="flex min-w-0 items-center gap-1">
         {trail.map((crumb, i) => {
           const isLast = i === trail.length - 1;
           return (

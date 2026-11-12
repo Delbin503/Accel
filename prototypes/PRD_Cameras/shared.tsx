@@ -10,7 +10,7 @@ export type DrawerAsync = "idle" | "loading" | "error";
 /** Skeleton that mirrors the Cameras layout: KPIs → toolbar → table. */
 export function CameraTableSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="cameras-page-skeleton" className="flex flex-col gap-4">
       {/* KPI cards (cols=5) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[0, 1, 2, 3, 4].map((i) => (
@@ -44,7 +44,7 @@ export function CameraTableSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+    <div data-slot="cameras-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load cameras.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -54,7 +54,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+    <div data-slot="cameras-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
       <Cctv className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No cameras yet</p>
       <p className="text-sm">Add a camera to configure RTSP feeds, NVR linkage, and boundary zones.</p>

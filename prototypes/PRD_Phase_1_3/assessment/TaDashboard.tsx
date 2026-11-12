@@ -79,12 +79,12 @@ const REFERENCE_TODAY = "2026-05-19";
 
 function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <div data-slot="dashboard-section" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="dashboard-section-header" className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <TruncatedText text={title} className="min-w-0 flex-1 text-base font-bold text-foreground" />
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div data-slot="dashboard-section-body" className="p-4">{children}</div>
     </div>
   );
 }
@@ -357,7 +357,7 @@ function PanelFrame({
   }
 
   return (
-    <div
+    <div data-slot="panel-frame"
       role="button"
       tabIndex={0}
       aria-pressed={selected}
@@ -385,7 +385,7 @@ function PanelFrame({
     >
       {/* The live content, frozen — charts and popovers must not steal the drag. */}
       {/* Top padding makes room for the name tag, so it never covers the panel's own label. */}
-      <div className="@container pointer-events-none select-none pt-5" aria-hidden>
+      <div data-slot="panel-frame-content" className="@container pointer-events-none select-none pt-5" aria-hidden>
         {children}
       </div>
 
@@ -455,7 +455,7 @@ function PanelDrawer({
   const accepting = dragSource === "board";
 
   return (
-    <aside
+    <aside data-slot="panel-drawer"
       aria-label="Hidden panels"
       onDragOver={(e) => {
         if (!accepting) return;
@@ -475,7 +475,7 @@ function PanelDrawer({
         over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
-      <div className="border-b border-border px-4 py-3.5">
+      <div data-slot="panel-drawer-header" className="border-b border-border px-4 py-3.5">
         <p className="flex items-center justify-between gap-2 text-base font-bold text-foreground">
           Hidden panels
           <span className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-2xs text-muted-foreground">
@@ -487,7 +487,7 @@ function PanelDrawer({
         </p>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div data-slot="panel-drawer-list" className="flex-1 space-y-2 overflow-y-auto p-3">
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
@@ -593,7 +593,7 @@ function DashboardCanvas({
   return (
     <>
       {layout.length === 0 ? (
-        <div
+        <div data-slot="dashboard-canvas-empty"
           onDragOver={(e) => { if (drag) { e.preventDefault(); setDrop({ target: null, side: "after" }); } }}
           onDrop={(e) => { e.preventDefault(); dropAt(null, "after"); }}
           className={cn(
@@ -610,8 +610,8 @@ function DashboardCanvas({
       ) : (
         /* Columns follow the canvas, not the window — opening the edit drawer
            narrows the canvas and the pairs stack instead of getting crushed. */
-        <div className="@container/canvas">
-        <div className={cn("grid grid-cols-1 gap-4 @2xl/canvas:grid-cols-2", editing && "gap-6")}>
+        <div data-slot="dashboard-canvas" className="@container/canvas">
+        <div data-slot="dashboard-canvas-grid" className={cn("grid grid-cols-1 gap-4 @2xl/canvas:grid-cols-2", editing && "gap-6")}>
           {layout.map((id, i) => (
             <PanelFrame
               key={id}
@@ -973,7 +973,7 @@ export function TaDashboard({
          without the window changing, and viewport breakpoints would crush it.
          Side by side, the groups grow 3 : 2 from a basis equal to their inner
          gaps (two and one gap-3), so all five cards come out the same width. */
-      <div className="flex flex-col gap-4 @2xl:flex-row">
+      <div data-slot="ta-dashboard-page-kpis" className="flex flex-col gap-4 @2xl:flex-row">
         <div className="min-w-0 @2xl:flex-[3_3_24px]">
           <StripLabel live>Live status</StripLabel>
           <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
@@ -1000,7 +1000,7 @@ export function TaDashboard({
       </div>
     ),
     visitors: (
-      <div>
+      <div data-slot="ta-dashboard-page-visitors">
         <StripLabel live>Visitor counts · all cameras</StripLabel>
         <VisitorKpis stats={visitors} statusColumns />
       </div>
@@ -1417,12 +1417,12 @@ export function TaDashboard({
   return (
     /* While editing, the docked drawer covers the right edge — pad the page
        so no panel sits underneath it. */
-    <div className={cn(
+    <div data-slot="ta-dashboard-page" className={cn(
       "flex flex-col gap-4 transition-[padding] duration-[var(--duration-normal)] ease-standard",
       editing && "sm:pr-80"
     )}>
       {showAlertBanner && worstGroup && (
-        <div
+        <div data-slot="ta-dashboard-page-alert-banner"
           className={cn(
             "flex items-start gap-3 rounded-xl border px-4 py-3",
             systemStatus === "critical"
@@ -1487,7 +1487,7 @@ export function TaDashboard({
 
       {/* Edit bar — stays on screen while the operator scrolls the panels. */}
       {editing && (
-        <div className="sticky top-0 z-[var(--z-sticky)] flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-floating">
+        <div data-slot="ta-dashboard-page-edit-bar" className="sticky top-0 z-[var(--z-sticky)] flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-floating">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <Pencil className="size-4" />
           </div>

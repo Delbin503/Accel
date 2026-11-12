@@ -41,7 +41,7 @@ export function WelcomeModal({
         />
 
         <ModalBody>
-          <div className="rounded-lg border border-border bg-card p-3.5">
+          <div data-slot="welcome-modal-sites" className="rounded-lg border border-border bg-card p-3.5">
             <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               You now have access to
             </p>

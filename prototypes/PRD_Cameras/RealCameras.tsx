@@ -47,7 +47,7 @@ export default function RealCameras({
     );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div data-slot="cameras-page" className="flex flex-col gap-5">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <CameraTableSkeleton />}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}

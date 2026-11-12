@@ -69,15 +69,15 @@ function UseCaseChip({ uc }: { uc: UseCaseKey }) {
 
 function Panel({ title, sub, action, children, className }: { title: string; sub?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <div data-slot="sessions-panel" className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <div data-slot="sessions-panel-header" className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <p className="text-md font-bold text-foreground">{title}</p>
           {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
         </div>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div data-slot="sessions-panel-body" className="p-4">{children}</div>
     </div>
   );
 }
@@ -97,7 +97,7 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
 }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="filters-bar" className="rounded-xl border border-border bg-card">
       <div className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
@@ -117,7 +117,7 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
         </button>
       </div>
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="filters-bar-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder={placeholder} className="h-9 w-full pl-9 text-base" />
@@ -275,7 +275,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
         <ModalHeader title="New Assessment Session" description="Pick the use case, where it runs and who takes part." icon={CalendarClock} />
         <ModalBody className="space-y-5">
           {/* Use case */}
-          <div>
+          <div data-slot="new-session-modal-use-case">
             <p className={LABEL}>Use Case</p>
             <div role="radiogroup" aria-label="Use case" className="grid grid-cols-3 gap-2">
               {USE_CASE_KEYS.map((k) => {
@@ -296,7 +296,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
           </div>
 
           {/* Where */}
-          <div className="grid grid-cols-3 gap-3">
+          <div data-slot="new-session-modal-where" className="grid grid-cols-3 gap-3">
             <div>
               <label className={LABEL}>Site</label>
               <Select value={siteId} onValueChange={(v) => { setSiteId(v); const s = TA_SITES.find((x) => x.id === v); pickArea(s?.areas[0]?.id ?? ""); }}>
@@ -344,7 +344,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
           )}
 
           {/* When */}
-          <div className="grid grid-cols-4 gap-3">
+          <div data-slot="new-session-modal-when" className="grid grid-cols-4 gap-3">
             <div className="col-span-2">
               <label className={LABEL}>Session Name</label>
               <Input value={name} onChange={(e) => { setName(e.target.value); setError(null); }} placeholder={uc === "golf" ? "Junior squad clinic" : uc === "gym" ? "6 pm barbell class" : "Knee rehab class"} className="h-9" aria-invalid={!!error && !name.trim()} />
@@ -363,7 +363,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
           </div>
 
           {/* Who */}
-          <div className="grid grid-cols-2 gap-3">
+          <div data-slot="new-session-modal-who" className="grid grid-cols-2 gap-3">
             <div>
               <label className={LABEL}>Participants</label>
               <Select value={group} onValueChange={setGroup}>
@@ -458,7 +458,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
   const openResult = (id: string) => navigate(`${TA_RESULT_PATH}?session=${id}`);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="sessions-tab" className="flex flex-col gap-4">
       <KpiGrid cols={3}>
         <KpiCard label="Total Sessions" value={allSessions.length} sub="Last 2 weeks" accent="primary" onClick={() => setKpi("all")} />
         <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" accent="severity-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
@@ -472,7 +472,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
         onSearch={setSearch}
         placeholder="Search sessions, models or coaches…"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div data-slot="sessions-tab-kpis" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FilterField label="Use case">
             <FilterDropdown label="All use cases" options={USE_CASE_FILTER} selected={ucs} onChange={setUcs} className="w-full" />
           </FilterField>
@@ -491,13 +491,13 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
       </p>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="sessions-tab-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <CalendarClock className="size-10 opacity-20" />
           <p className="text-sm">{sessions.length === 0 ? "No live or scheduled sessions. Finished ones are in Results." : "No sessions match the current filters."}</p>
           {sessions.length === 0 && <Button size="sm" className="gap-1.5" onClick={() => setCreating(true)}><Plus className="size-4" />New Session</Button>}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="sessions-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -601,8 +601,8 @@ function GroupResults({ session }: { session: TaSession }) {
   const open = (p: Participant) => p.attempts > 0 && navigate(analysisHref(session.useCase, p.name, session.id));
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+    <div data-slot="group-results" className="flex flex-col gap-4">
+      <div data-slot="group-results-meta" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
         <StatusBadge tone={STATUS_TONE[session.status]}>{SESSION_STATUS_LABEL[session.status]}</StatusBadge>
         <UseCaseChip uc={session.useCase} />
         <span>{session.date} · {session.time}</span>
@@ -625,7 +625,7 @@ function GroupResults({ session }: { session: TaSession }) {
         <KpiCard label="Flagged for review" value={session.flagged} sub="Low-confidence findings" accent="warning" />
       </KpiGrid>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="group-results-table" className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
           <div>
             <p className="text-md font-bold text-foreground">Individual results</p>
@@ -666,7 +666,7 @@ function GroupResults({ session }: { session: TaSession }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div data-slot="group-results-charts" className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Panel title={g.trendTitle} sub="Last five sessions">
           <LineChart data={g.trend} xKey="session" series={[{ key: "score", label: session.useCase === "physio" ? "Attended" : "Score" }]} className="h-52" />
         </Panel>
@@ -744,7 +744,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
   }
 
   return (
-    <div className={cn("flex flex-col gap-4", selected.size > 0 && "pb-24")}>
+    <div data-slot="results-tab" className={cn("flex flex-col gap-4", selected.size > 0 && "pb-24")}>
       <FiltersBar
         chips={["All sessions", "All use cases", "All types"]}
         activeCount={ucs.length + types.length + (search ? 1 : 0) + (sessionFilter !== "all" ? 1 : 0)}
@@ -752,7 +752,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
         onSearch={setSearch}
         placeholder="Search sessions, coaches or people…"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div data-slot="results-tab-kpis" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FilterField label="Session">
             <SessionPicker value={sessionFilter} onChange={onSession} sessions={sessions} allowAll />
           </FilterField>
@@ -771,12 +771,12 @@ function ResultsTab({ sessionId, onSession, focus }: {
       </p>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="results-tab-empty" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <FileText className="size-10 opacity-20" />
           <p className="text-sm">{sessions.length === 0 ? "No completed sessions yet. Ended sessions land here with their results." : "No sessions match the current filters."}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="results-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -874,7 +874,7 @@ export function TaSessions() {
   const [creating, setCreating] = React.useState(false);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="ta-sessions-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Performance & Posture</PageHeader.Title>
@@ -920,7 +920,7 @@ export function TaSessionResult() {
   const session = useSessionsStore((s) => s.sessions).find((s) => s.id === id);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="ta-session-result-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>{session?.name ?? "Result not found"}</PageHeader.Title>
@@ -937,7 +937,7 @@ export function TaSessionResult() {
       {session ? (
         <GroupResults session={session} />
       ) : (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="ta-session-result-page-empty" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <BarChart3 className="size-10 opacity-20" />
           <p className="text-sm">This result isn't available. Pick one from Results.</p>
         </div>

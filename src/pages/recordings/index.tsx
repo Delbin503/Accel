@@ -111,14 +111,14 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
 
   return (
     // Mirrors the shared KpiCard look (accent dot + neutral value); custom only for the usage bar.
-    <div className="relative flex h-[120px] min-w-0 flex-col rounded-xl border border-border bg-card p-4">
+    <div data-slot="storage-card" className="relative flex h-[120px] min-w-0 flex-col rounded-xl border border-border bg-card p-4">
       <div className="flex min-w-0 items-center gap-2">
         <span className="size-1.5 shrink-0 rounded-full bg-violet" />
         <span className="truncate text-base font-medium text-muted-foreground">Storage Total</span>
       </div>
       <div className="mt-2 truncate text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">{fmtGb(total)}</div>
       {/* Each part is a taller hover target than the 4px bar it draws. */}
-      <div className="mt-auto flex gap-px">
+      <div data-slot="storage-card-bar" className="mt-auto flex gap-px">
         {parts.map((part) => (
           <Tooltip key={part.key}>
             <TooltipTrigger asChild>
@@ -179,7 +179,7 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
   const selectedHere = items.filter((r) => selectedIds.has(r.id)).length;
   const all = selectedHere === items.length;
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div data-slot="recording-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/30">
@@ -331,7 +331,7 @@ function InfoGrid({ rec }: { rec: DayRecording }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+    <div data-slot="recording-info-grid" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
       {rows.map(([label, value]) => (
         <div key={label} className="flex flex-col gap-0.5">
           <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
@@ -362,7 +362,7 @@ function PlayRow({ rec, title, onPlay, selected, onSelect }: {
   onSelect?: () => void;
 }) {
   return (
-    <div className="group/row flex w-full items-center gap-3 px-3.5 py-3 transition-colors hover:bg-muted/40">
+    <div data-slot="play-row" className="group/row flex w-full items-center gap-3 px-3.5 py-3 transition-colors hover:bg-muted/40">
       {onSelect && (
         <Checkbox checked={selected} onCheckedChange={onSelect} aria-label={`Include ${rec.id} in the export`} />
       )}
@@ -467,14 +467,14 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
           </div>
         </SheetHeader>
 
-        <div className="flex-1 space-y-5 overflow-y-auto p-5">
-          <div>
+        <div data-slot="recording-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div data-slot="recording-drawer-info">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording Info</p>
             <InfoGrid rec={rec} />
           </div>
 
           {/* The hours the camera was open for — the recording this row is. */}
-          <div>
+          <div data-slot="recording-drawer-hours">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording</p>
               {/* Nothing to choose between when a day is one recording. */}
@@ -489,7 +489,7 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
                 </label>
               )}
             </div>
-            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+            <div data-slot="recording-drawer-parts" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
               {parts.map((p) => (
                 <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
                   selected={multi ? selected.has(p.id) : undefined}
@@ -508,7 +508,7 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
           {/* Operation only — the rest of the day. Standby covers the closed
               hours, and the motion it caught splits into a clip each. */}
           {standby && (
-            <div>
+            <div data-slot="recording-drawer-standby">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Outside Operation Hours</p>
                 <p className="text-2xs text-muted-foreground">
@@ -539,7 +539,7 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-border bg-card px-5 py-3.5">
+        <div data-slot="recording-drawer-footer" className="flex items-center justify-end gap-3 border-t border-border bg-card px-5 py-3.5">
           {bookmarked && (
             <p className="mr-auto inline-flex items-center gap-1.5 text-xs text-warning">
               <Lock className="size-3" />
@@ -648,7 +648,7 @@ export function ExportRecordingModal({ open, target, onClose, onConfirm }: {
               </>
             )}
           </p>
-          <ul className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+          <ul data-slot="export-recording-modal-list" className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
             {groups.map((g) => {
               const t = typeById(g.kind);
               return (
@@ -915,7 +915,7 @@ export default function RecordingsPage({
   }
 
   return (
-    <div className={cn("flex flex-col gap-4", selectedIds.size > 0 && "pb-24")}>
+    <div data-slot="recordings-page" className={cn("flex flex-col gap-4", selectedIds.size > 0 && "pb-24")}>
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Recordings</PageHeader.Title>
@@ -955,7 +955,7 @@ export default function RecordingsPage({
         additionalActiveCount={datePreset !== "all" ? 1 : 0}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div data-slot="recordings-page-toolbar" className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong> recording{filtered.length === 1 ? "" : "s"} match current filters
           {hasFilters && (
@@ -990,7 +990,7 @@ export default function RecordingsPage({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="recordings-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Film className="size-10 opacity-20" />
           {source.length === 0 ? (
             <>
@@ -1021,7 +1021,7 @@ export default function RecordingsPage({
       )}
 
       {filtered.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div data-slot="recordings-page-pagination" className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">
             {`${(safePage - 1) * pageSize + 1} – ${Math.min(safePage * pageSize, filtered.length)} of ${filtered.length}`}
           </p>
@@ -1076,7 +1076,7 @@ export default function RecordingsPage({
 
       {selectedIds.size > 0 && (
         <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
-          <div className="flex items-center gap-2">
+          <div data-slot="recordings-page-bulk-selection" className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
@@ -1084,7 +1084,7 @@ export default function RecordingsPage({
               {selectedIds.size} recording{selectedIds.size > 1 ? "s" : ""} selected
             </span>
           </div>
-          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <div data-slot="recordings-page-bulk-actions" className="ml-auto flex flex-wrap items-center gap-1.5">
             <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground" onClick={() => setSelectedIds(new Set())}>
               <X className="size-3.5" />
               Clear selection

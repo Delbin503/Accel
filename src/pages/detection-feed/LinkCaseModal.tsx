@@ -72,7 +72,7 @@ export function LinkCaseModal({
       <ModalContent size="sm">
         <ModalHeader title="Link to Incident Case" />
         <ModalBody className="space-y-4">
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p data-slot="link-case-modal-intro" className="text-sm leading-relaxed text-muted-foreground">
             Link{" "}
             <strong className="text-foreground">
               {eventIds.length > 1 ? `${eventIds.length} events` : eventIds[0]}
@@ -82,12 +82,12 @@ export function LinkCaseModal({
           </p>
 
           {eligible.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+            <p data-slot="link-case-modal-empty" className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
               No open cases at {eventSiteDisplay}. Escalate to create one instead.
             </p>
           ) : (
             <>
-              <div className="relative">
+              <div data-slot="link-case-modal-search" className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={query}

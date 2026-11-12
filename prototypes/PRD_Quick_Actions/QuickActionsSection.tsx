@@ -59,7 +59,7 @@ function PinnedRow({
   const Icon = action.icon;
 
   return (
-    <li className="flex items-center gap-2.5 rounded-md border border-border bg-background px-3 py-2">
+    <li data-slot="pinned-row" className="flex items-center gap-2.5 rounded-md border border-border bg-background px-3 py-2">
       <span className="w-4 shrink-0 text-2xs tabular-nums text-muted-foreground">{index + 1}</span>
       <Icon className="size-4 shrink-0 text-muted-foreground" />
 
@@ -114,7 +114,7 @@ function ActionRow({ action, previewRole }: { action: QuickAction; previewRole: 
   const pinFull = !pinned && pinnedIds.length >= maxPins;
 
   return (
-    <div
+    <div data-slot="action-row"
       className={cn(
         "flex items-center gap-3 px-4 py-2.5",
         !visibleToRole && "opacity-50"
@@ -182,7 +182,7 @@ export function QuickActionsSection() {
   const visibleCount = actionsForRole(role).filter((a) => !disabledIds.includes(a.id)).length;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="quick-actions-section" className="flex flex-col gap-4">
       {/* Behaviour ------------------------------------------------------- */}
       <SectionCard
         title="Palette behaviour"
@@ -282,7 +282,7 @@ export function QuickActionsSection() {
             description="Pin an action below, or from the palette itself with the pin icon on any row."
           />
         ) : (
-          <ol className="flex flex-col gap-2">
+          <ol data-slot="quick-actions-section-pinned-list" className="flex flex-col gap-2">
             {pinned.map((a, i) => (
               <PinnedRow key={a.id} action={a} index={i} total={pinned.length} />
             ))}
@@ -296,7 +296,7 @@ export function QuickActionsSection() {
         description="Switch an action off to remove it from the palette for everyone."
         flushBody
       >
-        <div className="divide-y divide-border">
+        <div data-slot="quick-actions-section-availability" className="divide-y divide-border">
           {GROUP_ORDER.map((group) => {
             const rows = QUICK_ACTIONS.filter((a) => a.group === group);
             if (rows.length === 0) return null;

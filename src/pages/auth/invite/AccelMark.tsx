@@ -10,13 +10,13 @@ export function AccelMark({ size = "md" }: { size?: "md" | "lg" }) {
   const mark = size === "lg" ? "size-5" : "size-4";
   const word = size === "lg" ? "text-xl" : "text-base";
   return (
-    <div className="flex items-center gap-2.5">
-      <div className={`flex ${box} items-center justify-center rounded-md bg-primary`}>
+    <div data-slot="accel-mark" className="flex items-center gap-2.5">
+      <div data-slot="accel-mark-logo" className={`flex ${box} items-center justify-center rounded-md bg-primary`}>
         <svg viewBox="0 0 14 14" className={`${mark} fill-primary-foreground`} aria-hidden>
           <polygon points="2,1 13,7 2,13" />
         </svg>
       </div>
-      <span className={`${word} font-bold tracking-tight text-foreground`}>Accel</span>
+      <span data-slot="accel-mark-wordmark" className={`${word} font-bold tracking-tight text-foreground`}>Accel</span>
     </div>
   );
 }

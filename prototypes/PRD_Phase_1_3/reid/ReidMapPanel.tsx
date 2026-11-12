@@ -37,8 +37,8 @@ export function ReidMapPanel() {
   const personTotal = Object.values(persons).reduce((t, n) => t + n, 0);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+    <div data-slot="reid-map-panel" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="reid-map-panel-header" className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <MapPinned className="size-4 shrink-0 text-primary-ink" />
         <span className="text-base font-bold text-foreground">Re-ID Map</span>
         <span className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-success">
@@ -70,15 +70,15 @@ export function ReidMapPanel() {
       </div>
 
       {!map ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-muted-foreground">
+        <div data-slot="reid-map-panel-empty" className="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-muted-foreground">
           <MapPinned className="size-5" />
           No Re-ID map deployed yet. Deploy the Re-ID model with a calibrated site map to see it here.
         </div>
       ) : (
         /* Three columns when wide — counts, map, the weapons on it —
            stretched to one height; stacked when narrow. */
-        <div className="grid grid-cols-1 gap-4 p-4 @3xl:grid-cols-[minmax(0,180px)_minmax(0,1fr)_minmax(0,320px)]">
-          <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-1 @3xl:grid-rows-2">
+        <div data-slot="reid-map-panel-content" className="grid grid-cols-1 gap-4 p-4 @3xl:grid-cols-[minmax(0,180px)_minmax(0,1fr)_minmax(0,320px)]">
+          <div data-slot="reid-map-panel-kpis" className="grid grid-cols-2 gap-3 @3xl:grid-cols-1 @3xl:grid-rows-2">
             {/* Same shared KPI card as the dashboard's status strip and visitor
                 counts; bg-background keeps them distinct inside this panel, and
                 h-full fills the two rows beside the map instead of leaving the
@@ -87,7 +87,7 @@ export function ReidMapPanel() {
             <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="severity-critical" className="h-full min-h-[120px] bg-background" />
           </div>
 
-          <div className="flex min-w-0 flex-col gap-2">
+          <div data-slot="reid-map-panel-map" className="flex min-w-0 flex-col gap-2">
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -105,7 +105,7 @@ export function ReidMapPanel() {
           </div>
 
           {/* Out of flow when wide, so a long list scrolls instead of stretching the row. */}
-          <div className="relative min-w-0">
+          <div data-slot="reid-map-panel-track-list" className="relative min-w-0">
             <div className="flex max-h-80 min-w-0 flex-col rounded-xl border border-border bg-background @3xl:absolute @3xl:inset-0 @3xl:max-h-none">
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons on this map · {onMap.length}</p>

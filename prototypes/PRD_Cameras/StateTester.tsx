@@ -32,13 +32,13 @@ export function StateTester({
   onDrawer: (d: DrawerAsync) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
+    <div data-slot="cameras-state-tester" className="flex flex-col gap-1.5 rounded-lg border border-dashed border-warning/50 bg-warning/[0.06] px-2.5 py-1.5">
       <div className="flex items-center gap-2">
         <span className="inline-flex w-14 items-center gap-1 text-2xs font-bold uppercase tracking-wider text-warning">
           <FlaskConical className="size-3" />
           Page
         </span>
-        <div className="flex items-center gap-1">
+        <div data-slot="cameras-state-tester-options" className="flex items-center gap-1">
           {OPTIONS.map((o) => (
             <button
               key={o.key}
@@ -57,7 +57,7 @@ export function StateTester({
       </div>
       <div className="flex items-center gap-2">
         <span className="w-14 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Drawer</span>
-        <div className="flex items-center gap-1">
+        <div data-slot="cameras-state-tester-options" className="flex items-center gap-1">
           {DRAWER_OPTIONS.map((o) => (
             <button
               key={o.key}

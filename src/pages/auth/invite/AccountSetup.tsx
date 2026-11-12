@@ -107,8 +107,8 @@ export function AccountSetup({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[520px] flex-col px-5 py-10">
-      <header className="mb-7 flex flex-col items-center text-center">
+    <div data-slot="account-setup" className="mx-auto flex min-h-screen w-full max-w-[520px] flex-col px-5 py-10">
+      <header data-slot="account-setup-header" className="mb-7 flex flex-col items-center text-center">
         <AccelMark size="lg" />
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">Set up your account</h1>
         <p className="mt-1.5 text-md text-muted-foreground">
@@ -118,7 +118,7 @@ export function AccountSetup({
       </header>
 
       {/* Identity chip — same layout as the live app's Edit User modal header. */}
-      <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
+      <div data-slot="account-setup-identity" className="mb-5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
         <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary-ink">
           {initials(invite.email)}
         </div>
@@ -129,7 +129,7 @@ export function AccountSetup({
         <RolePill role={invite.role} />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+      <form data-slot="account-setup-form" onSubmit={handleSubmit} className="space-y-3" noValidate>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="firstName" className={labelClass}>First Name</label>

@@ -178,7 +178,7 @@ function ParamRow({
     );
 
   return (
-    <div>
+    <div data-slot="param-row">
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-foreground">{meta.label}</span>
         <button
@@ -267,7 +267,7 @@ function ClassCard({
       onOpenChange={setOpen}
       className="rounded-lg border border-border bg-background"
     >
-      <div className={cn("flex items-center gap-2 px-3 py-2", open && "border-b border-border")}>
+      <div data-slot="class-card-header" className={cn("flex items-center gap-2 px-3 py-2", open && "border-b border-border")}>
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -308,7 +308,7 @@ function ClassCard({
       </div>
 
       <CollapsibleContent>
-        <div className="px-3 py-3">
+        <div data-slot="class-card-body" className="px-3 py-3">
           {params.fields.length === 0 ? (
             <p className="text-sm italic text-muted-foreground">
               No parameters — fires on any detection of this class.
@@ -366,11 +366,11 @@ export function RuleTemplateForm({
   }
 
   return (
-    <div>
+    <div data-slot="rule-template-form">
       {/* Mirrors "Rule Information" so the labels below line up across columns. */}
       <h2 className="mb-4 text-lg font-bold text-foreground">Detection Logic</h2>
 
-      <div className="space-y-4">
+      <div data-slot="rule-template-form-content" className="space-y-4">
         <div>
           <label className="mb-1.5 block text-base font-semibold text-foreground">
             Object Classes
@@ -391,11 +391,11 @@ export function RuleTemplateForm({
           </label>
 
           {config.objectClasses.length === 0 ? (
-            <div className="flex min-h-[120px] flex-col items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground">
+            <div data-slot="rule-template-form-classes-empty" className="flex min-h-[120px] flex-col items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground">
               <p className="text-base">No object classes selected yet</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div data-slot="rule-template-form-classes-list" className="space-y-2">
               {config.objectClasses.map((cls) => (
                 <ClassCard
                   key={cls}

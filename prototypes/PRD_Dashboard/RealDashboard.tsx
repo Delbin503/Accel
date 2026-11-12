@@ -46,12 +46,12 @@ const REFERENCE_TODAY = "2026-05-19";
 
 function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <div data-slot="dashboard-section" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="dashboard-section-header" className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <TruncatedText text={title} className="min-w-0 flex-1 text-base font-bold text-foreground" />
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div data-slot="dashboard-section-content" className="p-4">{children}</div>
     </div>
   );
 }
@@ -87,7 +87,7 @@ function SevRow({ kind, value, total }: { kind: SevKind; value: number; total: n
   const s = SEV_STYLES[kind];
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2 text-xs">
+    <div data-slot="sev-row" className="flex items-center gap-2 text-xs">
       <span className={cn("inline-flex items-center gap-1 font-bold", s.text)}>
         <span className={cn("size-1.5 rounded-full", s.dot)} />
         {s.label}
@@ -146,7 +146,7 @@ function SiteChipRow({
   }
 
   return (
-    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+    <div data-slot="site-chip-row" className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
       {sites.map((s) => {
         const isActive = selected.includes(s.name);
         return (
@@ -224,7 +224,7 @@ function SiteMultiSelect({
             All
           </button>
         </div>
-        <div className="max-h-64 space-y-0.5 overflow-y-auto">
+        <div data-slot="site-multi-select-list" className="max-h-64 space-y-0.5 overflow-y-auto">
           {options.map((o) => {
             const checked = selected.includes(o.id);
             return (
@@ -498,7 +498,7 @@ export default function DashboardPage({
   // renders the full layout with empty data (each section shows its own no-data state).
   if (forced === "loading" || forced === "error") {
     return (
-      <div className="flex flex-col gap-4">
+      <div data-slot="dashboard-page" className="flex flex-col gap-4">
         <PageHeader>
           <PageHeader.Content>
             <PageHeader.Title>Dashboard</PageHeader.Title>
@@ -510,9 +510,9 @@ export default function DashboardPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="dashboard-page" className="flex flex-col gap-4">
       {showAlertBanner && worstHealth && (
-        <div
+        <div data-slot="dashboard-page-alert-banner"
           className={cn(
             "flex items-start gap-3 rounded-xl border px-4 py-3",
             systemStatus === "critical"
@@ -593,8 +593,8 @@ export default function DashboardPage({
       />
 
       {/* KPI strip — Live Status | Period Metrics */}
-      <div className="flex gap-4">
-        <div className="flex-[3] space-y-2">
+      <div data-slot="dashboard-page-kpis" className="flex gap-4">
+        <div data-slot="dashboard-page-live-status" className="flex-[3] space-y-2">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-success animate-pulse" />
             <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Live status</p>
@@ -624,7 +624,7 @@ export default function DashboardPage({
           </KpiGrid>
         </div>
         <div className="w-px self-stretch bg-border" />
-        <div className="w-64 shrink-0 space-y-2">
+        <div data-slot="dashboard-page-period-metrics" className="w-64 shrink-0 space-y-2">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Period · {dateLabel}
           </p>
@@ -648,7 +648,7 @@ export default function DashboardPage({
       </div>
 
       {/* Detections trend — full width now that System Health lives in the header */}
-      <div>
+      <div data-slot="dashboard-page-detections">
         <div>
           <Section
             title="Detections by Site — Severity Breakdown"
@@ -795,7 +795,7 @@ export default function DashboardPage({
             {zoneSiteFilter.length > 0 ? "No zones match the selected sites." : "No detections recorded in this range."}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <div data-slot="dashboard-page-zone-areas" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {filteredZoneAreas.map((z) => {
               return (
                 <Popover key={`${z.site}-${z.area}`}>
@@ -868,12 +868,12 @@ export default function DashboardPage({
       </Section>
 
       {/* Recent events + Cases */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-slot="dashboard-page-recent" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Recent Detections"
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>
             View all <ArrowUpRight className="size-3" />
           </Button>}>
-          <div className="space-y-2">
+          <div data-slot="dashboard-page-recent-detections" className="space-y-2">
             {recentEvents.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No detections in this range.</p>
             ) : recentEvents.map((e) => {
@@ -908,7 +908,7 @@ export default function DashboardPage({
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/incidents")}>
             View all <ArrowUpRight className="size-3" />
           </Button>}>
-          <div className="space-y-2">
+          <div data-slot="dashboard-page-recent-cases" className="space-y-2">
             {recentCases.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm italic text-muted-foreground">No cases in this range.</p>
             ) : recentCases.map((c) => {
@@ -936,13 +936,13 @@ export default function DashboardPage({
       </div>
 
       {/* Cameras by Sites + Activity Log */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-slot="dashboard-page-sites-activity" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Cameras by Site"
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/site/overview")}>
             Sites <ArrowUpRight className="size-3" />
           </Button>}>
           {/* With many sites the chart scrolls horizontally so labels/bars stay legible. */}
-          <div className={cn("h-[260px]", scaleMany && "overflow-x-auto")}>
+          <div data-slot="dashboard-page-cameras-chart" className={cn("h-[260px]", scaleMany && "overflow-x-auto")}>
             <div className="h-full" style={scaleMany ? { minWidth: camerasBySite.length * 52 } : undefined}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
@@ -989,7 +989,7 @@ export default function DashboardPage({
           }
         >
           {/* Height matches the Cameras by Site chart (h-[260px] + ~24px legend = ~300px) */}
-          <div className="-mx-4 -my-4">
+          <div data-slot="dashboard-page-activity-log" className="-mx-4 -my-4">
             <div className="grid grid-cols-[96px_140px_1fr] gap-4 border-b border-border bg-muted/30 px-4 py-2">
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">When</p>
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>

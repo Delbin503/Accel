@@ -72,7 +72,7 @@ export function OtpVerify({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col px-5 py-10">
+    <div data-slot="otp-verify" className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col px-5 py-10">
       <button
         type="button"
         onClick={onBack}
@@ -81,7 +81,7 @@ export function OtpVerify({
         <ArrowLeft className="size-4" /> Back to setup
       </button>
 
-      <header className="mt-8 text-center">
+      <header data-slot="otp-verify-header" className="mt-8 text-center">
         <AccelMark size="lg" />
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">Verify your email</h1>
         <p className="mt-1.5 text-md text-muted-foreground">
@@ -90,8 +90,8 @@ export function OtpVerify({
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col items-center space-y-5">
-        <div className="flex items-center gap-2 sm:gap-3" onPaste={(e) => { e.preventDefault(); handleChange(0, e.clipboardData.getData("text")); }}>
+      <form data-slot="otp-verify-form" onSubmit={handleSubmit} className="mt-6 flex flex-col items-center space-y-5">
+        <div data-slot="otp-verify-otp" className="flex items-center gap-2 sm:gap-3" onPaste={(e) => { e.preventDefault(); handleChange(0, e.clipboardData.getData("text")); }}>
           {digits.map((d, i) => (
             <input
               key={i}

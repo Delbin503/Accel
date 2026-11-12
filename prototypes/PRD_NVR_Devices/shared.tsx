@@ -7,7 +7,7 @@ export type ForcedState = "normal" | "loading" | "empty" | "error";
 /** Skeleton that mirrors the NVR Devices layout: KPIs → toolbar → table. */
 export function NvrTableSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="nvr-devices-page-skeleton" className="flex flex-col gap-4">
       {/* KPI cards (cols=5) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[0, 1, 2, 3, 4].map((i) => (
@@ -41,7 +41,7 @@ export function NvrTableSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+    <div data-slot="nvr-devices-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load NVR devices.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -51,7 +51,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+    <div data-slot="nvr-devices-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
       <Server className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No NVR devices yet</p>
       <p className="text-sm">Add an NVR to manage channels, storage health, and recording cleanup.</p>

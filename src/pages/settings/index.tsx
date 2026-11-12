@@ -30,12 +30,12 @@ import { MOCK_USERS } from "@/mocks/users";
 
 function SectionCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="border-b border-border px-5 py-4">
+    <div data-slot="settings-section-card" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="settings-section-card-header" className="border-b border-border px-5 py-4">
         <h2 className="text-md font-bold text-foreground">{title}</h2>
         {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div data-slot="settings-section-card-content" className="px-5 py-4">{children}</div>
     </div>
   );
 }
@@ -122,7 +122,7 @@ function PrefRow({
   control: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
+    <div data-slot="pref-row" className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
       <Icon className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <p className="text-base font-semibold text-foreground">{title}</p>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="settings-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Settings</PageHeader.Title>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
       <SectionCard title="Appearance" description="Choose how the dashboard looks.">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Theme</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div data-slot="settings-page-theme-options" className="grid grid-cols-3 gap-2">
             {([
               { v: "light",  label: "Light",  icon: Sun     },
               { v: "dark",   label: "Dark",   icon: Moon    },
@@ -202,7 +202,7 @@ export default function SettingsPage() {
             })}
           </div>
         </div>
-        <div className="mt-4 space-y-2">
+        <div data-slot="settings-page-display-prefs" className="mt-4 space-y-2">
           <PrefRow icon={Bell} title="Denser tables" description="Reduce row spacing in lists and tables to show more at once." control={<Toggle checked={denserTables} onChange={setDenserTables} />} />
           <PrefRow icon={Bell} title="Auto-play recording clips" description="Play recordings automatically when opening the drawer." control={<Toggle checked={autoPlayClips} onChange={setAutoPlayClips} />} />
         </div>
@@ -210,13 +210,13 @@ export default function SettingsPage() {
 
       <SectionCard title="Notifications" description="Choose where and when we should reach you.">
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email Notifications</p>
-        <div className="space-y-2">
+        <div data-slot="settings-page-email-prefs" className="space-y-2">
           <PrefRow icon={Mail} title="Critical incidents" description="Email me when a Critical severity incident is detected." control={<Toggle checked={notifEmailIncidents} onChange={setNotifEmailIncidents} />} />
           <PrefRow icon={Mail} title="Weekly summary" description="Get a digest of detections, cases and SLA performance every Monday." control={<Toggle checked={notifEmailWeekly} onChange={setNotifEmailWeekly} />} />
           <PrefRow icon={Mail} title="Daily activity digest" description="Once-daily recap of activity at end-of-day." control={<Toggle checked={notifEmailDigest} onChange={setNotifEmailDigest} />} />
         </div>
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Push & In-App</p>
-        <div className="space-y-2">
+        <div data-slot="settings-page-push-prefs" className="space-y-2">
           <PrefRow icon={Smartphone} title="Critical alerts" description="Push notification for any Critical detection or escalation." control={<Toggle checked={notifPushCritical} onChange={setNotifPushCritical} />} />
           <PrefRow icon={Bell} title="Mentions and case assignments" description="When you are assigned a case or @-mentioned in a note." control={<Toggle checked={notifPushMentions} onChange={setNotifPushMentions} />} />
           <PrefRow icon={Volume2} title="Notification sound" description="Play a chime when a Critical detection arrives." control={<Toggle checked={notifSound} onChange={setNotifSound} />} />
@@ -225,7 +225,7 @@ export default function SettingsPage() {
       </SectionCard>
 
       <SectionCard title="Danger Zone" description="Irreversible account actions.">
-        <div className="space-y-2">
+        <div data-slot="settings-page-danger-zone" className="space-y-2">
           <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
             <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
             <div className="min-w-0 flex-1">

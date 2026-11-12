@@ -127,8 +127,8 @@ function SectionCard({ title, icon: Icon, children, action }: {
   title: string; icon: React.ElementType; children: React.ReactNode; action?: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+    <div data-slot="system-info-section-card" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="system-info-section-card-header" className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
             <Icon className="size-3.5 text-primary-ink" />
@@ -137,7 +137,7 @@ function SectionCard({ title, icon: Icon, children, action }: {
         </div>
         {action}
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div data-slot="system-info-section-card-content" className="px-5 py-4">{children}</div>
     </div>
   );
 }
@@ -151,7 +151,7 @@ function copy(value: string) {
 
 export default function SystemInfoPage() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-info-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Info</PageHeader.Title>
@@ -174,9 +174,9 @@ export default function SystemInfoPage() {
           <span className="font-semibold text-success">All systems operational</span>
           <span className="text-muted-foreground">· Updated just now</span>
         </p>
-        <div className="space-y-1.5">
+        <div data-slot="system-info-page-services" className="space-y-1.5">
           {SYSTEM_STATUS.map((s) => (
-            <div key={s.label} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+            <div data-slot="system-info-page-service-row" key={s.label} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
               <div className="min-w-0 flex-1">
                 <p className="text-base font-semibold text-foreground">{s.label}</p>
                 <p className="text-xs text-muted-foreground">Uptime · {s.uptime} over 30 days</p>
@@ -187,7 +187,7 @@ export default function SystemInfoPage() {
         </div>
       </SectionCard>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-slot="system-info-page-details-grid" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {INFO_GROUPS.map((group) => (
           <SectionCard key={group.title} title={group.title} icon={group.icon}>
             <dl className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-2.5">

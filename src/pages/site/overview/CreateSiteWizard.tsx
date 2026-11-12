@@ -219,7 +219,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
 
         <ModalBody>
           {step === "details" && (
-            <div className="space-y-4">
+            <div data-slot="create-site-wizard-details" className="space-y-4">
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Building2 className="size-3" />
@@ -288,7 +288,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
           )}
 
           {step === "areas" && (
-            <div className="space-y-4">
+            <div data-slot="create-site-wizard-areas" className="space-y-4">
               <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5">
                 <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-warning" />
                 <p className="text-sm leading-snug text-muted-foreground">
@@ -360,7 +360,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
           )}
 
           {step === "floor-plan" && (
-            <div className="space-y-4">
+            <div data-slot="create-site-wizard-floor-plan" className="space-y-4">
               <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/[0.06] px-3 py-2.5">
                 <SkipForward className="mt-0.5 size-4 flex-shrink-0 text-info" />
                 <p className="text-sm leading-snug text-muted-foreground">
@@ -419,7 +419,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
           )}
 
           {step === "review" && (
-            <div className="space-y-4">
+            <div data-slot="create-site-wizard-review" className="space-y-4">
               <div className="overflow-hidden rounded-xl border border-border bg-card">
                 <div className="border-b border-border px-4 py-3">
                   <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Site Details</p>

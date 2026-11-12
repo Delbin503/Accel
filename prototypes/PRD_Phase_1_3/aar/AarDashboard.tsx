@@ -80,10 +80,10 @@ export function AarDashboard() {
   const clock = fmtClip(live ? t : focus.at);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div data-slot="aar-dashboard-page" className="flex flex-col gap-6">
     {/* The overview is pinned to the viewport (less the top bar and page padding), so
         it fits a laptop screen; the full report follows below it. */}
-    <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
+    <div data-slot="aar-dashboard-page-overview" className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
       <PageHeader>
         <PageHeader.Content className="flex-row items-center gap-3">
           <PageHeader.Title>After Action Review</PageHeader.Title>
@@ -134,7 +134,7 @@ export function AarDashboard() {
       </PageHeader>
 
       {/* The report's header block */}
-      <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
+      <dl data-slot="aar-dashboard-page-meta" className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
         {([["Unit", SESSION_META.unit], ["Weapon / position", SESSION_META.weaponPosition], ["Range / distance", SESSION_META.range], ["Date / detail", SESSION_META.detail]] as const).map(([k, v]) => (
           <div key={k} className="flex items-baseline gap-1.5">
             <dt className="text-3xs font-semibold uppercase text-muted-foreground">{k}</dt>
@@ -145,7 +145,7 @@ export function AarDashboard() {
 
       <SummaryStrip shots={fired} live={live} complete={complete} />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(280px,1.12fr)_minmax(260px,1fr)]">
+      <div data-slot="aar-dashboard-page-panels" className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(280px,1.12fr)_minmax(260px,1fr)]">
         <CameraPanel className="lg:col-span-5" shot={focus} fired={fired} live={live} t={t} clock={clock} onSelect={setSelected} />
         <TargetPanel className="lg:col-span-3" shots={fired} focus={focus} live={live} onSelect={setSelected} />
         <ShotPanel className="lg:col-span-4" shot={focus} rel={rel} live={live} onSelect={setSelected} />
@@ -177,13 +177,13 @@ function Panel({ title, meta, action, className, bodyClassName, children }: {
   title: string; meta?: React.ReactNode; action?: React.ReactNode; className?: string; bodyClassName?: string; children: React.ReactNode;
 }) {
   return (
-    <section className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+    <section data-slot="aar-panel" className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <header data-slot="aar-panel-header" className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
         <h2 className="shrink-0 text-sm font-bold text-foreground">{title}</h2>
         {meta && <span className="min-w-0 truncate text-2xs text-muted-foreground">{meta}</span>}
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </header>
-      <div className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
+      <div data-slot="aar-panel-body" className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -262,7 +262,7 @@ function SummaryStrip({ shots, live, complete }: { shots: Shot[]; live: boolean;
   ];
 
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
+    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{FIRER.initials}</span>
         <div className="min-w-0 flex-1">
@@ -332,7 +332,7 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
         </div>
       }
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
+      <div data-slot="camera-panel-frame" className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
         {view === "pose" ? (
           <PostureFrame shot={shown} live={live} clock={live ? clock : fmtClip(head)} className="absolute inset-0" />
         ) : (
@@ -340,7 +340,7 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
         )}
       </div>
       {/* Session timeline: every shot, the playhead, click a shot to review it */}
-      <div className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
+      <div data-slot="camera-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
         {!live && (
           <button
             type="button"
@@ -447,7 +447,7 @@ function TargetPanel({ className, shots, focus, live, onSelect }: { className?: 
   const mr = 1.5;
   return (
     <Panel className={className} title="Target Board" meta={`${shots.length}/${SHOTS.length} shots · ${RING_MM} mm rings`}>
-      <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
+      <div data-slot="target-panel-plot" className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
         <svg viewBox={`${-HALF} ${-HALF} ${HALF * 2} ${HALF * 2}`} className="block size-full max-h-full" role="img" aria-label={`Target board, ${s.hits} hits and ${s.misses} misses`}>
           <rect x={-HALF} y={-HALF} width={HALF * 2} height={HALF * 2} rx="1.5" fill="var(--severity-critical)" fillOpacity="0.05" />
           {[5, 4, 3, 2, 1].map((k) => (
@@ -539,7 +539,7 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
       meta={live ? `#${shot.n}` : "Pick a shot"}
     >
       {!live && (
-        <div role="tablist" aria-label="Shots" className="mb-2 grid shrink-0 grid-cols-6 gap-1">
+        <div data-slot="shot-panel-tabs" role="tablist" aria-label="Shots" className="mb-2 grid shrink-0 grid-cols-6 gap-1">
           {SHOTS.map((s) => {
             const active = s.n === shot.n;
             const hit = isHit(s);
@@ -574,7 +574,7 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
           <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", shot.n === BEST_SHOT ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>
         )}
       </p>
-      <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+      <ul data-slot="shot-panel-list" className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
         {checks.map((c) => (
           <li
             key={c.label}
@@ -636,7 +636,7 @@ function ShotNotes({ shot }: { shot: Shot }) {
 function ShotTable({ selected, onSelect }: { selected: number; onSelect: (n: number) => void }) {
   const head = "px-1.5 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground";
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
+    <div data-slot="shot-table" className="min-h-0 flex-1 overflow-auto">
       <table className="w-full border-collapse">
         <thead className="sticky top-0 bg-card">
           <tr className="border-b border-border">
@@ -778,7 +778,7 @@ function MiniChart({ title, value, bad, legend, empty, children }: {
   title: string; value: string; bad?: boolean; legend: React.ReactNode; empty?: string; children: React.ReactElement;
 }) {
   return (
-    <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
+    <div data-slot="mini-chart" className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
@@ -901,7 +901,7 @@ function FundamentalsPanel({ className, shots, live }: { className?: string; sho
         Factors met, all shots <span className="font-mono font-semibold text-foreground">{total.met}/{total.of}</span>
         {!live && <span className={cn("font-mono font-semibold", delta >= 0 ? "text-success" : "text-severity-critical")}> {delta >= 0 ? "▲ +" : "▼ −"}{Math.abs(delta)}</span>}
       </p>
-      <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1.5">
+      <ul data-slot="fundamentals-panel-list" className="flex min-h-0 flex-1 flex-col justify-between gap-1.5">
         {factors.map((f) => {
           const any = f.of > 0;
           const d = f.score - f.prev;
@@ -947,7 +947,7 @@ function GradesTable({ shots, full = false }: { shots: Shot[]; full?: boolean })
   const overall = overallFor(shots);
   const cell = "px-1 py-1 text-2xs";
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
+    <div data-slot="grades-table" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-border text-left text-3xs uppercase text-muted-foreground">
@@ -1019,7 +1019,7 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
       }
       bodyClassName="gap-2"
     >
-      <ol className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden" aria-label="Top two things to work on">
+      <ol data-slot="coaching-panel-list" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden" aria-label="Top two things to work on">
         {recs.map((r, i) => (
           <li key={r.key} className={cn("shrink-0 rounded-lg border bg-background px-2.5 py-1.5", i === 0 ? "border-severity-critical/35" : "border-border")}>
             <div className="flex items-center gap-2">
@@ -1091,7 +1091,7 @@ function AllRecommendations({ onSelect, onOpen }: { onSelect: (n: number) => voi
   const gained = STATS_ALL.points - PREVIOUS.points;
   const shotsText = (ns: number[]) => `shot${ns.length === 1 ? "" : "s"} ${ns.join(", ")}`;
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
+    <div data-slot="all-recommendations" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
       <p className="shrink-0 text-xs leading-snug text-foreground">
         <strong>{STATS_ALL.points}/{STATS_ALL.maxPoints}</strong> with {STATS_ALL.misses} miss{STATS_ALL.misses === 1 ? "" : "es"}
         {gained !== 0 && <>, {gained > 0 ? "up" : "down"} {Math.abs(gained)} on {PREVIOUS.date}</>}.
@@ -1132,7 +1132,7 @@ function AllRecommendations({ onSelect, onOpen }: { onSelect: (n: number) => voi
 function Standing() {
   const you = TREND[TREND.length - 1].score;
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+    <div data-slot="standing" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
       <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
         <span className="font-mono text-2xl font-bold text-primary-ink">{PEERS.betterThanPct}%</span>
         <p className="text-2xs leading-snug text-muted-foreground">of {PEERS.group} scored lower this session. You placed <strong className="text-foreground">{PEERS.rank}th of {PEERS.of}</strong>.</p>
@@ -1224,12 +1224,12 @@ function LiveCuesPanel({ className, shot, rel, fired }: { className?: string; sh
   );
   return (
     <Panel className={className} title="Live Cues" meta={`Shot ${shot.n} · ${rel >= 0 ? "fired" : "aiming"}`} bodyClassName="gap-2">
-      <div className={cn("shrink-0 rounded-lg border px-3 py-2.5", toneCls)}>
+      <div data-slot="live-cues-panel-cue" className={cn("shrink-0 rounded-lg border px-3 py-2.5", toneCls)}>
         <p className="text-3xs font-bold uppercase tracking-widest opacity-80">Now</p>
         <p className="text-md font-bold leading-snug">{cue.text}</p>
       </div>
       <p className="shrink-0 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">From shots so far</p>
-      <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+      <ul data-slot="live-cues-panel-list" className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
         {notes.length === 0 ? (
           <li className="text-xs text-muted-foreground">{fired.length ? "Clean so far — keep it up." : "Cues appear here after each shot."}</li>
         ) : (
@@ -1255,14 +1255,14 @@ function LiveCuesPanel({ className, shot, rel, fired }: { className?: string; sh
 function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect: (n: number) => void; onOpen: (n: number, id: string) => void }) {
   const shot = shotByN(selected);
   return (
-    <div id="aar-report" className="flex scroll-mt-4 flex-col gap-4 border-t border-border pt-5">
+    <div data-slot="full-report" id="aar-report" className="flex scroll-mt-4 flex-col gap-4 border-t border-border pt-5">
       <div>
         <h2 className="text-lg font-bold text-foreground">Full report</h2>
         <p className="text-sm text-muted-foreground">Everything from the session in detail. Scroll back up for the overview.</p>
       </div>
 
       {/* Shot analysis — follows the picked shot */}
-      <section id="aar-analysis" className="flex scroll-mt-4 flex-col gap-3">
+      <section data-slot="full-report-analysis" id="aar-analysis" className="flex scroll-mt-4 flex-col gap-3">
         <div className="sticky top-12 z-[var(--z-sticky)] -mx-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 px-3 py-2 backdrop-blur-sm">
           <h3 className="text-md font-bold text-foreground">Shot analysis</h3>
           <span className="text-xs text-muted-foreground">Every panel in this section follows the picked shot.</span>
@@ -1318,7 +1318,7 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
       </section>
 
       {/* Best vs weakest, as the report sets them side by side */}
-      <section className="flex flex-col gap-3">
+      <section data-slot="full-report-best-weakest" className="flex flex-col gap-3">
         <h3 className="text-md font-bold text-foreground">Shot review · best and weakest</h3>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <ShotCard shot={shotByN(BEST_SHOT)} kind="best" onSelect={onSelect} />
@@ -1327,7 +1327,7 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
       </section>
 
       {/* Grades, and how they moved */}
-      <section className="flex flex-col gap-3">
+      <section data-slot="full-report-grades" className="flex flex-col gap-3">
         <h3 className="text-md font-bold text-foreground">Factor grades</h3>
         <Panel title="Fundamentals" meta={`This session vs ${PREVIOUS.date} · hover a row for detail`}>
           <GradesTable shots={SHOTS} full />
@@ -1338,14 +1338,14 @@ function FullReport({ selected, onSelect, onOpen }: { selected: number; onSelect
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section data-slot="full-report-standing" className="flex flex-col gap-3">
         <h3 className="text-md font-bold text-foreground">Comparisons and achievements</h3>
         <Panel title="Standing" meta="Same practice, SAR 21, 25 m">
           <Standing />
         </Panel>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+      <section data-slot="full-report-recommendations" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
         <Panel className="lg:col-span-7" title="Recommendations" meta="Every fault, biggest cost per shot first">
           <AllRecommendations onSelect={onSelect} onOpen={onOpen} />
         </Panel>
@@ -1548,7 +1548,7 @@ function PreviousVsCurrent() {
   const factors = factorsFor(SHOTS);
   return (
     <Panel title="Previous vs current" meta={`${PREVIOUS.date} against 18 Oct, by factor`}>
-      <div className="flex flex-col gap-3">
+      <div data-slot="previous-vs-current" className="flex flex-col gap-3">
         {factors.map((f) => {
           const d = f.score - f.prev;
           return (

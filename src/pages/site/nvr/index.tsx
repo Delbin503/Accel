@@ -290,7 +290,7 @@ function FilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="nvr-filter-panel" className="rounded-xl border border-border bg-card">
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
@@ -327,7 +327,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="nvr-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -492,7 +492,7 @@ export function NvrDrawer({
       <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
         <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
           <SheetHeader className="border-b border-border bg-card px-5 py-4">
-            <div className="flex items-center justify-between">
+            <div data-slot="nvr-drawer-header" className="flex items-center justify-between">
               <SheetTitle className="text-md text-muted-foreground">NVR not found</SheetTitle>
               <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="size-4" />
@@ -535,7 +535,7 @@ export function NvrDrawer({
       >
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
+          <div data-slot="nvr-drawer-header" className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <StatusPill status={nvr.status} />
@@ -568,7 +568,7 @@ export function NvrDrawer({
           </div>
 
           {/* Tabs */}
-          <div className="mt-3 flex items-center gap-1">
+          <div data-slot="nvr-drawer-tabs" className="mt-3 flex items-center gap-1">
             {[
               { key: "overview" as const, label: "Overview",           icon: Layers },
               { key: "channels" as const, label: "Channel Management", icon: Cable, badge: nvr.channelCount },
@@ -596,9 +596,9 @@ export function NvrDrawer({
 
         {/* Overview tab */}
         {tab === "overview" && (
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div data-slot="nvr-drawer-overview" className="flex-1 space-y-5 overflow-y-auto p-5">
             {/* 4 KPI strip */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div data-slot="nvr-drawer-kpis" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatCard
                 icon={<Cable className="size-3 text-success" />}
                 label="Available Channels"
@@ -633,7 +633,7 @@ export function NvrDrawer({
             </div>
 
             {/* Device Information */}
-            <div>
+            <div data-slot="nvr-drawer-device-info">
               <SectionTitle>Device Information</SectionTitle>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
@@ -665,7 +665,7 @@ export function NvrDrawer({
             </div>
 
             {/* NVR Recording Storage */}
-            <div>
+            <div data-slot="nvr-drawer-storage">
               <SectionTitle>NVR Recording Storage</SectionTitle>
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="grid grid-cols-[160px_1fr] items-center gap-5">
@@ -730,7 +730,7 @@ export function NvrDrawer({
             </div>
 
             {/* Recording Statistics by Channel */}
-            <div>
+            <div data-slot="nvr-drawer-channel-stats">
               <SectionTitle
                 aside={
                   <div className="flex items-center gap-1.5">
@@ -824,8 +824,8 @@ export function NvrDrawer({
 
         {/* Channel Management tab */}
         {tab === "channels" && (
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            <div className="flex items-center justify-between gap-3">
+          <div data-slot="nvr-drawer-channels" className="flex-1 space-y-4 overflow-y-auto p-5">
+            <div data-slot="nvr-drawer-channels-toolbar" className="flex items-center justify-between gap-3">
               <div className="relative max-w-sm flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -840,7 +840,7 @@ export function NvrDrawer({
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div data-slot="nvr-drawer-channels-table" className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full">
                 <thead className="bg-muted/30">
                   <tr className="border-b border-border text-left">
@@ -946,7 +946,7 @@ export function NvrDrawer({
         )}
 
         {/* Footer */}
-        <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+        <div data-slot="nvr-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
           <Button size="sm" className="gap-1.5" onClick={onEdit}>
             <Pencil className="size-3.5" />
             Edit NVR
@@ -2076,7 +2076,7 @@ export default function NvrDevicesPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="nvr-devices-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>NVR Devices</PageHeader.Title>
@@ -2114,7 +2114,7 @@ export default function NvrDevicesPage({
       />
 
       {/* Count */}
-      <p className="text-base text-muted-foreground">
+      <p data-slot="nvr-devices-page-results" className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "NVR" : "NVRs"} match current filters
         {hasFilters && (
@@ -2129,7 +2129,7 @@ export default function NvrDevicesPage({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="nvr-devices-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <HardDrive className="size-10 opacity-20" />
           {nvrs.length === 0 ? (
             <>
@@ -2154,7 +2154,7 @@ export default function NvrDevicesPage({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="nvr-devices-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -2254,7 +2254,7 @@ export default function NvrDevicesPage({
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
+          <div data-slot="nvr-devices-page-pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
             <p className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"

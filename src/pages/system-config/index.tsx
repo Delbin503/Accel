@@ -76,22 +76,22 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
 
 function SectionCard({ title, description, action, children }: { title: string; description?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+    <div data-slot="system-config-section-card" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="system-config-section-card-header" className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <div className="min-w-0">
           <h3 className="text-md font-bold text-foreground">{title}</h3>
           {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div data-slot="system-config-section-card-content" className="px-5 py-4">{children}</div>
     </div>
   );
 }
 
 function PrefRow({ icon: Icon, title, description, control }: { icon?: React.ElementType; title: string; description?: string; control: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
+    <div data-slot="system-config-pref-row" className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
       {Icon && <Icon className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />}
       <div className="min-w-0 flex-1">
         <p className="text-base font-semibold text-foreground">{title}</p>
@@ -121,7 +121,7 @@ function GeneralSection() {
   const [weekStart, setWeekStart] = React.useState<"sun" | "mon">("mon");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-general" className="flex flex-col gap-4">
       <SectionCard title="Organization" description="Your workspace identity.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -297,10 +297,10 @@ function UserAccessSection() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-user-access" className="flex flex-col gap-4">
       <SectionCard title="Role Permissions Matrix" description="Define what each role can do across all modules. Owner always has full access."
         action={<Button variant="outline" onClick={() => setMatrix(DEFAULT_PERMISSIONS)} className="gap-1.5"><RefreshCw className="size-3" />Reset</Button>}>
-        <div className="overflow-x-auto">
+        <div data-slot="system-config-user-access-table" className="overflow-x-auto">
           <table className="w-full text-left text-base">
             <thead>
               <tr className="border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
@@ -404,7 +404,7 @@ const fromMinutes = (min: number, unit: Unit) =>
 
 function UnitToggle({ value, onChange, disabled }: { value: Unit; onChange: (u: Unit) => void; disabled?: boolean }) {
   return (
-    <div className="flex items-center rounded-md border border-border bg-card p-0.5">
+    <div data-slot="unit-toggle" className="flex items-center rounded-md border border-border bg-card p-0.5">
       {(["min", "hr"] as Unit[]).map((u) => (
         <button
           key={u}
@@ -458,7 +458,7 @@ function SlaSection() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-sla" className="flex flex-col gap-4">
       <SectionCard title="SLA Master Switch" description="Control whether SLA tracking is enforced across all incidents.">
         <PrefRow icon={Clock} title="Enable SLA tracking"
           description="Track response times for every incident. When off, incidents are not timed."
@@ -588,7 +588,7 @@ function DetectionSection() {
   const [autoLogAll, setAutoLogAll] = React.useState(true);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-detection" className="flex flex-col gap-4">
       <SectionCard title="Detection Defaults" description="Default values applied to new rules and deployments.">
         <div className="space-y-4">
           <div>
@@ -645,7 +645,7 @@ function NotificationsSection() {
   const [mediumAdminOnly, setMediumAdminOnly] = React.useState(true);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-notifications" className="flex flex-col gap-4">
       <SectionCard title="Delivery Channels" description="Which channels can the system use to reach users.">
         <div className="space-y-2">
           <PrefRow icon={Mail} title="Email"
@@ -682,7 +682,7 @@ function CameraDefaultsSection() {
   const [defaultSchedule, setDefaultSchedule] = React.useState<"24x7" | "scheduled">("24x7");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-camera-defaults" className="flex flex-col gap-4">
       <SectionCard title="Stream Defaults" description="Applied to every newly added camera.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -774,7 +774,7 @@ function NvrDefaultsSection() {
   const maxVideoLabel = MAX_VIDEO_LENGTHS.find((o) => o.value === maxVideoLength)?.label;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-nvr-defaults" className="flex flex-col gap-4">
       <SectionCard title="Storage Alerts" description="When to flag a NVR for attention.">
         <div>
           <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -919,7 +919,7 @@ function SecuritySection() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-security" className="flex flex-col gap-4">
       <SectionCard title="Authentication Policy" description="Rules applied to all users.">
         <div className="space-y-2">
           <PrefRow icon={KeyRound} title="Require Two-Factor Authentication"
@@ -1033,7 +1033,7 @@ export default function SystemConfigPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="system-config-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Configuration</PageHeader.Title>
@@ -1050,8 +1050,8 @@ export default function SystemConfigPage() {
         </PageHeader.Actions>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
-        <nav className="flex flex-col gap-1 self-start rounded-xl border border-border bg-card p-1.5">
+      <div data-slot="system-config-page-layout" className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
+        <nav data-slot="system-config-page-nav" className="flex flex-col gap-1 self-start rounded-xl border border-border bg-card p-1.5">
           {SECTIONS.map((s) => {
             const Icon = s.icon;
             const active = section === s.key;
@@ -1074,7 +1074,7 @@ export default function SystemConfigPage() {
           )}
         </nav>
 
-        <div className="min-w-0">
+        <div data-slot="system-config-page-content" className="min-w-0">
           {section === "general"          && <GeneralSection />}
           {section === "user-access"      && <UserAccessSection />}
           {section === "sla"              && <SlaSection />}

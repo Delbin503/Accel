@@ -7,7 +7,7 @@ export type ForcedState = "normal" | "loading" | "empty" | "error";
 /** Skeleton that mirrors the User Management layout: seat strip → KPIs → table. */
 export function UserTableSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="user-management-page-skeleton" className="flex flex-col gap-4">
       {/* Seat usage strip */}
       <div className="rounded-xl border border-border bg-card p-3">
         <div className="mb-2 h-3 w-24 animate-pulse rounded bg-muted" />
@@ -47,7 +47,7 @@ export function UserTableSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+    <div data-slot="user-management-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load workspace members.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -57,7 +57,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState({ onInvite }: { onInvite: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+    <div data-slot="user-management-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
       <Users className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No team members yet</p>
       <p className="text-sm">Invite people to give them access to this workspace.</p>

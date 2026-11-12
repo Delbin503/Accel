@@ -48,10 +48,10 @@ export function OwnershipLanding({ onExit }: { onExit: (templateId?: string) => 
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={200}>
           <SidebarProvider defaultOpen={true}>
-            <div className="flex min-h-screen w-full bg-background">
+            <div data-slot="ownership-landing" className="flex min-h-screen w-full bg-background">
               <AppSidebar />
               <div className="flex min-w-0 flex-1 flex-col">
-                <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+                <header data-slot="ownership-landing-header" className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
                   <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
                   <ProtoBreadcrumb className="md:ml-2" />
                   <div className="flex-1" />
@@ -60,7 +60,7 @@ export function OwnershipLanding({ onExit }: { onExit: (templateId?: string) => 
                   <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                   <UserMenu />
                 </header>
-                <main className="flex-1 overflow-auto p-6">
+                <main data-slot="ownership-landing-main" className="flex-1 overflow-auto p-6">
                   <DashboardPage />
                 </main>
               </div>

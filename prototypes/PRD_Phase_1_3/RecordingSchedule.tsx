@@ -122,8 +122,8 @@ function NestedTrigger({ def, config, onChange }: {
   const tone = TONE_CLASSES[def.tone];
 
   return (
-    <div className="rounded-lg border border-border bg-card px-3.5 py-3">
-      <div className="flex items-start gap-3">
+    <div data-slot="nested-trigger" className="rounded-lg border border-border bg-card px-3.5 py-3">
+      <div data-slot="nested-trigger-header" className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <span className={cn("rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider", tone.chip)}>
@@ -138,7 +138,7 @@ function NestedTrigger({ def, config, onChange }: {
         </span>
       </div>
 
-      <div className="mt-3 border-t border-border pt-3">
+      <div data-slot="nested-trigger-settings" className="mt-3 border-t border-border pt-3">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <QualityFields def={def} config={config} onChange={onChange} />
           <div>
@@ -191,8 +191,8 @@ function TypeRow({ def, config, configs, scheduledBy, windowFromSchedule, onChan
   const children = childrenOf(def.id);
 
   return (
-    <div className="rounded-lg border border-border bg-background px-3.5 py-3">
-      <div className="flex items-start gap-3">
+    <div data-slot="type-row" className="rounded-lg border border-border bg-background px-3.5 py-3">
+      <div data-slot="type-row-header" className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <span className={cn("rounded border px-1.5 py-px text-2xs font-bold uppercase tracking-wider", tone.chip)}>
@@ -216,7 +216,7 @@ function TypeRow({ def, config, configs, scheduledBy, windowFromSchedule, onChan
         )}
       </div>
 
-      <div className={cn("mt-3 border-t border-border pt-3", !config.enabled && !scheduledBy && "pointer-events-none opacity-40")}>
+      <div data-slot="type-row-settings" className={cn("mt-3 border-t border-border pt-3", !config.enabled && !scheduledBy && "pointer-events-none opacity-40")}>
         <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2", !windowFromSchedule && "lg:grid-cols-4")}>
           {/* A scheduled mode takes its window from the week, so it has none here. */}
           {!windowFromSchedule && (
@@ -397,8 +397,8 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
   }));
 
   return (
-    <div className="rounded-lg border border-border bg-background px-3.5 py-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div data-slot="weekly-schedule" className="rounded-lg border border-border bg-background px-3.5 py-3">
+      <div data-slot="weekly-schedule-header" className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Schedule</span>
         <button type="button" onClick={copyMonday} className="flex items-center gap-1 text-2xs font-semibold text-primary-ink hover:underline">
           <Copy className="size-3" />Copy Monday to all days
@@ -411,7 +411,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
 
       {/* The whole week at a glance — one letter a day, with a dot for how it
           records. Picking a day opens it below. */}
-      <div role="tablist" aria-label="Day of week" className="mt-3 flex flex-wrap gap-1">
+      <div data-slot="weekly-schedule-day-tabs" role="tablist" aria-label="Day of week" className="mt-3 flex flex-wrap gap-1">
         {WEEKDAYS.map((w) => {
           const wd = config.days[w.id];
           const mode = DAY_MODES.find((m) => m.id === wd.mode)!;
@@ -439,7 +439,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
         })}
       </div>
 
-      <div className="mt-3 rounded-md border border-border px-3.5 py-3">
+      <div data-slot="weekly-schedule-day-editor" className="mt-3 rounded-md border border-border px-3.5 py-3">
         <label className={FIELD_LABEL}>{d.label} records</label>
         {/* A switch a mode, rather than one pick across all of them. Continuous
             fills the day, so it leaves operation nothing to run in — turning it
@@ -623,10 +623,10 @@ function CoverageStrip({ site, schedule }: { site: SiteData; schedule: SiteSched
   ] as const).filter(([, show]) => show).map(([id]) => typeById(id));
 
   return (
-    <div className="rounded-lg border border-border bg-background px-3.5 py-3">
+    <div data-slot="coverage-strip" className="rounded-lg border border-border bg-background px-3.5 py-3">
       <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Coverage</p>
 
-      <div className="space-y-1">
+      <div data-slot="coverage-strip-rows" className="space-y-1">
         {WEEKDAYS.map((w) => {
           const day = operation.days[w.id];
           const { bands, note } = bandsFor(day);
@@ -657,7 +657,7 @@ function CoverageStrip({ site, schedule }: { site: SiteData; schedule: SiteSched
       </div>
 
       {/* Hour ruler — same column widths as the rows above so it lines up. */}
-      <div className="mt-2 flex items-center gap-3">
+      <div data-slot="coverage-strip-ruler" className="mt-2 flex items-center gap-3">
         <span className="w-10 shrink-0" />
         <div className="flex flex-1 justify-between font-mono text-3xs text-muted-foreground">
           {[0, 6, 12, 18, 24].map((hr) => (
@@ -717,7 +717,7 @@ function SiteEditor({ site, schedule, onSave, onCancel }: {
   const everyDayClosed = [...weekModes(draft.operation)].every((m) => m === "closed");
 
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="site-editor" className="flex flex-col gap-3">
       <CoverageStrip site={site} schedule={draft} />
 
       {/* The week comes first, above every mode — it is what decides which of
@@ -764,7 +764,7 @@ function SiteEditor({ site, schedule, onSave, onCancel }: {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+      <div data-slot="site-editor-footer" className="flex items-center justify-end gap-2 border-t border-border pt-3">
         <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
         <Button size="sm" className="gap-1.5" onClick={() => onSave(draft)}>
           <Check className="size-3.5" />
@@ -787,12 +787,12 @@ export function RecordingSchedule() {
   const scheduleOf = (site: SiteData) => schedules[site.id] ?? defaultSchedule(site);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="recording-schedule-page" className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
         Each site records either continuously, or by operation hours with standby and motion-based recording outside them.
         Open a site to see its day; edit it to change how it records.
       </p>
-      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+      <ul data-slot="recording-schedule-page-site-list" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
         {sites.map((site) => {
           const schedule = scheduleOf(site);
           const open = openId === site.id;

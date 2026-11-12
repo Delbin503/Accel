@@ -6,7 +6,7 @@ export type ForcedState = "normal" | "loading" | "empty" | "error";
 
 export function SkeletonList() {
   return (
-    <div className="space-y-2">
+    <div data-slot="detection-feed-page-skeleton" className="space-y-2">
       <div className="h-3 w-24 animate-pulse rounded bg-muted" />
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="flex gap-3 rounded-xl border border-border p-3.5">
@@ -24,7 +24,7 @@ export function SkeletonList() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+    <div data-slot="detection-feed-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load detection events.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -43,7 +43,7 @@ export function ListFooter({
 }) {
   if (mode === "more") {
     return (
-      <div className="flex justify-center pt-1">
+      <div data-slot="detection-feed-page-list-footer" className="flex justify-center pt-1">
         <Button variant="outline" className="gap-1.5" disabled={loading} onClick={onLoadOlder}>
           {loading ? "Loading…" : "Load older entries"}
         </Button>

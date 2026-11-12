@@ -7,4 +7,4 @@ import "./proto.css";
 const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>${lofiHtml}</body></html>`;
 
 const el = document.getElementById("root");
-if (el) createRoot(el).render(<iframe title="Training Assessment lo-fi prototype" srcDoc={doc} className="block h-svh w-full border-0 bg-background" />);
+if (el) createRoot(el).render(<iframe data-slot="training-assessment-prototype" title="Training Assessment lo-fi prototype" srcDoc={doc} className="block h-svh w-full border-0 bg-background" />);

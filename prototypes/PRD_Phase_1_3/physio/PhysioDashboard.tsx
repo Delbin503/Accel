@@ -102,8 +102,8 @@ export function PhysioDashboard() {
       : toast("Draft exported", { description: "Marked DRAFT until a clinician signs off." });
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
+    <div data-slot="physio-dashboard-page" className="flex flex-col gap-6">
+      <div data-slot="physio-dashboard-page-overview" className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
         <PageHeader>
           <PageHeader.Content className="flex-row items-center gap-3">
             <PageHeader.Title>Rehab Analysis</PageHeader.Title>
@@ -132,7 +132,7 @@ export function PhysioDashboard() {
           </PageHeader.Actions>
         </PageHeader>
 
-        <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
+        <dl data-slot="physio-dashboard-page-meta" className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
           {([
             ["Clinic / room", `${VISIT.clinic} · ${VISIT.room}`], ["Clinician", VISIT.clinician], ["Date", VISIT.date], ["Cameras", VISIT.cameras],
             ["Device", <DeviceStatusValue mode={device} connected={VISIT.device} offlineFrom={PLATE_OFFLINE_AT} />], ["Privacy", "Faces blurred"],
@@ -151,7 +151,7 @@ export function PhysioDashboard() {
 
         <SummaryStrip name={name} open={open.length} device={device} />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
+        <div data-slot="physio-dashboard-page-panels" className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
           <VideoPanel className="lg:col-span-5" rep={rep} view={view} moment={moment} device={device} onView={setView} onMoment={setMoment} onSelect={(id) => pick(id)} />
           <ReviewPanel className="lg:col-span-4" rep={rep} reviews={reviews} device={device} onReview={review} onSelect={(id) => pick(id)} />
           <RangePanel className="lg:col-span-3" rep={rep} />
@@ -175,13 +175,13 @@ function Panel({ id, title, meta, action, className, bodyClassName, children }: 
   id?: string; title: string; meta?: React.ReactNode; action?: React.ReactNode; className?: string; bodyClassName?: string; children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+    <section data-slot="physio-panel" id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <header data-slot="physio-panel-header" className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
         <h2 className="shrink-0 text-sm font-bold text-foreground">{title}</h2>
         {meta && <span className="min-w-0 truncate text-2xs text-muted-foreground">{meta}</span>}
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </header>
-      <div className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
+      <div data-slot="physio-panel-body" className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -243,7 +243,7 @@ function Swatch({ c, dashed }: { c: string; dashed?: boolean }) {
 
 function MiniChart({ title, value, bad, legend, children }: { title: string; value: string; bad?: boolean; legend: React.ReactNode; children: React.ReactElement }) {
   return (
-    <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
+    <div data-slot="mini-chart" className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
@@ -290,7 +290,7 @@ function SummaryStrip({ name, open, device }: { name: string; open: number; devi
     },
   ];
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.5fr)_minmax(0,1.6fr)_repeat(5,minmax(0,0.95fr))]">
+    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.5fr)_minmax(0,1.6fr)_repeat(5,minmax(0,0.95fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{initialsOf(name)}</span>
         <div className="min-w-0 flex-1">
@@ -377,11 +377,11 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
         </div>
       }
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
+      <div data-slot="video-panel-frame" className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
         <RoomFrame rep={rep} view={shown} moment={moment} showPose={showPose} noLoad={!hasLoad(rep, device)} className="absolute inset-0" />
       </div>
       {/* Moments of the picked rep */}
-      <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
+      <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
         <button type="button" aria-label={running ? "Pause" : "Play through the rep"}
           onClick={() => {
             if (running) return setPlaying(false);
@@ -404,7 +404,7 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
         <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
       </div>
       {/* Visit timeline: every rep, grouped by exercise */}
-      <div className="flex h-10 shrink-0 items-center gap-2 border-t border-border px-2">
+      <div data-slot="video-panel-timeline" className="flex h-10 shrink-0 items-center gap-2 border-t border-border px-2">
         <span className="w-8 shrink-0 font-mono text-2xs text-muted-foreground">{fmtClock(rep.at)}</span>
         <div className="relative h-7 flex-1">
           {EX_ORDER.map((ex) => {
@@ -439,7 +439,7 @@ function RepPicker({ rep, device, onSelect }: { rep: Rep; device: DeviceMode; on
     activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [rep.id]);
   return (
-    <div role="tablist" aria-label="Reps" className="mb-2 flex shrink-0 items-stretch gap-1 overflow-x-auto pb-1">
+    <div data-slot="rep-picker" role="tablist" aria-label="Reps" className="mb-2 flex shrink-0 items-stretch gap-1 overflow-x-auto pb-1">
       {EX_ORDER.map((ex, i) => (
         <React.Fragment key={ex}>
           {i > 0 && <span aria-hidden className="mx-1 w-px shrink-0 self-stretch bg-border" />}
@@ -480,7 +480,7 @@ function ReviewPanel({ className, rep, reviews, device, onReview, onSelect }: {
         <span className="truncate">{repName(rep)}: <span className="font-semibold text-foreground">{rep.flex}° · {met}/{scored.length} checks met</span></span>
         {best && <span className="ml-auto shrink-0 rounded bg-success/15 px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider text-success">Best bend</span>}
       </p>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="review-panel-findings" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
           {checks.map((c) => c.na ? (
             <li key={c.label} className="flex items-center gap-2 rounded-md bg-muted/40 px-2 py-0.5" title="Not counted: the force plate gave no load for this rep">
@@ -518,7 +518,7 @@ function FindingRow({ rep, f, status, onReview }: { rep: Rep; f: Finding; status
   const k = reviewKey(rep.id, f.key);
   const label = FAULTS[f.key].label;
   return (
-    <li className={cn("flex items-center gap-2 rounded-md border px-2 py-1",
+    <li data-slot="finding-row" className={cn("flex items-center gap-2 rounded-md border px-2 py-1",
       status === "dismissed" ? "border-border bg-background opacity-60" : status ? "border-success/30 bg-success/[0.06]" : "border-warning/30 bg-warning/[0.06]")}>
       <div className="min-w-0 flex-1">
         <p className={cn("flex items-center gap-1 truncate text-xs font-semibold text-foreground", status === "dismissed" && "line-through")}>
@@ -566,7 +566,7 @@ function RangePanel({ className, rep }: { className?: string; rep: Rep }) {
         <span className={cn("text-2xl font-bold leading-none", met ? "text-success" : "text-warning")}>{rep.flex}°</span>
         <span className="truncate text-2xs text-muted-foreground">{ex.peak}</span>
       </div>
-      <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-[16/10]">
+      <div data-slot="range-panel-gauge" className="grid min-h-0 flex-1 place-items-center max-lg:aspect-[16/10]">
         <RangeGauge rep={rep} best={TODAY.flex} className="max-h-full" />
       </div>
       <dl className="mt-1 grid shrink-0 grid-cols-3 gap-x-2 gap-y-1">
@@ -677,7 +677,7 @@ function MeasuresPanel({ className, device }: { className?: string; device: Devi
   return (
     <Panel className={className} title="Measures vs Goal" meta="week 1 → goal"
       action={<InfoTip text="Each bar runs from the patient's week-1 baseline (left) to their goal (right). The tick is the last visit. Patients are only compared with themselves." />}>
-      <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto">
+      <ul data-slot="measures-panel-list" className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto">
         {measuresFor(device).map((m) => {
           const p = progressOf(m.baseline, m.goal, m.now);
           const last = progressOf(m.baseline, m.goal, m.last);
@@ -721,7 +721,7 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
   const adding = approved && plan === "progress";
   return (
     <Panel className={className} title="Clinician" meta="Programme change needs approval">
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="clinician-panel-content" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <div className="rounded-lg border border-border bg-background p-2">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="flex items-center gap-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -800,7 +800,7 @@ function FullReport(props: {
   name: string; device: DeviceMode; selected: string; onSelect: (id: string) => void; open: { rep: Rep; f: Finding }[]; approved: boolean; plan: Plan; signed: boolean; onSign: (v: boolean) => void; onShare: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="full-report" className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
       <RecoverySection device={props.device} />
       <RepTable device={props.device} selected={props.selected} onSelect={props.onSelect} />
@@ -831,7 +831,7 @@ function RecoverySection({ device }: { device: DeviceMode }) {
   const inBand = m.now >= lo && m.now <= hi;
   const ahead = lowerIsBetter ? m.now < lo : m.now > hi;
   return (
-    <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+    <section data-slot="recovery-section" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
       <div className="rounded-xl border border-border bg-card p-3 lg:col-span-8">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-bold text-foreground">Recovery</h3>
@@ -899,8 +899,8 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+    <section data-slot="rep-table" className="overflow-hidden rounded-xl border border-border bg-card">
+      <header data-slot="rep-table-header" className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Every rep</h3>
         <span className="text-2xs text-muted-foreground">Click a row to review that rep above</span>
       </header>
@@ -956,7 +956,7 @@ function DischargeCard({ className, device }: { className?: string; device: Devi
   const criteria = dischargeFor(device);
   const met = criteria.filter((d) => d.met).length;
   return (
-    <div className={cn("flex flex-col rounded-xl border border-border bg-card p-3", className)}>
+    <div data-slot="discharge-card" className={cn("flex flex-col rounded-xl border border-border bg-card p-3", className)}>
       <div className="mb-2 flex items-baseline gap-2">
         <h3 className="text-sm font-bold text-foreground">Discharge criteria</h3>
         <span className="text-2xs text-muted-foreground">{met} of {criteria.length} met</span>
@@ -998,7 +998,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
     { label: approved ? `Programme change approved (${PLAN_LABEL[plan].toLowerCase()})` : "Approve the programme change", done: approved },
   ];
   return (
-    <div className={cn("flex flex-col gap-2 rounded-xl border border-border bg-card p-3", className)}>
+    <div data-slot="sign-off-card" className={cn("flex flex-col gap-2 rounded-xl border border-border bg-card p-3", className)}>
       <div className="flex items-baseline gap-2">
         <h3 className="text-sm font-bold text-foreground">Clinician notes & sign-off</h3>
         <span className="text-2xs text-muted-foreground">Shown on {name}'s visit report</span>
@@ -1013,7 +1013,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
           </li>
         ))}
       </ul>
-      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
+      <div data-slot="sign-off-card-actions" className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
         {signed ? (
           <>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><ShieldCheck className="size-4" />Signed off by {VISIT.clinician} · {SIGNED_AT}</span>

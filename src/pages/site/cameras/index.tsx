@@ -253,7 +253,7 @@ function FilterPanel({
   ];
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="cameras-filter-panel" className="rounded-xl border border-border bg-card">
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
@@ -297,7 +297,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="cameras-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -384,7 +384,7 @@ type DrawerTab = "overview" | "recordings";
 /* Drawer body — loading skeleton (mirrors the overview layout). */
 function CameraDrawerSkeleton() {
   return (
-    <div className="flex-1 space-y-5 overflow-y-auto p-5">
+    <div data-slot="camera-drawer-skeleton" className="flex-1 space-y-5 overflow-y-auto p-5">
       <div className="aspect-video w-full animate-pulse rounded-xl bg-muted" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
@@ -406,7 +406,7 @@ function CameraDrawerSkeleton() {
 /* Drawer body — error state with retry. */
 function CameraDrawerError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-muted-foreground">
+    <div data-slot="camera-drawer-error" className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-muted-foreground">
       <AlertTriangle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load camera details.</p>
       <p className="text-xs">The feed and configuration for this camera are unavailable.</p>
@@ -628,7 +628,7 @@ export function CameraDrawer({
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           {camera ? (
-            <div className="flex items-start justify-between gap-3">
+            <div data-slot="camera-drawer-header" className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                   <StatusPill status={camera.status} />
@@ -665,7 +665,7 @@ export function CameraDrawer({
 
           {/* Tabs */}
           {camera && (
-            <div className="mt-3 flex items-center gap-1 border-b border-transparent">
+            <div data-slot="camera-drawer-tabs" className="mt-3 flex items-center gap-1 border-b border-transparent">
               {[
                 { key: "overview" as const,   label: "Overview",   icon: Layers },
                 { key: "recordings" as const, label: "Recordings", icon: FileVideo, badge: recordings.length },
@@ -704,9 +704,9 @@ export function CameraDrawer({
 
         {/* Body */}
         {camera && phase === "idle" && tab === "overview" && (
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div data-slot="camera-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
             {/* Live feed */}
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div data-slot="camera-drawer-live-feed" className="overflow-hidden rounded-xl border border-border bg-card">
               <div className="relative aspect-video w-full overflow-hidden bg-media-raised">
                 {camera.status === "online" ? (
                   <>
@@ -749,7 +749,7 @@ export function CameraDrawer({
             </div>
 
             {/* 3-up stat strip */}
-            <div className="grid grid-cols-3 gap-3">
+            <div data-slot="camera-drawer-stats" className="grid grid-cols-3 gap-3">
               <StatCard
                 label="Recordings"
                 value={recordings.length}
@@ -793,7 +793,7 @@ export function CameraDrawer({
             </div>
 
             {/* Device Info — full KV grid */}
-            <div>
+            <div data-slot="camera-drawer-device-info">
               <SectionTitle>Device Info</SectionTitle>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
@@ -835,7 +835,7 @@ export function CameraDrawer({
             </div>
 
             {/* Stream + Video Specs */}
-            <div>
+            <div data-slot="camera-drawer-stream">
               <SectionTitle>Stream Specifications</SectionTitle>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
@@ -859,7 +859,7 @@ export function CameraDrawer({
             </div>
 
             {/* NVR Storage */}
-            <div>
+            <div data-slot="camera-drawer-storage">
               <SectionTitle>NVR Storage</SectionTitle>
               {nvr && camera.nvrId && camera.nvrName ? (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
@@ -912,9 +912,9 @@ export function CameraDrawer({
         )}
 
         {camera && phase === "idle" && tab === "recordings" && (
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
+          <div data-slot="camera-drawer-recordings" className="flex-1 space-y-4 overflow-y-auto p-5">
             {/* Search + date filters */}
-            <div className="space-y-3">
+            <div data-slot="camera-drawer-recordings-filters" className="space-y-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -984,7 +984,7 @@ export function CameraDrawer({
 
             {/* Recordings grid */}
             {!camera.nvrId ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
+              <div data-slot="camera-drawer-recordings-empty" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
                 <FileVideo className="size-9 opacity-30" />
                 <p className="text-base font-medium">No NVR linked</p>
                 <p className="max-w-xs text-center text-xs">
@@ -996,13 +996,13 @@ export function CameraDrawer({
                 </Button>
               </div>
             ) : filteredRecordings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
+              <div data-slot="camera-drawer-recordings-empty" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
                 <FileVideo className="size-9 opacity-30" />
                 <p className="text-base">No recordings match this filter.</p>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div data-slot="camera-drawer-recordings-grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {filteredRecordings.map((r) => (
                     <RecordingCard
                       key={r.id}
@@ -1025,7 +1025,7 @@ export function CameraDrawer({
 
         {/* Floating selection bar inside drawer */}
         {camera && phase === "idle" && tab === "recordings" && selectedRecordingIds.size > 0 && (
-          <div className="absolute inset-x-4 bottom-20 z-40 mx-auto flex max-w-[640px] flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
+          <div data-slot="camera-drawer-selection-bar" className="absolute inset-x-4 bottom-20 z-40 mx-auto flex max-w-[640px] flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
             <div className="flex items-center gap-2">
               <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
                 <Check className="size-3.5" strokeWidth={3} />
@@ -1056,7 +1056,7 @@ export function CameraDrawer({
 
         {/* Footer */}
         {camera && phase === "idle" && (
-          <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+          <div data-slot="camera-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
             <Button size="sm" className="gap-1.5" onClick={onEdit}>
               <Pencil className="size-3.5" />
               Edit Camera
@@ -1725,7 +1725,7 @@ export default function CamerasPage({
   }, [deployments]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="cameras-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>{title}</PageHeader.Title>
@@ -1763,7 +1763,7 @@ export default function CamerasPage({
       />
 
       {/* Count */}
-      <p className="text-base text-muted-foreground">
+      <p data-slot="cameras-page-results" className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "camera" : "cameras"} match current filters
         {hasFilters && (
@@ -1778,7 +1778,7 @@ export default function CamerasPage({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="cameras-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Video className="size-10 opacity-20" />
           {cameras.length === 0 ? (
             <>
@@ -1803,7 +1803,7 @@ export default function CamerasPage({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="cameras-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -1931,7 +1931,7 @@ export default function CamerasPage({
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-            <p className="text-sm text-muted-foreground">
+            <p data-slot="cameras-page-pagination" className="text-sm text-muted-foreground">
               {filtered.length === 0
                 ? "0 of 0"
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}

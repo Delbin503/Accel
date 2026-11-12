@@ -49,7 +49,7 @@ export function DeviceStatusValue({ mode, connected, offlineFrom }: { mode: Devi
 /** Thin banner under the session strip when the device dropped out during the session. */
 export function DeviceOfflineBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div role="status" className="flex shrink-0 items-center gap-2 rounded-lg border border-warning/30 bg-warning/[0.07] px-3 py-1.5 text-xs text-foreground">
+    <div data-slot="device-offline-banner" role="status" className="flex shrink-0 items-center gap-2 rounded-lg border border-warning/30 bg-warning/[0.07] px-3 py-1.5 text-xs text-foreground">
       <WifiOff className="size-4 shrink-0 text-warning" />
       <span className="min-w-0">{children}</span>
     </div>
@@ -73,7 +73,7 @@ export function EstTag({ className }: { className?: string }) {
 /** Panel body when a panel's data comes only from the missing device. */
 export function DeviceMissing({ device, unit, what, className }: { device: string; unit: string; what: string; className?: string }) {
   return (
-    <div className={cn("flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-center", className)}>
+    <div data-slot="device-missing" className={cn("flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-center", className)}>
       <Unplug className="size-5 text-muted-foreground" />
       <p className="text-sm font-semibold text-foreground">No {device.toLowerCase()} on {unit}</p>
       <p className="max-w-64 text-xs text-muted-foreground">{what}</p>

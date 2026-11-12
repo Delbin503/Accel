@@ -59,7 +59,7 @@ import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/Kp
 
 function TimelineRow({ entry }: { entry: EntityTimelineEntry }) {
   return (
-    <div
+    <div data-slot="entity-timeline-row"
       className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30"
       style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${entry.severity})` }}
     >
@@ -132,7 +132,7 @@ function LinkedCaseCard({
   eventCount: number;
 }) {
   return (
-    <div
+    <div data-slot="entity-linked-case-card"
       className="rounded-xl border bg-card p-4"
       style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${severity})` }}
     >
@@ -179,7 +179,7 @@ function EntityKpiRow({
     reIdConfidence >= 70 ? "Medium confidence" :
     "Low confidence";
   return (
-    <div className="grid grid-cols-3 gap-2.5">
+    <div data-slot="entity-drawer-kpis" className="grid grid-cols-3 gap-2.5">
       <SharedKpiCard compact
         label="Total Detections"
         value={totalDetections}
@@ -214,7 +214,7 @@ function EntityKpiRow({
 
 function DetectedTimeline({ entries }: { entries: EntityTimelineEntry[] }) {
   return (
-    <div>
+    <div data-slot="entity-drawer-timeline">
       <div className="mb-2.5">
         <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Detected Timeline
@@ -255,7 +255,7 @@ function PossibleMatchCard({
   const scoreBg = match.similarity >= 80 ? "bg-success/15 border-success/40" : match.similarity >= 65 ? "bg-warning/15 border-warning/40" : "bg-muted border-border";
 
   return (
-    <div className={cn(
+    <div data-slot="possible-match-card" className={cn(
       "overflow-hidden rounded-lg border bg-card transition-colors",
       isApproved ? "border-success/50 bg-success/[0.04]" :
       isRejected ? "border-border opacity-50" :
@@ -386,7 +386,7 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
   const rejectedCount = matches.filter((m) => verdicts[m.candidateId] === "rejected").length;
 
   return (
-    <div>
+    <div data-slot="entity-drawer-possible-matches">
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           <Sparkles className="size-3 text-info" />
@@ -460,7 +460,7 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
 function LinkedCasesSection({ linkedCases }: { linkedCases: import("@/types/entities").EntityLinkedCase[] }) {
   if (linkedCases.length === 0) return null;
   return (
-    <div>
+    <div data-slot="entity-drawer-linked-cases">
       <div className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Linked Cases
       </div>
@@ -485,7 +485,7 @@ function PersonBody({ entity }: { entity: PersonEntity }) {
       />
 
       {/* Meta grid — First Seen removed */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {(
           [
             ["Person ID", <span className="font-mono text-xs text-info">{entity.id}</span>],
@@ -529,7 +529,7 @@ function AssetBody({ entity }: { entity: AssetEntity }) {
         priorIncidents={entity.priorEventCount ?? 0}
       />
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {(
           [
             ["Asset ID",       <span className="font-mono text-xs text-primary-ink">{entity.id}</span>],
@@ -571,7 +571,7 @@ function VehicleBody({ entity }: { entity: VehicleEntity }) {
         priorIncidents={entity.priorEventCount ?? 0}
       />
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
+      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {(
           [
             ["Asset ID",       <span className="font-mono text-xs text-success">{entity.id}</span>],
@@ -654,7 +654,7 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           {entity ? (
-            <div className="flex items-start justify-between gap-3">
+            <div data-slot="entity-drawer-header" className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                   {badge && (
@@ -700,7 +700,7 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
 
         {/* Body */}
         {entity && (
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div data-slot="entity-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
             {entity.kind === "person" ? (
               <PersonBody entity={entity as PersonEntity} />
             ) : entity.kind === "vehicle" ? (

@@ -295,7 +295,7 @@ export function VideoEnhancement() {
   const draftRatio = draft ? ASPECTS.find((a) => a.id === draft.aspect)?.ratio ?? null : null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="video-enhancement-page" className="flex flex-col gap-4">
       {/* The sharpen kernel lives once, off-screen, and is referenced by filter url(). */}
       <svg width="0" height="0" className="absolute" aria-hidden="true">
         <defs>
@@ -334,10 +334,10 @@ export function VideoEnhancement() {
         </PageHeader.Actions>
       </PageHeader>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[1fr_320px]">
+      <div data-slot="video-enhancement-page-workspace" className="grid items-start gap-4 lg:grid-cols-[1fr_320px]">
         {/* ── Viewer ── */}
-        <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+        <div data-slot="video-enhancement-page-viewer" className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
+          <div data-slot="video-enhancement-page-viewer-header" className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
             <p className="text-base font-semibold text-foreground">{recording.cameraName}</p>
 
             <Select value={recordingId} onValueChange={pickRecording}>
@@ -359,7 +359,7 @@ export function VideoEnhancement() {
 
           {/* Crop mode toolbar — shape, then cancel or save */}
           {draft && (
-            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
+            <div data-slot="video-enhancement-page-crop-toolbar" className="flex flex-wrap items-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
               <Crop className="size-4 text-primary-ink" />
               <span className="text-sm font-semibold text-foreground">
                 {draft.editingId ? `Editing ${savedCrops.find((c) => c.id === draft.editingId)?.name}` : "Crop mode"}
@@ -389,7 +389,7 @@ export function VideoEnhancement() {
             </div>
           )}
 
-          <div className="bg-media p-4">
+          <div data-slot="video-enhancement-page-stage" className="bg-media p-4">
             <div className="relative mx-auto aspect-video w-full overflow-hidden rounded-lg">
               {/* Drawing shows the whole frame; otherwise a crop that is on shows only what it keeps. */}
               {activeCrop && !draft ? (
@@ -416,7 +416,7 @@ export function VideoEnhancement() {
           </div>
 
           {/* Resolved settings — legible in review without opening devtools */}
-          <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-border px-4 py-2.5 font-mono text-2xs text-muted-foreground">
+          <div data-slot="video-enhancement-page-settings-readout" className="flex flex-wrap gap-x-5 gap-y-1 border-t border-border px-4 py-2.5 font-mono text-2xs text-muted-foreground">
             <span>brightness: <span className="text-foreground">{enh.brightness}%</span></span>
             <span>contrast: <span className="text-foreground">{enh.contrast}%</span></span>
             <span>sharpness: <span className="text-foreground">{enh.sharpness}</span></span>
@@ -428,9 +428,9 @@ export function VideoEnhancement() {
 
 
         {/* ── Controls ── */}
-        <div className="flex flex-col gap-4">
+        <div data-slot="video-enhancement-page-controls" className="flex flex-col gap-4">
           <SectionCard collapsible size="sm" title="Image" description="Applied on playback and on export.">
-            <div className="space-y-4">
+            <div data-slot="video-enhancement-page-image-controls" className="space-y-4">
               <Slider
                 label="Brightness"
                 value={enh.brightness}
@@ -462,7 +462,7 @@ export function VideoEnhancement() {
           </SectionCard>
 
           <SectionCard collapsible size="sm" title="Crop" description="Draw it on the video, save, switch on.">
-            <div className="space-y-3">
+            <div data-slot="video-enhancement-page-crop-controls" className="space-y-3">
               <Button
                 variant={draft && !draft.editingId ? "default" : "outline"}
                 size="sm"
@@ -527,7 +527,7 @@ export function VideoEnhancement() {
               description={`${files.length} files · enhancements apply to all`}
               flushBody
             >
-              <ul className="max-h-96 divide-y divide-border/60 overflow-y-auto">
+              <ul data-slot="video-enhancement-page-files-list" className="max-h-96 divide-y divide-border/60 overflow-y-auto">
                 {files.map((f) => {
                   const active = f.id === file.id;
                   return (
@@ -560,7 +560,7 @@ export function VideoEnhancement() {
             </SectionCard>
           )}
 
-          <div className="rounded-xl border border-border bg-card p-3">
+          <div data-slot="video-enhancement-page-hint" className="rounded-xl border border-border bg-card p-3">
             <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <Sparkles className="mt-0.5 size-3 flex-shrink-0 text-primary-ink" />
               Enhancements are non-destructive — they are stored alongside the clip and applied

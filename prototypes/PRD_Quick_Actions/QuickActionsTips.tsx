@@ -13,12 +13,12 @@ export function QuickActionsTips() {
   const setQuery = useCommandPaletteStore((s) => s.setQuery);
 
   return (
-    <div className="w-64 rounded-xl border border-border bg-card p-3 shadow-floating">
+    <div data-slot="quick-actions-tips" className="w-64 rounded-xl border border-border bg-card p-3 shadow-floating">
       <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Quick Actions prototype
       </p>
 
-      <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+      <div data-slot="quick-actions-tips-list" className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <button
           type="button"
           onClick={() => openPalette("search")}
@@ -48,7 +48,7 @@ export function QuickActionsTips() {
       <p className="mt-2.5 mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Try a query
       </p>
-      <div className="flex flex-wrap gap-1">
+      <div data-slot="quick-actions-tips-samples" className="flex flex-wrap gap-1">
         {SAMPLES.map((q) => (
           <button
             key={q}

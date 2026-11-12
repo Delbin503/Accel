@@ -37,7 +37,7 @@ export function ActivitiesPicker({
   }
 
   return (
-    <div className={cn("rounded-lg border bg-background p-2.5", invalid ? "border-severity-critical" : "border-border")}>
+    <div data-slot="activities-picker" className={cn("rounded-lg border bg-background p-2.5", invalid ? "border-severity-critical" : "border-border")}>
       <div className="flex flex-wrap gap-1.5">
         {options.map((a) => {
           const on = value.includes(a);
@@ -158,7 +158,7 @@ export function AssessmentFields({
 export function AssessmentSummary({ info }: { info: AssessmentInfo }) {
   const uc = USE_CASES[info.useCase];
   return (
-    <div className="mt-3 grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-[180px_1fr]">
+    <div data-slot="assessment-summary" className="mt-3 grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-[180px_1fr]">
       <div>
         <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Use case</p>
         <p className="mt-0.5 text-base font-semibold text-foreground">{uc.full}</p>
@@ -183,7 +183,7 @@ export function AssessmentSummary({ info }: { info: AssessmentInfo }) {
 export function AssessmentCriteriaColumn({ info }: { info: AssessmentInfo }) {
   const uc = USE_CASES[info.useCase];
   return (
-    <div className="h-[460px] space-y-3 overflow-y-auto pr-1">
+    <div data-slot="assessment-criteria-column" className="h-[460px] space-y-3 overflow-y-auto pr-1">
       <div className="rounded-xl border border-border bg-background p-3">
         <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
           <Target className="size-4 text-primary-ink" />

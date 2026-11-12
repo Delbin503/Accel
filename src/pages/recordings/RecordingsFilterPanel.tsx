@@ -82,8 +82,8 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
   const TYPE_OPTS = LISTED_TYPE_IDS.map((id) => ({ value: id, label: typeById(id).label }));
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
+    <div data-slot="recordings-filter-panel" className="rounded-xl border border-border bg-card">
+      <div data-slot="recordings-filter-panel-header" className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
@@ -102,14 +102,14 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
         </button>
       </div>
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="recordings-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by recording ID, camera, or area…" className="h-9 w-full pl-9 text-base" />
           </div>
           {/* Four per row at most — the fifth dropdown wraps to a second row. */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div data-slot="recordings-filter-panel-grid" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {[
               { key: "site" as const, label: "Site", opts: CAMERA_SITES },
               { key: "area" as const, label: "Area", opts: CAMERA_AREAS },

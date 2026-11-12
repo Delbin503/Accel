@@ -58,7 +58,7 @@ export function CropOverlay({
   const pct = (v: number) => `${v * 100}%`;
 
   return (
-    <div
+    <div data-slot="crop-overlay"
       ref={frameRef}
       className="absolute inset-0 touch-none select-none"
       onPointerDown={begin}
@@ -66,13 +66,13 @@ export function CropOverlay({
       onPointerUp={end}
       onPointerCancel={end}
     >
-      <div
+      <div data-slot="crop-overlay-box"
         className="absolute cursor-move border-2 border-primary shadow-[0_0_0_9999px_rgb(0_0_0/0.55)]"
         style={{ left: pct(rect.x), top: pct(rect.y), width: pct(rect.w), height: pct(rect.h) }}
         data-handle="move"
       >
         {/* Rule-of-thirds guides */}
-        <div className="pointer-events-none absolute inset-0">
+        <div data-slot="crop-overlay-guides" className="pointer-events-none absolute inset-0">
           <div className="absolute inset-y-0 left-1/3 w-px bg-media-foreground/30" />
           <div className="absolute inset-y-0 left-2/3 w-px bg-media-foreground/30" />
           <div className="absolute inset-x-0 top-1/3 h-px bg-media-foreground/30" />

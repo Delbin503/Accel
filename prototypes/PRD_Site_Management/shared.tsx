@@ -7,7 +7,7 @@ export type ForcedState = "normal" | "loading" | "empty" | "error";
 /** Skeleton that mirrors the Site Management layout: KPIs → toolbar → table. */
 export function SiteTableSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="site-overview-page-skeleton" className="flex flex-col gap-4">
       {/* KPI cards (cols=4) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
@@ -41,7 +41,7 @@ export function SiteTableSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
+    <div data-slot="site-overview-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-16 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load sites.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -51,7 +51,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+    <div data-slot="site-overview-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
       <MapPinned className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No sites yet</p>
       <p className="text-sm">Add a site to upload floor plans, draw areas, and place cameras.</p>

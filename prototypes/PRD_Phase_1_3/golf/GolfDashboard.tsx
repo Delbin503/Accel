@@ -73,8 +73,8 @@ export function GolfDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
+    <div data-slot="golf-dashboard-page" className="flex flex-col gap-6">
+      <div data-slot="golf-dashboard-page-overview" className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
         <PageHeader>
           <PageHeader.Content className="flex-row items-center gap-3">
             <PageHeader.Title>Swing Analysis</PageHeader.Title>
@@ -96,7 +96,7 @@ export function GolfDashboard() {
           </PageHeader.Actions>
         </PageHeader>
 
-        <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
+        <dl data-slot="golf-dashboard-page-meta" className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
           {([
             ["Academy / bay", `${GOLFER.academy} · ${SESSION.bay}`], ["Club", SESSION.club], ["Coach", SESSION.coach], ["Date", SESSION.date], ["Cameras", SESSION.cameras],
             [DEVICE, <DeviceStatusValue mode={mode} connected={SESSION.launchMonitor} offlineFrom={OFFLINE_AT} />],
@@ -116,7 +116,7 @@ export function GolfDashboard() {
 
         <SummaryStrip reviews={reviews} golfer={golfer} monitor={monitor} />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
+        <div data-slot="golf-dashboard-page-panels" className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
           <VideoPanel className="lg:col-span-5" swing={swing} ball={monitor.hasBall(swing)} view={view} phase={phase} onView={setView} onPhase={setPhase} onSelect={setSelected} />
           <ReviewPanel className="lg:col-span-4" swing={swing} ball={monitor.hasBall(swing)} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
           <BallPanel className="lg:col-span-3" swing={swing} monitor={monitor} onSelect={setSelected} />
@@ -137,13 +137,13 @@ function Panel({ id, title, meta, action, className, bodyClassName, children }: 
   id?: string; title: string; meta?: React.ReactNode; action?: React.ReactNode; className?: string; bodyClassName?: string; children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+    <section data-slot="golf-panel" id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <header data-slot="golf-panel-header" className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
         <h2 className="shrink-0 text-sm font-bold text-foreground">{title}</h2>
         {meta && <span className="min-w-0 truncate text-2xs text-muted-foreground">{meta}</span>}
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </header>
-      <div className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
+      <div data-slot="golf-panel-body" className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -234,7 +234,7 @@ function SummaryStrip({ reviews, golfer, monitor }: { reviews: Reviews; golfer: 
     { label: "To review", value: String(open), tone: open ? "text-warning" : "text-success", info: "AI findings the coach hasn't confirmed or dismissed yet.", delta: <span className="text-muted-foreground">{open ? "Confirm or dismiss" : "All reviewed"}</span> },
   ];
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
+    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{golfer.initials}</span>
         <div className="min-w-0 flex-1">
@@ -322,7 +322,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
         </div>
       }
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
+      <div data-slot="video-panel-frame" className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
         <SwingFrame swing={swing} view={view} phase={phase} showPose={showPose} ball={ball} className="absolute inset-0">
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </SwingFrame>
@@ -333,7 +333,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
         )}
       </div>
       {/* Key moments of the picked swing */}
-      <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
+      <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
         <button type="button" aria-label={running ? "Pause" : "Play through the swing"}
           onClick={() => {
             if (running) return setPlaying(false);
@@ -356,7 +356,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
         <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
       </div>
       {/* Lesson timeline: every swing, coloured by its grade */}
-      <div className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
+      <div data-slot="video-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
         <span className="font-mono text-2xs text-muted-foreground">{fmtClock(swing.at)}</span>
         <div className="relative h-4 flex-1">
           <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-muted" />
@@ -414,7 +414,7 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
   return (
     <Panel className={className} title="Swing Review" meta="Pick a swing">
       {/* One row that scrolls sideways, however many swings the lesson had. */}
-      <div ref={strip} role="tablist" aria-label="Swings" className="mb-2 flex shrink-0 gap-1 overflow-x-auto pb-1">
+      <div data-slot="review-panel-swings" ref={strip} role="tablist" aria-label="Swings" className="mb-2 flex shrink-0 gap-1 overflow-x-auto pb-1">
         {SWINGS.map((s) => {
           const active = s.n === swing.n;
           const sc = swingScore(s);
@@ -436,7 +436,7 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
         <span>Swing {swing.n}: <span className="font-semibold text-foreground">{score}/100{ball && ` · ${swing.carry} yd · ${shapeOf(swing)}`}</span> · {met}/{scored} met</span>
         {tag && <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", swing.n === BEST_SWING ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>}
       </p>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="review-panel-findings" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
           {checks.map((c) => c.ok === null ? (
             <li key={c.label} className="flex items-center gap-2 rounded-md bg-background px-2 py-1">
@@ -473,7 +473,7 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
 function FindingRow({ n, f, status, onReview }: { n: number; f: Finding; status?: Review; onReview: (k: string, r: Review) => void }) {
   const k = reviewKey(n, f.key);
   return (
-    <li className={cn("flex items-center gap-2 rounded-md border px-2 py-1", status === "dismissed" ? "border-border bg-background opacity-60" : status === "confirmed" ? "border-success/30 bg-success/[0.06]" : "border-warning/30 bg-warning/[0.06]")}>
+    <li data-slot="finding-row" className={cn("flex items-center gap-2 rounded-md border px-2 py-1", status === "dismissed" ? "border-border bg-background opacity-60" : status === "confirmed" ? "border-success/30 bg-success/[0.06]" : "border-warning/30 bg-warning/[0.06]")}>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-xs font-semibold text-foreground", status === "dismissed" && "line-through")}>{FAULTS[f.key].label}</p>
         <p className="truncate font-mono text-3xs text-muted-foreground">{f.detail} · <span className={CONF_TONE[f.confidence]}>{f.confidence} confidence</span></p>
@@ -522,7 +522,7 @@ function BallPanel({ className, swing, monitor, onSelect }: { className?: string
   ];
   return (
     <Panel className={className} title="Ball & Club" meta={mode === "offline" ? `Swing ${swing.n} · swings ${WITH_BALL} plotted` : `Swing ${swing.n} · launch monitor`}>
-      <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
+      <div data-slot="ball-panel-plot" className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
         <Dispersion swings={plotted} focus={swing.n} onSelect={onSelect} className="max-h-full" />
       </div>
       {ball ? (
@@ -636,7 +636,7 @@ function Swatch({ c }: { c: string }) {
 
 function MiniChart({ title, value, bad, legend, children }: { title: string; value: string; bad?: boolean; legend: React.ReactNode; children: React.ReactElement }) {
   return (
-    <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
+    <div data-slot="mini-chart" className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         <span className={cn("ml-auto truncate font-mono text-3xs font-semibold", bad ? "text-severity-critical" : "text-muted-foreground")}>{value}</span>
@@ -656,7 +656,7 @@ function FundamentalsPanel({ className }: { className?: string }) {
   return (
     <Panel className={className} title="Fundamentals" meta={`vs ${PREVIOUS.date}`}
       action={<InfoTip text={`Each fundamental is scored 0–100 on every swing and graded on the average: ${GRADE_BANDS.map(([g, m]) => `${g} ${m}+`).join(" · ")}. A swing meets it at 75+.`} />}>
-      <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1">
+      <ul data-slot="fundamentals-panel-list" className="flex min-h-0 flex-1 flex-col justify-between gap-1">
         {rows.map((f) => (
           <li key={f.key} className="flex items-center gap-2" title={f.measures}>
             <GradeBadge score={f.score} size="sm" />
@@ -692,7 +692,7 @@ function CoachingPanel({ className, monitor, onSee }: { className?: string; moni
   const strongest = [...fundamentalsFor(SWINGS)].sort((a, b) => b.score - a.score).slice(0, 2);
   return (
     <Panel className={className} title="Coaching" meta="What to work on next">
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="coaching-panel-list" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {faults.map((f, i) => (
           <div key={f.key} className="rounded-lg border border-border bg-background p-2">
             <div className="flex items-baseline gap-2">
@@ -726,7 +726,7 @@ function CoachingPanel({ className, monitor, onSee }: { className?: string; moni
 
 function FullReport({ selected, onSelect, monitor }: { selected: number; onSelect: (n: number) => void; monitor: Monitor }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="full-report" className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
       <CompareSection selected={selected} monitor={monitor} />
       <SwingTable selected={selected} onSelect={onSelect} monitor={monitor} />
@@ -782,8 +782,8 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
   ];
   const fmt = (v: number | null, d = 1) => (v === null ? "—" : v.toFixed(d));
   return (
-    <section className="rounded-xl border border-border bg-card">
-      <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+    <section data-slot="compare-section" className="rounded-xl border border-border bg-card">
+      <header data-slot="compare-section-header" className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Compare swings</h3>
         <span className="text-2xs text-muted-foreground">Synced at the same moment</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -793,7 +793,7 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
           <PanelTabs value={view} onChange={setView} tabs={[["face", "Face-on"], ["dtl", "Down-the-line"]]} className="group-data-[orientation=horizontal]/tabs:h-8" />
         </div>
       </header>
-      <div className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
+      <div data-slot="compare-section-content" className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
         <div className="flex flex-col gap-2 lg:col-span-8">
           <div role="tablist" aria-label="Sync at" className="flex gap-1">
             {PHASES.map((p) => (
@@ -867,8 +867,8 @@ function SwingTable({ selected, onSelect, monitor }: { selected: number; onSelec
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+    <section data-slot="swing-table" className="overflow-hidden rounded-xl border border-border bg-card">
+      <header data-slot="swing-table-header" className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Every swing</h3>
         <span className="text-2xs text-muted-foreground">Click a row to review that swing above</span>
       </header>
@@ -946,7 +946,7 @@ function ProgressSection({ monitor }: { monitor: Monitor }) {
       : { key: "clubSpeed", title: "Club speed", unit: " mph" },
   ];
   return (
-    <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+    <section data-slot="progress-section" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
       <div className="rounded-xl border border-border bg-card p-3 lg:col-span-5">
         <div className="mb-2 flex items-baseline gap-2">
           <h3 className="text-sm font-bold text-foreground">Progress</h3>

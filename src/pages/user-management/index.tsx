@@ -140,7 +140,7 @@ function Avatar({ user, size = 36 }: { user: UserData; size?: number }) {
     .join("")
     .toUpperCase();
   return (
-    <div
+    <div data-slot="user-avatar"
       className="flex items-center justify-center rounded-full bg-muted font-mono text-sm font-semibold text-muted-foreground"
       style={{ width: size, height: size }}
     >
@@ -276,8 +276,8 @@ function FilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div
+    <div data-slot="user-filter-panel" className="rounded-xl border border-border bg-card">
+      <div data-slot="user-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
@@ -312,7 +312,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="user-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -323,7 +323,7 @@ function FilterPanel({
             />
           </div>
           {/* One row — three columns on the main view, two when Status is hidden. */}
-          <div
+          <div data-slot="user-filter-panel-grid"
             className={cn(
               "grid grid-cols-1 gap-3",
               filterGroups.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
@@ -373,7 +373,7 @@ function SitesCell({ user }: { user: UserData }) {
 
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
-    <div className="mb-2.5 flex items-center justify-between">
+    <div data-slot="section-title" className="mb-2.5 flex items-center justify-between">
       <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {children}
       </span>
@@ -475,8 +475,8 @@ function UpdateUserMenu({
 
 function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspension; onReinstate: () => void }) {
   return (
-    <div className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <div data-slot="suspension-info-card" className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
+      <div data-slot="suspension-info-card-header" className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
           <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/30 bg-severity-critical/10">
             <Ban className="size-4 text-severity-critical" />
@@ -498,7 +498,7 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
           Reinstate
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
+      <div data-slot="suspension-info-card-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended From</p>
           <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.startedAtDisplay}</p>
@@ -517,7 +517,7 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
         </div>
       </div>
       {suspension.note && (
-        <div className="mt-3 rounded-lg border border-severity-critical/15 bg-card px-3 py-2.5">
+        <div data-slot="suspension-info-card-note" className="mt-3 rounded-lg border border-severity-critical/15 bg-card px-3 py-2.5">
           <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
           <p className="text-sm leading-relaxed text-foreground">{suspension.note}</p>
         </div>
@@ -538,8 +538,8 @@ function DeletedAccountInfoCard({
   onRestore: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <div data-slot="deleted-account-info-card" className="rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] p-4">
+      <div data-slot="deleted-account-info-card-header" className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
           <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-severity-critical/30 bg-severity-critical/10">
             <Trash2 className="size-4 text-severity-critical" />
@@ -561,7 +561,7 @@ function DeletedAccountInfoCard({
           Restore
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
+      <div data-slot="deleted-account-info-card-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted On</p>
           <p className="mt-0.5 text-sm font-semibold text-severity-critical">{deletedAtDisplay}</p>
@@ -627,7 +627,7 @@ export function UserDrawer({
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
           {user ? (
-            <div className="flex items-start justify-between gap-3">
+            <div data-slot="user-drawer-header" className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Avatar user={user} size={44} />
                 <div className="min-w-0 flex-1">
@@ -670,7 +670,7 @@ export function UserDrawer({
 
         {/* ── Body ───────────────────────────────────────────────────────── */}
         {user ? (
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div data-slot="user-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
             {isDeleted && deletedMeta && (
               <DeletedAccountInfoCard
                 deletedAtDisplay={deletedMeta.deletedAtDisplay}
@@ -686,7 +686,7 @@ export function UserDrawer({
             )}
 
             {/* Overview KPIs */}
-            <div>
+            <div data-slot="user-drawer-overview">
               <SectionTitle>Overview</SectionTitle>
               <div className="grid grid-cols-3 gap-3">
                 <StatCard label="Cases Owned" value={user.cases30d} sub="Last 30 days" />
@@ -707,7 +707,7 @@ export function UserDrawer({
             </div>
 
             {/* Member details */}
-            <div>
+            <div data-slot="user-drawer-details">
               <SectionTitle>Member Details</SectionTitle>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                 {(
@@ -751,7 +751,7 @@ export function UserDrawer({
             </div>
 
             {/* Site permissions — no Manage button (Fix #2) */}
-            <div>
+            <div data-slot="user-drawer-sites">
               <SectionTitle>Site Permissions ({user.sitePermissions.length})</SectionTitle>
               {user.sitePermissions.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
@@ -789,7 +789,7 @@ export function UserDrawer({
             </div>
 
             {/* Role & Access */}
-            <div>
+            <div data-slot="user-drawer-role">
               <SectionTitle>Role & Access</SectionTitle>
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
@@ -807,7 +807,7 @@ export function UserDrawer({
 
             {/* Authentication — wired buttons (Fix #2) */}
             {!isDeleted && (
-            <div>
+            <div data-slot="user-drawer-auth">
               <SectionTitle>Authentication</SectionTitle>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
@@ -850,7 +850,7 @@ export function UserDrawer({
             )}
 
             {/* Activities */}
-            <div>
+            <div data-slot="user-drawer-activity">
               <SectionTitle>User Activities</SectionTitle>
               {user.activities.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
@@ -885,7 +885,7 @@ export function UserDrawer({
             </div>
           </div>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+          <div data-slot="user-drawer-empty" className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
             <AlertTriangle className="size-8 opacity-20" />
             <p className="text-sm">User not found.</p>
           </div>
@@ -893,7 +893,7 @@ export function UserDrawer({
 
         {/* ── Footer ─────────────────────────────────────────────────────── */}
         {user && (
-          <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+          <div data-slot="user-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
             {isDeleted ? (
               <Button
                 variant="outline"
@@ -1010,7 +1010,7 @@ export function InviteUsersModal({
         {/* Scrollable body — modal height is fixed; content scrolls inside. */}
         <ModalBody className="space-y-3.5">
           {/* Seat tiles double as the role selector — pick a tier to invite into. */}
-          <div>
+          <div data-slot="invite-users-modal-seats">
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Seat Type
             </label>
@@ -1052,7 +1052,7 @@ export function InviteUsersModal({
           </div>
 
           {/* Site Access — moved ABOVE the email field, rendered as a dropdown */}
-          <div>
+          <div data-slot="invite-users-modal-sites">
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site Access
             </label>
@@ -1109,7 +1109,7 @@ export function InviteUsersModal({
           </div>
 
           {/* Department */}
-          <div>
+          <div data-slot="invite-users-modal-department">
             <label className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               Department
             </label>
@@ -1123,7 +1123,7 @@ export function InviteUsersModal({
           </div>
 
           {/* Emails */}
-          <div>
+          <div data-slot="invite-users-modal-emails">
             <div className="mb-1 flex items-center justify-between">
               <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Email Addresses
@@ -1255,7 +1255,7 @@ function SeatPill({
             <p className="text-base font-bold text-foreground">{label}</p>
           </div>
         </div>
-        <div className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
+        <div data-slot="seat-pill-details" className="space-y-1.5 rounded-md border border-border bg-background p-2.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Total</span>
             <span className="font-mono font-semibold text-foreground">{total}</span>
@@ -1305,14 +1305,14 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
   const activatedAll = Math.max(0, assignedAll - pendingAll);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div data-slot="seat-strip" className="rounded-xl border border-border bg-card p-3">
+      <div data-slot="seat-strip-header" className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Seat Usage
         </div>
         <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
       </div>
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+      <div data-slot="seat-strip-grid" className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         <SeatPill
           kind="all"
           label="Total Seats"
@@ -2040,7 +2040,7 @@ export function EditUserModal({
           description="Email and User ID are fixed after creation."
         />
         <ModalBody className="space-y-3">
-          <div className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
+          <div data-slot="edit-user-modal-user" className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5">
             <Avatar user={user} size={32} />
             <div className="min-w-0 flex-1">
               <TruncatedText text={user.email} className="text-base font-semibold text-foreground" />
@@ -2297,7 +2297,7 @@ export function SuspendUserModal({
             />
           </div>
 
-          <div className="rounded-lg border border-severity-critical/25 bg-severity-critical/[0.05] px-3 py-2.5">
+          <div data-slot="suspend-user-modal-warning" className="rounded-lg border border-severity-critical/25 bg-severity-critical/[0.05] px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
               <Ban className="mr-1 inline-block size-3 text-severity-critical align-text-bottom" />
               Suspending blocks sign-in immediately. Active sessions revoke on next refresh.
@@ -2525,7 +2525,7 @@ function DeletedUsersPage({
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
   const drawerUser = drawerId ? users.find((u) => u.id === drawerId) ?? null : null;
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="deleted-users-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Deleted Users List</PageHeader.Title>
@@ -2546,7 +2546,7 @@ function DeletedUsersPage({
         hideStatus
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div data-slot="deleted-users-page-toolbar" className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "deleted user" : "deleted users"} match current filters
@@ -2585,7 +2585,7 @@ function DeletedUsersPage({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="deleted-users-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Trash2 className="size-10 opacity-20" />
           <p className="text-sm">{users.length === 0 ? "No deleted users yet." : "No deleted users match the current filters."}</p>
           {hasFilters && (
@@ -2599,7 +2599,7 @@ function DeletedUsersPage({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="deleted-users-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -2669,7 +2669,7 @@ function DeletedUsersPage({
               </tbody>
             </table>
           </div>
-          <div className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
+          <div data-slot="deleted-users-page-footer" className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
             {hasMore && (
               <Button
                 variant="outline"
@@ -3020,7 +3020,7 @@ export default function UserManagementPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="user-management-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>User Management</PageHeader.Title>
@@ -3078,7 +3078,7 @@ export default function UserManagementPage({
       />
 
       {/* Count + sort */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div data-slot="user-management-page-toolbar" className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "user" : "users"} match current filters
@@ -3118,7 +3118,7 @@ export default function UserManagementPage({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="user-management-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <UsersIcon className="size-10 opacity-20" />
           {users.length === 0 ? (
             <>
@@ -3143,7 +3143,7 @@ export default function UserManagementPage({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="user-management-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">
@@ -3248,7 +3248,7 @@ export default function UserManagementPage({
           </div>
 
           {/* Load more — newest 20 shown first, older entries loaded on demand */}
-          <div className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
+          <div data-slot="user-management-page-footer" className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
             {hasMore && (
               <Button
                 variant="outline"

@@ -7,7 +7,7 @@ export type ForcedState = "normal" | "loading" | "empty" | "noresults" | "error"
 /** Skeleton mirroring the Rule Library table (filter bar + header + rows). */
 export function RuleSkeleton() {
   return (
-    <div className="space-y-4">
+    <div data-slot="rules-library-page-skeleton" className="space-y-4">
       {/* Filter bar */}
       <div className="flex items-center gap-2">
         <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
@@ -43,7 +43,7 @@ export function RuleSkeleton() {
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
+    <div data-slot="rules-library-page-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
       <AlertCircle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load detection rules.</p>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -53,7 +53,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 
 export function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+    <div data-slot="rules-library-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <ScrollText className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No rules yet</p>
       <p className="text-sm">Create your first detection rule, or start from a saved template.</p>
@@ -64,7 +64,7 @@ export function EmptyState({ onCreate }: { onCreate: () => void }) {
 
 export function NoResultsState({ onClear }: { onClear: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+    <div data-slot="rules-library-page-no-results" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <SearchX className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No rules match your filters</p>
       <p className="text-sm">Try a different search term, severity, or tag — or clear the active filters.</p>

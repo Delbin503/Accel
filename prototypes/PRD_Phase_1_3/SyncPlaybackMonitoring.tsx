@@ -100,7 +100,7 @@ function CameraTile({
   const live = pb.offsetSec <= 0;
 
   return (
-    <div
+    <div data-slot="camera-tile"
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
         checked
@@ -110,7 +110,7 @@ function CameraTile({
             : "border-border hover:border-primary/40"
       )}
     >
-      <div className="relative aspect-video w-full flex-1 overflow-hidden">
+      <div data-slot="camera-tile-media" className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
             {/* Zoom magnifies around the focal point the operator scrolled to. */}
@@ -269,8 +269,8 @@ function HeroView({
   const expanded = cameras.find((c) => c.id === expandedId) ?? null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-3">
+    <div data-slot="hero-view" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+      <div data-slot="hero-view-main" className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="group relative aspect-[16/9] w-full overflow-hidden bg-media">
             <CameraFrameLayer camera={camera} zoom={pb.zoom} />
@@ -347,8 +347,8 @@ function HeroView({
       </div>
 
       {/* Sidebar */}
-      <div className="flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-shrink-0 border-b border-border px-3 py-3">
+      <div data-slot="hero-view-sidebar" className="flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="hero-view-sidebar-header" className="flex-shrink-0 border-b border-border px-3 py-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Cameras {multiSite ? `· ${Object.keys(bySite).length} sites` : `· ${Object.values(bySite)[0]?.siteName ?? ""}`}
@@ -365,7 +365,7 @@ function HeroView({
           </div>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+        <div data-slot="hero-view-camera-list" className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
           {Object.entries(bySite).map(([siteId, siteData]) => (
             <div key={siteId} className="space-y-1.5">
               {Object.entries(siteData.areas).map(([areaKey, group]) => (
@@ -443,8 +443,8 @@ function WallView({
   const expanded = cameras.find((c) => c.id === expandedId) ?? null;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div data-slot="wall-view" className="rounded-xl border border-border bg-card p-4">
+      <div data-slot="wall-view-header" className="mb-3 flex items-center justify-between gap-3">
         <p className="text-base font-semibold text-foreground">
           Wall view · Cameras {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {total}
         </p>
@@ -467,7 +467,7 @@ function WallView({
           </Select>
         </div>
       </div>
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>
+      <div data-slot="wall-view-grid" className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>
         {pageItems.map((c) => (
           <CameraTile
             key={c.id}
@@ -511,8 +511,8 @@ function SyncGrid({
 }) {
   const cols = cameras.length === 1 ? 1 : cameras.length <= 4 ? 2 : 3;
   return (
-    <div className="rounded-xl border border-primary/40 bg-card p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div data-slot="sync-grid" className="rounded-xl border border-primary/40 bg-card p-4">
+      <div data-slot="sync-grid-header" className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-base font-semibold text-foreground">
             Synchronised playback · {cameras.length} camera{cameras.length === 1 ? "" : "s"}
@@ -529,7 +529,7 @@ function SyncGrid({
           {pb.offsetSec <= 0 ? "LIVE" : `−${fmtOffset(pb.offsetSec)} · ${timestampAt(now, pb.offsetSec)}`}
         </span>
       </div>
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      <div data-slot="sync-grid-tiles" className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {cameras.map((c) => (
           <CameraTile
             key={c.id}
@@ -554,7 +554,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
   if (count === 0) return null;
   return (
     <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
-      <div className="flex items-center gap-2">
+      <div data-slot="selection-bar-summary" className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
@@ -562,7 +562,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
           {count} camera{count > 1 ? "s" : ""} selected
         </span>
       </div>
-      <div className="ml-auto flex flex-wrap items-center gap-1.5">
+      <div data-slot="selection-bar-actions" className="ml-auto flex flex-wrap items-center gap-1.5">
         <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={onClear}>
           <X className="size-3.5" />
           Clear selection
@@ -590,7 +590,7 @@ function SyncPlaybackBar({
   return (
     <FloatingBar className="rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       {/* Shared timeline */}
-      <div className="flex items-center gap-3">
+      <div data-slot="sync-playback-bar-timeline" className="flex items-center gap-3">
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">−06:00:00</span>
         <div className="flex-1 rounded-md bg-media px-2 py-2">
           <ScrubTrack offsetSec={pb.offsetSec} onChange={(v) => onChange({ offsetSec: v })} now={now} label="Synchronised playback position" />
@@ -598,7 +598,7 @@ function SyncPlaybackBar({
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">LIVE</span>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-3">
+      <div data-slot="sync-playback-bar-controls" className="mt-2.5 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <SlidersHorizontal className="size-3.5" />
@@ -814,7 +814,7 @@ export function SyncPlaybackMonitoring({
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
-    <div className={cn("flex flex-col gap-4", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
+    <div data-slot="sync-playback-monitoring-page" className={cn("flex flex-col gap-4", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
@@ -842,7 +842,7 @@ export function SyncPlaybackMonitoring({
       {statsSlot ?? <VisitorKpis stats={stats} />}
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+      <div data-slot="sync-playback-monitoring-page-filters" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <MultiSiteSelector sites={sites.map((s) => ({ id: s.id, name: s.name }))} selected={siteFilter} onChange={setSiteFilter} />
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -858,7 +858,7 @@ export function SyncPlaybackMonitoring({
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+      <div data-slot="sync-playback-monitoring-page-summary" className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
         <strong className="text-foreground">{siteLabel}</strong> · {filteredCameras.length} cameras total · {onlineCount} online
         {inSync && <> · <strong className="text-primary-ink">{checkedCameras.length} in synchronised playback</strong></>}
       </div>

@@ -67,7 +67,7 @@ export default function OnboardingSubscriptionPage({
   if (!targetSite) {
     return (
       <AuthLayout>
-        <div className="rounded-xl border border-warning/30 bg-warning/[0.05] p-6 text-center">
+        <div data-slot="onboarding-subscription-page-empty" className="rounded-xl border border-warning/30 bg-warning/[0.05] p-6 text-center">
           <AlertCircle className="mx-auto mb-3 size-6 text-warning" />
           <h1 className="text-xl font-bold text-foreground">No site found</h1>
           <p className="mt-1 text-base text-muted-foreground">
@@ -171,7 +171,7 @@ export default function OnboardingSubscriptionPage({
         </>
       }
     >
-      <div>
+      <div data-slot="onboarding-subscription-page">
         <OnboardingProgress current="subscription" />
 
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -186,7 +186,7 @@ export default function OnboardingSubscriptionPage({
 
         {step === "pick" ? (
           <>
-            <div className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
+            <div data-slot="onboarding-subscription-page-billing-cycle" className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
               <button onClick={() => setCycle("monthly")}
                 className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
                   cycle === "monthly" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -199,7 +199,7 @@ export default function OnboardingSubscriptionPage({
               </button>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div data-slot="onboarding-subscription-page-plans" className="mt-4 space-y-2">
               {TIER_ORDER.map((tier) => {
                 const p = PLANS[tier];
                 const color = PLAN_COLORS[tier];
@@ -248,7 +248,7 @@ export default function OnboardingSubscriptionPage({
               })}
             </div>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div data-slot="onboarding-subscription-page-actions" className="mt-4 flex items-center gap-2">
               <Button variant="ghost" className="gap-1.5" onClick={() => navigate("/onboarding/site")}>
                 <ArrowLeft className="size-3.5" />
                 Back
@@ -261,7 +261,7 @@ export default function OnboardingSubscriptionPage({
           </>
         ) : (
           <>
-            <div className="mt-5 space-y-3">
+            <div data-slot="onboarding-subscription-page-payment" className="mt-5 space-y-3">
               <div className="rounded-lg border border-border bg-background p-3.5">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>

@@ -22,9 +22,9 @@ function PaneShell({
   right: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
+    <div data-slot="model-management-page-panes" className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
       {/* Left — models list */}
-      <div className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="model-management-page-list" className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-shrink-0 border-b border-border px-4 py-4">
           <div className="mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Models</p>
@@ -45,7 +45,7 @@ function PaneShell({
         <div className="flex flex-1 flex-col overflow-y-auto p-3">{left}</div>
       </div>
       {/* Right — detail */}
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">{right}</div>
+      <div data-slot="model-management-page-detail" className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">{right}</div>
     </div>
   );
 }
@@ -53,7 +53,7 @@ function PaneShell({
 /** Right-panel placeholder identical to the real EmptyDetailState. */
 function SelectModelPlaceholder() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+    <div data-slot="model-management-page-select-placeholder" className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
       <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
         <Plus className="size-6" />
       </div>
@@ -65,7 +65,7 @@ function SelectModelPlaceholder() {
 /** Skeleton mirroring the Model Management two-pane layout (models list + detail). */
 export function ModelSkeleton() {
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
+    <div data-slot="model-management-page-skeleton" className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
       <div className="flex w-[380px] flex-shrink-0 flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card p-4">
         <div className="h-3 w-20 animate-pulse rounded bg-muted" />
         <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
@@ -102,7 +102,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
         </div>
       }
       right={
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <div data-slot="model-management-page-error" className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
           <AlertCircle className="size-8 text-severity-critical" />
           <p className="text-sm text-foreground">Couldn't load detection models.</p>
           <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
@@ -123,7 +123,7 @@ export function EmptyState({ onCreate }: { onCreate: () => void }) {
         </div>
       }
       right={
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <div data-slot="model-management-page-empty" className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
           <Boxes className="size-10 opacity-30" />
           <p className="text-sm font-medium text-foreground">No models yet</p>
           <p className="text-sm">Create a model to upload files and build a verification sequence.</p>
@@ -140,7 +140,7 @@ export function NoResultsState({ onClear }: { onClear: () => void }) {
       modelsLabel="0 of 3 models"
       searchValue="armoury-zzz"
       left={
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <div data-slot="model-management-page-no-results" className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <SearchX className="size-8 opacity-30" />
           <p className="text-center text-sm font-medium text-foreground">No models match your filters</p>
           <p className="px-4 text-center text-sm">Try a different search term or clear the active tag filters.</p>

@@ -40,7 +40,7 @@ export default function RealUserManagement({
     return <UserManagementPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="user-management-page" className="flex flex-col gap-4">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <UserTableSkeleton />}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}

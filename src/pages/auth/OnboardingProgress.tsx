@@ -11,7 +11,7 @@ type StepKey = (typeof STEPS)[number]["key"];
 export function OnboardingProgress({ current }: { current: StepKey }) {
   const currentIdx = STEPS.findIndex((s) => s.key === current);
   return (
-    <div className="mb-6">
+    <div data-slot="onboarding-progress" className="mb-6">
       <div className="flex items-center gap-2">
         {STEPS.map((s, i) => {
           const Icon = s.icon;

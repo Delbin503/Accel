@@ -72,7 +72,7 @@ const STAGES = [
 
 function Stepper({ stage, canReach, onGo }: { stage: number; canReach: (n: number) => boolean; onGo: (n: number) => void }) {
   return (
-    <ol className="flex items-center gap-2">
+    <ol data-slot="demo-stepper" className="flex items-center gap-2">
       {STAGES.map((s, i) => {
         const done = s.n < stage, current = s.n === stage, reachable = canReach(s.n);
         return (
@@ -127,8 +127,8 @@ function HouseScene({
   const path = ordered.map((id) => `${SENSOR_SPOT[id].x},${SENSOR_SPOT[id].y}`).join(" ");
 
   return (
-    <div className="relative aspect-[640/440] w-full select-none">
-      <svg viewBox="0 0 640 440" className="absolute inset-0 size-full" role="img" aria-label="Floor plan of the house with a porch camera, a front door sensor and a hallway motion sensor">
+    <div data-slot="house-scene" className="relative aspect-[640/440] w-full select-none">
+      <svg data-slot="house-scene-map" viewBox="0 0 640 440" className="absolute inset-0 size-full" role="img" aria-label="Floor plan of the house with a porch camera, a front door sensor and a hallway motion sensor">
         {/* Garden path and porch */}
         <rect x="245" y="384" width="30" height="56" className="fill-muted/40" />
         <rect x="216" y="340" width="88" height="44" rx="4" className="fill-muted/50 stroke-border" strokeDasharray="4 4" />
@@ -224,13 +224,13 @@ function SignalCard({ id, selected }: { id: SensorId; selected: boolean }) {
   const ev = eventFor(id), Icon = SENSOR_ICON[id];
   if (!selected)
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-dashed border-border px-3 py-2.5 text-muted-foreground">
+      <div data-slot="signal-card" className="flex items-center gap-3 rounded-lg border border-dashed border-border px-3 py-2.5 text-muted-foreground">
         <Icon className="size-4 shrink-0" />
         <p className="text-sm">Click the <span className="font-semibold text-foreground">{ev.device.toLowerCase()}</span> on the house</p>
       </div>
     );
   return (
-    <div className="rounded-lg border border-border bg-background px-3 py-2.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]">
+    <div data-slot="signal-card" className="rounded-lg border border-border bg-background px-3 py-2.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]">
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Icon className="size-3" /> {ev.source}
@@ -246,7 +246,7 @@ function SignalCard({ id, selected }: { id: SensorId; selected: boolean }) {
 function Timeline({ selected }: { selected: SensorId[] }) {
   const events = SENSOR_EVENTS.filter((e) => selected.includes(e.id));
   return (
-    <ol className="space-y-0">
+    <ol data-slot="demo-timeline" className="space-y-0">
       {events.map((ev, i) => (
         <li key={ev.id} className="relative flex gap-3 pb-3 last:pb-0">
           {i < events.length - 1 && <span className="absolute left-[9px] top-5 h-full w-px bg-border" />}
@@ -266,7 +266,7 @@ function Timeline({ selected }: { selected: SensorId[] }) {
 
 function ContextFacts() {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div data-slot="context-facts" className="grid grid-cols-2 gap-2">
       {CONTEXT_FACTS.map((f) => (
         <div key={f.key} className="rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{f.label}</p>
@@ -281,7 +281,7 @@ function ContextFacts() {
 function AssessmentCard({ a }: { a: Assessment }) {
   const tone = LEVEL[a.level];
   return (
-    <div className={cn("rounded-lg border p-3.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]", tone.panel)} aria-live="polite">
+    <div data-slot="assessment-card" className={cn("rounded-lg border p-3.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]", tone.panel)} aria-live="polite">
       <div className="flex items-center justify-between gap-2">
         <StatusBadge tone={a.level}>{a.levelLabel}</StatusBadge>
         <span className="font-mono text-2xs text-muted-foreground">{a.supports.length} of {SENSOR_ORDER.length} signals</span>
@@ -300,7 +300,7 @@ function AssessmentCard({ a }: { a: Assessment }) {
       </div>
 
       <p className="mt-3.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Why Accel thinks so</p>
-      <ul className="mt-1.5 space-y-1.5">
+      <ul data-slot="assessment-card-reasons" className="mt-1.5 space-y-1.5">
         {a.supports.map((s) => {
           const Icon = SENSOR_ICON[s.sensor];
           return (
@@ -339,8 +339,8 @@ function IncidentRecord({ a, selected, response }: { a: Assessment; selected: Se
     { label: "Response", value: <span className="font-semibold text-foreground">{r.record}</span> },
   ];
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]" aria-live="polite">
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
+    <div data-slot="incident-record" className="overflow-hidden rounded-lg border border-border bg-background animate-in fade-in-0 slide-in-from-bottom-1 duration-[var(--duration-normal)]" aria-live="polite">
+      <div data-slot="incident-record-header" className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
         <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"><FileText className="size-3" /> Incident record</p>
         <span className="font-mono text-2xs text-primary-ink">{INCIDENT_ID}</span>
       </div>
@@ -413,8 +413,8 @@ export function HouseDemo() {
           : "";
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div data-slot="house-demo" className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+      <header data-slot="house-demo-header" className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <StatusBadge tone="primary" dot={false} className="gap-1.5"><MousePointerClick className="size-3" /> Interactive demo</StatusBadge>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Build an incident. Follow it through Accel.</h1>
@@ -424,14 +424,14 @@ export function HouseDemo() {
         </div>
       </header>
 
-      <div className="rounded-xl border border-border bg-card px-3 py-2.5">
+      <div data-slot="house-demo-stepper" className="rounded-xl border border-border bg-card px-3 py-2.5">
         <Stepper stage={stage} canReach={canReach} onGo={(n) => canReach(n) && setStage(n)} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div data-slot="house-demo-content" className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
         {/* The house — on screen for every stage */}
-        <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <section data-slot="house-demo-scene" className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div data-slot="house-demo-scene-header" className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
             <div className="min-w-0">
               <p className="text-base font-bold text-foreground">12 Linden Close</p>
               <p className="text-xs text-muted-foreground">Example home · 3 sensors from 3 different systems</p>
@@ -451,14 +451,14 @@ export function HouseDemo() {
         </section>
 
         {/* What the current stage reveals */}
-        <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-4 py-3">
+        <section data-slot="house-demo-panel" className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div data-slot="house-demo-panel-header" className="border-b border-border px-4 py-3">
             <p className="text-2xs font-semibold uppercase tracking-wider text-primary-ink">Stage {meta.n} of {STAGES.length}</p>
             <h2 className="mt-0.5 text-lg font-bold text-foreground">{meta.title}</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
           </div>
 
-          <div className="flex-1 space-y-3 p-4">
+          <div data-slot="house-demo-panel-body" className="flex-1 space-y-3 p-4">
             {stage === 1 && SENSOR_ORDER.map((id) => <SignalCard key={id} id={id} selected={selected.includes(id)} />)}
 
             {stage === 2 && !contextOn && (
@@ -530,7 +530,7 @@ export function HouseDemo() {
           </div>
 
           {/* Back · Reset · Next */}
-          <div className="border-t border-border px-4 py-3">
+          <div data-slot="house-demo-footer" className="border-t border-border px-4 py-3">
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={() => setStage(stage - 1)} disabled={stage === 1} className="gap-1.5">
                 <ArrowLeft className="size-3.5" /> Back

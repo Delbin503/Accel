@@ -305,7 +305,7 @@ function FloorPlanCanvas({
   const selPlacement = selCam ? site.cameraPlacements[selCam.id] : undefined;
 
   return (
-    <div
+    <div data-slot="floor-plan-canvas"
       className={cn(
         "relative w-full overflow-hidden rounded-xl border-2 bg-media select-none",
         tool === "draw-area" ? "border-primary cursor-crosshair" : "border-border cursor-default"
@@ -483,7 +483,7 @@ function FloorPlanEmpty({
     e.target.value = "";
   }
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-card py-16">
+    <div data-slot="floor-plan-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-card py-16">
       <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
         <UploadCloud className="size-6 text-primary-ink" />
       </div>
@@ -803,7 +803,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
       <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
         {/* Header — site title with identifying metadata. */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
+          <div data-slot="site-detail-drawer-header" className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <SheetTitle className="text-lg font-bold leading-snug">{site.name}</SheetTitle>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -816,7 +816,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto p-5">
+        <div data-slot="site-detail-drawer-body" className="flex-1 overflow-y-auto p-5">
           <OverviewTab site={site} siteCameras={siteCameras} onlineCount={onlineCount} placedCount={placedCount}
             onGoFloorPlan={() => setFloorPlanOpen(true)} />
         </div>
@@ -872,7 +872,7 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
           onConfirm={confirmDeleteSite} />
 
         {/* Footer */}
-        <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+        <div data-slot="site-detail-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
           <Button className="gap-1.5" onClick={() => setEditSiteOpen(true)}>
             <Edit3 className="size-3.5" />
             Edit Site
@@ -914,9 +914,9 @@ function OverviewTab({
   };
 
   return (
-    <div className="space-y-5">
+    <div data-slot="site-detail-overview" className="space-y-5">
       {/* ── Hero floor plan banner (mirrors EventDrawer.DrawerThumb) ── */}
-      <div className="relative h-[360px] overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
+      <div data-slot="site-detail-overview-floor-plan" className="relative h-[360px] overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
         {site.floorPlan?.imageUrl ? (
           <img src={site.floorPlan.imageUrl} alt="" className="absolute inset-0 size-full object-contain opacity-80" />
         ) : null}
@@ -960,7 +960,7 @@ function OverviewTab({
       </div>
 
       {/* ── Quick counts (Areas + Cameras + Placed) ── */}
-      <div>
+      <div data-slot="site-detail-overview-kpis">
         <div className="grid grid-cols-3 gap-2.5">
           <SharedKpiCard compact
             label="Areas"
@@ -987,7 +987,7 @@ function OverviewTab({
       </div>
 
       {/* ── Site Details — directly under quick counts ── */}
-      <div>
+      <div data-slot="site-detail-overview-details">
         <SiteSectionTitle>Site Details</SiteSectionTitle>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
           {([
@@ -1018,7 +1018,7 @@ function OverviewTab({
       </div>
 
       {/* ── Camera Health — expandable rows; click a row to see the cameras in that bucket ── */}
-      <div>
+      <div data-slot="site-detail-overview-camera-health">
         <SiteSectionTitle
           aside={
             <span className="inline-flex items-center gap-1.5 rounded bg-success/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
@@ -1085,7 +1085,7 @@ function OverviewTab({
       </div>
 
       {/* ── NVR Health (one site can have multiple NVRs) ── */}
-      <div>
+      <div data-slot="site-detail-overview-nvr-health">
         <SiteSectionTitle
           aside={
             <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-info">
@@ -1283,10 +1283,10 @@ export function FloorPlanModal({
         />
 
         <ModalBody className="flex min-h-0 flex-col gap-4 overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:items-start">
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div data-slot="floor-plan-modal-content" className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:items-start">
+      <div data-slot="floor-plan-modal-editor" className="flex min-w-0 flex-1 flex-col gap-3">
         {tool === "draw-area" && drafting && drafting.points.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
+          <div data-slot="floor-plan-modal-toolbar" className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2">
             <span className="mr-auto text-xs text-muted-foreground">
               {drafting.points.length} point{drafting.points.length === 1 ? "" : "s"} placed
             </span>
@@ -1333,9 +1333,9 @@ export function FloorPlanModal({
       </div>
 
       {/* Areas / Cameras — tabbed side panel */}
-      <div className="flex max-h-[60vh] w-full flex-col overflow-hidden rounded-xl border border-border bg-card lg:max-h-full lg:w-[380px] lg:flex-shrink-0">
+      <div data-slot="floor-plan-modal-sidebar" className="flex max-h-[60vh] w-full flex-col overflow-hidden rounded-xl border border-border bg-card lg:max-h-full lg:w-[380px] lg:flex-shrink-0">
         {/* Tabs — same pattern as the NVR / Cameras detail drawers. */}
-        <div className="flex items-center gap-1 border-b border-border px-2">
+        <div data-slot="floor-plan-modal-tabs" className="flex items-center gap-1 border-b border-border px-2">
           {[
             { key: "areas"   as const, label: "Areas",   icon: Shapes, badge: site.areas.length },
             { key: "cameras" as const, label: "Cameras", icon: Video,  badge: siteCameras.length },

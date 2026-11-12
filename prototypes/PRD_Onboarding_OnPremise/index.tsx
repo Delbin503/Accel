@@ -40,7 +40,7 @@ function Shell() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div data-slot="onboarding-onpremise-prototype" className="min-h-screen w-full bg-background">
       {asyncMode === "loading" ? (
         <LoadingPreview />
       ) : asyncMode === "error" ? (

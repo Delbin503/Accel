@@ -33,10 +33,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
-          <div className="flex min-h-screen w-full bg-background">
+          <div data-slot="live-monitoring-prototype" className="flex min-h-screen w-full bg-background">
             <AppSidebar />
             <div className="flex min-w-0 flex-1 flex-col">
-              <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+              <header data-slot="live-monitoring-prototype-header" className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
                 <ProtoBreadcrumb className="md:ml-2" />
                 <div className="flex-1" />
@@ -46,7 +46,7 @@ function App() {
                 <UserMenu />
               </header>
               {/* The routes get the full height of the main area, so the wall fills the page. */}
-              <main id="main-content" className="flex flex-1 flex-col overflow-auto p-6 focus:outline-none">
+              <main data-slot="live-monitoring-prototype-main" id="main-content" className="flex flex-1 flex-col overflow-auto p-6 focus:outline-none">
                 <div className="min-h-0 flex-1">
                   <Routes>
                     <Route path="/detection-feed" element={<DetectionFeedPage />} />

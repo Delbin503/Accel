@@ -27,7 +27,7 @@ export function parseEventText(text: string): React.ReactNode {
     }
     if (part.startsWith("!!") && part.endsWith("!!")) {
       return (
-        <span key={i} className="font-semibold text-severity-medium">
+        <span data-slot="reasoning-highlight" key={i} className="font-semibold text-severity-medium">
           {part.slice(2, -2)}
         </span>
       );

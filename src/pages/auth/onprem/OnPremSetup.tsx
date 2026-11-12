@@ -199,10 +199,10 @@ function WizardShell({
   wide?: boolean;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col text-foreground">
+    <div data-slot="on-prem-setup-page" className="relative flex min-h-screen flex-col text-foreground">
       <AuthBackground />
 
-      <header className="relative z-10 px-6 pt-4 pb-2 sm:px-10">
+      <header data-slot="on-prem-setup-page-header" className="relative z-10 px-6 pt-4 pb-2 sm:px-10">
         <div className="flex items-center justify-between gap-4">
           <Link to="/on-premise/signin" className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-md bg-secondary">
@@ -225,7 +225,7 @@ function WizardShell({
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 justify-center px-4 pt-6 pb-8 sm:px-6 sm:pt-10">
+      <main data-slot="on-prem-setup-page-content" className="relative z-10 flex flex-1 justify-center px-4 pt-6 pb-8 sm:px-6 sm:pt-10">
         <div className={cn("w-full", wide ? "max-w-[1024px]" : "max-w-[560px]")}>{children}</div>
       </main>
     </div>
@@ -440,7 +440,7 @@ export default function OnPremSetupPage({
           title="Activate your license"
           subtitle="Upload the license file from your installation pack to continue."
         />
-        <form onSubmit={submitLicense} className="mt-10 space-y-5">
+        <form data-slot="on-prem-setup-page-license-form" onSubmit={submitLicense} className="mt-10 space-y-5">
           <div>
             <Label>Upload license file</Label>
             <button
@@ -510,7 +510,7 @@ export default function OnPremSetupPage({
           title="Owner details"
           subtitle="The owner is the first admin account and the contact for license renewals."
         />
-        <form onSubmit={submitOwner} className="mt-7 space-y-4">
+        <form data-slot="on-prem-setup-page-owner-form" onSubmit={submitOwner} className="mt-7 space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="First name" icon={CircleUser}>
               <Input
@@ -603,7 +603,7 @@ export default function OnPremSetupPage({
           title="Configure this site"
           subtitle="Set the site details and operating defaults."
         />
-        <form onSubmit={submitSite} className="mt-8 space-y-4">
+        <form data-slot="on-prem-setup-page-site-form" onSubmit={submitSite} className="mt-8 space-y-4">
           <Field label="Site name" icon={Building2}>
             <Input
               value={siteName}
@@ -745,11 +745,11 @@ export default function OnPremSetupPage({
         subtitle="Choose the type of access each team member will need. You can adjust later."
       />
 
-      <div className="mt-6">
+      <div data-slot="on-prem-setup-page-seats" className="mt-6">
         <SeatStrip usage={seatUsage} billingCycle="Perpetual" />
       </div>
 
-      <div className="mt-5 flex items-center justify-between">
+      <div data-slot="on-prem-setup-page-members-toolbar" className="mt-5 flex items-center justify-between">
         <p className="text-base font-bold text-foreground">Members</p>
         <Button onClick={openAddMember} className="h-9 gap-1.5">
           <Plus className="size-3.5" />
@@ -757,7 +757,7 @@ export default function OnPremSetupPage({
         </Button>
       </div>
 
-      <div className="mt-3 flex max-h-[calc(100vh-26rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
+      <div data-slot="on-prem-setup-page-members-list" className="mt-3 flex max-h-[calc(100vh-26rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
         <div className="flex-1 overflow-y-auto">
           <table className="w-full">
             <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
@@ -846,7 +846,7 @@ export default function OnPremSetupPage({
           {members.length === 0 ? "" : "s"}
         </div>
 
-        <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-4 py-3.5">
+        <div data-slot="on-prem-setup-page-actions" className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-4 py-3.5">
           <Button variant="ghost" onClick={finishSetup}>
             Skip — finish later
           </Button>

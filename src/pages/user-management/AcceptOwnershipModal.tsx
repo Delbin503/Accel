@@ -74,11 +74,11 @@ export function AcceptOwnershipModal({
 
         {declining ? (
           <ModalBody className="space-y-4">
-            <p className="text-sm text-muted-foreground">
+            <p data-slot="accept-ownership-modal-intro" className="text-sm text-muted-foreground">
               Nothing changes for you: you keep your <strong className="text-foreground">{request.currentRole}</strong>{" "}
               role. {request.fromName} can send a new request later.
             </p>
-            <div>
+            <div data-slot="accept-ownership-modal-details">
               <label htmlFor="decline-reason" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Note to {request.fromName} (optional)
               </label>
@@ -95,7 +95,7 @@ export function AcceptOwnershipModal({
         ) : (
           <ModalBody className="space-y-4">
             {/* Role change, at a glance — the same from → to card as Transfer Ownership. */}
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-lg border border-border bg-card p-3">
+            <div data-slot="accept-ownership-modal-transfer" className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-lg border border-border bg-card p-3">
               <div className="min-w-0">
                 <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Your role today</p>
                 <p className="truncate text-sm font-semibold text-foreground">{request.currentRole}</p>

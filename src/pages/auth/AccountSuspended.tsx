@@ -38,8 +38,8 @@ export default function AccountSuspendedPage() {
 
   return (
     <AuthLayout hideBrand>
-      <div>
-        <div className="mb-6 flex flex-col items-center text-center">
+      <div data-slot="account-suspended-page">
+        <div data-slot="account-suspended-page-header" className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-severity-critical/30 bg-severity-critical/15">
             <ShieldOff className="size-7 text-severity-critical" />
           </div>
@@ -66,7 +66,7 @@ export default function AccountSuspendedPage() {
           mistake, contact your owner directly or reach out to our support team.
         </p>
 
-        <div className="mt-5 flex flex-col gap-2">
+        <div data-slot="account-suspended-page-actions" className="mt-5 flex flex-col gap-2">
           <Button
             className="h-10 w-full gap-2 text-base"
             onClick={() => {
@@ -86,7 +86,7 @@ export default function AccountSuspendedPage() {
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground/70">
+        <p data-slot="account-suspended-page-footer" className="mt-6 text-center text-xs text-muted-foreground/70">
           Support replies within one business day at{" "}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}

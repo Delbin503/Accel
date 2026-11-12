@@ -39,7 +39,7 @@ export default function RealNvrDevices({
     return <NvrDevicesPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div data-slot="nvr-devices-page" className="flex flex-col gap-5">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <NvrTableSkeleton />}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}

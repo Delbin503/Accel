@@ -121,7 +121,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
         <p className="mb-2.5 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/50">
           Choose Icon
         </p>
-        <div className="grid grid-cols-5 gap-1.5">
+        <div data-slot="icon-picker-grid" className="grid grid-cols-5 gap-1.5">
           {Object.entries(MODEL_ICONS).map(([key, Comp]) => (
             <button
               key={key}
@@ -292,7 +292,7 @@ function TagInput({
   const showCreate = q && !suggestions.some((s) => s.toLowerCase() === q) && !tags.includes(val.trim());
 
   return (
-    <div className="relative">
+    <div data-slot="model-tag-input" className="relative">
       <div
         className="flex min-h-[38px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary"
         onClick={() => { ref.current?.focus(); setOpen(true); }}
@@ -333,7 +333,7 @@ function TagInput({
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
+        <div data-slot="model-tag-input-suggestions" className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
           {filteredSuggestions.length > 0 && (
             <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
@@ -379,7 +379,7 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="mb-3 border-t border-border pt-3">
+    <div data-slot="section-header" className="mb-3 border-t border-border pt-3">
       <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
         <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {label}
@@ -411,7 +411,7 @@ function ModelCard({
   const IconComp = getIconComp(model.iconKey);
 
   return (
-    <button
+    <button data-slot="model-card"
       onClick={onClick}
       className={cn(
         "group w-full rounded-xl border px-4 py-3.5 text-left transition-all",
@@ -420,7 +420,7 @@ function ModelCard({
           : "border-border bg-card hover:border-primary/20 hover:bg-muted/30"
       )}
     >
-      <div className="mb-2 flex items-start justify-between gap-2">
+      <div data-slot="model-card-header" className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div
             className={cn(
@@ -454,7 +454,7 @@ function ModelCard({
       <TruncatedText text={model.description} className="mb-2 line-clamp-1 text-sm text-muted-foreground" />
 
       {model.tags.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1">
+        <div data-slot="model-card-tags" className="flex flex-wrap items-center gap-1">
           {visibleTags.map((t) => (
             <TagChip key={t} label={t} />
           ))}
@@ -503,7 +503,7 @@ function UploadDropzone({
   }
 
   return (
-    <div
+    <div data-slot="upload-dropzone"
       role="button"
       tabIndex={0}
       onClick={pick}
@@ -940,7 +940,7 @@ function RemovedStepCard({
   onDragEnd: () => void;
 }) {
   return (
-    <div
+    <div data-slot="removed-step-card"
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
@@ -1011,7 +1011,7 @@ function CustomizeStepsDrawer({
   const [over, setOver] = React.useState(false);
 
   return (
-    <aside
+    <aside data-slot="customize-steps-drawer"
       aria-label="Customize steps"
       onDragOver={(e) => {
         if (!accepting) return;
@@ -1032,7 +1032,7 @@ function CustomizeStepsDrawer({
         over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
-      <div className="border-b border-border px-4 py-3.5">
+      <div data-slot="customize-steps-drawer-header" className="border-b border-border px-4 py-3.5">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-base font-bold text-foreground">
             Removed steps
@@ -1053,7 +1053,7 @@ function CustomizeStepsDrawer({
         </p>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div data-slot="customize-steps-drawer-list" className="flex-1 space-y-2 overflow-y-auto p-3">
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
@@ -1065,7 +1065,7 @@ function CustomizeStepsDrawer({
         )}
 
         {steps.length === 0 && !accepting ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center text-muted-foreground">
+          <div data-slot="customize-steps-drawer-empty" className="flex flex-col items-center gap-2 px-4 py-10 text-center text-muted-foreground">
             <Layers className="size-5" />
             <p className="text-sm">Every step is in the sequence.</p>
             <p className="text-xs">Remove one and it will wait here.</p>
@@ -1094,7 +1094,7 @@ function CustomizeStepsDrawer({
 
 function HoverActions({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "top" }) {
   return (
-    <div
+    <div data-slot="hover-actions"
       className={cn(
         "absolute right-2 z-10 hidden items-center gap-0.5 rounded-md border border-border bg-card/95 p-0.5 shadow-raised group-hover:flex",
         align === "top" ? "top-1.5" : "top-1/2 -translate-y-1/2"
@@ -1156,7 +1156,7 @@ function SequenceItem({
   onDragEnd: () => void;
 }) {
   return (
-    <div
+    <div data-slot="sequence-item"
       draggable={editable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -1260,7 +1260,7 @@ function AttachedRuleCard({
   onDetach: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-border bg-background px-3 py-2.5">
+    <div data-slot="attached-rule-card" className="group relative rounded-lg border border-border bg-background px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1306,7 +1306,7 @@ function ExtractedRuleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
+    <div data-slot="extracted-rule-card" className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1346,7 +1346,7 @@ function ExtractedRuleCard({
 
 function EmptyDetailState() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+    <div data-slot="empty-detail-state" className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
       <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
         <Plus className="size-6" />
       </div>
@@ -1363,7 +1363,7 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
     { key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount },
   ];
   return (
-    <div className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
+    <div data-slot="edit-progress" className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
       {items.map((it, i) => {
         const Icon = it.icon;
         return (
@@ -1780,7 +1780,7 @@ function ModelDetailPanel({
   }
 
   return (
-    <div className={cn(
+    <div data-slot="model-detail-panel" className={cn(
       "flex h-full flex-col overflow-hidden transition-[padding] duration-[var(--duration-normal)] ease-standard",
       // The docked Customize drawer covers the right edge — keep content clear of it.
       isEditing && customizeOpen && "sm:pr-80"
@@ -1788,7 +1788,7 @@ function ModelDetailPanel({
 
       {/* ── Header ── */}
       {isEditing ? (
-        <div className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3.5">
+        <div data-slot="model-detail-panel-edit-header" className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3.5">
           <IconPicker current={draft.iconKey} onChange={(k) => patchDraft({ iconKey: k })} />
           <div className="min-w-0 flex-1">
             <Input
@@ -1812,7 +1812,7 @@ function ModelDetailPanel({
           </div>
         </div>
       ) : (
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div data-slot="model-detail-panel-header" className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
               {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary-ink" })}
@@ -1861,10 +1861,10 @@ function ModelDetailPanel({
       )}
 
       {/* ── Combined scrollable content (Description/Tags scrolls with rest) ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div data-slot="model-detail-panel-content" className="flex-1 overflow-y-auto">
         {isEditing ? (
           <>
-          <div className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
+          <div data-slot="model-detail-panel-info-form" className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
@@ -1890,7 +1890,7 @@ function ModelDetailPanel({
           </div>
           </>
         ) : (
-          <div className="border-b border-border px-5 py-3">
+          <div data-slot="model-detail-panel-tags" className="border-b border-border px-5 py-3">
             <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
               {model.description}
             </p>
@@ -1911,7 +1911,7 @@ function ModelDetailPanel({
               rulesCount={draft.extractedRules.length + attachedRules.length}
             />
             {/* ── SEQUENCE section (edit mode) ── */}
-            <div className="px-5 pb-5 pt-4">
+            <div data-slot="model-detail-panel-sequence-edit" className="px-5 pb-5 pt-4">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Sequence
@@ -2000,7 +2000,7 @@ function ModelDetailPanel({
             <div className="mx-5 border-t border-border" />
 
             {/* ── RULES section (edit mode) ── */}
-            <div className="px-5 pb-6 pt-4">
+            <div data-slot="model-detail-panel-rules-edit" className="px-5 pb-6 pt-4">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Rules
@@ -2109,7 +2109,7 @@ function ModelDetailPanel({
           </>
         ) : (
           /* ── VIEW MODE — single combined section ── */
-          <div className="px-5 pb-6 pt-4">
+          <div data-slot="model-detail-panel-overview" className="px-5 pb-6 pt-4">
             <div className="mb-4">
               <p className="text-base font-bold text-foreground">Model Configuration</p>
               <p className="text-xs text-muted-foreground">
@@ -2121,7 +2121,7 @@ function ModelDetailPanel({
             <div className="grid grid-cols-2 gap-4">
 
               {/* Sequence (view) */}
-              <div>
+              <div data-slot="model-detail-panel-sequence">
                 <SectionHeader
                   label="Sequence"
                   count={sequenceSteps.length}
@@ -2154,7 +2154,7 @@ function ModelDetailPanel({
               </div>
 
               {/* Detection Rules (view) */}
-              <div>
+              <div data-slot="model-detail-panel-rules">
                 <SectionHeader
                   label="Detection Rules"
                   count={draft.extractedRules.length + attachedRules.length}
@@ -2402,7 +2402,7 @@ export default function ModelManagementPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="model-management-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Management</PageHeader.Title>
@@ -2415,12 +2415,12 @@ export default function ModelManagementPage({
         </PageHeader.Actions>
       </PageHeader>
 
-    <div className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
+    <div data-slot="model-management-page-workspace" className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
 
       {/* ── Left panel — hidden while editing a model ── */}
       {!editing && (
-      <div className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-shrink-0 border-b border-border px-4 py-4">
+      <div data-slot="model-management-page-list-panel" className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="model-management-page-list-header" className="flex-shrink-0 border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -2432,7 +2432,7 @@ export default function ModelManagementPage({
             </div>
           </div>
 
-          <div className="relative mb-2">
+          <div data-slot="model-management-page-search" className="relative mb-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
@@ -2516,7 +2516,7 @@ export default function ModelManagementPage({
           </Popover>
         </div>
 
-        <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+        <div data-slot="model-management-page-list" className="flex-1 space-y-2.5 overflow-y-auto p-3">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
               <AlignLeft className="size-8 opacity-20" />
@@ -2550,7 +2550,7 @@ export default function ModelManagementPage({
       )}
 
       {/* ── Right panel ── */}
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="model-management-page-detail-panel" className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         {selectedModel ? (
           <ModelDetailPanel
             model={selectedModel}

@@ -185,7 +185,7 @@ function FilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="site-overview-filter-panel" className="rounded-xl border border-border bg-card">
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
@@ -221,7 +221,7 @@ function FilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="site-overview-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -331,7 +331,7 @@ export default function SiteOverviewPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="site-overview-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Site Management</PageHeader.Title>
@@ -387,7 +387,7 @@ export default function SiteOverviewPage({
         onSearchChange={setSearch}
       />
 
-      <p className="text-base text-muted-foreground">
+      <p data-slot="site-overview-page-results" className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "site" : "sites"} match current filters
         {hasFilters && (
@@ -401,7 +401,7 @@ export default function SiteOverviewPage({
       </p>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="site-overview-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <MapPin className="size-10 opacity-20" />
           {sites.length === 0 ? (
             <>
@@ -423,7 +423,7 @@ export default function SiteOverviewPage({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="site-overview-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30">

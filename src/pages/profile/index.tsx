@@ -52,12 +52,12 @@ function RoleBadge({ role }: { role: UserRole }) {
 
 function SectionCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="border-b border-border px-5 py-4">
+    <div data-slot="profile-section-card" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="profile-section-card-header" className="border-b border-border px-5 py-4">
         <h2 className="text-md font-bold text-foreground">{title}</h2>
         {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div data-slot="profile-section-card-content" className="px-5 py-4">{children}</div>
     </div>
   );
 }
@@ -169,7 +169,7 @@ export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose
           description="Scan the QR code with your authenticator app, then enter the 6-digit code."
         />
         <ModalBody className="space-y-4">
-          <div className="flex justify-center">
+          <div data-slot="two-fa-modal-qr" className="flex justify-center">
             <div className="flex size-44 items-center justify-center rounded-lg border border-border bg-background p-3">
               <div className="grid size-full grid-cols-12 grid-rows-12 gap-px">
                 {Array.from({ length: 144 }).map((_, i) => (
@@ -178,7 +178,7 @@ export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose
               </div>
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-background px-3 py-2 text-center">
+          <div data-slot="two-fa-modal-secret" className="rounded-lg border border-border bg-background px-3 py-2 text-center">
             <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Or enter this key</p>
             <p className="mt-0.5 font-mono text-sm text-foreground">JBSWY3DPEHPK3PXPEHPK3PXPEHPK3PXP</p>
           </div>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="profile-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>My Profile</PageHeader.Title>
@@ -247,8 +247,8 @@ export default function ProfilePage() {
         </PageHeader.Actions>
       </PageHeader>
 
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
-        <div className="relative">
+      <div data-slot="profile-page-identity" className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
+        <div data-slot="profile-page-avatar" className="relative">
           <div className="flex size-20 items-center justify-center rounded-full bg-primary-fill text-2xl font-bold text-primary-foreground">
             {initials}
           </div>
@@ -269,7 +269,7 @@ export default function ProfilePage() {
       </div>
 
       <SectionCard title="Personal Info" description="Your name and contact details.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div data-slot="profile-page-personal-form" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
@@ -325,7 +325,7 @@ export default function ProfilePage() {
       </SectionCard>
 
       <SectionCard title="Role & Workspace" description="Your role and assigned permissions.">
-        <div className="space-y-3">
+        <div data-slot="profile-page-role" className="space-y-3">
           <div className="flex items-start gap-3 rounded-lg border border-border bg-background p-3.5">
             <Shield className="mt-0.5 size-4 text-muted-foreground" />
             <div className="flex-1">
@@ -358,7 +358,7 @@ export default function ProfilePage() {
       </SectionCard>
 
       <SectionCard title="Authentication" description="Secure your account with a strong password and 2FA.">
-        <div className="space-y-2">
+        <div data-slot="profile-page-auth" className="space-y-2">
           <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
             <KeyRound className="size-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">

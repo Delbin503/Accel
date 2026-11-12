@@ -25,6 +25,7 @@ type Stage = "setup" | "verify" | "welcome";
 function RestartButton({ onRestart }: { onRestart: () => void }) {
   return (
     <button
+      data-slot="restart-flow-button"
       onClick={onRestart}
       title="Restart flow"
       className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-floating transition-opacity hover:opacity-100 hover:text-foreground"
@@ -38,8 +39,8 @@ function RestartButton({ onRestart }: { onRestart: () => void }) {
 /* Logged-out chrome — minimal top bar with theme toggle, no sidebar. */
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full bg-background">
-      <div className="absolute right-4 top-4 z-10">
+    <div data-slot="auth-shell" className="min-h-screen w-full bg-background">
+      <div data-slot="auth-shell-toolbar" className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>
       {children}
@@ -91,10 +92,10 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
   const name = profile?.firstName || "there";
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background">
+      <div data-slot="invite-signup-prototype" className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+          <header data-slot="invite-signup-prototype-header" className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
             <ProtoBreadcrumb className="md:ml-2" />
             <div className="flex-1" />
@@ -103,7 +104,7 @@ function DashboardRoute({ profile }: { profile: AccountProfile | null }) {
             <div className="mx-1 h-5 w-px shrink-0 bg-border" />
             <UserMenu />
           </header>
-          <main className="flex-1 overflow-auto p-6">
+          <main data-slot="invite-signup-prototype-main" className="flex-1 overflow-auto p-6">
             <div className="mx-auto max-w-2xl py-10">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
@@ -174,7 +175,7 @@ function App() {
 
 function NotInPrototype() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background text-center text-muted-foreground">
+    <div data-slot="not-in-prototype" className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background text-center text-muted-foreground">
       <AccelMark />
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
       <p className="text-sm">This prototype covers the invite → account setup → welcome → dashboard flow.</p>

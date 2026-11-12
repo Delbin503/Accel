@@ -71,7 +71,7 @@ export function renderPlaceCameraFrame(frame: number) {
       )}
       <g style={{ transform: `translate(${pos[0] - 10}px, ${pos[1] - 10}px)`, transition: "transform 400ms ease-out" }}>
         <foreignObject width={20} height={20} overflow="visible">
-          <div className="flex size-5 items-center justify-center rounded-full bg-primary-fill text-primary-foreground">
+          <div data-slot="floor-plan-guide-step-index" className="flex size-5 items-center justify-center rounded-full bg-primary-fill text-primary-foreground">
             <Video className="size-3" />
           </div>
         </foreignObject>

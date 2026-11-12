@@ -131,7 +131,7 @@ function FilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div data-slot="dismissed-events-filter-panel" className="rounded-xl border border-border bg-card">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
@@ -162,7 +162,7 @@ function FilterPanel({
       </button>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="dismissed-events-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           {/* Search */}
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -233,7 +233,7 @@ function ActiveFilterBar({
   if (allActive.length === 0 && !search) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
+    <div data-slot="dismissed-events-active-filters" className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
       {search && (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
           "{search}"
@@ -273,7 +273,7 @@ function DismissedRow({
   const { event } = item;
 
   return (
-    <div
+    <div data-slot="dismissed-row"
       onClick={() => onOpen(event.id)}
       className={cn(
         "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30 hover:opacity-100",
@@ -284,7 +284,7 @@ function DismissedRow({
       style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >
       {/* Thumbnail with bounding boxes — same as Detection Feed */}
-      <div className="self-start">
+      <div data-slot="dismissed-row-thumb" className="self-start">
         <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
           {/* Select for bulk restore — same affordance as the Detection Feed. */}
           <button
@@ -331,7 +331,7 @@ function DismissedRow({
       </div>
 
       {/* Body */}
-      <div className="min-w-0">
+      <div data-slot="dismissed-row-body" className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <SeverityBadge severity={event.severity} />
           <span className="text-base font-semibold text-foreground">{event.typeLabel}</span>
@@ -364,7 +364,7 @@ function DismissedRow({
       </div>
 
       {/* Right rail — dismissed by + when (no action buttons) */}
-      <div className="col-span-2 flex items-center justify-end gap-2 border-t border-border/40 pt-2 sm:col-span-1 sm:flex-col sm:items-end sm:self-start sm:border-t-0 sm:pt-0">
+      <div data-slot="dismissed-row-meta" className="col-span-2 flex items-center justify-end gap-2 border-t border-border/40 pt-2 sm:col-span-1 sm:flex-col sm:items-end sm:self-start sm:border-t-0 sm:pt-0">
         <div className="text-right">
           <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Dismissed by</p>
           <p className="mt-0.5 text-sm font-medium text-foreground">{item.dismissedBy}</p>
@@ -460,7 +460,7 @@ export default function DismissedEventsPage() {
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="dismissed-events-page" className="flex flex-col gap-4">
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <PageHeader>
         <PageHeader.Content>
@@ -512,7 +512,7 @@ export default function DismissedEventsPage() {
       />
 
       {/* ── Results bar ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
+      <div data-slot="dismissed-events-page-toolbar" className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <p className="text-base text-muted-foreground">
             <strong className="text-foreground">{visible.length}</strong> events
@@ -560,7 +560,7 @@ export default function DismissedEventsPage() {
           }
         />
       ) : (
-        <div className="space-y-2">
+        <div data-slot="dismissed-events-page-list" className="space-y-2">
           {visible.map((item) => (
             <DismissedRow
               key={item.event.id}
@@ -575,7 +575,7 @@ export default function DismissedEventsPage() {
 
       {/* ── Bulk-restore selection bar ───────────────────────────────────── */}
       {selectedIds.size > 0 && (
-        <div className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-modal">
+        <div data-slot="dismissed-events-page-selection-bar" className="fixed inset-x-6 bottom-6 z-[var(--z-sticky)] mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-modal">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
               <CheckSquare className="size-3.5" />

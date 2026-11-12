@@ -77,7 +77,7 @@ function ExpandableTags({ tags }: { tags: string[] }) {
   const visible = tags.slice(0, 4);
   const rest = tags.slice(4);
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div data-slot="expandable-tags" className="flex flex-wrap items-center gap-1">
       {visible.map((t) => (
         <span
           key={t}
@@ -222,8 +222,8 @@ function RuleFilterPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div
+    <div data-slot="rule-filter-panel" className="rounded-xl border border-border bg-card">
+      <div data-slot="rule-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
@@ -258,7 +258,7 @@ function RuleFilterPanel({
       </div>
 
       {open && (
-        <div className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
+        <div data-slot="rule-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -307,7 +307,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
   }, [open]);
 
   return (
-    <div className="relative" ref={ref}>
+    <div data-slot="row-action-menu" className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
         className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground"
@@ -315,7 +315,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
         <MoreHorizontal className="size-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-floating">
+        <div data-slot="row-action-menu-content" className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-floating">
           <button
             onClick={() => { setOpen(false); onEdit(); }}
             className="flex w-full items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -371,7 +371,7 @@ function TagInput({
   const showCreate = q && !suggestions.some((s) => s.toLowerCase() === q) && !tags.includes(val.trim());
 
   return (
-    <div className="relative">
+    <div data-slot="tag-input" className="relative">
       <div
         className={cn(
           "flex min-h-[42px] cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 transition-colors focus-within:border-primary",
@@ -409,7 +409,7 @@ function TagInput({
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
+        <div data-slot="tag-input-suggestions" className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-floating">
           {filteredSuggestions.length > 0 && (
             <div className="mb-1 px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
               Existing tags
@@ -580,17 +580,17 @@ function RuleBuilder({
 
 
   return (
-    <div className="flex flex-col gap-5 pb-20">
-      <div className="flex items-center gap-3">
+    <div data-slot="rule-builder" className="flex flex-col gap-5 pb-20">
+      <div data-slot="rule-builder-header" className="flex items-center gap-3">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {sourceModel ?? (mode === "create" ? "Create Rule" : "Edit Rule")}
         </h1>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div data-slot="rule-builder-content" className="flex flex-col gap-6">
         <div>
           <h2 className="mb-4 text-lg font-bold text-foreground">Rule Information</h2>
-          <div className="space-y-4">
+          <div data-slot="rule-builder-info-form" className="space-y-4">
             {/* Name and description share a row, as do tags and severity. */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -676,7 +676,7 @@ function RuleBuilder({
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:left-[var(--sidebar-width,16rem)]">
+      <div data-slot="rule-builder-footer" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:left-[var(--sidebar-width,16rem)]">
         <div className="mx-auto flex max-w-6xl items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5">
             <ArrowLeft className="size-3.5" />
@@ -903,7 +903,7 @@ export default function RulesLibraryPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="rules-library-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Rule Library</PageHeader.Title>
@@ -925,7 +925,7 @@ export default function RulesLibraryPage({
       />
 
       {/* Count + sort */}
-      <div className="flex items-center justify-between gap-3">
+      <div data-slot="rules-library-page-toolbar" className="flex items-center justify-between gap-3">
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           Rule{filtered.length !== 1 ? "s" : ""}
@@ -956,7 +956,7 @@ export default function RulesLibraryPage({
       {/* Table or empty */}
       {filtered.length === 0 ? (
         rules.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+          <div data-slot="rules-library-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
             <BookOpen className="size-10 opacity-20" />
             <p className="text-base font-semibold text-foreground">No rules yet</p>
             <p className="max-w-sm text-center text-sm">
@@ -968,7 +968,7 @@ export default function RulesLibraryPage({
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+          <div data-slot="rules-library-page-no-results" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
             <BookOpen className="size-10 opacity-20" />
             <p className="text-sm">No rules match the current filters.</p>
             <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}>
@@ -977,7 +977,7 @@ export default function RulesLibraryPage({
           </div>
         )
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="rules-library-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] border-collapse">
               <thead className="bg-muted/30">

@@ -125,7 +125,7 @@ function LinkedEventCard({
   onView: () => void;
 }) {
   return (
-    <div
+    <div data-slot="linked-event-card"
       onClick={onView}
       className="grid cursor-pointer grid-cols-[140px_1fr] gap-3 rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30 hover:-translate-y-px"
       style={{ borderLeftColor: `var(--severity-${event.severity})` }}
@@ -1080,7 +1080,7 @@ function CaseActivityTimeline({ activity }: { activity: CaseActivity[] }) {
     );
   }
   return (
-    <div>
+    <div data-slot="case-activity-timeline">
       {activity.map((entry, i) => (
         <ActivityItem key={entry.id} entry={entry} isLast={i === activity.length - 1} />
       ))}
@@ -1181,7 +1181,7 @@ function EntityCard({
   }
 
   return (
-    <div
+    <div data-slot="case-entity-card"
       className="flex items-start justify-between gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/20"
       style={{ borderLeftWidth: 3, borderLeftColor: style.borderColor }}
     >
@@ -1316,7 +1316,7 @@ interface CaseDrawerProps {
 /* Prototype-only loading skeleton for the drawer body. */
 function CaseDrawerSkeleton() {
   return (
-    <div className="flex-1 space-y-5 overflow-y-auto p-5">
+    <div data-slot="case-drawer-skeleton" className="flex-1 space-y-5 overflow-y-auto p-5">
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex flex-col gap-1.5">
@@ -1460,7 +1460,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                 </button>
               </div>
             ) : caseData ? (
-              <div className="flex items-start justify-between gap-3">
+              <div data-slot="case-drawer-header" className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                     <SeverityBadge severity={caseData.severity} />
@@ -1499,13 +1499,13 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
           {forcedState === "loading" ? (
             <CaseDrawerSkeleton />
           ) : forcedState === "error" ? (
-            <div className="flex flex-1 items-center justify-center p-5">
+            <div data-slot="case-drawer-error" className="flex flex-1 items-center justify-center p-5">
               <ListErrorState onRetry={onRetry} title="Couldn't load this case" />
             </div>
           ) : caseData ? (
-            <div className="flex-1 space-y-5 overflow-y-auto p-5">
+            <div data-slot="case-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
               {/* Case Details */}
-              <div>
+              <div data-slot="case-drawer-details">
                 <SectionTitle>Case Details</SectionTitle>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
                   {(
@@ -1551,7 +1551,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
 
               {/* Case Notes */}
               {caseData.notes && (
-                <div>
+                <div data-slot="case-drawer-notes">
                   <SectionTitle>Case Notes</SectionTitle>
                   <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-3.5 text-base leading-relaxed text-foreground">
                     {caseData.notes}
@@ -1561,7 +1561,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
 
               {/* Entities Involved */}
               {involvedEntities.length > 0 && (
-                <div>
+                <div data-slot="case-drawer-entities">
                   <SectionTitle
                     aside={
                       <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
@@ -1585,7 +1585,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
               )}
 
               {/* Linked Incidents */}
-              <div>
+              <div data-slot="case-drawer-linked-incidents">
                 <SectionTitle
                   aside={
                     <div className="flex items-center gap-1.5">
@@ -1690,13 +1690,13 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
               </div>
 
               {/* Case Activity */}
-              <div>
+              <div data-slot="case-drawer-activity">
                 <SectionTitle>Case Activity</SectionTitle>
                 <CaseActivityTimeline activity={caseData.activity} />
               </div>
             </div>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+            <div data-slot="case-drawer-empty" className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
               <AlertTriangle className="size-8 opacity-20" />
               <p className="text-sm">Case not found.</p>
             </div>
@@ -1704,7 +1704,7 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
 
           {/* ── Footer ─────────────────────────────────────────────────────── */}
           {caseData && forcedState !== "loading" && forcedState !== "error" && (
-            <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+            <div data-slot="case-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
               <UpdateCaseMenu
                 isActive={!!isActive}
                 onChangeStatus={() => setStatusModal(true)}

@@ -21,7 +21,7 @@ export function RestoreDismissedModal({
       <ModalContent size="sm">
         <ModalHeader title="Restore dismissed events?" />
         <ModalBody>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p data-slot="restore-dismissed-modal-intro" className="text-sm leading-relaxed text-muted-foreground">
             Are you sure you want to restore{" "}
             <strong className="text-foreground">{count === 1 ? "this event" : `these ${count} events`}</strong> to the Detection Feed?
           </p>

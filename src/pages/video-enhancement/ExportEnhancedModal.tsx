@@ -65,7 +65,7 @@ export function ExportEnhancedModal({
             Pick the recordings to export, each with <strong className="text-foreground">its own enhancements</strong>. The
             originals stay untouched.
           </p>
-          <div className="overflow-hidden rounded-lg border border-border">
+          <div data-slot="export-enhanced-modal-summary" className="overflow-hidden rounded-lg border border-border">
             {items.length > 1 && (
               <label className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5">
                 <Checkbox
@@ -80,7 +80,7 @@ export function ExportEnhancedModal({
                 </span>
               </label>
             )}
-            <ul className="max-h-80 divide-y divide-border/60 overflow-y-auto">
+            <ul data-slot="export-enhanced-modal-list" className="max-h-80 divide-y divide-border/60 overflow-y-auto">
               {items.map(({ rec, files, applied }) => {
                 const enhanced = applied.length > 0;
                 const on = enhanced && picked.has(rec.id);

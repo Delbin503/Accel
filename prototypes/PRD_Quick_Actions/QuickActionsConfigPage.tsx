@@ -51,15 +51,15 @@ export default function QuickActionsConfigPage() {
   const current = SECTIONS.find((s) => s.key === section);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div data-slot="quick-actions-config-page" className="flex flex-col gap-5">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Configuration</PageHeader.Title>
         </PageHeader.Content>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
-        <nav className="flex flex-col gap-1 self-start rounded-xl border border-border bg-card p-1.5">
+      <div data-slot="quick-actions-config-page-content" className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
+        <nav data-slot="quick-actions-config-page-nav" className="flex flex-col gap-1 self-start rounded-xl border border-border bg-card p-1.5">
           {SECTIONS.map((s) => {
             const Icon = s.icon;
             const active = section === s.key;
@@ -91,7 +91,7 @@ export default function QuickActionsConfigPage() {
           })}
         </nav>
 
-        <div className="min-w-0">
+        <div data-slot="quick-actions-config-page-panel" className="min-w-0">
           {section === "quick-actions" ? (
             <QuickActionsSection />
           ) : (

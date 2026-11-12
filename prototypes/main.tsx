@@ -104,9 +104,9 @@ function ModuleCard({ mod }: { mod: ModuleDef }) {
   // Module backed by several prototype variants.
   if (mod.variants) {
     return (
-      <div className="card">
+      <div data-slot="prototype-card" className="card">
         <div className="name">{mod.name}</div>
-        <div className="variants">
+        <div data-slot="prototype-card-variants" className="variants">
           {mod.variants.map((v) =>
             has(v.slug) ? (
               <a key={v.slug} className="chip" href={`/${v.slug}/`}>
@@ -126,7 +126,7 @@ function ModuleCard({ mod }: { mod: ModuleDef }) {
   // Single-prototype module → the whole card is the link when ready.
   if (has(mod.slug)) {
     return (
-      <a className="card ready" href={`/${mod.slug}/`}>
+      <a data-slot="prototype-card" className="card ready" href={`/${mod.slug}/`}>
         <div className="name">{mod.name}</div>
         <div className="meta">
           <span className="open">Open →</span>
@@ -137,7 +137,7 @@ function ModuleCard({ mod }: { mod: ModuleDef }) {
 
   // No design PRD yet → greyed, not clickable.
   return (
-    <div className="card soon">
+    <div data-slot="prototype-card" className="card soon">
       <div className="name">{mod.name}</div>
       <div className="meta">
         <span className="tag">No design yet</span>
@@ -149,7 +149,7 @@ function ModuleCard({ mod }: { mod: ModuleDef }) {
 function LinkCard({ name, desc, href }: { name: string; desc?: string; href: string | null }) {
   if (!href) {
     return (
-      <div className="card soon">
+      <div data-slot="prototype-card" className="card soon">
         <div className="name">{name}</div>
         {desc && <div className="desc">{desc}</div>}
         <div className="meta">
@@ -159,7 +159,7 @@ function LinkCard({ name, desc, href }: { name: string; desc?: string; href: str
     );
   }
   return (
-    <a className="card ready" href={href}>
+    <a data-slot="prototype-card" className="card ready" href={href}>
       <div className="name">{name}</div>
       {desc && <div className="desc">{desc}</div>}
       <div className="meta">
@@ -171,14 +171,14 @@ function LinkCard({ name, desc, href }: { name: string; desc?: string; href: str
 
 function Section({ title, badge, count, children }: { title: string; badge?: "P0" | "P1"; count?: string; children: React.ReactNode }) {
   return (
-    <section className="phase">
-      <div className="phase-head">
+    <section data-slot="prototype-section" className="phase">
+      <div data-slot="prototype-section-header" className="phase-head">
         <span className="phase-title">{title}</span>
         {badge && <span className={`badge ${badge.toLowerCase()}`}>{badge}</span>}
         {count && <span className="count">{count}</span>}
       </div>
       <div className="rule" />
-      <div className="grid">{children}</div>
+      <div data-slot="prototype-section-grid" className="grid">{children}</div>
     </section>
   );
 }
@@ -198,8 +198,8 @@ function PrototypeIndex() {
   };
 
   return (
-    <div>
-      <nav className="tabs" role="tablist" aria-label="Prototype groups">
+    <div data-slot="prototype-index">
+      <nav data-slot="prototype-index-tabs" className="tabs" role="tablist" aria-label="Prototype groups">
         {TABS.map((t) => (
           <a
             key={t.key}
@@ -235,7 +235,7 @@ function PrototypeIndex() {
               ))}
             </Section>
           )}
-          <footer className="note">
+          <footer data-slot="prototype-index-footer" className="note">
             Phase 1 opens on the dashboard; every delivered module is reachable from there. Grey modules are not yet prototyped.
           </footer>
         </>

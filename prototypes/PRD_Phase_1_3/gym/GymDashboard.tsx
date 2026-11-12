@@ -76,8 +76,8 @@ export function GymDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
+    <div data-slot="gym-dashboard-page" className="flex flex-col gap-6">
+      <div data-slot="gym-dashboard-page-overview" className="flex flex-col gap-3 lg:h-[calc(100svh-6rem)] lg:min-h-[720px]">
         <PageHeader>
           <PageHeader.Content className="flex-row items-center gap-3">
             <PageHeader.Title>Lift Analysis</PageHeader.Title>
@@ -99,7 +99,7 @@ export function GymDashboard() {
           </PageHeader.Actions>
         </PageHeader>
 
-        <dl className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
+        <dl data-slot="gym-dashboard-page-meta" className="-mt-1 flex shrink-0 flex-wrap items-baseline gap-x-5 gap-y-0.5">
           {([
             ["Gym / rack", `${SESSION.gym} · ${SESSION.rack}`], ["Lift", `${SESSION.lift} · ${SESSION.plannedSets} × ${SESSION.plannedReps} @ ${SESSION.load} kg`],
             ["Coach", SESSION.coach], ["Date", SESSION.date],
@@ -118,7 +118,7 @@ export function GymDashboard() {
 
         <SummaryStrip name={name} device={device} />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
+        <div data-slot="gym-dashboard-page-panels" className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:grid-rows-[minmax(300px,1.15fr)_minmax(260px,1fr)]">
           <VideoPanel className="lg:col-span-5" rep={rep} phase={phase} device={device} onPhase={setPhase} onSelect={setSelected} />
           <ReviewPanel className="lg:col-span-4" rep={rep} device={device} reviews={reviews} onReview={(k, r) => setReviews((m) => ({ ...m, [k]: r }))} onSelect={setSelected} />
           <BarPathPanel className="lg:col-span-3" rep={rep} device={device} onSelect={setSelected} />
@@ -139,13 +139,13 @@ function Panel({ id, title, meta, action, className, bodyClassName, children }: 
   id?: string; title: string; meta?: React.ReactNode; action?: React.ReactNode; className?: string; bodyClassName?: string; children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+    <section data-slot="gym-panel" id={id} className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card", className)}>
+      <header data-slot="gym-panel-header" className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
         <h2 className="shrink-0 text-sm font-bold text-foreground">{title}</h2>
         {meta && <span className="min-w-0 truncate text-2xs text-muted-foreground">{meta}</span>}
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </header>
-      <div className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
+      <div data-slot="gym-panel-body" className={cn("flex min-h-0 flex-1 flex-col p-3", bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -228,7 +228,7 @@ function SummaryStrip({ name, device }: { name: string; device: DeviceMode }) {
     { label: "Velocity loss", value: `${sp.velLoss}%`, tone: lossBad ? "text-severity-critical" : "text-success", est, info: `How much slower the last rep was than the first, in the worst set. Above ${TARGET.velLoss}% form usually breaks down.${est ? ` ${speedSource}` : ""}`, delta: est ? estSub : <Delta now={sp.velLoss} before={PREVIOUS.velLoss} unit="%" lowerIsBetter /> },
   ];
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
+    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_repeat(6,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{initialsOf(name)}</span>
         <div className="min-w-0 flex-1">
@@ -336,7 +336,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
         </div>
       }
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
+      <div data-slot="video-panel-frame" className="relative min-h-0 flex-1 overflow-hidden bg-camera-feed max-lg:aspect-video">
         <RepFrame rep={rep} phase={phase} showPose={showPose} showPath={showPath} speed={velIn(rep, device)} speedEst={!sensorMeasured(rep, device)} className="absolute inset-0">
           <DrawLayer tool={tool} marks={marks} onAdd={(m) => setMarks((ms) => [...ms, m])} />
         </RepFrame>
@@ -347,7 +347,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
         )}
       </div>
       {/* Key moments of the picked rep */}
-      <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
+      <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
         <button type="button" aria-label={running ? "Pause" : "Play through the rep"}
           onClick={() => {
             if (running) return setPlaying(false);
@@ -370,7 +370,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
         <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
       </div>
       {/* Workout timeline: every rep, grouped by set, coloured by its grade */}
-      <div className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
+      <div data-slot="video-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
         <span className="w-8 shrink-0 font-mono text-2xs text-muted-foreground">{fmtClock(rep.at)}</span>
         <div className="flex min-w-0 flex-1 gap-1.5">
           {SETS.map((s) => (
@@ -421,7 +421,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
     <Panel className={className} title="Rep Review" meta={open ? `${open} findings to review` : "All reviewed"}>
       {/* One set at a time: the set tabs carry each set's speed loss, and the
           picked set's reps sit underneath at full size. */}
-      <div role="tablist" aria-label="Sets" className="mb-1.5 grid shrink-0 grid-cols-4 gap-1">
+      <div data-slot="review-panel-sets" role="tablist" aria-label="Sets" className="mb-1.5 grid shrink-0 grid-cols-4 gap-1">
         {SETS.map((s) => {
           const active = s === rep.set;
           const loss = velLossIn(s, device);
@@ -437,7 +437,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
           );
         })}
       </div>
-      <div role="tablist" aria-label={`Set ${rep.set} reps`} className="mb-2 grid shrink-0 grid-cols-5 gap-1">
+      <div data-slot="review-panel-reps" role="tablist" aria-label={`Set ${rep.set} reps`} className="mb-2 grid shrink-0 grid-cols-5 gap-1">
         {repsOf(rep.set).map((r) => {
           const active = r.id === rep.id;
           return (
@@ -460,7 +460,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
         </span>
         {tag && <span className={cn("ml-auto shrink-0 rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", rep.id === BEST_REP ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>}
       </p>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="review-panel-findings" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <ul className="flex flex-col gap-0.5">
           {checks.map((c) => (
             <li key={c.label} className={cn("flex items-center gap-2 rounded-md px-2 py-1", c.ok === false ? "bg-severity-critical/[0.07]" : "bg-background")}>
@@ -494,7 +494,7 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
 function FindingRow({ id, f, status, onReview }: { id: string; f: Finding; status?: Review; onReview: (k: string, r: Review) => void }) {
   const k = reviewKey(id, f.key);
   return (
-    <li className={cn("flex items-center gap-2 rounded-md border px-2 py-1", status === "dismissed" ? "border-border bg-background opacity-60" : status === "confirmed" ? "border-success/30 bg-success/[0.06]" : "border-warning/30 bg-warning/[0.06]")}>
+    <li data-slot="finding-row" className={cn("flex items-center gap-2 rounded-md border px-2 py-1", status === "dismissed" ? "border-border bg-background opacity-60" : status === "confirmed" ? "border-success/30 bg-success/[0.06]" : "border-warning/30 bg-warning/[0.06]")}>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-xs font-semibold text-foreground", status === "dismissed" && "line-through")}>{FAULTS[f.key].label}</p>
         <p className="truncate font-mono text-3xs text-muted-foreground">{f.detail} · <span className={CONF_TONE[f.confidence]}>{f.confidence}</span></p>
@@ -538,7 +538,7 @@ function BarPathPanel({ className, rep, device, onSelect }: { className?: string
   return (
     <Panel className={className} title="Bar Path" meta={`${repLabel(rep)} · side view`}
       action={<InfoTip text={`The bar should travel straight up and down over mid-foot. Drift is the furthest it moves off that line; up to ${TARGET.drift} cm is fine. Faint lines are the other reps of the set — click one to pick it.`} />}>
-      <div className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
+      <div data-slot="bar-path-panel-plot" className="grid min-h-0 flex-1 place-items-center max-lg:aspect-square">
         <BarPathPlot rep={rep} others={repsOf(rep.set)} onSelect={onSelect} className="max-h-full" />
       </div>
       <dl className="mt-2 grid shrink-0 grid-cols-3 gap-x-2 gap-y-1">
@@ -661,7 +661,7 @@ function MiniChart({ title, value, bad, est, legend, empty, children }: {
   title: string; value: string; bad?: boolean; est?: boolean; legend: React.ReactNode; empty?: React.ReactNode; children?: React.ReactElement;
 }) {
   return (
-    <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
+    <div data-slot="mini-chart" className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-background px-2 pt-1.5">
       <div className="flex items-baseline gap-2">
         <span className="shrink-0 text-2xs font-semibold text-foreground">{title}</span>
         {est && <EstTag className="shrink-0" />}
@@ -682,7 +682,7 @@ function FundamentalsPanel({ className }: { className?: string }) {
   return (
     <Panel className={className} title="Fundamentals" meta={`vs ${PREVIOUS.date}`}
       action={<InfoTip text={`Each fundamental is scored 0–100 on every rep and graded on the average: ${GRADE_BANDS.map(([g, m]) => `${g} ${m}+`).join(" · ")}. A rep meets it at 75+. Hover a row for what it measures.`} />}>
-      <ul className="flex min-h-0 flex-1 flex-col justify-between gap-1">
+      <ul data-slot="fundamentals-panel-list" className="flex min-h-0 flex-1 flex-col justify-between gap-1">
         {rows.map((f) => (
           <li key={f.key} className="flex items-center gap-2" title={f.measures}>
             <GradeBadge score={f.score} size="sm" />
@@ -719,7 +719,7 @@ function CoachingPanel({ className, device, onSee }: { className?: string; devic
   return (
     <Panel className={className} title="Coaching" meta="Ranked by impact"
       action={<InfoTip text={`Faults are ranked by how many reps they hit and how much they matter for safety and the lift. ${noSensor ? "Points are how much lower those reps scored than clean reps." : `Speed is how much slower those reps moved than clean reps.${device === "offline" ? " Set 4 speeds are estimated from video." : ""}`}`} />}>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div data-slot="coaching-panel-list" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {faults.map((f, i) => (
           <div key={f.key} className="rounded-lg border border-border bg-background p-2">
             <div className="flex items-center gap-2">
@@ -774,7 +774,7 @@ function CoachingPanel({ className, device, onSee }: { className?: string; devic
 
 function FullReport({ selected, device, onSelect }: { selected: string; device: DeviceMode; onSelect: (id: string) => void }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="full-report" className="flex flex-col gap-3">
       <h2 className="text-lg font-bold text-foreground">Full report</h2>
       <CompareSection device={device} />
       <RepTable selected={selected} device={device} onSelect={onSelect} />
@@ -826,8 +826,8 @@ function CompareSection({ device }: { device: DeviceMode }) {
     { label: "Heel lift", a: A.heelLift, b: B.heelLift, unit: " cm", target: `≤ ${TARGET.heelLift}`, bad: (v) => v > TARGET.heelLift },
   ];
   return (
-    <section className="rounded-xl border border-border bg-card">
-      <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+    <section data-slot="compare-section" className="rounded-xl border border-border bg-card">
+      <header data-slot="compare-section-header" className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">First rep vs last rep</h3>
         <InfoTip text="Fatigue shows as the workout goes on: compare the first rep with the last at the same moment, or pick any two reps." />
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -839,7 +839,7 @@ function CompareSection({ device }: { device: DeviceMode }) {
           </label>
         </div>
       </header>
-      <div className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
+      <div data-slot="compare-section-content" className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
         <div className="flex flex-col gap-2 lg:col-span-8">
           <PanelTabs value={phase} onChange={setPhase} tabs={PHASES.map((p) => [p.key, p.label])} />
           {overlay ? (
@@ -913,8 +913,8 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+    <section data-slot="rep-table" className="overflow-hidden rounded-xl border border-border bg-card">
+      <header data-slot="rep-table-header" className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Every rep</h3>
         <span className="text-2xs text-muted-foreground">
           {REPS.length} reps · click to review
@@ -986,7 +986,7 @@ function ProgressSection({ device }: { device: DeviceMode }) {
     { key: "goodPct", title: "Good reps", unit: "%", digits: 0, pad: 2 },
   ];
   return (
-    <section className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+    <section data-slot="progress-section" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
       <div className="flex flex-col rounded-xl border border-border bg-card p-3 lg:col-span-5">
         <div className="mb-2 flex flex-wrap items-baseline gap-2">
           <h3 className="text-sm font-bold text-foreground">Progress</h3>

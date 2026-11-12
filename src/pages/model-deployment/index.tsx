@@ -155,8 +155,8 @@ function WizardColumn({
 }) {
   const isSelected = count > 0;
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
+    <div data-slot="wizard-column" className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="wizard-column-header" className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-md font-bold text-foreground">{title}</h3>
           <span
@@ -172,7 +172,7 @@ function WizardColumn({
           </span>
         </div>
         <p className="text-sm text-muted-foreground">{description}</p>
-        <div className="relative">
+        <div data-slot="wizard-column-search" className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -182,7 +182,7 @@ function WizardColumn({
           />
         </div>
       </div>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+      <div data-slot="wizard-column-list" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {children}
       </div>
     </div>
@@ -202,7 +202,7 @@ function ModelCard({
 }) {
   const Icon = getModelIcon(model.iconKey);
   return (
-    <button
+    <button data-slot="deploy-model-card"
       onClick={onClick}
       className={cn(
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
@@ -243,7 +243,7 @@ function SiteCard({
   onClick: () => void;
 }) {
   return (
-    <button
+    <button data-slot="deploy-site-card"
       onClick={onClick}
       className={cn(
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
@@ -257,7 +257,7 @@ function SiteCard({
         </div>
         <OnlineDot online={site.status === "online"} />
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div data-slot="deploy-site-card-counts" className="grid grid-cols-3 gap-2">
         <CountMini label="Areas" value={site.areaCount} tone="default" />
         <CountMini label="Cameras" value={site.cameraCount} tone="success" />
         <CountMini label="Deployed" value={site.deployedCount} tone="info" />
@@ -276,7 +276,7 @@ function AreaCard({
   onToggle: () => void;
 }) {
   return (
-    <button
+    <button data-slot="deploy-area-card"
       onClick={onToggle}
       className={cn(
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
@@ -309,7 +309,7 @@ function CameraCard({
 }) {
   const online = camera.status === "online";
   return (
-    <button
+    <button data-slot="deploy-camera-card"
       onClick={onToggle}
       className={cn(
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
@@ -327,7 +327,7 @@ function CameraCard({
         <OnlineDot online={online} />
       </div>
       {!camera.nvrId && (
-        <div className="mt-2 flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/[0.06] px-2 py-1 text-2xs text-warning">
+        <div data-slot="deploy-camera-card-warning" className="mt-2 flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/[0.06] px-2 py-1 text-2xs text-warning">
           <AlertTriangle className="size-3" />
           No NVR — events will have no footage
         </div>
@@ -385,7 +385,7 @@ function SummaryBar({
   // Wraps rather than a rigid grid — at narrow widths the deploy button drops
   // to a second row instead of crushing the summary fields.
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border bg-card px-5 py-3.5">
+    <div data-slot="summary-bar" className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border bg-card px-5 py-3.5">
       <SummaryField label="Model" value={model?.name ?? null} placeholder="-" className="min-w-[104px] flex-[1.4]" />
       <SummaryField label="Site" value={site?.siteName ?? null} placeholder="-" className="min-w-[104px] flex-[1.4]" />
       <SummaryField
@@ -424,7 +424,7 @@ function SummaryField({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0", className)}>
+    <div data-slot="summary-field" className={cn("min-w-0", className)}>
       <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
         <span className="truncate font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
         {count !== undefined && (
@@ -449,7 +449,7 @@ export type DeployForcedState = "normal" | "loading" | "empty" | "error";
 
 function SkeletonCol() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+    <div data-slot="skeleton-col" className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
         <div className="h-4 w-20 animate-pulse rounded bg-muted" />
         <div className="h-3 w-32 animate-pulse rounded bg-muted" />
@@ -466,7 +466,7 @@ function SkeletonCol() {
 
 function DeployWizardSkeleton() {
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
+    <div data-slot="deploy-wizard-skeleton" className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => <SkeletonCol key={i} />)}
       </div>
@@ -476,7 +476,7 @@ function DeployWizardSkeleton() {
 
 function HistorySkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="history-skeleton" className="flex flex-col gap-4">
       <KpiGrid cols={5}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-[120px] animate-pulse rounded-xl bg-muted" />
@@ -494,7 +494,7 @@ function HistorySkeleton() {
 
 function ContentError({ onRetry }: { onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
+    <div data-slot="content-error" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
       <AlertTriangle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load deployments.</p>
       {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>}
@@ -504,7 +504,7 @@ function ContentError({ onRetry }: { onRetry?: () => void }) {
 
 function HistoryEmpty() {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
+    <div data-slot="history-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-24 text-muted-foreground">
       <Cpu className="size-10 opacity-30" />
       <p className="text-sm font-medium text-foreground">No models deployed yet</p>
       <p className="text-sm">Deploy a validated model to cameras from the Deploy tab to see it here.</p>
@@ -516,7 +516,7 @@ function HistoryEmpty() {
 function ModelColumnEmpty() {
   const navigate = useNavigate();
   return (
-    <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 px-3 text-center text-muted-foreground">
+    <div data-slot="model-column-empty" className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 px-3 text-center text-muted-foreground">
       <Cpu className="size-7 opacity-30" />
       <p className="text-sm">Create a model in the Model Management to continue.</p>
       <Button size="sm" className="gap-1.5" onClick={() => navigate("/models")}>
@@ -728,10 +728,10 @@ export function DeployWizard({
   const isEmpty = forcedState === "empty";
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
+    <div data-slot="deploy-wizard" className="flex h-[calc(100vh-12rem)] min-h-[640px] flex-col gap-4">
 
       {/* 4 columns */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-4">
+      <div data-slot="deploy-wizard-columns" className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-4">
 
         <WizardColumn
           title="Model"
@@ -962,7 +962,7 @@ export function DeployConfirmModal({
 
 function KvRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-border/40 pb-2 last:border-0 last:pb-0">
+    <div data-slot="kv-row" className="flex items-baseline justify-between gap-3 border-b border-border/40 pb-2 last:border-0 last:pb-0">
       <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
       <span className="text-sm font-semibold text-foreground">{value}</span>
     </div>
@@ -971,7 +971,7 @@ function KvRow({ label, value }: { label: string; value: string }) {
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 text-center text-muted-foreground">
+    <div data-slot="deployment-empty-state" className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 text-center text-muted-foreground">
       {icon}
       <p className="text-sm">{text}</p>
     </div>
@@ -1061,7 +1061,7 @@ function HistoryView({
   if (forcedState === "empty") return <HistoryEmpty />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="history-view" className="flex flex-col gap-4">
 
       {/* Health filter strip */}
       <KpiGrid cols={3}>
@@ -1087,7 +1087,7 @@ function HistoryView({
       </KpiGrid>
 
       {/* Search */}
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
+      <div data-slot="history-view-search" className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
         <Search className="size-3.5 text-muted-foreground" />
         <input
           value={search}
@@ -1102,16 +1102,16 @@ function HistoryView({
 
       {/* Model grid */}
       {filteredModels.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="history-view-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <Rocket className="size-10 opacity-20" />
           <p className="text-sm">No models match the current filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div data-slot="history-view-grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredModels.map((m) => {
             const s = MODEL_HEALTH_STYLES[m.health];
             return (
-              <button
+              <button data-slot="history-view-model-card"
                 key={m.modelId}
                 onClick={() => setDrawerModelId(m.modelId)}
                 className={cn(
@@ -1175,7 +1175,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: "suc
     tone === "warning"      ? "text-warning" :
                               "text-severity-critical";
   return (
-    <div className="rounded-md border border-border/60 bg-background px-2 py-1.5">
+    <div data-slot="deployment-stat" className="rounded-md border border-border/60 bg-background px-2 py-1.5">
       <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
       <p className={cn("mt-0.5 font-mono text-base font-bold leading-none", txt)}>{value}</p>
     </div>
@@ -1262,14 +1262,14 @@ export function ModelDeploymentsDrawer({
   const allChecked = rows.length > 0 && selectedCount === rows.length;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div data-slot="model-deployments-drawer" className="fixed inset-0 z-50">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-scrim/50 backdrop-blur-sm" onClick={onClose} />
+      <div data-slot="model-deployments-drawer-backdrop" className="absolute inset-0 bg-scrim/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Drawer */}
-      <aside className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-modal">
+      <aside data-slot="model-deployments-drawer-panel" className="absolute inset-y-0 right-0 flex w-[min(960px,68vw)] max-w-[95vw] flex-col bg-background shadow-modal">
         {/* Header */}
-        <div className="border-b border-border bg-card px-5 py-4">
+        <div data-slot="model-deployments-drawer-header" className="border-b border-border bg-card px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5">
@@ -1294,7 +1294,7 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {/* Camera search */}
-        <div className="flex-shrink-0 border-b border-border bg-card/40 px-5 py-3">
+        <div data-slot="model-deployments-drawer-search" className="flex-shrink-0 border-b border-border bg-card/40 px-5 py-3">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -1307,7 +1307,7 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {/* Filter row */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card/40 px-5 py-3">
+        <div data-slot="model-deployments-drawer-filters" className="flex flex-wrap items-center gap-2 border-b border-border bg-card/40 px-5 py-3">
           <DrawerFilter label="Site"  options={siteOptions} selected={siteFilter} onChange={setSiteFilter} icon={MapPin} />
           <DrawerFilter label="Area"  options={areaOptions} selected={areaFilter} onChange={setAreaFilter} icon={Crosshair} />
           {(siteFilter.length > 0 || areaFilter.length > 0) && (
@@ -1324,7 +1324,7 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {/* Camera table */}
-        <div className="flex-1 overflow-auto">
+        <div data-slot="model-deployments-drawer-table" className="flex-1 overflow-auto">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Video className="size-8 opacity-30" />
@@ -1404,7 +1404,7 @@ export function ModelDeploymentsDrawer({
 
         {/* Bottom action bar — only when selection is non-empty */}
         {selectedCount > 0 && (
-          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-floating">
+          <div data-slot="model-deployments-drawer-actions" className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-floating">
             <p className="text-sm text-foreground">
               <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
               <button onClick={() => setSelected(new Set())} className="ml-2 text-muted-foreground underline hover:text-foreground">
@@ -1549,7 +1549,7 @@ export default function ModelDeploymentPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="model-deployment-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Deployment</PageHeader.Title>

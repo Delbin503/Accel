@@ -45,7 +45,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
 function DrawerThumb({ item }: { item: DismissedEvent }) {
   const { event } = item;
   return (
-    <div className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-camera-feed">
+    <div data-slot="dismissed-drawer-media" className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-camera-feed">
       {event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
@@ -186,7 +186,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
       >
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
+          <div data-slot="dismissed-drawer-header" className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <SeverityBadge severity={event.severity} />
@@ -209,12 +209,12 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
         </SheetHeader>
 
         {/* Scrollable body */}
-        <div className="flex-1 space-y-5 overflow-y-auto p-5">
+        <div data-slot="dismissed-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
           <DrawerThumb item={item} />
 
           {/* Operator Notes — highlighted first since this is the key dismissal context */}
           {item.notes && (
-            <div>
+            <div data-slot="dismissed-drawer-notes">
               <SectionTitle>
                 <span className="flex items-center gap-2">
                   <MessageSquare className="size-3.5 text-severity-medium" />
@@ -228,7 +228,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
           )}
 
           {/* Original Detection Summary */}
-          <div>
+          <div data-slot="dismissed-drawer-summary">
             <SectionTitle>Original Detection Summary</SectionTitle>
             <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
               {parseEventText(event.summary)}
@@ -237,7 +237,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
 
           {/* VLM Reasoning */}
           {event.vlmReasoning && (
-            <div>
+            <div data-slot="dismissed-drawer-reasoning">
               <SectionTitle
                 aside={
                   <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
@@ -257,25 +257,25 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
           )}
 
           {/* Detected By */}
-          <div>
+          <div data-slot="dismissed-drawer-model">
             <SectionTitle>Detected By</SectionTitle>
             <ModelCard item={item} />
           </div>
 
           {/* Detection Details */}
-          <div>
+          <div data-slot="dismissed-drawer-details">
             <SectionTitle>Detection Details</SectionTitle>
             <DetailGrid item={item} />
           </div>
 
           {/* Detection Confidence (parity with active event drawer) */}
-          <div>
+          <div data-slot="dismissed-drawer-confidence">
             <DetectionConfidenceSection event={event} />
           </div>
 
           {/* Entities Involved */}
           {eventEntities.length > 0 && (
-            <div>
+            <div data-slot="dismissed-drawer-entities">
               <SectionTitle
                 aside={
                   <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
@@ -295,7 +295,7 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+        <div data-slot="dismissed-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
           <Button
             size="sm"
             className="gap-1.5"

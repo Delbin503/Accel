@@ -39,7 +39,7 @@ export default function RealSiteManagement({
     return <SiteOverviewPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div data-slot="site-overview-page" className="flex flex-col gap-5">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <SiteTableSkeleton />}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}

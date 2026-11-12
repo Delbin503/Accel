@@ -75,14 +75,14 @@ function CameraTile({
   const frame = isOnline ? cameraFrame(camera.id) : OFFLINE_FRAME;
   const tileGradient = "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
   return (
-    <button
+    <button data-slot="camera-tile"
       onClick={onSelect}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
         isSelected ? "border-primary shadow-[0_0_0_2px_var(--primary)]" : "border-border hover:border-primary/40"
       )}
     >
-      <div className="relative aspect-video w-full flex-1 overflow-hidden">
+      <div data-slot="camera-tile-frame" className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
             {frame ? (
@@ -195,10 +195,10 @@ function HeroView({
   if (!camera) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-3">
+    <div data-slot="hero-view" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+      <div data-slot="hero-view-main" className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-media">
+          <div data-slot="hero-view-stage" className="relative aspect-[16/9] w-full overflow-hidden bg-media">
             {cameraFrame(camera.id) ? (
               <img
                 src={cameraFrame(camera.id)}
@@ -221,7 +221,7 @@ function HeroView({
           </div>
 
           {/* Timeline */}
-          <div className="border-t border-border bg-background/40 px-4 py-3">
+          <div data-slot="hero-view-timeline" className="border-t border-border bg-background/40 px-4 py-3">
             <div className="relative h-8 w-full">
               <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-warning/20" />
               <div className="absolute inset-y-0 right-0 w-px bg-severity-critical" />
@@ -241,7 +241,7 @@ function HeroView({
           </div>
 
           {/* Footer controls */}
-          <div className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3">
+          <div data-slot="hero-view-controls" className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3">
             <div className="min-w-0">
               <TruncatedText text={`${camera.siteName} · ${camera.id}`} className="text-md font-bold text-foreground" />
               <TruncatedText text={`${camera.areaName} · ${camera.stream.resolution} · ${camera.stream.frameRate}fps · accel-vms v4.2.1 active`} className="text-xs text-muted-foreground" />
@@ -289,8 +289,8 @@ function HeroView({
       </div>
 
       {/* Sidebar */}
-      <div className="flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-shrink-0 border-b border-border px-3 py-3">
+      <div data-slot="hero-view-sidebar" className="flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="hero-view-sidebar-header" className="flex-shrink-0 border-b border-border px-3 py-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Cameras {multiSite ? `· ${Object.keys(bySite).length} sites` : `· ${Object.values(bySite)[0]?.siteName ?? ""}`}
@@ -313,7 +313,7 @@ function HeroView({
           </div>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+        <div data-slot="hero-view-camera-list" className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
           {Object.entries(bySite).map(([siteId, siteData]) => (
             <div key={siteId} className="space-y-1.5">
               {Object.entries(siteData.areas).map(([areaKey, group]) => (
@@ -393,8 +393,8 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
   const pageItems = cameras.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div data-slot="wall-view" className="rounded-xl border border-border bg-card p-4">
+      <div data-slot="wall-view-header" className="mb-3 flex items-center justify-between gap-3">
         <p className="text-base font-semibold text-foreground">
           Wall view · Cameras {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {total}
         </p>
@@ -419,7 +419,7 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
           </Select>
         </div>
       </div>
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>
+      <div data-slot="wall-view-grid" className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}>
         {pageItems.map((c) => (
           <CameraTile key={c.id} camera={c} hasDetection={detCount(c.id) > 0} detectionCount={detCount(c.id)}
             inlineBox={detCount(c.id) > 0 ? { x: 0.4, y: 0.4, w: 0.2, h: 0.3, color: detCount(c.id) > 2 ? "warning" : "info" } : undefined}
@@ -581,7 +581,7 @@ function GridSizeControl({
     onChange(cols, Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, rows + delta)));
   }
   return (
-    <div className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs">
+    <div data-slot="grid-size-control" className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs">
       <span className="font-semibold uppercase tracking-wider text-muted-foreground">Grid</span>
       {/* Columns */}
       <div className="inline-flex items-center gap-0.5">
@@ -783,9 +783,9 @@ function CustomView({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div data-slot="custom-view" className="flex flex-col gap-3">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+      <div data-slot="custom-view-toolbar" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
         <LayoutSwitcher
           layouts={layouts}
           activeId={activeLayoutId}
@@ -851,7 +851,7 @@ function CustomView({
       </div>
 
       {tiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="custom-view-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <LayoutGrid className="size-10 opacity-20" />
           <p className="text-sm">No cameras in your custom layout yet.</p>
           <button onClick={() => availableCameras.length > 0 && addTiles(availableCameras.slice(0, 4).map((c) => c.id))}
@@ -861,7 +861,7 @@ function CustomView({
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card p-3">
+        <div data-slot="custom-view-canvas" className="rounded-xl border border-border bg-card p-3">
           <div
             onDragOver={handleGridDragOver}
             onDrop={handleGridDrop}
@@ -1050,7 +1050,7 @@ export default function LiveMonitoringPage() {
     null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="live-monitoring-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
@@ -1058,9 +1058,9 @@ export default function LiveMonitoringPage() {
       </PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+      <div data-slot="live-monitoring-page-toolbar" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <MultiSiteSelector sites={sites.map((s) => ({ id: s.id, name: s.name }))} selected={siteFilter} onChange={setSiteFilter} />
-        <div className="relative flex-1 min-w-[200px]">
+        <div data-slot="live-monitoring-page-search" className="relative flex-1 min-w-[200px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder={`Search ${filteredCameras.length} cameras…`}
@@ -1090,7 +1090,7 @@ export default function LiveMonitoringPage() {
 
       {/* Site context strip — above the cameras, so it frames what follows (PRD). */}
       {selectedSiteInfo && (
-        <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+        <div data-slot="live-monitoring-page-site-context" className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
           <strong className="text-foreground">{selectedSiteInfo.name}</strong>
           {"address" in selectedSiteInfo && selectedSiteInfo.address && (
             <> · {selectedSiteInfo.address}</>
@@ -1101,7 +1101,7 @@ export default function LiveMonitoringPage() {
       )}
 
       {filteredCameras.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
+        <div data-slot="live-monitoring-page-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <VideoOff className="size-10 opacity-20" />
           <p className="text-sm">No cameras match the current filter.</p>
         </div>

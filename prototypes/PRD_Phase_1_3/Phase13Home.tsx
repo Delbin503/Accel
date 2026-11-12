@@ -13,14 +13,14 @@ import { TA_PAGES } from "./assessment/taPages";
 
 export function Phase13Index() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="phase13-index-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Phase 1.3</PageHeader.Title>
         </PageHeader.Content>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div data-slot="phase13-index-page-list" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {PAGES.filter((p) => !MERGED_INTO_PHASE_ONE.includes(p.path)).map((p) => {
           const Icon = p.icon;
           return (
@@ -63,7 +63,7 @@ export function Phase13Index() {
       </div>
 
       {/* Separate module — its own pages and sidebar, not a Phase 1.3 page. */}
-      <div className="mt-2 flex flex-col gap-3">
+      <div data-slot="phase13-index-page-modules" className="mt-2 flex flex-col gap-3">
         <div>
           <h2 className="text-md font-bold text-foreground">Separate module</h2>
           <p className="text-xs text-muted-foreground">Opens with its own navigation, apart from the proposals above.</p>
@@ -181,7 +181,7 @@ export function ReidNotInModule() {
   const { pathname } = useLocation();
   const label = reidNavLabel(pathname);
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
+    <div data-slot="reid-not-in-module" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">
         {label ? `${label} is not part of this module` : "Not part of this module"}
       </p>
@@ -202,7 +202,7 @@ export function TaNotInModule() {
   const { pathname } = useLocation();
   const label = taNavLabel(pathname);
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
+    <div data-slot="ta-not-in-module" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">
         {label ? `${label} is not part of this module` : "Not part of this module"}
       </p>

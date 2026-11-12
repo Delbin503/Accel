@@ -12,6 +12,7 @@
  *   3. Every data-slot value starts with the kebab name of a component declared
  *      in that file — so a layer always says which component it belongs to.
  *      (ui/ is exempt: shadcn's own slot names are kept for compatibility.)
+ *   5. Every page / prototype file that renders DOM names its sections.
  *   4. EVERY HTML element (div, span, p, button, input, img…) has a data-slot,
  *      or spreads props/rest so its caller supplies one. SVG internals are exempt.
  */
@@ -89,10 +90,33 @@ for (const dir of DIRS) {
   }
 }
 
+// 5. Pages and prototypes name their sections (root "{page}-page" + regions).
+// Only files that render their own DOM are checked. Exempt: frozen/dev copies
+// and files with in-flight user work (remove from PAGE_EXEMPT once committed).
+const PAGE_ROOTS = [join(ROOT, "src/pages"), join(ROOT, "prototypes")];
+const PAGE_EXEMPT = [/src\/pages\/dev\//, /src\/pages\/run-analysis\/index\.tsx$/, /prototypes\/PRD_Email_Templates\/index\.tsx$/];
+let pageFiles = 0;
+function walk(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, e.name);
+    if (e.isDirectory()) { if (e.name !== "node_modules") walk(path); continue; }
+    if (!e.name.endsWith(".tsx") || e.name.includes(".stories.")) continue;
+    const rel = relative(ROOT, path);
+    if (PAGE_EXEMPT.some((re) => re.test(rel))) continue;
+    const src = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    if (!/<(div|section|main|header|aside|nav|form|article|ul|span|p)\b/.test(src)) continue; // renders no DOM of its own
+    pageFiles++;
+    const values = [...src.matchAll(/data-slot=(?:"([^"]+)"|\{\s*["'`]([^"'`$]+)["'`]\s*\})/g)].map((m) => m[1] ?? m[2]);
+    if (values.length === 0) problems.push(`${rel}  names no sections — add data-slot="{page}-page" to the root and "{page}-page-{region}" to its main regions.`);
+    for (const v of values) if (!KEBAB.test(v)) problems.push(`${rel}  data-slot="${v}" is not kebab-case.`);
+  }
+}
+PAGE_ROOTS.forEach(walk);
+
 if (problems.length) {
   console.error(`Slot check failed — ${problems.length} problem(s):\n`);
   for (const p of problems) console.error("  " + p);
   console.error('\nConvention: root data-slot = kebab-case component name; parts = "{root}-{part}".');
   process.exit(1);
 }
-console.log(`Slot check passed — ${files} component files, ${slots} named layers.`);
+console.log(`Slot check passed — ${files} component files, ${slots} named layers; ${pageFiles} page files name their sections.`);

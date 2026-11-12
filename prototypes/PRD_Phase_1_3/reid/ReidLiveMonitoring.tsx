@@ -117,7 +117,7 @@ function CameraTile({
   const live = pb.offsetSec <= 0;
 
   return (
-    <div
+    <div data-slot="camera-tile"
       data-panel-camera={panelAnchor}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
@@ -128,7 +128,7 @@ function CameraTile({
             : "border-border hover:border-primary/40"
       )}
     >
-      <div className="relative aspect-video w-full flex-1 overflow-hidden">
+      <div data-slot="camera-tile-media" className="relative aspect-video w-full flex-1 overflow-hidden">
         {isOnline ? (
           <>
             {/* Zoom magnifies around the focal point the operator scrolled to. */}
@@ -280,7 +280,7 @@ function CameraWall({
 
   if (cameras.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
+      <div data-slot="camera-wall-empty" className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-16 text-muted-foreground">
         <Search className="size-5" />
         <p className="text-sm">No cameras match these filters.</p>
       </div>
@@ -289,7 +289,7 @@ function CameraWall({
 
   return (
     <>
-      <div
+      <div data-slot="camera-wall"
         className={cn(
           "grid gap-3",
           n === 0 && "grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
@@ -398,13 +398,13 @@ function SidePanel({
   return (
     /* On desktop the panel is laid over its grid cell, so the wall alone sets the
        row's height and the panel's list scrolls inside it — the two end flush. */
-    <div className="relative lg:min-h-[420px]">
+    <div data-slot="side-panel" className="relative lg:min-h-[420px]">
       <aside
         aria-label={panelName}
         className="flex max-h-[80vh] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card lg:absolute lg:inset-0 lg:max-h-none"
       >
         {tabs.length > 1 ? (
-        <div role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
+        <div data-slot="side-panel-tabs" role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
           {tabs.map((t) => (
             <button
               key={t}
@@ -540,8 +540,8 @@ function SyncGrid({
   const expanded = cameras.find((c) => c.id === expandedId) ?? null;
   const cols = cameras.length === 1 ? 1 : cameras.length <= 4 ? 2 : 3;
   return (
-    <div className="min-h-full rounded-xl border border-primary/40 bg-card p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div data-slot="sync-grid" className="min-h-full rounded-xl border border-primary/40 bg-card p-4">
+      <div data-slot="sync-grid-header" className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-base font-semibold text-foreground">
             Synchronised playback · {cameras.length} camera{cameras.length === 1 ? "" : "s"}
@@ -558,7 +558,7 @@ function SyncGrid({
           {pb.offsetSec <= 0 ? "LIVE" : `−${fmtOffset(pb.offsetSec)} · ${timestampAt(now, pb.offsetSec)}`}
         </span>
       </div>
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      <div data-slot="sync-grid-tiles" className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {cameras.map((c) => (
           <CameraTile
             key={c.id}
@@ -594,7 +594,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
   if (count === 0) return null;
   return (
     <FloatingBar className="flex flex-wrap items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
-      <div className="flex items-center gap-2">
+      <div data-slot="selection-bar-summary" className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
           <CheckSquare className="size-3.5" />
         </div>
@@ -602,7 +602,7 @@ function SelectionBar({ count, onClear, onOpenPlayback }: { count: number; onCle
           {count} camera{count > 1 ? "s" : ""} selected
         </span>
       </div>
-      <div className="ml-auto flex flex-wrap items-center gap-1.5">
+      <div data-slot="selection-bar-actions" className="ml-auto flex flex-wrap items-center gap-1.5">
         <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={onClear}>
           <X className="size-3.5" />
           Clear selection
@@ -630,7 +630,7 @@ function SyncPlaybackBar({
   return (
     <FloatingBar className="rounded-xl border border-primary bg-card px-4 py-3 shadow-[0_16px_48px_hsl(var(--primary)/0.25)]">
       {/* Shared timeline */}
-      <div className="flex items-center gap-3">
+      <div data-slot="sync-playback-bar-timeline" className="flex items-center gap-3">
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">−06:00:00</span>
         <div className="flex-1 rounded-md bg-media px-2 py-2">
           <ScrubTrack offsetSec={pb.offsetSec} onChange={(v) => onChange({ offsetSec: v })} now={now} label="Synchronised playback position" />
@@ -638,7 +638,7 @@ function SyncPlaybackBar({
         <span className="shrink-0 font-mono text-2xs text-muted-foreground">LIVE</span>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-3">
+      <div data-slot="sync-playback-bar-controls" className="mt-2.5 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary-fill text-primary-foreground">
             <SlidersHorizontal className="size-3.5" />
@@ -1015,7 +1015,7 @@ export function ReidLiveMonitoring({
   const siteLabel = siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0])?.name ?? "" : "All sites";
 
   return (
-    <div className={cn("flex flex-col gap-4 lg:h-full", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
+    <div data-slot="reid-live-monitoring-page" className={cn("flex flex-col gap-4 lg:h-full", checkedIds.length > 0 && (inSync ? "pb-44" : "pb-24"))}>
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>
@@ -1046,7 +1046,7 @@ export function ReidLiveMonitoring({
       </PageHeader>
 
       {/* Filter bar — sites · areas · grid view · search */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+      <div data-slot="reid-live-monitoring-page-filters" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <MultiSiteSelector
           sites={sites.map((s) => ({ id: s.id, name: s.name }))}
           selected={siteFilter}
@@ -1089,7 +1089,7 @@ export function ReidLiveMonitoring({
       </div>
 
       {/* Summary — and the pager when a fixed grid can't fit every camera */}
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <div data-slot="reid-live-monitoring-page-summary" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         {mapView && shownMap ? (
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="inline-flex items-center gap-1 rounded-md border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-severity-critical">
@@ -1126,8 +1126,8 @@ export function ReidLiveMonitoring({
         )}
       </div>
 
-      <div className={cn("grid min-h-0 flex-1 grid-cols-1 gap-4", panelOpen && "lg:grid-cols-[minmax(0,1fr)_340px]")}>
-        <div className={cn("min-w-0", !inSync && "rounded-xl border border-border bg-card p-3")}>
+      <div data-slot="reid-live-monitoring-page-content" className={cn("grid min-h-0 flex-1 grid-cols-1 gap-4", panelOpen && "lg:grid-cols-[minmax(0,1fr)_340px]")}>
+        <div data-slot="reid-live-monitoring-page-wall" className={cn("min-w-0", !inSync && "rounded-xl border border-border bg-card p-3")}>
           {inSync ? (
             <SyncGrid
               cameras={checkedCameras}

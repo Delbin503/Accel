@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      <div>
+      <div data-slot="forgot-password-page">
         {step !== "done" && (
           <button
             onClick={() => {
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
               Enter the email associated with your Accel account. We'll send a
               6-digit verification code.
             </p>
-            <form onSubmit={submitEmail} className="mt-6 space-y-4">
+            <form data-slot="forgot-password-page-email-form" onSubmit={submitEmail} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Email
@@ -192,7 +192,7 @@ export default function ForgotPasswordPage() {
               <strong className="text-foreground">{email}</strong>. Enter it
               below to verify.
             </p>
-            <form onSubmit={submitCode} className="mt-6 space-y-4">
+            <form data-slot="forgot-password-page-code-form" onSubmit={submitCode} className="mt-6 space-y-4">
               <div
                 onPaste={handleCodePaste}
                 className="flex items-center justify-between gap-2"
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
             <p className="mt-2 text-base text-muted-foreground">
               Choose a strong password — at least 8 characters.
             </p>
-            <form onSubmit={submitReset} className="mt-6 space-y-4">
+            <form data-slot="forgot-password-page-reset-form" onSubmit={submitReset} className="mt-6 space-y-4">
               <div>
                 <PasswordField
                   label="New password"
@@ -278,7 +278,7 @@ export default function ForgotPasswordPage() {
         )}
 
         {step === "done" && (
-          <div className="text-center">
+          <div data-slot="forgot-password-page-done" className="text-center">
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full border-2 border-success/50 bg-success/10">
               <CheckCircle2 className="size-7 text-success" />
             </div>

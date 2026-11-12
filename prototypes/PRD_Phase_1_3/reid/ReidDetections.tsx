@@ -36,7 +36,7 @@ export function DetectionsPanel({ detections, now, onOpen, onLocate }: {
 
   return (
     <>
-      <div className="flex-shrink-0 border-b border-border px-3 py-3">
+      <div data-slot="detections-panel-header" className="flex-shrink-0 border-b border-border px-3 py-3">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             <span className="size-1.5 animate-pulse rounded-full bg-severity-critical" />
@@ -52,7 +52,7 @@ export function DetectionsPanel({ detections, now, onOpen, onLocate }: {
         </p>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
+      <div data-slot="detections-panel-list" className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {detections.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
             <Radar className="size-5" />
@@ -134,7 +134,7 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
      style turns them back on here, and DETECTION_CARDS_ATTR lets the modal
      tell a click on a card from a click-away that should close it. */
   return createPortal(
-    <div
+    <div data-slot="detection-card-stack"
       aria-live="polite"
       aria-label="New detections"
       {...{ [DETECTION_CARDS_ATTR]: "" }}

@@ -92,9 +92,9 @@ export function TaPoseDefaults() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="ta-pose-defaults-page" className="flex flex-col gap-4">
       {/* Use case + scope */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div data-slot="ta-pose-defaults-page-toolbar" className="flex flex-wrap items-center justify-between gap-3">
         <div data-slot="button-group" className="flex h-8 items-center rounded-md border border-border bg-background p-0.5">
           {USE_CASE_KEYS.map((k) => (
             <button
@@ -126,7 +126,7 @@ export function TaPoseDefaults() {
       </div>
 
       {/* Pose settings */}
-      <div>
+      <div data-slot="ta-pose-defaults-page-pose-mode">
         <p className={LABEL}>Pose Mode</p>
         <div role="radiogroup" aria-label="Pose mode" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <ModeCard mode="3d" active={s.mode === "3d"} onPick={setMode} icon={Box} title="3D pose · two views"
@@ -136,7 +136,7 @@ export function TaPoseDefaults() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-slot="ta-pose-defaults-page-settings" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label className={LABEL}>Frame Rate</label>
           <Select value={String(s.fps)} onValueChange={(v) => patch(uc, { fps: Number(v) })}>
@@ -166,7 +166,7 @@ export function TaPoseDefaults() {
       </div>
 
       {/* Camera requirements — follow the pose mode */}
-      <div className="rounded-lg border border-primary/30 bg-primary/[0.04] p-4">
+      <div data-slot="ta-pose-defaults-page-camera-requirements" className="rounded-lg border border-primary/30 bg-primary/[0.04] p-4">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <div>
             <p className="flex items-center gap-1.5 text-base font-bold text-foreground">
@@ -203,7 +203,7 @@ export function TaPoseDefaults() {
       </div>
 
       {/* Fewer cameras than required */}
-      <div>
+      <div data-slot="ta-pose-defaults-page-fallback">
         <p className={LABEL}>When a {u.unit} has fewer cameras</p>
         <div role="radiogroup" aria-label="Fewer cameras" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {([
@@ -239,7 +239,7 @@ export function TaPoseDefaults() {
       </div>
 
       {/* Readiness at the sites */}
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div data-slot="ta-pose-defaults-page-readiness" className="overflow-hidden rounded-lg border border-border">
         <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3.5 py-2.5">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
             <Layers className="size-4 text-muted-foreground" />

@@ -112,7 +112,7 @@ export default function OnboardingSitePage() {
         </>
       }
     >
-      <div>
+      <div data-slot="onboarding-site-page">
         <OnboardingProgress current="site" />
 
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Create your first site</h1>
@@ -120,7 +120,7 @@ export default function OnboardingSitePage() {
           Add basic details and the areas you want to monitor.
         </p>
 
-        <div className="mt-6 space-y-4">
+        <div data-slot="onboarding-site-page-form" className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Site name
@@ -208,7 +208,7 @@ export default function OnboardingSitePage() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-2">
+          <div data-slot="onboarding-site-page-actions" className="flex items-center gap-2 pt-2">
             <Button variant="ghost" onClick={() => navigate("/signin")} className="gap-1.5">
               <ArrowLeft className="size-3.5" />
               Back to sign in

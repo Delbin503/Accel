@@ -90,7 +90,7 @@ export function EscalateModal({
         <ModalHeader title="Escalate to Incident Case" />
         <ModalBody className="space-y-4">
           {/* One sentence replaces the description and the bulk banner. */}
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p data-slot="escalate-modal-intro" className="text-sm leading-relaxed text-muted-foreground">
             {isBulk ? (
               <>
                 Create one case from <strong className="text-foreground">{bulkCount} selected events</strong>;
@@ -101,7 +101,7 @@ export function EscalateModal({
             )}
           </p>
 
-          <div>
+          <div data-slot="escalate-modal-title-field">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
             </label>

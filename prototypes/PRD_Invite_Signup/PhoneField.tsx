@@ -48,7 +48,7 @@ export function PhoneField({
   );
 
   return (
-    <div className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
+    <div data-slot="phone-field" className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
       <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(""); }}>
         <PopoverTrigger asChild>
           <button
@@ -69,7 +69,7 @@ export function PhoneField({
               className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="max-h-56 overflow-y-auto">
+          <div data-slot="phone-field-country-list" className="max-h-56 overflow-y-auto">
             {list.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>
             ) : (

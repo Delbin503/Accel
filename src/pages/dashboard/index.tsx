@@ -49,12 +49,12 @@ const REFERENCE_TODAY = "2026-05-19";
 
 function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <div data-slot="dashboard-section" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="dashboard-section-header" className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <TruncatedText text={title} className="min-w-0 flex-1 text-base font-bold text-foreground" />
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div data-slot="dashboard-section-content" className="p-4">{children}</div>
     </div>
   );
 }
@@ -90,7 +90,7 @@ function SevRow({ kind, value, total }: { kind: SevKind; value: number; total: n
   const s = SEV_STYLES[kind];
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2 text-xs">
+    <div data-slot="sev-row" className="flex items-center gap-2 text-xs">
       <span className={cn("inline-flex items-center gap-1 font-bold", s.text)}>
         <span className={cn("size-1.5 rounded-full", s.dot)} />
         {s.label}
@@ -149,7 +149,7 @@ function SiteChipRow({
   }
 
   return (
-    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+    <div data-slot="site-chip-row" className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
       {sites.map((s) => {
         const isActive = selected.includes(s.name);
         return (
@@ -485,9 +485,9 @@ export default function DashboardPage() {
   const showAlertBanner = !!worstHealth && !alertAcknowledged;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="dashboard-page" className="flex flex-col gap-4">
       {showAlertBanner && worstHealth && (
-        <div
+        <div data-slot="dashboard-page-alert"
           className={cn(
             "flex items-center gap-3 rounded-xl border px-4 py-3",
             alertCritical
@@ -568,8 +568,8 @@ export default function DashboardPage() {
       />
 
       {/* KPI strip — live status on the left, the selected period on the right (PRD). */}
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div className="min-w-0 flex-[3] space-y-2">
+      <div data-slot="dashboard-page-kpis" className="flex flex-col gap-4 md:flex-row">
+        <div data-slot="dashboard-page-kpis-live" className="min-w-0 flex-[3] space-y-2">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 animate-pulse rounded-full bg-success" />
             <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Live status</p>
@@ -599,7 +599,7 @@ export default function DashboardPage() {
           </KpiGrid>
         </div>
         <div className="hidden w-px self-stretch bg-border md:block" />
-        <div className="space-y-2 md:w-72 md:shrink-0">
+        <div data-slot="dashboard-page-kpis-period" className="space-y-2 md:w-72 md:shrink-0">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Period · {dateLabel}
           </p>
@@ -624,7 +624,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Detections trend — full width now that System Health lives in the header */}
-      <div>
+      <div data-slot="dashboard-page-detections">
         <div>
           <Section
             title="Detections by Site — Severity Breakdown"
@@ -643,7 +643,7 @@ export default function DashboardPage() {
                   selected={selectedSites}
                   onChange={setSelectedSites}
                 />
-                <div className="h-[240px]">
+                <div data-slot="dashboard-page-detections-chart" className="h-[240px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={siteTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
@@ -670,7 +670,7 @@ export default function DashboardPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div data-slot="dashboard-page-detections-sites" className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {detectionsBySite
                     .filter((s) => selectedSites.includes(s.site))
                     .map((s) => {
@@ -771,7 +771,7 @@ export default function DashboardPage() {
             {zoneSiteFilter.length > 0 ? "No zones match the selected sites." : "No detections recorded in this range."}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <div data-slot="dashboard-page-zones-grid" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {filteredZoneAreas.map((z) => {
               return (
                 <Popover key={`${z.site}-${z.area}`}>
@@ -844,7 +844,7 @@ export default function DashboardPage() {
       </Section>
 
       {/* Recent events + Cases */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-slot="dashboard-page-recent" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Recent Detections"
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/detection-feed")}>
             View all <ArrowUpRight className="size-3" />
@@ -855,7 +855,7 @@ export default function DashboardPage() {
             ) : recentEvents.map((e) => {
               const sv = SEV_STYLES[e.severity];
               return (
-                <div key={e.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2"
+                <div data-slot="dashboard-page-detection-row" key={e.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2"
                   style={{ borderLeftWidth: 3, borderLeftColor: `var(--severity-${e.severity})` }}>
                   <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", sv.bg, sv.text)}>
                     {sv.label}
@@ -881,7 +881,7 @@ export default function DashboardPage() {
             ) : recentCases.map((c) => {
               const sv = SEV_STYLES[c.severity];
               return (
-                <div key={c.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2">
+                <div data-slot="dashboard-page-case-row" key={c.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2">
                   <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
                     <FolderOpen className="size-3.5 text-muted-foreground" />
                   </div>
@@ -903,12 +903,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Cameras by Sites + Activity Log */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-slot="dashboard-page-cameras-activity" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section title="Cameras by Site"
           action={<Button variant="ghost" className="gap-1 text-sm" onClick={() => navigate("/site/overview")}>
             Sites <ArrowUpRight className="size-3" />
           </Button>}>
-          <div className="h-[260px]">
+          <div data-slot="dashboard-page-cameras-chart" className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
@@ -945,7 +945,7 @@ export default function DashboardPage() {
           }
         >
           {/* Height matches the Cameras by Site chart (h-[260px] + ~24px legend = ~300px) */}
-          <div className="-mx-4 -my-4">
+          <div data-slot="dashboard-page-activity-log" className="-mx-4 -my-4">
             <div className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border bg-muted/30 px-4 py-2">
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">When</p>
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
@@ -955,7 +955,7 @@ export default function DashboardPage() {
               {recentActivity.map((a) => {
                 const ks = ACTIVITY_KIND_STYLES[a.kind];
                 return (
-                  <div
+                  <div data-slot="dashboard-page-activity-row"
                     key={a.id}
                     className="grid grid-cols-[120px_70px_1fr] gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 hover:bg-muted/20"
                   >

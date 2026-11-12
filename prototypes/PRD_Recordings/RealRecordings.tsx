@@ -29,7 +29,7 @@ export default function RealRecordings({
     return <RecordingsPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div data-slot="recordings-page" className="flex flex-col gap-5">
       <StateHeader />
       {forced === "loading" && <RecordingsSkeleton />}
       {forced === "error" && <ErrorState onRetry={onResolveForced} />}

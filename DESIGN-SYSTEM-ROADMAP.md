@@ -18,7 +18,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 1. ~~Commit + push Phase 2A~~ ✅ `d70e0b7`
 2. **Phase 2B: prototypes.** Token work is done (2026-11-14) and needs committing. Left: migrating raw elements (383)
-3. **Phase 2C: name page sections** (S–M). The decision was to name sections, not every element.
+3. ~~Phase 2C: name page sections~~ ✅ done 2026-11-14 (1,331 section names in 167 page files); needs committing
 4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
 5. Then **Phase 3** (component APIs).
 
@@ -35,7 +35,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 |---|---|---|
 | Tokens | 🟢 Strong | 3 tiers (`--palette-*` → semantic → component), light/dark, elevation, media, fill/ink tokens; **0 WCAG AA text failures**; `npm run lint:tokens` |
 | Guardrails (app `src/`) | 🟢 Strong | ESLint bans off-system classes; pages can't hand-roll primitives; component registry; every component element named. Debt baselined (572) |
-| Layer naming | 🟢 Strong (components) / 🟠 pages | 693 named layers across 76 component files; pages unnamed (Phase 2C) |
+| Layer naming | 🟢 Strong | 693 layers in 76 component files (every element); 1,331 section names in 167 page/prototype files |
 | **Prototypes (the main UI)** | 🟡 Functional | Guardrails + type-check cover them; token issues 1,171 → 0. Left: 383 raw elements (Phase 2B) |
 | Primitives (`components/ui`) | 🟢 Strong | 26 shadcn components, 24 with stories |
 | App composites (`components/shared`) | 🟠 Weak | 43 components, 10 with stories; design-system and app-only pieces mixed |
@@ -180,7 +180,7 @@ Steps:
 
 **Why:** components are fully named. Pages need a root and region names so any area can be found in the inspector, in tests or in design imports. Naming every one of the ~5,500 page elements would mostly name layout glue, so the decision was **sections only**.
 
-- [ ] Every page (`src/pages/**` + prototype pages) gets a root `data-slot="{page}-page"` and region names, e.g.:
+- [x] Every page (`src/pages/**` + prototype pages) gets a root `data-slot="{page}-page"` and region names (**1,331 names in 167 files**). Prototype copies use the same names as their app page (`dashboard-page`, `nvr-devices-page`…). Page-local drawers and modals get their own root (`event-drawer`, `case-drawer`, `invoice-detail-drawer`). Example:
   ```
   detection-feed-page
   ├─ detection-feed-page-header    (PageHeader)
@@ -190,7 +190,7 @@ Steps:
   └─ detection-feed-page-event
   ```
   About 5–15 names per page, ~400–800 in total
-- [ ] Extend `scripts/check-slots.mjs`: every page file names its root `*-page`
+- [x] `scripts/check-slots.mjs` now also fails any page or prototype file that renders DOM without section names. Exempt: `src/pages/dev/` (gallery and frozen copies) and your two WIP files (`run-analysis/index.tsx`, `PRD_Email_Templates/index.tsx`). Remove those from `PAGE_EXEMPT` once committed
 - [ ] Raw elements inside pages get named automatically as they're migrated to components (Phase 2B / 3)
 
 **Done when:** every page has a named root and named regions, and the slot check enforces it.

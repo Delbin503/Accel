@@ -54,6 +54,7 @@ function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | nul
   if (!show) return null;
   return (
     <button
+      data-slot="back-to-top"
       onClick={() => {
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -78,10 +79,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <SidebarProvider defaultOpen={true}>
-          <div className="flex min-h-screen w-full bg-background">
+          <div data-slot="incident-cases-prototype" className="flex min-h-screen w-full bg-background">
             <AppSidebar />
             <div className="flex min-w-0 flex-1 flex-col">
-              <header className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+              <header data-slot="incident-cases-prototype-header" className="sticky top-0 z-[var(--z-sticky)] flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-sm">
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground md:hidden" aria-label="Toggle sidebar" />
                 <ProtoBreadcrumb className="md:ml-2" />
                 <div className="flex-1" />
@@ -90,7 +91,7 @@ function App() {
                 <div className="mx-1 h-5 w-px shrink-0 bg-border" />
                 <UserMenu />
               </header>
-              <main ref={mainRef} id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
+              <main ref={mainRef} data-slot="incident-cases-prototype-main" id="main-content" className="flex-1 overflow-auto p-6 focus:outline-none">
                 <Routes>
                   <Route path="/incidents" element={<RealIncidentCases forced={forced} onResolveForced={resolve} />} />
                   {/* Opened from other modules ("Open case" on a detection), via the Phase 1 handoff. */}
@@ -113,7 +114,7 @@ function App() {
 
 function NotInPrototype() {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
+    <div data-slot="not-in-prototype" className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-24 text-center text-muted-foreground">
       <p className="text-sm font-medium text-foreground">Not part of this prototype</p>
       <p className="text-sm">This prototype only covers <strong className="text-foreground">Incident Cases</strong>.</p>
     </div>

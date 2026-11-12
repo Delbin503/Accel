@@ -193,7 +193,7 @@ export function ReidSiteMapModal({
           }
         />
         <ModalBody className="space-y-3">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+          <div data-slot="reid-site-map-modal-legend" className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
             {groups.map((g, i) => (
               <span key={g.join()} className="flex items-center gap-1.5">
                 <span className={cn("size-2.5 rounded-sm", GROUP_TONES[i % GROUP_TONES.length].swatch)} />
@@ -207,7 +207,7 @@ export function ReidSiteMapModal({
             </span>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border bg-media-raised">
+          <div data-slot="reid-site-map-modal-map" className="overflow-hidden rounded-lg border border-border bg-media-raised">
             <SiteMapCanvas
               cameras={cameras}
               usedByCamera={usedByCamera}
@@ -281,8 +281,8 @@ export function ReidZoneMapCard({ map, cameras }: { map: ReidMap; cameras: Camer
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
+    <section data-slot="reid-zone-map-card" className="overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="reid-zone-map-card-header" className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-md font-semibold text-foreground">
             <MapIcon className="size-4 text-primary-ink" />
@@ -320,11 +320,11 @@ export function ReidZoneMapCard({ map, cameras }: { map: ReidMap; cameras: Camer
         </DropdownMenu>
       </div>
 
-      <div ref={ref} className="bg-media-raised">
+      <div data-slot="reid-zone-map-card-map" ref={ref} className="bg-media-raised">
         <SiteMapCanvas cameras={mapCameras} usedByCamera={map.used} positionsByCamera={map.positions} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+      <div data-slot="reid-zone-map-card-legend" className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
         {groups.map((g, i) => (
           <span key={g.join()} className="flex items-center gap-1.5">
             <span className={cn("size-2.5 rounded-sm", GROUP_TONES[i % GROUP_TONES.length].swatch)} />

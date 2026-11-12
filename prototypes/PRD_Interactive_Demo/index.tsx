@@ -10,8 +10,8 @@ import "./proto.css";
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-      <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:py-12">
-        <div className="mx-auto mb-4 flex w-full max-w-6xl justify-end">
+      <div data-slot="interactive-demo-prototype" className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:py-12">
+        <div data-slot="interactive-demo-prototype-toolbar" className="mx-auto mb-4 flex w-full max-w-6xl justify-end">
           <ThemeToggle />
         </div>
         <HouseDemo />

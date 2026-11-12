@@ -32,7 +32,7 @@ const StatShell = React.forwardRef<HTMLDivElement, {
   /* "muted" means a card whose parts carry the colour themselves — the header
      dot stays neutral rather than repeating the first part's colour. */
   return (
-    <div ref={ref} className={cn("relative flex h-[172px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
+    <div data-slot="stat-shell" ref={ref} className={cn("relative flex h-[172px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4", className)}>
       <div className="flex min-w-0 items-center gap-2">
         <span className={cn("size-1.5 shrink-0 rounded-full", accent === "muted" ? "bg-muted-foreground/40" : TONE_BAR[accent])} />
         <span className="min-w-0 flex-1 truncate text-base font-medium text-muted-foreground">{label}</span>
@@ -220,10 +220,10 @@ export function VisitorKpis({
 
   // Same flex and grids as the status strip, so the columns match exactly.
   return (
-    <div className="flex flex-col gap-4 @2xl:flex-row">
-      <div className="grid min-w-0 grid-cols-1 gap-3 @sm:grid-cols-3 @2xl:flex-[3_3_24px]">{cards.slice(0, 3)}</div>
+    <div data-slot="visitor-kpis" className="flex flex-col gap-4 @2xl:flex-row">
+      <div data-slot="visitor-kpis-primary" className="grid min-w-0 grid-cols-1 gap-3 @sm:grid-cols-3 @2xl:flex-[3_3_24px]">{cards.slice(0, 3)}</div>
       <div className="hidden w-px @2xl:block" />
-      <div className="grid min-w-0 grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:flex-[2_2_12px]">{cards.slice(3)}</div>
+      <div data-slot="visitor-kpis-secondary" className="grid min-w-0 grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:flex-[2_2_12px]">{cards.slice(3)}</div>
     </div>
   );
 }

@@ -47,6 +47,7 @@ export function TesterShell({
     <>
       {visible && (
         <div
+          data-slot="tester-shell"
           className={cn(
             "fixed z-[var(--z-tooltip)] opacity-30 transition-opacity duration-[var(--duration-normal)] ease-standard hover:opacity-100",
             position
@@ -57,6 +58,7 @@ export function TesterShell({
       )}
 
       <button
+        data-slot="tester-shell-toggle"
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-pressed={visible}

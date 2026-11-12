@@ -25,7 +25,7 @@ export default function InviteSignupPage() {
   const invite = MOCK_INVITE;
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div data-slot="invite-page" className="min-h-screen w-full bg-background">
       <div className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>

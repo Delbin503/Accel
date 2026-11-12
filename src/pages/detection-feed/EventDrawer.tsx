@@ -22,7 +22,7 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
   const frame = eventImage(event.id);
 
   return (
-    <div className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-camera-feed">
+    <div data-slot="event-drawer-media" className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-camera-feed">
       {frame && (
         <img
           src={frame}
@@ -439,7 +439,7 @@ export function EventEntityCard({
   }
 
   return (
-    <div
+    <div data-slot="event-entity-card"
       className="flex items-start justify-between gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/20"
       style={{ borderLeftWidth: 3, borderLeftColor: style.borderColor }}
     >
@@ -510,7 +510,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
       >
         {/* Header */}
         <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
+          <div data-slot="event-drawer-header" className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                 <SeverityBadge severity={event.severity} />
@@ -532,11 +532,11 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
         </SheetHeader>
 
         {/* Scrollable body */}
-        <div className="flex-1 space-y-5 overflow-y-auto p-5">
+        <div data-slot="event-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
           <DrawerThumb event={event} />
 
           {/* Event Summary */}
-          <div>
+          <div data-slot="event-drawer-summary">
             <SectionTitle>Event Summary</SectionTitle>
             <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
               {parseEventText(event.summary)}
@@ -544,7 +544,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           </div>
 
           {/* VLM Reasoning */}
-          <div>
+          <div data-slot="event-drawer-reasoning">
             <SectionTitle
               aside={
                 <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
@@ -561,7 +561,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           </div>
 
           {/* Detected By */}
-          <div>
+          <div data-slot="event-drawer-model">
             <SectionTitle
               aside={
                 <button className="text-2xs text-violet hover:underline">View model →</button>
@@ -573,19 +573,19 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           </div>
 
           {/* Detection Details */}
-          <div>
+          <div data-slot="event-drawer-details">
             <SectionTitle>Detection Details</SectionTitle>
             <DetailGrid event={event} />
           </div>
 
           {/* Detection Confidence */}
-          <div>
+          <div data-slot="event-drawer-confidence">
             <DetectionConfidenceSection event={event} />
           </div>
 
           {/* Entities Involved */}
           {eventEntities.length > 0 && (
-            <div>
+            <div data-slot="event-drawer-entities">
               <SectionTitle
                 aside={
                   <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
@@ -610,7 +610,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+        <div data-slot="event-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
           {event.status === "escalated" && event.caseId ? (
             <Button variant="outline" size="sm">
               View {event.caseId} →

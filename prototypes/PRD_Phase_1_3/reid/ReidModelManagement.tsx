@@ -425,7 +425,7 @@ function ModelCard({
   const IconComp = getIconComp(model.iconKey);
 
   return (
-    <button
+    <button data-slot="model-card"
       onClick={onClick}
       className={cn(
         "group w-full rounded-xl border px-4 py-3.5 text-left transition-all",
@@ -532,7 +532,7 @@ function UploadDropzone({
   }
 
   return (
-    <div
+    <div data-slot="upload-dropzone"
       role="button"
       tabIndex={0}
       onClick={pick}
@@ -1015,7 +1015,7 @@ function RemovedStepCard({
   onDragEnd: () => void;
 }) {
   return (
-    <div
+    <div data-slot="removed-step-card"
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
@@ -1086,7 +1086,7 @@ function CustomizeStepsDrawer({
   const [over, setOver] = React.useState(false);
 
   return (
-    <aside
+    <aside data-slot="customize-steps-drawer"
       aria-label="Customize steps"
       onDragOver={(e) => {
         if (!accepting) return;
@@ -1107,7 +1107,7 @@ function CustomizeStepsDrawer({
         over ? "border-severity-critical bg-severity-critical/5" : "border-border"
       )}
     >
-      <div className="border-b border-border px-4 py-3.5">
+      <div data-slot="customize-steps-drawer-header" className="border-b border-border px-4 py-3.5">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-base font-bold text-foreground">
             Removed steps
@@ -1128,7 +1128,7 @@ function CustomizeStepsDrawer({
         </p>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div data-slot="customize-steps-drawer-list" className="flex-1 space-y-2 overflow-y-auto p-3">
         {accepting && (
           <div className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
@@ -1231,7 +1231,7 @@ function SequenceItem({
   onDragEnd: () => void;
 }) {
   return (
-    <div
+    <div data-slot="sequence-item"
       draggable={editable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -1335,7 +1335,7 @@ function AttachedRuleCard({
   onDetach: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-border bg-background px-3 py-2.5">
+    <div data-slot="attached-rule-card" className="group relative rounded-lg border border-border bg-background px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1381,7 +1381,7 @@ function ExtractedRuleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
+    <div data-slot="extracted-rule-card" className="group relative rounded-lg border border-violet/20 bg-violet/[0.04] px-3 py-2.5">
       {editable && (
         <HoverActions align="top">
           <IconAction icon={Edit2} title="Edit rule" onClick={onEdit} tone="primary" />
@@ -1421,7 +1421,7 @@ function ExtractedRuleCard({
 
 function EmptyDetailState() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+    <div data-slot="empty-detail-state" className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
       <div className="flex size-14 items-center justify-center rounded-full border border-dashed border-border">
         <Plus className="size-6" />
       </div>
@@ -1438,7 +1438,7 @@ function EditProgress({ sequenceCount, rulesCount }: { sequenceCount: number; ru
     { key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount },
   ];
   return (
-    <div className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
+    <div data-slot="edit-progress" className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
       {items.map((it, i) => {
         const Icon = it.icon;
         return (
@@ -1856,7 +1856,7 @@ function ModelDetailPanel({
   }
 
   return (
-    <div className={cn(
+    <div data-slot="model-detail-panel" className={cn(
       "flex h-full flex-col overflow-hidden transition-[padding] duration-[var(--duration-normal)] ease-standard",
       // The docked Customize drawer covers the right edge — keep content clear of it.
       isEditing && customizeOpen && "sm:pr-80"
@@ -1864,7 +1864,7 @@ function ModelDetailPanel({
 
       {/* ── Header ── */}
       {isEditing ? (
-        <div className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3.5">
+        <div data-slot="model-detail-panel-header" className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3.5">
           <IconPicker current={draft.iconKey} onChange={(k) => patchDraft({ iconKey: k })} />
           <div className="min-w-0 flex-1">
             <Input
@@ -1888,7 +1888,7 @@ function ModelDetailPanel({
           </div>
         </div>
       ) : (
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div data-slot="model-detail-panel-header" className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
               {React.createElement(getIconComp(model.iconKey), { className: "size-5 text-primary-ink" })}
@@ -1937,10 +1937,10 @@ function ModelDetailPanel({
       )}
 
       {/* ── Combined scrollable content (Description/Tags scrolls with rest) ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div data-slot="model-detail-panel-content" className="flex-1 overflow-y-auto">
         {isEditing ? (
           <>
-          <div className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
+          <div data-slot="model-detail-panel-edit-form" className="space-y-3 border-b border-border bg-muted/10 px-5 py-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
@@ -1966,7 +1966,7 @@ function ModelDetailPanel({
           </div>
           </>
         ) : (
-          <div className="border-b border-border px-5 py-3">
+          <div data-slot="model-detail-panel-summary" className="border-b border-border px-5 py-3">
             <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
               {model.description}
             </p>
@@ -2185,7 +2185,7 @@ function ModelDetailPanel({
           </>
         ) : (
           /* ── VIEW MODE — single combined section ── */
-          <div className="px-5 pb-6 pt-4">
+          <div data-slot="model-detail-panel-configuration" className="px-5 pb-6 pt-4">
             <div className="mb-4">
               <p className="text-base font-bold text-foreground">Model Configuration</p>
               <p className="text-xs text-muted-foreground">
@@ -2477,7 +2477,7 @@ export function ReidModelManagement() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="reid-model-management-page" className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Management</PageHeader.Title>
@@ -2490,12 +2490,12 @@ export function ReidModelManagement() {
         </PageHeader.Actions>
       </PageHeader>
 
-    <div className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
+    <div data-slot="reid-model-management-page-content" className="flex h-[calc(100vh-12rem)] min-h-[600px] gap-4">
 
       {/* ── Left panel — hidden while editing a model ── */}
       {!editing && (
-      <div className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-shrink-0 border-b border-border px-4 py-4">
+      <div data-slot="reid-model-management-page-sidebar" className="flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div data-slot="reid-model-management-page-sidebar-header" className="flex-shrink-0 border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -2606,7 +2606,7 @@ export function ReidModelManagement() {
           </Select>
         </div>
 
-        <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+        <div data-slot="reid-model-management-page-list" className="flex-1 space-y-2.5 overflow-y-auto p-3">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">
               <AlignLeft className="size-8 opacity-20" />
@@ -2640,7 +2640,7 @@ export function ReidModelManagement() {
       )}
 
       {/* ── Right panel ── */}
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div data-slot="reid-model-management-page-detail" className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         {selectedModel ? (
           <ModelDetailPanel
             model={selectedModel}

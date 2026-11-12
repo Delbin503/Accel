@@ -74,7 +74,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
   return (
     <>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
+      <div data-slot="recording-player-header" className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
             <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider", tone.chip)}>
@@ -101,9 +101,9 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
       </div>
 
       {/* Player */}
-      <div className="overflow-y-auto p-5">
+      <div data-slot="recording-player-body" className="overflow-y-auto p-5">
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="relative aspect-video w-full overflow-hidden bg-media">
+          <div data-slot="recording-player-stage" className="relative aspect-video w-full overflow-hidden bg-media">
             <div
               className="absolute inset-0 origin-top-left transition-transform duration-[var(--duration-normal)] ease-standard"
               style={{
@@ -135,7 +135,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
             )}
 
             {/* Overlay controls — the same bar the live tiles carry. */}
-            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-scrim/90 via-scrim/70 to-transparent px-3 pb-2 pt-8">
+            <div data-slot="recording-player-controls" className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-1 bg-gradient-to-t from-scrim/90 via-scrim/70 to-transparent px-3 pb-2 pt-8">
               <div className="flex items-center justify-between gap-2 text-3xs text-media-foreground/70">
                 <span className="font-mono">{recording.startsAtDisplay}</span>
                 <span className="inline-flex items-center gap-1">
@@ -226,7 +226,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
         </div>
 
         {/* Detected periods, so the pop-up carries the triage context too */}
-        <div className="mt-4">
+        <div data-slot="recording-player-periods" className="mt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Detected Periods</p>
           <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {periods.map((p) => (

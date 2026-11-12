@@ -38,7 +38,7 @@ export default function RealModelManagement({
     return <ModelManagementPage key={forced} forcedState={forced === "empty" ? "empty" : "normal"} />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-slot="model-management-page" className="flex flex-col gap-4">
       <StateHeader loading={forced === "loading"} />
       {forced === "loading" && <ModelSkeleton />}
       {forced === "noresults" && (
