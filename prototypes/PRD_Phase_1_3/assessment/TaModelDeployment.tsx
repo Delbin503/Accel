@@ -61,7 +61,7 @@ import { useDevicesStore } from "./taData";
 import { usePoseStore } from "./taPose";
 import { SEED_TA_DEPLOYMENTS, taAreaSummaries, taSiteSummaries, targetsIn, type DeployTarget, type TargetKind } from "./taDeploy";
 import { DrawZoneModal } from "@/components/shared/DrawZoneModal";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import type {
   DeploymentData,
   DeploymentStatus,
@@ -91,13 +91,12 @@ const DEP_STATUS: Record<DeploymentStatus, { bg: string; text: string; dot: stri
 
 /* ── Model health (derived from underlying deployments) ─────────────────── */
 
-export type ModelHealth = "healthy" | "degraded" | "offline" | "overloaded";
+/** A model is Online while at least one of its cameras is running, otherwise Offline. */
+export type ModelHealth = "online" | "offline";
 
 const MODEL_HEALTH_STYLES: Record<ModelHealth, { bg: string; text: string; dot: string; label: string; border: string }> = {
-  healthy:    { bg: "bg-success/15",      text: "text-success",      dot: "bg-success",      border: "border-success/40",      label: "Healthy" },
-  degraded:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      border: "border-warning/40",      label: "Degraded" },
-  offline:    { bg: "bg-muted",           text: "text-muted-foreground", dot: "bg-muted-foreground", border: "border-border",   label: "Offline" },
-  overloaded: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", border: "border-sev-critical/40", label: "Overloaded" },
+  online:  { bg: "bg-success/15", text: "text-success",          dot: "bg-success",          border: "border-success/40", label: "Online" },
+  offline: { bg: "bg-muted",      text: "text-muted-foreground", dot: "bg-muted-foreground", border: "border-border",     label: "Offline" },
 };
 
 function ModelHealthPill({ health }: { health: ModelHealth }) {
@@ -116,18 +115,7 @@ function ModelHealthPill({ health }: { health: ModelHealth }) {
 }
 
 function computeModelHealth(deps: DeploymentData[]): ModelHealth {
-  if (deps.length === 0) return "offline";
-  const active = deps.filter((d) => d.status === "active").length;
-  const failed = deps.filter((d) => d.status === "failed").length;
-  const totalEvents = deps.reduce((s, d) => s + d.eventCount, 0);
-  // Overloaded — high per-active-camera event load
-  if (active > 0 && totalEvents / active > 80) return "overloaded";
-  // Offline — nothing running, or majority failed
-  if (active === 0 || failed >= Math.ceil(deps.length / 2)) return "offline";
-  // Healthy — everything active
-  if (active === deps.length) return "healthy";
-  // Mixed
-  return "degraded";
+  return deps.some((d) => d.status === "active") ? "online" : "offline";
 }
 
 function StatusPill({ status }: { status: DeploymentStatus }) {
@@ -1172,7 +1160,7 @@ function HistoryView({
   }, [models, healthFilter, search]);
 
   const healthCounts = React.useMemo(() => {
-    const init: Record<ModelHealth, number> = { healthy: 0, degraded: 0, offline: 0, overloaded: 0 };
+    const init: Record<ModelHealth, number> = { online: 0, offline: 0 };
     for (const m of models) init[m.health]++;
     return init;
   }, [models]);
@@ -1187,7 +1175,7 @@ function HistoryView({
     <div className="flex flex-col gap-4">
 
       {/* Health filter strip */}
-      <KpiGrid cols={5}>
+      <KpiGrid cols={3}>
         <KpiCard
           label="All Models"
           value={models.length}
@@ -1196,29 +1184,17 @@ function HistoryView({
           active={healthFilter === "all"}
           onClick={() => setHealthFilter("all")}
         />
-        {(["healthy", "degraded", "offline", "overloaded"] as ModelHealth[]).map((h) => {
-          const accent: KpiAccent =
-            h === "healthy"    ? "success" :
-            h === "degraded"   ? "warning" :
-            h === "offline"    ? "muted"   :
-                                 "sev-critical";
-          return (
-            <KpiCard
-              key={h}
-              label={MODEL_HEALTH_STYLES[h].label}
-              value={healthCounts[h]}
-              sub={
-                h === "healthy"    ? "All cameras running" :
-                h === "degraded"   ? "Some cameras paused"  :
-                h === "offline"    ? "No active cameras"    :
-                                     "Excessive event load"
-              }
-              accent={accent}
-              active={healthFilter === h}
-              onClick={() => setHealthFilter((cur) => (cur === h ? "all" : h))}
-            />
-          );
-        })}
+        {(["online", "offline"] as ModelHealth[]).map((h) => (
+          <KpiCard
+            key={h}
+            label={MODEL_HEALTH_STYLES[h].label}
+            value={healthCounts[h]}
+            sub={h === "online" ? "At least one camera running" : "No active cameras"}
+            accent={h === "online" ? "success" : "muted"}
+            active={healthFilter === h}
+            onClick={() => setHealthFilter((cur) => (cur === h ? "all" : h))}
+          />
+        ))}
       </KpiGrid>
 
       {/* Search */}
@@ -1251,10 +1227,7 @@ function HistoryView({
                 onClick={() => setDrawerModelId(m.modelId)}
                 className={cn(
                   "group flex flex-col gap-3 rounded-xl border bg-card px-4 py-3.5 text-left transition-colors hover:border-primary/40",
-                  m.health === "overloaded" ? "border-sev-critical/30" :
-                  m.health === "degraded"   ? "border-warning/30"      :
-                  m.health === "offline"    ? "border-border"          :
-                                              "border-success/30"
+                  m.health === "online" ? "border-success/30" : "border-border"
                 )}
               >
                 <div className="flex items-start justify-between gap-2">

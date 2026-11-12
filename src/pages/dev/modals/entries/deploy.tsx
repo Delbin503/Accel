@@ -27,7 +27,7 @@ const modelAggregate: ModelAggregate = (() => {
     paused: deployments.filter((d) => d.status === "paused").length,
     failed: deployments.filter((d) => d.status === "failed").length,
     totalEvents: deployments.reduce((sum, d) => sum + d.eventCount, 0),
-    health: "healthy",
+    health: "online",
     deployments,
   };
 })();

@@ -238,10 +238,10 @@ function EventCard({
         ) : (
           <>
             <Button size="sm" className="text-xs" onClick={() => onEscalate(event.id)}>
-              Escalate Case
+              Escalate New Case
             </Button>
             <Button variant="outline" size="sm" className="text-xs" onClick={() => onLink(event.id)}>
-              Link Case
+              Link Existing Case
             </Button>
             <Button variant="ghost" size="sm" className="text-xs" onClick={() => onDismiss(event.id)}>
               Dismiss
@@ -497,10 +497,10 @@ function SelectionBar({
           onClick={onLinkAll}
         >
           <Link2 className="size-3.5" />
-          Link Case
+          Link Existing Case
         </Button>
         <Button size="sm" className="gap-1.5 text-[12px]" onClick={onEscalateAll}>
-          Escalate Case
+          Escalate New Case
         </Button>
       </div>
     </div>

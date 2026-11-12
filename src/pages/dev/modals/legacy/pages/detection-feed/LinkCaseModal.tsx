@@ -159,7 +159,7 @@ export function LinkCaseModal({
               <FolderOpen className="size-10 opacity-20" />
               <p className="text-base">No open cases for {eventSiteDisplay}.</p>
               <p className="text-sm text-muted-foreground/70">
-                Use &ldquo;Escalate Case&rdquo; to create a new case instead.
+                Use &ldquo;Escalate New Case&rdquo; to create a new case instead.
               </p>
             </div>
           ) : filtered.length === 0 ? (

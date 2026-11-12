@@ -445,29 +445,12 @@ export default function DeviceHealthPage({
     setPage(1);
   }
 
-  const onlineCount = allDevices.filter((d) => d.health === "online").length;
-  const totalCount = allDevices.length;
-  const healthScore = totalCount === 0 ? 0 : Math.round((onlineCount / totalCount) * 100);
-  const scoreClass =
-    healthScore >= 90 ? "text-success" : healthScore >= 75 ? "text-warning" : "text-sev-critical";
-
   return (
     <div className="flex flex-col gap-4">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Device Health</PageHeader.Title>
         </PageHeader.Content>
-        {forcedState !== "loading" && (
-          <PageHeader.Actions>
-            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 md:flex">
-              <HeartPulse className={cn("size-4", scoreClass)} />
-              <div className="flex items-baseline gap-1.5">
-                <span className={cn("text-lg font-bold leading-none", scoreClass)}>{healthScore}%</span>
-                <span className="text-2xs uppercase tracking-wider text-muted-foreground">Health Score</span>
-              </div>
-            </div>
-          </PageHeader.Actions>
-        )}
       </PageHeader>
 
       {forcedState === "loading" ? (

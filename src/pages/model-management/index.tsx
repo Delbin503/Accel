@@ -8,6 +8,7 @@ import {
   X,
   Trash2,
   Edit2,
+  SlidersHorizontal,
   GripVertical,
   UploadCloud,
   BookOpen,
@@ -919,51 +920,172 @@ export function DeleteModelModal({
   );
 }
 
-/* ── Pool step card (no numbers, drag-out to sequence) ───────────────────── */
+/* ── Removed step card (Customize drawer — drag back into the sequence) ─── */
 
-function PoolStepCard({
+function RemovedStepCard({
   step,
-  editable,
   isDragging,
+  onAdd,
   onEdit,
-  onRemove,
+  onDelete,
   onDragStart,
   onDragEnd,
 }: {
   step: ModelStep;
-  editable: boolean;
   isDragging: boolean;
+  onAdd: () => void;
   onEdit: () => void;
-  onRemove: () => void;
+  onDelete: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
   return (
     <div
-      draggable={editable}
-      onDragStart={onDragStart}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move";
+        // Firefox will not start a drag without data.
+        e.dataTransfer.setData("text/plain", step.id);
+        onDragStart();
+      }}
       onDragEnd={onDragEnd}
       className={cn(
-        "group relative flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 transition-all",
-        isDragging && "opacity-40",
-        editable && "cursor-grab active:cursor-grabbing"
+        "flex cursor-grab items-start gap-2.5 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/40 active:cursor-grabbing",
+        isDragging && "opacity-40"
       )}
     >
-      {editable && (
-        <GripVertical className="hidden size-3.5 flex-shrink-0 text-muted-foreground/30 group-hover:block" />
-      )}
+      <GripVertical className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <TruncatedText text={step.actionLabel} className="text-sm font-semibold text-foreground" />
-        <p className="font-mono text-xs text-muted-foreground">{step.label}</p>
-      </div>
-      <FileTypeBadge fileName={step.modelFile} />
-      {editable && (
-        <HoverActions>
+        <p className="mt-0.5 truncate font-mono text-2xs text-muted-foreground">
+          {step.modelFile} · batch {step.batchSize}
+        </p>
+        <div className="mt-2 flex items-center gap-1">
+          <FileTypeBadge fileName={step.modelFile} />
+          <span className="flex-1" />
           <IconAction icon={Edit2} title="Edit step" onClick={onEdit} tone="primary" />
-          <IconAction icon={Trash2} title="Delete step" onClick={onRemove} tone="danger" />
-        </HoverActions>
-      )}
+          <IconAction icon={Trash2} title="Delete step" onClick={onDelete} tone="danger" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-1 h-7 gap-1 px-2"
+            onClick={onAdd}
+            aria-label={`Add ${step.actionLabel} to the sequence`}
+          >
+            <Plus className="size-3" />
+            Add
+          </Button>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/* ── Customize drawer — steps taken out of the sequence wait here. Docked
+   on the right edge like the dashboard's Hidden panels drawer. ──────────── */
+
+function CustomizeStepsDrawer({
+  steps,
+  accepting,
+  dragStepId,
+  onClose,
+  onDropRemove,
+  onDragStart,
+  onDragEnd,
+  onAdd,
+  onEdit,
+  onDelete,
+}: {
+  steps: ModelStep[];
+  /** A sequence step is being dragged — the drawer accepts it as a removal. */
+  accepting: boolean;
+  dragStepId: string | null;
+  onClose: () => void;
+  onDropRemove: () => void;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  onAdd: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [over, setOver] = React.useState(false);
+
+  return (
+    <aside
+      aria-label="Customize steps"
+      onDragOver={(e) => {
+        if (!accepting) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        if (accepting) onDropRemove();
+      }}
+      className={cn(
+        "fixed bottom-0 right-0 top-12 z-[var(--z-drawer)] flex w-80 max-w-[85vw] flex-col border-l bg-card shadow-2xl transition-colors duration-[var(--duration-fast)] ease-standard",
+        over ? "border-sev-critical bg-sev-critical/5" : "border-border"
+      )}
+    >
+      <div className="border-b border-border px-4 py-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-base font-bold text-foreground">
+            Removed steps
+            <span className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-2xs text-muted-foreground">
+              {steps.length}
+            </span>
+          </p>
+          <button
+            onClick={onClose}
+            aria-label="Close customize"
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Drag a step into the sequence, or press Add. Drag one here to remove it.
+        </p>
+      </div>
+
+      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+        {accepting && (
+          <div className={cn(
+            "flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-5 text-xs font-semibold transition-colors",
+            over ? "border-sev-critical text-sev-critical" : "border-border text-muted-foreground"
+          )}>
+            <X className="size-3.5" />
+            Drop here to remove
+          </div>
+        )}
+
+        {steps.length === 0 && !accepting ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center text-muted-foreground">
+            <Layers className="size-5" />
+            <p className="text-sm">Every step is in the sequence.</p>
+            <p className="text-xs">Remove one and it will wait here.</p>
+          </div>
+        ) : (
+          steps.map((step) => (
+            <RemovedStepCard
+              key={step.id}
+              step={step}
+              isDragging={dragStepId === step.id}
+              onAdd={() => onAdd(step.id)}
+              onEdit={() => onEdit(step.id)}
+              onDelete={() => onDelete(step.id)}
+              onDragStart={() => onDragStart(step.id)}
+              onDragEnd={onDragEnd}
+            />
+          ))
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -1063,7 +1185,7 @@ function SequenceItem({
         <button
           onClick={onRemoveFromSequence}
           className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-sev-critical/10 hover:text-sev-critical group-hover:opacity-100"
-          title="Remove from sequence (returns to pool)"
+          title="Remove from sequence (moves to Customize)"
         >
           <X className="size-3" />
         </button>
@@ -1534,6 +1656,8 @@ function ModelDetailPanel({
   // Step drag state
   const [activeDrag, setActiveDrag] = React.useState(false);
   const [poolDragId, setPoolDragId] = React.useState<string | null>(null);
+  // Customize drawer: holds steps taken out of the sequence.
+  const [customizeOpen, setCustomizeOpen] = React.useState(false);
   const [seqDragIdx, setSeqDragIdx] = React.useState<number | null>(null);
   const [seqOverIdx, setSeqOverIdx] = React.useState<number | null>(null);
 
@@ -1656,7 +1780,11 @@ function ModelDetailPanel({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className={cn(
+      "flex h-full flex-col overflow-hidden transition-[padding] duration-[var(--duration-normal)] ease-standard",
+      // The docked Customize drawer covers the right edge — keep content clear of it.
+      isEditing && customizeOpen && "sm:pr-80"
+    )}>
 
       {/* ── Header ── */}
       {isEditing ? (
@@ -1788,112 +1916,84 @@ function ModelDetailPanel({
                 <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
                   Sequence
                 </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddStep(true)}
-                  // Primary-tinted so the panel's main "add" action is findable
-                  // without competing with Save Changes.
-                  className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
-                >
-                  <Plus className="size-3" />
-                  Add Step
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCustomizeOpen((v) => !v)}
+                    aria-pressed={customizeOpen}
+                    className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary")}
+                  >
+                    <SlidersHorizontal className="size-3" />
+                    Customize
+                    {poolSteps.length > 0 && (
+                      <span className="rounded-full bg-muted px-1.5 font-mono text-2xs text-muted-foreground">
+                        {poolSteps.length}
+                      </span>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddStep(true)}
+                    // Primary-tinted so the panel's main "add" action is findable
+                    // without competing with Save Changes.
+                    className="gap-1.5 border-primary/50 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                  >
+                    <Plus className="size-3" />
+                    Add Step
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-
-                {/* Step Pool */}
-                <div>
-                  <SectionHeader
-                    label="Step Pool"
-                    count={poolSteps.length}
-                    description="Drag steps → sequence to build pipeline"
-                  />
-                  {draft.steps.length === 0 ? (
-                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
-                      <UploadCloud className="size-7 opacity-20" />
-                      <p className="text-center text-sm">Click "+ Add Step" to upload</p>
-                    </div>
-                  ) : poolSteps.length === 0 ? (
-                    <div className="flex min-h-[460px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground">
-                      <Check className="size-6 opacity-20" />
-                      <p className="text-center text-sm">All steps placed in sequence</p>
-                    </div>
-                  ) : (
-                    <div className="h-[460px] space-y-2 overflow-y-auto pr-1">
-                      {poolSteps.map((step) => (
-                        <PoolStepCard
-                          key={step.id}
-                          step={step}
-                          editable
-                          isDragging={poolDragId === step.id}
-                          onEdit={() => setEditStepId(step.id)}
-                          onRemove={() =>
-                            patchDraft({
-                              steps: draft.steps.filter((s) => s.id !== step.id),
-                              sequenceIds: draft.sequenceIds.filter((id) => id !== step.id),
-                            })
-                          }
-                          onDragStart={() => handlePoolDragStart(step.id)}
-                          onDragEnd={handlePoolDragEnd}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sequence */}
-                <div>
-                  <SectionHeader
-                    label="Sequence"
-                    count={sequenceSteps.length}
-                    description="Each step triggers an AI model in order"
-                  />
-                  <div
-                    onDragOver={handleSeqContainerDragOver}
-                    onDrop={handleSeqContainerDrop}
-                    className={cn(
-                      "h-[460px] overflow-y-auto rounded-xl border-2 border-dashed pr-1 transition-all",
-                      activeDrag
-                        ? "border-primary/40 bg-primary/[0.03]"
-                        : sequenceSteps.length === 0
-                        ? "border-border"
-                        : "border-transparent"
-                    )}
-                  >
-                    {sequenceSteps.length === 0 ? (
-                      <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-                        <Hash className="size-7 opacity-20" />
-                        <p className="text-center text-sm">
-                          Drag steps from the pool to build the sequence
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {sequenceSteps.map((step, idx) => (
-                          <SequenceItem
-                            key={step.id}
-                            step={step}
-                            index={idx}
-                            editable
-                            isDragging={seqDragIdx === idx}
-                            isOver={seqOverIdx === idx && seqDragIdx !== idx}
-                            onRemoveFromSequence={() =>
-                              patchDraft({
-                                sequenceIds: draft.sequenceIds.filter((id) => id !== step.id),
-                              })
-                            }
-                            onDragStart={() => handleSeqDragStart(idx)}
-                            onDragOver={(e) => handleSeqItemDragOver(e, idx)}
-                            onDrop={(e) => handleSeqItemDrop(e, idx)}
-                            onDragEnd={handleSeqDragEnd}
-                          />
-                        ))}
-                      </div>
-                    )}
+              <p className="mb-3 text-xs text-muted-foreground">
+                Each step triggers an AI model in order ·{" "}
+                <span className="font-mono text-foreground">{sequenceSteps.length}</span> in sequence
+              </p>
+              <div
+                onDragOver={handleSeqContainerDragOver}
+                onDrop={handleSeqContainerDrop}
+                className={cn(
+                  "h-[460px] overflow-y-auto rounded-xl border-2 border-dashed pr-1 transition-all",
+                  activeDrag
+                    ? "border-primary/40 bg-primary/[0.03]"
+                    : sequenceSteps.length === 0
+                    ? "border-border"
+                    : "border-transparent"
+                )}
+              >
+                {sequenceSteps.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <Hash className="size-7 opacity-20" />
+                    <p className="text-center text-sm">
+                      {draft.steps.length === 0
+                        ? "Click \"+ Add Step\" to upload a model step"
+                        : "Open Customize and drag steps back into the sequence"}
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sequenceSteps.map((step, idx) => (
+                      <SequenceItem
+                        key={step.id}
+                        step={step}
+                        index={idx}
+                        editable
+                        isDragging={seqDragIdx === idx}
+                        isOver={seqOverIdx === idx && seqDragIdx !== idx}
+                        onRemoveFromSequence={() =>
+                          patchDraft({
+                            sequenceIds: draft.sequenceIds.filter((id) => id !== step.id),
+                          })
+                        }
+                        onDragStart={() => handleSeqDragStart(idx)}
+                        onDragOver={(e) => handleSeqItemDragOver(e, idx)}
+                        onDrop={(e) => handleSeqItemDrop(e, idx)}
+                        onDragEnd={handleSeqDragEnd}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2087,6 +2187,32 @@ function ModelDetailPanel({
         )}
       </div>
 
+      {isEditing && customizeOpen && (
+        <CustomizeStepsDrawer
+          steps={poolSteps}
+          accepting={seqDragIdx !== null}
+          dragStepId={poolDragId}
+          onClose={() => setCustomizeOpen(false)}
+          onDropRemove={() => {
+            const payload = dragPayload.current;
+            if (payload?.type === "seq") {
+              patchDraft({ sequenceIds: draft.sequenceIds.filter((_, i) => i !== payload.seqIdx) });
+            }
+            resetDrag();
+          }}
+          onDragStart={handlePoolDragStart}
+          onDragEnd={handlePoolDragEnd}
+          onAdd={(id) => patchDraft({ sequenceIds: [...draft.sequenceIds, id] })}
+          onEdit={(id) => setEditStepId(id)}
+          onDelete={(id) =>
+            patchDraft({
+              steps: draft.steps.filter((st) => st.id !== id),
+              sequenceIds: draft.sequenceIds.filter((sid) => sid !== id),
+            })
+          }
+        />
+      )}
+
       {/* Modals */}
       {(showAddStep || editStepId) && (
         <AddStepModal
@@ -2098,7 +2224,8 @@ function ModelDetailPanel({
               setEditStepId(null);
             } else {
               const newStep: ModelStep = { ...s, id: genId(), order: draft.steps.length + 1 };
-              patchDraft({ steps: [...draft.steps, newStep] });
+              // No pool any more — a new step joins the end of the sequence.
+              patchDraft({ steps: [...draft.steps, newStep], sequenceIds: [...draft.sequenceIds, newStep.id] });
               setShowAddStep(false);
             }
             // Offer to pull rules from the just-uploaded model file.

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BarChart3, CalendarClock, Check, ChevronRight, CircleCheck, CircleDot, Download, Dumbbell, FileDown, FileText, FlagTriangleRight,
-  ChevronDown, ChevronUp, HeartPulse, MoreHorizontal, Plus, Radio, Search, Send, SlidersHorizontal, Upload, Users, X,
+  ChevronDown, ChevronUp, HeartPulse, MoreHorizontal, Plus, Radio, Search, SlidersHorizontal, Upload, User, Users, X,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ import { FloatingBar } from "@/components/shared/FloatingBar";
 import { LineChart } from "@/components/charts";
 import { cn } from "@/lib/utils";
 import {
-  GROUP_RESULTS, REPORT_TITLE, SESSION_STATUS_LABEL, reportsFor, TA_AREAS, TA_SITES, USE_CASES, USE_CASE_KEYS,
+  GROUP_RESULTS, SESSION_STATUS_LABEL, reportsFor, TA_AREAS, TA_SITES, USE_CASES, USE_CASE_KEYS,
   useDevicesStore, useReportsStore, useSessionsStore,
-  type Participant, type ReportStatus, type SessionStatus, type TaReport, type TaSession, type UseCaseKey,
+  type Participant, type SessionStatus, type TaSession, type UseCaseKey,
 } from "./taData";
 import { useTaModelsStore } from "./taModels";
 import { TA_ANALYSIS, TA_RESULT_PATH } from "./taNav";
@@ -33,11 +33,11 @@ import { TA_ANALYSIS, TA_RESULT_PATH } from "./taNav";
    · Sessions — live and scheduled sessions (a session that completes moves to
      Results); New Session picks use case → site → deployed model →
      bays/racks/rooms, then participants
-   · Results  — Results and Reports in one: every report the completed
-     sessions made, listed first (select any to export, send the reviewed
-     ones). Viewing an individual result opens that person's analysis
-     dashboard — Swing, Lift or Rehab Analysis — and a group result opens the
-     session's result details page (TaSessionResult, below). */
+   · Results  — completed sessions, with the same columns as Sessions (ID,
+     session, use case, individual or group, where, when, status). A group
+     session opens its result details page (TaSessionResult, below), where
+     each person's results lead to their analysis dashboard — Swing, Lift or
+     Rehab Analysis; an individual session opens that person's analysis. */
 
 type Tab = "sessions" | "results";
 
@@ -52,8 +52,6 @@ const STATUS_TONE: Record<SessionStatus, "info" | "critical" | "warning" | "succ
   scheduled: "info", live: "critical", complete: "success",
 };
 
-const REPORT_TONE: Record<ReportStatus, "neutral" | "info" | "success"> = { draft: "neutral", ready: "info", sent: "success" };
-const REPORT_LABEL: Record<ReportStatus, string> = { draft: "Draft", ready: "Ready", sent: "Sent" };
 
 const TH = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60";
 const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted";
@@ -137,6 +135,64 @@ function FilterField({ label, children }: { label: string; children: React.React
       <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
       {children}
     </div>
+  );
+}
+
+/* ── Session columns — Sessions and Results list sessions the same way ── */
+
+type SessionKind = "Individual" | "Group";
+
+/** One person is an individual session; more than one is a group. */
+function sessionKind(s: TaSession): SessionKind {
+  return s.participants.length > 1 ? "Group" : "Individual";
+}
+
+function sessionMatches(s: TaSession, q: string) {
+  return [s.id, s.name, s.modelName, s.deployment, s.coach, USE_CASES[s.useCase].label].join(" ").toLowerCase().includes(q);
+}
+
+const SESSION_HEAD = ["ID", "SESSION", "USE CASE", "TYPE", "WHERE", "WHEN", "STATUS", "ACTION"];
+const USE_CASE_FILTER = USE_CASE_KEYS.map((k) => ({ value: k, label: USE_CASES[k].label }));
+const TYPE_FILTER: { value: SessionKind; label: string }[] = [
+  { value: "Individual", label: "Individual" },
+  { value: "Group", label: "Group" },
+];
+/* The Action column stays pinned to the right edge, so the ⋯ menu is reachable
+   even when a narrow window scrolls the table sideways. */
+// Opaque mixes of the header and row-hover tints, so pinned cells hide what scrolls under them.
+const STICKY_TH = "sticky right-0 bg-[color-mix(in_srgb,var(--muted)_30%,var(--card))]";
+const STICKY_TD = "sticky right-0 bg-card px-4 py-3 group-hover:bg-[color-mix(in_srgb,var(--muted)_20%,var(--card))]";
+const ROW_MENU = "flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground";
+
+/** ID · Session · Use case · Type · Where · When — the cells both tabs share. */
+function SessionCells({ s }: { s: TaSession }) {
+  const u = USE_CASES[s.useCase];
+  const n = s.participants.length;
+  const kind = sessionKind(s);
+  const KindIcon = kind === "Group" ? Users : User;
+  return (
+    <>
+      <td className="whitespace-nowrap px-4 py-3">
+        <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary">{s.id}</span>
+      </td>
+      <td className="min-w-[160px] px-4 py-3">
+        <p className="font-semibold text-foreground group-hover:text-primary">{s.name}</p>
+        <p className="text-xs text-muted-foreground">{s.coach}</p>
+      </td>
+      <td className="px-4 py-3"><UseCaseChip uc={s.useCase} /></td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <p className="inline-flex items-center gap-1.5 text-foreground"><KindIcon className="size-3.5 text-muted-foreground" />{kind}</p>
+        <p className="text-xs text-muted-foreground">{n} {n === 1 ? u.person : u.people}</p>
+      </td>
+      <td className="min-w-[140px] px-4 py-3">
+        <p className="text-foreground">{s.deployment}</p>
+        <p className="text-xs text-muted-foreground">{s.units.length} {s.units.length === 1 ? u.unit : u.units}{s.devices.length > 0 ? ` · ${s.devices.length} device${s.devices.length === 1 ? "" : "s"}` : " · no device"}</p>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <p className="text-foreground">{s.date}</p>
+        <p className="text-xs text-muted-foreground">{s.time} · {s.source}</p>
+      </td>
+    </>
   );
 }
 
@@ -368,6 +424,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
   const setReports = useReportsStore((s) => s.setReports);
   const [search, setSearch] = React.useState("");
   const [ucs, setUcs] = React.useState<string[]>([]);
+  const [types, setTypes] = React.useState<string[]>([]);
   const [statuses, setStatuses] = React.useState<string[]>([]);
   const [kpi, setKpi] = React.useState<"all" | "live" | "scheduled">("all");
   const setCreating = onCreating;
@@ -375,11 +432,12 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
   const filtered = sessions.filter((s) => {
     if (kpi !== "all" && s.status !== kpi) return false;
     if (ucs.length && !ucs.includes(s.useCase)) return false;
+    if (types.length && !types.includes(sessionKind(s))) return false;
     if (statuses.length && !statuses.includes(s.status)) return false;
     const q = search.toLowerCase().trim();
-    return !q || [s.id, s.name, s.modelName, s.deployment, s.coach].join(" ").toLowerCase().includes(q);
+    return !q || sessionMatches(s, q);
   });
-  const hasFilters = !!search || ucs.length > 0 || statuses.length > 0 || kpi !== "all";
+  const hasFilters = !!search || ucs.length > 0 || types.length > 0 || statuses.length > 0 || kpi !== "all";
 
   function start(s: TaSession) {
     setSessions((cur) => cur.map((x) => (x.id === s.id ? { ...x, status: "live", date: "Today", captured: 0 } : x)));
@@ -401,23 +459,25 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
 
   return (
     <div className="flex flex-col gap-4">
-      <KpiGrid cols={4}>
+      <KpiGrid cols={3}>
         <KpiCard label="Total Sessions" value={allSessions.length} sub="Last 2 weeks" accent="primary" onClick={() => setKpi("all")} />
         <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" accent="sev-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
         <KpiCard label="Scheduled" value={sessions.filter((s) => s.status === "scheduled").length} sub="Coming up" accent="info" active={kpi === "scheduled"} onClick={() => setKpi(kpi === "scheduled" ? "all" : "scheduled")} />
-        <KpiCard label="Complete" value={allSessions.length - sessions.length} sub="In Results" accent="success" onClick={onShowResults} />
       </KpiGrid>
 
       <FiltersBar
-        chips={["All use cases", "All statuses"]}
-        activeCount={ucs.length + statuses.length + (search ? 1 : 0) + (kpi !== "all" ? 1 : 0)}
+        chips={["All use cases", "All types", "All statuses"]}
+        activeCount={ucs.length + types.length + statuses.length + (search ? 1 : 0) + (kpi !== "all" ? 1 : 0)}
         search={search}
         onSearch={setSearch}
         placeholder="Search sessions, models or coaches…"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FilterField label="Use case">
-            <FilterDropdown label="All use cases" options={USE_CASE_KEYS.map((k) => ({ value: k, label: USE_CASES[k].label }))} selected={ucs} onChange={setUcs} className="w-full" />
+            <FilterDropdown label="All use cases" options={USE_CASE_FILTER} selected={ucs} onChange={setUcs} className="w-full" />
+          </FilterField>
+          <FilterField label="Type">
+            <FilterDropdown label="All types" options={TYPE_FILTER} selected={types} onChange={setTypes} className="w-full" />
           </FilterField>
           <FilterField label="Status">
             <FilterDropdown label="All statuses" options={(["live", "scheduled"] as SessionStatus[]).map((k) => ({ value: k, label: SESSION_STATUS_LABEL[k] }))} selected={statuses} onChange={setStatuses} className="w-full" />
@@ -427,7 +487,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
 
       <p className="px-1 text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setStatuses([]); setKpi("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
+        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); setStatuses([]); setKpi("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -442,7 +502,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr className="border-b border-border text-left">
-                  {["ID", "SESSION", "WHERE", "WHEN", "PEOPLE", "STATUS", "ACTION"].map((h) => <th key={h} className={TH}>{h}</th>)}
+                  {SESSION_HEAD.map((h) => <th key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</th>)}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -450,26 +510,13 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
                   const hasResults = s.status === "live";
                   return (
                     <tr key={s.id} onClick={() => hasResults && openResult(s.id)} className={cn("group text-base transition-colors", hasResults && "cursor-pointer hover:bg-muted/20")}>
-                      <td className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary">{s.id}</span></td>
-                      <td className="min-w-[220px] px-4 py-3">
-                        <p className="font-semibold text-foreground group-hover:text-primary">{s.name}</p>
-                        <p className="text-xs text-muted-foreground">{s.modelName} · {s.coach}</p>
-                      </td>
-                      <td className="min-w-[200px] px-4 py-3">
-                        <p className="text-foreground">{s.deployment}</p>
-                        <p className="text-xs text-muted-foreground">{s.units.length} {USE_CASES[s.useCase].units}{s.devices.length > 0 && ` · ${s.devices.length} device${s.devices.length === 1 ? "" : "s"}`}</p>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <p className="text-foreground">{s.date}</p>
-                        <p className="text-xs text-muted-foreground">{s.time} · {s.source}</p>
-                      </td>
-                      <td className="px-4 py-3 text-foreground">{s.participants.length}</td>
+                      <SessionCells s={s} />
                       <td className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></td>
                       {/* The "⋯" menu the other pages' tables use. */}
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <td className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button aria-label={`Actions for ${s.name}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                            <button aria-label={`Actions for ${s.name}`} className={ROW_MENU}>
                               <MoreHorizontal className="size-4" />
                             </button>
                           </PopoverTrigger>
@@ -638,75 +685,10 @@ function GroupResults({ session }: { session: TaSession }) {
   );
 }
 
-/* ── Report preview: sections, sign-off, send ────────────────────────── */
-
-function ReportPreview({ report, onClose }: { report: TaReport; onClose: () => void }) {
-  const sessions = useSessionsStore((s) => s.sessions);
-  const setReports = useReportsStore((s) => s.setReports);
-  const session = sessions.find((s) => s.id === report.sessionId);
-  const [included, setIncluded] = React.useState<string[]>(session ? REPORT_TITLE[session.useCase].sections : []);
-  const [signed, setSigned] = React.useState(false);
-  if (!session) return null;
-  const t = REPORT_TITLE[session.useCase];
-  const person = session.participants.find((p) => p.name === report.subject);
-  const needsSign = report.needsSignOff && report.status !== "sent";
-
-  function send() {
-    setReports((cur) => cur.map((r) => (r.id === report.id ? { ...r, status: "sent", needsSignOff: false, sharedVia: [t.share[0]], updatedDisplay: "Just now" } : r)));
-    toast.success(`${report.title} sent`, { description: `${report.subject} · via ${t.share[0]}` });
-    onClose();
-  }
-
-  return (
-    <Modal open onOpenChange={(v) => !v && onClose()}>
-      <ModalContent size="xl">
-        <ModalHeader title={`${report.title} · ${report.subject}`} description={`${session.name} · ${session.date}`} icon={FileText} />
-        <ModalBody className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-bold text-foreground">{report.subject}</p>
-              <p className="text-sm text-muted-foreground">{session.name} · {session.date} · {session.modelName}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xs uppercase tracking-wider text-muted-foreground">{report.kind === "Group" ? GROUP_RESULTS[session.useCase].scoreLabel : session.useCase === "physio" ? "Progress to goal" : "Score"}</p>
-              <p className="text-2xl font-bold text-foreground">{report.kind === "Group" ? GROUP_RESULTS[session.useCase].scoreValue : person?.score ?? "—"}</p>
-            </div>
-          </div>
-          <div>
-            <p className={LABEL}>Sections</p>
-            <div className="grid grid-cols-2 gap-2">
-              {t.sections.map((sec) => {
-                const on = included.includes(sec);
-                return (
-                  <label key={sec} className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-                    <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={on} onChange={() => setIncluded((cur) => (on ? cur.filter((x) => x !== sec) : [...cur, sec]))} />
-                    {sec}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-          {needsSign && (
-            <label className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2.5 text-sm text-foreground">
-              <input type="checkbox" className="mt-0.5 size-4 accent-[var(--primary)]" checked={signed} onChange={(e) => setSigned(e.target.checked)} />
-              <span>I've reviewed the measures and AI findings. <span className="text-muted-foreground">Clinical reports need a clinician's sign-off before they're shared.</span></span>
-            </label>
-          )}
-          <p className="text-xs text-muted-foreground">Shared through {t.share.join(" · ")}.</p>
-        </ModalBody>
-        <ModalFooter>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => toast.success(`Exporting ${report.id}.pdf`)}><Download className="size-3.5" />Export PDF</Button>
-          <Button size="sm" className="gap-1.5" disabled={(needsSign && !signed) || included.length === 0} onClick={send}>
-            <Send className="size-3.5" />
-            {report.status === "sent" ? "Send again" : needsSign ? "Sign off & send" : `Send to ${t.share[0]}`}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
-
-/* ── Results tab: every report first; viewing one opens its results ───── */
+/* ── Results tab: completed sessions, one row each — the same columns as
+   Sessions. The group and individual reports live inside the session's
+   results, so a row opens them: a group session its result details page,
+   an individual session that person's analysis. ─────────────────────── */
 
 function ResultsTab({ sessionId, onSession, focus }: {
   sessionId: string;
@@ -716,33 +698,31 @@ function ResultsTab({ sessionId, onSession, focus }: {
   const navigate = useNavigate();
   const sessions = useSessionsStore((s) => s.sessions).filter((s) => s.status === "complete");
   const reports = useReportsStore((s) => s.reports);
-  const [kinds, setKinds] = React.useState<string[]>([]);
-  const [analyses, setAnalyses] = React.useState<string[]>([]);
-  const [statuses, setStatuses] = React.useState<string[]>([]);
+  const [ucs, setUcs] = React.useState<string[]>([]);
+  const [types, setTypes] = React.useState<string[]>([]);
   const [search, setSearch] = React.useState(focus ?? "");
-  const [preview, setPreview] = React.useState<TaReport | null>(null);
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
   const sessionFilter = sessionId && sessions.some((s) => s.id === sessionId) ? sessionId : "all";
-  const scoped = reports.filter((r) => sessionFilter === "all" || r.sessionId === sessionFilter);
-  const filtered = scoped.filter((r) => {
-    if (kinds.length && !kinds.includes(r.kind)) return false;
-    if (analyses.length && !analyses.includes(sessions.find((s) => s.id === r.sessionId)?.useCase ?? "")) return false;
-    if (statuses.length && !statuses.includes(r.status)) return false;
-    const q = search.toLowerCase().trim();
-    return !q || [r.id, r.title, r.subject].join(" ").toLowerCase().includes(q);
+  const reportCount = (id: string) => reports.filter((r) => r.sessionId === id).length;
+  const q = search.toLowerCase().trim();
+  const filtered = sessions.filter((s) => {
+    if (sessionFilter !== "all" && s.id !== sessionFilter) return false;
+    if (ucs.length && !ucs.includes(s.useCase)) return false;
+    if (types.length && !types.includes(sessionKind(s))) return false;
+    // People are searchable too, so a name finds the session they were in.
+    return !q || sessionMatches(s, q) || s.participants.some((p) => p.name.toLowerCase().includes(q));
   });
-  const hasFilters = !!search || kinds.length > 0 || analyses.length > 0 || statuses.length > 0 || sessionFilter !== "all";
-  const sessionOf = (id: string) => sessions.find((s) => s.id === id);
-  const shownSelected = filtered.filter((r) => selected.has(r.id)).length;
+  const hasFilters = !!search || ucs.length > 0 || types.length > 0 || sessionFilter !== "all";
+  const shownSelected = filtered.filter((s) => selected.has(s.id)).length;
   const allShown = filtered.length > 0 && shownSelected === filtered.length;
 
-  /* Viewing a report opens the results behind it: a person's analysis dashboard, or the group's results. */
-  function view(r: TaReport) {
-    const s = sessionOf(r.sessionId);
-    if (!s) return;
-    if (r.kind === "Group") navigate(`${TA_RESULT_PATH}?session=${s.id}`);
-    else navigate(analysisHref(s.useCase, r.subject, s.id));
+  function viewResults(s: TaSession) {
+    navigate(sessionKind(s) === "Group" ? `${TA_RESULT_PATH}?session=${s.id}` : analysisHref(s.useCase, s.participants[0].name, s.id));
+  }
+
+  function exportPdf(s: TaSession) {
+    toast.success("Exporting PDF", { description: `${s.id}_${s.name.replace(/[\s·]+/g, "_")}.pdf · ${reportCount(s.id)} report${reportCount(s.id) === 1 ? "" : "s"}` });
   }
 
   function toggle(id: string) {
@@ -756,53 +736,44 @@ function ResultsTab({ sessionId, onSession, focus }: {
 
   function exportSelected(format: "PDF" | "CSV") {
     const n = selected.size;
-    toast.success(`Exporting ${n} result${n === 1 ? "" : "s"} as ${format}`, {
-      description: format === "PDF" ? "One PDF per report, zipped together." : "One row per report, with its scores and findings.",
+    const count = filtered.filter((s) => selected.has(s.id)).reduce((t, s) => t + reportCount(s.id), 0);
+    toast.success(`Exporting ${n} session${n === 1 ? "" : "s"} as ${format}`, {
+      description: format === "PDF" ? `${count} reports, one PDF each, zipped together.` : `${count} reports, one row each, with scores and findings.`,
     });
     setSelected(new Set());
   }
 
   return (
     <div className={cn("flex flex-col gap-4", selected.size > 0 && "pb-24")}>
-      <KpiGrid cols={4}>
-        <KpiCard label="Drafts" value={scoped.filter((r) => r.status === "draft").length} sub="Findings still to review" accent="muted" />
-        <KpiCard label="Ready to send" value={scoped.filter((r) => r.status === "ready" && !r.needsSignOff).length} sub="Reviewed" accent="info" />
-        <KpiCard label="Awaiting sign-off" value={scoped.filter((r) => r.needsSignOff).length} sub="Clinical reports" accent="warning" />
-        <KpiCard label="Sent" value={scoped.filter((r) => r.status === "sent").length} sub="Shared with people" accent="success" />
-      </KpiGrid>
-
       <FiltersBar
-        chips={["All sessions", "All analyses", "All types", "All statuses"]}
-        activeCount={kinds.length + analyses.length + statuses.length + (search ? 1 : 0) + (sessionFilter !== "all" ? 1 : 0)}
+        chips={["All sessions", "All use cases", "All types"]}
+        activeCount={ucs.length + types.length + (search ? 1 : 0) + (sessionFilter !== "all" ? 1 : 0)}
         search={search}
         onSearch={setSearch}
-        placeholder="Search by result ID, person or report…"
+        placeholder="Search sessions, coaches or people…"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FilterField label="Session">
             <SessionPicker value={sessionFilter} onChange={onSession} sessions={sessions} allowAll />
           </FilterField>
-          <FilterField label="Analysis">
-            <FilterDropdown label="All analyses" options={USE_CASE_KEYS.map((k) => ({ value: k, label: TA_ANALYSIS[k].label }))} selected={analyses} onChange={setAnalyses} className="w-full" />
+          <FilterField label="Use case">
+            <FilterDropdown label="All use cases" options={USE_CASE_FILTER} selected={ucs} onChange={setUcs} className="w-full" />
           </FilterField>
           <FilterField label="Type">
-            <FilterDropdown label="All types" options={[{ value: "Individual", label: "Individual" }, { value: "Group", label: "Group" }]} selected={kinds} onChange={setKinds} className="w-full" />
-          </FilterField>
-          <FilterField label="Status">
-            <FilterDropdown label="All statuses" options={(["draft", "ready", "sent"] as ReportStatus[]).map((k) => ({ value: k, label: REPORT_LABEL[k] }))} selected={statuses} onChange={setStatuses} className="w-full" />
+            <FilterDropdown label="All types" options={TYPE_FILTER} selected={types} onChange={setTypes} className="w-full" />
           </FilterField>
         </div>
       </FiltersBar>
 
       <p className="px-1 text-base text-muted-foreground">
-        <strong className="text-foreground">{filtered.length}</strong> result{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setKinds([]); setAnalyses([]); setStatuses([]); onSession("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
+        <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
+        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); onSession("all"); }} className="ml-2 underline hover:text-primary">Clear all</button>}
       </p>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <FileText className="size-10 opacity-20" />
-          <p className="text-sm">{scoped.length === 0 ? "No results for this session yet." : "No results match the current filters."}</p>
+          <p className="text-sm">{sessions.length === 0 ? "No completed sessions yet. Ended sessions land here with their results." : "No sessions match the current filters."}</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -815,60 +786,39 @@ function ResultsTab({ sessionId, onSession, focus }: {
                       checked={allShown ? true : shownSelected > 0 ? "indeterminate" : false}
                       onCheckedChange={() => setSelected((cur) => {
                         const next = new Set(cur);
-                        filtered.forEach((r) => (allShown ? next.delete(r.id) : next.add(r.id)));
+                        filtered.forEach((s) => (allShown ? next.delete(s.id) : next.add(s.id)));
                         return next;
                       })}
-                      aria-label="Select every result shown"
+                      aria-label="Select every session shown"
                     />
                   </th>
-                  {["ID", "RESULT", "SESSION", "TYPE", "STATUS", "UPDATED", "ACTION"].map((h) => <th key={h} className={TH}>{h}</th>)}
+                  {SESSION_HEAD.map((h) => <th key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</th>)}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filtered.map((r) => {
-                  const s = sessionOf(r.sessionId);
-                  const on = selected.has(r.id);
+                {filtered.map((s) => {
+                  const on = selected.has(s.id);
                   return (
-                    <tr key={r.id} onClick={() => view(r)} className={cn("group cursor-pointer text-base hover:bg-muted/20", on && "bg-primary/5")}>
+                    <tr key={s.id} onClick={() => viewResults(s)}
+                      className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", on && "bg-primary/5")}>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox checked={on} onCheckedChange={() => toggle(r.id)} aria-label={`Select ${r.subject}`} />
+                        <Checkbox checked={on} onCheckedChange={() => toggle(s.id)} aria-label={`Select ${s.name}`} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary">{r.id}</span></td>
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-foreground group-hover:text-primary">{r.subject}</p>
-                        <p className="text-xs text-muted-foreground">{r.title}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-foreground">{s?.name}</p>
-                        <div className="mt-0.5 flex items-center gap-1.5">{s && <UseCaseChip uc={s.useCase} />}<span className="text-xs text-muted-foreground">{s?.date}</span></div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 text-sm text-foreground">{r.kind === "Group" && <Users className="size-3.5 text-muted-foreground" />}{r.kind}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <StatusBadge tone={REPORT_TONE[r.status]}>{REPORT_LABEL[r.status]}</StatusBadge>
-                          {r.needsSignOff && <span className="text-2xs font-semibold text-warning">Needs sign-off</span>}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{r.updatedDisplay}</td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <SessionCells s={s} />
+                      <td className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></td>
+                      <td className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button aria-label={`Actions for ${r.subject}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                            <button aria-label={`Actions for ${s.name}`} className={ROW_MENU}>
                               <MoreHorizontal className="size-4" />
                             </button>
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
-                            <button onClick={() => view(r)} className={MENU_ITEM}>
+                            <button onClick={() => viewResults(s)} className={MENU_ITEM}>
                               <BarChart3 className="size-3.5 text-muted-foreground" />
                               View results
                             </button>
-                            <button onClick={() => setPreview(r)} className={MENU_ITEM}>
-                              <Send className="size-3.5 text-muted-foreground" />
-                              {r.needsSignOff ? "Sign off & send" : r.status === "sent" ? "Send again" : "Send report"}
-                            </button>
-                            <button onClick={() => toast.success(`Exporting ${r.id}.pdf`)} className={MENU_ITEM}>
+                            <button onClick={() => exportPdf(s)} className={MENU_ITEM}>
                               <Download className="size-3.5 text-muted-foreground" />
                               Export PDF
                             </button>
@@ -890,7 +840,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Check className="size-3.5" strokeWidth={3} />
             </div>
-            <span className="text-base font-semibold text-foreground">{selected.size} result{selected.size === 1 ? "" : "s"} selected</span>
+            <span className="text-base font-semibold text-foreground">{selected.size} session{selected.size === 1 ? "" : "s"} selected</span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
             <Button variant="ghost" className="gap-1.5 text-sm text-muted-foreground" onClick={() => setSelected(new Set())}>
@@ -909,28 +859,11 @@ function ResultsTab({ sessionId, onSession, focus }: {
           </div>
         </FloatingBar>
       )}
-
-      {preview && <ReportPreview key={preview.id} report={preview} onClose={() => setPreview(null)} />}
     </div>
   );
 }
 
 /* ── Page ──────────────────────────────────────────────────────────────── */
-
-/** Reviewed reports, in the session picked on Results (or all), that can go out now. */
-function useSendReady(sessionId: string) {
-  const sessions = useSessionsStore((s) => s.sessions);
-  const reports = useReportsStore((s) => s.reports);
-  const setReports = useReportsStore((s) => s.setReports);
-  const ready = reports.filter((r) => (sessionId === "all" || r.sessionId === sessionId) && r.status === "ready" && !r.needsSignOff);
-  function sendReady() {
-    const ids = ready.map((r) => r.id);
-    const caseOf = (id: string) => sessions.find((x) => x.id === id)?.useCase ?? "golf";
-    setReports((cur) => cur.map((r) => (ids.includes(r.id) ? { ...r, status: "sent", sharedVia: [REPORT_TITLE[caseOf(r.sessionId)].share[0]], updatedDisplay: "Just now" } : r)));
-    toast.success(`Sent ${ids.length} report${ids.length === 1 ? "" : "s"}`);
-  }
-  return { ready, sendReady };
-}
 
 export function TaSessions() {
   const location = useLocation();
@@ -939,7 +872,6 @@ export function TaSessions() {
   const [tab, setTab] = React.useState<Tab>(asked === "results" || asked === "reports" ? "results" : "sessions");
   const [sessionId, setSessionId] = React.useState("all");
   const [creating, setCreating] = React.useState(false);
-  const { ready, sendReady } = useSendReady(sessionId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -961,16 +893,11 @@ export function TaSessions() {
               );
             })}
           </div>
-          {/* The page's main action, top right, as on every list page. */}
-          {tab === "sessions" ? (
+          {/* Sessions' main action, top right, as on every list page. */}
+          {tab === "sessions" && (
             <Button size="sm" className="gap-1.5" onClick={() => setCreating(true)}>
               <Plus className="size-4" />
               New Session
-            </Button>
-          ) : (
-            <Button size="sm" className="gap-1.5" disabled={ready.length === 0} onClick={sendReady}>
-              <Send className="size-3.5" />
-              Send ready ({ready.length})
             </Button>
           )}
         </PageHeader.Actions>

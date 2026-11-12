@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowRight, Check, CreditCard } from "lucide-react";
+import { Check, CreditCard, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
 
@@ -14,21 +14,27 @@ export interface PaymentReceipt {
   reference: string;
   /** Formatted payment date. */
   date: string;
+  /** Formatted next renewal date, e.g. "12 Nov 2027". */
+  renews?: string;
+  /** Where the receipt email went. */
+  email?: string;
 }
 
 /**
  * "Payment successful" confirmation, shown after checkout charges the card
- * (On-Cloud sign-up). Recaps what was paid, then continues the flow. Like
- * SetupCompleteModal it can't be dismissed by clicking outside, so the next
- * step always runs through the Continue button.
+ * (On-Cloud sign-up). Recaps what was paid, offers the invoice, then continues
+ * the flow. Like SetupCompleteModal it can't be dismissed by clicking outside,
+ * so the next step always runs through the Continue button.
  */
 export function PaymentSuccessModal({
   receipt,
   onContinue,
+  onDownloadInvoice,
   continueLabel = "Continue",
 }: {
   receipt: PaymentReceipt | null;
   onContinue: () => void;
+  onDownloadInvoice?: (receipt: PaymentReceipt) => void;
   continueLabel?: string;
 }) {
   return (
@@ -36,56 +42,75 @@ export function PaymentSuccessModal({
       <ModalContent
         size="sm"
         showCloseButton={false}
+        className="max-h-[90vh]"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <ModalHeader
           title="Payment successful"
-          description={receipt ? `${receipt.amount} paid for the ${receipt.planName} plan. A receipt has been emailed to you.` : undefined}
-          icon={Check}
-          tone="success"
+          description={receipt ? `${receipt.amount} paid for the ${receipt.planName} plan.` : undefined}
+          className="sr-only"
         />
 
         {receipt && (
-          <ModalBody className="flex flex-col items-center gap-5 py-6">
+          <ModalBody className="flex flex-col gap-5 px-6 pb-2 pt-7">
+            {/* Hero: tick, headline, amount */}
             <div className="flex flex-col items-center text-center">
-              <div className="relative mb-4 flex size-20 items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-2 border-success/40" />
-                <div className="absolute inset-1.5 rounded-full border border-success/25" />
-                <div className="relative flex size-12 items-center justify-center rounded-full border border-success/40 bg-success/10">
-                  <Check className="size-6 text-success" strokeWidth={2.5} />
-                </div>
+              <div className="relative flex size-16 items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-success/10" />
+                <span className="absolute inset-2 rounded-full bg-success/15" />
+                <span className="relative flex size-9 items-center justify-center rounded-full bg-success text-background">
+                  <Check className="size-5" strokeWidth={3} />
+                </span>
               </div>
-              <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Amount paid</p>
-              <p className="font-mono text-3xl font-bold text-foreground">{receipt.amount}</p>
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-2xs font-bold uppercase tracking-wider text-success">
-                Subscription active
-              </span>
+              <p className="mt-4 text-lg font-bold text-foreground">Payment successful</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">Your {receipt.planName} subscription is now active.</p>
+              <p className="mt-4 font-mono text-4xl font-bold tracking-tight text-foreground">{receipt.amount}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Paid on {receipt.date}
+                {receipt.renews && <> · Renews {receipt.renews}</>}
+              </p>
             </div>
 
-            <dl className="w-full divide-y divide-border rounded-lg border border-border bg-background/40 text-sm">
-              <Row label="Plan" value={`${receipt.planName} · ${receipt.cycle === "annual" ? "Annual" : "Monthly"}`} />
-              {receipt.card && (
-                <Row
-                  label="Paid with"
-                  value={
-                    <span className="inline-flex items-center gap-1.5">
-                      <CreditCard className="size-3.5 text-muted-foreground" />
-                      {receipt.card}
-                    </span>
-                  }
-                />
-              )}
-              <Row label="Date" value={receipt.date} />
-              <Row label="Reference" value={<span className="font-mono">{receipt.reference}</span>} />
-            </dl>
+            {/* Receipt — a ticket with a dashed tear line */}
+            <div className="rounded-xl border border-border bg-muted/30">
+              <dl className="space-y-2.5 px-4 py-3.5 text-sm">
+                <Row label="Plan" value={receipt.planName} />
+                <Row label="Billing" value={receipt.cycle === "annual" ? "Annual" : "Monthly"} />
+                {receipt.card && (
+                  <Row
+                    label="Paid with"
+                    value={
+                      <span className="inline-flex items-center gap-1.5">
+                        <CreditCard className="size-4 text-muted-foreground" />
+                        {receipt.card}
+                      </span>
+                    }
+                  />
+                )}
+              </dl>
+              <dl className="border-t border-dashed border-border px-4 py-3 text-sm">
+                <Row label="Invoice" value={<span className="font-mono">{receipt.reference}</span>} />
+              </dl>
+            </div>
+
+            {receipt.email && (
+              <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Mail className="size-3.5" />
+                Receipt sent to <span className="font-medium text-foreground">{receipt.email}</span>
+              </p>
+            )}
           </ModalBody>
         )}
 
-        <ModalFooter>
-          <Button onClick={onContinue} className="h-10 w-full gap-1.5 text-sm">
-            {continueLabel} <ArrowRight className="size-3.5" />
+        {/* The plain modal chrome hides icons in footer buttons, so these are text only. */}
+        <ModalFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+          <Button variant="outline" onClick={() => receipt && onDownloadInvoice?.(receipt)} className="h-10 text-sm">
+            Download invoice
+          </Button>
+          <Button onClick={onContinue} className="h-10 text-sm">
+            {continueLabel}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -95,7 +120,7 @@ export function PaymentSuccessModal({
 
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2">
+    <div className="flex items-center justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-right font-medium text-foreground">{value}</dd>
     </div>

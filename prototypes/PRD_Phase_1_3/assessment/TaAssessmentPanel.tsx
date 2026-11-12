@@ -1,42 +1,26 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Radio, TrendingUp } from "lucide-react";
+import { ArrowRight, Radio } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
-  GROUP_RESULTS, SESSION_STATUS_LABEL, TA_AREAS, USE_CASES, useDevicesStore, useReportsStore, useSessionsStore,
+  GROUP_RESULTS, SESSION_STATUS_LABEL, TA_AREAS, USE_CASES, useDevicesStore, useSessionsStore,
   type SessionStatus, type UseCaseKey,
 } from "./taData";
-import { useTaModelsStore } from "./taModels";
 import { TA_RESULT_PATH, TA_ROUTES } from "./taNav";
 
 /* Golf, Gym and Physio Assessment — one panel each on the customizable
    dashboard, so each can be placed or removed on its own and shows only its
-   own use case: its sessions, results, trend and faults. Shown by default;
+   own use case: its sessions, top faults and what's live or coming up. Shown by default;
    like every panel it can be removed in Customize and dragged back from the
    drawer. Everything links to Performance & Posture. */
 
 const STATUS_TONE: Record<SessionStatus, "info" | "critical" | "success"> = { scheduled: "info", live: "critical", complete: "success" };
-
-/** A trend line drawn from the group trend, so the panel shows direction at a glance. */
-function Spark({ values }: { values: number[] }) {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const pts = values.map((v, i) => `${(i / (values.length - 1)) * 100},${28 - ((v - min) / (max - min || 1)) * 24}`).join(" ");
-  return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="h-10 w-full text-primary" role="img" aria-label={`Trend from ${values[0]} to ${values[values.length - 1]}`}>
-      <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-    </svg>
-  );
-}
 
 export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
   const navigate = useNavigate();
   const u = USE_CASES[uc];
   const g = GROUP_RESULTS[uc];
   const sessions = useSessionsStore((s) => s.sessions).filter((s) => s.useCase === uc);
-  const ids = new Set(sessions.map((s) => s.id));
-  const reports = useReportsStore((s) => s.reports).filter((r) => ids.has(r.sessionId));
-  const model = useTaModelsStore((s) => s.models).find((m) => m.assessment?.useCase === uc);
   const areaIds = new Set(TA_AREAS.filter((a) => a.useCase === uc).map((a) => a.id));
   const devicesDown = useDevicesStore((s) => s.devices).filter((d) => areaIds.has(d.areaId) && d.status !== "online").length;
 
@@ -44,42 +28,24 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
   const complete = sessions.filter((s) => s.status === "complete");
   const scheduled = sessions.filter((s) => s.status === "scheduled");
   const participants = new Set(sessions.flatMap((s) => s.participants.map((p) => p.name))).size;
-  const toSend = reports.filter((r) => r.status === "ready").length;
   const upcoming = sessions
     .filter((s) => s.status === "live" || s.status === "scheduled")
     .sort((a, b) => ["live", "scheduled"].indexOf(a.status) - ["live", "scheduled"].indexOf(b.status))
     .slice(0, 3);
-  const last = complete[0];
   const maxFault = Math.max(...g.faults.map(([, n]) => n));
   const go = (tab?: string) => navigate(tab ? `${TA_ROUTES.sessions}?tab=${tab}` : TA_ROUTES.sessions);
   const faultWord = uc === "physio" ? "compensations" : "faults";
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
         <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} accent="sev-critical" onClick={() => go()} />
         <KpiCard label="Total participants" value={participants} sub={`${u.people[0].toUpperCase()}${u.people.slice(1)} across all sessions`} accent="primary" onClick={() => go()} />
         <KpiCard label="Scheduled" value={scheduled.length} sub={scheduled[0] ? `Next: ${scheduled[0].date}` : "Nothing booked"} accent="info" onClick={() => go()} />
         <KpiCard label="Complete" value={complete.length} sub={`${complete.reduce((n, s) => n + s.flagged, 0)} flagged ${u.items}`} accent="success" onClick={() => go("results")} />
-        <KpiCard label="Reports to send" value={toSend} sub="Reviewed, not yet shared" accent="warning" onClick={() => go("results")} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,320px)]">
-        {/* Score and its trend */}
-        <button type="button" onClick={() => (last ? navigate(`${TA_RESULT_PATH}?session=${last.id}`) : go("results"))}
-          className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-primary/40">
-          <p className="text-2xs uppercase tracking-wider text-muted-foreground">{g.scoreLabel}</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold text-foreground">{g.scoreValue}</p>
-            <p className="flex items-center gap-1 text-xs text-success"><TrendingUp className="size-3" />{g.scoreSub}</p>
-          </div>
-          <Spark values={g.trend.map((t) => t.score)} />
-          <div className="mt-auto border-t border-border pt-2 text-xs text-muted-foreground">
-            <p className="truncate">{last ? `${last.name} · ${last.date}` : "No completed sessions yet"}</p>
-            <p className="truncate">{model?.name ?? "No model deployed"}</p>
-          </div>
-        </button>
-
+      <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
         {/* What the group gets wrong most */}
         <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-background p-3">
           <p className="text-2xs uppercase tracking-wider text-muted-foreground">Top {faultWord}</p>

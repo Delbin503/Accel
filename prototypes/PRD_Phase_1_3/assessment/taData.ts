@@ -382,9 +382,14 @@ const SEED_SESSIONS: TaSession[] = [
     source: "Live", status: "scheduled", coach: "Daniel Lim", participants: GOLF_PEOPLE.slice(0, 3).map((p) => ({ ...p, attempts: 0, score: "—", change: "—", topFault: "—" })), analysed: 0, captured: 0, flagged: 0, devices: ["LM-1", "LM-2", "LM-3"],
   },
   {
-    id: "SES-1039", name: "PT clients · Thursday", useCase: "gym", modelName: "Strength Technique Assessment", siteId: "dt",
-    deployment: "Strength floor", units: ["Rack 1", "Rack 2"], date: "Thu 6 Nov 2026", time: "07:00–08:00",
-    source: "Recorded", status: "complete", coach: "Sarah Koh", participants: GYM_PEOPLE.slice(0, 3), analysed: 94, captured: 96, flagged: 2, devices: [],
+    id: "SES-1050", name: "Follow-up · Mei Ling Chua", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",
+    deployment: "Clinic A rehab", units: ["Room 1"], date: "Thu 13 Nov 2026", time: "09:30–10:15",
+    source: "Live", status: "scheduled", coach: "Dr. Lim", participants: [{ ...PHYSIO_PEOPLE[0], attempts: 0, score: "—", change: "—", topFault: "—" }], analysed: 0, captured: 0, flagged: 0, devices: ["DC-1"],
+  },
+  {
+    id: "SES-1039", name: "PT session · Ravi Kumar", useCase: "gym", modelName: "Strength Technique Assessment", siteId: "dt",
+    deployment: "Strength floor", units: ["Rack 2"], date: "Thu 6 Nov 2026", time: "07:00–08:00",
+    source: "Recorded", status: "complete", coach: "Sarah Koh", participants: [GYM_PEOPLE[1]], analysed: 31, captured: 32, flagged: 1, devices: [],
   },
   {
     id: "SES-1036", name: "Falls prevention class", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",
@@ -485,10 +490,11 @@ const FRESH_SESSIONS = new Set(["SES-1047"]);
  */
 export function reportsFor(s: TaSession, fresh = FRESH_SESSIONS.has(s.id)): TaReport[] {
   const t = REPORT_TITLE[s.useCase];
-  const out: TaReport[] = [{
+  // An individual session (one person) has no group summary — only that person's report.
+  const out: TaReport[] = s.participants.length > 1 ? [{
     id: `RPT-${s.id.slice(4)}-G`, sessionId: s.id, kind: "Group", subject: s.name, title: t.group,
     status: fresh ? "draft" : "sent", needsSignOff: false, sharedVia: fresh ? [] : ["Email"], updatedDisplay: s.date,
-  }];
+  }] : [];
   s.participants.forEach((p, i) => {
     const status: ReportStatus = fresh ? (i < 2 ? "ready" : "draft") : i === 1 ? "ready" : "sent";
     out.push({

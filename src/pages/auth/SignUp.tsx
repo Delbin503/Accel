@@ -425,14 +425,24 @@ export default function SignUpPage({
     const totalDue = monthlyPerSite + additionalSeats * monthlyPerSeat;
     const digits = cardNumber.replace(/\s/g, "");
     const brand = digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card";
+    const fmtDay = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    const renewal = new Date();
+    if (cycle === "annual") renewal.setFullYear(renewal.getFullYear() + 1);
+    else renewal.setMonth(renewal.getMonth() + 1);
     setReceipt({
       amount: `S$${totalDue.toLocaleString()}`,
       planName: plan.name,
       cycle,
       card: `${brand} ···· ${digits.slice(-4)}`,
       reference: `INV-${new Date().getFullYear()}-${String(totalDue).padStart(4, "0").slice(-4)}${digits.slice(-2)}`,
-      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      date: fmtDay(new Date()),
+      renews: fmtDay(renewal),
+      email: email.trim() || undefined,
     });
+  }
+
+  function downloadInvoice(r: PaymentReceipt) {
+    toast.success("Invoice downloaded", { description: `${r.reference}.pdf · ${r.amount}` });
   }
 
   function continueAfterPayment() {
@@ -1284,7 +1294,7 @@ export default function SignUpPage({
             </Button>
           </div>
         </div>
-        <PaymentSuccessModal receipt={receipt} onContinue={continueAfterPayment} continueLabel="Continue to site setup" />
+        <PaymentSuccessModal receipt={receipt} onContinue={continueAfterPayment} onDownloadInvoice={downloadInvoice} continueLabel="Continue to site setup" />
       </WizardShell>
     );
   }

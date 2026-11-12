@@ -623,7 +623,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
                 onEscalate();
               }}
             >
-              Escalate Case
+              Escalate New Case
             </Button>
           )}
           {event.status !== "escalated" && (
@@ -632,7 +632,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
               size="sm"
               onClick={() => {}}
             >
-              Link Case
+              Link Existing Case
             </Button>
           )}
           <Button
