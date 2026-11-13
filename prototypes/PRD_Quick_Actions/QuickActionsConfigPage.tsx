@@ -5,6 +5,7 @@ import { Bell, Brain, Building2, Clock, Command, Database, ShieldCheck, Users, V
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
+import { ItemButton } from "@/components/ui/item";
 import { QuickActionsSection } from "./QuickActionsSection";
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -64,7 +65,9 @@ export default function QuickActionsConfigPage() {
             const Icon = s.icon;
             const active = section === s.key;
             return (
-              <button
+              <ItemButton
+                variant="plain"
+                selected={active}
                 key={s.key}
                 onClick={() => setSection(s.key)}
                 className={cn(
@@ -86,7 +89,7 @@ export default function QuickActionsConfigPage() {
                     {s.description}
                   </p>
                 </div>
-              </button>
+              </ItemButton>
             );
           })}
         </nav>

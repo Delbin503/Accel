@@ -1,6 +1,7 @@
 import * as React from "react";
 import { FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /* ──────────────────────────────────────────────────────────────────────────
    PROTOTYPE-ONLY. Shared chrome for every prototype's State Tester:
@@ -57,7 +58,9 @@ export function TesterShell({
         </div>
       )}
 
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         data-slot="tester-shell-toggle"
         type="button"
         onClick={() => setVisible((v) => !v)}
@@ -68,12 +71,12 @@ export function TesterShell({
           "fixed bottom-3 left-3 z-[var(--z-tooltip)] flex size-8 items-center justify-center rounded-full border shadow-floating",
           "transition-[color,background-color,border-color,opacity] duration-[var(--duration-normal)] ease-standard",
           visible
-            ? "border-warning/50 bg-warning/15 text-warning hover:bg-warning/25"
-            : "border-border bg-card text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
+            ? "border-warning/50 bg-warning/15 text-warning hover:bg-warning/25 dark:hover:bg-warning/25"
+            : "border-border bg-card text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground hover:bg-card dark:hover:bg-card"
         )}
       >
         <FlaskConical className="size-4" />
-      </button>
+      </Button>
     </>
   );
 }

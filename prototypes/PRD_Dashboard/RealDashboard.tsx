@@ -20,6 +20,8 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { DashboardSkeleton, ErrorState, type ForcedState, type HealthMode, type ScaleMode } from "./states";
@@ -146,23 +148,33 @@ function SiteChipRow({
   }
 
   return (
-    <div data-slot="site-chip-row" className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+    <SegmentedControl
+      data-slot="site-chip-row"
+      type="multiple"
+      variant="outline"
+      value={selected}
+      onValueChange={(next) => {
+        const changed = next.find((n) => !selected.includes(n)) ?? selected.find((n) => !next.includes(n));
+        if (changed) handleToggle(changed);
+      }}
+      className="mb-3 flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
+    >
       {sites.map((s) => {
         const isActive = selected.includes(s.name);
         return (
-          <button
+          <SegmentedControlItem
             key={s.name}
-            onClick={() => handleToggle(s.name)}
+            value={s.name}
             style={isActive ? {
               backgroundColor: `color-mix(in srgb, ${s.color} 15%, transparent)`,
               borderColor: `color-mix(in srgb, ${s.color} 40%, transparent)`,
               color: s.color,
             } : undefined}
             className={cn(
-              "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
+              "h-auto flex-shrink-0 gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
               isActive
-                ? "border-current/30"
-                : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                ? "border-current/30 hover:bg-transparent"
+                : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground"
             )}
           >
             <span className="size-1.5 flex-shrink-0 rounded-full" style={{ background: s.color }} />
@@ -173,10 +185,10 @@ function SiteChipRow({
             )}>
               {s.count}
             </span>
-          </button>
+          </SegmentedControlItem>
         );
       })}
-    </div>
+    </SegmentedControl>
   );
 }
 
@@ -201,37 +213,41 @@ function SiteMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
+            "h-auto gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
-              ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              : "border-primary bg-primary/10 text-primary-ink"
+              ? "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground aria-expanded:bg-transparent aria-expanded:text-foreground dark:border-border dark:bg-transparent dark:hover:bg-transparent"
+              : "border-primary bg-primary/10 text-primary-ink hover:bg-primary/10 hover:text-primary-ink aria-expanded:bg-primary/10 aria-expanded:text-primary-ink dark:border-primary dark:bg-primary/10 dark:hover:bg-primary/10"
           )}
         >
           <Filter className="size-3" />
           {label}
           <ChevronDown className="size-3 opacity-70" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2">
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
-          <button
+          <Button
+            variant="link"
             onClick={() => onChange([])}
-            className="text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
+            className="h-auto p-0 text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
           >
             All
-          </button>
+          </Button>
         </div>
         <div data-slot="site-multi-select-list" className="max-h-64 space-y-0.5 overflow-y-auto">
           {options.map((o) => {
             const checked = selected.includes(o.id);
             return (
-              <button
+              <ItemButton
+                variant="plain"
                 key={o.id}
                 onClick={() => onChange(checked ? selected.filter((s) => s !== o.id) : [...selected, o.id])}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
+                className="gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60"
               >
                 <span
                   className={cn(
@@ -242,7 +258,7 @@ function SiteMultiSelect({
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
                 </span>
                 <TruncatedText text={o.name} className="min-w-0 flex-1 text-foreground" />
-              </button>
+              </ItemButton>
             );
           })}
         </div>
@@ -541,13 +557,15 @@ export default function DashboardPage({
               administrator immediately.
             </span>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => setAlertAcknowledged(true)}
-            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            className="size-auto flex-shrink-0 p-0 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
             aria-label="Dismiss alert"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -703,8 +721,9 @@ export default function DashboardPage({
                     return (
                       <Popover key={s.site}>
                         <PopoverTrigger asChild>
-                          <button
-                            className="group flex flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
+                          <ItemButton
+                            variant="plain"
+                            className="group flex-col items-stretch gap-2 rounded-lg border border-border bg-background px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-background"
                           >
                             {/* Row 1: site name + colored dot */}
                             <div className="flex items-center gap-1.5">
@@ -732,7 +751,7 @@ export default function DashboardPage({
                               <SevPill kind="medium"   value={s.medium} />
                               <SevPill kind="low"      value={s.low} />
                             </div>
-                          </button>
+                          </ItemButton>
                         </PopoverTrigger>
                         <PopoverContent align="start" className="w-64 p-0">
                           <div className="border-b border-border px-3 py-2.5">
@@ -758,13 +777,14 @@ export default function DashboardPage({
                             </div>
                           </div>
                           <div className="border-t border-border bg-muted/20 px-3 py-2.5">
-                            <button
+                            <Button
+                              variant="link"
                               onClick={() => navigate("/detection-feed")}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
+                              className="h-auto gap-1 p-0 text-xs font-semibold text-primary-ink hover:underline"
                             >
                               View feed for this site
                               <ArrowUpRight className="size-3" />
-                            </button>
+                            </Button>
                           </div>
                         </PopoverContent>
                       </Popover>
@@ -800,8 +820,9 @@ export default function DashboardPage({
               return (
                 <Popover key={`${z.site}-${z.area}`}>
                   <PopoverTrigger asChild>
-                    <button
-                      className="group flex flex-col gap-1 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40"
+                    <ItemButton
+                      variant="plain"
+                      className="group flex-col items-stretch gap-1 rounded-lg border border-border bg-background px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-background"
                     >
                       <div className="flex items-center gap-1.5">
                         <MapPin className="size-3 flex-shrink-0 text-muted-foreground" />
@@ -818,7 +839,7 @@ export default function DashboardPage({
                           {z.cameras}
                         </span>
                       </div>
-                    </button>
+                    </ItemButton>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-72 p-0">
                     <div className="border-b border-border px-3 py-2.5">
@@ -852,12 +873,14 @@ export default function DashboardPage({
                       ))}
                     </div>
                     <div className="border-t border-border px-3 py-2">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="xs"
                         onClick={() => navigate("/detection-feed")}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10"
+                        className="h-auto w-full gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10 hover:text-primary-ink dark:hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
-                      </button>
+                      </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -889,13 +912,15 @@ export default function DashboardPage({
                     <TruncatedText text={e.summary} className="text-xs text-muted-foreground" />
                   </div>
                   {e.caseId && (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="xs"
                       onClick={(ev) => { ev.stopPropagation(); navigate(`/incidents/${e.caseId}`); }}
                       title={`Linked to ${e.caseId}`}
-                      className="inline-flex flex-shrink-0 items-center rounded-full border border-info/30 bg-info/15 px-1.5 py-0.5 font-mono text-2xs font-semibold text-info transition-colors hover:bg-info/25"
+                      className="h-auto flex-shrink-0 rounded-full border border-info/30 bg-info/15 px-1.5 py-0.5 font-mono text-2xs font-semibold text-info transition-colors hover:bg-info/25 hover:text-info dark:border-info/30 dark:bg-info/15 dark:hover:bg-info/25"
                     >
                       {e.caseId}
-                    </button>
+                    </Button>
                   )}
                   <span className="font-mono text-2xs text-muted-foreground">{e.time}</span>
                 </div>

@@ -88,7 +88,7 @@ export function ReidMapPanel() {
           </div>
 
           <div data-slot="reid-map-panel-map" className="flex min-w-0 flex-col gap-2">
-            <button
+            <Button variant="ghost" size="icon-xs"
               type="button"
               onClick={() => setOpen(true)}
               aria-label="Enlarge map"
@@ -96,7 +96,7 @@ export function ReidMapPanel() {
               className="block w-full overflow-hidden rounded-lg border border-border bg-media-raised transition-colors hover:border-primary/50 @3xl:h-72 @3xl:[&>svg]:h-full"
             >
               <TrackMap map={map} states={onMap} focusId={pinned?.track.id ?? null} size="mini" persons={persons} />
-            </button>
+            </Button>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-muted-foreground">
               <span className="flex items-center gap-1"><Users className="size-3 text-info" />people in each camera's zone</span>
               <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-severity-critical" />weapon, last {TRAIL_SEC} s</span>
@@ -110,7 +110,7 @@ export function ReidMapPanel() {
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Weapons on this map · {onMap.length}</p>
                 {pinned && (
-                  <button type="button" onClick={() => setPinnedId(null)} className="text-2xs font-semibold text-primary-ink hover:underline">Clear selection</button>
+                  <Button variant="link" type="button" onClick={() => setPinnedId(null)} className="h-auto p-0 border-0 text-2xs font-semibold text-primary-ink hover:underline">Clear selection</Button>
                 )}
               </div>
               {/* The same rows as the enlarged map's list; picking one highlights it on the map. */}

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { type VisitorStats } from "./visitorStats";
@@ -121,10 +122,11 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
         {parts.map((part, i) => (
           <Tooltip key={part.label}>
             <TooltipTrigger asChild>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 aria-label={`${part.label}: ${part.value}, ${Math.round(share(part.value))}%`}
-                className="group/part flex h-3 min-w-0 items-center"
+                className="group/part flex h-3 min-w-0 items-center rounded-none border-0 p-0 hover:bg-transparent"
                 style={{ width: `${share(part.value)}%` }}
               >
                 <span className={cn(
@@ -133,7 +135,7 @@ function SplitStat({ label, parts, stacked, className }: { label: string; parts:
                   i === parts.length - 1 && "rounded-r-full",
                   TONE_BAR[part.tone]
                 )} />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <span className="flex items-center gap-1.5">

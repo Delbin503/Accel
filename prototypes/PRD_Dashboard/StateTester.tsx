@@ -1,5 +1,6 @@
 import { FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import type { ForcedState, HealthMode, ScaleMode } from "./states";
 
 /* PROTOTYPE-ONLY. Forces the view state + System Health for testing. Not promoted to src. */
@@ -47,54 +48,66 @@ export function StateTester({
           <FlaskConical className="size-3" />
           State
         </span>
-        <div data-slot="dashboard-state-tester-options" className="flex items-center gap-1">
+        <SegmentedControl
+          data-slot="dashboard-state-tester-options"
+          type="single"
+          size="sm"
+          value={value}
+          onValueChange={(next) => next && onChange(next as typeof value)}
+          className="flex items-center gap-1 rounded-none bg-transparent p-0"
+        >
           {STATE_OPTIONS.map((o) => (
-            <button
+            <SegmentedControlItem
               key={o.key}
-              onClick={() => onChange(o.key)}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                value === o.key ? "bg-warning/20 text-warning" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+              value={o.key}
+              className="h-auto rounded-md px-2 py-1 font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=on]:bg-warning/20 data-[state=on]:text-warning data-[state=on]:shadow-none"
             >
               {o.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
       <div className={cn("flex items-center gap-2", healthDisabled && "pointer-events-none opacity-40")}>
         <span className="w-14 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Health</span>
-        <div data-slot="dashboard-state-tester-options" className="flex items-center gap-1">
+        <SegmentedControl
+          data-slot="dashboard-state-tester-options"
+          type="single"
+          size="sm"
+          value={health}
+          onValueChange={(next) => next && onHealthChange(next as typeof health)}
+          className="flex items-center gap-1 rounded-none bg-transparent p-0"
+        >
           {HEALTH_OPTIONS.map((o) => (
-            <button
+            <SegmentedControlItem
               key={o.key}
-              onClick={() => onHealthChange(o.key)}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                health === o.key ? "bg-warning/20 text-warning" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+              value={o.key}
+              className="h-auto rounded-md px-2 py-1 font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=on]:bg-warning/20 data-[state=on]:text-warning data-[state=on]:shadow-none"
             >
               {o.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
       <div className={cn("flex items-center gap-2", scaleDisabled && "pointer-events-none opacity-40")}>
         <span className="w-14 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Sites</span>
-        <div data-slot="dashboard-state-tester-options" className="flex items-center gap-1">
+        <SegmentedControl
+          data-slot="dashboard-state-tester-options"
+          type="single"
+          size="sm"
+          value={scale}
+          onValueChange={(next) => next && onScaleChange(next as typeof scale)}
+          className="flex items-center gap-1 rounded-none bg-transparent p-0"
+        >
           {SCALE_OPTIONS.map((o) => (
-            <button
+            <SegmentedControlItem
               key={o.key}
-              onClick={() => onScaleChange(o.key)}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                scale === o.key ? "bg-warning/20 text-warning" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+              value={o.key}
+              className="h-auto rounded-md px-2 py-1 font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=on]:bg-warning/20 data-[state=on]:text-warning data-[state=on]:shadow-none"
             >
               {o.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
     </div>
   );

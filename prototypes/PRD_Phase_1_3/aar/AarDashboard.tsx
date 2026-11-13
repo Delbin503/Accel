@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ItemButton } from "@/components/ui/item";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -206,9 +209,9 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label={text} className="inline-flex text-muted-foreground/70 transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs leading-snug">{text}</TooltipContent>
     </UiTooltip>
@@ -342,8 +345,9 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
       {/* Session timeline: every shot, the playhead, click a shot to review it */}
       <div data-slot="camera-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
         {!live && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-xs"
             aria-label={playing && !ended ? "Pause" : "Play"}
             onClick={() => {
               if (ended) setHead(0);
@@ -352,7 +356,7 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
             className="grid size-6 shrink-0 place-items-center rounded text-foreground hover:bg-muted"
           >
             {playing && !ended ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-          </button>
+          </Button>
         )}
         <span className="font-mono text-2xs text-muted-foreground">{fmtClip(pos)}</span>
         <div className="relative h-4 flex-1">
@@ -361,9 +365,9 @@ function CameraPanel({ className, shot, fired, live, t, clock, onSelect }: {
           {SHOTS.map((s) => {
             const reached = !live || fired.includes(s);
             return (
-              <button
+              <ItemButton
                 key={s.n}
-                type="button"
+                variant="plain"
                 disabled={!reached || live}
                 onClick={() => onSelect(s.n)}
                 aria-label={`Shot ${s.n} at ${fmtClip(s.at)}`}
@@ -393,9 +397,9 @@ function ClipInfo() {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label="Clip details" className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label="Clip details" className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
           <Info className="size-3.5" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="w-64 text-xs">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
@@ -539,19 +543,18 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
       meta={live ? `#${shot.n}` : "Pick a shot"}
     >
       {!live && (
-        <div data-slot="shot-panel-tabs" role="tablist" aria-label="Shots" className="mb-2 grid shrink-0 grid-cols-6 gap-1">
+        <SegmentedControl type="single" data-slot="shot-panel-tabs" aria-label="Shots" value={String(shot.n)}
+          onValueChange={(next) => next && onSelect(Number(next))}
+          className="mb-2 grid w-auto shrink-0 grid-cols-6 gap-1 rounded-none bg-transparent p-0">
           {SHOTS.map((s) => {
             const active = s.n === shot.n;
             const hit = isHit(s);
             return (
-              <button
+              <SegmentedControlItem
                 key={s.n}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => onSelect(s.n)}
+                value={String(s.n)}
                 className={cn(
-                  "flex flex-col items-center rounded-md border py-0.5 transition-colors duration-[var(--duration-fast)]",
+                  "flex h-auto flex-col items-center gap-0 rounded-md border px-0 py-0.5 transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/10 data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]",
                   active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40"
                 )}
               >
@@ -563,10 +566,10 @@ function ShotPanel({ className, shot, rel, live, onSelect }: { className?: strin
                 <span className={cn("font-mono text-3xs font-semibold", !hit ? "text-severity-critical" : points(s) === 10 ? "text-success" : "text-info")}>
                   {hit ? `${points(s)} pts` : "Miss"}
                 </span>
-              </button>
+              </SegmentedControlItem>
             );
           })}
-        </div>
+        </SegmentedControl>
       )}
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
         <span>Shot {shot.n}: <span className={cn("font-semibold", !fired ? "text-foreground" : isHit(shot) ? "text-foreground" : "text-severity-critical")}>{status}</span> · {passed}/{checks.length} met</span>
@@ -637,37 +640,37 @@ function ShotTable({ selected, onSelect }: { selected: number; onSelect: (n: num
   const head = "px-1.5 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground";
   return (
     <div data-slot="shot-table" className="min-h-0 flex-1 overflow-auto">
-      <table className="w-full border-collapse">
-        <thead className="sticky top-0 bg-card">
-          <tr className="border-b border-border">
-            {([["#", "Shot"], ["Pts", "Points"], ["Aim", "From aim, mm"], ["Breath", "Breathing at the shot"], ["Wob", "Wobble in the last 1 s, mm"], ["Flinch", "Flinch, mm"], ["Off", "Ends off aim 2 s after, mm"], ["M/S", "Muzzle / shoulder peak, mm"]] as const).map(([h, full]) => <th key={h} title={full} className={head}>{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full border-collapse">
+        <TableHeader className="sticky top-0 bg-card">
+          <TableRow className="border-0 hover:bg-transparent border-b border-border">
+            {([["#", "Shot"], ["Pts", "Points"], ["Aim", "From aim, mm"], ["Breath", "Breathing at the shot"], ["Wob", "Wobble in the last 1 s, mm"], ["Flinch", "Flinch, mm"], ["Off", "Ends off aim 2 s after, mm"], ["M/S", "Muzzle / shoulder peak, mm"]] as const).map(([h, full]) => <TableHead key={h} title={full} className={cn("h-auto px-0 whitespace-normal text-current", head)}>{h}</TableHead>)}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {SHOTS.map((s) => {
             const hit = isHit(s);
             const cell = "px-1.5 py-1.5 font-mono text-2xs";
             return (
-              <tr
+              <TableRow
                 key={s.n}
                 tabIndex={0}
                 onClick={() => onSelect(s.n)}
                 onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
-                className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted", !hit && "bg-severity-critical/[0.05]")}
+                className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted", !hit && "bg-severity-critical/[0.05]")}
               >
-                <td className={cn(cell, "font-semibold text-foreground")}>{s.n}</td>
-                <td className={cn(cell, hit ? "text-foreground" : "text-severity-critical")}>{hit ? points(s) : "Miss"}</td>
-                <td className={cn(cell, "text-muted-foreground")}>{radius(s).toFixed(1)}</td>
-                <td className={cn(cell, firedInPause(s) ? "text-muted-foreground" : "text-severity-critical")}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</td>
-                <td className={cn(cell, s.wobbleMm > WOBBLE_LIMIT_MM ? "text-severity-critical" : "text-muted-foreground")}>{s.wobbleMm.toFixed(1)}</td>
-                <td className={cn(cell, flinched(s) ? "text-severity-critical" : "text-muted-foreground")}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</td>
-                <td className={cn(cell, settled(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.settleMm.toFixed(1)}</td>
-                <td className={cn(cell, "text-muted-foreground")}>{s.muzzlePeakMm}/{s.shoulderPeakMm}</td>
-              </tr>
+                <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold text-foreground")}>{s.n}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, hit ? "text-foreground" : "text-severity-critical")}>{hit ? points(s) : "Miss"}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{radius(s).toFixed(1)}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, firedInPause(s) ? "text-muted-foreground" : "text-severity-critical")}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, s.wobbleMm > WOBBLE_LIMIT_MM ? "text-severity-critical" : "text-muted-foreground")}>{s.wobbleMm.toFixed(1)}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, flinched(s) ? "text-severity-critical" : "text-muted-foreground")}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, settled(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.settleMm.toFixed(1)}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{s.muzzlePeakMm}/{s.shoulderPeakMm}</TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <p className="px-2 py-1.5 text-3xs text-muted-foreground">Distances in mm. Red: missed the limit (wobble {WOBBLE_LIMIT_MM}, flinch {FLINCH_LIMIT_MM}, settle {SETTLE_LIMIT_MM}).</p>
     </div>
   );
@@ -844,36 +847,36 @@ function EventMarkers({ selected }: { selected: number }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-max min-w-full border-separate border-spacing-y-0.5">
-          <thead>
-            <tr>
-              <th className="sticky left-0 z-20 min-w-28 bg-card pr-2 text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</th>
+        <Table className="w-max min-w-full border-separate border-spacing-y-0.5">
+          <TableHeader>
+            <TableRow className="border-0 hover:bg-transparent">
+              <TableHead className="h-auto px-0 whitespace-normal text-current sticky left-0 z-20 min-w-28 bg-card pr-2 text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</TableHead>
               {SHOTS.map((s) => (
-                <th key={s.n} className={cn("w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary-ink" : isHit(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.n}</th>
+                <TableHead key={s.n} className={cn("h-auto px-0 whitespace-normal text-current", "w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary-ink" : isHit(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.n}</TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {CUES.map((c) => (
-              <tr key={c.key}>
-                <td className="sticky left-0 z-10 min-w-28 bg-card py-0.5 pr-2 text-xs text-foreground">
+              <TableRow key={c.key} className="border-0 hover:bg-transparent">
+                <TableCell className="p-0 whitespace-normal sticky left-0 z-10 min-w-28 bg-card py-0.5 pr-2 text-xs text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span className={cn("size-1.5 shrink-0 rounded-sm", CUE_TONE[c.key])} />
                     <span className="truncate">{c.label}</span>
                   </span>
-                </td>
+                </TableCell>
                 {SHOTS.map((s) => {
                   const on = s.cues[c.key];
                   return (
-                    <td key={s.n} className={cn("text-center", s.n === selected && "bg-muted")}>
+                    <TableCell key={s.n} className={cn("p-0 whitespace-normal", "text-center", s.n === selected && "bg-muted")}>
                       <span title={`Shot ${s.n} · ${c.label} ${on ? "detected" : "not seen"}`} className={cn("mx-auto block size-2.5 rounded-full", on ? CUE_TONE[c.key] : "border border-border")} />
-                    </td>
+                    </TableCell>
                   );
                 })}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <p className="shrink-0 pt-1 text-3xs text-muted-foreground">
         One shade per marker · red and orange are the two faults · hollow: not seen. The highlighted column is the selected shot; scroll sideways for the rest.
@@ -948,29 +951,29 @@ function GradesTable({ shots, full = false }: { shots: Shot[]; full?: boolean })
   const cell = "px-1 py-1 text-2xs";
   return (
     <div data-slot="grades-table" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-border text-left text-3xs uppercase text-muted-foreground">
-            <th className="px-1 py-1 font-semibold">Factor</th>{full && <th className="px-1 py-1 font-semibold">What the system measured</th>}<th className="px-1 py-1 font-semibold">Met</th>
-            <th className="px-1 py-1 font-semibold">Now</th><th className="px-1 py-1 font-semibold">{PREVIOUS.date}</th><th className="px-1 py-1 font-semibold" title="Change since last session">±</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full border-collapse">
+        <TableHeader>
+          <TableRow className="border-0 hover:bg-transparent border-b border-border text-left text-3xs uppercase text-muted-foreground">
+            <TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Factor</TableHead>{full && <TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">What the system measured</TableHead>}<TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Met</TableHead>
+            <TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Now</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">{PREVIOUS.date}</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold" title="Change since last session">±</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {factors.map((f) => {
             const d = f.score - f.prev;
             return (
-              <tr key={f.key} className="border-b border-border/60 last:border-0" title={f.measure}>
-                <td className={cn(cell, "font-semibold text-foreground")}>{f.label}</td>
-                {full && <td className={cn(cell, "text-muted-foreground")}>{f.measure}</td>}
-                <td className={cn(cell, "font-mono text-muted-foreground")}>{f.met}/{f.of}</td>
-                <td className={cell}><span className="flex items-center gap-1 font-mono text-foreground"><GradeBadge score={f.score} size="sm" />{f.score}</span></td>
-                <td className={cell}><span className="flex items-center gap-1 font-mono text-muted-foreground"><GradeBadge score={f.prev} size="sm" />{f.prev}</span></td>
-                <td className={cn(cell, "font-mono font-semibold", d >= 0 ? "text-success" : "text-severity-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</td>
-              </tr>
+              <TableRow key={f.key} className="border-0 hover:bg-transparent border-b border-border/60 last:border-0" title={f.measure}>
+                <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold text-foreground")}>{f.label}</TableCell>
+                {full && <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{f.measure}</TableCell>}
+                <TableCell className={cn("p-0 whitespace-normal", cell, "font-mono text-muted-foreground")}>{f.met}/{f.of}</TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell)}><span className="flex items-center gap-1 font-mono text-foreground"><GradeBadge score={f.score} size="sm" />{f.score}</span></TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell)}><span className="flex items-center gap-1 font-mono text-muted-foreground"><GradeBadge score={f.prev} size="sm" />{f.prev}</span></TableCell>
+                <TableCell className={cn("p-0 whitespace-normal", cell, "font-mono font-semibold", d >= 0 ? "text-success" : "text-severity-critical")}>{d >= 0 ? `▲ +${d}` : `▼ −${-d}`}</TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <p className="flex flex-wrap gap-x-2 gap-y-0.5 font-mono text-3xs text-muted-foreground">
         {GRADE_BANDS.map(([g, m], i) => <span key={g}>{g} {i === 0 ? "90–100" : i === GRADE_BANDS.length - 1 ? "<50" : `${m}–${m + 9}`}</span>)}
       </p>
@@ -999,9 +1002,9 @@ const PANEL_ID: Record<string, string> = {
 
 function SeeLink({ r, onOpen }: { r: (typeof RANKED_RECS)[number]; onOpen: (n: number, id: string) => void }) {
   return (
-    <button type="button" onClick={() => r.shots[0] && onOpen(r.shots[0], PANEL_ID[r.panel] ?? "aar-analysis")} className="shrink-0 text-3xs font-semibold text-primary-ink hover:underline">
+    <Button variant="link" onClick={() => r.shots[0] && onOpen(r.shots[0], PANEL_ID[r.panel] ?? "aar-analysis")} className="h-auto shrink-0 p-0 text-3xs font-semibold text-primary-ink hover:underline">
       See {r.panel}
-    </button>
+    </Button>
   );
 }
 
@@ -1013,9 +1016,9 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
       title="Coaching"
       meta="By points lost a shot"
       action={
-        <button type="button" onClick={() => document.getElementById("aar-report")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="text-2xs font-semibold text-primary-ink hover:underline">
+        <Button variant="link" onClick={() => document.getElementById("aar-report")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="h-auto p-0 text-2xs font-semibold text-primary-ink hover:underline">
           Full report ↓
-        </button>
+        </Button>
       }
       bodyClassName="gap-2"
     >
@@ -1032,9 +1035,9 @@ function CoachingPanel({ className, onSelect, onOpen }: { className?: string; on
               <span className="line-clamp-1">{r.drill}</span>
               <span className="ml-auto flex shrink-0 gap-1">
                 {r.shots.map((n) => (
-                  <button key={n} type="button" onClick={() => onSelect(n)} className="rounded border border-border bg-card px-1 font-mono text-3xs text-foreground hover:border-foreground/40">
+                  <Button key={n} variant="outline" size="xs" onClick={() => onSelect(n)} className="h-auto rounded border border-border bg-card px-1 font-mono text-3xs text-foreground hover:border-foreground/40">
                     #{n}
-                  </button>
+                  </Button>
                 ))}
               </span>
             </p>
@@ -1107,7 +1110,7 @@ function AllRecommendations({ onSelect, onOpen }: { onSelect: (n: number) => voi
           <p className="mt-0.5 flex items-start gap-1 text-2xs leading-snug text-foreground"><Dumbbell className="mt-px size-3 shrink-0 text-muted-foreground" />{r.drill}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {r.shots.map((n) => (
-              <button key={n} type="button" onClick={() => onSelect(n)} className="rounded border border-border bg-card px-1 font-mono text-3xs text-foreground hover:border-foreground/40">Shot {n}</button>
+              <Button key={n} variant="outline" size="xs" onClick={() => onSelect(n)} className="h-auto rounded border border-border bg-card px-1 font-mono text-3xs text-foreground hover:border-foreground/40">Shot {n}</Button>
             ))}
             <span className="ml-auto"><SeeLink r={r} onOpen={onOpen} /></span>
           </div>
@@ -1170,23 +1173,23 @@ function Standing() {
           </div>
         </div>
       </div>
-      <table className="w-full shrink-0 border-collapse">
-        <thead>
-          <tr className="border-b border-border text-left text-3xs uppercase text-muted-foreground">
-            <th className="py-1 pr-1 font-semibold">Compared with</th><th className="px-1 py-1 font-semibold">Place</th><th className="px-1 py-1 font-semibold">Better than</th><th className="px-1 py-1 font-semibold">Avg</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full shrink-0 border-collapse">
+        <TableHeader>
+          <TableRow className="border-0 hover:bg-transparent border-b border-border text-left text-3xs uppercase text-muted-foreground">
+            <TableHead className="h-auto px-0 whitespace-normal text-current py-1 pr-1 font-semibold">Compared with</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Place</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Better than</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Avg</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {COMPARISONS.map((c) => (
-            <tr key={c.group} className="border-b border-border/60 text-2xs last:border-0">
-              <td className="py-1 pr-1 font-semibold text-foreground">{c.group}</td>
-              <td className="px-1 py-1 font-mono text-muted-foreground">{c.place}</td>
-              <td className="px-1 py-1 font-mono text-muted-foreground">{c.betterThan}%</td>
-              <td className="px-1 py-1 font-mono text-muted-foreground">{c.average}</td>
-            </tr>
+            <TableRow key={c.group} className="border-0 hover:bg-transparent border-b border-border/60 text-2xs last:border-0">
+              <TableCell className="p-0 whitespace-normal py-1 pr-1 font-semibold text-foreground">{c.group}</TableCell>
+              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.place}</TableCell>
+              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.betterThan}%</TableCell>
+              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.average}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <div className="grid shrink-0 grid-cols-2 gap-1">
         {BADGES.map((b) => (
           <div key={b.title} className="flex items-start gap-1.5 rounded-md border border-border bg-background px-2 py-1">
@@ -1480,7 +1483,7 @@ function ShotCard({ shot, kind, onSelect }: { shot: Shot; kind: "best" | "weakes
       action={
         <div className="flex items-center gap-2">
           <span className={cn("rounded px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider", best ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{best ? "Good shot" : "Bad shot"}</span>
-          <button type="button" onClick={() => onSelect(shot.n)} className="text-2xs font-semibold text-primary-ink hover:underline">Review</button>
+          <Button variant="link" onClick={() => onSelect(shot.n)} className="h-auto p-0 text-2xs font-semibold text-primary-ink hover:underline">Review</Button>
         </div>
       }
       bodyClassName="gap-3"

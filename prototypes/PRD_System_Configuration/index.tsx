@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ArrowUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/shared/NotificationsBell";
@@ -40,7 +41,9 @@ function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | nul
 
   if (!show) return null;
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon-lg"
       data-slot="back-to-top"
       onClick={() => {
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -48,10 +51,10 @@ function BackToTop({ scrollRef }: { scrollRef: React.RefObject<HTMLElement | nul
       }}
       aria-label="Back to top"
       title="Back to top"
-      className="fixed bottom-6 right-6 z-[var(--z-tooltip)] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-floating transition-colors hover:border-primary hover:text-primary-ink"
+      className="fixed bottom-6 right-6 z-[var(--z-tooltip)] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-floating transition-colors hover:border-primary hover:text-primary-ink hover:bg-card dark:hover:bg-card"
     >
       <ArrowUp className="size-5" />
-    </button>
+    </Button>
   );
 }
 

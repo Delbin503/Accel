@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -208,23 +209,22 @@ export function QuickActionsSection() {
                 Past six, the pinned row stops being a shortcut and becomes a second nav.
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <SegmentedControl
+              type="single"
+              value={String(maxPins)}
+              onValueChange={(next) => next && setMaxPins(Number(next))}
+              className="flex shrink-0 items-center gap-1 rounded-none bg-transparent p-0"
+            >
               {[3, 4, 5, 6, 7, 8].map((n) => (
-                <button
+                <SegmentedControlItem
                   key={n}
-                  type="button"
-                  onClick={() => setMaxPins(n)}
-                  className={cn(
-                    "size-8 rounded-md border text-base transition-colors duration-[var(--duration-fast)] ease-standard",
-                    n === maxPins
-                      ? "border-primary bg-primary/10 text-primary-ink"
-                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+                  value={String(n)}
+                  className="size-8 rounded-md border border-border px-0 text-base font-normal text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary-ink data-[state=on]:shadow-none"
                 >
                   {n}
-                </button>
+                </SegmentedControlItem>
               ))}
-            </div>
+            </SegmentedControl>
           </div>
 
           <div className="flex items-start justify-between gap-4 border-t border-border pt-4">
@@ -249,23 +249,22 @@ export function QuickActionsSection() {
                 Role-gated actions are hidden from the palette, not shown-and-refused.
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <SegmentedControl
+              type="single"
+              value={role}
+              onValueChange={(next) => next && user && setUser({ ...user, role: next as UserRole })}
+              className="flex shrink-0 items-center gap-1 rounded-none bg-transparent p-0"
+            >
               {ROLES.map((r) => (
-                <button
+                <SegmentedControlItem
                   key={r.value}
-                  type="button"
-                  onClick={() => user && setUser({ ...user, role: r.value })}
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-sm transition-colors duration-[var(--duration-fast)] ease-standard",
-                    r.value === role
-                      ? "border-primary bg-primary/10 text-primary-ink"
-                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+                  value={r.value}
+                  className="h-auto rounded-md border border-border px-2.5 py-1 text-sm font-normal text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-muted hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary-ink data-[state=on]:shadow-none"
                 >
                   {r.label}
-                </button>
+                </SegmentedControlItem>
               ))}
-            </div>
+            </SegmentedControl>
           </div>
         </div>
       </SectionCard>

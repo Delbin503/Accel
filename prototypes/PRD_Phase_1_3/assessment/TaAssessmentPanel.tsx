@@ -7,6 +7,8 @@ import {
   type SessionStatus, type UseCaseKey,
 } from "./taData";
 import { TA_RESULT_PATH, TA_ROUTES } from "./taNav";
+import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
 
 /* Golf, Gym and Physio Assessment — one panel each on the customizable
    dashboard, so each can be placed or removed on its own and shows only its
@@ -64,32 +66,32 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
         <div data-slot="ta-use-case-panel-sessions" className="flex flex-col rounded-lg border border-border bg-background">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <p className="text-sm font-semibold text-foreground">Live & upcoming</p>
-            <button type="button" onClick={() => go()} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline">
+            <Button variant="link" type="button" onClick={() => go()} className="h-auto p-0 border-0 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline">
               All sessions <ArrowRight className="size-3" />
-            </button>
+            </Button>
           </div>
           <div className="flex-1 divide-y divide-border/60">
             {upcoming.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">Nothing live or scheduled.</p>
             ) : (
               upcoming.map((s) => (
-                <button key={s.id} type="button" onClick={() => (s.status === "live" ? navigate(`${TA_RESULT_PATH}?session=${s.id}`) : go())}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-muted/30">
+                <ItemButton variant="plain" key={s.id} type="button" onClick={() => (s.status === "live" ? navigate(`${TA_RESULT_PATH}?session=${s.id}`) : go())}
+                  className="text-inherit flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-muted/30">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">{s.name}</p>
                     <p className="truncate text-2xs text-muted-foreground">{s.date} · {s.time} · {s.participants.length} {u.people}</p>
                   </div>
                   <StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge>
-                </button>
+                </ItemButton>
               ))
             )}
           </div>
           {devicesDown > 0 && (
-            <button type="button" onClick={() => navigate(TA_ROUTES.devices)}
+            <ItemButton variant="plain" type="button" onClick={() => navigate(TA_ROUTES.devices)}
               className="flex items-center gap-1.5 border-t border-border px-3 py-2 text-left text-xs text-warning transition-colors hover:bg-warning/[0.06]">
               <Radio className="size-3.5" />
               {devicesDown} external device{devicesDown === 1 ? "" : "s"} offline or pairing
-            </button>
+            </ItemButton>
           )}
         </div>
       </div>

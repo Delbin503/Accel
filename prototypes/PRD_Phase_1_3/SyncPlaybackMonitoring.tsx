@@ -21,6 +21,9 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ItemButton } from "@/components/ui/item";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -122,8 +125,8 @@ function CameraTile({
               />
             )}
             {onActivate && (
-              <button
-                type="button"
+              <ItemButton
+                variant="plain"
                 aria-label={`Show ${camera.id} in the main view`}
                 onClick={onActivate}
                 className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -141,21 +144,18 @@ function CameraTile({
         )}
 
         {/* Selection checkbox — revealed on hover, pinned open once checked. */}
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={checked}
+        <Checkbox
+          checked={checked}
           aria-label={`Select ${camera.id} for synchronised playback`}
-          onClick={(e) => { e.stopPropagation(); onToggleCheck(); }}
+          onCheckedChange={() => onToggleCheck()}
+          onClick={(e) => { e.stopPropagation(); }}
           className={cn(
             "absolute left-2 top-2 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity duration-[var(--duration-fast)] ease-standard",
             checked
               ? "border-primary bg-primary opacity-100"
               : "border-media-foreground/60 bg-scrim/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           )}
-        >
-          {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-        </button>
+        />
 
         {isOnline && (
           <span
@@ -281,20 +281,16 @@ function HeroView({
                 onExit={() => setZoomArmed(false)}
               />
             )}
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={checked}
+            <Checkbox
+              checked={checked}
               aria-label={`Select ${camera.id} for synchronised playback`}
-              onClick={() => onToggleCheck(camera.id)}
+              onCheckedChange={() => onToggleCheck(camera.id)}
               className={cn(
                 "absolute left-3 top-3 z-20 flex size-5 items-center justify-center rounded border backdrop-blur-sm transition-opacity",
                 checked ? "border-primary bg-primary opacity-100"
                   : "border-media-foreground/60 bg-scrim/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               )}
-            >
-              {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-            </button>
+            />
             <span className={cn(
               "absolute top-3 z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-widest text-media-foreground transition-all",
               live ? "bg-severity-critical/95" : "bg-scrim/70",
@@ -449,14 +445,14 @@ function WallView({
           Wall view · Cameras {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {total}
         </p>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} aria-label="Previous page"
+          <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} aria-label="Previous page"
             className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
             <ChevronLeft className="size-3.5" />
-          </button>
-          <button onClick={() => setPage(Math.min(pageCount, page + 1))} disabled={page === pageCount} aria-label="Next page"
+          </Button>
+          <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.min(pageCount, page + 1))} disabled={page === pageCount} aria-label="Next page"
             className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
             <ChevronRight className="size-3.5" />
-          </button>
+          </Button>
           <Select value={String(gridSize)} onValueChange={(v) => { setGridSize(Number(v)); setPage(1); }}>
             <SelectTrigger className="h-7 w-auto"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -615,41 +611,41 @@ function SyncPlaybackBar({
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label="Back 30 seconds"
+              <Button variant="outline" size="icon" aria-label="Back 30 seconds"
                 onClick={() => onChange({ offsetSec: Math.min(BUFFER_SEC, pb.offsetSec + 30) })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
                 <RotateCcw className="size-3.5" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>Back 30s</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label={pb.playing ? "Pause all" : "Play all"}
+              <Button variant="default" size="icon" aria-label={pb.playing ? "Pause all" : "Play all"}
                 onClick={() => onChange({ playing: !pb.playing })}
                 className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary-fill text-primary-foreground hover:opacity-90">
                 {pb.playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>{pb.playing ? "Pause all" : "Play all"}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label="Forward 30 seconds" disabled={live}
+              <Button variant="outline" size="icon" aria-label="Forward 30 seconds" disabled={live}
                 onClick={() => onChange({ offsetSec: Math.max(0, pb.offsetSec - 30) })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted disabled:opacity-40">
                 <RotateCw className="size-3.5" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>Forward 30s</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label={pb.muted ? "Unmute" : "Mute"}
+              <Button variant="outline" size="icon" aria-label={pb.muted ? "Unmute" : "Mute"}
                 onClick={() => onChange({ muted: !pb.muted })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
                 {pb.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>{pb.muted ? "Unmute" : "Mute"}</TooltipContent>
           </Tooltip>
@@ -704,36 +700,36 @@ function MultiSiteSelector({ sites, selected, onChange }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
+        <Button variant="outline" className={cn(
           "inline-flex h-9 items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-base font-semibold transition-colors",
           open ? "border-primary" : "border-input",
           isAll ? "text-muted-foreground" : "text-foreground"
         )} style={{ minWidth: "160px" }}>
           {display}
           <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
-        <button onClick={() => onChange([])}
+        <ItemButton variant="plain" onClick={() => onChange([])}
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           All Sites
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {sites.map((s) => {
           const checked = !isAll && selected.includes(s.id);
           return (
-            <button key={s.id} onClick={() => toggle(s.id)}
+            <ItemButton key={s.id} variant="plain" onClick={() => toggle(s.id)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {s.name}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -821,20 +817,21 @@ export function SyncPlaybackMonitoring({
         </PageHeader.Content>
         <PageHeader.Actions>
           {/* View mode is about the page, not the camera list — it sits with the title. */}
-          <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
+          <SegmentedControl type="single" value={viewMode} onValueChange={(next) => next && setViewMode(next as typeof viewMode)} disabled={inSync}
+            data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
             {VIEW_MODES.map((vm) => {
               const Icon = vm.icon;
               const active = viewMode === vm.key;
               return (
-                <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description} disabled={inSync}
-                  className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
-                    active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <SegmentedControlItem key={vm.key} value={vm.key} title={vm.description}
+                  className={cn("inline-flex h-auto items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
+                    active ? "bg-primary-fill text-primary-foreground data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                   <Icon className="size-3.5" />
                   {vm.label}
-                </button>
+                </SegmentedControlItem>
               );
             })}
-          </div>
+          </SegmentedControl>
         </PageHeader.Actions>
       </PageHeader>
 

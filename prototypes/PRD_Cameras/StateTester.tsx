@@ -1,5 +1,5 @@
 import { FlaskConical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import type { ForcedState, DrawerAsync } from "./shared";
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -38,41 +38,45 @@ export function StateTester({
           <FlaskConical className="size-3" />
           Page
         </span>
-        <div data-slot="cameras-state-tester-options" className="flex items-center gap-1">
+        <SegmentedControl
+          data-slot="cameras-state-tester-options"
+          type="single"
+          size="sm"
+          value={value}
+          onValueChange={(next) => next && onChange(next as typeof value)}
+          className="flex items-center gap-1 rounded-none bg-transparent p-0"
+        >
           {OPTIONS.map((o) => (
-            <button
+            <SegmentedControlItem
               key={o.key}
-              onClick={() => onChange(o.key)}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                value === o.key
-                  ? "bg-warning/20 text-warning"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+              value={o.key}
+              className="h-auto rounded-md px-2 py-1 font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=on]:bg-warning/20 data-[state=on]:text-warning data-[state=on]:shadow-none"
             >
               {o.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-14 text-2xs font-bold uppercase tracking-wider text-muted-foreground">Drawer</span>
-        <div data-slot="cameras-state-tester-options" className="flex items-center gap-1">
+        <SegmentedControl
+          data-slot="cameras-state-tester-options"
+          type="single"
+          size="sm"
+          value={drawer}
+          onValueChange={(next) => next && onDrawer(next as typeof drawer)}
+          className="flex items-center gap-1 rounded-none bg-transparent p-0"
+        >
           {DRAWER_OPTIONS.map((o) => (
-            <button
+            <SegmentedControlItem
               key={o.key}
-              onClick={() => onDrawer(o.key)}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                drawer === o.key
-                  ? "bg-warning/20 text-warning"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+              value={o.key}
+              className="h-auto rounded-md px-2 py-1 font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=on]:bg-warning/20 data-[state=on]:text-warning data-[state=on]:shadow-none"
             >
               {o.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
     </div>
   );

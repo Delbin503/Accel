@@ -34,13 +34,15 @@ function PaneShell({
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={searchValue} readOnly placeholder="Search model" className="h-9 pl-9 text-base" />
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="default"
             disabled
-            className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-base text-muted-foreground"
+            className="h-9 w-full justify-between gap-2 rounded-lg border border-border bg-background px-3 text-base font-normal text-muted-foreground dark:border-border dark:bg-background disabled:opacity-100"
           >
             All tags
             <ChevronDown className="size-3.5 flex-shrink-0 text-muted-foreground" />
-          </button>
+          </Button>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto p-3">{left}</div>
       </div>

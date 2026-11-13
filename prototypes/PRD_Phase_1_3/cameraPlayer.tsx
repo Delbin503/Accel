@@ -153,18 +153,20 @@ export function TilePlayerBar({
         )}
 
         {/* Live tag / how far back this tile is sitting */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="xs"
           onClick={() => onChange({ offsetSec: 0, playing: true })}
           disabled={live}
           className={cn(
-            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-3xs font-bold uppercase tracking-wider transition-colors",
-            live ? "text-media-foreground/90" : "bg-media-foreground/15 text-status-foreground hover:bg-severity-critical"
+            "inline-flex h-auto items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-3xs font-bold uppercase tracking-wider transition-colors",
+            live ? "text-media-foreground/90 hover:bg-transparent hover:text-media-foreground/90 disabled:opacity-100" : "bg-media-foreground/15 text-status-foreground hover:bg-severity-critical"
           )}
         >
           <span className={cn("size-1.5 rounded-full", live ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
           {live ? "Live" : `−${fmtOffset(pb.offsetSec)}`}
-        </button>
+        </Button>
 
         {!live && !compact && (
           <span className="font-mono text-3xs text-media-foreground/70">{timestampAt(now, pb.offsetSec)}</span>

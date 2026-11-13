@@ -24,6 +24,8 @@ import {
 } from "@/components/shared/Modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SkeletonList, ErrorState, type ForcedState } from "./shared";
+import { ItemButton } from "@/components/ui/item";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
@@ -141,9 +143,10 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton
+          variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary hover:bg-card",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
@@ -152,16 +155,17 @@ function FilterDropdown({
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton
+              variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -172,7 +176,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -210,7 +214,7 @@ function FilterPanel({
       <div data-slot="dismissed-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="min-w-0 flex-1 gap-2.5 hover:bg-transparent">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -226,22 +230,23 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
           {activeCount > 0 && (
-            <button
+            <Button
+              variant="link"
               onClick={(e) => { e.stopPropagation(); onClearAll(); }}
-              className="text-sm text-muted-foreground underline hover:text-primary-ink"
+              className="h-auto p-0 text-sm font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open
               ? <ChevronUp className="size-4 text-muted-foreground" />
               : <ChevronDown className="size-4 text-muted-foreground" />
             }
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -314,15 +319,18 @@ function DismissedRow({
       <div data-slot="dismissed-row-thumb" className="self-start">
         <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-[linear-gradient(135deg,#2a1a0e_0%,#1a1a1a_100%)]">
           {/* select checkbox */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-pressed={selected}
             onClick={(e) => { e.stopPropagation(); onToggle(event.id); }}
             className={cn(
-              "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border transition-colors",
-              selected ? "border-primary bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary"
+              "absolute left-1.5 top-1.5 z-10 size-4 rounded border transition-colors active:not-aria-[haspopup]:translate-y-0",
+              selected ? "border-primary bg-primary hover:bg-primary dark:hover:bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary hover:bg-scrim/50 dark:hover:bg-scrim/50"
             )}
           >
             {selected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-          </button>
+          </Button>
           {event.bboxes.map((box, i) => (
             <React.Fragment key={i}>
               <div
@@ -540,22 +548,22 @@ export default function DismissedEventsPage({
             <span className="flex items-center gap-1.5 text-sm text-success">
               <RotateCcw className="size-3" />
               {restoredIds.size} restored
-              <button onClick={() => setRestoredIds(new Set())} className="text-success/60 hover:text-success">
+              <Button variant="link" onClick={() => setRestoredIds(new Set())} className="h-auto p-0 font-normal text-success/60 hover:text-success hover:no-underline">
                 (undo)
-              </button>
+              </Button>
             </span>
           )}
         </div>
         <div className="relative flex-shrink-0">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-9 appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-9 rounded-lg border border-border bg-card pl-3 pr-2.5 text-sm text-foreground shadow-none focus-visible:border-primary focus-visible:ring-0 dark:bg-card dark:hover:bg-card [&_[data-slot=select-trigger-icon]]:size-3.5 [&_[data-slot=select-trigger-icon]]:opacity-100">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -569,12 +577,13 @@ export default function DismissedEventsPage({
           <ShieldOff className="size-8 opacity-30" />
           <p className="text-sm font-medium">No dismissed events match your filters</p>
           {(hasFilters || forced === "empty") && (
-            <button
-              className="text-sm text-primary-ink hover:underline"
+            <Button
+              variant="link"
+              className="h-auto p-0 text-sm font-normal text-primary-ink hover:underline"
               onClick={() => { if (forced === "empty") onResolveForced(); setFilters(EMPTY_DISMISSED_FILTERS); setSearch(""); setKpiFilter("all"); }}
             >
               Clear all filters
-            </button>
+            </Button>
           )}
         </div>
       ) : (

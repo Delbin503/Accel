@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ItemButton } from "@/components/ui/item";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -203,9 +206,9 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label={text} className="inline-flex shrink-0 text-muted-foreground/70 transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto shrink-0 rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs leading-snug">{text}</TooltipContent>
     </UiTooltip>
@@ -382,7 +385,7 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
       </div>
       {/* Moments of the picked rep */}
       <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
-        <button type="button" aria-label={running ? "Pause" : "Play through the rep"}
+        <Button variant="ghost" size="icon-xs" aria-label={running ? "Pause" : "Play through the rep"}
           onClick={() => {
             if (running) return setPlaying(false);
             if (moment === 3) onMoment(0);
@@ -390,18 +393,20 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
           }}
           className="grid size-6 shrink-0 place-items-center rounded text-foreground hover:bg-muted">
           {running ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        </button>
-        <button type="button" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></button>
-        <div role="tablist" aria-label="Moments" className="flex min-w-0 flex-1 gap-1">
+        </Button>
+        <Button variant="ghost" size="icon-xs" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></Button>
+        <SegmentedControl type="single" size="sm" aria-label="Moments" value={String(moment)}
+          onValueChange={(next) => { if (!next) return; setPlaying(false); onMoment(Number(next) as Moment); }}
+          className="flex min-w-0 flex-1 gap-1 rounded-none bg-transparent p-0">
           {MOMENT_ORDER.map((m) => (
-            <button key={m} type="button" role="tab" aria-selected={m === moment} onClick={() => { setPlaying(false); onMoment(m); }}
-              className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
+            <SegmentedControlItem key={m} value={String(m)}
+              className={cn("block h-auto min-w-0 flex-1 truncate data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
                 m === moment ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {MOMENTS[rep.ex][m]}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
-        <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
+        </SegmentedControl>
+        <Button variant="ghost" size="icon-xs" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></Button>
       </div>
       {/* Visit timeline: every rep, grouped by exercise */}
       <div data-slot="video-panel-timeline" className="flex h-10 shrink-0 items-center gap-2 border-t border-border px-2">
@@ -418,7 +423,7 @@ function VideoPanel({ className, rep, view, moment, device, onView, onMoment, on
             );
           })}
           {REPS.map((r) => (
-            <button key={r.id} type="button" onClick={() => onSelect(r.id)} aria-label={`${repName(r)} at ${fmtClock(r.at)}`} title={`${repName(r)} · ${fmtClock(r.at)} · ${r.flex}°`}
+            <ItemButton key={r.id} variant="plain" onClick={() => onSelect(r.id)} aria-label={`${repName(r)} at ${fmtClock(r.at)}`} title={`${repName(r)} · ${fmtClock(r.at)} · ${r.flex}°`}
               className={cn("absolute bottom-1 size-2 -translate-x-1/2 rounded-full ring-1 ring-card transition-transform hover:scale-150", r.id === rep.id ? "scale-125 bg-foreground" : TONE_DOT[repTone(r, device)])}
               style={{ left: pct(r.at) }} />
           ))}
@@ -439,7 +444,8 @@ function RepPicker({ rep, device, onSelect }: { rep: Rep; device: DeviceMode; on
     activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [rep.id]);
   return (
-    <div data-slot="rep-picker" role="tablist" aria-label="Reps" className="mb-2 flex shrink-0 items-stretch gap-1 overflow-x-auto pb-1">
+    <SegmentedControl type="single" data-slot="rep-picker" aria-label="Reps" value={rep.id} onValueChange={(next) => next && onSelect(next)}
+      className="mb-2 flex w-auto shrink-0 items-stretch gap-1 overflow-x-auto rounded-none bg-transparent p-0 pb-1">
       {EX_ORDER.map((ex, i) => (
         <React.Fragment key={ex}>
           {i > 0 && <span aria-hidden className="mx-1 w-px shrink-0 self-stretch bg-border" />}
@@ -450,18 +456,18 @@ function RepPicker({ rep, device, onSelect }: { rep: Rep; device: DeviceMode; on
             const active = r.id === rep.id;
             const scored = scoredChecks(r, device).length;
             return (
-              <button key={r.id} ref={active ? activeRef : undefined} type="button" role="tab" aria-selected={active} onClick={() => onSelect(r.id)}
+              <SegmentedControlItem key={r.id} ref={active ? activeRef : undefined} value={r.id}
                 title={`${repName(r)} · ${r.flex}° · ${scored - failedChecks(r, device)}/${scored} checks${hasLoad(r, device) ? "" : " · no force-plate load"}`}
-                className={cn("flex h-8 w-9 shrink-0 items-center justify-center gap-1 rounded-md border text-xs font-bold text-foreground transition-colors duration-[var(--duration-fast)]",
+                className={cn("flex h-8 w-9 shrink-0 items-center justify-center gap-1 rounded-md border px-0 text-xs font-bold text-foreground transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/10 data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]",
                   active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40")}>
                 {r.n}
                 <span className={cn("size-1.5 rounded-full", TONE_DOT[repTone(r, device)])} />
-              </button>
+              </SegmentedControlItem>
             );
           })}
         </React.Fragment>
       ))}
-    </div>
+    </SegmentedControl>
   );
 }
 
@@ -530,16 +536,16 @@ function FindingRow({ rep, f, status, onReview }: { rep: Rep; f: Finding; status
         </p>
       </div>
       {status ? (
-        <button type="button" onClick={() => onReview(k, status === "auto" ? "dismissed" : null)} className="flex shrink-0 items-center gap-1 text-3xs font-semibold text-muted-foreground hover:text-foreground"
+        <Button variant="link" onClick={() => onReview(k, status === "auto" ? "dismissed" : null)} className="flex h-auto shrink-0 p-0 hover:no-underline items-center gap-1 text-3xs font-semibold text-muted-foreground hover:text-foreground"
           title={status === "auto" ? "Dismiss" : "Undo review"}>
           {status === "auto" ? <>Kept · <X className="size-3" /></> : <>{status === "confirmed" ? "Confirmed" : "Dismissed"} · <Undo2 className="size-3" /></>}
-        </button>
+        </Button>
       ) : (
         <div className="flex shrink-0 gap-1">
-          <button type="button" aria-label={`Confirm ${label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></button>
-          <button type="button" aria-label={`Dismiss ${label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></button>
+          <Button variant="outline" size="icon-xs" aria-label={`Confirm ${label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></Button>
+          <Button variant="outline" size="icon-xs" aria-label={`Dismiss ${label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></Button>
         </div>
       )}
     </li>
@@ -752,7 +758,7 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
             {approved ? (
               <>
                 <span className="inline-flex items-center gap-1 text-2xs font-semibold text-success"><ShieldCheck className="size-3.5" />Approved · {VISIT.clinician}</span>
-                <button type="button" onClick={() => onApprove(false)} className="ml-auto inline-flex items-center gap-1 text-3xs font-semibold text-muted-foreground hover:text-foreground"><Undo2 className="size-3" />Undo</button>
+                <Button variant="link" onClick={() => onApprove(false)} className="ml-auto h-auto p-0 hover:no-underline inline-flex items-center gap-1 text-3xs font-semibold text-muted-foreground hover:text-foreground"><Undo2 className="size-3" />Undo</Button>
               </>
             ) : (
               <>
@@ -905,13 +911,13 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
         <span className="text-2xs text-muted-foreground">Click a row to review that rep above</span>
       </header>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-border">
-              {cols.map(([h, full]) => <th key={h} title={full} className="px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</th>)}
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full border-collapse">
+          <TableHeader>
+            <TableRow className="border-0 hover:bg-transparent border-b border-border">
+              {cols.map(([h, full]) => <TableHead key={h} title={full} className="h-auto px-0 whitespace-normal text-current px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</TableHead>)}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {REPS.map((r) => {
               const checks = scoredChecks(r, device);
               const met = checks.filter((c) => c.ok).length;
@@ -919,34 +925,34 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
               const fs = findingsFor(r);
               const need = EXERCISES[r.ex].need;
               return (
-                <tr key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
-                  className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.id === selected && "bg-muted")}>
-                  <td className={cn(cell, "font-sans font-semibold text-foreground")}>{repName(r)}</td>
-                  <td className={cn(cell, "text-muted-foreground")}>{fmtClock(r.at)}</td>
-                  <td className={cn(cell, "font-semibold", r.flex >= need ? "text-foreground" : "text-severity-critical")}>{r.flex}</td>
-                  <td className={cn(cell, red(r.lag > LIMIT.lag))}>{r.lag}</td>
-                  <td className={cn(cell, r.ex === "rom" ? red(r.speed > LIMIT.romSpeed) : r.ex === "sts" ? red(r.hold < LIMIT.stsLower) : "text-muted-foreground")}>
+                <TableRow key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
+                  className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.id === selected && "bg-muted")}>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans font-semibold text-foreground")}>{repName(r)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{fmtClock(r.at)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", r.flex >= need ? "text-foreground" : "text-severity-critical")}>{r.flex}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lag > LIMIT.lag))}>{r.lag}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" ? red(r.speed > LIMIT.romSpeed) : r.ex === "sts" ? red(r.hold < LIMIT.stsLower) : "text-muted-foreground")}>
                     {r.ex === "rom" ? `${r.speed}°/s` : r.ex === "sts" ? `${r.hold.toFixed(1)} s` : "—"}
-                  </td>
-                  <td className={cn(cell, r.ex === "rom" ? red(r.hold < LIMIT.hold) : "text-muted-foreground")}>{r.ex === "rom" ? r.hold.toFixed(1) : "—"}</td>
-                  <td className={cn(cell, red(r.hipHike > LIMIT.hipHike))}>{r.hipHike.toFixed(1)}</td>
-                  <td className={cn(cell, red(r.trunkLean > LIMIT.trunkLean))}>{r.trunkLean}</td>
-                  <td className={cn(cell, r.ex === "rom" || !load ? "text-muted-foreground" : red(r.lr > LIMIT.lr))} title={load ? undefined : `Needs ${PLATE.toLowerCase()}`}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" ? red(r.hold < LIMIT.hold) : "text-muted-foreground")}>{r.ex === "rom" ? r.hold.toFixed(1) : "—"}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.hipHike > LIMIT.hipHike))}>{r.hipHike.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.trunkLean > LIMIT.trunkLean))}>{r.trunkLean}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" || !load ? "text-muted-foreground" : red(r.lr > LIMIT.lr))} title={load ? undefined : `Needs ${PLATE.toLowerCase()}`}>
                     {r.ex === "rom" || !load ? "—" : r.lr}
-                  </td>
-                  <td className={cn(cell, TONE_TEXT[repTone(r, device)])}>{met}/{checks.length}</td>
-                  <td className={cn(cell, "font-sans")}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, TONE_TEXT[repTone(r, device)])}>{met}/{checks.length}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans")}>
                     {fs.length ? (
                       <span className="flex flex-wrap gap-1">
                         {fs.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   );
@@ -993,7 +999,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
     {
       label: open.length ? `Review ${open.length} AI finding${open.length === 1 ? "" : "s"} under ${REVIEW_BELOW}%` : "AI findings reviewed",
       done: open.length === 0,
-      action: open.length ? <button type="button" onClick={() => onSelect(open[0].rep.id)} className="text-2xs font-semibold text-primary-ink hover:underline">Show {repName(open[0].rep).toLowerCase()} →</button> : undefined,
+      action: open.length ? <Button variant="link" onClick={() => onSelect(open[0].rep.id)} className="h-auto p-0 text-2xs font-semibold text-primary-ink hover:underline">Show {repName(open[0].rep).toLowerCase()} →</Button> : undefined,
     },
     { label: approved ? `Programme change approved (${PLAN_LABEL[plan].toLowerCase()})` : "Approve the programme change", done: approved },
   ];
@@ -1017,7 +1023,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
         {signed ? (
           <>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><ShieldCheck className="size-4" />Signed off by {VISIT.clinician} · {SIGNED_AT}</span>
-            <button type="button" onClick={() => onSign(false)} className="inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground hover:text-foreground"><Undo2 className="size-3" />Reopen</button>
+            <Button variant="link" onClick={() => onSign(false)} className="h-auto p-0 hover:no-underline inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground hover:text-foreground"><Undo2 className="size-3" />Reopen</Button>
             <Button size="sm" variant="outline" className="ml-auto" onClick={onShare}><Share2 className="size-4" />Share with patient</Button>
           </>
         ) : (

@@ -4,6 +4,7 @@ import {
   Activity, Cable, Calendar, CircleCheck, MoreHorizontal, Pencil, Plus, Radio, RefreshCw, Search, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,6 +21,8 @@ import {
   type Connection, type DeviceStatus, type DeviceType, type ExternalDevice,
 } from "./taData";
 import { useTaModelsStore } from "./taModels";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 /* Site › External Devices — new page for the Training Assessment module.
 
@@ -171,7 +174,7 @@ function DeviceModal({
             </div>
           </div>
           <label className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
-            <input type="checkbox" className="mt-0.5 size-4 accent-[var(--primary)]" checked={f.useInSessions} onChange={(e) => set({ useInSessions: e.target.checked })} />
+            <Checkbox className="mt-0.5" checked={f.useInSessions} onCheckedChange={(c) => set({ useInSessions: c === true })} />
             <span>
               <span className="block text-base font-semibold text-foreground">Use in assessment sessions</span>
               <span className="mt-0.5 block text-xs text-muted-foreground">Its readings are added to the results of whoever is in {f.unit || "the paired unit"}.</span>
@@ -234,9 +237,9 @@ function DeviceDrawer({
             <div className="flex flex-shrink-0 items-center gap-2">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={onTest}><RefreshCw className="size-3.5" />Test Connection</Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}><Pencil className="size-3.5" />Edit</Button>
-              <button onClick={onClose} aria-label="Close" className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close" className="border-0 flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </SheetHeader>
@@ -261,7 +264,7 @@ function DeviceDrawer({
                 <p className="mt-1 text-base text-foreground">{info.measures}</p>
                 <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
                   <span className="text-sm font-semibold text-foreground">Use in assessment sessions</span>
-                  <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={device.useInSessions} onChange={(e) => onToggleSessions(e.target.checked)} />
+                  <Checkbox checked={device.useInSessions} onCheckedChange={(c) => onToggleSessions(c === true)} />
                 </label>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Used by {usedBy.length ? usedBy.map((m) => m.name).join(", ") : "no assessment model yet"} when deployed to {device.unit}.
@@ -303,10 +306,10 @@ function DeviceDrawer({
             )}
           </div>
 
-          <button onClick={onRemove} className="inline-flex items-center gap-1.5 text-sm font-semibold text-severity-critical hover:underline">
+          <Button variant="link" onClick={onRemove} className="h-auto p-0 border-0 inline-flex items-center gap-1.5 text-sm font-semibold text-severity-critical hover:underline">
             <Trash2 className="size-3.5" />
             Remove device
-          </button>
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
@@ -434,7 +437,7 @@ export function TaExternalDevices() {
 
       <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> {filtered.length === 1 ? "device" : "devices"} match current filters
-        {hasFilters && <button onClick={clearAll} className="ml-2 text-muted-foreground underline hover:text-primary-ink">Clear all</button>}
+        {hasFilters && <Button variant="link" onClick={clearAll} className="h-auto p-0 border-0 ml-2 text-muted-foreground underline hover:text-primary-ink">Clear all</Button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -456,74 +459,74 @@ export function TaExternalDevices() {
       ) : (
         <div data-slot="ta-external-devices-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-b border-border text-left">
                   {["ID", "NAME · MODEL", "TYPE", "STATUS", "PAIRED TO", "CONNECTION", "IN SESSIONS", "LAST ACTIVE", "ACTION"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">{h}</th>
+                    <TableHead key={h} className="whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">{h}</TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {filtered.map((d) => (
-                  <tr key={d.id} onClick={() => setDrawerId(d.id)} className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
-                    <td className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{d.id}</span></td>
-                    <td className="px-4 py-3">
+                  <TableRow key={d.id} onClick={() => setDrawerId(d.id)} className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
+                    <TableCell className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{d.id}</span></TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-foreground group-hover:text-primary-ink">{d.name}</span>
                         <span className="font-mono text-xs text-muted-foreground">{d.model}</span>
                       </div>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-foreground">{d.type}</td>
-                    <td className="px-4 py-3"><StatusBadge tone={STATUS_TONE[d.status]}>{STATUS_LABEL[d.status]}</StatusBadge></td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap px-4 py-3 text-foreground">{d.type}</TableCell>
+                    <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[d.status]}>{STATUS_LABEL[d.status]}</StatusBadge></TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{d.unit}</span>
                         <span className="text-xs text-muted-foreground">{d.areaName} · {d.siteName}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{d.connection}</span>
                         <span className="font-mono text-xs text-muted-foreground">{d.address}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       {d.useInSessions
                         ? <span className="inline-flex items-center gap-1 text-sm text-success"><CircleCheck className="size-3.5" />Yes</span>
                         : <span className="text-sm text-muted-foreground">Off</span>}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                       <span className="flex items-center gap-1.5"><Calendar className="size-3" />{d.lastSeenDisplay}</span>
-                    </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button aria-label={`Actions for ${d.id}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${d.id}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
                             <MoreHorizontal className="size-4" />
-                          </button>
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1" align="end">
-                          <button onClick={() => setDrawerId(d.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                          <ItemButton variant="plain" onClick={() => setDrawerId(d.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                             <Radio className="size-3.5 text-muted-foreground" />View details
-                          </button>
-                          <button onClick={() => testConnection(d)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                          </ItemButton>
+                          <ItemButton variant="plain" onClick={() => testConnection(d)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                             <RefreshCw className="size-3.5 text-muted-foreground" />Test connection
-                          </button>
-                          <button onClick={() => { setDrawerId(d.id); setModal("edit"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                          </ItemButton>
+                          <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("edit"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                             <Pencil className="size-3.5 text-muted-foreground" />Edit device
-                          </button>
+                          </ItemButton>
                           <div className="my-1 border-t border-border" />
-                          <button onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
+                          <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
                             <Trash2 className="size-3.5" />Remove
-                          </button>
+                          </ItemButton>
                         </PopoverContent>
                       </Popover>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

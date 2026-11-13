@@ -59,6 +59,7 @@ import { allTrackStates, type TrackState } from "./weaponTracks";
 import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";
 import { DetectionCardStack, DetectionsPanel } from "./ReidDetections";
 import { feedDrawerPath, useLiveDetectionsStore, type LiveDetection } from "./liveDetections";
+import { ItemButton } from "@/components/ui/item";
 
 /* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal,
    laid out as one camera wall: sites · grid view · search, then the grid,
@@ -153,16 +154,16 @@ function CameraTile({
         {/* The whole tile is the click target — online or offline. It picks the
             camera (outline + Re-ID map) and opens it in the expanded view. */}
         {(onActivate || onOpen) && (
-          <button
+          <Button variant="ghost"
             type="button"
             aria-label={onOpen ? `Open ${camera.id} in the expanded view` : `Pick ${camera.id} — outline it on the wall and show its Re-ID map`}
             onClick={() => { onActivate?.(); onOpen?.(); }}
-            className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-auto rounded-none border-0 p-0 hover:bg-transparent absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         )}
 
         {/* Selection checkbox — revealed on hover, pinned open once checked. */}
-        <button
+        <Button variant="ghost" size="icon-xs"
           type="button"
           role="checkbox"
           aria-checked={checked}
@@ -176,7 +177,7 @@ function CameraTile({
           )}
         >
           {checked && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-        </button>
+        </Button>
 
         {isOnline && (
           <span
@@ -406,14 +407,14 @@ function SidePanel({
         {tabs.length > 1 ? (
         <div data-slot="side-panel-tabs" role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
           {tabs.map((t) => (
-            <button
+            <Button variant="ghost"
               key={t}
               type="button"
               role="tab"
               aria-selected={tab === t}
               onClick={() => setTab(t)}
               className={cn(
-                "-mb-px inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-xs font-semibold transition-colors",
+                "h-auto rounded-none border-0 hover:bg-transparent", "-mb-px inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-xs font-semibold transition-colors",
                 tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
@@ -426,7 +427,7 @@ function SidePanel({
               {t === "detections" && detectionCount > 0 && (
                 <span className="rounded-full bg-warning/15 px-1.5 text-3xs font-bold text-warning">{detectionCount}</span>
               )}
-            </button>
+            </Button>
           ))}
         </div>
         ) : (
@@ -655,41 +656,41 @@ function SyncPlaybackBar({
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label="Back 30 seconds"
+              <Button variant="ghost" size="icon" aria-label="Back 30 seconds"
                 onClick={() => onChange({ offsetSec: Math.min(BUFFER_SEC, pb.offsetSec + 30) })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
                 <RotateCcw className="size-3.5" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>Back 30s</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label={pb.playing ? "Pause all" : "Play all"}
+              <Button variant="ghost" size="icon" aria-label={pb.playing ? "Pause all" : "Play all"}
                 onClick={() => onChange({ playing: !pb.playing })}
                 className="flex size-8 items-center justify-center rounded-md border border-primary bg-primary-fill text-primary-foreground hover:opacity-90">
                 {pb.playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>{pb.playing ? "Pause all" : "Play all"}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label="Forward 30 seconds" disabled={live}
+              <Button variant="ghost" size="icon" aria-label="Forward 30 seconds" disabled={live}
                 onClick={() => onChange({ offsetSec: Math.max(0, pb.offsetSec - 30) })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted disabled:opacity-40">
                 <RotateCw className="size-3.5" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>Forward 30s</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button aria-label={pb.muted ? "Unmute" : "Mute"}
+              <Button variant="ghost" size="icon" aria-label={pb.muted ? "Unmute" : "Mute"}
                 onClick={() => onChange({ muted: !pb.muted })}
                 className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
                 {pb.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>{pb.muted ? "Unmute" : "Mute"}</TooltipContent>
           </Tooltip>
@@ -747,36 +748,36 @@ function MultiSiteSelector({ sites, selected, onChange, noun = "site" }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button aria-label={`Filter by ${noun}`} className={cn(
+        <Button variant="ghost" aria-label={`Filter by ${noun}`} className={cn(
           "inline-flex h-9 items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-base font-semibold transition-colors",
           open ? "border-primary" : "border-input",
           isAll ? "text-muted-foreground" : "text-foreground"
         )} style={{ minWidth: "160px" }}>
           {display}
           <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
-        <button onClick={() => onChange([])}
+        <ItemButton variant="plain" onClick={() => onChange([])}
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           {allLabel}
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {sites.map((s) => {
           const checked = !isAll && selected.includes(s.id);
           return (
-            <button key={s.id} onClick={() => toggle(s.id)}
+            <ItemButton variant="plain" key={s.id} onClick={() => toggle(s.id)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {s.name}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -1099,9 +1100,9 @@ export function ReidLiveMonitoring({
               <strong className="text-foreground">{mapLabel(shownMap)}</strong> · {wallCameras.length} camera
               {wallCameras.length === 1 ? "" : "s"} on this map · {onlineCount} online
             </span>
-            <button type="button" onClick={() => setPanelTab(homeTab)} className="text-xs font-semibold text-primary-ink hover:underline">
+            <Button variant="link" type="button" onClick={() => setPanelTab(homeTab)} className="h-auto p-0 border-0 text-xs font-semibold text-primary-ink hover:underline">
               Show all cameras
-            </button>
+            </Button>
           </span>
         ) : (
           <span>
@@ -1114,14 +1115,14 @@ export function ReidLiveMonitoring({
             <span className="text-xs">
               Cameras {shownFrom}–{shownTo} of {wallCameras.length}
             </span>
-            <button onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} aria-label="Previous page"
+            <Button variant="ghost" size="icon-sm" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} aria-label="Previous page"
               className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
               <ChevronLeft className="size-3.5" />
-            </button>
-            <button onClick={() => setPage(Math.min(pageCount, currentPage + 1))} disabled={currentPage === pageCount} aria-label="Next page"
+            </Button>
+            <Button variant="ghost" size="icon-sm" onClick={() => setPage(Math.min(pageCount, currentPage + 1))} disabled={currentPage === pageCount} aria-label="Next page"
               className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
               <ChevronRight className="size-3.5" />
-            </button>
+            </Button>
           </div>
         )}
       </div>

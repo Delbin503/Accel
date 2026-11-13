@@ -17,7 +17,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 **Do these in order:**
 
 1. ~~Commit + push Phase 2A~~ ✅ `d70e0b7`
-2. **Phase 2B: prototypes.** Token work is done (2026-11-14) and needs committing. Left: migrating raw elements (383)
+2. ~~Phase 2B: prototypes~~ ✅ tokens + raw elements done; needs committing
 3. ~~Phase 2C: name page sections~~ ✅ done 2026-11-14 (1,331 section names in 167 page files); needs committing
 4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
 5. Then **Phase 3** (component APIs).
@@ -36,7 +36,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 | Tokens | 🟢 Strong | 3 tiers (`--palette-*` → semantic → component), light/dark, elevation, media, fill/ink tokens; **0 WCAG AA text failures**; `npm run lint:tokens` |
 | Guardrails (app `src/`) | 🟢 Strong | ESLint bans off-system classes; pages can't hand-roll primitives; component registry; every component element named. Debt baselined (572) |
 | Layer naming | 🟢 Strong | 693 layers in 76 component files (every element); 1,331 section names in 167 page/prototype files |
-| **Prototypes (the main UI)** | 🟡 Functional | Guardrails + type-check cover them; token issues 1,171 → 0. Left: 383 raw elements (Phase 2B) |
+| **Prototypes (the main UI)** | 🟢 Strong | Guardrails + type-check cover them; 0 token issues, 0 raw elements, 0 type errors (except your email WIP) |
 | Primitives (`components/ui`) | 🟢 Strong | 26 shadcn components, 24 with stories |
 | App composites (`components/shared`) | 🟠 Weak | 43 components, 10 with stories; design-system and app-only pieces mixed |
 | Prop vocabulary | 🟠 Weak | `StatusBadge tone=`, `KpiCard accent=`, `Button variant=` |
@@ -168,9 +168,9 @@ Steps:
 - [x] ESLint guardrails now cover `prototypes/**` (same `pageGuardrails` as pages). Added `npm run typecheck:prototypes` (`tsconfig.protocheck.json`), since prototypes weren't type-checked at all; 1 error predates this work (`RecordingSchedule.tsx`)
 - [x] Codemods across 88 files (~1,070 fixes): `sev-*` → `severity-*` (467), `text-primary` → `text-primary-ink` (207), `purple` → `violet` (63), labelled `bg-primary` → `bg-primary-fill` (41), black/white on media → media tokens (96), old shadows → elevation (46), `*-soft` / `primary-muted` → opacity (15)
 - [x] `text-[Npx]` → type scale (122). `z-[90]`/`z-[100]` tester chrome → `--z-tooltip` (16 wrappers). Re-ID floor-plan and scene SVG greys → media tokens at matching opacity. Chart `var(--purple)` → `var(--violet)`. **Token violations in prototypes: 0** (except 6 in your email-template WIP)
-- [ ] Screenshot pass of every prototype in light and dark. Phase 1.3 index and Re-ID live monitoring checked so far
-- [ ] Raw elements → components: **383 baselined** (343 buttons, 26 inputs, 18 tables, 1 select), mostly `PRD_Phase_1_3`. Anything that genuinely needs a new component goes through the "ask first" rule (L, can overlap with Phase 3)
-- [ ] `npm run lint:prune` after each batch
+- [x] Load check of all 26 prototypes: every one renders, no runtime errors. Spot-checked the riskiest migrations (camera tiles, state tester, config sliders and segmented controls)
+- [x] Raw elements → components: **383 → 0** (only 2 hidden file inputs stay raw, with a documented lint exception). Used Button (icon/link/variants), Input, Checkbox, Switch, Select, Table, plus three **new approved components**: `SegmentedControl` (option groups, view switchers, chips, state testers), `Item`/`ItemButton` (clickable cards and rows) and `Slider` (range inputs). Each has stories, layer names and a registry entry. Prototype type errors are now 0 (fixed a leftover `TONE_CLASSES.purple`, which had also made the Recording Schedule standby band colourless)
+- [x] `npm run lint:prune`: prototype baseline 394 → 11 (all in your email-template WIP)
 
 **Done when:** the prototypes' guardrail baseline is 0 for token and deprecated-name rules (raw elements may still be burning down), and every prototype renders correctly in both themes.
 

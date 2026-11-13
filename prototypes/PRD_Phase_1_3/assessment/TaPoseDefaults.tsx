@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { USE_CASES, USE_CASE_KEYS, type PoseMode, type UseCaseKey } from "./taData";
 import { requiredCameras, unitReadiness, usePoseStore, type FewerCameras, type Smoothing } from "./taPose";
 import { useTaModelsStore } from "./taModels";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ItemButton } from "@/components/ui/item";
 
 /* System Configuration › Camera Defaults › Assessment Cameras & Pose.
 
@@ -23,19 +26,19 @@ function Segmented<T extends string | number>({
   return (
     <div role="radiogroup" aria-label={label} className="flex h-9 items-center rounded-md border border-border bg-background p-0.5">
       {options.map((o) => (
-        <button
+        <Button variant="ghost"
           key={String(o.value)}
           type="button"
           role="radio"
           aria-checked={o.value === value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "inline-flex h-full flex-1 items-center justify-center rounded px-2.5 text-sm font-semibold transition-colors",
+            "border-0", "inline-flex h-full flex-1 items-center justify-center rounded px-2.5 text-sm font-semibold transition-colors",
             o.value === value ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
         >
           {o.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -45,13 +48,13 @@ function ModeCard({
   mode, active, onPick, title, body, icon: Icon,
 }: { mode: PoseMode; active: boolean; onPick: (m: PoseMode) => void; title: string; body: string; icon: React.ElementType }) {
   return (
-    <button
+    <ItemButton variant="plain"
       type="button"
       role="radio"
       aria-checked={active}
       onClick={() => onPick(mode)}
       className={cn(
-        "flex items-start gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors",
+        "text-inherit", "flex items-start gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors",
         active ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30",
       )}
     >
@@ -65,7 +68,7 @@ function ModeCard({
         </p>
         <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{body}</p>
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -97,31 +100,31 @@ export function TaPoseDefaults() {
       <div data-slot="ta-pose-defaults-page-toolbar" className="flex flex-wrap items-center justify-between gap-3">
         <div data-slot="button-group" className="flex h-8 items-center rounded-md border border-border bg-background p-0.5">
           {USE_CASE_KEYS.map((k) => (
-            <button
+            <Button variant="ghost"
               key={k}
               type="button"
               onClick={() => setUc(k)}
               className={cn(
-                "inline-flex h-full items-center rounded px-3 text-sm font-semibold transition-colors",
+                "border-0", "inline-flex h-full items-center rounded px-3 text-sm font-semibold transition-colors",
                 uc === k ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               {USE_CASES[k].label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="flex items-center gap-3">
           <p className="text-xs text-muted-foreground">
             Applies to {models.length === 0 ? "every new " + u.label.toLowerCase() + " model" : models.map((m) => m.name).join(", ")}
           </p>
-          <button
+          <Button variant="link"
             type="button"
             onClick={() => { reset(uc); toast.message(`${u.label} pose settings reset to defaults`); }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+            className="h-auto p-0 border-0 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="size-3" />
             Reset
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -213,7 +216,7 @@ export function TaPoseDefaults() {
             const disabled = key === "reduced" && reducedBlocked;
             const active = s.fewer === key;
             return (
-              <button
+              <ItemButton variant="plain"
                 key={key}
                 type="button"
                 role="radio"
@@ -221,7 +224,7 @@ export function TaPoseDefaults() {
                 disabled={disabled}
                 onClick={() => patch(uc, { fewer: key })}
                 className={cn(
-                  "flex items-start gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  "text-inherit", "flex items-start gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   active ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30",
                 )}
               >
@@ -232,7 +235,7 @@ export function TaPoseDefaults() {
                   <span className="block text-sm font-semibold text-foreground">{title}</span>
                   <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{disabled ? "Not allowed: clinical angles need both views." : body}</span>
                 </span>
-              </button>
+              </ItemButton>
             );
           })}
         </div>
@@ -267,12 +270,11 @@ export function TaPoseDefaults() {
 
       {/* Privacy */}
       <label className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 accent-[var(--primary)]"
+        <Checkbox
+          className="mt-0.5"
           checked={s.faceBlur}
           disabled={uc === "physio"}
-          onChange={(e) => patch(uc, { faceBlur: e.target.checked })}
+          onCheckedChange={(c) => patch(uc, { faceBlur: c === true })}
         />
         <span className="min-w-0">
           <span className="block text-base font-semibold text-foreground">Blur faces in stored clips</span>

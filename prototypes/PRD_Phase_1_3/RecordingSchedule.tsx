@@ -1,6 +1,8 @@
 import * as React from "react";
 import { AlertTriangle, Check, ChevronDown, Clock, Copy, Info, MapPin, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimeSelect } from "@/components/shared/TimeSelect";
 import { formatTimeOfDay } from "@/lib/formatters";
@@ -33,21 +35,12 @@ function Toggle({ checked, onChange, label, disabled }: {
   checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
+    <Switch
+      checked={checked}
+      onCheckedChange={(c) => onChange(c === true)}
       aria-label={label}
       disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
-        checked ? "border-primary bg-primary" : "border-border bg-muted"
-      )}
-    >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform",
-        checked ? "translate-x-[18px]" : "translate-x-0.5")} />
-    </button>
+    />
   );
 }
 
@@ -400,9 +393,9 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
     <div data-slot="weekly-schedule" className="rounded-lg border border-border bg-background px-3.5 py-3">
       <div data-slot="weekly-schedule-header" className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Weekly Schedule</span>
-        <button type="button" onClick={copyMonday} className="flex items-center gap-1 text-2xs font-semibold text-primary-ink hover:underline">
+        <Button variant="link" onClick={copyMonday} className="flex h-auto items-center gap-1 p-0 text-2xs font-semibold text-primary-ink hover:underline">
           <Copy className="size-3" />Copy Monday to all days
-        </button>
+        </Button>
       </div>
       <p className="mt-1 text-xs leading-snug text-foreground">
         Pick a day to set the mode it records in. Each day runs on its own — a site can be continuous on
@@ -417,9 +410,9 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
           const mode = DAY_MODES.find((m) => m.id === wd.mode)!;
           const picked = w.id === activeDay;
           return (
-            <button
+            <ItemButton
               key={w.id}
-              type="button"
+              variant="plain"
               role="tab"
               aria-selected={picked}
               aria-label={`${w.label} — ${mode.label}`}
@@ -434,7 +427,7 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
                 {w.initial}
               </span>
               <span className={cn("size-1 rounded-full", mode.dot)} />
-            </button>
+            </ItemButton>
           );
         })}
       </div>
@@ -477,20 +470,20 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
                   <Clock className="size-3.5" />
                   {hoursLabel(siteHours.start, siteHours.end)} · site hours
                 </span>
-                <button type="button" onClick={() => onChange({ ...config, source: "custom" })}
-                  className="text-2xs font-semibold text-primary-ink hover:underline">
+                <Button variant="link" onClick={() => onChange({ ...config, source: "custom" })}
+                  className="h-auto p-0 text-2xs font-semibold text-primary-ink hover:underline">
                   Set hours per day
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 items-center gap-2">
                 <TimeSelect value={day.start} onChange={(v) => setDay(activeDay, { start: v })} aria-label={`${d.label} start time`} />
                 <TimeSelect value={day.end} onChange={(v) => setDay(activeDay, { end: v })} aria-label={`${d.label} end time`} />
                 {!allDaySite && (
-                  <button type="button" onClick={() => onChange({ ...config, source: "site" })}
-                    className="col-span-2 text-left text-2xs font-semibold text-primary-ink hover:underline">
+                  <Button variant="link" onClick={() => onChange({ ...config, source: "site" })}
+                    className="col-span-2 h-auto justify-start whitespace-normal p-0 text-left text-2xs font-semibold text-primary-ink hover:underline">
                     Use the site's hours on every day instead
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -607,7 +600,7 @@ function CoverageStrip({ site, schedule }: { site: SiteData; schedule: SiteSched
     const bands: Band[] = [{ cls: TONE_CLASSES.success.bar, spans: spansOf(hours.start, hours.end) }];
     if (configs.standby.enabled) {
       const w = configs.standby;
-      bands.push({ cls: TONE_CLASSES.purple.bar, spans: spansOf(w.startTime, w.endTime) });
+      bands.push({ cls: TONE_CLASSES.violet.bar, spans: spansOf(w.startTime, w.endTime) });
       if (configs.motion.enabled) {
         bands.push({ cls: TONE_CLASSES.warning.bar, spans: spansOf(w.startTime, w.endTime), inset: true });
       }
@@ -810,8 +803,8 @@ export function RecordingSchedule() {
           return (
             <li key={site.id}>
               <div className={cn("flex items-center gap-3 px-3.5 py-3", open && "bg-muted/20")}>
-                <button
-                  type="button"
+                <ItemButton
+                  variant="plain"
                   onClick={() => { setOpenId(open ? null : site.id); if (open) setEditingId(null); }}
                   aria-expanded={open}
                   className="flex min-w-0 flex-1 items-center gap-3 text-left"
@@ -835,7 +828,7 @@ export function RecordingSchedule() {
                       );
                     })}
                   </span>
-                </button>
+                </ItemButton>
                 <Button
                   variant={editing ? "secondary" : "outline"}
                   size="sm"
@@ -846,14 +839,15 @@ export function RecordingSchedule() {
                   <Pencil className="size-3.5" />
                   Edit
                 </Button>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => { setOpenId(open ? null : site.id); if (open) setEditingId(null); }}
                   aria-label={open ? `Collapse ${site.name}` : `Show ${site.name}'s daily coverage`}
                   className="flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <ChevronDown className={cn("size-4 transition-transform duration-[var(--duration-fast)] ease-standard", open && "rotate-180")} />
-                </button>
+                </Button>
               </div>
 
               {open && (

@@ -25,6 +25,8 @@ import {
 } from "./taData";
 import { useTaModelsStore } from "./taModels";
 import { TA_ANALYSIS, TA_RESULT_PATH } from "./taNav";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 /* Training Assessment module — Performance & Posture.
 
@@ -99,7 +101,7 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
   return (
     <div data-slot="filters-bar" className="rounded-xl border border-border bg-card">
       <div className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -111,10 +113,10 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
               ))}
             </div>
           )}
-        </button>
-        <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+        </ItemButton>
+        <Button variant="ghost" size="icon-xs" className="border-0 hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
           {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-        </button>
+        </Button>
       </div>
       {open && (
         <div data-slot="filters-bar-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -172,26 +174,26 @@ function SessionCells({ s }: { s: TaSession }) {
   const KindIcon = kind === "Group" ? Users : User;
   return (
     <>
-      <td className="whitespace-nowrap px-4 py-3">
+      <TableCell className="whitespace-nowrap px-4 py-3">
         <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{s.id}</span>
-      </td>
-      <td className="min-w-[160px] px-4 py-3">
+      </TableCell>
+      <TableCell className="min-w-[160px] px-4 py-3">
         <p className="font-semibold text-foreground group-hover:text-primary-ink">{s.name}</p>
         <p className="text-xs text-muted-foreground">{s.coach}</p>
-      </td>
-      <td className="px-4 py-3"><UseCaseChip uc={s.useCase} /></td>
-      <td className="whitespace-nowrap px-4 py-3">
+      </TableCell>
+      <TableCell className="px-4 py-3"><UseCaseChip uc={s.useCase} /></TableCell>
+      <TableCell className="whitespace-nowrap px-4 py-3">
         <p className="inline-flex items-center gap-1.5 text-foreground"><KindIcon className="size-3.5 text-muted-foreground" />{kind}</p>
         <p className="text-xs text-muted-foreground">{n} {n === 1 ? u.person : u.people}</p>
-      </td>
-      <td className="min-w-[140px] px-4 py-3">
+      </TableCell>
+      <TableCell className="min-w-[140px] px-4 py-3">
         <p className="text-foreground">{s.deployment}</p>
         <p className="text-xs text-muted-foreground">{s.units.length} {s.units.length === 1 ? u.unit : u.units}{s.devices.length > 0 ? ` · ${s.devices.length} device${s.devices.length === 1 ? "" : "s"}` : " · no device"}</p>
-      </td>
-      <td className="whitespace-nowrap px-4 py-3">
+      </TableCell>
+      <TableCell className="whitespace-nowrap px-4 py-3">
         <p className="text-foreground">{s.date}</p>
         <p className="text-xs text-muted-foreground">{s.time} · {s.source}</p>
-      </td>
+      </TableCell>
     </>
   );
 }
@@ -282,14 +284,14 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                 const Icon = UC_ICON[k];
                 const on = uc === k;
                 return (
-                  <button key={k} type="button" role="radio" aria-checked={on} onClick={() => pickUc(k)}
-                    className={cn("flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors", on ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
+                  <ItemButton variant="plain" key={k} type="button" role="radio" aria-checked={on} onClick={() => pickUc(k)}
+                    className={cn("text-inherit", "flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors", on ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
                     <Icon className={cn("mt-0.5 size-4", on ? "text-primary-ink" : "text-muted-foreground")} />
                     <span>
                       <span className={cn("block text-base font-semibold", on ? "text-primary-ink" : "text-foreground")}>{USE_CASES[k].label}</span>
                       <span className="block text-xs text-muted-foreground">{USE_CASES[k].full} · {USE_CASES[k].units}</span>
                     </span>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -327,13 +329,13 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                   const on = units.includes(un);
                   const dev = devices.find((d) => d.areaId === areaId && d.unit === un && d.useInSessions);
                   return (
-                    <button key={un} type="button" aria-pressed={on} onClick={() => setUnits((cur) => (on ? cur.filter((x) => x !== un) : [...cur, un]))}
-                      className={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    <Button variant="ghost" key={un} type="button" aria-pressed={on} onClick={() => setUnits((cur) => (on ? cur.filter((x) => x !== un) : [...cur, un]))}
+                      className={cn("h-auto", "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors",
                         on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-background text-muted-foreground hover:border-primary/30")}>
                       {on && <Check className="size-3" strokeWidth={3} />}
                       {un}
                       {dev && <span title={`${dev.id} · ${dev.type}`}><Radio className="size-3 text-info" /></span>}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -378,7 +380,7 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                 {imported.length > 0 && (
                   <span className="text-xs text-muted-foreground">
                     {SAMPLE_CSV[uc].file} · {imported.length} added
-                    <button className="ml-1.5 underline hover:text-foreground" onClick={() => setImported([])}>Remove</button>
+                    <Button variant="link" className="h-auto p-0 border-0 ml-1.5 underline hover:text-foreground" onClick={() => setImported([])}>Remove</Button>
                   </span>
                 )}
               </div>
@@ -390,11 +392,11 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
               <p className={LABEL}>Footage</p>
               <div role="radiogroup" aria-label="Footage" className="grid grid-cols-2 gap-2">
                 {(["Live", "Recorded"] as const).map((v) => (
-                  <button key={v} type="button" role="radio" aria-checked={source === v} onClick={() => setSource(v)}
-                    className={cn("rounded-lg border px-3 py-2 text-left transition-colors", source === v ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
+                  <Button variant="ghost" key={v} type="button" role="radio" aria-checked={source === v} onClick={() => setSource(v)}
+                    className={cn("h-auto", "rounded-lg border px-3 py-2 text-left transition-colors", source === v ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30")}>
                     <span className={cn("block text-sm font-semibold", source === v ? "text-primary-ink" : "text-foreground")}>{v}</span>
                     <span className="block text-2xs text-muted-foreground">{v === "Live" ? "Analyse as it happens" : "Footage the VMS recorded"}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -487,7 +489,7 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
 
       <p className="px-1 text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); setStatuses([]); setKpi("all"); }} className="ml-2 underline hover:text-primary-ink">Clear all</button>}
+        {hasFilters && <Button variant="link" onClick={() => { setSearch(""); setUcs([]); setTypes([]); setStatuses([]); setKpi("all"); }} className="h-auto p-0 border-0 ml-2 underline hover:text-primary-ink">Clear all</Button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -499,53 +501,53 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
       ) : (
         <div data-slot="sessions-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
-                  {SESSION_HEAD.map((h) => <th key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</th>)}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+            <Table className="w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-b border-border text-left">
+                  {SESSION_HEAD.map((h) => <TableHead key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {filtered.map((s) => {
                   const hasResults = s.status === "live";
                   return (
-                    <tr key={s.id} onClick={() => hasResults && openResult(s.id)} className={cn("group text-base transition-colors", hasResults && "cursor-pointer hover:bg-muted/20")}>
+                    <TableRow key={s.id} onClick={() => hasResults && openResult(s.id)} className={cn("group text-base transition-colors", hasResults && "cursor-pointer hover:bg-muted/20")}>
                       <SessionCells s={s} />
-                      <td className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></td>
+                      <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></TableCell>
                       {/* The "⋯" menu the other pages' tables use. */}
-                      <td className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
+                      <TableCell className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button aria-label={`Actions for ${s.name}`} className={ROW_MENU}>
+                            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
                               <MoreHorizontal className="size-4" />
-                            </button>
+                            </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
                             {s.status === "scheduled" ? (
-                              <button onClick={() => start(s)} className={MENU_ITEM}>
+                              <ItemButton variant="plain" onClick={() => start(s)} className={MENU_ITEM}>
                                 <CircleDot className="size-3.5 text-muted-foreground" />
                                 Start session
-                              </button>
+                              </ItemButton>
                             ) : (
                               <>
-                                <button onClick={() => openResult(s.id)} className={MENU_ITEM}>
+                                <ItemButton variant="plain" onClick={() => openResult(s.id)} className={MENU_ITEM}>
                                   <BarChart3 className="size-3.5 text-muted-foreground" />
                                   View results
-                                </button>
-                                <button onClick={() => end(s)} className={MENU_ITEM}>
+                                </ItemButton>
+                                <ItemButton variant="plain" onClick={() => end(s)} className={MENU_ITEM}>
                                   <CircleCheck className="size-3.5 text-muted-foreground" />
                                   End session
-                                </button>
+                                </ItemButton>
                               </>
                             )}
                           </PopoverContent>
                         </Popover>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}
@@ -634,35 +636,35 @@ function GroupResults({ session }: { session: TaSession }) {
           <span className="whitespace-nowrap text-xs text-muted-foreground">{rows.filter((p) => p.attempts > 0).length} of {rows.length} {u.people} with results</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/30">
-              <tr className="border-b border-border text-left">
-                {[u.person.toUpperCase(), u.unit.toUpperCase(), u.items.toUpperCase(), session.useCase === "physio" ? "PROGRESS TO GOAL" : "SCORE", "CHANGE", session.useCase === "physio" ? "MAIN COMPENSATION" : "TOP FAULT", ""].map((h) => <th key={h} className={TH}>{h}</th>)}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
+          <Table className="w-full">
+            <TableHeader className="bg-muted/30">
+              <TableRow className="border-b border-border text-left">
+                {[u.person.toUpperCase(), u.unit.toUpperCase(), u.items.toUpperCase(), session.useCase === "physio" ? "PROGRESS TO GOAL" : "SCORE", "CHANGE", session.useCase === "physio" ? "MAIN COMPENSATION" : "TOP FAULT", ""].map((h) => <TableHead key={h} className={TH}>{h}</TableHead>)}
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/60">
               {rows.map((p) => (
-                <tr key={p.name} onClick={() => open(p)} className={cn("group text-base", p.attempts > 0 && "cursor-pointer hover:bg-muted/20")}>
-                  <td className="px-4 py-3">
+                <TableRow key={p.name} onClick={() => open(p)} className={cn("group text-base", p.attempts > 0 && "cursor-pointer hover:bg-muted/20")}>
+                  <TableCell className="px-4 py-3">
                     <p className="font-semibold text-foreground group-hover:text-primary-ink">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.detail}</p>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.unit}</td>
-                  <td className="px-4 py-3 text-foreground">{p.attempts || "—"}</td>
-                  <td className="px-4 py-3 font-semibold text-foreground">{p.score}</td>
-                  <td className={cn("px-4 py-3", p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-severity-critical" : "text-muted-foreground")}>{p.change}</td>
-                  <td className="px-4 py-3 text-foreground">{p.topFault}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-muted-foreground">{p.unit}</TableCell>
+                  <TableCell className="px-4 py-3 text-foreground">{p.attempts || "—"}</TableCell>
+                  <TableCell className="px-4 py-3 font-semibold text-foreground">{p.score}</TableCell>
+                  <TableCell className={cn("px-4 py-3", p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-severity-critical" : "text-muted-foreground")}>{p.change}</TableCell>
+                  <TableCell className="px-4 py-3 text-foreground">{p.topFault}</TableCell>
+                  <TableCell className="whitespace-nowrap px-4 py-3 text-right">
                     {p.attempts > 0 ? (
                       <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{TA_ANALYSIS[session.useCase].label}<ChevronRight className="size-4" /></span>
                     ) : (
                       <span className="text-xs text-muted-foreground">No {u.items} yet</span>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -767,7 +769,7 @@ function ResultsTab({ sessionId, onSession, focus }: {
 
       <p className="px-1 text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> session{filtered.length === 1 ? "" : "s"} match current filters
-        {hasFilters && <button onClick={() => { setSearch(""); setUcs([]); setTypes([]); onSession("all"); }} className="ml-2 underline hover:text-primary-ink">Clear all</button>}
+        {hasFilters && <Button variant="link" onClick={() => { setSearch(""); setUcs([]); setTypes([]); onSession("all"); }} className="h-auto p-0 border-0 ml-2 underline hover:text-primary-ink">Clear all</Button>}
       </p>
 
       {filtered.length === 0 ? (
@@ -778,10 +780,10 @@ function ResultsTab({ sessionId, onSession, focus }: {
       ) : (
         <div data-slot="results-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
-                  <th className={cn(TH, "w-10")}>
+            <Table className="w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-b border-border text-left">
+                  <TableHead className={cn(TH, "w-10")}>
                     <Checkbox
                       checked={allShown ? true : shownSelected > 0 ? "indeterminate" : false}
                       onCheckedChange={() => setSelected((cur) => {
@@ -791,45 +793,45 @@ function ResultsTab({ sessionId, onSession, focus }: {
                       })}
                       aria-label="Select every session shown"
                     />
-                  </th>
-                  {SESSION_HEAD.map((h) => <th key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</th>)}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                  </TableHead>
+                  {SESSION_HEAD.map((h) => <TableHead key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {filtered.map((s) => {
                   const on = selected.has(s.id);
                   return (
-                    <tr key={s.id} onClick={() => viewResults(s)}
+                    <TableRow key={s.id} onClick={() => viewResults(s)}
                       className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", on && "bg-primary/5")}>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Checkbox checked={on} onCheckedChange={() => toggle(s.id)} aria-label={`Select ${s.name}`} />
-                      </td>
+                      </TableCell>
                       <SessionCells s={s} />
-                      <td className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></td>
-                      <td className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></TableCell>
+                      <TableCell className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button aria-label={`Actions for ${s.name}`} className={ROW_MENU}>
+                            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
                               <MoreHorizontal className="size-4" />
-                            </button>
+                            </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
-                            <button onClick={() => viewResults(s)} className={MENU_ITEM}>
+                            <ItemButton variant="plain" onClick={() => viewResults(s)} className={MENU_ITEM}>
                               <BarChart3 className="size-3.5 text-muted-foreground" />
                               View results
-                            </button>
-                            <button onClick={() => exportPdf(s)} className={MENU_ITEM}>
+                            </ItemButton>
+                            <ItemButton variant="plain" onClick={() => exportPdf(s)} className={MENU_ITEM}>
                               <Download className="size-3.5 text-muted-foreground" />
                               Export PDF
-                            </button>
+                            </ItemButton>
                           </PopoverContent>
                         </Popover>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}
@@ -884,12 +886,12 @@ export function TaSessions() {
             {TABS.map((t) => {
               const Icon = t.icon;
               return (
-                <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-                  className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
+                <Button variant="ghost" key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+                  className={cn("border-0", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
                     tab === t.key ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                   <Icon className="size-3.5" />
                   {t.label}
-                </button>
+                </Button>
               );
             })}
           </div>

@@ -20,6 +20,7 @@ import {
   Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils";
 import {
@@ -77,14 +78,15 @@ function Stepper({ stage, canReach, onGo }: { stage: number; canReach: (n: numbe
         const done = s.n < stage, current = s.n === stage, reachable = canReach(s.n);
         return (
           <li key={s.n} className="flex min-w-0 flex-1 items-center gap-2">
-            <button
+            <ItemButton
+              variant="plain"
               type="button"
               onClick={() => onGo(s.n)}
               disabled={!reachable}
               aria-current={current ? "step" : undefined}
               className={cn(
-                "flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                reachable ? "hover:bg-muted/60" : "cursor-not-allowed"
+                "w-auto min-w-0 gap-2 rounded-lg px-1.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                reachable ? "hover:bg-muted/60" : "cursor-not-allowed hover:bg-transparent disabled:pointer-events-auto disabled:opacity-100"
               )}
             >
               <span
@@ -100,7 +102,7 @@ function Stepper({ stage, canReach, onGo }: { stage: number; canReach: (n: numbe
               <span className={cn("hidden truncate text-sm font-semibold sm:block", current ? "text-foreground" : "text-muted-foreground")}>
                 {s.title}
               </span>
-            </button>
+            </ItemButton>
             {i < STAGES.length - 1 && <span className={cn("h-px flex-1", s.n < stage ? "bg-primary/50" : "bg-border")} />}
           </li>
         );
@@ -190,14 +192,16 @@ function HouseScene({
         return (
           <div key={ev.id} className={cn("absolute -translate-x-1/2 -translate-y-1/2", spot.cls)}>
             {hint && <span className="absolute inset-0 animate-ping rounded-full bg-primary/40" />}
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               type="button"
               aria-pressed={on}
               aria-label={`${ev.device} — ${on ? "selected, click to remove" : "click to add its signal"}`}
               onClick={() => onToggle(ev.id)}
               className={cn(
                 "relative flex size-10 items-center justify-center rounded-full border-2 shadow-floating transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                on ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:text-foreground"
+                on ? "border-primary bg-primary-fill text-primary-foreground hover:bg-primary-fill hover:text-primary-foreground dark:hover:bg-primary-fill" : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:bg-card hover:text-foreground dark:bg-card dark:hover:bg-card"
               )}
             >
               <Icon className="size-4" />
@@ -206,7 +210,7 @@ function HouseScene({
                   {SENSOR_ORDER.filter(has).indexOf(ev.id) + 1}
                 </span>
               )}
-            </button>
+            </Button>
             <span className={cn("pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-background/90 px-1.5 py-0.5 text-2xs font-semibold", spot.labelCls, on ? "text-foreground" : "text-muted-foreground")}>
               {contextOn && on && <span className="mr-1 font-mono text-primary-ink">{ev.time}</span>}
               {ev.device}
@@ -499,15 +503,16 @@ export function HouseDemo() {
                   {RESPONSES.map((r) => {
                     const Icon = RESPONSE_ICON[r.id], on = response === r.id;
                     return (
-                      <button
+                      <ItemButton
+                        variant="plain"
                         key={r.id}
                         type="button"
                         role="radio"
                         aria-checked={on}
                         onClick={() => dispatch({ type: "respond", id: r.id })}
                         className={cn(
-                          "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          on ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"
+                          "rounded-lg border px-3 py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          on ? "border-primary bg-primary/10 hover:bg-primary/10" : "border-border bg-background hover:border-primary/40 hover:bg-background"
                         )}
                       >
                         <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border", on ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-card text-muted-foreground")}>
@@ -518,7 +523,7 @@ export function HouseDemo() {
                           <span className="block text-xs text-muted-foreground">{r.hint}</span>
                         </span>
                         {on && <Check className="size-4 shrink-0 text-primary-ink" strokeWidth={3} />}
-                      </button>
+                      </ItemButton>
                     );
                   })}
                 </div>

@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { USE_CASES, USE_CASE_KEYS, type UseCaseKey } from "./taData";
 import type { AssessmentInfo } from "./taModels";
+import { Button } from "@/components/ui/button";
 
 /* Assessment pieces of Model Management: the basic info a Training Assessment
    model carries — its use case and the activities it assesses — as a form
@@ -42,19 +43,19 @@ export function ActivitiesPicker({
         {options.map((a) => {
           const on = value.includes(a);
           return (
-            <button
+            <Button variant="ghost"
               key={a}
               type="button"
               aria-pressed={on}
               onClick={() => toggle(a)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-medium transition-colors",
+                "h-auto", "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-medium transition-colors",
                 on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:text-foreground",
               )}
             >
               {on && <Check className="size-3" strokeWidth={3} />}
               {a}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -66,7 +67,7 @@ export function ActivitiesPicker({
           placeholder="Add another activity"
           className="h-8 text-sm"
         />
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={addCustom}
           disabled={!custom.trim()}
@@ -74,7 +75,7 @@ export function ActivitiesPicker({
         >
           <Plus className="size-3.5" />
           Add
-        </button>
+        </Button>
       </div>
     </div>
   );

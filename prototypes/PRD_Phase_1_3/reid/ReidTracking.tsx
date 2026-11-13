@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { cameraPose } from "./calibrationGeometry";
 import { mapLabel, type ReidMap } from "./reidMaps";
 import { TRAIL_SEC, trackWhere, zonesFor, type TrackState } from "./weaponTracks";
+import { ItemButton } from "@/components/ui/item";
 
 /* Re-ID tracking — the Live Monitoring pieces.
 
@@ -287,7 +288,7 @@ export function WeaponBadges({
       {states.map((st) => {
         const pinned = st.track.id === pinnedId;
         return (
-          <button
+          <Button variant="ghost"
             key={st.track.id}
             type="button"
             title={pinned ? `Clear the highlight on ${st.track.id}` : `Show ${st.track.id} on its Re-ID map`}
@@ -296,7 +297,7 @@ export function WeaponBadges({
               onPin(st.track.id);
             }}
             className={cn(
-              "inline-flex items-center gap-1 rounded-md border font-mono font-bold backdrop-blur-sm transition-colors",
+              "h-auto", "inline-flex items-center gap-1 rounded-md border font-mono font-bold backdrop-blur-sm transition-colors",
               size === "md" ? "px-2 py-0.5 text-2xs" : "px-1.5 py-px text-3xs",
               pinned
                 ? "border-severity-critical bg-severity-critical text-status-foreground"
@@ -306,7 +307,7 @@ export function WeaponBadges({
             <Crosshair className={size === "md" ? "size-3" : "size-2.5"} />
             {st.track.id}
             {size === "md" && " in view"}
-          </button>
+          </Button>
         );
       })}
     </>
@@ -317,11 +318,11 @@ export function WeaponBadges({
 
 export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: ReidMap | undefined; pinned: boolean; onPin: () => void }) {
   return (
-    <button data-slot="track-row"
+    <ItemButton variant="plain" data-slot="track-row"
       type="button"
       onClick={onPin}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors",
+        "text-inherit", "flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors",
         pinned ? "border-severity-critical/50 bg-severity-critical/10" : "border-border bg-background hover:border-primary/40"
       )}
     >
@@ -339,7 +340,7 @@ export function TrackRow({ st, map, pinned, onPin }: { st: TrackState; map: Reid
       <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded", pinned ? "text-severity-critical" : "text-muted-foreground")} aria-hidden>
         {pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
       </span>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -430,21 +431,21 @@ export function TrackingPanel({
 
         {shownMap ? (
           <>
-            <button
+            <Button variant="ghost" size="icon-xs"
               type="button"
               onClick={onExpand}
               aria-label="Enlarge map"
               className="block w-full overflow-hidden rounded-lg border border-border transition-colors hover:border-primary/50"
             >
               <TrackMap map={shownMap} states={focus} focusId={pinnedId ?? focus[0]?.track.id ?? null} highlightCameraId={heroCameraId} size="mini" />
-            </button>
+            </Button>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-muted-foreground">
               <span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-severity-critical" /> last {TRAIL_SEC} s</span>
               <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-media-foreground/95 bg-media-raised" /> camera in view</span>
               {hiddenCount > 0 && (
-                <button type="button" onClick={onExpand} className="ml-auto font-semibold text-primary-ink hover:underline">
+                <Button variant="link" type="button" onClick={onExpand} className="h-auto p-0 border-0 ml-auto font-semibold text-primary-ink hover:underline">
                   +{hiddenCount} more on this map
-                </button>
+                </Button>
               )}
             </div>
           </>

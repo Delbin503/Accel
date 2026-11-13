@@ -22,6 +22,7 @@ import {
 } from "./calibrationGeometry";
 import { ReidSiteMapModal } from "./ReidSiteMap";
 import { useReidMapsStore } from "./reidMaps";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 /* Re-ID deployment — calibration drawer.
 
@@ -315,35 +316,35 @@ function MarkerTable({
       </div>
 
       <div data-slot="marker-table-table" className="overflow-hidden rounded-lg border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40">
-            <tr className="text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <th className="px-3 py-2">Marker</th>
-              <th className="px-3 py-2 text-right">Floor x (m)</th>
-              <th className="px-3 py-2 text-right">Floor y (m)</th>
-              <th className="px-3 py-2 text-right">Fit error{editing ? " (cm)" : ""}</th>
-              <th className="px-3 py-2">In this map</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+        <Table className="w-full text-sm">
+          <TableHeader className="bg-muted/40">
+            <TableRow className="text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="px-3 py-2">Marker</TableHead>
+              <TableHead className="px-3 py-2 text-right">Floor x (m)</TableHead>
+              <TableHead className="px-3 py-2 text-right">Floor y (m)</TableHead>
+              <TableHead className="px-3 py-2 text-right">Fit error{editing ? " (cm)" : ""}</TableHead>
+              <TableHead className="px-3 py-2">In this map</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {rows.map((m) => {
               const onBoundary = placement.boundary.includes(m.id);
               const dropped = placement.dropped.includes(m.id);
               const pos = markerPosition(m, placement);
               return (
-                <tr key={m.id} className={cn(dropped && !editing && "text-muted-foreground")}>
-                  <td className="px-3 py-2 font-mono font-semibold text-foreground">
+                <TableRow key={m.id} className={cn(dropped && !editing && "text-muted-foreground")}>
+                  <TableCell className="px-3 py-2 font-mono font-semibold text-foreground">
                     {m.id}
                     {placement.edited?.includes(m.id) && (
                       <span className="ml-1.5 font-sans text-2xs font-medium text-info">edited</span>
                     )}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "x", "floor x") : pos.x.toFixed(3)}</td>
-                  <td className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "y", "floor y") : pos.y.toFixed(3)}</td>
-                  <td className={cn("px-3 py-2 text-right font-mono", dropped && !editing && "text-severity-critical")}>
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "x", "floor x") : pos.x.toFixed(3)}</TableCell>
+                  <TableCell className="px-3 py-2 text-right font-mono">{editing ? cellInput(m.id, "y", "floor y") : pos.y.toFixed(3)}</TableCell>
+                  <TableCell className={cn("px-3 py-2 text-right font-mono", dropped && !editing && "text-severity-critical")}>
                     {editing ? cellInput(m.id, "error", "fit error") : `${placement.errors[m.id].toFixed(1)} cm`}
-                  </td>
-                  <td className="px-3 py-2">
+                  </TableCell>
+                  <TableCell className="px-3 py-2">
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-semibold",
@@ -356,12 +357,12 @@ function MarkerTable({
                     >
                       {onBoundary ? "On boundary" : dropped ? "Dropped · outlier" : "Inside zone"}
                     </span>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {editing && (
         <p className="mt-2 text-xs text-muted-foreground">

@@ -33,6 +33,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -43,6 +44,8 @@ import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
 import { RecordingSchedule } from "../RecordingSchedule";
 import { TaPoseDefaults } from "./TaPoseDefaults";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 type Section =
   | "general"
@@ -69,17 +72,17 @@ const SECTIONS: { key: Section; label: string; icon: React.ElementType; descript
 
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
-    <button
+    <Button variant="ghost"
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
+        "p-0 hover:bg-transparent", "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
         checked ? "border-primary bg-primary" : "border-border bg-muted"
       )}
     >
       <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform",
         checked ? "translate-x-[18px]" : "translate-x-0.5")} />
-    </button>
+    </Button>
   );
 }
 
@@ -197,13 +200,13 @@ function GeneralSection() {
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time format</label>
             <div className="flex gap-1.5">
               {(["24h", "12h"] as const).map((opt) => (
-                <button key={opt} onClick={() => setTimeFormat(opt)}
+                <Button variant="ghost" key={opt} onClick={() => setTimeFormat(opt)}
                   className={cn(
-                    "flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
+                    "h-auto", "flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
                     timeFormat === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "24h" ? "24-hour (15:30)" : "12-hour (3:30 PM)"}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -211,9 +214,9 @@ function GeneralSection() {
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Week starts on</label>
             <div className="flex gap-1.5">
               {(["mon", "sun"] as const).map((opt) => (
-                <button key={opt} onClick={() => setWeekStart(opt)}
+                <Button variant="ghost" key={opt} onClick={() => setWeekStart(opt)}
                   className={cn(
-                    "relative flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
+                    "h-auto", "relative flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
                     weekStart === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
                   )}>
                   {opt === "mon" ? "Monday" : "Sunday"}
@@ -222,7 +225,7 @@ function GeneralSection() {
                       Default
                     </span>
                   )}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -310,59 +313,59 @@ function UserAccessSection() {
       <SectionCard title="Role Permissions Matrix" description="Define what each role can do across all modules. Owner always has full access."
         action={<Button variant="outline" onClick={() => setMatrix(DEFAULT_PERMISSIONS)} className="gap-1.5"><RefreshCw className="size-3" />Reset</Button>}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-base">
-            <thead>
-              <tr className="border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
-                <th className="px-3 py-2.5 font-semibold">Permission</th>
+          <Table className="w-full text-left text-base">
+            <TableHeader>
+              <TableRow className="border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+                <TableHead className="px-3 py-2.5 font-semibold">Permission</TableHead>
                 {(["owner", "admin", "user"] as UserRole[]).map((r) => {
                   const rs = ROLE_STYLES[r];
                   return (
-                    <th key={r} className="w-[120px] px-3 py-2.5 text-center font-semibold">
+                    <TableHead key={r} className="w-[120px] px-3 py-2.5 text-center font-semibold">
                       <span className={cn("inline-flex items-center gap-1 rounded-full border border-current px-2 py-0.5 text-2xs font-bold uppercase tracking-wider", rs.bg, rs.text)}>
                         {rs.label}
                       </span>
-                    </th>
+                    </TableHead>
                   );
                 })}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/60">
               {PERMISSIONS.map((p) => (
-                <tr key={p.key}>
-                  <td className="px-3 py-3">
+                <TableRow key={p.key}>
+                  <TableCell className="px-3 py-3">
                     <p className="text-base font-semibold text-foreground">{p.label}</p>
                     <p className="text-xs text-muted-foreground">{p.description}</p>
-                  </td>
+                  </TableCell>
                   {(["owner", "admin", "user"] as UserRole[]).map((r) => {
                     const locked = LOCKED_PERMISSIONS[r].has(p.key);
                     const checked = !locked && (matrix[r][p.key] ?? false);
                     if (locked) {
                       return (
-                        <td key={r} className="px-3 py-3 text-center">
+                        <TableCell key={r} className="px-3 py-3 text-center">
                           <span
                             title={`Not available for ${r}`}
                             className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-2xs text-muted-foreground/50"
                           >
                             —
                           </span>
-                        </td>
+                        </TableCell>
                       );
                     }
                     return (
-                      <td key={r} className="px-3 py-3 text-center">
-                        <button onClick={() => toggle(r, p.key)} disabled={r === "owner"}
+                      <TableCell key={r} className="px-3 py-3 text-center">
+                        <Button variant="ghost" size="icon-xs" onClick={() => toggle(r, p.key)} disabled={r === "owner"}
                           className={cn("inline-flex size-5 items-center justify-center rounded border transition-colors",
                             checked ? "border-primary bg-primary-fill text-primary-foreground" : "border-border bg-background",
                             r === "owner" && "cursor-not-allowed opacity-60")}>
                           {checked && <Check className="size-3" strokeWidth={3} />}
-                        </button>
-                      </td>
+                        </Button>
+                      </TableCell>
                     );
                   })}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           Permission changes apply on the user's next sign-in. Active sessions retain existing permissions until refresh.
@@ -415,18 +418,18 @@ function UnitToggle({ value, onChange, disabled }: { value: Unit; onChange: (u: 
   return (
     <div className="flex items-center rounded-md border border-border bg-card p-0.5">
       {(["min", "hr"] as Unit[]).map((u) => (
-        <button
+        <Button variant="ghost"
           key={u}
           type="button"
           disabled={disabled}
           onClick={() => onChange(u)}
           className={cn(
-            "rounded px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-50",
+            "h-auto border-0", "rounded px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-50",
             value === u ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {u === "min" ? "Mins" : "Hours"}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -486,7 +489,7 @@ function SlaSection() {
             return (
               <div key={opt.key} className={cn("rounded-lg border border-border bg-background", !slaEnabled && "opacity-50")}>
                 <div className="flex items-center gap-3 px-3.5 py-3">
-                  <button
+                  <ItemButton variant="plain"
                     type="button"
                     disabled={!slaEnabled}
                     onClick={() => setExpanded(isOpen ? null : opt.key)}
@@ -501,7 +504,7 @@ function SlaSection() {
                       <span className="block text-base font-semibold text-foreground">{opt.label} severity</span>
                       <span className="block text-xs text-muted-foreground">{opt.description}</span>
                     </span>
-                  </button>
+                  </ItemButton>
                   <div className="flex items-center gap-1.5">
                     <Input
                       type="number" min={0} step={units[opt.key] === "hr" ? 0.5 : 1}
@@ -605,9 +608,9 @@ function DetectionSection() {
               <span>Default Confidence Threshold</span>
               <span className="font-mono text-foreground">{globalConfidence}%</span>
             </label>
-            <input type="range" min={50} max={99} step={1} value={globalConfidence}
-              onChange={(e) => setGlobalConfidence(Number(e.target.value))}
-              className="w-full accent-primary" />
+            <Slider min={50} max={99} step={1} value={[globalConfidence]}
+                onValueChange={([n]) => setGlobalConfidence(n)}
+                className="w-full" />
             <p className="mt-1 text-xs text-muted-foreground">
               Detections below this threshold are discarded unless a rule explicitly lowers it.
             </p>
@@ -790,9 +793,9 @@ function NvrDefaultsSection() {
             <span>Warning threshold</span>
             <span className="font-mono text-warning">{storageWarn}%</span>
           </label>
-          <input type="range" min={50} max={99} step={1} value={storageWarn}
-            onChange={(e) => setStorageWarn(Number(e.target.value))}
-            className="w-full accent-warning" />
+          <Slider min={50} max={99} step={1} value={[storageWarn]}
+              onValueChange={([n]) => setStorageWarn(n)}
+              className="w-full" />
         </div>
       </SectionCard>
 
@@ -808,20 +811,20 @@ function NvrDefaultsSection() {
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
               {RETENTION_PRESETS.map((d) => (
-                <button
+                <Button variant="ghost"
                   key={d}
                   type="button"
                   disabled={!autoCleanupEnabled}
                   onClick={() => setRetentionDays(d)}
                   className={cn(
-                    "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+                    "h-auto", "rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
                     retentionDays === d
                       ? "border-primary bg-primary-fill text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   )}
                 >
                   {d} days
-                </button>
+                </Button>
               ))}
               <div className="flex items-center gap-1.5">
                 <Input
@@ -982,13 +985,13 @@ function SecuritySection() {
                       <li key={range}
                         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 font-mono text-xs text-foreground">
                         {range}
-                        <button
+                        <Button variant="ghost" size="icon-xs"
                           type="button"
                           onClick={() => setIpRanges((prev) => prev.filter((r) => r !== range))}
                           aria-label={`Remove ${range}`}
-                          className="text-muted-foreground transition-colors hover:text-foreground">
+                          className="border-0 text-muted-foreground transition-colors hover:text-foreground">
                           <X className="size-3" />
-                        </button>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -1067,7 +1070,7 @@ export function TaSystemConfig({ initialSection = "camera-defaults" }: { initial
             const Icon = s.icon;
             const active = section === s.key;
             return (
-              <button key={s.key} onClick={() => setSection(s.key)}
+              <ItemButton variant="plain" key={s.key} onClick={() => setSection(s.key)}
                 className={cn("flex items-start gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors",
                   active ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
@@ -1075,7 +1078,7 @@ export function TaSystemConfig({ initialSection = "camera-defaults" }: { initial
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
                   <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground/70")}>{s.description}</p>
                 </div>
-              </button>
+              </ItemButton>
             );
           })}
           {dirty && (

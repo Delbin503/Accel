@@ -63,6 +63,7 @@ import {
   shiftPanel,
   type PanelId,
 } from "./taDashboardLayout";
+import { ItemButton } from "@/components/ui/item";
 
 /* Dashboard, made customizable for Phase 1.3.
 
@@ -183,7 +184,7 @@ function SiteChipRow({
       {sites.map((s) => {
         const isActive = selected.includes(s.name);
         return (
-          <button
+          <Button variant="ghost"
             key={s.name}
             onClick={() => handleToggle(s.name)}
             style={isActive ? {
@@ -192,7 +193,7 @@ function SiteChipRow({
               color: s.color,
             } : undefined}
             className={cn(
-              "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
+              "h-auto", "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
               isActive
                 ? "border-current/30"
                 : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
@@ -206,7 +207,7 @@ function SiteChipRow({
             )}>
               {s.count}
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -234,9 +235,9 @@ function SiteMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button variant="ghost"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
+            "h-auto", "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold transition-colors",
             allSelected
               ? "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
               : "border-primary bg-primary/10 text-primary-ink"
@@ -245,26 +246,26 @@ function SiteMultiSelect({
           <Filter className="size-3" />
           {label}
           <ChevronDown className="size-3 opacity-70" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2">
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by site</p>
-          <button
+          <Button variant="link"
             onClick={() => onChange([])}
-            className="text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
+            className="h-auto p-0 border-0 text-2xs font-semibold uppercase tracking-wider text-primary-ink hover:underline"
           >
             All
-          </button>
+          </Button>
         </div>
         <div className="max-h-64 space-y-0.5 overflow-y-auto">
           {options.map((o) => {
             const checked = selected.includes(o.id);
             return (
-              <button
+              <ItemButton variant="plain"
                 key={o.id}
                 onClick={() => onChange(checked ? selected.filter((s) => s !== o.id) : [...selected, o.id])}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
+                className="text-inherit flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
               >
                 <span
                   className={cn(
@@ -275,7 +276,7 @@ function SiteMultiSelect({
                   {checked && <Check className="size-2.5" strokeWidth={3} />}
                 </span>
                 <TruncatedText text={o.name} className="min-w-0 flex-1 text-foreground" />
-              </button>
+              </ItemButton>
             );
           })}
         </div>
@@ -1073,8 +1074,8 @@ export function TaDashboard({
                 return (
                   <Popover key={s.site}>
                     <PopoverTrigger asChild>
-                      <button
-                        className="group flex flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
+                      <ItemButton variant="plain"
+                        className="items-stretch text-inherit group flex flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
                       >
                         {/* Row 1: site name + colored dot */}
                         <div className="flex items-center gap-1.5">
@@ -1102,7 +1103,7 @@ export function TaDashboard({
                           <SevPill kind="medium"   value={s.medium} />
                           <SevPill kind="low"      value={s.low} />
                         </div>
-                      </button>
+                      </ItemButton>
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-64 p-0">
                       <div className="border-b border-border px-3 py-2.5">
@@ -1128,13 +1129,13 @@ export function TaDashboard({
                         </div>
                       </div>
                       <div className="border-t border-border bg-muted/20 px-3 py-2.5">
-                        <button
+                        <Button variant="link"
                           onClick={() => navigate("/detection-feed")}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
+                          className="h-auto p-0 border-0 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                         >
                           View feed for this site
                           <ArrowUpRight className="size-3" />
-                        </button>
+                        </Button>
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -1167,8 +1168,8 @@ export function TaDashboard({
               return (
                 <Popover key={`${z.site}-${z.area}`}>
                   <PopoverTrigger asChild>
-                    <button
-                      className="group flex flex-col gap-1 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40"
+                    <ItemButton variant="plain"
+                      className="items-stretch text-inherit group flex flex-col gap-1 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40"
                     >
                       <div className="flex items-center gap-1.5">
                         <MapPin className="size-3 flex-shrink-0 text-muted-foreground" />
@@ -1185,7 +1186,7 @@ export function TaDashboard({
                           {z.cameras}
                         </span>
                       </div>
-                    </button>
+                    </ItemButton>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-72 p-0">
                     <div className="border-b border-border px-3 py-2.5">
@@ -1219,12 +1220,12 @@ export function TaDashboard({
                       ))}
                     </div>
                     <div className="border-t border-border px-3 py-2">
-                      <button
+                      <ItemButton variant="plain"
                         onClick={() => navigate("/detection-feed")}
                         className="inline-flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary/10"
                       >
                         View events for this zone <ArrowUpRight className="size-3" />
-                      </button>
+                      </ItemButton>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -1255,13 +1256,13 @@ export function TaDashboard({
                   <TruncatedText text={e.summary} className="text-xs text-muted-foreground" />
                 </div>
                 {e.caseId && (
-                  <button
+                  <Button variant="ghost"
                     onClick={(ev) => { ev.stopPropagation(); navigate(`/incidents/${e.caseId}`); }}
                     title={`Linked to ${e.caseId}`}
-                    className="inline-flex flex-shrink-0 items-center rounded-full border border-info/30 bg-info/15 px-1.5 py-0.5 font-mono text-2xs font-semibold text-info transition-colors hover:bg-info/25"
+                    className="h-auto inline-flex flex-shrink-0 items-center rounded-full border border-info/30 bg-info/15 px-1.5 py-0.5 font-mono text-2xs font-semibold text-info transition-colors hover:bg-info/25"
                   >
                     {e.caseId}
-                  </button>
+                  </Button>
                 )}
                 <span className="font-mono text-2xs text-muted-foreground">{e.time}</span>
               </div>
@@ -1446,13 +1447,13 @@ export function TaDashboard({
               {worstGroup.g.degraded > 0 && <>, {worstGroup.g.degraded} degraded</>}. Check Device Health for details.
             </span>
           </div>
-          <button
+          <Button variant="ghost" size="icon-xs"
             onClick={() => setAlertAcknowledged(true)}
-            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            className="border-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
             aria-label="Dismiss alert"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 

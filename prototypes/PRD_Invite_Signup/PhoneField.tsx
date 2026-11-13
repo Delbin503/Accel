@@ -1,6 +1,9 @@
 import * as React from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ItemButton } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 
 /* Copied verbatim from src/pages/user-management (EditUserModal) so the invite
@@ -51,22 +54,23 @@ export function PhoneField({
     <div data-slot="phone-field" className="flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:border-primary">
       <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(""); }}>
         <PopoverTrigger asChild>
-          <button
+          <Button
+            variant="ghost"
             type="button"
-            className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
+            className="h-auto flex-shrink-0 gap-1 rounded-none border-0 border-r border-input px-3 font-mono text-base font-normal text-foreground transition-colors hover:bg-muted/40 hover:text-foreground aria-expanded:bg-transparent aria-expanded:text-foreground dark:hover:bg-muted/40"
           >
             {dialCode}
             <ChevronDown className="size-3.5 text-muted-foreground" />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
           <div className="relative mb-1">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search country or code"
-              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
             />
           </div>
           <div data-slot="phone-field-country-list" className="max-h-56 overflow-y-auto">
@@ -74,7 +78,9 @@ export function PhoneField({
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>
             ) : (
               list.map((c) => (
-                <button
+                <ItemButton
+                  variant="plain"
+                  selected={c.code === dialCode}
                   key={c.code}
                   onClick={() => { onDialCode(c.code); setOpen(false); setQuery(""); }}
                   className={cn(
@@ -84,18 +90,18 @@ export function PhoneField({
                 >
                   <span className="truncate text-foreground">{c.name}</span>
                   <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">{c.code}</span>
-                </button>
+                </ItemButton>
               ))
             )}
           </div>
         </PopoverContent>
       </Popover>
-      <input
+      <Input
         value={number}
         onChange={(e) => onNumber(e.target.value)}
         placeholder="9123 4567"
         inputMode="tel"
-        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none rounded-none border-0 py-0 shadow-none md:text-base dark:bg-transparent focus-visible:ring-0"
       />
     </div>
   );

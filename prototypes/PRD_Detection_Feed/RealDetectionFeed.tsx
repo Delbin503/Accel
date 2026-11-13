@@ -18,6 +18,7 @@ import { SkeletonList, ErrorState, ListFooter, type ForcedState } from "./shared
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ItemButton } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -280,9 +281,10 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton
+          variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary hover:bg-card",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
@@ -294,16 +296,17 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
               open && "rotate-180"
             )}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton
+              variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -322,7 +325,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
                 />
               )}
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -370,7 +373,7 @@ function FilterPanel({
       <div data-slot="detection-feed-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="min-w-0 flex-1 gap-2.5 hover:bg-transparent">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -392,15 +395,15 @@ function FilterPanel({
           <span className="ml-auto hidden text-xs text-muted-foreground sm:block">
             Showing <strong className="text-foreground">{presetSummary}</strong>
           </span>
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -879,7 +882,8 @@ export default function DetectionFeedPage({
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
           {(hasActiveFilters || datePreset !== "all") && (
-            <button
+            <Button
+              variant="link"
               onClick={() => {
                 setFilters(EMPTY_FILTERS);
                 setKpiFilter("all");
@@ -888,10 +892,10 @@ export default function DetectionFeedPage({
                 setDateFrom("");
                 setDateTo("");
               }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="ml-2 h-auto p-0 text-base font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Popover open={sortOpen} onOpenChange={setSortOpen}>
@@ -903,11 +907,11 @@ export default function DetectionFeedPage({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-56 p-1">
             {SORT_OPTIONS.map((o) => (
-              <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
-                className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted", sort === o.key ? "text-primary-ink" : "text-foreground")}>
+              <ItemButton variant="plain" key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
+                className={cn("justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted", sort === o.key ? "text-primary-ink" : "text-foreground")}>
                 {o.label}
                 {sort === o.key && <Check className="size-3.5" />}
-              </button>
+              </ItemButton>
             ))}
           </PopoverContent>
         </Popover>
@@ -915,16 +919,16 @@ export default function DetectionFeedPage({
 
       {/* ── Live "N new events" pill ─────────────────────────────────────── */}
       {forced === "normal" && liveCount > 0 && (
-        <button data-slot="detection-feed-page-live-pill"
+        <Button variant="outline" size="sm" data-slot="detection-feed-page-live-pill"
           onClick={() => {
             toast.message(`Loaded ${liveCount} new event${liveCount === 1 ? "" : "s"}`);
             setLiveCount(0);
           }}
-          className="mx-auto inline-flex items-center gap-2 rounded-full border border-info/40 bg-info/15 px-4 py-1.5 text-sm font-semibold text-info shadow-raised transition-colors hover:bg-info/25"
+          className="mx-auto h-auto gap-2 rounded-full border border-info/40 bg-info/15 px-4 py-1.5 text-sm font-semibold text-info shadow-raised transition-colors hover:bg-info/25 hover:text-info dark:border-info/40 dark:bg-info/15 dark:hover:bg-info/25"
         >
           <Zap className="size-3.5" />
           {liveCount} new event{liveCount === 1 ? "" : "s"} — click to show
-        </button>
+        </Button>
       )}
 
       {/* ── Event groups (forced states override the real list) ─────────── */}

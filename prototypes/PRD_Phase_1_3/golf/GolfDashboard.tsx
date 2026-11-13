@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -165,9 +168,9 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label={text} className="inline-flex text-muted-foreground/70 transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs leading-snug">{text}</TooltipContent>
     </UiTooltip>
@@ -293,10 +296,10 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
   const step = (d: number) => onPhase(PHASE_ORDER[Math.max(0, Math.min(PHASE_ORDER.length - 1, PHASE_ORDER.indexOf(phase) + d))]);
   const pct = (sec: number) => `${(sec / SESSION.lengthSec) * 100}%`;
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
-    <button type="button" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+    <Button variant="ghost" size="icon-xs" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
+      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink hover:bg-primary/15 hover:text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
       <Icon className="size-3.5" />
-    </button>
+    </Button>
   );
 
   return (
@@ -310,10 +313,10 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
         <div className="flex items-center gap-1">
           {toolBtn("line", PenLine, "Draw a line")}
           {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
-          <button type="button" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
+          <Button variant="ghost" size="icon-xs" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
             className="grid size-6 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40">
             <Eraser className="size-3.5" />
-          </button>
+          </Button>
           <label className="ml-1 mr-1 flex items-center gap-1 text-2xs text-muted-foreground">
             <Switch checked={showPose} onCheckedChange={setShowPose} className="scale-75" aria-label="Show pose" />
             Pose
@@ -334,7 +337,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
       </div>
       {/* Key moments of the picked swing */}
       <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
-        <button type="button" aria-label={running ? "Pause" : "Play through the swing"}
+        <Button variant="ghost" size="icon-xs" aria-label={running ? "Pause" : "Play through the swing"}
           onClick={() => {
             if (running) return setPlaying(false);
             if (phase === "finish") onPhase("address");
@@ -342,18 +345,20 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
           }}
           className="grid size-6 shrink-0 place-items-center rounded text-foreground hover:bg-muted">
           {running ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        </button>
-        <button type="button" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></button>
-        <div role="tablist" aria-label="Key moments" className="flex min-w-0 flex-1 gap-1">
+        </Button>
+        <Button variant="ghost" size="icon-xs" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></Button>
+        <SegmentedControl type="single" size="sm" aria-label="Key moments" value={phase}
+          onValueChange={(next) => { if (!next) return; setPlaying(false); onPhase(next as Phase); }}
+          className="flex min-w-0 flex-1 gap-1 rounded-none bg-transparent p-0">
           {PHASES.map((p) => (
-            <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => { setPlaying(false); onPhase(p.key); }}
-              className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
+            <SegmentedControlItem key={p.key} value={p.key}
+              className={cn("block h-auto min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none",
                 p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {p.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
-        <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
+        </SegmentedControl>
+        <Button variant="ghost" size="icon-xs" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></Button>
       </div>
       {/* Lesson timeline: every swing, coloured by its grade */}
       <div data-slot="video-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
@@ -364,7 +369,7 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
           {SWINGS.map((s) => {
             const tone = gradeTone(gradeOf(swingScore(s)));
             return (
-              <button key={s.n} type="button" onClick={() => onSelect(s.n)} aria-label={`Swing ${s.n} at ${fmtClock(s.at)}`} title={`Swing ${s.n} · ${fmtClock(s.at)} · ${swingScore(s)}/100`}
+              <ItemButton key={s.n} variant="plain" onClick={() => onSelect(s.n)} aria-label={`Swing ${s.n} at ${fmtClock(s.at)}`} title={`Swing ${s.n} · ${fmtClock(s.at)} · ${swingScore(s)}/100`}
                 className={cn("absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-card transition-transform hover:scale-150", s.n === swing.n ? "bg-foreground" : TONE_DOT[tone])}
                 style={{ left: pct(s.at) }} />
             );
@@ -414,13 +419,15 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
   return (
     <Panel className={className} title="Swing Review" meta="Pick a swing">
       {/* One row that scrolls sideways, however many swings the lesson had. */}
-      <div data-slot="review-panel-swings" ref={strip} role="tablist" aria-label="Swings" className="mb-2 flex shrink-0 gap-1 overflow-x-auto pb-1">
+      <SegmentedControl type="single" data-slot="review-panel-swings" ref={strip} aria-label="Swings" value={String(swing.n)}
+        onValueChange={(next) => next && onSelect(Number(next))}
+        className="mb-2 flex w-auto shrink-0 gap-1 overflow-x-auto rounded-none bg-transparent p-0 pb-1">
         {SWINGS.map((s) => {
           const active = s.n === swing.n;
           const sc = swingScore(s);
           return (
-            <button key={s.n} type="button" role="tab" aria-selected={active} data-active={active || undefined} onClick={() => onSelect(s.n)}
-              className={cn("flex w-12 shrink-0 flex-col items-center rounded-md border py-0.5 transition-colors duration-[var(--duration-fast)]",
+            <SegmentedControlItem key={s.n} value={String(s.n)} data-active={active || undefined}
+              className={cn("flex h-auto w-12 shrink-0 flex-col items-center gap-0 rounded-md border px-0 py-0.5 transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/10 data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]",
                 active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40")}>
               <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                 #{s.n}
@@ -428,10 +435,10 @@ function ReviewPanel({ className, swing, ball, reviews, onReview, onSelect }: {
                 {s.n === WEAKEST_SWING && <span title="Weakest swing" className="size-1.5 rounded-full bg-severity-critical" />}
               </span>
               <span className={cn("font-mono text-3xs font-semibold", TONE_TEXT[gradeTone(gradeOf(sc))])}>{sc}</span>
-            </button>
+            </SegmentedControlItem>
           );
         })}
-      </div>
+      </SegmentedControl>
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
         <span>Swing {swing.n}: <span className="font-semibold text-foreground">{score}/100{ball && ` · ${swing.carry} yd · ${shapeOf(swing)}`}</span> · {met}/{scored} met</span>
         {tag && <span className={cn("ml-auto rounded px-1.5 py-px font-sans text-3xs font-bold uppercase tracking-wider", swing.n === BEST_SWING ? "bg-success/15 text-success" : "bg-severity-critical/15 text-severity-critical")}>{tag}</span>}
@@ -479,16 +486,16 @@ function FindingRow({ n, f, status, onReview }: { n: number; f: Finding; status?
         <p className="truncate font-mono text-3xs text-muted-foreground">{f.detail} · <span className={CONF_TONE[f.confidence]}>{f.confidence} confidence</span></p>
       </div>
       {status ? (
-        <button type="button" onClick={() => onReview(k, status === "confirmed" ? "dismissed" : "confirmed")} className="shrink-0 text-3xs font-semibold text-muted-foreground hover:text-foreground"
+        <Button variant="link" onClick={() => onReview(k, status === "confirmed" ? "dismissed" : "confirmed")} className="h-auto shrink-0 p-0 hover:no-underline text-3xs font-semibold text-muted-foreground hover:text-foreground"
           title="Change review">
           {status === "confirmed" ? "Confirmed" : "Dismissed"} · undo
-        </button>
+        </Button>
       ) : (
         <div className="flex shrink-0 gap-1">
-          <button type="button" aria-label={`Confirm ${FAULTS[f.key].label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></button>
-          <button type="button" aria-label={`Dismiss ${FAULTS[f.key].label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></button>
+          <Button variant="outline" size="icon-xs" aria-label={`Confirm ${FAULTS[f.key].label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></Button>
+          <Button variant="outline" size="icon-xs" aria-label={`Dismiss ${FAULTS[f.key].label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></Button>
         </div>
       )}
     </li>
@@ -707,9 +714,9 @@ function CoachingPanel({ className, monitor, onSee }: { className?: string; moni
               <p className="text-2xs leading-snug text-foreground"><strong>{f.drillName}:</strong> {f.drill}</p>
             </div>
             {f.example !== undefined && (
-              <button type="button" onClick={() => onSee(f.example!, f.key)} className="mt-1 text-2xs font-semibold text-primary-ink hover:underline">
+              <Button variant="link" onClick={() => onSee(f.example!, f.key)} className="mt-1 h-auto p-0 text-2xs font-semibold text-primary-ink hover:underline">
                 See swing {f.example} →
-              </button>
+              </Button>
             )}
           </div>
         ))}
@@ -795,14 +802,15 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
       </header>
       <div data-slot="compare-section-content" className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
         <div className="flex flex-col gap-2 lg:col-span-8">
-          <div role="tablist" aria-label="Sync at" className="flex gap-1">
+          <SegmentedControl type="single" size="sm" aria-label="Sync at" value={phase} onValueChange={(next) => next && setPhase(next as Phase)}
+            className="flex gap-1 rounded-none bg-transparent p-0">
             {PHASES.map((p) => (
-              <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => setPhase(p.key)}
-                className={cn("rounded px-2 py-0.5 text-2xs font-semibold transition-colors", p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+              <SegmentedControlItem key={p.key} value={p.key}
+                className={cn("h-auto rounded px-2 py-0.5 text-2xs font-semibold transition-colors data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none", p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 {p.label}
-              </button>
+              </SegmentedControlItem>
             ))}
-          </div>
+          </SegmentedControl>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {[A, B].map((s, i) => (
               <figure key={i} className="overflow-hidden rounded-lg border border-border">
@@ -819,33 +827,33 @@ function CompareSection({ selected, monitor }: { selected: number; monitor: Moni
           </div>
         </div>
         <div className="lg:col-span-4">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border text-left text-3xs font-semibold uppercase text-muted-foreground">
-                <th className="py-1.5 pr-2">Measure</th>
-                <th className="py-1.5 pr-2 text-right">#{A.n}</th>
-                <th className="py-1.5 pr-2 text-right">#{B.n}</th>
-                <th className="py-1.5 pr-2 text-right">B − A</th>
-                <th className="py-1.5 text-right">Target</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full border-collapse">
+            <TableHeader>
+              <TableRow className="border-0 hover:bg-transparent border-b border-border text-left text-3xs font-semibold uppercase text-muted-foreground">
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2">Measure</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">#{A.n}</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">#{B.n}</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">B − A</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 text-right">Target</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((r) => {
                 const d = r.a === null || r.b === null ? null : r.b - r.a;
                 const out = (v: number | null) => v !== null && r.target && !inRange(+v.toFixed(r.digits ?? 1), r.target);
                 const val = (v: number | null) => (v === null ? <span className="text-muted-foreground">—</span> : <>{fmt(v, r.digits)}{r.unit}</>);
                 return (
-                  <tr key={r.label} className="border-b border-border/60 last:border-0 font-mono text-2xs">
-                    <td className="py-1 pr-2 font-sans text-xs text-foreground">{r.label}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.a) ? "text-severity-critical" : "text-foreground")}>{val(r.a)}</td>
-                    <td className={cn("py-1 pr-2 text-right", out(r.b) ? "text-severity-critical" : "text-foreground")}>{val(r.b)}</td>
-                    <td className="py-1 pr-2 text-right text-muted-foreground">{d === null || Math.abs(d) < 0.05 ? "—" : signed(d, r.digits ?? 1)}</td>
-                    <td className="py-1 text-right text-muted-foreground">{r.target ? `${r.target[0]}–${r.target[1]}` : "—"}</td>
-                  </tr>
+                  <TableRow key={r.label} className="border-0 hover:bg-transparent border-b border-border/60 last:border-0 font-mono text-2xs">
+                    <TableCell className="p-0 whitespace-normal py-1 pr-2 font-sans text-xs text-foreground">{r.label}</TableCell>
+                    <TableCell className={cn("p-0 whitespace-normal", "py-1 pr-2 text-right", out(r.a) ? "text-severity-critical" : "text-foreground")}>{val(r.a)}</TableCell>
+                    <TableCell className={cn("p-0 whitespace-normal", "py-1 pr-2 text-right", out(r.b) ? "text-severity-critical" : "text-foreground")}>{val(r.b)}</TableCell>
+                    <TableCell className="p-0 whitespace-normal py-1 pr-2 text-right text-muted-foreground">{d === null || Math.abs(d) < 0.05 ? "—" : signed(d, r.digits ?? 1)}</TableCell>
+                    <TableCell className="p-0 whitespace-normal py-1 text-right text-muted-foreground">{r.target ? `${r.target[0]}–${r.target[1]}` : "—"}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           <p className="mt-1.5 text-3xs text-muted-foreground">Red: outside the coach's target for this golfer.</p>
         </div>
       </div>
@@ -873,55 +881,55 @@ function SwingTable({ selected, onSelect, monitor }: { selected: number; onSelec
         <span className="text-2xs text-muted-foreground">Click a row to review that swing above</span>
       </header>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-border">
-              {cols.map(([h, full]) => <th key={h} title={full} className="px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</th>)}
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full border-collapse">
+          <TableHeader>
+            <TableRow className="border-0 hover:bg-transparent border-b border-border">
+              {cols.map(([h, full]) => <TableHead key={h} title={full} className="h-auto px-0 whitespace-normal text-current px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</TableHead>)}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {SWINGS.map((s) => {
               const sc = swingScore(s);
               const ball = hasBall(s);
               const faults = findingsFor(s, ball);
               return (
-                <tr key={s.n} tabIndex={0} onClick={() => onSelect(s.n)} onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
-                  className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted")}>
-                  <td className={cn(cell, "font-semibold text-foreground")}>{s.n}</td>
-                  <td className={cn(cell, "font-semibold", TONE_TEXT[gradeTone(gradeOf(sc))])}>{sc}</td>
-                  <td className={cn(cell, red(!inRange(s.chestTurn, TARGET.chestTurn)))}>{s.chestTurn}</td>
-                  <td className={cn(cell, red(!inRange(s.pelvisTurn, TARGET.pelvisTurn)))}>{s.pelvisTurn}</td>
-                  <td className={cn(cell, red(!inRange(xFactor(s), TARGET.xFactor)))}>{xFactor(s)}</td>
-                  <td className={cn(cell, red(s.pelvisSway > TARGET.pelvisSway[1]))}>{s.pelvisSway.toFixed(1)}</td>
-                  <td className={cn(cell, red(s.headMove > TARGET.headMove[1]))}>{s.headMove.toFixed(1)}</td>
-                  <td className={cn(cell, red(spineLost(s) > TARGET.spineLost[1]))}>{spineLost(s)}</td>
-                  <td className={cn(cell, red(s.pelvisThrust > TARGET.pelvisThrust[1]))}>{s.pelvisThrust.toFixed(1)}</td>
-                  <td className={cn(cell, red(!inRange(tempo(s), TARGET.tempo)))}>{tempo(s).toFixed(1)}</td>
+                <TableRow key={s.n} tabIndex={0} onClick={() => onSelect(s.n)} onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
+                  className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted")}>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold text-foreground")}>{s.n}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", TONE_TEXT[gradeTone(gradeOf(sc))])}>{sc}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(!inRange(s.chestTurn, TARGET.chestTurn)))}>{s.chestTurn}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(!inRange(s.pelvisTurn, TARGET.pelvisTurn)))}>{s.pelvisTurn}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(!inRange(xFactor(s), TARGET.xFactor)))}>{xFactor(s)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(s.pelvisSway > TARGET.pelvisSway[1]))}>{s.pelvisSway.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(s.headMove > TARGET.headMove[1]))}>{s.headMove.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(spineLost(s) > TARGET.spineLost[1]))}>{spineLost(s)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(s.pelvisThrust > TARGET.pelvisThrust[1]))}>{s.pelvisThrust.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(!inRange(tempo(s), TARGET.tempo)))}>{tempo(s).toFixed(1)}</TableCell>
                   {mode === "none" ? null : ball ? (
                     <>
-                      <td className={cn(cell, "text-muted-foreground")}>{s.clubSpeed}</td>
-                      <td className={cn(cell, "text-foreground")}>{s.carry}</td>
-                      <td className={cn(cell, red(!inRange(s.clubPath, TARGET.clubPath)))}>{signed(s.clubPath)}</td>
-                      <td className={cn(cell, "text-muted-foreground")}>{signed(s.faceAngle)}</td>
-                      <td className={cn(cell, red(shapeOf(s) === "Slice" || shapeOf(s) === "Hook"))}>{shapeOf(s)}</td>
+                      <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{s.clubSpeed}</TableCell>
+                      <TableCell className={cn("p-0 whitespace-normal", cell, "text-foreground")}>{s.carry}</TableCell>
+                      <TableCell className={cn("p-0 whitespace-normal", cell, red(!inRange(s.clubPath, TARGET.clubPath)))}>{signed(s.clubPath)}</TableCell>
+                      <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{signed(s.faceAngle)}</TableCell>
+                      <TableCell className={cn("p-0 whitespace-normal", cell, red(shapeOf(s) === "Slice" || shapeOf(s) === "Hook"))}>{shapeOf(s)}</TableCell>
                     </>
                   ) : (
-                    <td colSpan={BALL_COLS.length} className={cn(cell, "font-sans text-muted-foreground")} title={`${DEVICE} offline from ${OFFLINE_AT}`}>
+                    <TableCell colSpan={BALL_COLS.length} className={cn("p-0 whitespace-normal", cell, "font-sans text-muted-foreground")} title={`${DEVICE} offline from ${OFFLINE_AT}`}>
                       No data · launch monitor offline
-                    </td>
+                    </TableCell>
                   )}
-                  <td className={cn(cell, "font-sans")}>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans")}>
                     {faults.length ? (
                       <span className="flex flex-wrap gap-1">
                         {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   );

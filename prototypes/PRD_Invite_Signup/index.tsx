@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { RotateCcw, LayoutDashboard } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -24,15 +25,17 @@ type Stage = "setup" | "verify" | "welcome";
 /* PROTOTYPE-ONLY: restart the flow from the top without reloading the page. */
 function RestartButton({ onRestart }: { onRestart: () => void }) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       data-slot="restart-flow-button"
       onClick={onRestart}
       title="Restart flow"
-      className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-floating transition-opacity hover:opacity-100 hover:text-foreground"
+      className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-floating transition-opacity h-auto hover:opacity-100 hover:text-foreground hover:bg-card dark:hover:bg-card"
     >
       <RotateCcw className="size-3.5" />
       Restart flow
-    </button>
+    </Button>
   );
 }
 

@@ -41,7 +41,7 @@ src/
 
 > **Design system & Storybook.** Run `npm run storybook` to browse the full
 > library. Before building anything, check what already exists:
-> - **`components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible).
+> - **`components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible), plus **SegmentedControl** (option groups, view switchers, filter chips), **Item / ItemButton** (clickable list rows and cards), **Slider** (range values).
 > - **`components/shared/`** — app composites: `StatusBadge` (all status/severity/health pills), `SectionCard`, `EmptyState`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `ConfirmDialog`, `DataTable`, `KpiCard`.
 > - **`components/charts/`** — `AreaChart`, `BarChart`, `LineChart`, `DonutChart`.
 > - **`lib/formatters.ts`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.

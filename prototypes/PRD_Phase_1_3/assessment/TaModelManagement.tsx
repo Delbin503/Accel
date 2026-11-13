@@ -83,6 +83,7 @@ import type { ExtractedRule } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity, ConditionRow } from "@/types/rules";
 import type { RuleConfig } from "@/types/ruleTemplates";
 import { newClassParams, newConfig } from "@/lib/ruleTemplates";
+import { ItemButton } from "@/components/ui/item";
 
 /* ── Counter ─────────────────────────────────────────────────────────────── */
 
@@ -128,15 +129,15 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          className="group relative flex size-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-primary/40 bg-primary/10 transition-all hover:border-primary hover:bg-primary/15"
+        <Button variant="link"
+          className="h-auto p-0 group relative flex size-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-primary/40 bg-primary/10 transition-all hover:border-primary hover:bg-primary/15"
           title="Change icon"
         >
           <IconComp className="size-5 text-primary-ink" />
           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-scrim/50 opacity-0 transition-opacity group-hover:opacity-100">
             <Edit2 className="size-3 text-media-foreground" />
           </span>
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-3" sideOffset={6} align="start">
         <p className="mb-2.5 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/50">
@@ -144,11 +145,11 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
         </p>
         <div className="grid grid-cols-5 gap-1.5">
           {Object.entries(MODEL_ICONS).map(([key, Comp]) => (
-            <button
+            <ItemButton variant="plain"
               key={key}
               onClick={() => onChange(key)}
               className={cn(
-                "flex items-center justify-center rounded-lg border p-2 transition-all hover:border-primary/40 hover:bg-primary/10",
+                "gap-0", "flex items-center justify-center rounded-lg border p-2 transition-all hover:border-primary/40 hover:bg-primary/10",
                 current === key
                   ? "border-primary/50 bg-primary/15 text-primary-ink"
                   : "border-transparent bg-muted text-muted-foreground"
@@ -156,7 +157,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
               title={key}
             >
               <Comp className="size-4" />
-            </button>
+            </ItemButton>
           ))}
         </div>
       </PopoverContent>
@@ -324,18 +325,18 @@ function TagInput({
             className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-sm font-medium text-foreground"
           >
             {t}
-            <button
+            <Button variant="ghost" size="icon-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove(t);
               }}
-              className="flex size-3.5 items-center justify-center text-muted-foreground hover:text-foreground"
+              className="border-0 flex size-3.5 items-center justify-center text-muted-foreground hover:text-foreground"
             >
               <X className="size-2.5" />
-            </button>
+            </Button>
           </span>
         ))}
-        <input
+        <Input
           ref={ref}
           value={val}
           onChange={(e) => { setVal(e.target.value); setOpen(true); }}
@@ -350,7 +351,7 @@ function TagInput({
             if (e.key === "Backspace" && !val && tags.length > 0) onRemove(tags[tags.length - 1]);
           }}
           placeholder={tags.length === 0 ? "+ Add tag" : ""}
-          className="min-w-[80px] flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+          className="h-auto min-w-0 rounded-none border-0 p-0 shadow-none focus-visible:ring-0 md:text-base dark:bg-transparent min-w-[80px] w-auto flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
@@ -361,25 +362,25 @@ function TagInput({
             </div>
           )}
           {filteredSuggestions.slice(0, 8).map((s) => (
-            <button
+            <ItemButton variant="plain"
               key={s}
               onMouseDown={(e) => { e.preventDefault(); commit(s); }}
               className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-foreground hover:bg-muted"
             >
               <span className="inline-block size-1.5 rounded-full bg-primary/60" />
               {s}
-            </button>
+            </ItemButton>
           ))}
           {showCreate && (
             <>
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
-              <button
+              <ItemButton variant="plain"
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
                 className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary-ink hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
-              </button>
+              </ItemButton>
             </>
           )}
         </div>
@@ -432,10 +433,10 @@ function ModelCard({
   const IconComp = getIconComp(model.iconKey);
 
   return (
-    <button data-slot="model-card"
+    <ItemButton variant="plain" data-slot="model-card"
       onClick={onClick}
       className={cn(
-        "group w-full rounded-xl border px-4 py-3.5 text-left transition-all",
+        "block items-stretch gap-0 text-inherit", "group w-full rounded-xl border px-4 py-3.5 text-left transition-all",
         selected
           ? "border-primary/40 bg-primary/5"
           : "border-border bg-card hover:border-primary/20 hover:bg-muted/30"
@@ -496,7 +497,7 @@ function ModelCard({
           />
         )}
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -570,22 +571,23 @@ function UploadDropzone({
       {value ? (
         <div className="flex max-w-full items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1">
           <span className="truncate font-mono text-sm text-foreground">{value}</span>
-          <button
+          <Button variant="ghost" size="icon-xs"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onChange("");
             }}
             aria-label="Remove file"
-            className="flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-severity-critical"
+            className="border-0 flex size-4 flex-shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-severity-critical"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       ) : (
         <p className="text-center text-sm text-muted-foreground">{primary}</p>
       )}
       <p className="text-center text-xs text-muted-foreground/80">{hint}</p>
+      {/* eslint-disable-next-line no-restricted-syntax -- hidden file input, no visible UI */}
       <input
         ref={inputRef}
         type="file"
@@ -1132,13 +1134,13 @@ function CustomizeStepsDrawer({
               {steps.length}
             </span>
           </p>
-          <button
+          <Button variant="ghost" size="icon-sm"
             onClick={onClose}
             aria-label="Close customize"
-            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="border-0 flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           Drag a step into the sequence, or press Add. Drag one here to remove it.
@@ -1209,16 +1211,16 @@ function IconAction({
   tone?: "primary" | "danger";
 }) {
   return (
-    <button
+    <Button variant="ghost" size="icon-xs"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       title={title}
       className={cn(
-        "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
+        "border-0", "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
         tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary-ink"
       )}
     >
       <Icon className="size-3" />
-    </button>
+    </Button>
   );
 }
 
@@ -1274,13 +1276,13 @@ function SequenceItem({
       </div>
       <FileTypeBadge fileName={step.modelFile} />
       {editable && (
-        <button
+        <Button variant="ghost" size="icon-xs"
           onClick={onRemoveFromSequence}
-          className="ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
+          className="border-0 ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
           title="Remove from sequence (moves to Customize)"
         >
           <X className="size-3" />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -1664,12 +1666,12 @@ function AddRuleModal({
               {filtered.map((rule) => {
                 const checked = picked.includes(rule.id);
                 return (
-                  <button
+                  <ItemButton variant="plain"
                     key={rule.id}
                     type="button"
                     onClick={() => toggle(rule.id)}
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors duration-[var(--duration-fast)] ease-standard",
+                      "text-inherit", "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors duration-[var(--duration-fast)] ease-standard",
                       checked ? "border-primary bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30"
                     )}
                   >
@@ -1692,7 +1694,7 @@ function AddRuleModal({
                         className="line-clamp-2 text-xs leading-relaxed text-muted-foreground"
                       />
                     </div>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -2578,7 +2580,7 @@ export function TaModelManagement() {
 
           <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
             <PopoverTrigger asChild>
-              <button className={cn(
+              <ItemButton variant="plain" className={cn(
                 "flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-base transition-colors hover:border-primary",
                 tagFilterOpen ? "border-primary" : "border-border",
                 tagFilter.length > 0 ? "text-foreground" : "text-muted-foreground"
@@ -2604,13 +2606,13 @@ export function TaModelManagement() {
                 ) : (
                   <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", tagFilterOpen && "rotate-180")} />
                 )}
-              </button>
+              </ItemButton>
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-[260px] w-56 overflow-y-auto p-1.5">
               {(() => {
                 const allSelected = tagFilter.length === MODEL_TAGS.length;
                 return (
-                  <button
+                  <ItemButton variant="plain"
                     onClick={() => setTagFilter(allSelected ? [] : [...MODEL_TAGS])}
                     className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base font-semibold text-foreground hover:bg-muted">
                     <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
@@ -2618,14 +2620,14 @@ export function TaModelManagement() {
                       {allSelected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
                     </div>
                     Select all
-                  </button>
+                  </ItemButton>
                 );
               })()}
               <div className="my-1 border-t border-border" />
               {MODEL_TAGS.map((tag) => {
                 const checked = tagFilter.includes(tag);
                 return (
-                  <button key={tag}
+                  <ItemButton variant="plain" key={tag}
                     onClick={() => setTagFilter((curr) => curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag])}
                     className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
                     <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
@@ -2633,17 +2635,17 @@ export function TaModelManagement() {
                       {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
                     </div>
                     {tag}
-                  </button>
+                  </ItemButton>
                 );
               })}
               {tagFilter.length > 0 && (
                 <div className="mt-1 border-t border-border pt-1.5">
-                  <button
+                  <ItemButton variant="plain"
                     onClick={() => setTagFilter([])}
-                    className="w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary-ink"
+                    className="block items-stretch gap-0 w-full rounded px-2 py-1 text-center text-xs text-muted-foreground underline hover:text-primary-ink"
                   >
                     Remove all
-                  </button>
+                  </ItemButton>
                 </div>
               )}
             </PopoverContent>

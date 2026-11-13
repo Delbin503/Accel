@@ -6,6 +6,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import type { Severity } from "@/types/detection";
 import { agoLabel, plainSummary, type LiveDetection } from "./liveDetections";
+import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
 
 /* Live detections on the camera wall — the side panel's Detections tab and the
    card stack in the bottom corner. Both open the event in the Detection Feed. */
@@ -69,11 +71,11 @@ export function DetectionsPanel({ detections, now, onOpen, onLocate }: {
                 SEVERITY_EDGE[d.event.severity]
               )}
             >
-              <button
+              <ItemButton variant="plain"
                 type="button"
                 onClick={() => onOpen(d)}
                 aria-label={`Open ${d.event.typeLabel} on ${d.event.camera} in the Detection Feed`}
-                className="block w-full py-2.5 pl-3.5 pr-9 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="block items-stretch gap-0 text-inherit block w-full py-2.5 pl-3.5 pr-9 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="flex items-center gap-2">
                   <StatusBadge tone={d.event.severity} dot={false}>{SEVERITY_LABEL[d.event.severity]}</StatusBadge>
@@ -85,17 +87,17 @@ export function DetectionsPanel({ detections, now, onOpen, onLocate }: {
                   <span className="truncate font-mono">{whereLabel(d)}</span>
                   <ArrowUpRight className="ml-auto size-3 shrink-0 opacity-0 transition-opacity group-hover/det:opacity-100" />
                 </span>
-              </button>
+              </ItemButton>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
+                  <Button variant="ghost" size="icon-xs"
                     type="button"
                     aria-label={`Show ${d.event.camera} on the wall`}
                     onClick={() => onLocate(d.event.camera)}
-                    className="absolute bottom-2 right-2 flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/det:opacity-100"
+                    className="border-0 absolute bottom-2 right-2 flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/det:opacity-100"
                   >
                     <LocateFixed className="size-3.5" />
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>Show {d.event.camera} on the wall</TooltipContent>
               </Tooltip>
@@ -155,11 +157,11 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
             "animate-in fade-in-0 slide-in-from-bottom-2 duration-[var(--duration-normal)]"
           )}
         >
-          <button
+          <ItemButton variant="plain"
             type="button"
             onClick={() => onOpen(d)}
             aria-label={`Open ${d.event.typeLabel} on ${d.event.camera} in the Detection Feed`}
-            className="block w-full py-3 pl-4 pr-10 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="block items-stretch gap-0 text-inherit block w-full py-3 pl-4 pr-10 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="flex items-center gap-2">
               <StatusBadge tone={d.event.severity} dot={false}>{SEVERITY_LABEL[d.event.severity]}</StatusBadge>
@@ -170,36 +172,36 @@ export function DetectionCardStack({ cards, now, lift, onOpen, onDismiss, onClea
               <span className="truncate font-mono">{whereLabel(d)}</span>
               <span className="shrink-0 font-mono">{agoLabel(d.at, now)}</span>
             </span>
-          </button>
-          <button
+          </ItemButton>
+          <Button variant="ghost" size="icon-xs"
             type="button"
             aria-label={`Dismiss ${d.event.typeLabel} notification`}
             onClick={() => onDismiss(d.id)}
-            className="absolute right-2 top-2 flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="border-0 absolute right-2 top-2 flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       ))}
 
       <div className="flex items-center justify-end gap-2">
         {hidden > 0 && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onShowAll}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-foreground shadow-raised hover:border-primary/40"
+            className="h-auto rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-foreground shadow-raised hover:border-primary/40"
           >
             +{hidden} more
-          </button>
+          </Button>
         )}
         {cards.length > 1 && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onClearAll}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-muted-foreground shadow-raised hover:text-foreground"
+            className="h-auto rounded-full border border-border bg-card px-2.5 py-1 text-2xs font-semibold text-muted-foreground shadow-raised hover:text-foreground"
           >
             Clear all
-          </button>
+          </Button>
         )}
       </div>
     </div>,

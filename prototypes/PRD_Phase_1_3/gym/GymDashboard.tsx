@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ItemButton } from "@/components/ui/item";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -167,9 +170,9 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label={text} className="inline-flex text-muted-foreground/70 transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs leading-snug">{text}</TooltipContent>
     </UiTooltip>
@@ -304,10 +307,10 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
 
   const step = (d: number) => onPhase(PHASE_ORDER[Math.max(0, Math.min(PHASE_ORDER.length - 1, PHASE_ORDER.indexOf(phase) + d))]);
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
-    <button type="button" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+    <Button variant="ghost" size="icon-xs" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
+      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink hover:bg-primary/15 hover:text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
       <Icon className="size-3.5" />
-    </button>
+    </Button>
   );
 
   return (
@@ -321,10 +324,10 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
         <div className="flex items-center gap-1">
           {toolBtn("line", PenLine, "Draw a line")}
           {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
-          <button type="button" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
+          <Button variant="ghost" size="icon-xs" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
             className="grid size-6 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40">
             <Eraser className="size-3.5" />
-          </button>
+          </Button>
           <label className="ml-1 flex items-center gap-1 text-2xs text-muted-foreground">
             <Switch checked={showPose} onCheckedChange={setShowPose} className="scale-75" aria-label="Show pose" />
             Pose
@@ -348,7 +351,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
       </div>
       {/* Key moments of the picked rep */}
       <div data-slot="video-panel-moments" className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
-        <button type="button" aria-label={running ? "Pause" : "Play through the rep"}
+        <Button variant="ghost" size="icon-xs" aria-label={running ? "Pause" : "Play through the rep"}
           onClick={() => {
             if (running) return setPlaying(false);
             if (phase === "lockout") onPhase("setup");
@@ -356,18 +359,20 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
           }}
           className="grid size-6 shrink-0 place-items-center rounded text-foreground hover:bg-muted">
           {running ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        </button>
-        <button type="button" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></button>
-        <div role="tablist" aria-label="Key moments" className="flex min-w-0 flex-1 gap-1">
+        </Button>
+        <Button variant="ghost" size="icon-xs" aria-label="Previous moment" onClick={() => step(-1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronLeft className="size-3.5" /></Button>
+        <SegmentedControl type="single" size="sm" aria-label="Key moments" value={phase}
+          onValueChange={(next) => { if (!next) return; setPlaying(false); onPhase(next as Phase); }}
+          className="flex min-w-0 flex-1 gap-1 rounded-none bg-transparent p-0">
           {PHASES.map((p) => (
-            <button key={p.key} type="button" role="tab" aria-selected={p.key === phase} onClick={() => { setPlaying(false); onPhase(p.key); }}
-              className={cn("min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)]",
+            <SegmentedControlItem key={p.key} value={p.key}
+              className={cn("block h-auto min-w-0 flex-1 truncate rounded px-1 py-0.5 text-2xs font-semibold transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none",
                 p.key === phase ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               {p.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
-        <button type="button" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></button>
+        </SegmentedControl>
+        <Button variant="ghost" size="icon-xs" aria-label="Next moment" onClick={() => step(1)} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"><ChevronRight className="size-3.5" /></Button>
       </div>
       {/* Workout timeline: every rep, grouped by set, coloured by its grade */}
       <div data-slot="video-panel-timeline" className="flex h-8 shrink-0 items-center gap-2 border-t border-border px-2">
@@ -377,7 +382,7 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
             <div key={s} className="flex min-w-0 flex-1 items-center gap-0.5 rounded bg-muted/60 px-1 py-0.5">
               <span className={cn("mr-0.5 shrink-0 text-3xs font-bold", s === rep.set ? "text-foreground" : "text-muted-foreground")}>S{s}</span>
               {repsOf(s).map((r) => (
-                <button key={r.id} type="button" onClick={() => onSelect(r.id)} aria-label={`${repLabel(r)} at ${fmtClock(r.at)}`} title={`${repLabel(r)} · ${fmtClock(r.at)} · ${repScore(r)}/100`}
+                <ItemButton key={r.id} variant="plain" onClick={() => onSelect(r.id)} aria-label={`${repLabel(r)} at ${fmtClock(r.at)}`} title={`${repLabel(r)} · ${fmtClock(r.at)} · ${repScore(r)}/100`}
                   className={cn("h-2.5 min-w-0 flex-1 rounded-sm transition-transform hover:scale-y-150", r.id === rep.id ? "bg-foreground ring-2 ring-primary/50" : TONE_DOT[repTone(r)])} />
               ))}
             </div>
@@ -421,28 +426,32 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
     <Panel className={className} title="Rep Review" meta={open ? `${open} findings to review` : "All reviewed"}>
       {/* One set at a time: the set tabs carry each set's speed loss, and the
           picked set's reps sit underneath at full size. */}
-      <div data-slot="review-panel-sets" role="tablist" aria-label="Sets" className="mb-1.5 grid shrink-0 grid-cols-4 gap-1">
+      <SegmentedControl type="single" data-slot="review-panel-sets" aria-label="Sets" value={String(rep.set)}
+        onValueChange={(next) => { if (next && Number(next) !== rep.set) onSelect(repsOf(Number(next))[0].id); }}
+        className="mb-1.5 grid w-auto shrink-0 grid-cols-4 gap-1 rounded-none bg-transparent p-0">
         {SETS.map((s) => {
           const active = s === rep.set;
           const loss = velLossIn(s, device);
           const est = setEstimated(s, device);
           return (
-            <button key={s} type="button" role="tab" aria-selected={active} onClick={() => !active && onSelect(repsOf(s)[0].id)}
+            <SegmentedControlItem key={s} value={String(s)}
               title={est ? "Speed loss estimated from video" : undefined}
-              className={cn("flex items-center justify-between gap-1 rounded-md border px-2 py-1 transition-colors duration-[var(--duration-fast)]",
+              className={cn("flex h-auto items-center justify-between gap-1 rounded-md border px-2 py-1 transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/10 data-[state=on]:shadow-none",
                 active ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40")}>
               <span className={cn("text-2xs font-semibold", active ? "text-foreground" : "text-muted-foreground")}>Set {s}</span>
               <span className={cn("font-mono text-3xs", loss > TARGET.velLoss ? "text-severity-critical" : "text-muted-foreground")}>{est && "≈"}−{loss}%</span>
-            </button>
+            </SegmentedControlItem>
           );
         })}
-      </div>
-      <div data-slot="review-panel-reps" role="tablist" aria-label={`Set ${rep.set} reps`} className="mb-2 grid shrink-0 grid-cols-5 gap-1">
+      </SegmentedControl>
+      <SegmentedControl type="single" data-slot="review-panel-reps" aria-label={`Set ${rep.set} reps`} value={rep.id}
+        onValueChange={(next) => next && onSelect(next)}
+        className="mb-2 grid w-auto shrink-0 grid-cols-5 gap-1 rounded-none bg-transparent p-0">
         {repsOf(rep.set).map((r) => {
           const active = r.id === rep.id;
           return (
-            <button key={r.id} type="button" role="tab" aria-selected={active} aria-label={repLabel(r)} onClick={() => onSelect(r.id)}
-              className={cn("flex flex-col items-center rounded-md border py-0.5 transition-colors duration-[var(--duration-fast)]",
+            <SegmentedControlItem key={r.id} value={r.id} aria-label={repLabel(r)}
+              className={cn("flex h-auto flex-col items-center gap-0 rounded-md border px-0 py-0.5 transition-colors duration-[var(--duration-fast)] data-[state=on]:bg-primary/10 data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]",
                 active ? "border-primary bg-primary/10 shadow-[inset_0_0_0_1px_var(--primary)]" : "border-border bg-background hover:border-primary/40")}>
               <span className="flex items-center gap-0.5 text-2xs font-bold text-foreground">
                 Rep {r.rep}
@@ -450,10 +459,10 @@ function ReviewPanel({ className, rep, device, reviews, onReview, onSelect }: {
                 {r.id === WEAKEST_REP && <span title="Weakest rep" className="size-1.5 rounded-full bg-severity-critical" />}
               </span>
               <span className={cn("font-mono text-3xs font-semibold", TONE_TEXT[repTone(r)])}>{repScore(r)}</span>
-            </button>
+            </SegmentedControlItem>
           );
         })}
-      </div>
+      </SegmentedControl>
       <p className="mb-1 flex shrink-0 items-center gap-2 font-mono text-2xs text-muted-foreground">
         <span className="truncate">
           {repLabel(rep)}: <span className="font-semibold text-foreground" title={repEst ? "Speed estimated from video" : undefined}>{score}/100 · {repEst && "≈"}{velIn(rep, device).toFixed(2)} m/s</span> · {met}/{measured.length} met
@@ -500,16 +509,16 @@ function FindingRow({ id, f, status, onReview }: { id: string; f: Finding; statu
         <p className="truncate font-mono text-3xs text-muted-foreground">{f.detail} · <span className={CONF_TONE[f.confidence]}>{f.confidence}</span></p>
       </div>
       {status ? (
-        <button type="button" onClick={() => onReview(k, status === "confirmed" ? "dismissed" : "confirmed")} className="shrink-0 text-3xs font-semibold text-muted-foreground hover:text-foreground"
+        <Button variant="link" onClick={() => onReview(k, status === "confirmed" ? "dismissed" : "confirmed")} className="h-auto shrink-0 p-0 hover:no-underline text-3xs font-semibold text-muted-foreground hover:text-foreground"
           title="Change review">
           {status === "confirmed" ? "Confirmed" : "Dismissed"} · undo
-        </button>
+        </Button>
       ) : (
         <div className="flex shrink-0 gap-1">
-          <button type="button" aria-label={`Confirm ${FAULTS[f.key].label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></button>
-          <button type="button" aria-label={`Dismiss ${FAULTS[f.key].label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
-            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></button>
+          <Button variant="outline" size="icon-xs" aria-label={`Confirm ${FAULTS[f.key].label}`} title="Confirm" onClick={() => onReview(k, "confirmed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-success hover:bg-success/10"><Check className="size-3.5" /></Button>
+          <Button variant="outline" size="icon-xs" aria-label={`Dismiss ${FAULTS[f.key].label}`} title="Dismiss" onClick={() => onReview(k, "dismissed")}
+            className="grid size-6 place-items-center rounded border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" /></Button>
         </div>
       )}
     </li>
@@ -737,9 +746,9 @@ function CoachingPanel({ className, device, onSee }: { className?: string; devic
               <span className="rounded-md border-l-2 border-warning bg-warning/10 px-2 py-0.5 text-2xs font-semibold text-foreground">“{f.cue}”</span>
               <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-2xs text-muted-foreground"><Dumbbell className="size-3" />{f.drill}</span>
               {f.example && (
-                <button type="button" onClick={() => onSee(f.example!, f.key)} className="ml-auto text-2xs font-semibold text-primary-ink hover:underline">
+                <Button variant="link" onClick={() => onSee(f.example!, f.key)} className="h-auto p-0 ml-auto text-2xs font-semibold text-primary-ink hover:underline">
                   See rep {f.example} →
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -866,36 +875,36 @@ function CompareSection({ device }: { device: DeviceMode }) {
           )}
         </div>
         <div className="lg:col-span-4">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border text-left text-3xs font-semibold uppercase text-muted-foreground">
-                <th className="py-1.5 pr-2">Measure</th>
-                <th className="py-1.5 pr-2 text-right">{A.id}</th>
-                <th className="py-1.5 pr-2 text-right">{B.id}</th>
-                <th className="py-1.5 pr-2 text-right">B − A</th>
-                <th className="py-1.5 text-right">Target</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full border-collapse">
+            <TableHeader>
+              <TableRow className="border-0 hover:bg-transparent border-b border-border text-left text-3xs font-semibold uppercase text-muted-foreground">
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2">Measure</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">{A.id}</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">{B.id}</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 pr-2 text-right">B − A</TableHead>
+                <TableHead className="h-auto px-0 whitespace-normal text-current py-1.5 text-right">Target</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((r) => {
                 const dg = r.digits ?? 1;
                 const d = +(r.b - r.a).toFixed(dg);
                 const na = r.na?.[0] || r.na?.[1];
                 const value = (v: number, i: 0 | 1) => (r.na?.[i] ? "—" : `${r.est?.[i] ? "≈" : ""}${v.toFixed(dg)}${r.unit}`);
                 return (
-                  <tr key={r.label} className="border-b border-border/60 font-mono text-2xs last:border-0">
-                    <td className="py-1 pr-2 font-sans text-xs text-foreground">
+                  <TableRow key={r.label} className="border-0 hover:bg-transparent border-b border-border/60 font-mono text-2xs last:border-0">
+                    <TableCell className="p-0 whitespace-normal py-1 pr-2 font-sans text-xs text-foreground">
                       {r.label}{(r.est?.[0] || r.est?.[1]) && <EstTag className="ml-1" />}
-                    </td>
-                    <td className={cn("py-1 pr-2 text-right", r.na?.[0] ? "text-muted-foreground" : r.bad?.(r.a) ? "text-severity-critical" : "text-foreground")}>{value(r.a, 0)}</td>
-                    <td className={cn("py-1 pr-2 text-right", r.na?.[1] ? "text-muted-foreground" : r.bad?.(r.b) ? "text-severity-critical" : "text-foreground")}>{value(r.b, 1)}</td>
-                    <td className="py-1 pr-2 text-right text-muted-foreground">{na || d === 0 ? "—" : signed(d, dg)}</td>
-                    <td className="py-1 text-right text-muted-foreground">{na ? <NeedsDevice device="sensor" className="font-sans" /> : r.target ?? "—"}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className={cn("p-0 whitespace-normal", "py-1 pr-2 text-right", r.na?.[0] ? "text-muted-foreground" : r.bad?.(r.a) ? "text-severity-critical" : "text-foreground")}>{value(r.a, 0)}</TableCell>
+                    <TableCell className={cn("p-0 whitespace-normal", "py-1 pr-2 text-right", r.na?.[1] ? "text-muted-foreground" : r.bad?.(r.b) ? "text-severity-critical" : "text-foreground")}>{value(r.b, 1)}</TableCell>
+                    <TableCell className="p-0 whitespace-normal py-1 pr-2 text-right text-muted-foreground">{na || d === 0 ? "—" : signed(d, dg)}</TableCell>
+                    <TableCell className="p-0 whitespace-normal py-1 text-right text-muted-foreground">{na ? <NeedsDevice device="sensor" className="font-sans" /> : r.target ?? "—"}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           <p className="mt-1.5 text-3xs text-muted-foreground">Red: outside the coach's target.</p>
         </div>
       </div>
@@ -922,17 +931,17 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
         </span>
       </header>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-border">
+        <Table className="w-full border-collapse">
+          <TableHeader>
+            <TableRow className="border-0 hover:bg-transparent border-b border-border">
               {cols.map(([h, full]) => (
-                <th key={h} title={full} className="px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">
+                <TableHead key={h} title={full} className="h-auto px-0 whitespace-normal text-current px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">
                   {h}{device === "none" && (h === "Speed" || h === "Loss") && <EstTag className="ml-1" />}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {REPS.map((r) => {
               const sc = repScore(r);
               const faults = findingsFor(r);
@@ -940,33 +949,33 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
               /* Offline: mark set 4's estimated cells; with no sensor the column headers carry the tag. */
               const approx = device === "offline" && !sensorMeasured(r, device) ? "≈" : "";
               return (
-                <tr key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
-                  className={cn("cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.rep === 1 && r.set > 1 && "border-t-2 border-t-border", r.id === selected && "bg-muted")}>
-                  <td className={cn(cell, "font-semibold", r.rep === 1 ? "text-foreground" : "text-transparent")}>{r.set}</td>
-                  <td className={cn(cell, "text-foreground")}>{r.rep}</td>
-                  <td className={cn(cell, "font-semibold", TONE_TEXT[repTone(r)])}>{sc}</td>
-                  <td className={cn(cell, red(r.depth < TARGET.depth))}>{signed(r.depth)}</td>
-                  <td className={cn(cell, red(r.lean > TARGET.lean))}>{r.lean}</td>
-                  <td className={cn(cell, red(r.hipRise > TARGET.hipRise))}>{r.hipRise}</td>
-                  <td className={cn(cell, red(r.drift > TARGET.drift))}>{r.drift.toFixed(1)}</td>
-                  <td className={cn(cell, "text-foreground")}>{approx}{velIn(r, device).toFixed(2)}</td>
-                  <td className={cn(cell, red(loss > TARGET.velLoss))}>{loss ? `${approx}${lossText(loss)}` : "—"}</td>
-                  <td className={cn(cell, red(r.ecc < TARGET.ecc[0]))}>{r.ecc.toFixed(1)}</td>
-                  <td className={cn(cell, "text-muted-foreground")}>{r.con.toFixed(2)}</td>
-                  <td className={cn(cell, red(r.lockout < TARGET.lockout))}>{r.lockout}</td>
-                  <td className={cn(cell, "text-muted-foreground/60")} title="Needs front camera">{r.knee ?? "n/a"}</td>
-                  <td className={cn(cell, "font-sans")}>
+                <TableRow key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
+                  className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.rep === 1 && r.set > 1 && "border-t-2 border-t-border", r.id === selected && "bg-muted")}>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", r.rep === 1 ? "text-foreground" : "text-transparent")}>{r.set}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-foreground")}>{r.rep}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", TONE_TEXT[repTone(r)])}>{sc}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.depth < TARGET.depth))}>{signed(r.depth)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lean > TARGET.lean))}>{r.lean}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.hipRise > TARGET.hipRise))}>{r.hipRise}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.drift > TARGET.drift))}>{r.drift.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-foreground")}>{approx}{velIn(r, device).toFixed(2)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(loss > TARGET.velLoss))}>{loss ? `${approx}${lossText(loss)}` : "—"}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.ecc < TARGET.ecc[0]))}>{r.ecc.toFixed(1)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{r.con.toFixed(2)}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lockout < TARGET.lockout))}>{r.lockout}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground/60")} title="Needs front camera">{r.knee ?? "n/a"}</TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans")}>
                     {faults.length ? (
                       <span className="flex flex-wrap gap-1">
                         {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
                       </span>
                     ) : <span className="text-3xs text-muted-foreground">None</span>}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   );
