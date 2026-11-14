@@ -1,5 +1,5 @@
-import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
-import { NotificationsDrawer } from "@/components/shared/NotificationsDrawer";
+import { SetupCompleteModal } from "@/components/app/SetupCompleteModal";
+import { NotificationsDrawer } from "@/components/app/NotificationsDrawer";
 import { GuideGifModal } from "@/components/custom/guide-gif-modal";
 import {
   renderDrawAreaFrame, DRAW_AREA_FRAME_COUNT,

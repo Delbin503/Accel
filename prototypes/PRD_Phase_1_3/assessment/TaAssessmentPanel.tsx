@@ -41,10 +41,10 @@ export function TaUseCasePanel({ uc }: { uc: UseCaseKey }) {
   return (
     <div data-slot="ta-use-case-panel" className="flex flex-col gap-4">
       <div data-slot="ta-use-case-panel-kpis" className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
-        <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} accent="severity-critical" onClick={() => go()} />
-        <KpiCard label="Total participants" value={participants} sub={`${u.people[0].toUpperCase()}${u.people.slice(1)} across all sessions`} accent="primary" onClick={() => go()} />
-        <KpiCard label="Scheduled" value={scheduled.length} sub={scheduled[0] ? `Next: ${scheduled[0].date}` : "Nothing booked"} accent="info" onClick={() => go()} />
-        <KpiCard label="Complete" value={complete.length} sub={`${complete.reduce((n, s) => n + s.flagged, 0)} flagged ${u.items}`} accent="success" onClick={() => go("results")} />
+        <KpiCard label="Live sessions" value={live.length} sub={live[0] ? live[0].name : "None running"} tone="severity-critical" onClick={() => go()} />
+        <KpiCard label="Total participants" value={participants} sub={`${u.people[0].toUpperCase()}${u.people.slice(1)} across all sessions`} tone="primary" onClick={() => go()} />
+        <KpiCard label="Scheduled" value={scheduled.length} sub={scheduled[0] ? `Next: ${scheduled[0].date}` : "Nothing booked"} tone="info" onClick={() => go()} />
+        <KpiCard label="Complete" value={complete.length} sub={`${complete.reduce((n, s) => n + s.flagged, 0)} flagged ${u.items}`} tone="success" onClick={() => go("results")} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">

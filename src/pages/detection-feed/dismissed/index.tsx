@@ -20,13 +20,14 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
 import { SeverityBadge, parseEventText } from "../shared";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RestoreDismissedModal } from "./RestoreDismissedModal";
+import { ItemButton } from "@/components/ui/item";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -61,7 +62,7 @@ const KPI_CONFIGS: {
   label: string;
   getValue: (items: DismissedEvent[]) => number;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
 }[] = [
   { key: "all",             label: "Total Dismissed", getValue: (i) => i.length,                                                              sub: "Last 30 days",            accent: "primary" },
   { key: "known-exemption", label: "Known Exemptions",getValue: (i) => i.filter((d) => d.reason === "known-exemption").length,               sub: "Authorized activities",   accent: "success" },
@@ -132,9 +133,10 @@ function FilterPanel({
 
   return (
     <div data-slot="dismissed-events-filter-panel" className="rounded-xl border border-border bg-card">
-      <button
+      <ItemButton
+        variant="plain"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
+        className="justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/30"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
@@ -159,7 +161,7 @@ function FilterPanel({
             : <ChevronDown className="size-4 text-muted-foreground" />
           }
         </div>
-      </button>
+      </ItemButton>
 
       {open && (
         <div data-slot="dismissed-events-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -237,22 +239,22 @@ function ActiveFilterBar({
       {search && (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
           "{search}"
-          <button onClick={onClearSearch} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground">
+          <Button variant="ghost" size="icon-xs" onClick={onClearSearch} className="size-4 rounded-full border-0 bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground dark:hover:bg-primary-fill">
             <X className="size-2.5" />
-          </button>
+          </Button>
         </span>
       )}
       {allActive.map(({ group, value, label }) => (
         <span key={`${group}-${value}`} className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
           {label}
-          <button onClick={() => onRemove(group, value)} className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground">
+          <Button variant="ghost" size="icon-xs" onClick={() => onRemove(group, value)} className="size-4 rounded-full border-0 bg-primary/20 text-primary-ink hover:bg-primary-fill hover:text-primary-foreground dark:hover:bg-primary-fill">
             <X className="size-2.5" />
-          </button>
+          </Button>
         </span>
       ))}
-      <button onClick={onClearAll} className="ml-auto text-xs text-muted-foreground underline hover:text-primary-ink">
+      <Button variant="link" onClick={onClearAll} className="ml-auto h-auto border-0 p-0 text-xs font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink">
         Clear all
-      </button>
+      </Button>
     </div>
   );
 }
@@ -287,19 +289,21 @@ function DismissedRow({
       <div data-slot="dismissed-row-thumb" className="self-start">
         <div className="relative h-[90px] w-[140px] flex-shrink-0 overflow-hidden rounded-md bg-camera-feed">
           {/* Select for bulk restore — same affordance as the Detection Feed. */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             type="button"
             role="checkbox"
             aria-checked={selected}
             aria-label={`Select ${event.id} for restore`}
             onClick={(e) => { e.stopPropagation(); onToggle(event.id); }}
             className={cn(
-              "absolute left-1.5 top-1.5 z-10 flex size-4 items-center justify-center rounded border transition-colors",
-              selected ? "border-primary bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary"
+              "absolute left-1.5 top-1.5 z-10 size-4 rounded border transition-colors active:not-aria-[haspopup]:translate-y-0",
+              selected ? "border-primary bg-primary hover:bg-primary dark:hover:bg-primary" : "border-media-foreground/50 bg-scrim/50 hover:border-primary hover:bg-scrim/50 dark:hover:bg-scrim/50"
             )}
           >
             {selected && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
-          </button>
+          </Button>
           {event.bboxes.map((box, i) => (
             <React.Fragment key={i}>
               <div
@@ -487,7 +491,7 @@ export default function DismissedEventsPage() {
             label={cfg.label}
             value={cfg.getValue(baseItems)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -522,9 +526,9 @@ export default function DismissedEventsPage() {
             <span className="flex items-center gap-1.5 text-sm text-success">
               <RotateCcw className="size-3" />
               {restoredIds.size} restored
-              <button onClick={() => setRestoredIds(new Set())} className="text-success/60 hover:text-success">
+              <Button variant="link" onClick={() => setRestoredIds(new Set())} className="h-auto border-0 p-0 text-sm font-normal text-success/60 hover:text-success hover:no-underline">
                 (undo)
-              </button>
+              </Button>
             </span>
           )}
         </div>

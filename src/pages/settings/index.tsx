@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ItemButton } from "@/components/ui/item";
+import { Switch } from "@/components/ui/switch";
 import {
   Modal,
   ModalContent,
@@ -98,15 +100,7 @@ export function DeleteAccountModal({
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors",
-        checked ? "border-primary bg-primary" : "border-border bg-muted"
-      )}
-    >
-      <span className={cn("inline-block size-3.5 rounded-full bg-card shadow-raised transition-transform", checked ? "translate-x-[18px]" : "translate-x-0.5")} />
-    </button>
+    <Switch checked={checked} onCheckedChange={(c) => onChange(c === true)} />
   );
 }
 
@@ -186,18 +180,18 @@ export default function SettingsPage() {
             ] as { v: "light" | "dark" | "system"; label: string; icon: React.ElementType }[]).map(({ v, label, icon: Icon }) => {
               const active = v === "system" ? false : theme === v;
               return (
-                <button
+                <ItemButton variant="plain" selected={active}
                   key={v}
                   onClick={() => v !== "system" && setTheme(v)}
                   disabled={v === "system"}
-                  className={cn(
+                  className={cn("w-auto",
                     "flex flex-col items-center gap-1.5 rounded-lg border bg-background px-3 py-4 transition-colors disabled:opacity-50",
                     active ? "border-primary bg-primary/5 text-primary-ink" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   )}
                 >
                   <Icon className="size-5" />
                   <span className="text-sm font-semibold">{label}</span>
-                </button>
+                </ItemButton>
               );
             })}
           </div>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DrawZoneModal } from "@/components/shared/DrawZoneModal";
+import { DrawZoneModal } from "@/components/app/DrawZoneModal";
 import { FloorPlanModal, type Tool } from "@/pages/site/overview/SiteDetailDrawer";
 import { MOCK_SITES_FULL } from "@/mocks/sites";
 import { MOCK_CAMERAS } from "@/mocks/cameras";

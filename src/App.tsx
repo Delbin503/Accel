@@ -6,7 +6,7 @@ import {
   RequireOnboarding,
   RedirectIfAuthed,
   RequireOnboardingStep,
-} from "@/components/shared/RequireOnboarding";
+} from "@/components/app/RequireOnboarding";
 
 /* ─── Pages ─────────────────────────────────────────────────────────────── */
 // Monitor

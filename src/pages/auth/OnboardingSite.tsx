@@ -173,11 +173,11 @@ export default function OnboardingSitePage() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Areas <span className="text-muted-foreground/60">(at least 1 required)</span>
               </label>
-              <button onClick={addArea}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline">
+              <Button variant="link" onClick={addArea}
+                className="h-auto gap-1 border-0 p-0 text-sm font-semibold text-primary-ink underline-offset-auto hover:underline">
                 <Plus className="size-3" />
                 Add area
-              </button>
+              </Button>
             </div>
             <div className="space-y-1.5">
               {areas.map((a) => (
@@ -189,12 +189,12 @@ export default function OnboardingSitePage() {
                   <Input value={a.name} onChange={(e) => renameArea(a.id, e.target.value)}
                     aria-invalid={!!errors.areas && !a.name.trim()}
                     placeholder="Area name" className="h-8 flex-1 border-0 bg-transparent text-base focus-visible:ring-0" />
-                  <button onClick={() => removeArea(a.id)}
+                  <Button variant="ghost" size="icon-sm" onClick={() => removeArea(a.id)}
                     disabled={areas.length === 1}
-                    className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-severity-critical disabled:opacity-30"
+                    className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-severity-critical disabled:opacity-30 dark:hover:bg-muted"
                     title="Remove area">
                     <Trash2 className="size-3" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>

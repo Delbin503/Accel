@@ -24,10 +24,11 @@ This is a **React + TypeScript dashboard**. All code generated here must follow 
 src/
 ├── components/
 │   ├── ui/          # shadcn primitives — managed by shadcn CLI, we own the code
+│   ├── shared/      # reusable design-system composites — no app state, routing or mock data
+│   ├── app/         # Accel-specific components (UserMenu, NotificationsBell, RequireRole, auth pieces…)
 │   ├── custom/      # custom components built on shadcn patterns (see conventions below)
 │   ├── layout/      # Sidebar, Header, page wrappers
 │   ├── charts/      # Recharts-based chart components
-│   └── shared/      # composite components reused across multiple pages
 ├── pages/           # one file or folder per route
 ├── lib/             # utilities — cn(), formatters, constants
 ├── hooks/           # custom React hooks
@@ -42,7 +43,9 @@ src/
 > **Design system & Storybook.** Run `npm run storybook` to browse the full
 > library. Before building anything, check what already exists:
 > - **`components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible), plus **SegmentedControl** (option groups, view switchers, filter chips), **Item / ItemButton** (clickable list rows and cards), **Slider** (range values).
-> - **`components/shared/`** — app composites: `StatusBadge` (all status/severity/health pills), `SectionCard`, `EmptyState`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `ConfirmDialog`, `DataTable`, `KpiCard`.
+> - **`components/shared/`** — reusable design-system composites: `StatusBadge` (all status/severity/health pills, `tone=`), `KpiCard` (`tone=`), `SectionCard`, `EmptyState`, `PageStates`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `DateRangeBar`, `Modal`/`ModalForm`/`ConfirmDialog`, `DataTable`, `ChoiceDropdown`, `OtpField`, `PhoneField`, `TimeSelect`, `ProgressRow`, `TruncatedText`, `FloatingBar`, `PlaybackControls`. These must never import from `@/stores`, `@/mocks`, `@/pages` or the router.
+> - **`components/app/`** — Accel-specific components that depend on app state, routing or product flows (`UserMenu`, `NotificationsBell`, `CommandPalette`, `RequireRole`, `DrawZoneModal`, auth/onboarding pieces). Not part of the reusable design system.
+> - **Prop vocabulary** — `variant` = visual style, `tone` = semantic colour (`success`, `warning`, `severity-critical`, `violet`…), `size` = scale. (`KpiCard accent=` is a deprecated alias of `tone`.)
 > - **`components/charts/`** — `AreaChart`, `BarChart`, `LineChart`, `DonutChart`.
 > - **`lib/formatters.ts`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.
 

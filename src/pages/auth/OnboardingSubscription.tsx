@@ -14,6 +14,8 @@ import { useSitesStore } from "@/stores/useSitesStore";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
 import { PLANS, type PlanTier } from "@/mocks/licenses";
 import { cn } from "@/lib/utils";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 
 const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
   starter: Sparkles,
@@ -186,18 +188,24 @@ export default function OnboardingSubscriptionPage({
 
         {step === "pick" ? (
           <>
-            <div data-slot="onboarding-subscription-page-billing-cycle" className="mt-5 flex items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm">
-              <button onClick={() => setCycle("monthly")}
-                className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                  cycle === "monthly" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+            <SegmentedControl
+              type="single"
+              value={cycle}
+              onValueChange={(next) => next && setCycle(next as typeof cycle)}
+              data-slot="onboarding-subscription-page-billing-cycle"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background p-1 text-sm"
+            >
+              <SegmentedControlItem value="monthly"
+                className={cn("h-auto flex-1 rounded-full px-3 py-1 text-sm font-semibold transition-colors data-[state=on]:shadow-none",
+                  cycle === "monthly" ? "hover:text-primary-foreground data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                 Monthly
-              </button>
-              <button onClick={() => setCycle("annual")}
-                className={cn("flex-1 rounded-full px-3 py-1 font-semibold transition-colors",
-                  cycle === "annual" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+              </SegmentedControlItem>
+              <SegmentedControlItem value="annual"
+                className={cn("h-auto flex-1 gap-1 rounded-full px-3 py-1 text-sm font-semibold transition-colors data-[state=on]:shadow-none",
+                  cycle === "annual" ? "hover:text-primary-foreground data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                 Annual <span className="text-2xs opacity-80">(save ~17%)</span>
-              </button>
-            </div>
+              </SegmentedControlItem>
+            </SegmentedControl>
 
             <div data-slot="onboarding-subscription-page-plans" className="mt-4 space-y-2">
               {TIER_ORDER.map((tier) => {
@@ -207,9 +215,9 @@ export default function OnboardingSubscriptionPage({
                 const isPicked = tier === picked;
                 const monthly = cycle === "annual" ? Math.round(p.pricePerYear / 12) : p.pricePerMonth;
                 return (
-                  <button key={tier} onClick={() => setPicked(tier)}
+                  <ItemButton variant="plain" selected={isPicked} key={tier} onClick={() => setPicked(tier)}
                     className={cn(
-                      "relative flex w-full items-start gap-3 rounded-lg border bg-background p-3.5 text-left transition-colors",
+                      "relative items-start gap-3 rounded-lg border bg-background p-3.5 transition-colors",
                       isPicked ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                     )}>
                     {p.highlight && (
@@ -243,7 +251,7 @@ export default function OnboardingSubscriptionPage({
                       <p className={cn("font-mono text-lg font-bold leading-none", color.text)}>${monthly}</p>
                       <p className="text-3xs text-muted-foreground">/mo</p>
                     </div>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -265,10 +273,10 @@ export default function OnboardingSubscriptionPage({
               <div className="rounded-lg border border-border bg-background p-3.5">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
-                  <button onClick={() => setStep("pick")}
-                    className="text-xs text-muted-foreground underline hover:text-primary-ink">
+                  <Button variant="link" onClick={() => setStep("pick")}
+                    className="h-auto border-0 p-0 text-xs font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink">
                     Change plan
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{plan.name} · {cycle === "annual" ? "Annual" : "Monthly"}</span>

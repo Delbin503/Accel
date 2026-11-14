@@ -39,11 +39,11 @@ export const Default: Story = {
 export const Accents: Story = {
   render: () => (
     <KpiGrid cols={5}>
-      <KpiCard label="Primary" value={142} sub="All time" accent="primary" />
-      <KpiCard label="Success" value={98} sub="Resolved" accent="success" />
-      <KpiCard label="Warning" value={17} sub="Pending" accent="warning" />
-      <KpiCard label="Critical" value={3} sub="Unresolved" accent="severity-critical" />
-      <KpiCard label="Info" value={24} sub="Informational" accent="info" />
+      <KpiCard label="Primary" value={142} sub="All time" tone="primary" />
+      <KpiCard label="Success" value={98} sub="Resolved" tone="success" />
+      <KpiCard label="Warning" value={17} sub="Pending" tone="warning" />
+      <KpiCard label="Critical" value={3} sub="Unresolved" tone="severity-critical" />
+      <KpiCard label="Info" value={24} sub="Informational" tone="info" />
     </KpiGrid>
   ),
 };
@@ -51,10 +51,10 @@ export const Accents: Story = {
 export const Clickable: Story = {
   render: () => (
     <KpiGrid cols={4}>
-      <KpiCard label="Total Cameras" value="11 / 14" sub="3 offline" accent="severity-critical" onClick={() => {}} />
-      <KpiCard label="Online" value={8} sub="Streaming" accent="success" onClick={() => {}} active />
-      <KpiCard label="Offline" value={3} sub="Check required" accent="warning" onClick={() => {}} />
-      <KpiCard label="Alerts Today" value={21} sub="Last 24 hours" accent="info" onClick={() => {}} />
+      <KpiCard label="Total Cameras" value="11 / 14" sub="3 offline" tone="severity-critical" onClick={() => {}} />
+      <KpiCard label="Online" value={8} sub="Streaming" tone="success" onClick={() => {}} active />
+      <KpiCard label="Offline" value={3} sub="Check required" tone="warning" onClick={() => {}} />
+      <KpiCard label="Alerts Today" value={21} sub="Last 24 hours" tone="info" onClick={() => {}} />
     </KpiGrid>
   ),
 };
@@ -62,10 +62,10 @@ export const Clickable: Story = {
 export const Compact: Story = {
   render: () => (
     <KpiGrid cols={4}>
-      <KpiCard compact label="Cameras" value="11 / 14" accent="primary" />
-      <KpiCard compact label="Online" value={8} accent="success" />
-      <KpiCard compact label="Offline" value={3} accent="severity-critical" />
-      <KpiCard compact label="Alerts" value={21} accent="warning" />
+      <KpiCard compact label="Cameras" value="11 / 14" tone="primary" />
+      <KpiCard compact label="Online" value={8} tone="success" />
+      <KpiCard compact label="Offline" value={3} tone="severity-critical" />
+      <KpiCard compact label="Alerts" value={21} tone="warning" />
     </KpiGrid>
   ),
 };
@@ -84,13 +84,13 @@ export const ActiveFilter: Story = {
 export const WithTrend: Story = {
   render: () => (
     <KpiGrid cols={3}>
-      <KpiCard label="Total Cases" value={250} sub="+60 added" accent="primary" trend={{ value: "12.5%", direction: "up" }} />
-      <KpiCard label="Closed" value={60} sub="+40 closed" accent="success" trend={{ value: "2.5%", direction: "up" }} />
+      <KpiCard label="Total Cases" value={250} sub="+60 added" tone="primary" trend={{ value: "12.5%", direction: "up" }} />
+      <KpiCard label="Closed" value={60} sub="+40 closed" tone="success" trend={{ value: "2.5%", direction: "up" }} />
       <KpiCard
         label="Critical Events"
         value={14}
         sub="vs prior"
-        accent="severity-critical"
+        tone="severity-critical"
         trend={{ value: "8.0%", direction: "up", sentiment: "negative" }}
       />
     </KpiGrid>

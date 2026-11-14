@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
 import {
   ChevronRight,
   ChevronLeft,
@@ -274,13 +275,13 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Accent</p>
                 <div className="flex flex-wrap gap-2">
                   {accentChoices.map((c) => (
-                    <button key={c} onClick={() => setAccent(c)}
-                      className={cn("relative size-9 overflow-hidden rounded-lg border-2 transition-colors",
+                    <ItemButton variant="plain" selected={accent === c} key={c} onClick={() => setAccent(c)}
+                      className={cn("relative size-9 gap-0 overflow-hidden rounded-lg border-2 transition-colors",
                         accent === c ? "border-primary" : "border-border hover:border-primary/40")}
                       style={{ background: c }}
                       aria-label="Choose accent color">
                       {accent === c && <Check className="absolute inset-0 m-auto size-4 text-foreground drop-shadow" strokeWidth={3} />}
-                    </button>
+                    </ItemButton>
                   ))}
                 </div>
               </div>
@@ -339,18 +340,18 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                         <span className="flex-1 text-base font-semibold text-foreground">{a.name}</span>
                         <div className="flex items-center gap-1">
                           {AREA_PALETTE.slice(0, 6).map((c) => (
-                            <button key={c} onClick={() => setAreaColor(a.id, c)}
+                            <ItemButton variant="plain" selected={a.color === c} key={c} onClick={() => setAreaColor(a.id, c)}
                               title="Change color"
-                              className={cn("size-3.5 rounded border-2 transition-colors",
+                              className={cn("size-3.5 gap-0 rounded border-2 transition-colors",
                                 a.color === c ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100 hover:border-foreground/40")}
                               style={{ background: c }} />
                           ))}
                         </div>
-                        <button onClick={() => removeArea(a.id)}
-                          className="flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
+                        <Button variant="ghost" size="icon-xs" onClick={() => removeArea(a.id)}
+                          className="size-6 rounded text-muted-foreground opacity-0 dark:hover:bg-severity-critical/10 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
                           aria-label="Remove area">
                           <Trash2 className="size-3" />
-                        </button>
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -373,11 +374,11 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                 <div className="space-y-3">
                   <div className="relative overflow-hidden rounded-xl border border-border bg-media">
                     <img src={floorPlanUrl} alt="Floor plan preview" className="block w-full" />
-                    <button onClick={() => { setFloorPlanUrl(null); setFloorPlanName(""); }}
-                      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-media-foreground/20 bg-scrim/70 px-2 py-1 text-2xs font-semibold text-media-foreground backdrop-blur-sm hover:bg-scrim/90">
+                    <Button variant="outline" size="xs" onClick={() => { setFloorPlanUrl(null); setFloorPlanName(""); }}
+                      className="absolute right-2 top-2 h-auto gap-1 rounded-md border border-media-foreground/20 bg-scrim/70 px-2 py-1 text-2xs font-semibold text-media-foreground backdrop-blur-sm hover:bg-scrim/90 hover:text-media-foreground dark:border-media-foreground/20 dark:bg-scrim/70 dark:hover:bg-scrim/90">
                       <Trash2 className="size-3" />
                       Remove
-                    </button>
+                    </Button>
                   </div>
                   <div>
                     <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -391,20 +392,21 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   </p>
                 </div>
               ) : (
-                <button
+                <ItemButton variant="plain"
                   onClick={() => fileRef.current?.click()}
-                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border bg-background py-10 transition-colors hover:border-primary/40 hover:bg-muted/40 w-full"
+                  className="flex-col gap-2 rounded-xl border-2 border-dashed border-border bg-background py-10 text-center transition-colors hover:border-primary/40 hover:bg-muted/40"
                 >
                   <UploadCloud className="size-8 text-muted-foreground" />
                   <p className="text-base font-semibold text-foreground">Click to upload a floor plan</p>
                   <p className="text-xs text-muted-foreground">PNG, JPG or SVG · up to 10 MB</p>
-                </button>
+                </ItemButton>
               )}
+              {/* eslint-disable-next-line no-restricted-syntax -- hidden file input, no visible UI */}
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleFileChange} />
 
               {!floorPlanUrl && (
-                <button onClick={useSampleFloorPlan}
-                  className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40">
+                <ItemButton variant="plain" onClick={useSampleFloorPlan}
+                  className="gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 transition-colors hover:border-primary/40">
                   <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
                     <ImageIcon className="size-4 text-primary-ink" />
                   </div>
@@ -413,7 +415,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                     <p className="text-xs text-muted-foreground">A generic floor plan to use while you wait for the real one.</p>
                   </div>
                   <ChevronRight className="size-4 text-muted-foreground" />
-                </button>
+                </ItemButton>
               )}
             </div>
           )}

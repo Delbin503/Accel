@@ -1,8 +1,11 @@
 import * as React from "react";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ItemButton } from "@/components/ui/item";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Crop, Download, Pencil, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionCard } from "@/components/shared/SectionCard";
@@ -55,9 +58,9 @@ interface CropDraft {
   editingId: string | null;
 }
 
-/* ── Slider ──────────────────────────────────────────────────────────────── */
+/* ── Adjustment slider ──────────────────────────────────────────────────────────────── */
 
-function Slider({
+function AdjustmentSlider({
   label,
   value,
   min,
@@ -89,27 +92,26 @@ function Slider({
             {suffix}
           </span>
           {changed && (
-            <button
+            <Button variant="link"
               type="button"
               onClick={() => onChange(neutral)}
               title={`Reset ${label}`}
               aria-label={`Reset ${label}`}
-              className="text-3xs text-muted-foreground underline hover:text-foreground"
+              className="h-auto border-0 p-0 text-3xs font-normal text-muted-foreground underline hover:text-foreground"
             >
               reset
-            </button>
+            </Button>
           )}
         </div>
       </div>
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        value={[value]}
+        onValueChange={([n]) => onChange(n)}
         aria-label={label}
-        className="w-full accent-primary"
+        className="w-full"
       />
     </div>
   );
@@ -366,22 +368,27 @@ export function VideoEnhancement() {
               </span>
               <span className="text-xs text-muted-foreground">Drag the box to move it, its handles to resize.</span>
               <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                <SegmentedControl
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  value={draft.aspect}
+                  onValueChange={(next) => next && pickAspect(next as AspectId)}
+                >
                 {ASPECTS.map((a) => (
-                  <button
+                  <SegmentedControlItem value={a.id}
                     key={a.id}
-                    type="button"
-                    onClick={() => pickAspect(a.id)}
-                    aria-pressed={draft.aspect === a.id}
                     className={cn(
-                      "rounded-md border px-2 py-0.5 text-xs font-medium transition-colors duration-[var(--duration-fast)] ease-standard",
+                      "h-auto rounded-md border px-2 py-0.5 text-xs font-medium transition-colors duration-[var(--duration-fast)] ease-standard",
                       draft.aspect === a.id
-                        ? "border-primary bg-primary/10 text-primary-ink"
-                        : "border-border text-muted-foreground hover:text-foreground"
+                        ? "data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary-ink"
+                        : "border-border bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
                     )}
                   >
                     {a.label}
-                  </button>
+                  </SegmentedControlItem>
                 ))}
+                </SegmentedControl>
                 <div className="mx-1 h-4 w-px bg-border" />
                 <Button variant="ghost" size="sm" onClick={() => setDraft(null)}>Cancel</Button>
                 <Button size="sm" onClick={saveCrop}>{draft.editingId ? "Save changes" : "Save crop"}</Button>
@@ -431,7 +438,7 @@ export function VideoEnhancement() {
         <div data-slot="video-enhancement-page-controls" className="flex flex-col gap-4">
           <SectionCard collapsible size="sm" title="Image" description="Applied on playback and on export.">
             <div data-slot="video-enhancement-page-image-controls" className="space-y-4">
-              <Slider
+              <AdjustmentSlider
                 label="Brightness"
                 value={enh.brightness}
                 min={50}
@@ -440,7 +447,7 @@ export function VideoEnhancement() {
                 neutral={100}
                 onChange={(v) => patch({ brightness: v })}
               />
-              <Slider
+              <AdjustmentSlider
                 label="Contrast"
                 value={enh.contrast}
                 min={50}
@@ -449,7 +456,7 @@ export function VideoEnhancement() {
                 neutral={100}
                 onChange={(v) => patch({ contrast: v })}
               />
-              <Slider
+              <AdjustmentSlider
                 label="Sharpness"
                 value={enh.sharpness}
                 min={0}
@@ -532,12 +539,12 @@ export function VideoEnhancement() {
                   const active = f.id === file.id;
                   return (
                     <li key={f.id}>
-                      <button
+                      <ItemButton variant="plain"
                         type="button"
                         onClick={() => pickFile(f.id)}
                         aria-current={active ? "true" : undefined}
                         className={cn(
-                          "flex w-full items-center gap-3 py-2 pr-4 text-left transition-colors duration-[var(--duration-fast)] ease-standard",
+                          "gap-3 py-2 pr-4 transition-colors duration-[var(--duration-fast)] ease-standard",
                           active ? "bg-primary/10" : "hover:bg-muted/50",
                           // Motion clips sit under their standby.
                           f.type === "motion" ? "pl-8" : "pl-4"
@@ -552,7 +559,7 @@ export function VideoEnhancement() {
                           </p>
                         </div>
                         <TypeChip rec={f} />
-                      </button>
+                      </ItemButton>
                     </li>
                   );
                 })}

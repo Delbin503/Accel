@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
 import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "@/pages/detection-feed/dismissed/DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
@@ -69,7 +69,7 @@ const KPI_CONFIGS: {
   label: string;
   getValue: (items: DismissedEvent[]) => number;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
 }[] = [
   { key: "all",             label: "Total Dismissed", getValue: (i) => i.length,                                                              sub: "Last 30 days",            accent: "primary" },
   { key: "known-exemption", label: "Known Exemptions",getValue: (i) => i.filter((d) => d.reason === "known-exemption").length,               sub: "Authorized activities",   accent: "success" },
@@ -516,7 +516,7 @@ export default function DismissedEventsPage({
             label={cfg.label}
             value={cfg.getValue(baseItems)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />

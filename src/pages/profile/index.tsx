@@ -106,9 +106,9 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Password</label>
             <div className="relative">
               <Input type={showCurrent ? "text" : "password"} value={current} aria-invalid={!!errors.current} onChange={(e) => { setCurrent(e.target.value); if (errors.current) setErrors((p) => ({ ...p, current: undefined })); }} className="h-9 pr-9 text-base" />
-              <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon-xs" type="button" onClick={() => setShowCurrent((v) => !v)} className="size-auto border-0 hover:bg-transparent dark:hover:bg-transparent absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showCurrent ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
+              </Button>
             </div>
             {errors.current && <p className="mt-1 text-xs text-severity-critical">{errors.current}</p>}
           </div>
@@ -116,9 +116,9 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Password</label>
             <div className="relative">
               <Input type={showNext ? "text" : "password"} value={next} aria-invalid={!!errors.next} placeholder="At least 8 characters" onChange={(e) => { setNext(e.target.value); if (errors.next) setErrors((p) => ({ ...p, next: undefined })); }} className="h-9 pr-9 text-base" />
-              <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon-xs" type="button" onClick={() => setShowNext((v) => !v)} className="size-auto border-0 hover:bg-transparent dark:hover:bg-transparent absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showNext ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
+              </Button>
             </div>
             {/* Same strength meter the sign-up flow uses, instead of a rules checklist. */}
             <PasswordStrengthBar className="mt-1.5" password={next} />
@@ -128,9 +128,9 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
             <div className="relative">
               <Input type={showConfirm ? "text" : "password"} value={confirm} aria-invalid={!!errors.confirm} placeholder="Re-type your password" onChange={(e) => { setConfirm(e.target.value); if (errors.confirm) setErrors((p) => ({ ...p, confirm: undefined })); }} className="h-9 pr-9 text-base" />
-              <button type="button" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon-xs" type="button" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? "Hide password" : "Show password"} className="size-auto border-0 hover:bg-transparent dark:hover:bg-transparent absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showConfirm ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
+              </Button>
             </div>
             {errors.confirm && <p className="mt-1 text-xs text-severity-critical">{errors.confirm}</p>}
           </div>
@@ -252,9 +252,9 @@ export default function ProfilePage() {
           <div className="flex size-20 items-center justify-center rounded-full bg-primary-fill text-2xl font-bold text-primary-foreground">
             {initials}
           </div>
-          <button className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-background text-muted-foreground transition-colors hover:text-foreground">
+          <Button variant="ghost" size="icon-sm" className="hover:bg-background dark:hover:bg-background absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-background text-muted-foreground transition-colors hover:text-foreground">
             <Camera className="size-3.5" />
-          </button>
+          </Button>
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

@@ -79,9 +79,9 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
           <ReasonChip reason={item.reason} />
         </div>
       </div>
-      <button className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-media-foreground/10 text-media-foreground/60 transition-colors hover:bg-primary/80 hover:text-media-foreground">
+      <Button variant="ghost" size="icon-lg" className="absolute left-1/2 top-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-media-foreground/10 text-media-foreground/60 transition-colors hover:bg-primary/80 hover:text-media-foreground active:not-aria-[haspopup]:-translate-y-1/2 dark:hover:bg-primary/80">
         <Play className="size-4 fill-media-foreground/60" />
-      </button>
+      </Button>
       <span className="absolute bottom-2.5 left-3 rounded bg-scrim/75 px-1.5 py-0.5 font-mono text-2xs text-media-foreground">
         {event.time}
       </span>
@@ -199,12 +199,14 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
                 {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={onClose}
-              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </SheetHeader>
 

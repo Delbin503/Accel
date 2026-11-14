@@ -1,4 +1,7 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import cameraLiveSample from "@/assets/camera-live-sample.webp";
@@ -67,11 +70,11 @@ import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_DEPLOYMENTS } from "@/mocks/deployments";
 import { getRecordingsForCamera } from "@/mocks/recordings";
 import type { CameraData, CameraStatus } from "@/types/cameras";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { RecordingCard } from "@/components/shared/RecordingCard";
-import { SyncProgressModal } from "@/components/shared/SyncProgressModal";
+import { RecordingCard } from "@/components/app/RecordingCard";
+import { SyncProgressModal } from "@/components/app/SyncProgressModal";
 import type { DeploymentData } from "@/types/deployments";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -90,14 +93,14 @@ function RevealValue({ value }: { value: string }) {
   return (
     <span className="flex items-center gap-1.5">
       <span className="font-mono text-xs">{shown ? value : "•".repeat(Math.min(value.length, 12))}</span>
-      <button
+      <Button variant="ghost" size="icon-xs"
         type="button"
         onClick={() => setShown((v) => !v)}
         aria-label={shown ? "Hide password" : "Show password"}
-        className="text-muted-foreground transition-colors hover:text-foreground"
+        className="size-auto rounded-none p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
       >
         {shown ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -136,7 +139,7 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (items: CameraData[]) => number;
 }[] = [
   { key: "all",               label: "Total Cameras",     sub: "Across all sites",        accent: "primary",      getValue: (i) => i.length },
@@ -176,9 +179,9 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
@@ -187,16 +190,16 @@ function FilterDropdown({
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -207,7 +210,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -257,10 +260,10 @@ function FilterPanel({
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button
+        <ItemButton variant="plain"
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+          className="w-auto flex-1 gap-2.5"
         >
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
@@ -280,9 +283,9 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button
+          <Button variant="ghost" size="icon-xs" className="size-auto rounded-none p-0 hover:bg-transparent dark:hover:bg-transparent"
             type="button"
             aria-label={open ? "Collapse filters" : "Expand filters"}
             onClick={() => setOpen((v) => !v)}
@@ -292,7 +295,7 @@ function FilterPanel({
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -361,14 +364,14 @@ function StatCard({
   sub?: string;
 }) {
   // Derive accent from valueClass (text-success / text-info / text-severity-critical / text-warning).
-  const accent: KpiAccent =
+  const accent: KpiTone =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
     valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
     valueClass?.includes("text-violet")       ? "violet" :
     "primary";
-  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
+  return <KpiCard compact label={label} value={value} sub={sub} tone={accent} />;
 }
 
 /* ── Deployment status pill (mini, drawer-only) ──────────────────────────── */
@@ -644,22 +647,22 @@ export function CameraDrawer({
                   {camera.siteName} · {camera.areaName}
                 </p>
               </div>
-              <button
+              <Button variant="ghost" size="icon-sm"
                 onClick={onClose}
-                className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="mt-0.5 size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <SheetTitle className="text-md text-muted-foreground">Camera not found</SheetTitle>
-              <button
+              <Button variant="ghost" size="icon-sm"
                 onClick={onClose}
-                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -670,11 +673,11 @@ export function CameraDrawer({
                 { key: "overview" as const,   label: "Overview",   icon: Layers },
                 { key: "recordings" as const, label: "Recordings", icon: FileVideo, badge: recordings.length },
               ].map(({ key, label, icon: Icon, badge }) => (
-                <button
+                <ItemButton variant="plain" selected={tab === key}
                   key={key}
                   onClick={() => setTab(key)}
                   className={cn(
-                    "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                    "relative w-auto gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                     tab === key
                       ? "text-primary-ink"
                       : "text-muted-foreground hover:text-foreground"
@@ -690,7 +693,7 @@ export function CameraDrawer({
                   {tab === key && (
                     <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
                   )}
-                </button>
+                </ItemButton>
               ))}
             </div>
           )}
@@ -863,9 +866,9 @@ export function CameraDrawer({
               <SectionTitle>NVR Storage</SectionTitle>
               {nvr && camera.nvrId && camera.nvrName ? (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
-                  <button
+                  <ItemButton variant="plain"
                     onClick={() => onOpenNvr(camera.nvrId!)}
-                    className="group flex min-w-0 flex-1 items-center gap-3 text-left transition-colors"
+                    className="group w-auto flex-1 gap-3 transition-colors"
                   >
                     <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-info/30 bg-info/10">
                       <HardDrive className="size-4 text-info" />
@@ -882,15 +885,15 @@ export function CameraDrawer({
                         Used: <span className="font-semibold text-foreground">{nvr.usedStorageGb.toFixed(1)}</span> / {nvr.totalStorageGb.toFixed(1)} TB
                       </p>
                     </div>
-                  </button>
-                  <button
+                  </ItemButton>
+                  <Button variant="outline" size="xs"
                     onClick={() => onUnlinkNvr(camera.id)}
                     title="Unlink NVR"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-severity-critical/30 px-2.5 py-1 text-xs font-semibold text-severity-critical transition-colors hover:bg-severity-critical/10"
+                    className="h-auto gap-1.5 rounded-md border border-severity-critical/30 bg-transparent px-2.5 py-1 text-xs font-semibold text-severity-critical transition-colors hover:bg-severity-critical/10 hover:text-severity-critical dark:border-severity-critical/30 dark:bg-transparent dark:hover:bg-severity-critical/10"
                   >
                     <Unlink className="size-3" />
                     Unlink
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-3.5 py-3">
@@ -924,22 +927,27 @@ export function CameraDrawer({
                   className="h-9 w-full pl-9 text-base"
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <SegmentedControl
+                type="single"
+                variant="outline"
+                value={recordingDate}
+                onValueChange={(next) => next && setRecordingDate(next as typeof recordingDate)}
+                className="flex w-full flex-wrap items-center gap-1.5"
+              >
                 {RECORDING_DATE_FILTERS.map((f) => (
-                  <button
+                  <SegmentedControlItem value={f.key}
                     key={f.key}
-                    onClick={() => setRecordingDate(f.key)}
                     className={cn(
-                      "rounded-md border px-2.5 py-1 text-sm font-semibold transition-colors",
+                      "h-auto rounded-md border px-2.5 py-1 text-sm font-semibold transition-colors",
                       recordingDate === f.key
-                        ? "border-primary bg-primary-fill text-primary-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        ? "data-[state=on]:border-primary data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground hover:bg-primary-fill hover:text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
                     )}
                   >
                     {f.label}
-                  </button>
+                  </SegmentedControlItem>
                 ))}
-              </div>
+              </SegmentedControl>
 
               {recordingDate === "custom" && (
                 <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-3">
@@ -947,24 +955,24 @@ export function CameraDrawer({
                     <label className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       From
                     </label>
-                    <input
+                    <Input
                       type="date"
                       value={customFrom}
                       onChange={(e) => setCustomFrom(e.target.value)}
                       max={customTo || undefined}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 py-0 text-sm text-foreground shadow-none focus:border-primary focus:outline-none focus-visible:border-primary focus-visible:ring-0 md:text-sm dark:bg-background"
                     />
                   </div>
                   <div>
                     <label className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       To
                     </label>
-                    <input
+                    <Input
                       type="date"
                       value={customTo}
                       onChange={(e) => setCustomTo(e.target.value)}
                       min={customFrom || undefined}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 py-0 text-sm text-foreground shadow-none focus:border-primary focus:outline-none focus-visible:border-primary focus-visible:ring-0 md:text-sm dark:bg-background"
                     />
                   </div>
                 </div>
@@ -1746,7 +1754,7 @@ export default function CamerasPage({
             label={cfg.label}
             value={cfg.getValue(cameras)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -1767,12 +1775,12 @@ export default function CamerasPage({
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "camera" : "cameras"} match current filters
         {hasFilters && (
-          <button
+          <Button variant="link"
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+            className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
-          </button>
+          </Button>
         )}
       </p>
 
@@ -1805,128 +1813,128 @@ export default function CamerasPage({
       ) : (
         <div data-slot="cameras-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
                   {["ID", "NAME", "STATUS", "IP", "LOCATION", "NVR · CH", "EVENTS 24H", "ACTIVE", ...extraColumns.map((c) => c.header), "ACTION"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto px-0 whitespace-normal text-current font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {pageItems.map((c) => (
-                  <tr
+                  <TableRow
                     key={c.id}
                     onClick={() => setDrawerId(c.id)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                    className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {c.id}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                         {c.name}
                       </span>
-                    </td>
-                    <td className="px-4 py-3"><StatusPill status={c.status} /></td>
-                    <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3"><StatusPill status={c.status} /></TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">
                       {c.ipAddress}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{c.areaName}</span>
                         <span className="text-xs">{c.siteName}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
                       {c.nvrId && c.channel ? (
-                        <button
+                        <Button variant="outline" size="xs"
                           onClick={(e) => { e.stopPropagation(); navigate(`/site/nvr?nvr=${c.nvrId}`); }}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
+                          className="h-auto gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs font-normal text-info hover:bg-info/15 hover:text-info dark:border-info/20 dark:bg-info/5 dark:hover:bg-info/15"
                         >
                           <HardDrive className="size-3" />
                           <span className="font-mono">{c.nvrId}</span>
                           <span className="text-muted-foreground">· Ch {c.channel}</span>
-                        </button>
+                        </Button>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-md border border-warning/20 bg-warning/5 px-2 py-1 text-xs text-warning">
                           <AlertTriangle className="size-3" />
                           Unlinked
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{c.recentEventCount}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3 font-semibold text-foreground">{c.recentEventCount}</TableCell>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="size-3" />
                         {c.lastSeenDisplay}
                       </div>
-                    </td>
+                    </TableCell>
                     {extraColumns.map((col) => (
-                      <td key={col.header} className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <TableCell key={col.header} className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         {col.cell(c)}
-                      </td>
+                      </TableCell>
                     ))}
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                          <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                             <MoreHorizontal className="size-4" />
-                          </button>
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1" align="end">
-                          <button
+                          <ItemButton variant="plain"
                             onClick={() => setDrawerId(c.id)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
                           >
                             <Video className="size-3.5 text-muted-foreground" />
                             View details
-                          </button>
-                          <button
+                          </ItemButton>
+                          <ItemButton variant="plain"
                             onClick={() => setModal({ kind: "edit", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
                           >
                             <Pencil className="size-3.5 text-muted-foreground" />
                             Edit camera
-                          </button>
-                          <button
+                          </ItemButton>
+                          <ItemButton variant="plain"
                             onClick={() => setModal({ kind: "edit", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
                           >
                             <Settings className="size-3.5 text-muted-foreground" />
                             Edit Config
-                          </button>
+                          </ItemButton>
                           {c.nvrId && (
-                            <button
+                            <ItemButton variant="plain"
                               onClick={() => navigate(`/site/nvr?nvr=${c.nvrId}`)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
                             >
                               <HardDrive className="size-3.5 text-muted-foreground" />
                               Open NVR
-                            </button>
+                            </ItemButton>
                           )}
                           <div className="my-1 border-t border-border" />
-                          <button
+                          <ItemButton variant="plain"
                             onClick={() => setModal({ kind: "delete", cameraId: c.id })}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10"
+                            className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete
-                          </button>
+                          </ItemButton>
                         </PopoverContent>
                       </Popover>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
@@ -1937,23 +1945,23 @@ export default function CamerasPage({
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
             </p>
             <div className="flex items-center gap-1">
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"
               >
                 <ChevronLeft className="size-3.5" />
-              </button>
+              </Button>
               <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"
               >
                 <ChevronRight className="size-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

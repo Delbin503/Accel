@@ -28,6 +28,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@/components/ui/item";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -54,9 +56,9 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
-import { AuthBackground } from "@/components/shared/AuthBackground";
-import { OnPremStepBar, type OnPremStepKey } from "@/components/shared/OnPremStepBar";
-import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
+import { AuthBackground } from "@/components/app/AuthBackground";
+import { OnPremStepBar, type OnPremStepKey } from "@/components/app/OnPremStepBar";
+import { SetupCompleteModal } from "@/components/app/SetupCompleteModal";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
 import { MOCK_SEATS } from "@/mocks/licenses";
 import type { UserRole } from "@/types/users";
@@ -213,12 +215,12 @@ function WizardShell({
               On-Premise
             </span>
           </Link>
-          <button
+          <Button variant="ghost"
             onClick={onCancel}
-            className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+            className="h-auto gap-0 whitespace-normal hover:bg-card/40 dark:hover:bg-card/40 rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
           >
             Save & exit
-          </button>
+          </Button>
         </div>
         <div className="mt-4">
           <OnPremStepBar current={currentStep} />
@@ -443,10 +445,10 @@ export default function OnPremSetupPage({
         <form data-slot="on-prem-setup-page-license-form" onSubmit={submitLicense} className="mt-10 space-y-5">
           <div>
             <Label>Upload license file</Label>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={pickLicenseFile}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-6 text-sm text-muted-foreground transition-colors hover:border-secondary/50 hover:text-foreground"
+              className="h-auto font-normal whitespace-normal hover:bg-card/40 dark:hover:bg-card/40 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-4 py-6 text-sm text-muted-foreground transition-colors hover:border-secondary/50 hover:text-foreground"
             >
               <Upload className="size-4" />
               {licenseFile ? (
@@ -456,7 +458,7 @@ export default function OnPremSetupPage({
                   Drop <strong className="text-foreground">.lic</strong> file here or click to browse
                 </>
               )}
-            </button>
+            </Button>
           </div>
 
           {licenseStatus === "validating" && (
@@ -684,11 +686,11 @@ export default function OnPremSetupPage({
                 const Icon = m.icon;
                 const selected = networkMode === m.key;
                 return (
-                  <button
+                  <ItemButton variant="plain" selected={selected}
                     key={m.key}
                     type="button"
                     onClick={() => setNetworkMode(m.key)}
-                    className={cn(
+                    className={cn("w-auto text-[length:inherit] text-inherit", 
                       "flex flex-col items-start gap-1.5 rounded-md border bg-card/40 px-3 py-2.5 text-left backdrop-blur-sm transition-colors",
                       selected
                         ? "border-primary bg-primary/[0.06]"
@@ -707,7 +709,7 @@ export default function OnPremSetupPage({
                     <span className="text-2xs text-muted-foreground">
                       {m.description}
                     </span>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -758,24 +760,24 @@ export default function OnPremSetupPage({
       </div>
 
       <div data-slot="on-prem-setup-page-members-list" className="mt-3 flex max-h-[calc(100vh-26rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
-        <div className="flex-1 overflow-y-auto">
-          <table className="w-full">
-            <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-              <tr className="border-b border-border text-left">
+        <div className="flex-1 overflow-y-auto [&>[data-slot=table-container]]:overflow-visible">
+          <Table className="text-[length:inherit] w-full">
+            <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
+              <TableRow className="hover:bg-transparent border-b border-border text-left">
                 {["MEMBER", "ROLE", "STATUS", "ACTION"].map((h) => (
-                  <th
+                  <TableHead
                     key={h}
-                    className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                    className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                   >
                     {h}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/60">
               {/* Bootstrap account owner — already provisioned. */}
-              <tr className="text-base transition-colors hover:bg-muted/20">
-                <td className="px-4 py-3">
+              <TableRow className="text-base transition-colors hover:bg-muted/20">
+                <TableCell className="whitespace-normal px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-success/15 font-mono text-sm font-semibold text-success">
                       <Crown className="size-3.5" />
@@ -788,21 +790,21 @@ export default function OnPremSetupPage({
                       <p className="font-mono text-xs text-muted-foreground">{bootstrapUsername}</p>
                     </div>
                   </div>
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="whitespace-normal px-4 py-3">
                   <RoleBadge role="owner" />
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="whitespace-normal px-4 py-3">
                   <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
                     Active
                   </span>
-                </td>
-                <td className="px-4 py-3" />
-              </tr>
+                </TableCell>
+                <TableCell className="whitespace-normal px-4 py-3" />
+              </TableRow>
 
               {members.map((m) => (
-                <tr key={m.id} className="text-base transition-colors hover:bg-muted/20">
-                  <td className="px-4 py-3">
+                <TableRow key={m.id} className="text-base transition-colors hover:bg-muted/20">
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                         <Mail className="size-3.5 text-muted-foreground" />
@@ -814,30 +816,30 @@ export default function OnPremSetupPage({
                         <p className="truncate text-xs text-muted-foreground">{m.email}</p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <RoleBadge role={m.role} />
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
                       Pending
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <div className="flex justify-end gap-1">
-                      <button
+                      <Button variant="ghost" size="icon-sm"
                         onClick={() => removeMember(m.id)}
-                        className="flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10"
+                        className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
                         aria-label="Remove invite"
                       >
                         <Trash2 className="size-3" />
-                      </button>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
@@ -947,12 +949,12 @@ export function MemberModal({
                 // Owner is assigned only via ownership transfer — not invitable here.
                 const selectable = r !== "owner";
                 return (
-                  <button
+                  <ItemButton variant="plain" selected={isSelected}
                     key={r}
                     type="button"
                     disabled={!selectable}
                     onClick={() => selectable && setRole(r as MemberRole)}
-                    className={cn(
+                    className={cn("block w-auto text-[length:inherit] text-inherit", 
                       "rounded-md border px-2 py-1.5 text-left transition-colors",
                       isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
                       selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
@@ -972,7 +974,7 @@ export function MemberModal({
                     <p className="font-mono text-2xs text-muted-foreground">
                       {s.assigned} / {s.total} used
                     </p>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -1135,14 +1137,14 @@ function BackLink({
   label?: string;
 }) {
   return (
-    <button
+    <Button variant="link"
       type="button"
       onClick={onClick}
-      className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      className="h-auto px-0 border-0 rounded-none justify-start whitespace-normal hover:no-underline mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-3.5" />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -1213,23 +1215,23 @@ function PhoneField({
         }}
       >
         <PopoverTrigger asChild>
-          <button
+          <ItemButton variant="plain"
             type="button"
-            className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
+            className="w-auto text-center flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
           >
             <Phone className="size-3.5 text-muted-foreground" />
             {dialCode}
             <ChevronDown className="size-3.5 text-muted-foreground" />
-          </button>
+          </ItemButton>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
           <div className="relative mb-1">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search country or code"
-              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="py-0 shadow-none dark:bg-background focus-visible:ring-0 focus-visible:border-primary h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
           <div className="max-h-56 overflow-y-auto">
@@ -1239,7 +1241,7 @@ function PhoneField({
               </p>
             ) : (
               list.map((c) => (
-                <button
+                <ItemButton variant="plain" selected={c.code === dialCode}
                   key={c.code}
                   type="button"
                   onClick={() => {
@@ -1247,7 +1249,7 @@ function PhoneField({
                     setOpen(false);
                     setQuery("");
                   }}
-                  className={cn(
+                  className={cn("text-inherit", 
                     "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60",
                     c.code === dialCode && "bg-primary/10"
                   )}
@@ -1256,19 +1258,19 @@ function PhoneField({
                   <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">
                     {c.code}
                   </span>
-                </button>
+                </ItemButton>
               ))
             )}
           </div>
         </PopoverContent>
       </Popover>
-      <input
+      <Input
         value={number}
         onChange={(e) => onNumber(e.target.value)}
         placeholder="9123 4567"
         inputMode="tel"
         autoComplete="tel-national"
-        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+        className="w-auto rounded-none border-0 py-0 shadow-none md:text-base dark:bg-transparent focus-visible:ring-0 h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
       />
     </div>
   );

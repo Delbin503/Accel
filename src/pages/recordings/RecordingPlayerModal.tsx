@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
 import {
   CircleDot,
   Maximize2,
@@ -115,16 +116,16 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
               <span className={cn("size-1.5 rounded-full", isPlaying ? "animate-pulse bg-severity-critical" : "bg-media-foreground/60")} />
               {isPlaying ? "Playing" : "Paused"}
             </span>
-            <button
+            <ItemButton variant="plain"
               type="button"
               onClick={() => setIsPlaying((v) => !v)}
               aria-label={isPlaying ? "Pause" : "Play"}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 justify-center gap-0"
             >
               <span className="flex size-16 items-center justify-center rounded-full bg-scrim/45 backdrop-blur-sm transition-transform hover:scale-105">
                 {isPlaying ? <Pause className="size-6 text-media-foreground" /> : <Play className="size-6 text-media-foreground" />}
               </span>
-            </button>
+            </ItemButton>
 
             {zoomArmed && (
               <ZoomSurface
@@ -230,8 +231,8 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Detected Periods</p>
           <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {periods.map((p) => (
-              <button key={p.label + p.at} onClick={() => seekTo(p.at)}
-                className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-muted/40">
+              <ItemButton variant="plain" key={p.label + p.at} onClick={() => seekTo(p.at)}
+                className="gap-3 px-3.5 py-2.5 transition-colors hover:bg-muted/40">
                 <span className={cn("size-2 shrink-0 rounded-full",
                   p.tone === "info" && "bg-info",
                   p.tone === "warning" && "bg-warning",
@@ -240,7 +241,7 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
                 <span className="shrink-0 font-mono text-2xs text-muted-foreground">
                   {fmtClock(Math.round(p.at * totalSec))}
                 </span>
-              </button>
+              </ItemButton>
             ))}
           </div>
         </div>

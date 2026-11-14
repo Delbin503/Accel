@@ -1,4 +1,6 @@
 import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
 import { Check, ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -35,27 +37,27 @@ function FilterDropdown({ label, options, selected, onChange }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+        <ItemButton variant="plain" className={cn(
+          "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
           hasValue ? "text-primary-ink" : "text-muted-foreground"
         )}>
           <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[260px] w-56 overflow-y-auto p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button key={opt.value} onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
+            <ItemButton variant="plain" key={opt.value} onClick={() => toggle(opt.value)}
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -84,7 +86,7 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
   return (
     <div data-slot="recordings-filter-panel" className="rounded-xl border border-border bg-card">
       <div data-slot="recordings-filter-panel-header" className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30">
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="w-auto flex-1 gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -96,10 +98,10 @@ export function FilterPanel({ filters, onChange, search, onSearchChange, additio
               ))}
             </div>
           )}
-        </button>
-        <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+        </ItemButton>
+        <Button variant="ghost" size="icon-xs" className="size-auto rounded-none p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
           {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-        </button>
+        </Button>
       </div>
       {open && (
         <div data-slot="recordings-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">

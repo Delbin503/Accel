@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AuthLayout } from "./AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SignInVerifyPage() {
   const navigate = useNavigate();
@@ -76,14 +78,15 @@ export default function SignInVerifyPage() {
   return (
     <AuthLayout>
       <div data-slot="sign-in-verify-page">
-        <button
+        <Button
+          variant="link"
           type="button"
           onClick={() => navigate("/signin")}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-4 h-auto gap-1.5 border-0 p-0 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground hover:no-underline"
         >
           <ArrowLeft className="size-3.5" />
           Back
-        </button>
+        </Button>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Verify your email</h1>
         <p className="mt-2 text-base text-muted-foreground">
           We sent a 6-digit code to <strong className="text-foreground">{email}</strong>.
@@ -92,7 +95,7 @@ export default function SignInVerifyPage() {
         <form data-slot="sign-in-verify-page-form" onSubmit={submit} className="mt-6 space-y-4">
           <div data-slot="sign-in-verify-page-otp" onPaste={onPaste} className="flex items-center justify-center gap-2">
             {otp.map((d, i) => (
-              <input
+              <Input
                 key={i}
                 ref={(el) => {
                   refs.current[i] = el;
@@ -104,7 +107,7 @@ export default function SignInVerifyPage() {
                 maxLength={1}
                 className={cn(
                   "h-12 w-11 rounded-md border border-input bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors",
-                  "focus:border-primary focus:ring-2 focus:ring-primary/30"
+                  "px-0 py-0 shadow-none focus:border-primary focus:ring-2 focus:ring-primary/30 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 md:text-2xl dark:bg-background"
                 )}
               />
             ))}
@@ -118,11 +121,10 @@ export default function SignInVerifyPage() {
           )}
 
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={trustDevice}
-              onChange={(e) => setTrustDevice(e.target.checked)}
-              className="mt-0.5 size-3.5 accent-primary"
+              onCheckedChange={(c) => setTrustDevice(c === true)}
+              className="mt-0.5 size-3.5"
             />
             Don't ask for a verification code again on this device for 14 days.
           </label>
@@ -131,15 +133,16 @@ export default function SignInVerifyPage() {
             Verify &amp; Continue <ArrowRight className="size-3.5" />
           </Button>
 
-          <button
+          <Button
+            variant="link"
             type="button"
             onClick={() =>
               toast.message("Code re-sent", { description: `A new code was sent to ${email}.` })
             }
-            className="group block w-full text-center text-sm text-muted-foreground"
+            className="group h-auto w-full gap-1 border-0 p-0 text-sm font-normal text-muted-foreground hover:no-underline"
           >
             Didn't get it? <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
-          </button>
+          </Button>
         </form>
       </div>
     </AuthLayout>

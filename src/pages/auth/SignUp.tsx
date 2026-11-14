@@ -69,14 +69,18 @@ import {
 } from "@/mocks/cloudPlans";
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
-import { SetupCompleteModal } from "@/components/shared/SetupCompleteModal";
-import { PaymentSuccessModal, type PaymentReceipt } from "@/components/shared/PaymentSuccessModal";
+import { SetupCompleteModal } from "@/components/app/SetupCompleteModal";
+import { PaymentSuccessModal, type PaymentReceipt } from "@/components/app/PaymentSuccessModal";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
-import { AuthBackground } from "@/components/shared/AuthBackground";
-import { AuthStepBar, type AuthStepKey } from "@/components/shared/AuthStepBar";
+import { AuthBackground } from "@/components/app/AuthBackground";
+import { AuthStepBar, type AuthStepKey } from "@/components/app/AuthStepBar";
 import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
 import { TruncatedText } from "@/components/shared/TruncatedText";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ItemButton } from "@/components/ui/item";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /* ── Wizard steps ───────────────────────────────────────────────────── */
 type WizardStep = "account" | "plan" | "site" | "team";
@@ -209,12 +213,13 @@ function WizardShell({
         <div className="flex-1 px-4">
           <AuthStepBar current={currentStep} />
         </div>
-        <button
+        <Button
+          variant="outline"
           onClick={onCancel}
-          className="rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+          className="h-auto rounded-md border border-border bg-card/40 px-3 py-1.5 text-sm font-semibold text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card/40 hover:text-foreground dark:border-border dark:bg-card/40 dark:hover:bg-card/40"
         >
           Cancel
-        </button>
+        </Button>
       </header>
 
       {/* Body — content sits near the top, not vertically centred */}
@@ -667,11 +672,10 @@ export default function SignUpPage({
             />
           </Field>
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={agreedTos}
-              onChange={(e) => setAgreedTos(e.target.checked)}
-              className="mt-0.5 size-3.5 accent-primary"
+              onCheckedChange={(c) => setAgreedTos(c === true)}
+              className="mt-0.5 size-3.5"
             />
             <span>
               I agree to the{" "}
@@ -744,7 +748,7 @@ export default function SignUpPage({
             className="flex items-center justify-center gap-2"
           >
             {otp.map((d, i) => (
-              <input
+              <Input
                 key={i}
                 ref={(el) => {
                   otpRefs.current[i] = el;
@@ -756,7 +760,7 @@ export default function SignUpPage({
                 maxLength={1}
                 className={cn(
                   "h-12 w-11 rounded-md border border-input bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors",
-                  "focus:border-primary focus:ring-2 focus:ring-primary/30"
+                  "px-0 py-0 shadow-none focus:border-primary focus:ring-2 focus:ring-primary/30 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 md:text-2xl dark:bg-background"
                 )}
               />
             ))}
@@ -765,18 +769,19 @@ export default function SignUpPage({
           <Button type="submit" className="h-10 w-full gap-2 text-base">
             Verify & Continue <ArrowRight className="size-3.5" />
           </Button>
-          <button
+          <Button
+            variant="link"
             type="button"
             onClick={() =>
               toast.message("Code re-sent", {
                 description: `A new code was sent to ${email}.`,
               })
             }
-            className="group block w-full text-center text-sm text-muted-foreground"
+            className="group h-auto w-full gap-1 border-0 p-0 text-sm font-normal text-muted-foreground hover:no-underline"
           >
             Didn't get it?{" "}
             <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
-          </button>
+          </Button>
         </form>
       </WizardShell>
     );
@@ -800,13 +805,17 @@ export default function SignUpPage({
           >
             Monthly
           </span>
-          <button
+          <Button
+            variant="ghost"
+            aria-pressed={cycle === "annual"}
             onClick={() =>
               setCycle((c) => (c === "monthly" ? "annual" : "monthly"))
             }
             className={cn(
-              "relative h-5 w-9 rounded-full transition-colors",
-              cycle === "annual" ? "bg-primary" : "bg-muted"
+              "relative h-5 w-9 rounded-full border-0 p-0 transition-colors active:not-aria-[haspopup]:translate-y-0",
+              cycle === "annual"
+                ? "bg-primary hover:bg-primary dark:hover:bg-primary"
+                : "bg-muted hover:bg-muted dark:hover:bg-muted"
             )}
           >
             <span
@@ -815,7 +824,7 @@ export default function SignUpPage({
                 cycle === "annual" && "translate-x-4"
               )}
             />
-          </button>
+          </Button>
           <span
             className={cn(
               "text-sm font-semibold",
@@ -841,12 +850,13 @@ export default function SignUpPage({
                 ? Math.round(p.pricePerYear / 12)
                 : p.pricePerMonth;
             return (
-              <button
+              <ItemButton
+                variant="plain"
+                selected={selected}
                 key={p.id}
                 onClick={() => setPicked(p.id)}
-                aria-pressed={selected}
                 className={cn(
-                  "relative flex flex-col rounded-xl border-2 bg-card/40 p-5 text-left backdrop-blur-sm transition-all",
+                  "relative flex-col items-stretch gap-0 rounded-xl border-2 bg-card/40 p-5 backdrop-blur-sm transition-all",
                   selected
                     ? "border-primary ring-1 ring-primary"
                     : "border-border/60 hover:border-primary/40"
@@ -922,7 +932,7 @@ export default function SignUpPage({
                     {p.footnote}
                   </p>
                 )}
-              </button>
+              </ItemButton>
             );
           })}
         </div>
@@ -1023,11 +1033,10 @@ export default function SignUpPage({
               </CompactField>
             </div>
             <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={saveCard}
-                onChange={(e) => setSaveCard(e.target.checked)}
-                className="size-3.5 accent-primary"
+                onCheckedChange={(c) => setSaveCard(c === true)}
+                className="size-3.5"
               />
               Save for future purchases
             </label>
@@ -1096,31 +1105,24 @@ export default function SignUpPage({
             <p className="mb-3 text-base font-bold text-foreground">
               Your {plan.name} Plan
             </p>
-            <div className="mb-3 space-y-1.5">
+            <RadioGroup
+              name="cycle"
+              value={cycle}
+              onValueChange={(v) => setCycle(v as typeof cycle)}
+              className="mb-3 gap-1.5"
+            >
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="cycle"
-                  checked={cycle === "annual"}
-                  onChange={() => setCycle("annual")}
-                  className="accent-primary"
-                />
+                <RadioGroupItem value="annual" className="size-3.5" />
                 Annual
                 <span className="ml-auto rounded-full bg-success/15 px-1.5 py-0.5 text-3xs font-bold text-success">
                   Save 17%
                 </span>
               </label>
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="cycle"
-                  checked={cycle === "monthly"}
-                  onChange={() => setCycle("monthly")}
-                  className="accent-primary"
-                />
+                <RadioGroupItem value="monthly" className="size-3.5" />
                 Monthly
               </label>
-            </div>
+            </RadioGroup>
             <div className="space-y-1.5 border-t border-border/60 pt-2.5 text-sm">
               <Line label="1 Owner seat (included)" value="Free" success />
               <Line
@@ -1183,12 +1185,13 @@ export default function SignUpPage({
           <div className="rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-base font-bold text-foreground">Details</p>
-              <button
+              <Button
+                variant="link"
                 onClick={() => setPlanSubStep("payment")}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline"
+                className="h-auto gap-1 border-0 p-0 text-sm font-semibold text-primary-ink underline-offset-auto hover:underline"
               >
                 <Pencil className="size-3" /> Edit Details
-              </button>
+              </Button>
             </div>
             <dl className="grid grid-cols-2 gap-3 text-base">
               <ReviewRow
@@ -1249,11 +1252,10 @@ export default function SignUpPage({
             </div>
             <div className="mt-4 space-y-2.5">
               <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={autoRenew}
-                  onChange={(e) => setAutoRenew(e.target.checked)}
-                  className="mt-0.5 size-3.5 accent-primary"
+                  onCheckedChange={(c) => setAutoRenew(c === true)}
+                  className="mt-0.5 size-3.5"
                 />
                 <span>
                   Auto-renewal of subscription. Your subscription will renew
@@ -1261,11 +1263,10 @@ export default function SignUpPage({
                 </span>
               </label>
               <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={agreedCheckoutTos}
-                  onChange={(e) => setAgreedCheckoutTos(e.target.checked)}
-                  className="mt-0.5 size-3.5 accent-primary"
+                  onCheckedChange={(c) => setAgreedCheckoutTos(c === true)}
+                  className="mt-0.5 size-3.5"
                 />
                 <span>
                   I agree to{" "}
@@ -1450,23 +1451,24 @@ export default function SignUpPage({
         </div>
 
         <div data-slot="sign-up-page-members-list" className="mt-3 flex max-h-[calc(100vh-22rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
-          <div className="flex-1 overflow-y-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-                <tr className="border-b border-border text-left">
+          {/* The Table wrapper must not become the scroll container, or the sticky header stops sticking. */}
+          <div className="flex-1 overflow-y-auto [&>[data-slot=table-container]]:overflow-visible">
+            <Table className="w-full">
+              <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
+                <TableRow className="border-border text-left hover:bg-transparent">
                   {["USER", "USER ID", "ROLE", "STATUS", "INCLUDES"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto whitespace-normal px-4 py-2.5 font-mono text-2xs font-bold uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                <tr className="text-base transition-colors hover:bg-muted/20">
-                  <td className="px-4 py-3">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow className="border-border/60 text-base transition-colors hover:bg-muted/20">
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary-ink">
                         {fullName
@@ -1485,29 +1487,29 @@ export default function SignUpPage({
                         <p className="text-xs text-muted-foreground">{email}</p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3 font-mono text-xs text-muted-foreground">
                     USR-001
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <RoleBadge role="owner" />
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3">
                     <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
                       Active
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">
                     {USER_ROLE_DESCRIPTIONS.owner}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
 
                 {invites.map((inv) => (
-                  <tr
+                  <TableRow
                     key={inv.id}
-                    className="text-base transition-colors hover:bg-muted/20"
+                    className="border-border/60 text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                           <Mail className="size-3.5 text-muted-foreground" />
@@ -1521,25 +1523,25 @@ export default function SignUpPage({
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground/50">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-xs text-muted-foreground/50">
                       —
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <RoleBadge role={inv.role} />
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
                         Pending
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">
                       {USER_ROLE_DESCRIPTIONS[inv.role]}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
@@ -1611,14 +1613,15 @@ function BackLink({
   label?: string;
 }) {
   return (
-    <button
+    <Button
+      variant="link"
       type="button"
       onClick={onClick}
-      className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      className="mb-4 h-auto gap-1.5 border-0 p-0 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground hover:no-underline"
     >
       <ArrowLeft className="size-3.5" />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -1674,23 +1677,24 @@ function PhoneField({
         }}
       >
         <PopoverTrigger asChild>
-          <button
+          <Button
+            variant="ghost"
             type="button"
-            className="flex flex-shrink-0 items-center gap-1 border-r border-input px-3 font-mono text-base text-foreground transition-colors hover:bg-muted/40"
+            className="h-auto flex-shrink-0 gap-1 rounded-none border-0 border-r border-input px-3 font-mono text-base font-normal text-foreground transition-colors hover:bg-muted/40 hover:text-foreground aria-expanded:bg-transparent aria-expanded:text-foreground dark:hover:bg-muted/40"
           >
             <Phone className="size-3.5 text-muted-foreground" />
             {dialCode}
             <ChevronDown className="size-3.5 text-muted-foreground" />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
           <div className="relative mb-1">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search country or code"
-              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
             />
           </div>
           <div className="max-h-56 overflow-y-auto">
@@ -1700,16 +1704,17 @@ function PhoneField({
               </p>
             ) : (
               list.map((c) => (
-                <button
+                <ItemButton
+                  variant="plain"
+                  selected={c.code === dialCode}
                   key={c.code}
-                  type="button"
                   onClick={() => {
                     onDialCode(c.code);
                     setOpen(false);
                     setQuery("");
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60",
+                    "justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60",
                     c.code === dialCode && "bg-primary/10"
                   )}
                 >
@@ -1717,19 +1722,19 @@ function PhoneField({
                   <span className="flex-shrink-0 font-mono text-xs text-muted-foreground">
                     {c.code}
                   </span>
-                </button>
+                </ItemButton>
               ))
             )}
           </div>
         </PopoverContent>
       </Popover>
-      <input
+      <Input
         value={number}
         onChange={(e) => onNumber(e.target.value)}
         placeholder="9123 4567"
         inputMode="tel"
         autoComplete="tel-national"
-        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none rounded-none border-0 py-0 shadow-none md:text-base dark:bg-transparent focus-visible:ring-0"
       />
     </div>
   );
@@ -1754,14 +1759,16 @@ function CompactField({
 
 function EyeToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon-xs"
       type="button"
       onClick={onClick}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      className="absolute right-3 top-1/2 size-auto -translate-y-1/2 border-0 p-0 text-muted-foreground hover:bg-transparent hover:text-foreground active:not-aria-[haspopup]:-translate-y-1/2 dark:hover:bg-transparent"
       aria-label={on ? "Hide password" : "Show password"}
     >
       {on ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-    </button>
+    </Button>
   );
 }
 
@@ -1893,13 +1900,14 @@ export function InviteUsersModal({
                 // Owner is assigned only via ownership transfer — not invitable here.
                 const selectable = r !== "owner";
                 return (
-                  <button
+                  <ItemButton
+                    variant="plain"
+                    selected={isSelected}
                     key={r}
-                    type="button"
                     disabled={!selectable}
                     onClick={() => selectable && setRole(r as InviteRole)}
                     className={cn(
-                      "rounded-md border px-2 py-1.5 text-left transition-colors",
+                      "flex-col items-stretch gap-0 rounded-md border px-2 py-1.5 transition-colors",
                       isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
                       selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
                     )}
@@ -1918,7 +1926,7 @@ export function InviteUsersModal({
                     <p className="font-mono text-2xs text-muted-foreground">
                       {s.assigned} / {s.total} used
                     </p>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>

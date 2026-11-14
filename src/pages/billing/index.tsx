@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Modal,
   ModalContent,
@@ -161,10 +164,10 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
           </Button>
         )}
         {canRemove && (
-          <button onClick={onRemove}
-            className="flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10">
+          <Button variant="ghost" size="icon-sm" onClick={onRemove}
+            className="dark:hover:bg-severity-critical/10 hover:text-severity-critical flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10">
             <Trash2 className="size-3" />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -294,8 +297,8 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
           <div data-slot="retry-payment-modal-cards" className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment card</p>
             {cards.map((card) => (
-              <button key={card.id} onClick={() => setSelected(card.id)}
-                className={cn(
+              <ItemButton variant="plain" selected={selected === card.id} key={card.id} onClick={() => setSelected(card.id)}
+                className={cn("text-inherit",
                   "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
                   selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                 )}>
@@ -311,14 +314,14 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
                 {card.isDefault && (
                   <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
-              </button>
+              </ItemButton>
             ))}
           </div>
 
-          <button onClick={onAddCard}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+          <Button variant="ghost" size="default" onClick={onAddCard}
+            className="h-auto shrink whitespace-normal hover:bg-transparent dark:hover:bg-transparent flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
             <Plus className="size-3.5" /> Use a different card / update details
-          </button>
+          </Button>
         </ModalBody>
         <ModalFooter>
           <Button disabled={!selected} onClick={() => onConfirm(selected)} className="gap-1.5">
@@ -385,8 +388,8 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
               </p>
             )}
             {cards.map((card) => (
-              <button key={card.id} onClick={() => setSelected(card.id)}
-                className={cn(
+              <ItemButton variant="plain" selected={selected === card.id} key={card.id} onClick={() => setSelected(card.id)}
+                className={cn("text-inherit",
                   "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
                   selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                 )}>
@@ -402,12 +405,12 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
                 {card.isDefault && (
                   <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
-              </button>
+              </ItemButton>
             ))}
-            <button onClick={onAddCard}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+            <Button variant="ghost" size="default" onClick={onAddCard}
+              className="h-auto shrink whitespace-normal hover:bg-transparent dark:hover:bg-transparent flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
               <Plus className="size-3.5" /> Add a new card
-            </button>
+            </Button>
           </div>
         </ModalBody>
         <ModalFooter>
@@ -528,8 +531,8 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
           <div data-slot="switch-to-annual-modal-payment" className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
             {cards.map((card) => (
-              <button key={card.id} type="button" onClick={() => setSelected(card.id)}
-                className={cn(
+              <ItemButton variant="plain" selected={selected === card.id} key={card.id} type="button" onClick={() => setSelected(card.id)}
+                className={cn("text-inherit",
                   "flex w-full items-center gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors",
                   selected === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                 )}>
@@ -545,12 +548,12 @@ export function SwitchToAnnualModal({ tier, seats, credit, daysLeft, renewsOn, c
                 {card.isDefault && (
                   <span className="rounded-full bg-primary/15 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-primary-ink">Default</span>
                 )}
-              </button>
+              </ItemButton>
             ))}
-            <button type="button" onClick={onAddCard}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+            <Button variant="ghost" size="default" type="button" onClick={onAddCard}
+              className="h-auto shrink whitespace-normal hover:bg-transparent dark:hover:bg-transparent flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
               <Plus className="size-3.5" /> Add a new card
-            </button>
+            </Button>
           </div>
         </ModalBody>
         <ModalFooter>
@@ -602,9 +605,9 @@ export function InvoiceDetailDrawer({ invoice, onRetryPayment, onClose }: {
               <p className="mt-0.5 text-xs text-muted-foreground">{invoice.planName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+          <Button variant="ghost" size="icon-sm" onClick={onClose} className="dark:hover:bg-muted flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
 
         <div data-slot="invoice-detail-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
@@ -859,73 +862,73 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
   return (
     <div data-slot="invoices-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted/30">
-            <tr className="border-b border-border text-left">
+        <Table className="text-base w-full">
+          <TableHeader className="bg-muted/30">
+            <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-left">
               {["ISSUED", "INVOICE", "PERIOD", "SUBSCRIPTION PLAN", "STATUS", "AMOUNT", ""].map((h, i) => (
-                <th
+                <TableHead
                   key={h || `col-${i}`}
-                  className={cn(
+                  className={cn("h-auto font-bold",
                     "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
                     h === "AMOUNT" && "text-right"
                   )}
                 >
                   {h}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/60">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/60">
             {invoices.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm italic text-muted-foreground">
+              <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent">
+                <TableCell colSpan={7} className="whitespace-normal px-4 py-10 text-center text-sm italic text-muted-foreground">
                   No invoices match the current filters.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : invoices.map((inv) => {
               const color = PLAN_COLORS[inv.planTier];
               const PlanIcon = PLAN_ICONS[inv.planTier];
               return (
-              <tr
+              <TableRow
                 key={inv.id}
                 onClick={() => onOpen(inv)}
-                className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                className="has-aria-expanded:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
               >
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{inv.issuedDisplay}</td>
-                <td className="whitespace-nowrap px-4 py-3">
+                <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{inv.issuedDisplay}</TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-3">
                   <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{inv.id}</span>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:text-primary-ink">{inv.periodDisplay}</td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:text-primary-ink">{inv.periodDisplay}</TableCell>
+                <TableCell className="whitespace-normal px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
                       <PlanIcon className={cn("size-3", color.text)} />
                     </div>
                     <span className="text-sm font-medium text-foreground">{inv.planName}</span>
                   </div>
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="whitespace-normal px-4 py-3">
                   <div className="flex items-center gap-2">
                     <StatusBadge tone={INVOICE_TONE[inv.status]}>{INVOICE_STATUS[inv.status].label}</StatusBadge>
                     {inv.status === "failed" && (
-                      <button
+                      <Button variant="ghost" size="xs"
                         onClick={(e) => { e.stopPropagation(); onRetry(inv); }}
-                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-severity-critical hover:bg-severity-critical/10"
+                        className="h-auto border-0 shrink whitespace-normal justify-start dark:hover:bg-severity-critical/10 hover:text-severity-critical inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-severity-critical hover:bg-severity-critical/10"
                       >
                         <RefreshCw className="size-2.5" /> Retry
-                      </button>
+                      </Button>
                     )}
                   </div>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right font-mono text-sm font-bold text-foreground">${inv.amount.toLocaleString()}</td>
-                <td className="px-3 py-3 text-right">
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-3 text-right font-mono text-sm font-bold text-foreground">${inv.amount.toLocaleString()}</TableCell>
+                <TableCell className="whitespace-normal px-3 py-3 text-right">
                   <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
@@ -958,7 +961,7 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
   return (
     <div data-slot="invoice-filter-panel" className="rounded-xl border border-border bg-card">
       <div data-slot="invoice-filter-panel-header" className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/30">
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="text-inherit flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -970,11 +973,11 @@ function InvoiceFilterPanel({ statusFilter, siteFilter, onStatusChange, onSiteCh
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)} className="size-auto border-0 hover:bg-transparent dark:hover:bg-transparent">
             {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-          </button>
+          </Button>
         </div>
       </div>
       {open && (
@@ -1085,18 +1088,15 @@ function BillingCycleToggle({ value, onChange }: {
     { key: "annual", label: "Annually" },
   ];
   return (
-    <div data-slot="billing-cycle-toggle" role="radiogroup" aria-label="Billing cycle" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+    <SegmentedControl data-slot="billing-cycle-toggle" type="single" value={value} onValueChange={(next) => next && onChange(next as BillingCycle)} aria-label="Billing cycle" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
       {options.map((o) => {
         const active = value === o.key;
         return (
-          <button
+          <SegmentedControlItem
             key={o.key}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(o.key)}
+            value={o.key}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              "h-auto data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
               active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -1109,10 +1109,10 @@ function BillingCycleToggle({ value, onChange }: {
                 Save {ANNUAL_SAVINGS_PCT}%
               </span>
             )}
-          </button>
+          </SegmentedControlItem>
         );
       })}
-    </div>
+    </SegmentedControl>
   );
 }
 
@@ -1129,20 +1129,20 @@ function TabSwitcher({ value, onChange }: {
     { key: "invoices", label: "Invoices" },
   ];
   return (
-    <div data-slot="billing-tab-switcher" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+    <SegmentedControl data-slot="billing-tab-switcher" type="single" value={value} onValueChange={(next) => next && onChange(next as TabKey)} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
       {tabs.map((t) => {
         const active = value === t.key;
         return (
-          <button key={t.key} onClick={() => onChange(t.key)}
+          <SegmentedControlItem key={t.key} value={t.key}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              "h-auto data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
               active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}>
             {t.label}
-          </button>
+          </SegmentedControlItem>
         );
       })}
-    </div>
+    </SegmentedControl>
   );
 }
 
@@ -1518,10 +1518,10 @@ export default function BillingPage() {
 
           {/* KPI strip */}
           <KpiGrid cols={4}>
-            <KpiCard label="Active Sites" value={usageSites.length} sub={`On ${activePlan.name} plan`} accent="primary" />
-            <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users assigned`} accent="info" />
-            <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${usageSites.length} sites`} accent="warning" />
-            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} accent="violet" />
+            <KpiCard label="Active Sites" value={usageSites.length} sub={`On ${activePlan.name} plan`} tone="primary" />
+            <KpiCard label="Total Seats" value={totalSeats} sub={`${totalUsers} users assigned`} tone="info" />
+            <KpiCard label="Total Cameras" value={totalCameras} sub={`Across ${usageSites.length} sites`} tone="warning" />
+            <KpiCard label="Total NVRs" value={totalNvrs} sub={`Across ${usageSites.length} sites`} tone="violet" />
           </KpiGrid>
 
           <div data-slot="billing-page-payment-grid" className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px] lg:items-stretch">
@@ -1538,9 +1538,9 @@ export default function BillingPage() {
               className="lg:h-full"
               bodyClassName="flex flex-col"
             >
-              <button
+              <ItemButton variant="plain"
                 onClick={() => setActiveInvoice(nextInvoice)}
-                className="group flex w-full items-center gap-2.5 rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/20"
+                className="text-inherit group flex w-full items-center gap-2.5 rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/20"
               >
                 <div className={cn("flex size-8 flex-shrink-0 items-center justify-center rounded-lg border", acctColor.border, acctColor.bg)}>
                   <AcctIcon className={cn("size-4", acctColor.text)} />
@@ -1550,7 +1550,7 @@ export default function BillingPage() {
                   <p className="text-2xs text-muted-foreground">{cycleLabel} · {siteNames.length} sites</p>
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
-              </button>
+              </ItemButton>
 
               <div className="mt-3 space-y-1.5 rounded-lg border border-border bg-background px-3.5 py-3">
                 {acctLines.map((li) => (
@@ -1589,12 +1589,12 @@ export default function BillingPage() {
             <p className="text-base text-muted-foreground">
               <strong className="text-foreground">{filteredInvoices.length}</strong> invoice{filteredInvoices.length !== 1 ? "s" : ""} match current filters
               {(invoiceStatusFilter.length > 0 || invoiceSiteFilter.length > 0) && (
-                <button
+                <Button variant="link"
                   onClick={() => { setInvoiceStatusFilter([]); setInvoiceSiteFilter([]); }}
-                  className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+                  className="h-auto p-0 border-0 font-normal ml-2 text-base text-muted-foreground underline hover:text-primary-ink"
                 >
                   Clear all
-                </button>
+                </Button>
               )}
             </p>
             <Select value={invoiceSortBy} onValueChange={(v) => setInvoiceSortBy(v as InvoiceSort)}>

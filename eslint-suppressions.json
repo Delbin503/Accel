@@ -9,104 +9,19 @@
       "count": 7
     }
   },
-  "src/pages/activity-logs/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 8
-    }
-  },
-  "src/pages/auth/ForgotPassword.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/auth/OnboardingSite.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/pages/auth/OnboardingSubscription.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
   "src/pages/auth/SignIn.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/pages/auth/SignInVerify.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/auth/SignUp.tsx": {
-    "no-restricted-syntax": {
-      "count": 20
-    }
-  },
-  "src/pages/auth/invite/AccountSetup.tsx": {
-    "no-restricted-syntax": {
-      "count": 5
-    }
-  },
-  "src/pages/auth/invite/OtpVerify.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/pages/auth/onprem/OnPremForgotPassword.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/auth/onprem/OnPremSetup.tsx": {
-    "no-restricted-syntax": {
-      "count": 11
-    }
-  },
-  "src/pages/auth/onprem/OnPremSignIn.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/pages/auth/onprem/OnPremSignInVerify.tsx": {
-    "no-restricted-syntax": {
-      "count": 5
-    }
-  },
-  "src/pages/billing/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 16
-    }
-  },
-  "src/pages/dashboard/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 9
-    }
-  },
-  "src/pages/detection-feed/EscalateModal.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "src/pages/detection-feed/EventDrawer.tsx": {
+  "src/pages/auth/onprem/OnPremSignIn.tsx": {
     "no-restricted-syntax": {
-      "count": 5
+      "count": 1
     }
   },
-  "src/pages/detection-feed/dismissed/DismissedDrawer.tsx": {
+  "src/pages/auth/onprem/OnPremSignInVerify.tsx": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/pages/detection-feed/dismissed/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 6
-    }
-  },
-  "src/pages/detection-feed/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
+      "count": 1
     }
   },
   "src/pages/dev/modals/deviceCopies.tsx": {
@@ -129,129 +44,9 @@
       "count": 3
     }
   },
-  "src/pages/device-health/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 8
-    }
-  },
-  "src/pages/incident-cases/CaseDrawer.tsx": {
-    "no-restricted-syntax": {
-      "count": 13
-    }
-  },
-  "src/pages/incident-cases/EntityDrawer.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/incident-cases/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 6
-    }
-  },
-  "src/pages/live-monitoring/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 31
-    }
-  },
-  "src/pages/model-deployment/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 18
-    }
-  },
-  "src/pages/model-management/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 17
-    }
-  },
-  "src/pages/profile/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/recordings/RecordingPlayerModal.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/pages/recordings/RecordingsFilterPanel.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "src/pages/recordings/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 13
-    }
-  },
-  "src/pages/rules-library/RuleConditions.tsx": {
-    "no-restricted-syntax": {
-      "count": 5
-    }
-  },
-  "src/pages/rules-library/RuleTemplateForm.tsx": {
-    "no-restricted-syntax": {
-      "count": 7
-    }
-  },
-  "src/pages/rules-library/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 15
-    }
-  },
   "src/pages/run-analysis/index.tsx": {
     "no-restricted-syntax": {
       "count": 154
-    }
-  },
-  "src/pages/settings/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/pages/site/cameras/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 24
-    }
-  },
-  "src/pages/site/nvr/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 23
-    }
-  },
-  "src/pages/site/overview/CreateSiteWizard.tsx": {
-    "no-restricted-syntax": {
-      "count": 7
-    }
-  },
-  "src/pages/site/overview/SiteDetailDrawer.tsx": {
-    "no-restricted-syntax": {
-      "count": 15
-    }
-  },
-  "src/pages/site/overview/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 10
-    }
-  },
-  "src/pages/system-config/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 14
-    }
-  },
-  "src/pages/system-info/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/pages/user-management/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 37
-    }
-  },
-  "src/pages/video-enhancement/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
     }
   }
 }

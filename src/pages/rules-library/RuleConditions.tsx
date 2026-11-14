@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
 import { ChevronDown, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,11 +56,11 @@ function MultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           type="button"
           aria-invalid={invalid}
           className={cn(
-            "flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1.5 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30",
+            "min-h-10 justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1.5 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30",
             invalid && "border-destructive"
           )}
         >
@@ -97,7 +98,7 @@ function MultiSelect({
             </span>
           )}
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent
         align="start"
@@ -107,13 +108,13 @@ function MultiSelect({
           const checked = values.includes(o.value);
           const locked = lockedValues.includes(o.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={o.value}
               type="button"
               disabled={locked}
               onClick={() => !locked && onToggle(o.value)}
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base transition-colors",
+                "gap-2 rounded px-2 py-1.5 text-base transition-colors",
                 locked ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
               )}
             >
@@ -127,7 +128,7 @@ function MultiSelect({
               </span>
               <span className={cn("flex-1", mono && "font-mono text-sm")}>{o.label}</span>
               {locked && <span className="text-2xs text-muted-foreground">always</span>}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -429,24 +430,24 @@ function ConditionCard({
           <p className="truncate font-mono text-2xs text-muted-foreground">{condition.templateId}</p>
         </div>
         <div data-slot="condition-card-actions" className="flex shrink-0 items-center gap-1">
-          <button
+          <Button variant="outline" size="icon-sm"
             type="button"
             onClick={onEdit}
             aria-label={`Edit ${template?.name ?? "condition"}`}
             title="Edit condition"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary-ink"
+            className="size-7 rounded border border-border bg-transparent text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary-ink dark:border-border dark:bg-transparent dark:hover:border-primary/40 dark:hover:bg-primary/10"
           >
             <Pencil className="size-3" />
-          </button>
-          <button
+          </Button>
+          <Button variant="outline" size="icon-sm"
             type="button"
             onClick={onRemove}
             aria-label={`Remove ${template?.name ?? "condition"}`}
             title="Remove condition"
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-severity-critical/40 hover:bg-severity-critical/10 hover:text-severity-critical"
+            className="size-7 rounded border border-border bg-transparent text-muted-foreground transition-colors hover:border-severity-critical/40 hover:bg-severity-critical/10 hover:text-severity-critical dark:border-border dark:bg-transparent dark:hover:border-severity-critical/40 dark:hover:bg-severity-critical/10"
           >
             <X className="size-3" />
-          </button>
+          </Button>
         </div>
       </div>
       <p className="mt-1.5 truncate text-sm text-muted-foreground">{summary.join(" · ")}</p>
@@ -491,11 +492,11 @@ export function RuleConditions({
       </div>
 
       {conditions.length === 0 ? (
-        <button
+        <ItemButton variant="plain"
           type="button"
           onClick={add}
           className={cn(
-            "group flex min-h-[160px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-muted-foreground transition-colors hover:text-foreground",
+            "group min-h-[160px] flex-col justify-center gap-2 rounded-xl border border-dashed text-center text-muted-foreground transition-colors hover:text-foreground",
             invalid ? "border-severity-critical" : "border-border"
           )}
         >
@@ -503,7 +504,7 @@ export function RuleConditions({
             <Plus className="size-4" />
           </div>
           <p className="text-base">Add your first condition</p>
-        </button>
+        </ItemButton>
       ) : (
         <div data-slot="rule-conditions-list" className="space-y-2">
           {conditions.map((c) => (

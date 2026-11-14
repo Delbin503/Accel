@@ -1,10 +1,4 @@
-export { ThemeToggle } from "./ThemeToggle";
-export { SystemStatusMenu } from "./SystemStatusMenu";
-export { UserMenu } from "./UserMenu";
-export { CommandPalette } from "./CommandPalette";
-export { GlobalSearchTrigger, QuickActionsTrigger } from "./GlobalSearchTrigger";
 export { TruncatedText } from "./TruncatedText";
-
 // Design-system composites
 export { StatusBadge, statusBadgeVariants } from "./StatusBadge";
 export type { StatusBadgeProps } from "./StatusBadge";
@@ -29,11 +23,8 @@ export {
 export type { ModalContentProps, ModalHeaderProps } from "./Modal";
 export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
-export { SyncProgressModal } from "./SyncProgressModal";
-export type { SyncProgressModalProps } from "./SyncProgressModal";
 export { DataTable } from "./DataTable";
 export type { DataTableColumn, DataTableProps } from "./DataTable";
-
 // Existing shared building blocks
 export { KpiCard, KpiGrid } from "./KpiCard";
 export { DateRangeBar } from "./DateRangeBar";

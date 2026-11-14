@@ -14,6 +14,7 @@ import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
 import { ASSIGNEES } from "@/mocks/incidentCases";
 import { ChoiceDropdown } from "@/components/shared/ChoiceDropdown";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 
 export interface EscalateFormData {
   title: string;
@@ -32,9 +33,9 @@ const SLA_BY_SEVERITY: Record<
 };
 
 const SEV_OPTION_STYLES: Record<Severity, string> = {
-  critical: "bg-severity-critical/15 text-severity-critical border-severity-critical",
-  medium: "bg-severity-medium/15 text-severity-medium border-severity-medium",
-  low: "bg-severity-low/15 text-severity-low border-severity-low",
+  critical: "data-[state=on]:bg-severity-critical/15 data-[state=on]:text-severity-critical hover:text-severity-critical border-severity-critical",
+  medium: "data-[state=on]:bg-severity-medium/15 data-[state=on]:text-severity-medium hover:text-severity-medium border-severity-medium",
+  low: "data-[state=on]:bg-severity-low/15 data-[state=on]:text-severity-low hover:text-severity-low border-severity-low",
 };
 
 interface EscalateModalProps {
@@ -120,21 +121,25 @@ export function EscalateModal({
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Severity
               </label>
-              <div className="flex gap-1.5">
+              <SegmentedControl
+                type="single"
+                value={pickedSev}
+                onValueChange={(next) => next && setPickedSev(next as Severity)}
+                className="flex w-full gap-1.5 rounded-none bg-transparent p-0"
+              >
                 {(["low", "medium", "critical"] as Severity[]).map((sev) => (
-                  <button
+                  <SegmentedControlItem
                     key={sev}
-                    type="button"
-                    onClick={() => setPickedSev(sev)}
+                    value={sev}
                     className={cn(
-                      "h-9 flex-1 rounded-md border text-2xs font-bold uppercase tracking-wider transition-colors",
-                      pickedSev === sev ? SEV_OPTION_STYLES[sev] : "border-input text-muted-foreground hover:border-ring"
+                      "h-9 flex-1 rounded-md border px-0 text-2xs font-bold uppercase tracking-wider transition-colors data-[state=on]:shadow-none",
+                      pickedSev === sev ? SEV_OPTION_STYLES[sev] : "border-input text-muted-foreground hover:border-ring hover:text-muted-foreground"
                     )}
                   >
                     {sev}
-                  </button>
+                  </SegmentedControlItem>
                 ))}
-              </div>
+              </SegmentedControl>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">

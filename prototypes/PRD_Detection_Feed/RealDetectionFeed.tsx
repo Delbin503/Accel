@@ -22,7 +22,7 @@ import { ItemButton } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
@@ -515,7 +515,7 @@ function SelectionBar({
 const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (events: DetectionEvent[]) => number;
   sub: string;
 }[] = [
@@ -840,7 +840,7 @@ export default function DetectionFeedPage({
             label={cfg.label}
             value={cfg.getValue(allEvents.filter((e) => e.status !== "dismissed"))}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />

@@ -6,15 +6,15 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
-import { NotificationsBell } from "@/components/shared/NotificationsBell";
-import { DownloadsIndicator } from "@/components/shared/DownloadsIndicator";
-import { SystemStatusMenu } from "@/components/shared/SystemStatusMenu";
-import { UserMenu } from "@/components/shared/UserMenu";
-import { CommandPalette } from "@/components/shared/CommandPalette";
+import { NotificationsBell } from "@/components/app/NotificationsBell";
+import { DownloadsIndicator } from "@/components/app/DownloadsIndicator";
+import { SystemStatusMenu } from "@/components/app/SystemStatusMenu";
+import { UserMenu } from "@/components/app/UserMenu";
+import { CommandPalette } from "@/components/app/CommandPalette";
 import {
   GlobalSearchTrigger,
   QuickActionsTrigger,
-} from "@/components/shared/GlobalSearchTrigger";
+} from "@/components/app/GlobalSearchTrigger";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";

@@ -421,7 +421,7 @@ export function TaExternalDevices() {
 
       <KpiGrid cols={5}>
         {KPIS.map((k) => (
-          <KpiCard key={k.key} label={k.label} value={k.value} sub={k.sub} accent={k.accent}
+          <KpiCard key={k.key} label={k.label} value={k.value} sub={k.sub} tone={k.accent}
             active={k.key !== "all" && kpi === k.key} onClick={() => setKpi(kpi === k.key ? "all" : k.key)} />
         ))}
       </KpiGrid>

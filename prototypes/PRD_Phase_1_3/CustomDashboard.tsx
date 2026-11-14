@@ -974,23 +974,23 @@ export function CustomDashboard({
         <div className="min-w-0 @2xl:flex-[3_3_24px]">
           <StripLabel live>Live status</StripLabel>
           <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
-            <KpiCard label="Sites" value={sitesTotal} sub={`${sitesActive} active`} accent="primary"
+            <KpiCard label="Sites" value={sitesTotal} sub={`${sitesActive} active`} tone="primary"
               onClick={() => navigate("/site/overview")} />
             <KpiCard label="Cameras"
               value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
-              sub={`${camTotal - camOnline} offline`} accent="success" onClick={() => navigate("/site/cameras")} />
+              sub={`${camTotal - camOnline} offline`} tone="success" onClick={() => navigate("/site/cameras")} />
             <KpiCard label="NVR Devices"
               value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
-              sub={`${nvrTotal - nvrOnline} offline`} accent="violet" onClick={() => navigate("/site/nvr")} />
+              sub={`${nvrTotal - nvrOnline} offline`} tone="violet" onClick={() => navigate("/site/nvr")} />
           </div>
         </div>
         <div className="hidden w-px self-stretch bg-border @2xl:block" />
         <div className="min-w-0 @2xl:flex-[2_2_12px]">
           <StripLabel>Period · {dateLabel}</StripLabel>
           <div className="grid grid-cols-2 gap-3">
-            <KpiCard label="Events" value={eventsInRange} sub={dateLabel} accent="info"
+            <KpiCard label="Events" value={eventsInRange} sub={dateLabel} tone="info"
               onClick={() => navigate("/detection-feed")} />
-            <KpiCard label="Open Cases" value={casesOpen} sub={`${casesEscalated} critical`} accent="severity-critical"
+            <KpiCard label="Open Cases" value={casesOpen} sub={`${casesEscalated} critical`} tone="severity-critical"
               onClick={() => navigate("/incidents")} />
           </div>
         </div>

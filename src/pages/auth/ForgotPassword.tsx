@@ -113,17 +113,18 @@ export default function ForgotPasswordPage() {
     <AuthLayout>
       <div data-slot="forgot-password-page">
         {step !== "done" && (
-          <button
+          <Button
+            variant="link"
             onClick={() => {
               if (step === "email") navigate("/signin");
               else if (step === "code") setStep("email");
               else if (step === "reset") setStep("code");
             }}
-            className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="mb-5 h-auto gap-1.5 border-0 p-0 text-sm font-semibold text-muted-foreground hover:text-foreground hover:no-underline"
           >
             <ArrowLeft className="size-3.5" />
             Back
-          </button>
+          </Button>
         )}
 
         {step === "email" && (
@@ -198,7 +199,7 @@ export default function ForgotPasswordPage() {
                 className="flex items-center justify-between gap-2"
               >
                 {code.map((digit, i) => (
-                  <input
+                  <Input
                     key={i}
                     ref={(el) => {
                       inputRefs.current[i] = el;
@@ -210,7 +211,7 @@ export default function ForgotPasswordPage() {
                     maxLength={1}
                     className={cn(
                       "h-12 w-12 rounded-md border border-input bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors",
-                      "focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      "px-0 py-0 shadow-none focus:border-primary focus:ring-2 focus:ring-primary/30 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 md:text-2xl dark:bg-background"
                     )}
                   />
                 ))}
@@ -222,18 +223,19 @@ export default function ForgotPasswordPage() {
               >
                 Verify Code
               </Button>
-              <button
+              <Button
+                variant="link"
                 type="button"
                 onClick={() =>
                   toast.message("Code re-sent", {
                     description: `A new code was sent to ${email}.`,
                   })
                 }
-                className="group block w-full text-center text-sm text-muted-foreground"
+                className="group h-auto w-full gap-1 border-0 p-0 text-sm font-normal text-muted-foreground hover:no-underline"
               >
                 Didn't get it?{" "}
                 <span className="font-semibold underline transition-colors group-hover:text-primary-ink">Resend code</span>
-              </button>
+              </Button>
             </form>
           </>
         )}
@@ -325,14 +327,16 @@ function PasswordField({
           placeholder={placeholder}
           className="h-10 px-9 text-base"
         />
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute right-3 top-1/2 size-auto -translate-y-1/2 border-0 p-0 text-muted-foreground hover:bg-transparent hover:text-foreground active:not-aria-[haspopup]:-translate-y-1/2 dark:hover:bg-transparent"
           aria-label={show ? "Hide password" : "Show password"}
         >
           {show ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        </button>
+        </Button>
       </div>
     </div>
   );

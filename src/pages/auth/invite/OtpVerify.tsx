@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AccelMark } from "./AccelMark";
 
@@ -73,13 +74,14 @@ export function OtpVerify({
 
   return (
     <div data-slot="otp-verify" className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col px-5 py-10">
-      <button
+      <Button
+        variant="link"
         type="button"
         onClick={onBack}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="h-auto w-fit gap-1.5 p-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:no-underline"
       >
         <ArrowLeft className="size-4" /> Back to setup
-      </button>
+      </Button>
 
       <header data-slot="otp-verify-header" className="mt-8 text-center">
         <AccelMark size="lg" />
@@ -93,7 +95,7 @@ export function OtpVerify({
       <form data-slot="otp-verify-form" onSubmit={handleSubmit} className="mt-6 flex flex-col items-center space-y-5">
         <div data-slot="otp-verify-otp" className="flex items-center gap-2 sm:gap-3" onPaste={(e) => { e.preventDefault(); handleChange(0, e.clipboardData.getData("text")); }}>
           {digits.map((d, i) => (
-            <input
+            <Input
               key={i}
               ref={(el) => { inputs.current[i] = el; }}
               value={d}
@@ -103,7 +105,7 @@ export function OtpVerify({
               maxLength={1}
               aria-label={`Digit ${i + 1}`}
               className={cn(
-                "h-12 w-11 rounded-md border bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/30",
+                "h-12 w-11 rounded-md border bg-background text-center font-mono text-2xl font-bold text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/30 px-0 py-0 shadow-none md:text-2xl dark:bg-background focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30",
                 error ? "border-severity-critical" : "border-input"
               )}
             />
@@ -122,9 +124,9 @@ export function OtpVerify({
 
         <p className="text-sm text-muted-foreground">
           Didn't get a code?{" "}
-          <button type="button" className="font-medium text-primary-ink underline hover:text-primary-hover">
+          <Button variant="link" type="button" className="h-auto p-0 text-sm font-medium text-primary-ink underline hover:text-primary-hover">
             Resend code
-          </button>
+          </Button>
         </p>
       </form>
     </div>

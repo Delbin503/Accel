@@ -53,7 +53,8 @@ function SeverityChip({ severity }: { severity: Severity }) {
 
 /* ── KPI card ────────────────────────────────────────────────────────────── */
 
-import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard as SharedKpiCard, type KpiTone } from "@/components/shared/KpiCard";
+import { ItemButton } from "@/components/ui/item";
 
 /* ── Timeline entry row ──────────────────────────────────────────────────── */
 
@@ -171,7 +172,7 @@ function EntityKpiRow({
   reIdConfidence: number | null;
   priorIncidents: number;
 }) {
-  const reidAccent: KpiAccent =
+  const reidAccent: KpiTone =
     reIdConfidence == null ? "muted" : reIdConfidence >= 85 ? "success" : "severity-medium";
   const reidLabel =
     reIdConfidence == null ? "Not available" :
@@ -184,13 +185,13 @@ function EntityKpiRow({
         label="Total Detections"
         value={totalDetections}
         sub={totalDetections === 0 ? "No events recorded" : totalDetections === 1 ? "1 event recorded" : "Recorded events"}
-        accent={totalDetections > 0 ? "severity-critical" : "muted"}
+        tone={totalDetections > 0 ? "severity-critical" : "muted"}
       />
       <SharedKpiCard compact
         label="RE-ID Confidence"
         value={reIdConfidence != null ? (reIdConfidence / 100).toFixed(3) : "—"}
         sub={reidLabel}
-        accent={reidAccent}
+        tone={reidAccent}
       />
       {(() => {
         // If the entity has been seen multiple times, the implicit prior count is N-1.
@@ -202,7 +203,7 @@ function EntityKpiRow({
             label="Prior Incidents"
             value={prior}
             sub={prior === 0 ? "Clean history" : prior === 1 ? "1 prior case" : `${prior} prior cases`}
-            accent={prior > 0 ? "severity-medium" : "muted"}
+            tone={prior > 0 ? "severity-medium" : "muted"}
           />
         );
       })()}
@@ -321,11 +322,11 @@ function PossibleMatchCard({
       </div>
 
       {/* Expandable detail */}
-      <button onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 border-t border-border/40 px-3.5 py-1.5 text-2xs text-muted-foreground hover:bg-muted/30">
+      <ItemButton variant="plain" onClick={() => setExpanded((v) => !v)}
+        className="justify-between gap-2 border-t border-border/40 px-3.5 py-1.5 text-2xs text-muted-foreground hover:bg-muted/30">
         <span>{expanded ? "Hide" : "Show"} similarity breakdown</span>
         <ChevronDown className={cn("size-3 transition-transform", expanded && "rotate-180")} />
-      </button>
+      </ItemButton>
       {expanded && (
         <div className="space-y-1.5 border-t border-border/40 px-3.5 py-3">
           <p className="mb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -397,11 +398,11 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
             </span>
           )}
         </span>
-        <button onClick={() => setShowInfo((v) => !v)}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline hover:text-primary-ink">
+        <Button variant="link" onClick={() => setShowInfo((v) => !v)}
+          className="h-auto gap-1 border-0 p-0 text-xs font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink">
           <Info className="size-3" />
           {showInfo ? "Hide" : "How does this work?"}
-        </button>
+        </Button>
       </div>
 
       {/* Merge confirmation banner — auto-dismisses after 10s */}
@@ -678,22 +679,26 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
                 </SheetTitle>
                 <p className="mt-0.5 text-base text-muted-foreground">{entitySubtitle(entity)}</p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={onClose}
-                className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <SheetTitle className="text-md text-muted-foreground">Entity not found</SheetTitle>
-              <button
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={onClose}
-                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
         </SheetHeader>

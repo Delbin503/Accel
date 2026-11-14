@@ -622,21 +622,21 @@ export default function DashboardPage({
               label="Sites"
               value={sitesTotal}
               sub={`${sitesActive} active`}
-              accent="primary"
+              tone="primary"
               onClick={() => navigate("/site/overview")}
             />
             <KpiCard
               label="Cameras"
               value={<>{camOnline}<span className="text-md text-muted-foreground"> / {camTotal}</span></>}
               sub={`${camTotal - camOnline} offline`}
-              accent="success"
+              tone="success"
               onClick={() => navigate("/site/cameras")}
             />
             <KpiCard
               label="NVR Devices"
               value={<>{nvrOnline}<span className="text-md text-muted-foreground"> / {nvrTotal}</span></>}
               sub={`${nvrTotal - nvrOnline} offline`}
-              accent="violet"
+              tone="violet"
               onClick={() => navigate("/site/nvr")}
             />
           </KpiGrid>
@@ -651,14 +651,14 @@ export default function DashboardPage({
               label="Events"
               value={eventsInRange}
               sub={dateLabel}
-              accent="info"
+              tone="info"
               onClick={() => navigate("/detection-feed")}
             />
             <KpiCard
               label="Open Cases"
               value={casesOpen}
               sub={`${casesEscalated} critical`}
-              accent="severity-critical"
+              tone="severity-critical"
               onClick={() => navigate("/incidents")}
             />
           </div>

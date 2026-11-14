@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
-import { AuthBackground } from "@/components/shared/AuthBackground";
+import { AuthBackground } from "@/components/app/AuthBackground";
 
 /**
  * Shell for sign-in / forgot-password / single-screen auth pages.

@@ -42,6 +42,8 @@ import {
   ModalFooter,
 } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@/components/ui/item";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -61,7 +63,7 @@ import {
 } from "@/mocks/users";
 import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { DEPARTMENTS } from "@/mocks/departments";
 import { OtpField } from "@/components/shared/OtpField";
@@ -157,7 +159,7 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (items: UserData[]) => number;
 }[] = [
   { key: "all",       label: "Total Users",     sub: "All registered accounts",        accent: "primary",      getValue: (i) => i.length },
@@ -197,8 +199,8 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className={cn(
+        <ItemButton variant="plain"
+          className={cn("text-center", 
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
@@ -208,13 +210,13 @@ function FilterDropdown({
           <ChevronDown
             className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -228,7 +230,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -280,7 +282,7 @@ function FilterPanel({
       <div data-slot="user-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="text-[length:inherit] text-inherit flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -299,15 +301,15 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -384,14 +386,14 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
 
 function StatCard({ label, value, valueClass, sub }: { label: string; value: React.ReactNode; valueClass?: string; sub?: React.ReactNode }) {
   // Derive accent from valueClass so the shared accent bar matches the value tint.
-  const accent: KpiAccent =
+  const accent: KpiTone =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
     valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
     valueClass?.includes("text-violet")       ? "violet" :
     "primary";
-  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
+  return <KpiCard compact label={label} value={value} sub={sub} tone={accent} />;
 }
 
 const ACTIVITY_CHIP_STYLES: Record<string, string> = {
@@ -429,7 +431,7 @@ function UpdateUserMenu({
 
   function item(icon: React.ReactNode, label: string, handler: () => void, kind: "default" | "warn" | "success" = "default") {
     return (
-      <button
+      <ItemButton variant="plain"
         onClick={() => { setOpen(false); handler(); }}
         className={cn(
           "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-base transition-colors",
@@ -440,7 +442,7 @@ function UpdateUserMenu({
       >
         {icon}
         {label}
-      </button>
+      </ItemButton>
     );
   }
 
@@ -648,22 +650,22 @@ export function UserDrawer({
                   </p>
                 </div>
               </div>
-              <button
+              <Button variant="ghost" size="icon-sm"
                 onClick={onClose}
-                className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <SheetTitle className="text-md text-muted-foreground">User not found</SheetTitle>
-              <button
+              <Button variant="ghost" size="icon-sm"
                 onClick={onClose}
-                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
         </SheetHeader>
@@ -1022,12 +1024,12 @@ export function InviteUsersModal({
                 // Owner is assigned only via ownership transfer — not invitable here.
                 const selectable = r !== "owner";
                 return (
-                  <button
+                  <ItemButton variant="plain" selected={isSelected}
                     key={r}
                     type="button"
                     disabled={!selectable}
                     onClick={() => selectable && setRole(r)}
-                    className={cn(
+                    className={cn("block w-auto text-[length:inherit] text-inherit", 
                       "rounded-md border px-2 py-1.5 text-left transition-colors",
                       isSelected ? "border-primary bg-primary/5" : "border-border bg-card",
                       selectable ? "hover:border-primary/40" : "cursor-not-allowed opacity-60"
@@ -1042,7 +1044,7 @@ export function InviteUsersModal({
                     <p className="font-mono text-2xs text-muted-foreground">
                       {s.assigned} / {s.total} used
                     </p>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -1058,9 +1060,9 @@ export function InviteUsersModal({
             </label>
             <Popover>
               <PopoverTrigger asChild>
-                <button
+                <ItemButton variant="plain"
                   type="button"
-                  className={cn(
+                  className={cn("text-center", 
                     "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-base transition-colors",
                     sites.length === 0
                       ? "border-input text-muted-foreground"
@@ -1072,26 +1074,26 @@ export function InviteUsersModal({
                     {siteLabel}
                   </span>
                   <ChevronDown className="size-3.5 text-muted-foreground" />
-                </button>
+                </ItemButton>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
-                <button
+                <ItemButton variant="plain"
                   onClick={() => setSites(sites.length === USER_SITES.length ? [] : USER_SITES.map((s) => s.value))}
-                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary-ink hover:bg-primary/10"
+                  className="gap-0 flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary-ink hover:bg-primary/10"
                 >
                   <span>{sites.length === USER_SITES.length ? "Clear all" : "Select all"}</span>
                   <span className="font-mono text-muted-foreground">{sites.length}/{USER_SITES.length}</span>
-                </button>
+                </ItemButton>
                 <div className="mt-1 max-h-48 overflow-y-auto border-t border-border pt-1">
                   {USER_SITES.map((s) => {
                     const checked = sites.includes(s.value);
                     return (
-                      <button
+                      <ItemButton variant="plain"
                         key={s.value}
                         onClick={() =>
                           setSites((curr) => (curr.includes(s.value) ? curr.filter((v) => v !== s.value) : [...curr, s.value]))
                         }
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
+                        className="text-inherit flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted/60"
                       >
                         <span className={cn(
                           "flex size-3.5 flex-shrink-0 items-center justify-center rounded-sm border",
@@ -1100,7 +1102,7 @@ export function InviteUsersModal({
                           {checked && <Check className="size-2.5" strokeWidth={3} />}
                         </span>
                         <TruncatedText text={s.label} className="text-foreground" />
-                      </button>
+                      </ItemButton>
                     );
                   })}
                 </div>
@@ -1231,7 +1233,7 @@ function SeatPill({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className={cn("group flex w-full flex-col gap-1 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:border-primary/40")}>
+        <ItemButton variant="plain" className={cn("items-stretch text-[length:inherit] text-inherit", "group flex w-full flex-col gap-1 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:border-primary/40")}>
           <div className="flex items-center gap-1.5">
             <Icon className={cn("size-3", cfg.text)} />
             <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
@@ -1244,7 +1246,7 @@ function SeatPill({
           <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
             <div className={cn("h-full rounded-full", cfg.barClass)} style={{ width: `${pct}%` }} />
           </div>
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-60 p-3">
         <div className="mb-2 flex items-center gap-2">
@@ -1576,9 +1578,9 @@ export function ChangeRoleModal({
                   <OtpField id="ownership-transfer-code" value={otp} onChange={setOtp} length={OTP_LENGTH} autoFocus />
                   <p className="mt-2 text-sm text-muted-foreground">
                     Sent to <strong className="text-foreground">{currentOwner.email}</strong> · expires in {OTP_EXPIRY_MINUTES} minutes.{" "}
-                    <button type="button" onClick={resendCode} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary-ink">
+                    <Button variant="link" type="button" onClick={resendCode} className="h-auto px-0 border-0 rounded-none gap-0 text-[length:inherit] whitespace-normal font-semibold text-foreground underline underline-offset-2 hover:text-primary-ink">
                       Resend code
-                    </button>
+                    </Button>
                   </p>
                 </div>
               </>
@@ -1638,12 +1640,12 @@ export function ChangeRoleModal({
                   const isEligible = candidate.status === "active";
                   const isSelected = candidate.id === selectedSuccessorId;
                   return (
-                    <button
+                    <ItemButton variant="plain" selected={isSelected}
                       key={candidate.id}
                       type="button"
                       disabled={!isEligible}
                       onClick={() => setSelectedSuccessorId(candidate.id)}
-                      className={cn(
+                      className={cn("text-[length:inherit] text-inherit", 
                         "flex w-full items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
                         isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40",
                         !isEligible && "cursor-not-allowed opacity-50 hover:border-border"
@@ -1666,7 +1668,7 @@ export function ChangeRoleModal({
                         <RoleBadge role={candidate.role} />
                         {!isEligible && <StatusPill status={candidate.status} />}
                       </div>
-                    </button>
+                    </ItemButton>
                   );
                 })
               ) : (
@@ -1701,10 +1703,10 @@ export function ChangeRoleModal({
                 ? (opt.value !== "owner" && opt.value !== users[0].role && u.available === 0)
                 : false;
               return (
-                <button
+                <ItemButton variant="plain" selected={role === opt.value}
                   key={opt.value}
                   onClick={() => setRole(opt.value)}
-                  className={cn(
+                  className={cn("text-[length:inherit] text-inherit", 
                     "flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
                     role === opt.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                   )}
@@ -1738,7 +1740,7 @@ export function ChangeRoleModal({
                       )}
                     </div>
                   </div>
-                </button>
+                </ItemButton>
               );
             })}
 
@@ -1933,15 +1935,15 @@ export function ManageSiteModal({
               Site Access ({sites.length}/{USER_SITES.length} selected)
             </p>
             <div className="flex items-center gap-1.5">
-              <button onClick={() => setSites(USER_SITES.map((s) => s.value))}
-                className="text-xs text-muted-foreground underline hover:text-primary-ink">
+              <Button variant="link" onClick={() => setSites(USER_SITES.map((s) => s.value))}
+                className="h-auto px-0 border-0 rounded-none font-normal gap-0 whitespace-normal text-xs text-muted-foreground underline hover:text-primary-ink">
                 Select all
-              </button>
+              </Button>
               <span className="text-muted-foreground/40">·</span>
-              <button onClick={() => setSites([])}
-                className="text-xs text-muted-foreground underline hover:text-primary-ink">
+              <Button variant="link" onClick={() => setSites([])}
+                className="h-auto px-0 border-0 rounded-none font-normal gap-0 whitespace-normal text-xs text-muted-foreground underline hover:text-primary-ink">
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
           <div className="relative">
@@ -1957,10 +1959,10 @@ export function ManageSiteModal({
             visibleSites.map((s) => {
               const checked = sites.includes(s.value);
               return (
-                <button
+                <ItemButton variant="plain"
                   key={s.value}
                   onClick={() => toggle(s.value)}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
+                  className="text-[length:inherit] text-inherit flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-primary/40"
                 >
                   <div
                     className={cn(
@@ -1974,7 +1976,7 @@ export function ManageSiteModal({
                     <MapPin className="size-4 text-info" />
                   </div>
                   <span className="text-base font-medium text-foreground">{s.label}</span>
-                </button>
+                </ItemButton>
               );
             })
           )}
@@ -2063,11 +2065,11 @@ export function EditUserModal({
               ) : (
                 <div className="relative">
                   <f.icon className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <input
+                  <Input
                     value={f.value}
                     onChange={(e) => f.set(e.target.value)}
                     placeholder={f.placeholder}
-                    className={cn(
+                    className={cn("py-0 shadow-none md:text-base dark:bg-background focus-visible:ring-0 focus-visible:border-primary", 
                       "h-9 w-full rounded-md border border-input bg-background px-9 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
                       f.mono && "font-mono"
                     )}
@@ -2239,10 +2241,10 @@ export function SuspendUserModal({
             </p>
             <div className="grid grid-cols-4 gap-2">
               {PRESETS.map((p) => (
-                <button
+                <ItemButton variant="plain" selected={preset === p}
                   key={p}
                   onClick={() => setPreset(p)}
-                  className={cn(
+                  className={cn("w-auto text-center", 
                     "flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-xs font-semibold transition-colors",
                     preset === p
                       ? "border-primary bg-primary/5 text-primary-ink"
@@ -2251,7 +2253,7 @@ export function SuspendUserModal({
                 >
                   {p === "custom" ? <Calendar className="size-3.5" /> : p === "permanent" ? <ShieldOff className="size-3.5" /> : <Clock className="size-3.5" />}
                   {SUSPEND_DURATION_LABEL[p]}
-                </button>
+                </ItemButton>
               ))}
             </div>
           </div>
@@ -2262,23 +2264,23 @@ export function SuspendUserModal({
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Start Date
                 </label>
-                <input
+                <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
+                  className="py-0 shadow-none md:text-base dark:bg-background focus-visible:ring-0 focus-visible:border-primary h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   End Date
                 </label>
-                <input
+                <Input
                   type="date"
                   value={endDate}
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
+                  className="py-0 shadow-none md:text-base dark:bg-background focus-visible:ring-0 focus-visible:border-primary h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
             </div>
@@ -2551,12 +2553,12 @@ function DeletedUsersPage({
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "deleted user" : "deleted users"} match current filters
           {hasFilters && (
-            <button
+            <Button variant="link"
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Popover open={sortOpen} onOpenChange={setSortOpen}>
@@ -2568,7 +2570,7 @@ function DeletedUsersPage({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1">
             {SORT_OPTIONS.map((o) => (
-              <button
+              <ItemButton variant="plain"
                 key={o.key}
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
@@ -2578,7 +2580,7 @@ function DeletedUsersPage({
               >
                 {o.label}
                 {sort === o.key && <Check className="size-3.5" />}
-              </button>
+              </ItemButton>
             ))}
           </PopoverContent>
         </Popover>
@@ -2601,30 +2603,30 @@ function DeletedUsersPage({
       ) : (
         <div data-slot="deleted-users-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="text-[length:inherit] w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-b border-border text-left">
                   {["USER ID", "USER", "ROLE", "SITES", "DELETED ON", "ACTION"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {visibleItems.map((u) => (
-                  <tr
+                  <TableRow
                     key={u.id}
                     onClick={() => setDrawerId(u.id)}
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{u.id}</span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar user={u} size={32} />
                         <div className="min-w-0">
@@ -2632,42 +2634,42 @@ function DeletedUsersPage({
                           <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                    <td className="px-4 py-3"><SitesCell user={u} /></td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{u.deletedAtDisplay}</td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3"><RoleBadge role={u.role} /></TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3"><SitesCell user={u} /></TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">{u.deletedAtDisplay}</TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button
-                            className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground"
+                          <Button variant="ghost" size="icon-sm"
+                            className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50"
                             aria-label={`Actions for ${u.fullName}`}
                           >
                             <MoreHorizontal className="size-4" />
-                          </button>
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1" align="end">
-                          <button
+                          <ItemButton variant="plain"
                             onClick={() => setDrawerId(u.id)}
                             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <CircleUser className="size-3.5 text-muted-foreground" />
                             View details
-                          </button>
-                          <button
+                          </ItemButton>
+                          <ItemButton variant="plain"
                             onClick={() => onRestore(u)}
                             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
                           >
                             <RotateCcw className="size-3.5" />
                             Restore User
-                          </button>
+                          </ItemButton>
                         </PopoverContent>
                       </Popover>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
           <div data-slot="deleted-users-page-footer" className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
             {hasMore && (
@@ -3061,7 +3063,7 @@ export default function UserManagementPage({
             label={cfg.label}
             value={cfg.getValue(users)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -3083,12 +3085,12 @@ export default function UserManagementPage({
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "user" : "users"} match current filters
           {hasFilters && (
-            <button
+            <Button variant="link"
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal ml-2 text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Popover open={sortOpen} onOpenChange={setSortOpen}>
@@ -3100,7 +3102,7 @@ export default function UserManagementPage({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1">
             {SORT_OPTIONS.map((o) => (
-              <button
+              <ItemButton variant="plain"
                 key={o.key}
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
@@ -3110,7 +3112,7 @@ export default function UserManagementPage({
               >
                 {o.label}
                 {sort === o.key && <Check className="size-3.5" />}
-              </button>
+              </ItemButton>
             ))}
           </PopoverContent>
         </Popover>
@@ -3145,32 +3147,32 @@ export default function UserManagementPage({
       ) : (
         <div data-slot="user-management-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="text-[length:inherit] w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-b border-border text-left">
                   {["USER ID", "USER", "ROLE", "STATUS", "SITES", "LAST ACTIVE", "ACTION"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {visibleItems.map((u) => (
-                  <tr
+                  <TableRow
                     key={u.id}
                     onClick={() => setDrawerId(u.id)}
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                      <td className="px-4 py-3">
+                      <TableCell className="whitespace-normal px-4 py-3">
                         <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                           {u.id}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <Avatar user={u} size={32} />
                           <div className="min-w-0">
@@ -3186,65 +3188,65 @@ export default function UserManagementPage({
                             <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                      <td className="px-4 py-3"><StatusPill status={u.status} /></td>
-                      <td className="px-4 py-3"><SitesCell user={u} /></td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{u.lastActiveDisplay}</td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3"><RoleBadge role={u.role} /></TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3"><StatusPill status={u.status} /></TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3"><SitesCell user={u} /></TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">{u.lastActiveDisplay}</TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                            <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
                               <MoreHorizontal className="size-4" />
-                            </button>
+                            </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
-                            <button
+                            <ItemButton variant="plain"
                               onClick={() => setDrawerId(u.id)}
                               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <CircleUser className="size-3.5 text-muted-foreground" />
                               View details
-                            </button>
-                            <button
+                            </ItemButton>
+                            <ItemButton variant="plain"
                               onClick={() => openDialog("change-role", [u.id])}
                               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <Shield className="size-3.5 text-muted-foreground" />
                               Change Role
-                            </button>
-                            <button
+                            </ItemButton>
+                            <ItemButton variant="plain"
                               onClick={() => openDialog("manage-site", [u.id])}
                               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                             >
                               <MapPin className="size-3.5 text-muted-foreground" />
                               Manage Site
-                            </button>
+                            </ItemButton>
                             <div className="my-1 border-t border-border" />
                             {u.status === "suspended" ? (
-                              <button
+                              <ItemButton variant="plain"
                                 onClick={() => openDialog("reinstate", [u.id])}
                                 className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
                               >
                                 <RotateCcw className="size-3.5" />
                                 Reinstate
-                              </button>
+                              </ItemButton>
                             ) : (
-                              <button
+                              <ItemButton variant="plain"
                                 onClick={() => openDialog("suspend", [u.id])}
                                 className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-warning hover:bg-warning/10"
                               >
                                 <ShieldOff className="size-3.5" />
                                 Suspend User
-                              </button>
+                              </ItemButton>
                             )}
                           </PopoverContent>
                         </Popover>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Load more — newest 20 shown first, older entries loaded on demand */}

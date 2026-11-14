@@ -2,7 +2,8 @@ import * as React from "react";
 import { Eye, EyeOff, CircleAlert, CircleUser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
+import { Input } from "@/components/ui/input";
+import { DepartmentSelect } from "@/components/app/DepartmentSelect";
 import { cn } from "@/lib/utils";
 import { AccelMark } from "./AccelMark";
 import { roleLabel, type InviteContext } from "./shared";
@@ -45,7 +46,7 @@ function initials(email: string): string {
 /* Field label — matches the EditUserModal pattern in the live app. */
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 const inputClass =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none";
+  "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-base dark:bg-background focus-visible:border-primary focus-visible:ring-0";
 
 const MIN_PASSWORD = 8;
 
@@ -135,7 +136,7 @@ export function AccountSetup({
             <label htmlFor="firstName" className={labelClass}>First Name</label>
             <div className="relative">
               <CircleUser className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
+              <Input
                 id="firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -155,7 +156,7 @@ export function AccountSetup({
             <label htmlFor="lastName" className={labelClass}>Last Name</label>
             <div className="relative">
               <CircleUser className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
+              <Input
                 id="lastName"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
@@ -195,7 +196,7 @@ export function AccountSetup({
         <div>
           <label htmlFor="password" className={labelClass}>Password</label>
           <div className="relative">
-            <input
+            <Input
               id="password"
               type={showPw ? "text" : "password"}
               value={password}
@@ -204,14 +205,16 @@ export function AccountSetup({
               autoComplete="new-password"
               className={cn(inputClass, "pr-10", submitted && !pwLongEnough && "border-severity-critical")}
             />
-            <button
+            <Button
+              variant="ghost"
+              size="icon-xs"
               type="button"
               onClick={() => setShowPw((v) => !v)}
               aria-label={showPw ? "Hide password" : "Show password"}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+              className="absolute right-2.5 top-1/2 size-auto -translate-y-1/2 p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground active:not-aria-[haspopup]:-translate-y-1/2 dark:hover:bg-transparent"
             >
               {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
+            </Button>
           </div>
           {password.length > 0 && (
             <div className="mt-1.5">
@@ -235,7 +238,7 @@ export function AccountSetup({
 
         <div>
           <label htmlFor="confirm" className={labelClass}>Confirm Password</label>
-          <input
+          <Input
             id="confirm"
             type={showPw ? "text" : "password"}
             value={confirm}

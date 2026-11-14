@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListLoadingState, ListErrorState } from "@/components/shared/PageStates";
@@ -190,7 +192,7 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (items: DeviceRow[]) => number;
 }[] = [
   { key: "all",     label: "Total Devices", sub: "Cameras + NVRs",         accent: "primary",      getValue: (i) => i.length },
@@ -228,7 +230,7 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
@@ -237,13 +239,13 @@ function FilterDropdown({
         >
           <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -257,7 +259,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -301,9 +303,9 @@ function FilterPanel({
 
   return (
     <div data-slot="device-health-filter-panel" className="rounded-xl border border-border bg-card">
-      <button
+      <ItemButton variant="plain"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
+        className="text-inherit flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
@@ -332,7 +334,7 @@ function FilterPanel({
             <ChevronDown className="size-4 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </ItemButton>
 
       {open && (
         <div data-slot="device-health-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -467,7 +469,7 @@ export default function DeviceHealthPage({
             label={cfg.label}
             value={cfg.getValue(allDevices)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -488,12 +490,12 @@ export default function DeviceHealthPage({
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           {filtered.length === 1 ? "device" : "devices"} match current filters
           {hasFilters && (
-            <button
+            <Button variant="link"
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="h-auto p-0 border-0 font-normal ml-2 text-base text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Popover open={sortOpen} onOpenChange={setSortOpen}>
@@ -505,7 +507,7 @@ export default function DeviceHealthPage({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-52 p-1">
             {SORT_OPTIONS.map((o) => (
-              <button
+              <ItemButton variant="plain"
                 key={o.key}
                 onClick={() => { setSort(o.key); setSortOpen(false); }}
                 className={cn(
@@ -515,7 +517,7 @@ export default function DeviceHealthPage({
               >
                 {o.label}
                 {sort === o.key && <Check className="size-3.5" />}
-              </button>
+              </ItemButton>
             ))}
           </PopoverContent>
         </Popover>
@@ -544,39 +546,39 @@ export default function DeviceHealthPage({
       ) : (
         <div data-slot="device-health-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="text-base w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-left">
                   {["DEVICE ID", "NAME", "TYPE", "STATUS", "LOCATION", "IP", "DISK USAGE", "LAST SYNC"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto font-bold whitespace-normal px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {pageItems.map((d) => (
-                  <tr
+                  <TableRow
                     key={d.id}
                     onClick={() => openDevice(d)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                    className="has-aria-expanded:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {d.id}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                         {d.name}
                       </span>
-                    </td>
-                    <td className="px-4 py-3"><TypePill type={d.type} /></td>
-                    <td className="px-4 py-3"><HealthPill status={d.health} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3"><TypePill type={d.type} /></TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3"><HealthPill status={d.health} /></TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{d.areaName}</span>
                         <span className="inline-flex items-center gap-1 text-xs">
@@ -584,9 +586,9 @@ export default function DeviceHealthPage({
                           {d.siteName}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-sm text-muted-foreground">{d.ip}</td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">{d.ip}</TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       {d.type === "nvr" && d.diskPct != null && d.diskBand && d.diskDisplay ? (
                         <DiskBar pct={d.diskPct} band={d.diskBand} display={d.diskDisplay} />
                       ) : (
@@ -595,8 +597,8 @@ export default function DeviceHealthPage({
                           n/a
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 text-sm",
@@ -605,11 +607,11 @@ export default function DeviceHealthPage({
                       >
                         {d.lastSeenDisplay}
                       </span>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
@@ -620,23 +622,23 @@ export default function DeviceHealthPage({
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
             </p>
             <div className="flex items-center gap-1">
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="bg-transparent hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:bg-transparent flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
               >
                 <ChevronLeft className="size-3.5" />
-              </button>
+              </Button>
               <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="bg-transparent hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:bg-transparent flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
               >
                 <ChevronRight className="size-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

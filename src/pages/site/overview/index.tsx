@@ -1,4 +1,6 @@
 import * as React from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ItemButton } from "@/components/ui/item";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -128,25 +130,25 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
         >
           <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -157,7 +159,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -189,7 +191,7 @@ function FilterPanel({
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="w-auto flex-1 gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -208,15 +210,15 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto rounded-none p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -374,10 +376,10 @@ export default function SiteOverviewPage({
       </PageHeader>
 
       <KpiGrid cols={4}>
-        <KpiCard label="Total Sites"      value={totalSites}    sub="All locations"                              accent="primary" />
-        <KpiCard label="With Floor Plans" value={sitesWithPlan} sub={`${totalSites - sitesWithPlan} pending upload`} accent="success" />
-        <KpiCard label="Areas Defined"    value={totalAreas}    sub="Across all sites"                           accent="info" />
-        <KpiCard label="Cameras"          value={totalCameras}  sub={`${onlineCameras} online`}                  accent="secondary" />
+        <KpiCard label="Total Sites"      value={totalSites}    sub="All locations"                              tone="primary" />
+        <KpiCard label="With Floor Plans" value={sitesWithPlan} sub={`${totalSites - sitesWithPlan} pending upload`} tone="success" />
+        <KpiCard label="Areas Defined"    value={totalAreas}    sub="Across all sites"                           tone="info" />
+        <KpiCard label="Cameras"          value={totalCameras}  sub={`${onlineCameras} online`}                  tone="secondary" />
       </KpiGrid>
 
       <FilterPanel
@@ -391,12 +393,12 @@ export default function SiteOverviewPage({
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "site" : "sites"} match current filters
         {hasFilters && (
-          <button
+          <Button variant="link"
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+            className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
-          </button>
+          </Button>
         )}
       </p>
 
@@ -425,30 +427,30 @@ export default function SiteOverviewPage({
       ) : (
         <div data-slot="site-overview-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
                   {["SITE ID", "SITE", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
-                    <th key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
+                    <TableHead key={h}
+                      className="h-auto px-0 whitespace-normal text-current font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {filtered.map((site) => {
                   const siteCams = cameras.filter((c) => c.siteId === site.id);
                   return (
-                    <tr key={site.id}
+                    <TableRow key={site.id}
                       onClick={() => openSite(site.id)}
-                      className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
-                      <td className="px-4 py-3">
+                      className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20">
+                      <TableCell className="p-0 whitespace-normal px-4 py-3">
                         <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                           {site.id}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <SiteMiniThumb site={site} />
                           <div className="min-w-0">
@@ -465,8 +467,8 @@ export default function SiteOverviewPage({
                             </TruncatedText>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3">
                         {site.floorPlan ? (
                           <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
                             <ImageIcon className="size-3" />
@@ -477,54 +479,54 @@ export default function SiteOverviewPage({
                             Missing
                           </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-foreground">
                           <Shapes className="size-3 text-muted-foreground" />
                           {site.areas.length}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3">
                         <CameraHealthCell cameras={siteCams} />
-                      </td>
-                      <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">
                         {site.operatingHours
                           ? <>{site.operatingHours.from}<span className="text-muted-foreground/50"> – </span>{site.operatingHours.to}</>
                           : <span className="text-muted-foreground/50">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{site.createdAtDisplay}</td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      </TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3 text-sm text-muted-foreground">{site.createdAtDisplay}</TableCell>
+                      <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                               <MoreHorizontal className="size-4" />
-                            </button>
+                            </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1" align="end">
-                            <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                            <ItemButton variant="plain" onClick={() => openSite(site.id)}
+                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
                               <ArrowUpRight className="size-3.5 text-muted-foreground" />
                               Open Site
-                            </button>
-                            <button onClick={() => editSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                            </ItemButton>
+                            <ItemButton variant="plain" onClick={() => editSite(site.id)}
+                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
                               <Edit3 className="size-3.5 text-muted-foreground" />
                               Edit Site
-                            </button>
+                            </ItemButton>
                             <div className="my-1 border-t border-border" />
-                            <button onClick={() => openSite(site.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
+                            <ItemButton variant="plain" onClick={() => openSite(site.id)}
+                              className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10">
                               <Trash2 className="size-3.5" />
                               Delete Site
-                            </button>
+                            </ItemButton>
                           </PopoverContent>
                         </Popover>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

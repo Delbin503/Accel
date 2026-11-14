@@ -30,9 +30,12 @@ const itemVariants = cva(
   }
 )
 
-// Interactive states only apply to ItemButton.
+// Every ItemButton — including variant="plain" — keeps a visible keyboard
+// focus ring and disabled handling; only hover/selected fills are opt-out.
+const itemButtonBase =
+  "cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
 const itemButtonStates =
-  "cursor-pointer hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[selected=true]:border-primary data-[selected=true]:bg-primary/10"
+  "hover:bg-muted data-[selected=true]:border-primary data-[selected=true]:bg-primary/10"
 
 type ItemVariantProps = VariantProps<typeof itemVariants>
 
@@ -67,7 +70,7 @@ function ItemButton({
       data-selected={selected ? "true" : undefined}
       aria-pressed={selected}
       type={type}
-      className={cn(itemVariants({ variant, size }), variant !== "plain" && itemButtonStates, className)}
+      className={cn(itemVariants({ variant, size }), itemButtonBase, variant !== "plain" && itemButtonStates, className)}
       {...props}
     />
   )

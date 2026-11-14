@@ -30,6 +30,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/button";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/utils";
 import { cameraFrame, OFFLINE_FRAME } from "@/mocks/cameraFrames";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -75,10 +78,10 @@ function CameraTile({
   const frame = isOnline ? cameraFrame(camera.id) : OFFLINE_FRAME;
   const tileGradient = "radial-gradient(120% 80% at 40% 60%, rgba(180,140,80,0.18) 0%, rgba(40,30,15,0.1) 45%, rgba(0,0,0,0.95) 100%)";
   return (
-    <button data-slot="camera-tile"
+    <ItemButton variant="plain" data-slot="camera-tile"
       onClick={onSelect}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-lg border bg-media text-left transition-all",
+        "group relative h-full flex-col items-stretch gap-0 overflow-hidden rounded-lg border bg-media transition-all hover:bg-media",
         isSelected ? "border-primary shadow-[0_0_0_2px_var(--primary)]" : "border-border hover:border-primary/40"
       )}
     >
@@ -153,7 +156,7 @@ function CameraTile({
           {camera.id}
         </span>
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -249,37 +252,41 @@ function HeroView({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={() => setPaused((v) => !v)}
-                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                  <Button variant="outline" size="icon" onClick={() => setPaused((v) => !v)}
+                    className="size-8 rounded-md border border-border bg-background text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
                     {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>{paused ? "Play" : "Pause"}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={() => setMuted((v) => !v)}
-                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                  <Button variant="outline" size="icon" onClick={() => setMuted((v) => !v)}
+                    className="size-8 rounded-md border border-border bg-background text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
                     {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>{muted ? "Unmute" : "Mute"}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8 rounded-md border border-border bg-background text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
                     <Camera className="size-3.5" />
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>Snapshot</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8 rounded-md border border-border bg-background text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
                     <Maximize2 className="size-3.5" />
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>Fullscreen</TooltipContent>
               </Tooltip>
@@ -399,14 +406,14 @@ function WallView({ cameras, gridSize, setGridSize, page, setPage, pinnedIds, on
           Wall view · Cameras {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {total}
         </p>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+          <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
+            className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent">
             <ChevronLeft className="size-3.5" />
-          </button>
-          <button onClick={() => setPage(Math.min(pageCount, page + 1))} disabled={page === pageCount}
-            className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+          </Button>
+          <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.min(pageCount, page + 1))} disabled={page === pageCount}
+            className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent">
             <ChevronRight className="size-3.5" />
-          </button>
+          </Button>
           <Select value={String(gridSize)} onValueChange={(v) => { setGridSize(Number(v)); setPage(1); }}>
             <SelectTrigger className="h-7 w-auto">
               <SelectValue />
@@ -480,14 +487,14 @@ function LayoutSwitcher({
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRenameId(null); setCreating(false); setNewName(""); } }}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          "h-9 inline-flex items-center justify-between gap-2 rounded-md border bg-background px-3 text-base font-semibold transition-colors",
+        <ItemButton variant="plain" className={cn(
+          "h-9 w-auto justify-between gap-2 rounded-md border bg-background px-3 text-base font-semibold transition-colors hover:bg-background",
           open ? "border-primary" : "border-input",
           "text-foreground"
         )} style={{ minWidth: "200px" }}>
           <TruncatedText text={active?.name ?? "Select layout"} />
           <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-1.5">
         <p className="px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Saved layouts</p>
@@ -510,26 +517,27 @@ function LayoutSwitcher({
                   </>
                 ) : (
                   <>
-                    <button
+                    <ItemButton
+                      variant="plain"
                       onClick={() => { onSelect(l.id); setOpen(false); }}
-                      className="flex flex-1 items-center gap-1.5 rounded px-1.5 py-1 text-left text-sm hover:bg-muted/40"
+                      className="flex-1 gap-1.5 rounded px-1.5 py-1 text-sm hover:bg-muted/40"
                     >
                       <Check className={cn("size-3 flex-shrink-0", isActive ? "text-primary-ink" : "opacity-0")} strokeWidth={3} />
                       <TruncatedText text={l.name} className="min-w-0 flex-1 text-foreground" />
                       <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-3xs text-muted-foreground">{l.tiles.length}</span>
-                    </button>
-                    <button onClick={() => startRename(l.id, l.name)} title="Rename"
-                      className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+                    </ItemButton>
+                    <Button variant="ghost" size="icon-xs" onClick={() => startRename(l.id, l.name)} title="Rename"
+                      className="size-6 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                       <Pencil className="size-3" />
-                    </button>
-                    <button onClick={() => onDuplicate(l.id)} title="Duplicate"
-                      className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+                    </Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => onDuplicate(l.id)} title="Duplicate"
+                      className="size-6 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                       <LayoutGrid className="size-3" />
-                    </button>
-                    <button onClick={() => { if (layouts.length > 1) onDelete(l.id); }} disabled={layouts.length <= 1} title="Delete"
-                      className="flex size-6 items-center justify-center rounded text-severity-critical hover:bg-severity-critical/10 disabled:opacity-30 disabled:hover:bg-transparent">
+                    </Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => { if (layouts.length > 1) onDelete(l.id); }} disabled={layouts.length <= 1} title="Delete"
+                      className="size-6 rounded text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-severity-critical/10">
                       <Trash2 className="size-3" />
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -547,16 +555,16 @@ function LayoutSwitcher({
                 placeholder="Layout name…"
                 className="h-7 flex-1 text-sm"
               />
-              <button onClick={commitCreate} className="rounded bg-primary-fill px-2 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
+              <Button variant="default" size="xs" onClick={commitCreate} className="h-auto rounded bg-primary-fill px-2 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
                 Add
-              </button>
+              </Button>
             </div>
           ) : (
-            <button onClick={() => setCreating(true)}
-              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-primary-ink hover:bg-primary/10">
+            <ItemButton variant="plain" onClick={() => setCreating(true)}
+              className="gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-primary-ink hover:bg-primary/10">
               <Plus className="size-3" />
               New layout
-            </button>
+            </ItemButton>
           )}
         </div>
       </PopoverContent>
@@ -585,16 +593,18 @@ function GridSizeControl({
       <span className="font-semibold uppercase tracking-wider text-muted-foreground">Grid</span>
       {/* Columns */}
       <div className="inline-flex items-center gap-0.5">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           type="button"
           onClick={() => bumpCols(-1)}
           disabled={cols <= MIN_GRID_COLS}
-          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          className="size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-muted"
           aria-label="Fewer columns"
         >
           −
-        </button>
-        <input
+        </Button>
+        <Input
           type="number"
           min={MIN_GRID_COLS}
           max={MAX_GRID_COLS}
@@ -603,31 +613,35 @@ function GridSizeControl({
             const v = Math.max(MIN_GRID_COLS, Math.min(MAX_GRID_COLS, Number(e.target.value) || MIN_GRID_COLS));
             onChange(v, rows);
           }}
-          className="h-5 w-8 rounded border border-input bg-background text-center font-mono text-xs text-foreground outline-none focus:border-primary"
+          className="h-5 w-8 rounded border border-input bg-background px-0 py-0 text-center font-mono text-xs text-foreground shadow-none outline-none focus:border-primary md:text-xs dark:bg-background focus-visible:border-primary focus-visible:ring-0"
         />
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           type="button"
           onClick={() => bumpCols(1)}
           disabled={cols >= MAX_GRID_COLS}
-          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          className="size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-muted"
           aria-label="More columns"
         >
           +
-        </button>
+        </Button>
       </div>
       <span className="text-muted-foreground/60">×</span>
       {/* Rows */}
       <div className="inline-flex items-center gap-0.5">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           type="button"
           onClick={() => bumpRows(-1)}
           disabled={rows <= MIN_GRID_ROWS}
-          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          className="size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-muted"
           aria-label="Fewer rows"
         >
           −
-        </button>
-        <input
+        </Button>
+        <Input
           type="number"
           min={MIN_GRID_ROWS}
           max={MAX_GRID_ROWS}
@@ -636,17 +650,19 @@ function GridSizeControl({
             const v = Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, Number(e.target.value) || MIN_GRID_ROWS));
             onChange(cols, v);
           }}
-          className="h-5 w-8 rounded border border-input bg-background text-center font-mono text-xs text-foreground outline-none focus:border-primary"
+          className="h-5 w-8 rounded border border-input bg-background px-0 py-0 text-center font-mono text-xs text-foreground shadow-none outline-none focus:border-primary md:text-xs dark:bg-background focus-visible:border-primary focus-visible:ring-0"
         />
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           type="button"
           onClick={() => bumpRows(1)}
           disabled={rows >= MAX_GRID_ROWS}
-          className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+          className="size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-muted"
           aria-label="More rows"
         >
           +
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -815,37 +831,37 @@ function CustomView({
             <>
               <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
                 <PopoverTrigger asChild>
-                  <button className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted">
+                  <Button variant="outline" size="xs" className="h-auto gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
                     <Plus className="size-3" />
                     Add Camera
-                  </button>
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="max-h-[280px] w-64 overflow-y-auto p-1.5">
                   {availableCameras.length === 0 ? (
                     <p className="px-2 py-3 text-center text-sm italic text-muted-foreground">All cameras already in layout.</p>
                   ) : (
                     availableCameras.map((c) => (
-                      <button key={c.id} onClick={() => addTiles([c.id])}
-                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <ItemButton variant="plain" key={c.id} onClick={() => addTiles([c.id])}
+                        className="gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
                         <span className="font-mono text-2xs text-primary-ink">{c.id}</span>
                         <TruncatedText text={c.name} />
-                      </button>
+                      </ItemButton>
                     ))
                   )}
                 </PopoverContent>
               </Popover>
-              <button onClick={() => setEditing(false)}
-                className="inline-flex items-center gap-1 rounded-md bg-primary-fill px-2.5 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
+              <Button variant="default" size="xs" onClick={() => setEditing(false)}
+                className="h-auto gap-1 rounded-md bg-primary-fill px-2.5 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary-hover">
                 <Save className="size-3" />
                 Done
-              </button>
+              </Button>
             </>
           ) : (
-            <button onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted">
+            <Button variant="outline" size="xs" onClick={() => setEditing(true)}
+              className="h-auto gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted dark:border-border dark:bg-background dark:hover:bg-muted">
               <Pencil className="size-3" />
               Edit Layout
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -854,11 +870,11 @@ function CustomView({
         <div data-slot="custom-view-empty" className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-20 text-muted-foreground">
           <LayoutGrid className="size-10 opacity-20" />
           <p className="text-sm">No cameras in your custom layout yet.</p>
-          <button onClick={() => availableCameras.length > 0 && addTiles(availableCameras.slice(0, 4).map((c) => c.id))}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary-fill px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
+          <Button variant="default" size="sm" onClick={() => availableCameras.length > 0 && addTiles(availableCameras.slice(0, 4).map((c) => c.id))}
+            className="h-auto gap-1.5 rounded-md bg-primary-fill px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
             <Plus className="size-3.5" />
             Add starter tiles
-          </button>
+          </Button>
         </div>
       ) : (
         <div data-slot="custom-view-canvas" className="rounded-xl border border-border bg-card p-3">
@@ -902,16 +918,18 @@ function CustomView({
                   </div>
                   {editing && (
                     <>
-                      <button
-                        className="absolute left-1.5 top-1.5 z-10 flex size-6 cursor-grab items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-scrim/90 active:cursor-grabbing"
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="absolute left-1.5 top-1.5 z-10 size-6 cursor-grab rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-scrim/90 hover:text-media-foreground/90 active:cursor-grabbing dark:hover:bg-scrim/90"
                         title="Drag to reposition" onMouseDown={(e) => e.stopPropagation()}>
                         <GripVertical className="size-3.5" />
-                      </button>
-                      <button onClick={() => removeTile(tile.id)}
-                        className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-severity-critical/80"
+                      </Button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => removeTile(tile.id)}
+                        className="absolute right-1.5 top-1.5 z-10 size-6 rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm hover:bg-severity-critical/80 hover:text-media-foreground/90 dark:hover:bg-severity-critical/80"
                         title="Remove">
                         <Trash2 className="size-3" />
-                      </button>
+                      </Button>
                       <span className="absolute left-1/2 bottom-2 z-10 -translate-x-1/2 rounded bg-scrim/70 px-1.5 py-0.5 font-mono text-2xs text-media-foreground/85 backdrop-blur-sm">
                         {tile.cols}×{tile.rows}
                       </span>
@@ -961,36 +979,36 @@ function MultiSiteSelector({ sites, selected, onChange }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          "h-9 inline-flex items-center justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-base font-semibold transition-colors",
+        <ItemButton variant="plain" className={cn(
+          "h-9 w-auto justify-between gap-2 rounded-md border bg-background pl-3 pr-2 text-base font-semibold transition-colors hover:bg-background",
           open ? "border-primary" : "border-input",
           isAll ? "text-muted-foreground" : "text-foreground"
         )} style={{ minWidth: "160px" }}>
           {display}
           <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
-        <button onClick={() => { onChange([]); }}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
+        <ItemButton variant="plain" onClick={() => { onChange([]); }}
+          className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           All Sites
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {sites.map((s) => {
           const checked = !isAll && selected.includes(s.id);
           return (
-            <button key={s.id} onClick={() => toggle(s.id)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
+            <ItemButton variant="plain" key={s.id} onClick={() => toggle(s.id)}
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {s.name}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -1066,20 +1084,26 @@ export default function LiveMonitoringPage() {
             placeholder={`Search ${filteredCameras.length} cameras…`}
             className="h-9 w-full border-0 bg-transparent pl-9 text-base focus-visible:ring-0" />
         </div>
-        <div data-slot="button-group" className="flex items-center rounded-lg border border-border bg-background p-0.5">
+        <SegmentedControl
+          data-slot="button-group"
+          type="single"
+          value={viewMode}
+          onValueChange={(next) => next && setViewMode(next as ViewMode)}
+          className="flex gap-0 rounded-lg border border-border bg-background p-0.5"
+        >
           {VIEW_MODES.map((vm) => {
             const Icon = vm.icon;
             const active = viewMode === vm.key;
             return (
-              <button key={vm.key} onClick={() => setViewMode(vm.key)} title={vm.description}
-                className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-                  active ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+              <SegmentedControlItem value={vm.key} key={vm.key} title={vm.description}
+                className={cn("h-auto gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors data-[state=on]:shadow-none",
+                  active ? "bg-primary-fill text-primary-foreground data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground hover:text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <Icon className="size-3.5" />
                 {vm.label}
-              </button>
+              </SegmentedControlItem>
             );
           })}
-        </div>
+        </SegmentedControl>
         {pinned.length > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-semibold text-primary-ink">
             <Pin className="size-3" />

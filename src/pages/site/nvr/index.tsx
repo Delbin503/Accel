@@ -39,6 +39,8 @@ import {
   ModalFooter,
 } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@/components/ui/item";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressRow } from "@/components/shared/ProgressRow";
 import { Progress } from "@/components/ui/progress";
@@ -69,9 +71,9 @@ import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { storageBandFor } from "@/types/nvr";
 import type { NvrData, NvrStatus, StorageBand, NvrChannel } from "@/types/nvr";
 import type { CameraData } from "@/types/cameras";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { TruncatedText } from "@/components/shared/TruncatedText";
-import { SyncProgressModal } from "@/components/shared/SyncProgressModal";
+import { SyncProgressModal } from "@/components/app/SyncProgressModal";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 
@@ -89,14 +91,14 @@ function RevealValue({ value }: { value: string }) {
   return (
     <span className="flex items-center gap-1.5">
       <span className="font-mono text-xs">{shown ? value : "•".repeat(Math.min(value.length, 12))}</span>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setShown((v) => !v)}
         aria-label={shown ? "Hide password" : "Show password"}
-        className="text-muted-foreground transition-colors hover:text-foreground"
+        className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal hover:bg-transparent dark:hover:bg-transparent text-muted-foreground transition-colors hover:text-foreground"
       >
         {shown ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -182,7 +184,7 @@ const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
   sub: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (items: NvrData[]) => number;
 }[] = [
   { key: "all",              label: "Total NVRs",       sub: "Across all sites",      accent: "primary",      getValue: (i) => i.length },
@@ -219,8 +221,8 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className={cn(
+        <ItemButton variant="plain"
+          className={cn("text-center", 
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
@@ -228,13 +230,13 @@ function FilterDropdown({
         >
           <TruncatedText text={displayLabel} className="font-medium" />
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -248,7 +250,7 @@ function FilterDropdown({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -294,10 +296,10 @@ function FilterPanel({
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button
+        <ItemButton variant="plain"
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+          className="text-[length:inherit] text-inherit flex min-w-0 flex-1 items-center gap-2.5 text-left"
         >
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
@@ -314,15 +316,15 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button
+          <Button variant="ghost" className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal hover:bg-transparent dark:hover:bg-transparent"
             type="button"
             aria-label={open ? "Collapse filters" : "Expand filters"}
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -425,14 +427,14 @@ function StatCard({ icon, label, value, valueClass, sub }: {
   icon?: React.ReactNode; label: string; value: React.ReactNode; valueClass?: string; sub?: string;
 }) {
   void icon;
-  const accent: KpiAccent =
+  const accent: KpiTone =
     valueClass?.includes("text-success")      ? "success" :
     valueClass?.includes("text-info")         ? "info" :
     valueClass?.includes("text-severity-critical") ? "severity-critical" :
     valueClass?.includes("text-warning")      ? "warning" :
     valueClass?.includes("text-violet")       ? "violet" :
     "primary";
-  return <KpiCard compact label={label} value={value} sub={sub} accent={accent} />;
+  return <KpiCard compact label={label} value={value} sub={sub} tone={accent} />;
 }
 
 function ChannelRecordingStatusPill({ status, hasCamera }: { status?: "live" | "offline"; hasCamera: boolean }) {
@@ -494,9 +496,9 @@ export function NvrDrawer({
           <SheetHeader className="border-b border-border bg-card px-5 py-4">
             <div data-slot="nvr-drawer-header" className="flex items-center justify-between">
               <SheetTitle className="text-md text-muted-foreground">NVR not found</SheetTitle>
-              <button onClick={onClose} className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Button variant="ghost" size="icon-sm" onClick={onClose} className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           </SheetHeader>
         </SheetContent>
@@ -559,12 +561,12 @@ export function NvrDrawer({
                 <span className="font-mono">{nvr.model}</span>
               </p>
             </div>
-            <button
+            <Button variant="ghost" size="icon-sm"
               onClick={onClose}
-              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Tabs */}
@@ -573,10 +575,10 @@ export function NvrDrawer({
               { key: "overview" as const, label: "Overview",           icon: Layers },
               { key: "channels" as const, label: "Channel Management", icon: Cable, badge: nvr.channelCount },
             ].map(({ key, label, icon: Icon, badge }) => (
-              <button
+              <ItemButton variant="plain" selected={tab === key}
                 key={key}
                 onClick={() => setTab(key)}
-                className={cn(
+                className={cn("w-auto text-center", 
                   "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                   tab === key ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
                 )}
@@ -589,7 +591,7 @@ export function NvrDrawer({
                   </span>
                 )}
                 {tab === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-              </button>
+              </ItemButton>
             ))}
           </div>
         </SheetHeader>
@@ -752,48 +754,48 @@ export function NvrDrawer({
                 </div>
               )}
               <div className="overflow-hidden rounded-xl border border-border bg-card">
-                <table className="w-full">
-                  <thead className="bg-muted/30">
-                    <tr className="border-b border-border text-left">
+                <Table className="text-[length:inherit] w-full">
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent border-b border-border text-left">
                       {["CH", "CAMERA", "RECORDING", "LOCATION", "STORAGE USED", "RECORDINGS"].map((h) => (
-                        <th
+                        <TableHead
                           key={h}
-                          className="px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                          className="h-auto whitespace-normal font-bold px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                         >
                           {h}
-                        </th>
+                        </TableHead>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/60">
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/60">
                     {linkedChannels.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={6} className="whitespace-normal px-3 py-8 text-center text-sm text-muted-foreground">
                           No cameras linked to this NVR yet.
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       linkedChannels.map((ch) => (
-                        <tr key={ch.channel} className="group text-base transition-colors hover:bg-muted/20">
-                          <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
+                        <TableRow key={ch.channel} className="group text-base transition-colors hover:bg-muted/20">
+                          <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-sm text-muted-foreground">
                             Ch {String(ch.channel).padStart(2, "0")}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <button
+                          </TableCell>
+                          <TableCell className="whitespace-normal px-3 py-2.5">
+                            <Button variant="ghost"
                               onClick={() => ch.cameraId && onOpenCamera(ch.cameraId)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
+                              className="h-auto font-normal justify-start whitespace-normal dark:hover:bg-info/15 inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15 hover:text-info"
                             >
                               <Video className="size-3" />
                               <span className="font-mono">{ch.cameraId}</span>
-                            </button>
+                            </Button>
                             {ch.cameraName && (
                               <p className="mt-1 text-xs text-muted-foreground">{ch.cameraName}</p>
                             )}
-                          </td>
-                          <td className="px-3 py-2.5">
+                          </TableCell>
+                          <TableCell className="whitespace-normal px-3 py-2.5">
                             <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId || !!ch.nvrManaged} />
-                          </td>
-                          <td className="px-3 py-2.5 text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="whitespace-normal px-3 py-2.5 text-muted-foreground">
                             {ch.cameraArea ? (
                               <div className="flex flex-col gap-0.5">
                                 <span className="inline-flex items-center gap-1 text-foreground">
@@ -805,18 +807,18 @@ export function NvrDrawer({
                             ) : (
                               "—"
                             )}
-                          </td>
-                          <td className="px-3 py-2.5">
+                          </TableCell>
+                          <TableCell className="whitespace-normal px-3 py-2.5">
                             <span className="font-mono text-sm font-semibold text-foreground">
                               {ch.storageGb.toFixed(2)} GB
                             </span>
-                          </td>
-                          <td className="px-3 py-2.5 font-semibold text-foreground">{ch.recordings}</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="whitespace-normal px-3 py-2.5 font-semibold text-foreground">{ch.recordings}</TableCell>
+                        </TableRow>
                       ))
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </div>
@@ -841,36 +843,36 @@ export function NvrDrawer({
             </div>
 
             <div data-slot="nvr-drawer-channels-table" className="overflow-hidden rounded-xl border border-border bg-card">
-              <table className="w-full">
-                <thead className="bg-muted/30">
-                  <tr className="border-b border-border text-left">
+              <Table className="text-[length:inherit] w-full">
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="hover:bg-transparent border-b border-border text-left">
                     {["CH", "CAMERA", "RECORDING", "LOCATION", "IP", "LINKED ON", "ACTION"].map((h) => (
-                      <th
+                      <TableHead
                         key={h}
-                        className="px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                        className="h-auto whitespace-normal font-bold px-3 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                       >
                         {h}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-border/60">
                   {filteredChannels.map((ch) => {
                     const cam = ch.cameraId ? MOCK_CAMERAS.find((c) => c.id === ch.cameraId) : null;
                     return (
-                      <tr key={ch.channel} className="text-base transition-colors hover:bg-muted/20">
-                        <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
+                      <TableRow key={ch.channel} className="text-base transition-colors hover:bg-muted/20">
+                        <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-sm text-muted-foreground">
                           Ch {String(ch.channel).padStart(2, "0")}
-                        </td>
-                        <td className="px-3 py-2.5">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5">
                           {ch.cameraId ? (
-                            <button
+                            <Button variant="ghost"
                               onClick={() => onOpenCamera(ch.cameraId!)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15"
+                              className="h-auto font-normal justify-start whitespace-normal dark:hover:bg-info/15 inline-flex items-center gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs text-info hover:bg-info/15 hover:text-info"
                             >
                               <Video className="size-3" />
                               <span className="font-mono">{ch.cameraId}</span>
-                            </button>
+                            </Button>
                           ) : ch.nvrManaged ? (
                             <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-2 py-1 text-xs font-semibold text-warning">
                               In use on NVR
@@ -883,11 +885,11 @@ export function NvrDrawer({
                           {ch.cameraName && (
                             <p className="mt-1 text-xs text-muted-foreground">{ch.cameraName}</p>
                           )}
-                        </td>
-                        <td className="px-3 py-2.5">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5">
                           <ChannelRecordingStatusPill status={ch.cameraStatus} hasCamera={!!ch.cameraId || !!ch.nvrManaged} />
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5 text-muted-foreground">
                           {ch.cameraArea ? (
                             <div className="flex flex-col gap-0.5">
                               <span className="inline-flex items-center gap-1 text-foreground">
@@ -899,11 +901,11 @@ export function NvrDrawer({
                           ) : (
                             "—"
                           )}
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-sm text-muted-foreground">
                           {cam?.ipAddress ?? ch.nvrIpAddress ?? "—"}
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5 text-muted-foreground">
                           {ch.linkedAtDisplay ? (
                             <div className="inline-flex items-center gap-1 text-sm">
                               <Calendar className="size-3 opacity-60" />
@@ -912,35 +914,35 @@ export function NvrDrawer({
                           ) : (
                             <span className="text-xs text-muted-foreground/50">—</span>
                           )}
-                        </td>
-                        <td className="px-3 py-2.5">
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-3 py-2.5">
                           {ch.cameraId ? (
-                            <button
+                            <Button variant="ghost" size="icon-sm"
                               onClick={() => onUnlink(ch.channel)}
                               title="Unlink camera"
                               aria-label="Unlink camera"
-                              className="flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical transition-colors hover:bg-severity-critical/10"
+                              className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical transition-colors hover:bg-severity-critical/10 hover:text-severity-critical"
                             >
                               <Unlink className="size-3.5" />
-                            </button>
+                            </Button>
                           ) : ch.nvrManaged ? (
                             <span className="text-xs text-muted-foreground/70">NVR managed</span>
                           ) : (
-                            <button
+                            <Button variant="ghost" size="icon-sm"
                               onClick={() => onLinkCamera(ch.channel)}
                               title="Link camera"
                               aria-label="Link camera"
-                              className="flex size-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-primary-ink transition-colors hover:bg-primary/20"
+                              className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-primary/20 flex size-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-primary-ink transition-colors hover:bg-primary/20 hover:text-primary-ink"
                             >
                               <Link2 className="size-3.5" />
-                            </button>
+                            </Button>
                           )}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}
@@ -2097,7 +2099,7 @@ export default function NvrDevicesPage({
             label={cfg.label}
             value={cfg.getValue(nvrs)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -2118,12 +2120,12 @@ export default function NvrDevicesPage({
         <strong className="text-foreground">{filtered.length}</strong>{" "}
         {filtered.length === 1 ? "NVR" : "NVRs"} match current filters
         {hasFilters && (
-          <button
+          <Button variant="link"
             onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setKpiFilter("all"); }}
-            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+            className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal ml-2 text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
-          </button>
+          </Button>
         )}
       </p>
 
@@ -2156,101 +2158,101 @@ export default function NvrDevicesPage({
       ) : (
         <div data-slot="nvr-devices-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="text-[length:inherit] w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-b border-border text-left">
                   {["ID", "NAME · MODEL", "STATUS", "CHANNELS", "STORAGE", "LOCATION", "LAST ACTIVE", "ACTION"].map((h) => (
-                    <th
+                    <TableHead
                       key={h}
-                      className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
+                      className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
                     >
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {pageItems.map((n) => (
-                  <tr
+                  <TableRow
                     key={n.id}
                     onClick={() => openDrawer(n.id)}
                     className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {n.id}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                           {n.name}
                         </span>
                         <span className="font-mono text-xs text-muted-foreground">{n.model}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3"><StatusPill status={n.status} /></td>
-                    <td className="px-4 py-3 text-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3"><StatusPill status={n.status} /></TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-foreground">
                       <span className="font-mono">
                         {n.channelsInUse} <span className="text-muted-foreground">/ {n.channelCount}</span>
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3">
                       <StorageBar used={n.usedStorageGb} total={n.totalStorageGb} />
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-foreground">{n.areaName}</span>
                         <span className="text-xs">{n.siteName}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="size-3" />
                         {n.lastSeenDisplay}
                       </div>
-                    </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                          <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
                             <MoreHorizontal className="size-4" />
-                          </button>
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1" align="end">
-                          <button
+                          <ItemButton variant="plain"
                             onClick={() => openDrawer(n.id)}
                             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <HardDrive className="size-3.5 text-muted-foreground" />
                             View details
-                          </button>
-                          <button
+                          </ItemButton>
+                          <ItemButton variant="plain"
                             onClick={() => { openDrawer(n.id); setTimeout(() => setModal({ kind: "cleanup" }), 100); }}
                             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
                           >
                             <Sparkles className="size-3.5 text-muted-foreground" />
                             Cleanup now
-                          </button>
-                          <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                          </ItemButton>
+                          <ItemButton variant="plain" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
                             <Pencil className="size-3.5 text-muted-foreground" />
                             Edit NVR
-                          </button>
+                          </ItemButton>
                           <div className="my-1 border-t border-border" />
-                          <button
+                          <ItemButton variant="plain"
                             onClick={() => { openDrawer(n.id); setTimeout(() => setModal({ kind: "delete" }), 100); }}
                             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10"
                           >
                             <Trash2 className="size-3.5" />
                             Delete
-                          </button>
+                          </ItemButton>
                         </PopoverContent>
                       </Popover>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
@@ -2261,23 +2263,23 @@ export default function NvrDevicesPage({
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
             </p>
             <div className="flex items-center gap-1">
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"
               >
                 <ChevronLeft className="size-3.5" />
-              </button>
+              </Button>
               <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground/60">of {pageCount}</span>
               </span>
-              <button
+              <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
-                className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
+                className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"
               >
                 <ChevronRight className="size-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

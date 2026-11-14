@@ -20,7 +20,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 2. ~~Phase 2B: prototypes~~ ✅ tokens + raw elements done; needs committing
 3. ~~Phase 2C: name page sections~~ ✅ done 2026-11-14 (1,331 section names in 167 page files); needs committing
 4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
-5. Then **Phase 3** (component APIs).
+5. **Phase 3** (component APIs): split, prop rename and app-page migration done 2026-11-15; left: adopt DataTable/Toolbar/chart wrappers, naming audit, spacing tokens, decision tree.
 
 **Open questions for you** (none block the steps above):
 - Dialogs, sheets and popovers render text at the browser default **16px**, because `body` sets no font size. Was 16px intended, or should it be the 13px `text-base`? It's a one-line fix either way.
@@ -38,8 +38,8 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 | Layer naming | 🟢 Strong | 693 layers in 76 component files (every element); 1,331 section names in 167 page/prototype files |
 | **Prototypes (the main UI)** | 🟢 Strong | Guardrails + type-check cover them; 0 token issues, 0 raw elements, 0 type errors (except your email WIP) |
 | Primitives (`components/ui`) | 🟢 Strong | 26 shadcn components, 24 with stories |
-| App composites (`components/shared`) | 🟠 Weak | 43 components, 10 with stories; design-system and app-only pieces mixed |
-| Prop vocabulary | 🟠 Weak | `StatusBadge tone=`, `KpiCard accent=`, `Button variant=` |
+| Composites | 🟡 Functional | `shared/` = 22 reusable (10 with stories), `app/` = 21 Accel-specific; no leaks between them |
+| Prop vocabulary | 🟢 Strong | `variant` / `tone` / `size` everywhere (`accent` deprecated alias) |
 | Tests | 🔴 Absent | 0 test files; Storybook a11y + Chromatic addons not wired to CI |
 | Reuse outside this app | 🔴 Absent | Design system lives in the app's `src/` |
 | Design ↔ code | 🔴 Absent | No Figma library linked |
@@ -201,20 +201,20 @@ Steps:
 
 **Why:** reuse means a component means the same thing everywhere. Today `shared/` mixes design-system pieces with app logic, and props name the same idea three ways.
 
-- [ ] Run `/design-system-ops:component-audit` across `ui/`, `shared/`, `custom/`, `charts/`, `layout/`
-- [ ] **Split `shared/`**:
-  - **Design system** (reusable): StatusBadge, KpiCard, EmptyState, PageStates, SectionCard, DataTable, Toolbar, FilterDropdown/Panel, Modal/ModalForm/ConfirmDialog, OtpField, PhoneField, TimeSelect, ChoiceDropdown, DateRangeBar, ProgressRow, TruncatedText, FloatingBar, PasswordStrengthBar, …
-  - **App** (Accel-specific): UserMenu, NotificationsBell/Drawer, RequireRole, RequireOnboarding, CommandPalette, DrawZoneModal, PaymentSuccessModal, SyncProgressModal, SystemStatusMenu, DownloadsIndicator, … → move to `components/app/` (or feature folders)
-- [ ] **Unify prop vocabulary** with `/design-system-ops:component-api-validator`: one name per concept, e.g.
-  - `variant` = visual style (solid/outline/ghost)
-  - `tone` = semantic colour (success/warning/severity-critical/violet…), replacing `accent`
-  - `size` = sm/md/lg
-  - Codemod the call sites (`/design-system-ops:codemod-generator`)
+- [x] Component audit (usage, app dependencies, style props) across all component folders
+- [x] **Split `shared/`**: 22 reusable design-system composites stay in `components/shared/`; 21 Accel-specific components moved to `components/app/` (anything importing stores, router, mocks or the theme provider, plus auth/onboarding/product-flow pieces). 42 files had imports rewritten. No design-system component imports an app component
+- [x] **Prop vocabulary**: `variant` = style, `tone` = semantic colour, `size` = scale. Only outlier was `KpiCard accent=` → `tone=` (88 uses, 25 type refs); `accent` / `KpiAccent` stay as deprecated aliases
+- [x] **Raw elements in `src/pages` → components**: 450 → 0 (one hidden file input excepted; run-analysis WIP and the dev gallery not touched). Same mapping as the prototypes. Follow-up fixes: `ItemButton variant="plain"` keeps its keyboard focus ring; table rows keep their dividers
+- [x] `registry.json` has separate `shared` (22) and `app` (21) groups; slot check covers `components/app`
+- [ ] **Adopt the built-but-unused components** (decided: keep and adopt):
+  - `DataTable`: 0 uses today; 11 files hand-assemble `Table` parts
+  - `Toolbar` / `ToolbarSearch`: 0 uses
+  - Chart wrappers (`AreaChart`, `BarChart`, `LineChart`, `DonutChart`): 1 file uses them, 8 import Recharts directly. Then add a lint rule banning direct `recharts` imports in pages
+  - `DeploymentModeSwitcher`: 0 uses; wire it in or retire it
+- [ ] Move remaining tab/picker groups kept as individual Buttons to `SegmentedControl` or `Tabs` where the look allows (Phase 1.3 assessment/Re-ID, option cards)
 - [ ] Run `/design-system-ops:naming-audit` on component names
 - [ ] Add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) once components share one rhythm (moved from Phase 2)
-- [ ] Migrate raw `<button>` / `<input>` / `<table>` in `src/pages` to components (baseline: 384 / 47 / 19). Each migrated element gets its name for free
-- [ ] Split `registry.json` into `design-system` vs `app` groups to match the folder split
-- [ ] Write a decision tree for overlapping pieces (Modal vs Dialog vs Sheet; ChoiceDropdown vs Select vs FilterDropdown) with `/design-system-ops:component-decision-tree`
+- [ ] Write a decision tree for overlapping pieces (Modal vs Dialog vs Sheet; ChoiceDropdown vs Select vs FilterDropdown; SegmentedControl vs Tabs; ItemButton vs Button) with `/design-system-ops:component-decision-tree`
 
 **Done when:** every component is in exactly one of design system / app; every design-system component uses the shared prop vocabulary; there's a written "which one do I use" decision tree.
 **Then →** Phase 4.

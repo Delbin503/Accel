@@ -14,7 +14,8 @@ import type { AnyEntity } from "@/types/entities";
 import { SeverityBadge, parseEventText } from "./shared";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
-import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard as SharedKpiCard, type KpiTone } from "@/components/shared/KpiCard";
+import { ItemButton } from "@/components/ui/item";
 
 /* ── Thumbnail with bounding boxes ──────────────────────────────────────── */
 
@@ -56,9 +57,9 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
           </span>
         </React.Fragment>
       ))}
-      <button className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/90 text-primary-foreground transition-colors hover:bg-primary-fill">
+      <Button variant="default" size="icon-lg" className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-primary/90 text-primary-foreground transition-colors hover:bg-primary-fill active:not-aria-[haspopup]:-translate-y-1/2">
         <Play className="size-5 fill-media-foreground" />
-      </button>
+      </Button>
       <span className="absolute bottom-2.5 left-3 rounded bg-scrim/75 px-1.5 py-0.5 font-mono text-2xs text-media-foreground">
         {event.time}
       </span>
@@ -168,7 +169,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
                 label={card.label}
                 value={(card.score / 100).toFixed(3)}
                 sub={card.id ?? undefined}
-                accent={scoreAccent as KpiAccent}
+                tone={scoreAccent as KpiTone}
               />
             );
           })}
@@ -178,9 +179,10 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
       {/* Model Evaluation Performance */}
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* Collapsible header */}
-        <button
+        <ItemButton
+          variant="plain"
           onClick={() => setEvalExpanded((v) => !v)}
-          className="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30"
+          className="justify-between gap-0 px-4 py-3 hover:bg-muted/30"
         >
           <div className="flex items-center gap-2">
             <Settings className="size-3.5 text-muted-foreground" />
@@ -198,7 +200,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
               <ChevronDown className="size-3.5 text-muted-foreground" />
             )}
           </div>
-        </button>
+        </ItemButton>
 
         {evalExpanded && (
           <div className="border-t border-border px-4 pb-4 pt-3">
@@ -459,12 +461,13 @@ export function EventEntityCard({
         {renderStats()}
       </div>
       {entity && onViewInfo && (
-        <button
+        <Button
+          variant="link"
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary-ink hover:underline"
+          className="mt-0.5 h-auto flex-shrink-0 border-0 p-0 text-sm font-medium text-primary-ink underline-offset-auto hover:underline"
         >
           View Info →
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -522,12 +525,14 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
                 {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={onClose}
-              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </SheetHeader>
 
@@ -564,7 +569,7 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
           <div data-slot="event-drawer-model">
             <SectionTitle
               aside={
-                <button className="text-2xs text-violet hover:underline">View model →</button>
+                <Button variant="link" className="h-auto border-0 p-0 text-2xs font-normal text-violet underline-offset-auto hover:underline">View model →</Button>
               }
             >
               Detected By

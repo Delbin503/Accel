@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ItemButton } from "@/components/ui/item";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
@@ -159,9 +160,9 @@ export default function ActivityLogsPage() {
 
       {/* KPI strip */}
       <KpiGrid cols={3}>
-        <KpiCard label="Today"        value={todayCount} sub="Recorded today"   accent="success" />
-        <KpiCard label="Success"      value={successCount} sub="Successful actions" accent="success" />
-        <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  accent="severity-critical" />
+        <KpiCard label="Today"        value={todayCount} sub="Recorded today"   tone="success" />
+        <KpiCard label="Success"      value={successCount} sub="Successful actions" tone="success" />
+        <KpiCard label="Failed"       value={failedCount}  sub="Require attention"  tone="severity-critical" />
       </KpiGrid>
 
       {/* Unified date bar — shared canonical design */}
@@ -185,9 +186,9 @@ export default function ActivityLogsPage() {
 
       {/* Filters — collapsible panel (matches all other modules) */}
       <div data-slot="activity-logs-page-filters" className="rounded-xl border border-border bg-card">
-        <button
+        <ItemButton variant="plain"
           onClick={() => setFiltersOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
+          className="text-inherit flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
         >
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
@@ -211,12 +212,12 @@ export default function ActivityLogsPage() {
           </div>
           <div className="flex items-center gap-3">
             {(typeFilter.length > 0 || siteFilter.length > 0 || search) && (
-              <button
+              <Button variant="link"
                 onClick={(e) => { e.stopPropagation(); setTypeFilter([]); setSiteFilter([]); setSearch(""); }}
-                className="text-sm text-muted-foreground underline hover:text-primary-ink"
+                className="h-auto p-0 border-0 font-normal text-sm text-muted-foreground underline hover:text-primary-ink"
               >
                 Clear all
-              </button>
+              </Button>
             )}
             {filtersOpen ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -224,7 +225,7 @@ export default function ActivityLogsPage() {
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
           </div>
-        </button>
+        </ItemButton>
 
         {filtersOpen && (
           <div data-slot="activity-logs-page-filters-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
@@ -377,7 +378,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
+        <ItemButton variant="plain" className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
           isAll ? "text-muted-foreground" : "text-primary-ink"
@@ -387,23 +388,23 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
             <TruncatedText text={display} className="min-w-0" />
           </span>
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[300px] w-56 overflow-y-auto p-1.5">
-        <button onClick={() => onChange([])}
+        <ItemButton variant="plain" onClick={() => onChange([])}
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           All types
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {options.map((o) => {
           const checked = selected.includes(o.value);
           const count = counts[o.value] ?? 0;
           return (
-            <button key={o.value} onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
+            <ItemButton variant="plain" key={o.value} onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
@@ -411,7 +412,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
               </div>
               <span className="flex-1">{o.label}</span>
               <span className="font-mono text-2xs text-muted-foreground/60">{count}</span>
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -431,7 +432,7 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
+        <ItemButton variant="plain" className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
           open ? "border-primary" : "border-border",
           isAll ? "text-muted-foreground" : "text-primary-ink"
@@ -441,29 +442,29 @@ function SiteFilter({ sites, selected, onChange }: { sites: string[]; selected: 
             <TruncatedText text={display} className="min-w-0" />
           </span>
           <ChevronDown className={cn("size-3.5 flex-shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="end" className="max-h-[280px] w-56 overflow-y-auto p-1.5">
-        <button onClick={() => onChange([])}
+        <ItemButton variant="plain" onClick={() => onChange([])}
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
           <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
             isAll ? "border-primary bg-primary" : "border-muted-foreground/40")}>
             {isAll && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           All sites
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {sites.map((s) => {
           const checked = selected.includes(s);
           return (
-            <button key={s} onClick={() => onChange(checked ? selected.filter((x) => x !== s) : [...selected, s])}
+            <ItemButton variant="plain" key={s} onClick={() => onChange(checked ? selected.filter((x) => x !== s) : [...selected, s])}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground">
               <div className={cn("flex size-3.5 flex-shrink-0 items-center justify-center rounded border transition-colors",
                 checked ? "border-primary bg-primary" : "border-muted-foreground/40")}>
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {s}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>

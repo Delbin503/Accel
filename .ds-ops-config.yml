@@ -4,13 +4,14 @@
 
 system:
   name: "Accel"
-  component_count: 78             # ui 26 · shared 43 · charts 4 · layout 3 · custom 2
+  component_count: 81             # ui 29 · shared 22 · app 21 · charts 4 · layout 3 · custom 2
   framework: react
   styling: tailwind               # Tailwind v4, CSS-first config (@theme in src/index.css)
   theming: true                   # light + dark (.dark on <html>; dark is the default)
   component_paths:
     - src/components/ui           # shadcn primitives (we own the code)
-    - src/components/shared       # app composites — mix of design-system and app-only (see roadmap Phase 3)
+    - src/components/shared       # reusable design-system composites
+    - src/components/app          # Accel-specific (not part of the reusable system)
     - src/components/custom
     - src/components/charts
     - src/components/layout

@@ -52,13 +52,15 @@ const EMPTY_FILTERS: CaseFilters = { status: [], severity: [], site: [] };
 
 /* ─── KPI cards ──────────────────────────────────────────────────────────── */
 
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (cases: IncidentCase[]) => number;
   sub: string;
 }[] = [
@@ -100,9 +102,10 @@ function FilterDropdown({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton
+          variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary hover:bg-card",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
@@ -114,16 +117,17 @@ function FilterDropdown({
               open && "rotate-180"
             )}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton
+              variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -140,7 +144,7 @@ function FilterDropdown({
                 />
               )}
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -191,7 +195,7 @@ function FilterPanel({
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="min-w-0 flex-1 gap-2.5 hover:bg-transparent">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -210,15 +214,15 @@ function FilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto border-0 p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -263,18 +267,18 @@ function FilterPanel({
 
 function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
   return (
-    <tr data-slot="incident-case-row"
+    <TableRow data-slot="incident-case-row"
       onClick={onClick}
       style={{ boxShadow: `inset 3px 0 0 var(--severity-${c.severity})` }}
-      className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+      className="group cursor-pointer border-border/60 text-base transition-colors hover:bg-muted/20"
     >
-      <td className="px-4 py-3">
+      <TableCell className="whitespace-normal px-4 py-3">
         <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
           {c.id}
         </span>
-      </td>
+      </TableCell>
 
-      <td className="max-w-[260px] px-4 py-3">
+      <TableCell className="whitespace-normal max-w-[260px] px-4 py-3">
         <TruncatedText
           text={c.title}
           className="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary-ink"
@@ -283,23 +287,23 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
           <MapPin className="size-2.5 flex-shrink-0" />
           {c.siteDisplay}
         </div>
-      </td>
+      </TableCell>
 
-      <td className="px-4 py-3 text-center">
+      <TableCell className="whitespace-normal px-4 py-3 text-center">
         <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
           {c.incidentIds.length}
         </span>
-      </td>
+      </TableCell>
 
-      <td className="px-4 py-3">
+      <TableCell className="whitespace-normal px-4 py-3">
         <SeverityBadge severity={c.severity} />
-      </td>
+      </TableCell>
 
-      <td className="px-4 py-3">
+      <TableCell className="whitespace-normal px-4 py-3">
         <CaseStatusBadge status={c.status} />
-      </td>
+      </TableCell>
 
-      <td className="px-4 py-3">
+      <TableCell className="whitespace-normal px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary-ink">
             {c.assignedTo.name.charAt(0)}
@@ -309,19 +313,19 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
             <div className="font-mono text-xs text-muted-foreground">{c.assignedTo.id}</div>
           </div>
         </div>
-      </td>
+      </TableCell>
 
-      <td className="whitespace-nowrap px-4 py-3">
+      <TableCell className="px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Calendar className="size-3 flex-shrink-0" />
           {c.createdAtDisplay}
         </div>
-      </td>
+      </TableCell>
 
-      <td className="px-4 py-3">
+      <TableCell className="whitespace-normal px-4 py-3">
         <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-ink" />
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -454,7 +458,7 @@ export default function IncidentCasesPage({
             label={cfg.label}
             value={cfg.getValue(cases)}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => setKpiFilter((prev) => (prev === cfg.key ? "all" : cfg.key))}
           />
@@ -492,12 +496,13 @@ export default function IncidentCasesPage({
           <strong className="text-foreground">{filtered.length}</strong> case
           {filtered.length !== 1 ? "s" : ""} match current filters
           {hasActiveFilters && (
-            <button
+            <Button
+              variant="link"
               onClick={clearAll}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
@@ -542,9 +547,9 @@ export default function IncidentCasesPage({
       ) : (
         <div data-slot="incident-cases-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] border-collapse">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="w-full min-w-[860px] border-collapse">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-border text-left hover:bg-transparent">
                   {[
                     { label: "CASE ID" },
                     { label: "TITLE / SITE" },
@@ -555,24 +560,24 @@ export default function IncidentCasesPage({
                     { label: "CREATED" },
                     { label: "" },
                   ].map(({ label, center }, i) => (
-                    <th
+                    <TableHead
                       key={i}
                       className={cn(
-                        "px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
+                        "h-auto whitespace-normal px-4 py-2.5 font-mono font-bold text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
                         center && "text-center"
                       )}
                     >
                       {label}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filtered.map((c) => (
                   <CaseRow key={c.id} c={c} onClick={() => setDrawerCaseId(c.id)} />
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

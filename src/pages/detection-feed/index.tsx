@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid, type KpiAccent } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
 import { DateRangeBar } from "@/components/shared/DateRangeBar";
 import { FilterDropdown } from "@/components/shared/FilterDropdown";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -38,6 +38,7 @@ import { EscalateModal } from "./EscalateModal";
 import { DismissModal } from "./DismissModal";
 import { LinkCaseModal } from "./LinkCaseModal";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
+import { ItemButton } from "@/components/ui/item";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -258,7 +259,7 @@ function FilterPanel({
       <div
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="min-w-0 flex-1 gap-2.5 hover:bg-transparent">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -280,15 +281,15 @@ function FilterPanel({
           <span className="ml-auto hidden text-xs text-muted-foreground sm:block">
             Showing <strong className="text-foreground">{presetSummary}</strong>
           </span>
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto border-0 p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -400,7 +401,7 @@ function SelectionBar({
 const KPI_CONFIGS: {
   key: KpiFilter;
   label: string;
-  accent: KpiAccent;
+  accent: KpiTone;
   getValue: (events: DetectionEvent[]) => number;
   sub: string;
 }[] = [
@@ -699,7 +700,7 @@ export default function DetectionFeedPage() {
             label={cfg.label}
             value={cfg.getValue(allEvents.filter((e) => e.status !== "dismissed"))}
             sub={cfg.sub}
-            accent={cfg.accent}
+            tone={cfg.accent}
             active={cfg.key !== "all" && kpiFilter === cfg.key}
             onClick={() => handleKpiClick(cfg.key)}
           />
@@ -736,12 +737,13 @@ export default function DetectionFeedPage() {
           <strong className="text-foreground">{visibleEvents.length}</strong> events match current
           filters · {pendingCount} pending
           {(hasActiveFilters || dateActive) && (
-            <button
+            <Button
+              variant="link"
               onClick={clearFilters}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <Select defaultValue="newest">

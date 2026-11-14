@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { HouseDemo } from "./HouseDemo";
 import "./proto.css";
 

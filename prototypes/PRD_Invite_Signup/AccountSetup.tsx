@@ -3,7 +3,7 @@ import { Eye, EyeOff, CircleAlert, CircleUser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { DepartmentSelect } from "@/components/shared/DepartmentSelect";
+import { DepartmentSelect } from "@/components/app/DepartmentSelect";
 import { cn } from "@/lib/utils";
 import { AccelMark, roleLabel, type InviteContext } from "./shared";
 import { PhoneField, DEFAULT_DIAL_CODE } from "./PhoneField";

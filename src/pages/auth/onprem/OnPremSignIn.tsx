@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthLayout } from "../AuthLayout";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * On-Premise sign-in page.
@@ -89,24 +90,25 @@ export default function OnPremSignInPage() {
                 placeholder="Enter your password"
                 className="h-10 px-9 text-base"
               />
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 type="button"
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 size-auto -translate-y-1/2 border-0 p-0 text-muted-foreground hover:bg-transparent hover:text-foreground active:not-aria-[haspopup]:-translate-y-1/2 dark:hover:bg-transparent"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
                 {showPw ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="size-3.5 accent-primary"
+                onCheckedChange={(c) => setRemember(c === true)}
+                className="size-3.5"
               />
               Keep me signed in
             </label>

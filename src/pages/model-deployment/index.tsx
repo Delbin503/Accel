@@ -23,6 +23,9 @@ import {
   Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@/components/ui/item";
 import { Input } from "@/components/ui/input";
 import {
   Modal,
@@ -46,7 +49,7 @@ import {
 } from "@/mocks/deployments";
 import type { ModelData } from "@/types/modelManagement";
 import type { CameraData, BoundaryZone } from "@/types/cameras";
-import { DrawZoneModal } from "@/components/shared/DrawZoneModal";
+import { DrawZoneModal } from "@/components/app/DrawZoneModal";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import type {
   DeploymentData,
@@ -202,9 +205,9 @@ function ModelCard({
 }) {
   const Icon = getModelIcon(model.iconKey);
   return (
-    <button data-slot="deploy-model-card"
+    <ItemButton variant="plain" selected={selected} data-slot="deploy-model-card"
       onClick={onClick}
-      className={cn(
+      className={cn("block text-[length:inherit] text-inherit", 
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
         selected ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30 hover:bg-muted/30"
       )}
@@ -229,7 +232,7 @@ function ModelCard({
           {model.attachedRuleIds.length} Rules
         </span>
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -243,9 +246,9 @@ function SiteCard({
   onClick: () => void;
 }) {
   return (
-    <button data-slot="deploy-site-card"
+    <ItemButton variant="plain" selected={selected} data-slot="deploy-site-card"
       onClick={onClick}
-      className={cn(
+      className={cn("block text-[length:inherit] text-inherit", 
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
         selected ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30 hover:bg-muted/30"
       )}
@@ -262,7 +265,7 @@ function SiteCard({
         <CountMini label="Cameras" value={site.cameraCount} tone="success" />
         <CountMini label="Deployed" value={site.deployedCount} tone="info" />
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -276,9 +279,9 @@ function AreaCard({
   onToggle: () => void;
 }) {
   return (
-    <button data-slot="deploy-area-card"
+    <ItemButton variant="plain" selected={selected} data-slot="deploy-area-card"
       onClick={onToggle}
-      className={cn(
+      className={cn("block text-[length:inherit] text-inherit", 
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
         selected ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30 hover:bg-muted/30"
       )}
@@ -294,7 +297,7 @@ function AreaCard({
         <CountMini label="Cameras" value={area.cameraCount} tone="success" />
         <CountMini label="Deployed" value={area.deployedCount} tone="info" />
       </div>
-    </button>
+    </ItemButton>
   );
 }
 
@@ -309,9 +312,9 @@ function CameraCard({
 }) {
   const online = camera.status === "online";
   return (
-    <button data-slot="deploy-camera-card"
+    <ItemButton variant="plain" selected={selected} data-slot="deploy-camera-card"
       onClick={onToggle}
-      className={cn(
+      className={cn("block text-[length:inherit] text-inherit", 
         "w-full rounded-xl border px-3.5 py-3 text-left transition-all",
         selected ? "border-primary/60 bg-primary/[0.06]" : "border-border bg-background hover:border-primary/30 hover:bg-muted/30"
       )}
@@ -332,7 +335,7 @@ function CameraCard({
           No NVR — events will have no footage
         </div>
       )}
-    </button>
+    </ItemButton>
   );
 }
 
@@ -1069,7 +1072,7 @@ function HistoryView({
           label="All Models"
           value={models.length}
           sub="Across all sites"
-          accent="primary"
+          tone="primary"
           active={healthFilter === "all"}
           onClick={() => setHealthFilter("all")}
         />
@@ -1079,7 +1082,7 @@ function HistoryView({
             label={MODEL_HEALTH_STYLES[h].label}
             value={healthCounts[h]}
             sub={h === "online" ? "At least one camera running" : "No active cameras"}
-            accent={h === "online" ? "success" : "muted"}
+            tone={h === "online" ? "success" : "muted"}
             active={healthFilter === h}
             onClick={() => setHealthFilter((cur) => (cur === h ? "all" : h))}
           />
@@ -1089,11 +1092,11 @@ function HistoryView({
       {/* Search */}
       <div data-slot="history-view-search" className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
         <Search className="size-3.5 text-muted-foreground" />
-        <input
+        <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search models by name or ID…"
-          className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+          className="h-auto rounded-none border-0 px-0 py-0 shadow-none md:text-base dark:bg-transparent focus-visible:ring-0 w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
         <p className="flex-shrink-0 text-xs text-muted-foreground">
           <strong className="text-foreground">{filteredModels.length}</strong> of {models.length} models
@@ -1111,10 +1114,10 @@ function HistoryView({
           {filteredModels.map((m) => {
             const s = MODEL_HEALTH_STYLES[m.health];
             return (
-              <button data-slot="history-view-model-card"
+              <ItemButton variant="plain" data-slot="history-view-model-card"
                 key={m.modelId}
                 onClick={() => setDrawerModelId(m.modelId)}
-                className={cn(
+                className={cn("items-stretch w-auto text-[length:inherit] text-inherit", 
                   "group flex flex-col gap-3 rounded-xl border bg-card px-4 py-3.5 text-left transition-colors hover:border-primary/40",
                   m.health === "online" ? "border-success/30" : "border-border"
                 )}
@@ -1152,7 +1155,7 @@ function HistoryView({
                     <ChevronRight className="size-3" />
                   </span>
                 </div>
-              </button>
+              </ItemButton>
             );
           })}
         </div>
@@ -1284,12 +1287,12 @@ export function ModelDeploymentsDrawer({
                 <strong className="text-foreground">{model.totalEvents.toLocaleString()}</strong> events
               </p>
             </div>
-            <button
+            <Button variant="ghost" size="icon-sm"
               onClick={onClose}
-              className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -1311,12 +1314,12 @@ export function ModelDeploymentsDrawer({
           <DrawerFilter label="Site"  options={siteOptions} selected={siteFilter} onChange={setSiteFilter} icon={MapPin} />
           <DrawerFilter label="Area"  options={areaOptions} selected={areaFilter} onChange={setAreaFilter} icon={Crosshair} />
           {(siteFilter.length > 0 || areaFilter.length > 0) && (
-            <button
+            <Button variant="link"
               onClick={() => { setSiteFilter([]); setAreaFilter([]); }}
-              className="text-xs text-muted-foreground underline hover:text-foreground"
+              className="h-auto px-0 border-0 rounded-none font-normal gap-0 whitespace-normal text-xs text-muted-foreground underline hover:text-foreground"
             >
               Clear
-            </button>
+            </Button>
           )}
           <p className="ml-auto text-xs text-muted-foreground">
             Showing <strong className="text-foreground">{rows.length}</strong> of {model.totalCameras}
@@ -1324,81 +1327,71 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {/* Camera table */}
-        <div data-slot="model-deployments-drawer-table" className="flex-1 overflow-auto">
+        <div data-slot="model-deployments-drawer-table" className="flex-1 overflow-auto [&>[data-slot=table-container]]:overflow-visible">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Video className="size-8 opacity-30" />
               <p className="text-base">No cameras match the current filters.</p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead className="sticky top-0 bg-muted/30 backdrop-blur">
-                <tr className="border-b border-border text-left">
-                  <th className="w-10 px-4 py-2.5">
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleAll}
-                      className="size-3.5 accent-primary"
-                    />
-                  </th>
+            <Table className="text-[length:inherit] w-full">
+              <TableHeader className="sticky top-0 bg-muted/30 backdrop-blur">
+                <TableRow className="hover:bg-transparent border-b border-border text-left">
+                  <TableHead className="h-auto whitespace-normal text-current font-bold w-10 px-4 py-2.5">
+                    <Checkbox checked={allChecked} onCheckedChange={() => toggleAll()} className="size-3.5" aria-label="Select all" />
+                  </TableHead>
                   {["CAMERA", "LOCATION", "STATUS", "EVENTS", "DEPLOYED"].map((h) => (
-                    <th key={h} className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
+                    <TableHead key={h} className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
                       {h}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {rows.map((d) => {
                   const isSel = selected.has(d.id);
                   return (
-                    <tr
+                    <TableRow
                       key={d.id}
                       onClick={() => toggleRow(d.id)}
                       className={cn(
                         "cursor-pointer text-base transition-colors",
-                        isSel ? "bg-primary/[0.05]" : "hover:bg-muted/20"
+                        isSel ? "bg-primary/[0.05] hover:bg-primary/[0.05]" : "hover:bg-muted/20"
                       )}
                     >
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={isSel}
-                          onChange={() => toggleRow(d.id)}
-                          className="size-3.5 accent-primary"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
+                      <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox checked={isSel} onCheckedChange={() => toggleRow(d.id)} className="size-3.5" />
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3">
                         <div className="flex flex-col gap-0.5">
-                          <button
+                          <Button variant="link"
                             onClick={(e) => { e.stopPropagation(); onOpenCamera(d.cameraId); }}
-                            className="text-left font-semibold text-foreground hover:text-primary-ink"
+                            className="h-auto px-0 border-0 rounded-none gap-0 text-[length:inherit] justify-start whitespace-normal hover:no-underline text-left font-semibold text-foreground hover:text-primary-ink"
                           >
                             {d.cameraName}
-                          </button>
+                          </Button>
                           <span className="font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-foreground">{d.areaName}</span>
                           <span className="text-2xs">{d.siteName}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3"><StatusPill status={d.status} /></td>
-                      <td className="px-4 py-3 font-mono text-foreground">{d.eventCount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3"><StatusPill status={d.status} /></TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3 font-mono text-foreground">{d.eventCount.toLocaleString()}</TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="size-3" />
                           {d.deployedAtDisplay}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
 
@@ -1407,9 +1400,9 @@ export function ModelDeploymentsDrawer({
           <div data-slot="model-deployments-drawer-actions" className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-3 shadow-floating">
             <p className="text-sm text-foreground">
               <strong>{selectedCount}</strong> camera{selectedCount === 1 ? "" : "s"} selected
-              <button onClick={() => setSelected(new Set())} className="ml-2 text-muted-foreground underline hover:text-foreground">
+              <Button variant="link" onClick={() => setSelected(new Set())} className="h-auto px-0 border-0 rounded-none font-normal gap-0 text-[length:inherit] whitespace-normal ml-2 text-muted-foreground underline hover:text-foreground">
                 Clear
-              </button>
+              </Button>
             </p>
             <div className="flex items-center gap-1.5">
               <Button size="sm" variant="outline" onClick={() => runAction("Restarted")} className="gap-1.5">
@@ -1476,8 +1469,8 @@ function DrawerFilter({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className={cn(
+        <ItemButton variant="plain"
+          className={cn("w-auto text-center", 
             "inline-flex h-8 items-center justify-between gap-2 rounded-md border bg-background pl-2.5 pr-2 text-sm font-semibold transition-colors",
             open ? "border-primary" : "border-input",
             selected.length === 0 ? "text-muted-foreground" : "text-foreground"
@@ -1489,10 +1482,10 @@ function DrawerFilter({
             {display}
           </span>
           <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[260px] w-60 overflow-y-auto p-1.5">
-        <button
+        <ItemButton variant="plain"
           onClick={() => onChange([])}
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
         >
@@ -1501,12 +1494,12 @@ function DrawerFilter({
             {selected.length === 0 && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
           </div>
           All {label.toLowerCase()}s
-        </button>
+        </ItemButton>
         <div className="my-1 border-t border-border" />
         {options.map((o) => {
           const checked = selected.includes(o.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={o.value}
               onClick={() => onChange(checked ? selected.filter((x) => x !== o.value) : [...selected, o.value])}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1516,7 +1509,7 @@ function DrawerFilter({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               <TruncatedText text={o.label} className="truncate" />
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -1557,18 +1550,18 @@ export default function ModelDeploymentPage({
         {forcedState !== "loading" && (
           <PageHeader.Actions>
             <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
-              <button onClick={() => setTab("deploy")}
-                className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
+              <ItemButton variant="plain" selected={tab === "deploy"} onClick={() => setTab("deploy")}
+                className={cn("w-auto text-center", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
                   tab === "deploy" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <Plus className="size-3.5" />
                 Deploy
-              </button>
-              <button onClick={() => setTab("history")}
-                className={cn("inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
+              </ItemButton>
+              <ItemButton variant="plain" selected={tab === "history"} onClick={() => setTab("history")}
+                className={cn("w-auto text-center", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
                   tab === "history" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <FileText className="size-3.5" />
                 Models
-              </button>
+              </ItemButton>
             </div>
           </PageHeader.Actions>
         )}

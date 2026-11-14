@@ -1,4 +1,6 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -89,12 +91,12 @@ function ExpandableTags({ tags }: { tags: string[] }) {
       {rest.length > 0 && (
         <Popover>
           <PopoverTrigger asChild>
-            <button
+            <Button variant="outline" size="xs"
               onClick={(e) => e.stopPropagation()}
-              className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink hover:bg-primary/15"
+              className="h-auto rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink hover:bg-primary/15 hover:text-primary-ink aria-expanded:bg-primary/10 aria-expanded:text-primary-ink dark:border-primary/30 dark:bg-primary/10 dark:hover:bg-primary/15"
             >
               +{rest.length} more tags
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent align="start" sideOffset={6} className="z-[var(--z-popover)] w-64 p-3">
             <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -142,9 +144,9 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
+            "justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-base transition-colors hover:border-primary",
             open ? "border-primary" : "border-border",
             hasValue ? "text-primary-ink" : "text-muted-foreground"
           )}
@@ -156,16 +158,16 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
               open && "rotate-180"
             )}
           />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1.5">
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt.value}
               onClick={() => toggle(opt.value)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <div
                 className={cn(
@@ -176,7 +178,7 @@ function FilterDropdown({ label, options, selected, onChange }: FilterDropdownPr
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               {opt.label}
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -226,7 +228,7 @@ function RuleFilterPanel({
       <div data-slot="rule-filter-panel-header"
         className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <ItemButton variant="plain" type="button" onClick={() => setOpen((v) => !v)} className="w-auto flex-1 gap-2.5">
           <SlidersHorizontal className="size-4 flex-shrink-0 text-muted-foreground" />
           <span className="text-base font-semibold text-foreground">Filters</span>
           {activeCount > 0 ? (
@@ -245,15 +247,15 @@ function RuleFilterPanel({
               ))}
             </div>
           )}
-        </button>
+        </ItemButton>
         <div className="flex items-center gap-3">
-          <button type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
+          <Button variant="ghost" size="icon-xs" className="size-auto rounded-none p-0 hover:bg-transparent dark:hover:bg-transparent" type="button" aria-label={open ? "Collapse filters" : "Expand filters"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="size-4 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -308,29 +310,29 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 
   return (
     <div data-slot="row-action-menu" className="relative" ref={ref}>
-      <button
+      <Button variant="ghost" size="icon-sm"
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground"
+        className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted"
       >
         <MoreHorizontal className="size-4" />
-      </button>
+      </Button>
       {open && (
         <div data-slot="row-action-menu-content" className="absolute right-0 top-8 z-50 min-w-[160px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-floating">
-          <button
+          <ItemButton variant="plain"
             onClick={() => { setOpen(false); onEdit(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="gap-2 px-3 py-2 text-base text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Edit2 className="size-3.5" />
             Edit Rule
-          </button>
+          </ItemButton>
           <div className="my-1 h-px bg-border" />
-          <button
+          <ItemButton variant="plain"
             onClick={() => { setOpen(false); onDelete(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-base text-severity-critical hover:bg-severity-critical/10"
+            className="gap-2 px-3 py-2 text-base text-severity-critical hover:bg-severity-critical/10"
           >
             <Trash2 className="size-3.5" />
             Delete Rule
-          </button>
+          </ItemButton>
         </div>
       )}
     </div>
@@ -385,15 +387,15 @@ function TagInput({
             className="inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-sm font-medium text-foreground"
           >
             {t}
-            <button
+            <Button variant="ghost" size="icon-xs"
               onClick={(e) => { e.stopPropagation(); onRemove(t); }}
-              className="flex size-4 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+              className="size-4 rounded text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
             >
               <X className="size-2.5" />
-            </button>
+            </Button>
           </span>
         ))}
-        <input
+        <Input
           ref={ref}
           value={val}
           onChange={(e) => { setVal(e.target.value); setOpen(true); }}
@@ -405,7 +407,7 @@ function TagInput({
             if (e.key === "Backspace" && !val && tags.length > 0) onRemove(tags[tags.length - 1]);
           }}
           placeholder={tags.length === 0 ? "+ Add tag" : ""}
-          className="min-w-[80px] flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+          className="h-auto w-auto min-w-[80px] flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-base text-foreground shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base dark:bg-transparent"
         />
       </div>
       {open && (filteredSuggestions.length > 0 || showCreate) && (
@@ -416,25 +418,25 @@ function TagInput({
             </div>
           )}
           {filteredSuggestions.slice(0, 10).map((sg) => (
-            <button
+            <ItemButton variant="plain"
               key={sg}
               onMouseDown={(e) => { e.preventDefault(); commit(sg); }}
-              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-foreground hover:bg-muted"
+              className="gap-1.5 rounded px-2 py-1.5 text-base text-foreground hover:bg-muted"
             >
               <span className="inline-block size-1.5 rounded-full bg-primary/60" />
               {sg}
-            </button>
+            </ItemButton>
           ))}
           {showCreate && (
             <>
               {filteredSuggestions.length > 0 && <div className="my-1 border-t border-border" />}
-              <button
+              <ItemButton variant="plain"
                 onMouseDown={(e) => { e.preventDefault(); commit(); }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-base text-primary-ink hover:bg-primary/10"
+                className="gap-1.5 rounded px-2 py-1.5 text-base text-primary-ink hover:bg-primary/10"
               >
                 <Plus className="size-3" />
                 Create "{val.trim()}"
-              </button>
+              </ItemButton>
             </>
           )}
         </div>
@@ -930,12 +932,12 @@ export default function RulesLibraryPage({
           <strong className="text-foreground">{filtered.length}</strong>{" "}
           Rule{filtered.length !== 1 ? "s" : ""}
           {(search || hasActiveFilters) && (
-            <button
+            <Button variant="link"
               onClick={() => { setSearch(""); setFilters(EMPTY_RULE_FILTERS); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <div className="flex-shrink-0">
@@ -979,9 +981,9 @@ export default function RulesLibraryPage({
       ) : (
         <div data-slot="rules-library-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] border-collapse">
-              <thead className="bg-muted/30">
-                <tr className="border-b border-border text-left">
+            <Table className="w-full min-w-[820px] border-collapse">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
                   {(
                     [
                       { label: "RULE ID",          cls: "w-[120px]" },
@@ -992,81 +994,81 @@ export default function RulesLibraryPage({
                       { label: "ACTION",           cls: "w-[64px]" },
                     ] as { label: string; cls: string; sort?: boolean }[]
                   ).map(({ label, cls, sort }) => (
-                    <th
+                    <TableHead
                       key={label}
-                      className={cn(
+                      className={cn("h-auto px-0 whitespace-normal text-current font-bold", 
                         "px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
                         cls
                       )}
                     >
                       {sort ? (
-                        <button
+                        <Button variant="link"
                           onClick={() => setSortBy((s) => (s === "newest" ? "oldest" : "newest"))}
-                          className="flex items-center gap-1 hover:text-foreground"
+                          className="h-auto gap-1 rounded-none border-0 p-0 text-2xs font-bold text-muted-foreground/60 hover:text-foreground hover:no-underline"
                         >
                           {label}
                           <ArrowUpDown className="size-3 opacity-40" />
-                        </button>
+                        </Button>
                       ) : (
                         label
                       )}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
                 {filtered.map((rule) => (
-                  <tr
+                  <TableRow
                     key={rule.id}
                     onClick={() => openEdit(rule)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
+                    className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
                   >
                     {/* Rule ID */}
-                    <td className="px-4 py-3">
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                         {rule.id}
                       </span>
-                    </td>
+                    </TableCell>
 
                     {/* Rule Name + Severity badge */}
-                    <td className="px-4 py-3">
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <div className="flex flex-col items-start gap-1.5">
                         <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                           {rule.name}
                         </span>
                         <SeverityBadge severity={rule.severity} />
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Description */}
-                    <td className="px-4 py-3">
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <TruncatedText text={rule.description} className="line-clamp-2 text-base text-muted-foreground" />
-                    </td>
+                    </TableCell>
 
                     {/* Tags */}
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <ExpandableTags tags={rule.tags} />
-                    </td>
+                    </TableCell>
 
                     {/* Created */}
-                    <td className="px-4 py-3">
+                    <TableCell className="p-0 whitespace-normal px-4 py-3">
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Calendar className="size-3 flex-shrink-0" />
                         {rule.createdAtDisplay}
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Action */}
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <RowActionMenu
                         onEdit={() => openEdit(rule)}
                         onDelete={() => setDeleteId(rule.id)}
                       />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

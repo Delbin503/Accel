@@ -462,9 +462,9 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
   return (
     <div data-slot="sessions-tab" className="flex flex-col gap-4">
       <KpiGrid cols={3}>
-        <KpiCard label="Total Sessions" value={allSessions.length} sub="Last 2 weeks" accent="primary" onClick={() => setKpi("all")} />
-        <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" accent="severity-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
-        <KpiCard label="Scheduled" value={sessions.filter((s) => s.status === "scheduled").length} sub="Coming up" accent="info" active={kpi === "scheduled"} onClick={() => setKpi(kpi === "scheduled" ? "all" : "scheduled")} />
+        <KpiCard label="Total Sessions" value={allSessions.length} sub="Last 2 weeks" tone="primary" onClick={() => setKpi("all")} />
+        <KpiCard label="Live" value={sessions.filter((s) => s.status === "live").length} sub="Being analysed" tone="severity-critical" active={kpi === "live"} onClick={() => setKpi(kpi === "live" ? "all" : "live")} />
+        <KpiCard label="Scheduled" value={sessions.filter((s) => s.status === "scheduled").length} sub="Coming up" tone="info" active={kpi === "scheduled"} onClick={() => setKpi(kpi === "scheduled" ? "all" : "scheduled")} />
       </KpiGrid>
 
       <FiltersBar
@@ -621,10 +621,10 @@ function GroupResults({ session }: { session: TaSession }) {
       )}
 
       <KpiGrid cols={4}>
-        <KpiCard label={u.people[0].toUpperCase() + u.people.slice(1)} value={session.participants.length} sub={`${session.participants.filter((p) => p.attempts > 0).length} assessed`} accent="primary" />
-        <KpiCard label={g.scoreLabel} value={scoreValue} sub={g.scoreSub} accent="success" />
-        <KpiCard label={`${u.items[0].toUpperCase() + u.items.slice(1)} analysed`} value={`${session.analysed} of ${session.captured}`} sub={`${session.captured - session.analysed} not analysed`} accent="info" />
-        <KpiCard label="Flagged for review" value={session.flagged} sub="Low-confidence findings" accent="warning" />
+        <KpiCard label={u.people[0].toUpperCase() + u.people.slice(1)} value={session.participants.length} sub={`${session.participants.filter((p) => p.attempts > 0).length} assessed`} tone="primary" />
+        <KpiCard label={g.scoreLabel} value={scoreValue} sub={g.scoreSub} tone="success" />
+        <KpiCard label={`${u.items[0].toUpperCase() + u.items.slice(1)} analysed`} value={`${session.analysed} of ${session.captured}`} sub={`${session.captured - session.analysed} not analysed`} tone="info" />
+        <KpiCard label="Flagged for review" value={session.flagged} sub="Low-confidence findings" tone="warning" />
       </KpiGrid>
 
       <div data-slot="group-results-table" className="overflow-hidden rounded-xl border border-border bg-card">

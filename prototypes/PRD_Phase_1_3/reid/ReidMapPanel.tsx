@@ -83,8 +83,8 @@ export function ReidMapPanel() {
                 counts; bg-background keeps them distinct inside this panel, and
                 h-full fills the two rows beside the map instead of leaving the
                 card's fixed height stranded in a taller column. */}
-            <KpiCard label="Persons" value={personTotal} sub="inside the map now" accent="info" className="h-full min-h-[120px] bg-background" />
-            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" accent="severity-critical" className="h-full min-h-[120px] bg-background" />
+            <KpiCard label="Persons" value={personTotal} sub="inside the map now" tone="info" className="h-full min-h-[120px] bg-background" />
+            <KpiCard label="Weapons" value={onMap.length} sub="tracked on this map" tone="severity-critical" className="h-full min-h-[120px] bg-background" />
           </div>
 
           <div data-slot="reid-map-panel-map" className="flex min-w-0 flex-col gap-2">

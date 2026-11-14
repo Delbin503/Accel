@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -319,14 +320,14 @@ function FloorPlanCanvas({
               on-image actions in the app (see live-monitoring tile actions):
               translucent dark chip, tinted critical on hover, never a solid
               fill. */}
-          <button
+          <Button variant="ghost" size="icon-xs"
             type="button"
             onClick={onDeleteFloorPlan}
             title="Remove floor plan"
-            className="absolute top-3 right-3 z-[var(--z-dropdown)] flex size-6 items-center justify-center rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm transition-colors hover:bg-severity-critical/80"
+            className="absolute top-3 right-3 z-[var(--z-dropdown)] size-6 rounded bg-scrim/70 text-media-foreground/90 backdrop-blur-sm transition-colors hover:bg-severity-critical/80 hover:text-media-foreground/90 dark:hover:bg-severity-critical/80"
           >
             <Trash2 className="size-3" />
-          </button>
+          </Button>
         </>
       )}
 
@@ -502,6 +503,7 @@ function FloorPlanEmpty({
           <ImageIcon className="size-3.5" />
           Use Sample
         </Button>
+        {/* eslint-disable-next-line no-restricted-syntax -- hidden file input, no visible UI */}
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleFile} />
       </div>
     </div>
@@ -538,14 +540,15 @@ export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</p>
             <div className="flex flex-wrap gap-2">
               {AREA_PALETTE.map((c) => (
-                <button
+                <ItemButton
+                  variant="plain"
                   key={c}
                   type="button"
                   aria-label={`Color ${c}`}
-                  aria-pressed={color === c}
+                  selected={color === c}
                   onClick={() => setColor(c)}
                   className={cn(
-                    "size-7 rounded-md ring-offset-2 ring-offset-background transition-shadow",
+                    "size-7 gap-0 rounded-md ring-offset-2 ring-offset-background transition-shadow",
                     color === c ? "ring-2 ring-foreground" : "hover:ring-2 hover:ring-foreground/30"
                   )}
                   // Swatch fill is the area's own colour value from the palette data.
@@ -810,9 +813,9 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
                 {site.id} · {site.address || "No address yet"} · {site.timezone}
               </p>
             </div>
-            <button onClick={onClose} className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Button variant="ghost" size="icon-sm" onClick={onClose} className="mt-0.5 size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </SheetHeader>
 
@@ -952,11 +955,11 @@ function OverviewTab({
           </div>
         )}
 
-        <button onClick={onGoFloorPlan}
-          className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-scrim/65 py-2.5 text-sm font-semibold text-media-foreground backdrop-blur-sm transition-colors hover:bg-scrim/85">
+        <Button variant="ghost" size="sm" onClick={onGoFloorPlan}
+          className="absolute inset-x-0 bottom-0 h-auto gap-1.5 rounded-none border-0 bg-scrim/65 px-0 py-2.5 text-sm font-semibold text-media-foreground backdrop-blur-sm transition-colors hover:bg-scrim/85 hover:text-media-foreground dark:hover:bg-scrim/85">
           <UploadCloud className="size-3.5" />
           Open Floor Plan Editor
-        </button>
+        </Button>
       </div>
 
       {/* ── Quick counts (Areas + Cameras + Placed) ── */}
@@ -966,7 +969,7 @@ function OverviewTab({
             label="Areas"
             value={site.areas.length}
             sub={`${drawn} drawn · ${pending} pending`}
-            accent="info"
+            tone="info"
           />
           <SharedKpiCard compact
             label="Cameras"
@@ -975,13 +978,13 @@ function OverviewTab({
               : onlineCount > 0 ? `${onlineCount} online`
               : offline > 0 ? `${offline} offline`
               : "—"}
-            accent={offline === 0 && siteCameras.length > 0 ? "success" : offline > 0 ? "warning" : "muted"}
+            tone={offline === 0 && siteCameras.length > 0 ? "success" : offline > 0 ? "warning" : "muted"}
           />
           <SharedKpiCard compact
             label="Placed"
             value={<>{placedCount}<span className="text-md text-muted-foreground"> / {siteCameras.length}</span></>}
             sub="On the floor plan"
-            accent={placedCount === siteCameras.length && siteCameras.length > 0 ? "success" : "warning"}
+            tone={placedCount === siteCameras.length && siteCameras.length > 0 ? "success" : "warning"}
           />
         </div>
       </div>
@@ -1046,11 +1049,11 @@ function OverviewTab({
             const disabled = row.items.length === 0;
             return (
               <div key={row.key} className={cn(i > 0 && "border-t border-border")}>
-                <button
+                <ItemButton variant="plain"
                   onClick={() => !disabled && toggleStatus(row.key)}
                   disabled={disabled}
                   className={cn(
-                    "flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors",
+                    "justify-between gap-0 px-4 py-2.5 transition-colors",
                     !disabled && "hover:bg-muted/30",
                     disabled && "cursor-default"
                   )}
@@ -1065,7 +1068,7 @@ function OverviewTab({
                       <ChevronDown className={cn("size-3 text-muted-foreground transition-transform", expanded && "rotate-180")} />
                     )}
                   </span>
-                </button>
+                </ItemButton>
                 {expanded && row.items.length > 0 && (
                   <ul className="bg-background/40 px-4 py-2">
                     {row.items.map((c) => (
@@ -1116,9 +1119,9 @@ function OverviewTab({
               const expanded = expandedStatus === `nvr-${n.id}`;
               return (
                 <div key={n.id} className="overflow-hidden rounded-lg border border-border bg-card">
-                  <button
+                  <ItemButton variant="plain"
                     onClick={() => toggleStatus(`nvr-${n.id}`)}
-                    className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-muted/30"
+                    className="items-start gap-3 px-3.5 py-2.5 transition-colors hover:bg-muted/30"
                   >
                     <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-md bg-info/10 text-info">
                       <HardDrive className="size-3.5" />
@@ -1143,7 +1146,7 @@ function OverviewTab({
                       </div>
                     </div>
                     <ChevronDown className={cn("mt-1 size-3 flex-shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")} />
-                  </button>
+                  </ItemButton>
                   {expanded && (
                     <div className="border-t border-border bg-background/40 px-3.5 py-2">
                       <p className="mb-1 text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Linked channels</p>
@@ -1323,7 +1326,7 @@ export function FloorPlanModal({
             {pendingCameraId && (
               <div className="rounded-md border border-info/30 bg-info/[0.06] px-3 py-2 text-xs text-muted-foreground">
                 Placing camera at the centre of the plan… drag it to the right spot, then rotate using the orange handle.
-                <button onClick={() => setPendingCameraId(null)} className="ml-2 underline">Cancel</button>
+                <Button variant="link" onClick={() => setPendingCameraId(null)} className="ml-2 h-auto border-0 p-0 text-xs font-normal text-muted-foreground underline">Cancel</Button>
               </div>
             )}
           </>
@@ -1345,10 +1348,10 @@ export function FloorPlanModal({
               active={guideStep === "cameras-tab" && key === "cameras"}
               message="Now switch to the Cameras tab to start placing your cameras."
             >
-              <button
+              <ItemButton variant="plain" selected={panelTab === key}
                 onClick={() => setPanelTab(key)}
                 className={cn(
-                  "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                  "relative w-auto gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
                   panelTab === key ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -1358,7 +1361,7 @@ export function FloorPlanModal({
                   {badge}
                 </span>
                 {panelTab === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-              </button>
+              </ItemButton>
             </CoachMark>
           ))}
         </div>
@@ -1370,11 +1373,11 @@ export function FloorPlanModal({
               <span className="font-semibold text-foreground">{site.areas.filter((a) => a.points.length >= 3).length}</span> drawn
               {" · "}
               <span className="font-semibold text-warning">{site.areas.filter((a) => a.points.length === 0).length}</span> pending
-              <button onClick={() => setShowDrawAreaDemo(true)}
-                className="flex size-4 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowDrawAreaDemo(true)}
+                className="size-4 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                 title="How to draw an area">
                 <Info className="size-3" />
-              </button>
+              </Button>
             </span>
             <CoachMark active={guideStep === "add-area"} message="Click Add Area, then click around the map to outline a space.">
               <Button onClick={handleStartNewArea} className="gap-1.5">
@@ -1393,7 +1396,7 @@ export function FloorPlanModal({
                   <div key={a.id}
                     className={cn("group flex items-center gap-2.5 border-b border-border/60 px-3.5 py-2 last:border-b-0 transition-colors",
                       isSel ? "bg-primary/5" : "hover:bg-muted/40")}>
-                    <button onClick={() => onSelectArea(a.id)} className="flex flex-1 items-center gap-2.5 text-left">
+                    <ItemButton variant="plain" onClick={() => onSelectArea(a.id)} className="w-auto flex-1 gap-2.5">
                       <span className="size-3 flex-shrink-0 rounded" style={{ background: a.color }} />
                       <TruncatedText text={a.name} className="text-sm font-semibold text-foreground" />
                       <span className="ml-auto inline-flex items-center gap-2 text-2xs text-muted-foreground">
@@ -1401,18 +1404,18 @@ export function FloorPlanModal({
                           ? <span className="inline-flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 font-semibold text-warning">Not drawn</span>
                           : <CircleDot className="size-2.5 text-success" />}
                       </span>
-                    </button>
+                    </ItemButton>
                     <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button onClick={() => onEditArea(a)}
-                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                      <Button variant="ghost" size="icon-xs" onClick={() => onEditArea(a)}
+                        className="size-6 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                         title="Edit color">
                         <Edit3 className="size-3" />
-                      </button>
-                      <button onClick={() => onDeleteArea(a.id)}
-                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-severity-critical/10 hover:text-severity-critical"
+                      </Button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => onDeleteArea(a.id)}
+                        className="size-6 rounded text-muted-foreground hover:bg-severity-critical/10 hover:text-severity-critical dark:hover:bg-severity-critical/10"
                         title="Delete area">
                         <Trash2 className="size-3" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -1425,11 +1428,11 @@ export function FloorPlanModal({
           <div className="flex items-center justify-start gap-2 border-b border-border px-3.5 py-2">
             <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
               <span className="font-semibold text-success">{placedCameras.length}</span> on plan · <span className="font-semibold text-warning">{unplacedCameras.length}</span> unplaced
-              <button onClick={() => setShowPlaceCameraDemo(true)}
-                className="flex size-4 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPlaceCameraDemo(true)}
+                className="size-4 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                 title="How to place a camera">
                 <Info className="size-3" />
-              </button>
+              </Button>
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1458,7 +1461,7 @@ export function FloorPlanModal({
                   return (
                     <div key={c.id} className={cn("border-b border-border/60 last:border-b-0 transition-colors", isSel && "bg-primary/5")}>
                       <div className={cn("flex items-center gap-2.5 px-3.5 py-2", !isSel && "hover:bg-muted/40")}>
-                        <button onClick={() => setSelected({ type: "camera", id: c.id })} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+                        <ItemButton variant="plain" onClick={() => setSelected({ type: "camera", id: c.id })} className="w-auto flex-1 gap-2.5">
                           <span className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded-full", cs.bg)}>
                             <Video className={cn("size-3", cs.text)} />
                           </span>
@@ -1468,7 +1471,7 @@ export function FloorPlanModal({
                               {area ? area.name : "Unassigned"} · <span className="font-mono">{c.id}</span>
                             </TruncatedText>
                           </div>
-                        </button>
+                        </ItemButton>
                         {placed ? (
                           <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-2xs font-semibold text-success">
                             <CircleDot className="size-2.5" /> On plan

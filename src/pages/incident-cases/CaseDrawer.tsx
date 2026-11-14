@@ -51,6 +51,8 @@ import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
 import { TruncatedText } from "@/components/shared/TruncatedText";
 import { PRINT_CALLOUT, PRINT_NEUTRAL, PRINT_SEVERITY, PRINT_TONE, type PrintTone } from "@/lib/tokens";
+import { ItemButton } from "@/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 
 /* ── Section heading ─────────────────────────────────────────────────────── */
 
@@ -199,11 +201,13 @@ export function ChangeStatusModal({
           {STATUS_OPTIONS.map((opt) => {
             const s = STATUS_CONFIG[opt.value];
             return (
-              <button
+              <ItemButton
+                variant="plain"
+                selected={picked === opt.value}
                 key={opt.value}
                 onClick={() => setPicked(opt.value)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                  "gap-3 rounded-lg border px-4 py-3 transition-colors",
                   picked === opt.value
                     ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
@@ -232,7 +236,7 @@ export function ChangeStatusModal({
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</p>
                 </div>
-              </button>
+              </ItemButton>
             );
           })}
         </ModalBody>
@@ -311,24 +315,31 @@ export function ReassignModal({
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Role</span>
-            {ROLE_PILLS.map((p) => {
-              const active = roleFilter === p.key;
-              const count = p.key === "all" ? ASSIGNEES.length : ASSIGNEES.filter((a) => a.role === p.key).length;
-              return (
-                <button
-                  key={p.key}
-                  onClick={() => setRoleFilter(p.key)}
-                  className={cn(
-                    "rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary/10 text-primary-ink"
-                      : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                  )}
-                >
-                  {p.label} <span className="font-mono opacity-70">({count})</span>
-                </button>
-              );
-            })}
+            <SegmentedControl
+              type="single"
+              value={roleFilter}
+              onValueChange={(next) => next && setRoleFilter(next as typeof roleFilter)}
+              className="contents"
+            >
+              {ROLE_PILLS.map((p) => {
+                const active = roleFilter === p.key;
+                const count = p.key === "all" ? ASSIGNEES.length : ASSIGNEES.filter((a) => a.role === p.key).length;
+                return (
+                  <SegmentedControlItem
+                    key={p.key}
+                    value={p.key}
+                    className={cn(
+                      "h-auto gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors data-[state=on]:shadow-none",
+                      active
+                        ? "border-primary text-primary-ink hover:text-primary-ink data-[state=on]:bg-primary/10 data-[state=on]:text-primary-ink"
+                        : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    )}
+                  >
+                    {p.label} <span className="font-mono opacity-70">({count})</span>
+                  </SegmentedControlItem>
+                );
+              })}
+            </SegmentedControl>
           </div>
         </ModalSubheader>
 
@@ -340,11 +351,13 @@ export function ReassignModal({
           ) : filtered.map((a) => {
             const role = a.role ? ROLE_STYLES[a.role] : null;
             return (
-              <button
+              <ItemButton
+                variant="plain"
+                selected={picked.id === a.id}
                 key={a.id}
                 onClick={() => setPicked(a)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg border px-4 py-2.5 text-left transition-colors",
+                  "gap-3 rounded-lg border px-4 py-2.5 transition-colors",
                   picked.id === a.id
                     ? "border-primary bg-primary/10"
                     : "border-border bg-muted/30 hover:border-primary"
@@ -368,7 +381,7 @@ export function ReassignModal({
                   <div className="font-mono text-xs text-muted-foreground">{a.id}</div>
                 </div>
                 {picked.id === a.id && <Check className="size-4 text-primary-ink" />}
-              </button>
+              </ItemButton>
             );
           })}
         </ModalBody>
@@ -461,11 +474,11 @@ export function LinkNewIncidentsModal({
           <div className="grid grid-cols-3 gap-2">
             <div className="relative col-span-3 sm:col-span-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
+              <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search events..."
-                className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="h-8 w-full rounded-md border border-input bg-background py-0 pl-8 pr-3 text-sm text-foreground shadow-none placeholder:text-muted-foreground focus:border-primary focus:outline-none focus-visible:border-primary focus-visible:ring-0 md:text-sm dark:bg-background"
               />
             </div>
             <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
@@ -506,11 +519,13 @@ export function LinkNewIncidentsModal({
               {visible.map((e) => {
                 const sel = selectedIds.has(e.id);
                 return (
-                  <button
+                  <ItemButton
+                    variant="plain"
+                    selected={sel}
                     key={e.id}
                     onClick={() => toggle(e.id)}
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                      "items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors",
                       sel
                         ? "border-primary bg-primary/10"
                         : "border-border bg-muted/20 hover:border-primary"
@@ -539,7 +554,7 @@ export function LinkNewIncidentsModal({
                         {e.areaDisplay} · {e.camera} · {e.dateDisplay}
                       </div>
                     </div>
-                  </button>
+                  </ItemButton>
                 );
               })}
             </div>
@@ -628,11 +643,11 @@ export function EditCaseModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Case Title
             </label>
-            <input
+            <Input
               value={title}
               onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(null); }}
               className={cn(
-                "h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none",
+                "h-9 w-full rounded-md border border-input bg-background px-3 py-0 text-base text-foreground shadow-none placeholder:text-muted-foreground focus:border-primary focus:outline-none focus-visible:border-primary focus-visible:ring-0 md:text-base dark:bg-background",
                 titleErr && "border-severity-critical"
               )}
               placeholder="Case title..."
@@ -644,16 +659,21 @@ export function EditCaseModal({
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Severity
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <SegmentedControl
+              type="single"
+              value={severity}
+              onValueChange={(next) => next && setSeverity(next as Severity)}
+              className="grid w-full grid-cols-4 items-stretch gap-2 rounded-none bg-transparent p-0"
+            >
               {SEVERITY_OPTIONS.map((opt) => (
-                <button
+                <SegmentedControlItem
                   key={opt.value}
-                  onClick={() => setSeverity(opt.value)}
+                  value={opt.value}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-lg border py-2.5 text-xs font-semibold transition-colors",
+                    "h-auto flex-col gap-1.5 rounded-lg border px-0 py-2.5 text-xs font-semibold transition-colors data-[state=on]:shadow-none",
                     severity === opt.value
-                      ? "border-primary bg-primary/10 text-primary-ink"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary"
+                      ? "border-primary text-primary-ink hover:text-primary-ink data-[state=on]:bg-primary/10 data-[state=on]:text-primary-ink"
+                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary hover:text-muted-foreground"
                   )}
                 >
                   <span
@@ -661,9 +681,9 @@ export function EditCaseModal({
                     style={{ background: `var(--severity-${opt.value})` }}
                   />
                   {opt.label}
-                </button>
+                </SegmentedControlItem>
               ))}
-            </div>
+            </SegmentedControl>
           </div>
 
           <div>
@@ -1202,12 +1222,13 @@ function EntityCard({
       </div>
 
       {entity && onViewInfo && (
-        <button
+        <Button
+          variant="link"
           onClick={onViewInfo}
-          className="mt-0.5 flex-shrink-0 text-sm font-medium text-primary-ink hover:underline"
+          className="mt-0.5 h-auto flex-shrink-0 border-0 p-0 text-sm font-medium text-primary-ink underline-offset-auto hover:underline"
         >
           View Info →
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -1242,7 +1263,8 @@ function UpdateCaseMenu({
     disabled = false
   ) {
     return (
-      <button
+      <ItemButton
+        variant="plain"
         onClick={() => {
           if (disabled) return;
           setOpen(false);
@@ -1250,7 +1272,7 @@ function UpdateCaseMenu({
         }}
         disabled={disabled}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-base transition-colors",
+          "gap-2.5 rounded-md px-3 py-2 text-base transition-colors",
           danger
             ? "text-destructive hover:bg-destructive/10"
             : "text-foreground hover:bg-muted",
@@ -1259,7 +1281,7 @@ function UpdateCaseMenu({
       >
         {icon}
         {label}
-      </button>
+      </ItemButton>
     );
   }
 
@@ -1452,12 +1474,14 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                 <SheetTitle className="text-md text-muted-foreground">
                   {forcedState === "loading" ? "Loading case…" : "Couldn't load case"}
                 </SheetTitle>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
             ) : caseData ? (
               <div data-slot="case-drawer-header" className="flex items-start justify-between gap-3">
@@ -1473,24 +1497,28 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                     {caseData.id} · {caseData.siteDisplay}
                   </p>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={onClose}
-                  className="mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center justify-between">
                 <SheetTitle className="text-md text-muted-foreground">
                   Case not found
                 </SheetTitle>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={onClose}
-                  className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
             )}
           </SheetHeader>
@@ -1590,15 +1618,16 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                   aside={
                     <div className="flex items-center gap-1.5">
                       {(areaFilter !== "all" || cameraFilter !== "all") && (
-                        <button
+                        <Button
+                          variant="link"
                           onClick={() => {
                             setAreaFilter("all");
                             setCameraFilter("all");
                           }}
-                          className="text-xs text-muted-foreground hover:text-primary-ink"
+                          className="h-auto border-0 p-0 text-xs font-normal text-muted-foreground hover:text-primary-ink hover:no-underline"
                         >
                           Clear ×
-                        </button>
+                        </Button>
                       )}
                       <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
                         {filteredEvents.length}

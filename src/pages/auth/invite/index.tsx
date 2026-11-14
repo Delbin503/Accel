@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { AccountSetup, type AccountProfile } from "./AccountSetup";
 import { OtpVerify } from "./OtpVerify";
 import { WelcomeModal } from "./WelcomeModal";

@@ -6,7 +6,7 @@
  *   root  → kebab-case of the component     (KpiCard → "kpi-card")
  *   parts → "{root}-{part}"                  ("kpi-card-value", "kpi-card-trend")
  *
- * Checks, for component files in src/components/{ui,shared,custom,charts,layout}:
+ * Checks, for component files in src/components/{ui,shared,app,custom,charts,layout}:
  *   1. The file names at least one layer (unless it renders no DOM of its own).
  *   2. Every data-slot value is kebab-case.
  *   3. Every data-slot value starts with the kebab name of a component declared
@@ -21,7 +21,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const DIRS = ["ui", "shared", "custom", "charts", "layout"].map((d) => join(ROOT, "src/components", d));
+const DIRS = ["ui", "shared", "app", "custom", "charts", "layout"].map((d) => join(ROOT, "src/components", d));
 
 // Components that render no DOM of their own (route guards, providers, logic-only).
 const NO_DOM = new Set(["RequireRole.tsx", "RequireOnboarding.tsx"]);

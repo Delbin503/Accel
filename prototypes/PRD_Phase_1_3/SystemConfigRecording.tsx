@@ -321,7 +321,7 @@ function UserAccessSection() {
             </TableHeader>
             <TableBody className="divide-y divide-border/60">
               {PERMISSIONS.map((p) => (
-                <TableRow key={p.key} className="border-0 hover:bg-transparent">
+                <TableRow key={p.key} className="border-b-0 hover:bg-transparent">
                   <TableCell className="p-0 whitespace-normal px-3 py-3">
                     <p className="text-base font-semibold text-foreground">{p.label}</p>
                     <p className="text-xs text-muted-foreground">{p.description}</p>

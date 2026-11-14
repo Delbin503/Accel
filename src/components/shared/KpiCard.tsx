@@ -21,12 +21,13 @@ import { TruncatedText } from "@/components/shared/TruncatedText";
  * Renders as a `<button>` when `onClick` is set, otherwise a `<div>`.
  *
  * @example
- *   <KpiCard label="Total" value={42} sub="Across sites" accent="primary" />
+ *   <KpiCard label="Total" value={42} sub="Across sites" tone="primary" />
  *   <KpiCard label="Events" value={128} sub="vs yesterday"
  *            trend={{ value: "12.5%", direction: "up" }} />
  */
 
-export type KpiAccent =
+/** Semantic colour of a KPI card's dot — same vocabulary as StatusBadge's `tone`. */
+export type KpiTone =
   | "primary"
   | "success"
   | "warning"
@@ -44,7 +45,10 @@ export type KpiAccent =
   | "sev-low"
   | "muted";
 
-const ACCENT_DOT: Record<KpiAccent, string> = {
+/** @deprecated Renamed to `KpiTone`. */
+export type KpiAccent = KpiTone;
+
+const ACCENT_DOT: Record<KpiTone, string> = {
   primary:        "bg-primary",
   success:        "bg-success",
   warning:        "bg-warning",
@@ -91,8 +95,10 @@ export interface KpiCardProps {
   trend?: KpiTrend;
   /** Accepted for backwards compatibility; KPI cards never render icons. */
   icon?: React.ElementType;
-  /** Colour token for the dot beside the label. Defaults to "primary". */
-  accent?: KpiAccent;
+  /** Semantic colour of the dot beside the label. Defaults to "primary". */
+  tone?: KpiTone;
+  /** @deprecated Renamed to `tone` — kept for prototypes and in-flight pages. */
+  accent?: KpiTone;
   /** Click handler. When provided, the card is rendered as a button with hover state. */
   onClick?: () => void;
   /** Active filter state — shows the "Active" chip and primary border. */
@@ -110,7 +116,8 @@ export function KpiCard({
   trend,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   icon: _Icon,
-  accent = "primary",
+  tone,
+  accent,
   onClick,
   active = false,
   compact = false,
@@ -138,7 +145,7 @@ export function KpiCard({
     >
       {/* Label row — the accent dot replaces the old coloured top stroke */}
       <div data-slot="kpi-card-header" className="flex min-w-0 items-center gap-2">
-        <span data-slot="kpi-card-accent" className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[accent])} />
+        <span data-slot="kpi-card-accent" className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[tone ?? accent ?? "primary"])} />
         <TruncatedText data-slot="kpi-card-label" className={cn("min-w-0 flex-1 font-medium text-muted-foreground", compact ? "text-sm" : "text-base")}>
           {label}
         </TruncatedText>

@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotificationsStore, type NotificationItem, type NotificationKind } from "@/stores/useNotificationsStore";
-import { TruncatedText } from "./TruncatedText";
+import { TruncatedText } from "@/components/shared/TruncatedText";
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
   incident: { bg: "bg-severity-critical/15", text: "text-severity-critical", icon: AlertTriangle, label: "Incident" },

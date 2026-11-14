@@ -1,4 +1,6 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -73,20 +75,20 @@ function BookmarkButton({ bookmarked, onToggle, label, className }: {
   bookmarked: boolean; onToggle: () => void; label: string; className?: string;
 }) {
   return (
-    <button
+    <Button variant="ghost" size="icon-xs"
       type="button"
       aria-pressed={bookmarked}
       aria-label={bookmarked ? `Remove bookmark from ${label}` : `Bookmark ${label}`}
       title={bookmarked ? "Bookmarked — cannot be deleted" : "Bookmark to keep this out of any delete"}
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className={cn(
-        "inline-flex size-6 items-center justify-center rounded transition-colors",
-        bookmarked ? "text-warning" : "text-muted-foreground hover:text-foreground",
+        "size-6 rounded transition-colors hover:bg-transparent dark:hover:bg-transparent",
+        bookmarked ? "text-warning hover:text-warning" : "text-muted-foreground hover:text-foreground",
         className
       )}
     >
       <Star className={cn("size-4", bookmarked && "fill-warning")} />
-    </button>
+    </Button>
   );
 }
 
@@ -122,14 +124,14 @@ function StorageCard({ siteIds, shownMb }: { siteIds: string[]; shownMb: number 
         {parts.map((part) => (
           <Tooltip key={part.key}>
             <TooltipTrigger asChild>
-              <button
+              <ItemButton variant="plain"
                 type="button"
                 aria-label={`${part.label}: ${fmtGb(part.gb)}, ${part.share}%`}
-                className="group/part flex h-3 min-w-0 items-center"
+                className="group/part h-3 gap-0"
                 style={{ width: `${part.share}%` }}
               >
                 <span className={cn("h-1 w-full transition-all group-hover/part:h-1.5", part.round, part.fill)} />
-              </button>
+              </ItemButton>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <span className="flex items-center gap-1.5">
@@ -181,46 +183,46 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
   return (
     <div data-slot="recording-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted/30">
-            <tr className="border-b border-border text-left">
-              <th className={cn(HEAD, "w-10")}>
+        <Table className="w-full">
+          <TableHeader className="bg-muted/30">
+            <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
+              <TableHead className={cn("h-auto px-0 whitespace-normal text-current", HEAD, "w-10 [&:has([role=checkbox])]:pr-4 [&>[role=checkbox]]:translate-y-0")}>
                 <Checkbox
                   checked={all ? true : selectedHere > 0 ? "indeterminate" : false}
                   onCheckedChange={() => onToggleAll(!all)}
                   aria-label="Select every recording on this page"
                 />
-              </th>
+              </TableHead>
               {["REC ID", "Recording", "Type", "Date", "Duration / Size", "Action"].map((h) => (
-                <th key={h} className={HEAD}>{h}</th>
+                <TableHead key={h} className={cn("h-auto px-0 whitespace-normal text-current", HEAD)}>{h}</TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/60">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/60">
             {items.map((rec) => {
               const selected = selectedIds.has(rec.id);
               const bookmarked = bookmarkedIds.has(rec.id);
               const label = `${rec.id} · ${rec.cameraName}`;
               const { date, time } = recDate(rec);
               return (
-                <tr
+                <TableRow
                   key={rec.id}
                   tabIndex={0}
                   onClick={() => onOpen(rec.id)}
                   onKeyDown={(e) => e.key === "Enter" && onOpen(rec.id)}
-                  className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
+                  className={cn("border-b-0 hover:bg-transparent", "group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
                 >
-                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL, "[&:has([role=checkbox])]:pr-4 [&>[role=checkbox]]:translate-y-0")} onClick={(e) => e.stopPropagation()}>
                     <Checkbox checked={selected} onCheckedChange={() => onToggle(rec.id)} aria-label={`Select ${label}`} />
-                  </td>
-                  <td className={CELL}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL)}>
                     <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                       {rec.id}
                     </span>
-                  </td>
+                  </TableCell>
                   {/* About a third of the row: wide enough to read, never the whole gap,
                       and it truncates rather than push the table past the page. */}
-                  <td className={cn(CELL, "w-[34%] max-w-0")}>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL, "w-[34%] max-w-0")}>
                     <div className="flex items-center gap-2.5">
                       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
                         <Video className="size-4" />
@@ -234,8 +236,8 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                         <TruncatedText text={`${rec.cameraId} · ${rec.areaName} · ${rec.siteName}`} className="text-xs text-muted-foreground" />
                       </div>
                     </div>
-                  </td>
-                  <td className={CELL}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL)}>
                     <div className="flex flex-col items-start gap-1">
                       <TypeChip type={rec.type} />
                       {/* Plain text, so the type pill stays the one thing that reads as a type. */}
@@ -246,9 +248,9 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                         </span>
                       )}
                     </div>
-                  </td>
+                  </TableCell>
                   {/* Date over time, each with its icon as the other modules' tables show them. */}
-                  <td className={cn(CELL, "whitespace-nowrap")}>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL, "whitespace-nowrap")}>
                     <p className="flex items-center gap-1.5 text-sm text-foreground">
                       <Calendar className="size-3 shrink-0 text-muted-foreground" />
                       {date}
@@ -257,40 +259,40 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
                       <Clock className="size-3 shrink-0" />
                       {time}
                     </p>
-                  </td>
-                  <td className={cn(CELL, "whitespace-nowrap")}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL, "whitespace-nowrap")}>
                     <p className="text-foreground">{rec.durationDisplay}</p>
                     <p className="text-xs text-muted-foreground">{rec.fileSizeDisplay}</p>
-                  </td>
-                  <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                  </TableCell>
+                  <TableCell className={cn("p-0 whitespace-normal", CELL)} onClick={(e) => e.stopPropagation()}>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button aria-label={`Actions for ${label}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+                        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${label}`} className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                           <MoreHorizontal className="size-4" />
-                        </button>
+                        </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-44 p-1" align="end">
-                        <button onClick={() => onOpen(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
+                        <ItemButton variant="plain" onClick={() => onOpen(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
                           <Play className="size-3.5 text-muted-foreground" />
                           View recording
-                        </button>
-                        <button onClick={() => onToggleBookmark(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
+                        </ItemButton>
+                        <ItemButton variant="plain" onClick={() => onToggleBookmark(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
                           <Star className={cn("size-3.5", bookmarked ? "fill-warning text-warning" : "text-muted-foreground")} />
                           {bookmarked ? "Remove bookmark" : "Bookmark"}
-                        </button>
+                        </ItemButton>
                         <div className="my-1 border-t border-border" />
-                        <button onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-severity-critical hover:bg-severity-critical/10")}>
+                        <ItemButton variant="plain" onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-severity-critical hover:bg-severity-critical/10")}>
                           <Trash2 className="size-3.5" />
                           Delete
-                        </button>
+                        </ItemButton>
                       </PopoverContent>
                     </Popover>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
@@ -366,7 +368,7 @@ function PlayRow({ rec, title, onPlay, selected, onSelect }: {
       {onSelect && (
         <Checkbox checked={selected} onCheckedChange={onSelect} aria-label={`Include ${rec.id} in the export`} />
       )}
-      <button onClick={onPlay} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <ItemButton variant="plain" onClick={onPlay} className="w-auto flex-1 gap-3">
         <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-muted text-foreground transition-colors group-hover/row:border-primary group-hover/row:bg-primary-fill group-hover/row:text-primary-foreground">
           <Play className="size-3.5" />
         </span>
@@ -380,7 +382,7 @@ function PlayRow({ rec, title, onPlay, selected, onSelect }: {
           </span>
         </span>
         <span className="shrink-0 font-mono text-xs text-foreground">{rec.fileSizeDisplay}</span>
-      </button>
+      </ItemButton>
     </div>
   );
 }
@@ -459,10 +461,10 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
                 label={`${rec.id} · ${rec.cameraName}`}
                 className={cn("size-7", !bookmarked && "text-muted-foreground hover:text-foreground")}
               />
-              <button onClick={onClose} aria-label="Close"
-                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close"
+                className="size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </SheetHeader>
@@ -923,12 +925,12 @@ export default function RecordingsPage({
       </PageHeader>
 
       <KpiGrid cols={3}>
-        <KpiCard label="Total Recordings" value={String(filtered.length)} sub="Matching the current filters" accent="primary" icon={Film} />
+        <KpiCard label="Total Recordings" value={String(filtered.length)} sub="Matching the current filters" tone="primary" icon={Film} />
         <KpiCard
           label="Today"
           value={String(todayCount)}
           sub="Recorded today"
-          accent="success"
+          tone="success"
           icon={Video}
           active={datePreset === "today"}
           onClick={() => { setDatePreset((c) => (c === "today" ? "all" : "today")); setDateFrom(""); setDateTo(""); setPage(1); }}
@@ -959,12 +961,12 @@ export default function RecordingsPage({
         <p className="text-base text-muted-foreground">
           <strong className="text-foreground">{filtered.length}</strong> recording{filtered.length === 1 ? "" : "s"} match current filters
           {hasFilters && (
-            <button
+            <Button variant="link"
               onClick={() => { setSearch(""); setFilters(EMPTY_FILTERS); setDatePreset("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
-              className="ml-2 text-muted-foreground underline hover:text-primary-ink"
+              className="ml-2 h-auto border-0 p-0 text-base font-normal text-muted-foreground underline hover:text-primary-ink"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </p>
         <div className="flex items-center gap-2">
@@ -977,12 +979,12 @@ export default function RecordingsPage({
             </PopoverTrigger>
             <PopoverContent align="end" className="w-48 p-1">
               {SORT_OPTIONS.map((o) => (
-                <button key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
-                  className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                <ItemButton variant="plain" key={o.key} onClick={() => { setSort(o.key); setSortOpen(false); }}
+                  className={cn("justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted",
                     sort === o.key ? "text-primary-ink" : "text-foreground")}>
                   {o.label}
                   {sort === o.key && <Check className="size-3.5" />}
-                </button>
+                </ItemButton>
               ))}
             </PopoverContent>
           </Popover>
@@ -1026,17 +1028,17 @@ export default function RecordingsPage({
             {`${(safePage - 1) * pageSize + 1} – ${Math.min(safePage * pageSize, filtered.length)} of ${filtered.length}`}
           </p>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage === 1} aria-label="Previous page"
-              className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+            <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage === 1} aria-label="Previous page"
+              className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent">
               <ChevronLeft className="size-3.5" />
-            </button>
+            </Button>
             <span className="px-2 text-sm text-foreground">
               {safePage} <span className="text-muted-foreground/60">of {pageCount}</span>
             </span>
-            <button onClick={() => setPage(Math.min(pageCount, safePage + 1))} disabled={safePage === pageCount} aria-label="Next page"
-              className="flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40">
+            <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.min(pageCount, safePage + 1))} disabled={safePage === pageCount} aria-label="Next page"
+              className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent">
               <ChevronRight className="size-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}

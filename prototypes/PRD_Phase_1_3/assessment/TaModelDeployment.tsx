@@ -61,7 +61,7 @@ import { isAssessment, isDeployable, useTaModelsStore, type ModelData } from "./
 import { useDevicesStore } from "./taData";
 import { usePoseStore } from "./taPose";
 import { SEED_TA_DEPLOYMENTS, taAreaSummaries, taSiteSummaries, targetsIn, type DeployTarget, type TargetKind } from "./taDeploy";
-import { DrawZoneModal } from "@/components/shared/DrawZoneModal";
+import { DrawZoneModal } from "@/components/app/DrawZoneModal";
 import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
 import type {
   DeploymentData,
@@ -1183,7 +1183,7 @@ function HistoryView({
           label="All Models"
           value={models.length}
           sub="Across all sites"
-          accent="primary"
+          tone="primary"
           active={healthFilter === "all"}
           onClick={() => setHealthFilter("all")}
         />
@@ -1193,7 +1193,7 @@ function HistoryView({
             label={MODEL_HEALTH_STYLES[h].label}
             value={healthCounts[h]}
             sub={h === "online" ? "At least one camera running" : "No active cameras"}
-            accent={h === "online" ? "success" : "muted"}
+            tone={h === "online" ? "success" : "muted"}
             active={healthFilter === h}
             onClick={() => setHealthFilter((cur) => (cur === h ? "all" : h))}
           />

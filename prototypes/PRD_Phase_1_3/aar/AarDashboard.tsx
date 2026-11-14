@@ -849,7 +849,7 @@ function EventMarkers({ selected }: { selected: number }) {
       <div className="min-h-0 flex-1 overflow-auto">
         <Table className="w-max min-w-full border-separate border-spacing-y-0.5">
           <TableHeader>
-            <TableRow className="border-0 hover:bg-transparent">
+            <TableRow className="border-b-0 hover:bg-transparent">
               <TableHead className="h-auto px-0 whitespace-normal text-current sticky left-0 z-20 min-w-28 bg-card pr-2 text-left text-3xs font-semibold uppercase text-muted-foreground">Marker</TableHead>
               {SHOTS.map((s) => (
                 <TableHead key={s.n} className={cn("h-auto px-0 whitespace-normal text-current", "w-8 rounded font-mono text-2xs font-semibold", s.n === selected ? "bg-primary/15 text-primary-ink" : isHit(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.n}</TableHead>
@@ -858,7 +858,7 @@ function EventMarkers({ selected }: { selected: number }) {
           </TableHeader>
           <TableBody>
             {CUES.map((c) => (
-              <TableRow key={c.key} className="border-0 hover:bg-transparent">
+              <TableRow key={c.key} className="border-b-0 hover:bg-transparent">
                 <TableCell className="p-0 whitespace-normal sticky left-0 z-10 min-w-28 bg-card py-0.5 pr-2 text-xs text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span className={cn("size-1.5 shrink-0 rounded-sm", CUE_TONE[c.key])} />

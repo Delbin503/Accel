@@ -1,4 +1,6 @@
 import * as React from "react";
+import { ItemButton } from "@/components/ui/item";
+import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,11 +47,11 @@ function ClassMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <ItemButton variant="plain"
           type="button"
           aria-invalid={invalid}
           className={cn(
-            "flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1.5 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30",
+            "min-h-10 justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1.5 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30",
             invalid && "border-destructive"
           )}
         >
@@ -75,17 +77,17 @@ function ClassMultiSelect({
             </span>
           )}
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
-        </button>
+        </ItemButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-[260px] w-[--radix-popover-trigger-width] min-w-56 overflow-y-auto p-1.5">
         {OBJECT_CLASSES.map((opt) => {
           const checked = values.includes(opt);
           return (
-            <button
+            <ItemButton variant="plain"
               key={opt}
               type="button"
               onClick={() => onToggle(opt)}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <span
                 className={cn(
@@ -96,7 +98,7 @@ function ClassMultiSelect({
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </span>
               <span className="font-mono">{opt}</span>
-            </button>
+            </ItemButton>
           );
         })}
       </PopoverContent>
@@ -181,15 +183,15 @@ function ParamRow({
     <div data-slot="param-row">
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-foreground">{meta.label}</span>
-        <button
+        <Button variant="ghost" size="icon-xs"
           type="button"
           onClick={onRemove}
           title={`Remove ${meta.label}`}
           aria-label={`Remove ${meta.label}`}
-          className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-severity-critical/10 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="size-5 rounded text-muted-foreground/60 dark:hover:bg-severity-critical/10 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-severity-critical/10 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3" />
-        </button>
+        </Button>
       </div>
       <div className="flex items-center gap-2">{control}</div>
     </div>
@@ -210,35 +212,35 @@ function AddParamMenu({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button variant="outline" size="icon-xs"
           type="button"
           disabled={disabled}
           title={disabled ? "Every parameter is already on this class" : "Add a parameter"}
           aria-label="Add a parameter"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary/50 hover:text-primary-ink disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="size-6 rounded-md border border-border bg-transparent text-muted-foreground hover:bg-transparent aria-expanded:bg-transparent aria-expanded:text-muted-foreground dark:border-border dark:bg-transparent dark:hover:border-primary/50 dark:hover:bg-transparent transition-colors duration-[var(--duration-fast)] ease-standard hover:border-primary/50 hover:text-primary-ink disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Plus className="size-3.5" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1.5">
         <p className="px-2 pb-1.5 pt-1 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
           Add parameter
         </p>
         {available.map((f) => (
-          <button
+          <ItemButton variant="plain"
             key={f}
             type="button"
             onClick={() => {
               onAdd(f);
               setOpen(false);
             }}
-            className="flex w-full flex-col items-start gap-0.5 rounded px-2 py-1.5 text-left transition-colors hover:bg-muted"
+            className="flex-col items-start gap-0.5 rounded px-2 py-1.5 transition-colors hover:bg-muted"
           >
             <span className="text-sm font-medium text-foreground">{PARAMETER_META[f].label}</span>
             <span className="text-2xs leading-snug text-muted-foreground">
               {PARAMETER_META[f].hint}
             </span>
-          </button>
+          </ItemButton>
         ))}
       </PopoverContent>
     </Popover>
@@ -269,9 +271,9 @@ function ClassCard({
     >
       <div data-slot="class-card-header" className={cn("flex items-center gap-2 px-3 py-2", open && "border-b border-border")}>
         <CollapsibleTrigger asChild>
-          <button
+          <ItemButton variant="plain"
             type="button"
-            className="flex min-w-0 flex-1 items-center gap-2 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-auto flex-1 gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronDown
               className={cn(
@@ -287,7 +289,7 @@ function ClassCard({
                 ? "any detection"
                 : `${params.fields.length} parameter${params.fields.length === 1 ? "" : "s"}`}
             </span>
-          </button>
+          </ItemButton>
         </CollapsibleTrigger>
         <AddParamMenu
           available={available}
@@ -296,15 +298,15 @@ function ClassCard({
             setOpen(true);
           }}
         />
-        <button
+        <Button variant="outline" size="icon-xs"
           type="button"
           onClick={onRemove}
           title={`Remove ${cls}`}
           aria-label={`Remove ${cls}`}
-          className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-standard hover:border-severity-critical/40 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="size-6 rounded-md border border-border bg-transparent text-muted-foreground hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:border-severity-critical/40 dark:hover:bg-transparent transition-colors duration-[var(--duration-fast)] ease-standard hover:border-severity-critical/40 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3.5" />
-        </button>
+        </Button>
       </div>
 
       <CollapsibleContent>

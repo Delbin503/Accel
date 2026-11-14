@@ -197,10 +197,10 @@ export default function SystemInfoPage() {
                   <dd className="flex items-center gap-1.5 text-sm text-foreground">
                     <span className={cn(item.mono && "font-mono text-xs")}>{item.value}</span>
                     {item.copy && (
-                      <button onClick={() => copy(item.value)}
-                        className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <Button variant="ghost" size="icon-xs" onClick={() => copy(item.value)}
+                        className="size-auto border-0 dark:hover:bg-muted rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                         <Copy className="size-3" />
-                      </button>
+                      </Button>
                     )}
                   </dd>
                 </React.Fragment>

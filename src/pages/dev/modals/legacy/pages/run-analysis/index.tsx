@@ -6,7 +6,7 @@
 import { CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { CoinIcon } from "@/components/shared/CoinIcon";
+import { CoinIcon } from "@/components/app/CoinIcon";
 import { cn } from "@/lib/utils";
 
 /** Human "8 Min 50 Sec" / "10 Min" / "45 Sec" for a duration in seconds. */
