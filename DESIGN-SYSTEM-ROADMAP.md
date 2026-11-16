@@ -10,7 +10,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 ## ▶ Start here (next session)
 
-*Updated 2026-11-17.*
+*Updated 2026-11-17 (end of day).*
 
 **State:** Phases 0–6 are done, merged into `main` and deployed to Vercel production. `@accel/ui` is **1.0.0** in `packages/ui` (npm workspace); the app and prototypes import it.
 
@@ -19,15 +19,28 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 - Merging into `main` deploys production (Vercel). Bitbucket can take several minutes to start the `main` pipeline; if none has appeared after ~10 minutes, **Run pipeline → main** (see CLAUDE.md "Deploys").
 - Changes under `packages/ui` need a line under `[Unreleased]` in `packages/ui/CHANGELOG.md` (CI checks it); version by `packages/ui/README.md#versioning`.
 
-**Needs you (optional)**
-1. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` as a Bitbucket repository variable → visual snapshots of every story in light and dark on each PR.
-2. **Phase 7 decisions:** is Figma the source of truth (then mirror tokens as Figma variables)? When to adopt DTCG / Style Dictionary (only when a second platform needs tokens)? Who approves new components?
+### What's left
 
-**Open in Phases 0–6:** nothing. Phase 7 (below) is ongoing and waits on the decisions above.
+#### Necessary
+- **Nothing.** Every item in Phases 0–6 is done, merged into `main` and deployed, and every pull request is checked.
+
+#### Recommended (small — Claude can do these)
+- [ ] **Release `@accel/ui` 1.1.0.** `packages/ui/CHANGELOG.md` → `[Unreleased]` holds what was merged since 1.0.0 (page accessibility fixes, focus return in Dialog/Sheet, `aria-pressed` on filters / presets / clickable KpiCards, spacing role tokens, SectionCard `headingLevel`). All additions or fixes → **minor**: move them under `## [1.1.0] — <date>`, set `version` to `1.1.0` in `packages/ui/package.json` (and the `@accel/ui` dependency in the root `package.json`), run the gates, merge.
+- [ ] **Tidy merged branches** on Bitbucket: `design-updates-nov-6`, `design-system-a11y-ci`, `docs-start-here` are all in `main` and can be deleted (confirm first).
+- [ ] **Check the last two `main` pipelines** (`d97729a`, `5205d22`, docs only) appeared in Pipelines. If not, nothing to do — production already runs the latest app code.
+
+#### Optional (needs you)
+- [ ] **Chromatic:** create a Chromatic project and add `CHROMATIC_PROJECT_TOKEN` as a Bitbucket repository variable (secured) → visual snapshots of every story in light and dark on each PR. Everything else is already wired up.
+- [ ] **Phase 7 decisions** (no deadline):
+  - Is Figma the design source of truth? If yes → mirror the tokens as Figma variables and check parity.
+  - When to move tokens to DTCG / Style Dictionary? Only once a second platform (native app, email/PDF build) needs them.
+  - Who approves new components? CLAUDE.md says "ask first" but names no approver.
+
+**Phase 7** (below) is ongoing and waits on those decisions.
 
 ---
 
-## Where we are (2026-11-13)
+## Where we were on 2026-11-13 (historical — see Start here for today)
 
 | Layer | Status | Evidence |
 |---|---|---|
