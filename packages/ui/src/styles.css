@@ -141,6 +141,11 @@
   --color-sidebar-border:             var(--sidebar-border);
   --color-sidebar-ring:               var(--sidebar-ring);
 
+  /* Brand artwork — fill-brand-mark, fill-brand-coin, stroke-brand-coin-ink */
+  --color-brand-mark:     var(--brand-mark);
+  --color-brand-coin:     var(--brand-coin);
+  --color-brand-coin-ink: var(--brand-coin-ink);
+
   /* Elevation — shadow-raised / shadow-floating / shadow-modal (values in :root/.dark) */
   --shadow-raised:  var(--elevation-raised);
   --shadow-floating: var(--elevation-floating);
@@ -197,7 +202,9 @@
   /* Brand orange */
   --palette-orange-50:    hsl(20 95% 95%);
   --palette-orange-300:   hsl(20 95% 75%);
+  --palette-orange-450:   hsl(27.8 91.5% 54.1%);   /* brand artwork: coin face */
   --palette-orange-500:   hsl(20 95% 55%);
+  --palette-orange-550:   hsl(21.6 99.2% 50.0%);  /* brand artwork: the logo's exact orange (#FE5C01) */
   --palette-orange-600:   hsl(20 95% 42%);   /* fills under white text — 4.5:1 */
   --palette-orange-700:   hsl(20 95% 33%);   /* light-mode orange text (4.5:1 on its /10 tint); fill hover */
   --palette-orange-800:   hsl(20 80% 30%);
@@ -323,6 +330,12 @@
   --sidebar-accent-foreground:  var(--secondary-foreground);
   --sidebar-border:             var(--border);
   --sidebar-ring:               var(--ring);
+
+  /* Component: brand artwork — logo mark and token coin, same in both themes.
+     A re-skin overrides these with its own logo colours (docs/theming.md). */
+  --brand-mark:     var(--palette-orange-550);
+  --brand-coin:     var(--palette-orange-450);
+  --brand-coin-ink: var(--palette-neutral-960);
 }
 
 /* ── Dark theme (<html class="dark"> — the default) ────────────────────────

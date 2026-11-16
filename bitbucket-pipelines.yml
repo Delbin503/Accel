@@ -28,7 +28,9 @@ definitions:
           # eslint-suppressions.json; new violations fail).
           - npx eslint .
     - step: &a11y
-        name: Storybook build + accessibility (axe, light and dark)
+        name: Storybook build + accessibility (axe) + visual snapshots (Chromatic)
+        clone:
+          depth: full          # Chromatic uses git history to find baselines
         caches:
           - npm
         script:
@@ -36,6 +38,10 @@ definitions:
           - npm ci
           - npm run build-storybook -- --quiet
           - CHROME_PATH=/usr/bin/chromium node scripts/check-a11y.mjs
+          # Visual snapshots of every story in light + dark. Runs once the
+          # CHROMATIC_PROJECT_TOKEN repository variable is set; changes are
+          # reviewed in Chromatic, so they don't fail the step.
+          - if [ -n "$CHROMATIC_PROJECT_TOKEN" ]; then npm run chromatic -- --storybook-build-dir storybook-static; else echo "Chromatic skipped — set CHROMATIC_PROJECT_TOKEN to enable"; fi
         artifacts:
           - .ds-ops-reports/**
 

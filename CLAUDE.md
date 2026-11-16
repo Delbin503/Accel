@@ -291,7 +291,8 @@ All color usage must be expressed with semantic tokens — those automatically h
 - `npm test` — Vitest + Testing Library interaction tests in `packages/ui/test/*.test.tsx` (not next to components: the registry check treats every `.tsx` in a component folder as a component). When you change a component's behaviour (keyboard, selection, labelling, open/close), add or update a test there.
 - `npm run test:a11y` — builds Storybook and runs axe over every story in light **and** dark (`scripts/check-a11y.mjs`). Must report 0 violations. A justified exception goes in that story's `parameters.a11y.config.rules`, with a comment saying why.
 - **Changelog** — any change under `packages/ui/` adds a line under `## [Unreleased]` in `packages/ui/CHANGELOG.md`, written for the people using the components (`npm run lint:changelog` checks it). Decide major / minor / patch with the table in `packages/ui/README.md#versioning`; deprecate before removing.
-- Pull requests run these in Bitbucket Pipelines (`bitbucket-pipelines.yml`): guardrail checks, `npm run build`, prototype typecheck, tests, and the a11y gate.
+- **Visual snapshots (Chromatic)** — every story is snapshotted in light and dark (`parameters.chromatic.modes` in `.storybook/preview.tsx`). In CI it runs once the `CHROMATIC_PROJECT_TOKEN` repository variable is set; review visual changes in Chromatic before merging. Locally: `CHROMATIC_PROJECT_TOKEN=… npm run chromatic`.
+- Pull requests run these in Bitbucket Pipelines (`bitbucket-pipelines.yml`): guardrail checks, `npm run build`, prototype typecheck, tests, the a11y gate and Chromatic.
 
 ## Code Conventions
 

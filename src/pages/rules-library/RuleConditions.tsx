@@ -102,7 +102,7 @@ function MultiSelect({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="max-h-[260px] w-[--radix-popover-trigger-width] min-w-56 overflow-y-auto p-1.5"
+        className="max-h-[260px] w-(--radix-popover-trigger-width) min-w-56 overflow-y-auto p-1.5"
       >
         {options.map((o) => {
           const checked = values.includes(o.value);

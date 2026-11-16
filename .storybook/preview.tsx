@@ -29,6 +29,14 @@ const preview: Preview = {
     ),
   ],
   parameters: {
+    // Chromatic snapshots every story twice — light and dark — so a token
+    // change shows its visual diff in both themes (modes set the theme global).
+    chromatic: {
+      modes: {
+        light: { theme: "light" },
+        dark: { theme: "dark" },
+      },
+    },
     options: {
       storySort: {
         order: ["Introduction", "Foundations", "Guidelines", "UI", "Shared", "Charts"],

@@ -2,6 +2,8 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "../../lib/utils"
+// Accel: overlay body text is the app's text-base (13px), not 16px (text-lg/6),
+// so unsized text in dialogs, sheets and popovers matches the pages behind them.
 
 // Accel: layer names + tokens — z-index via --z-modal (same value); content text size made explicit (was inherited 16px/24px from body).
 // Accel: shadow-raised/floating/modal are theme-aware elevation tokens (index.css),
@@ -32,7 +34,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "z-[var(--z-modal)] w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-lg/6 text-popover-foreground shadow-floating outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          "z-[var(--z-modal)] w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-base text-popover-foreground shadow-floating outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className
         )}
         {...props}

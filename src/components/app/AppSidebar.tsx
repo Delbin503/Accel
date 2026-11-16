@@ -129,10 +129,9 @@ function AccelLogo() {
         aria-label="Accel"
         className={cn("shrink-0", isCollapsed ? "size-6" : "h-8 w-auto")}
       >
-        {/* The mark keeps the logo file's exact orange rather than the primary
-            token, which is a shade off — a logo is the one place the asset's
-            own colour wins over the theme. */}
-        <g fill="#FE5C01">
+        {/* --brand-mark is the logo file's exact orange (not the primary token,
+            which is a shade off); a re-skin overrides it. */}
+        <g data-slot="app-sidebar-logo-mark-shape" className="fill-brand-mark">
           {MARK_PATHS.map((d) => <path key={d} d={d} />)}
         </g>
         {!isCollapsed && (

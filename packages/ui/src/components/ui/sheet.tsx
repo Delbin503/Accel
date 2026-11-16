@@ -5,6 +5,8 @@ import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "../../lib/utils"
+// Accel: overlay body text is the app's text-base (13px), not 16px (text-lg/6),
+// so unsized text in dialogs, sheets and popovers matches the pages behind them.
 
 // Accel: layer names + tokens — data-slot on the built-in close button/icon/label; z-index via --z-modal; content text size/colour made explicit (was inherited 16px/24px from body).
 // Accel: shadow-raised/floating/modal are theme-aware elevation tokens (index.css),
@@ -64,7 +66,7 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "fixed z-[var(--z-modal)] flex flex-col gap-4 bg-background text-lg/6 text-foreground shadow-modal transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-[var(--duration-slow)] data-[state=open]:animate-in data-[state=open]:duration-500",
+          "fixed z-[var(--z-modal)] flex flex-col gap-4 bg-background text-base text-foreground shadow-modal transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-[var(--duration-slow)] data-[state=open]:animate-in data-[state=open]:duration-500",
           side === "right" &&
             "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&

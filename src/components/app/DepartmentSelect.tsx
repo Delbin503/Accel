@@ -75,7 +75,7 @@ export function DepartmentSelect({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent data-slot="department-select-content" align="start" className="w-[--radix-popover-trigger-width] p-1.5">
+      <PopoverContent data-slot="department-select-content" align="start" className="w-(--radix-popover-trigger-width) p-1.5">
         <div data-slot="department-select-list" className="max-h-56 overflow-y-auto">
           {DEPARTMENTS.map((dept) => {
             const checked = value.includes(dept);

@@ -1014,7 +1014,7 @@ export function InviteUsersModal({
                   <ChevronDown className="size-3.5 text-muted-foreground" />
                 </ItemButton>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-1.5">
+              <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-1.5">
                 <ItemButton variant="plain"
                   onClick={() => setSites(sites.length === USER_SITES.length ? [] : USER_SITES.map((s) => s.value))}
                   className="gap-0 flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-semibold text-primary-ink hover:bg-primary/10"

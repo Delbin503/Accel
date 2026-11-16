@@ -16,6 +16,13 @@ First stable version. Removes everything 0.1.0 deprecated.
 - **Tone values** `"purple"` and `"sev-critical" | "sev-medium" | "sev-low"` on KpiCard and StatusBadge → `"violet"`, `"severity-*"`.
 - **App import paths** `@/components/ui|shared|charts|custom|layout` and `@/lib/utils|formatters|…` → `@accel/ui/…` (the compatibility aliases are gone).
 
+### Changed (breaking)
+- Dialog, Sheet and Popover content default to the 13px body size (`text-base`) instead of 16px (`text-lg/6`). Text you sized explicitly is unaffected.
+
+### Added
+- Brand artwork tokens `--brand-mark`, `--brand-coin`, `--brand-coin-ink` (utilities `fill-brand-mark`, `fill-brand-coin`, `stroke-brand-coin-ink`…) and primitives `--palette-orange-450`, `--palette-orange-550`.
+- Chromatic modes: every story is snapshotted in light and dark.
+
 ### Migrating
 Find and replace in class strings: `-sev-` → `-severity-`, `-purple` → `-violet`, `bg-X-soft` → `bg-X/15`, `bg-primary-muted` → `bg-primary/10`; in KpiCard props, `accent=` → `tone=`. ESLint still flags the old names, so `npm run lint` lists anything missed.
 

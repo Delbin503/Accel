@@ -36,7 +36,7 @@ integrations:
   figma:
     enabled: false                # no Figma library yet — roadmap Phase 7
   chromatic:
-    enabled: false                # addon installed, not wired up — roadmap Phase 5
+    enabled: true                 # light + dark modes; CI runs once CHROMATIC_PROJECT_TOKEN is set
     project_token_env: "CHROMATIC_PROJECT_TOKEN"
   storybook:
     enabled: true

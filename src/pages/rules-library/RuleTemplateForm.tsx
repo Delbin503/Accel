@@ -79,7 +79,7 @@ function ClassMultiSelect({
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         </ItemButton>
       </PopoverTrigger>
-      <PopoverContent align="start" className="max-h-[260px] w-[--radix-popover-trigger-width] min-w-56 overflow-y-auto p-1.5">
+      <PopoverContent align="start" className="max-h-[260px] w-(--radix-popover-trigger-width) min-w-56 overflow-y-auto p-1.5">
         {OBJECT_CLASSES.map((opt) => {
           const checked = values.includes(opt);
           return (

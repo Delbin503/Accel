@@ -55,9 +55,21 @@ Verified on the prototypes (2026-11-16): buttons, the active nav item, avatars, 
 }
 ```
 
+## Brand artwork
+
+The logo mark and the token coin read their colours from component tokens, so a re-skin can swap them too:
+
+| Token | Used by | Default |
+|---|---|---|
+| `--brand-mark` | Sidebar logo mark (`fill-brand-mark`) | the Accel logo orange `#FE5C01` (`--palette-orange-550`) |
+| `--brand-coin` | Token coin face (`fill-brand-coin`) | `--palette-orange-450` |
+| `--brand-coin-ink` | Token coin outline and mark | `--palette-neutral-960` |
+
+Override them on `:root` next to the brand ramp. Logo **image files** (`src/assets/*.svg`, the Sigmawave partner logo) can't read CSS variables; replace those files instead.
+
 ## What does not re-skin
 
-- **Brand artwork** (the Accel logo, coin icon, draw-zone placeholder) uses fixed colours. Swap the assets.
+- **Logo image files** (`src/assets/*.svg`) and partner logos use their own colours. Swap the files.
 - **Status and severity colours** (`--success`, `--severity-*`…) are semantic, not brand — keep them so alerts read the same in every product.
 - **Media surfaces** (`--media*`, `--scrim`) stay dark in both themes on purpose (video and floor plans).
 - **Email / PDF HTML** uses the paper palette in `src/lib/tokens.ts`, which can't read CSS variables — update it by hand.

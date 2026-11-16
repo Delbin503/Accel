@@ -20,7 +20,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 3. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` in Bitbucket for visual snapshots.
 4. Phase 7 decisions: is Figma the source of truth? When to adopt DTCG / Style Dictionary?
 
-**Open questions** (from earlier, still open): dialog text at 16px vs 13px `text-base`; `DepartmentSelect`'s v3 width syntax; brand artwork as tokens or artwork.
+**Open questions:** ~~all three answered (2026-11-17)~~ — dialogs/sheets/popovers use 13px `text-base`; the v3 `w-[--radix-…-trigger-width]` syntax fixed to `w-(--…)` in DepartmentSelect, rule conditions, rule template form and user management; brand artwork colours are tokens (`--brand-mark`, `--brand-coin`, `--brand-coin-ink`).
 
 ---
 
@@ -269,7 +269,7 @@ Steps:
 
 - [x] Vitest 5 + Testing Library + jsdom (2026-11-16): `npm test`, tests in `src/test/` (the registry check would treat `.tsx` in component folders as components). 14 tests: DataTable (row click + Enter/Space, `stopRowClick`, selection + indeterminate select-all, loading / inline empty), DetailDrawer (named dialog, page slot, close button, Esc), DescriptionList (`<dl>` pairing, em dash), Stepper (states, `aria-current`), ModalField label linking (text / password / select), ToolbarSearch name, OtpField typing, Slider thumb names. Mutation-checked: breaking ModalSelect's `id` fails the suite
   - [ ] More tests as components change: FilterPanel, Modal focus trap, TimeSelect, DateRangeBar, SegmentedControl
-- [ ] Visual regression via Chromatic (addon already installed): snapshot every story in light **and** dark. ⏸ **Needs you:** a Chromatic account/project and its token as the `CHROMATIC_PROJECT_TOKEN` repository variable in Bitbucket; then add a `npx chromatic --exit-zero-on-changes` step to the PR pipeline
+- [x] Visual regression via Chromatic (2026-11-17): every story snapshotted in light **and** dark (`parameters.chromatic.modes`), `npm run chromatic` (CLI 18.14.4, `--exit-zero-on-changes`), CI step after the a11y gate. ⏸ **Needs you:** create the Chromatic project and add `CHROMATIC_PROJECT_TOKEN` as a Bitbucket repository variable — until then the step prints "skipped"
 - [x] Storybook a11y gate (2026-11-16): `npm run test:a11y` builds Storybook and `scripts/check-a11y.mjs` runs axe over every story in light + dark against the static build (serves it itself; puppeteer-core + system Chrome/Chromium via `CHROME_PATH`; honours story `a11y` rule exceptions; report in `.ds-ops-reports/`). Passes: 216 stories × 2 themes, 0 violations
 - [x] CI on every pull request (2026-11-16, `bitbucket-pipelines.yml`, Node 22, two parallel steps): (1) token / slot / registry guardrails, `npm run build`, prototype typecheck, `npm test`; (2) Storybook build + a11y gate (Chromium from apt), report kept as an artifact. The existing `main` → Vercel deploy step is unchanged. All steps pass locally. **Not yet run on Bitbucket** — it runs on the first PR after this is pushed
   - [x] **ESLint debt cleared (2026-11-16): 205 errors + 17 warnings → 0** outside run-analysis, and ESLint now **blocks PRs** (`--ignore-pattern src/pages/run-analysis/**`; that page is reported only).
