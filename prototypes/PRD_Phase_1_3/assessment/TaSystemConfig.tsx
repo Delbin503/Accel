@@ -1075,7 +1075,7 @@ export function TaSystemConfig({ initialSection = "camera-defaults" }: { initial
                 <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink" : "text-muted-foreground")}>{s.description}</p>
                 </div>
               </ItemButton>
             );

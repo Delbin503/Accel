@@ -134,10 +134,10 @@ function EventThumb({ event, selected }: { event: DetectionEvent; selected: bool
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-media-foreground",
-              box.variant === "person"  ? "bg-info"
-              : box.variant === "vehicle" ? "bg-violet"
-              : "bg-primary"
+              "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold",
+              box.variant === "person"  ? "bg-info text-status-foreground"
+              : box.variant === "vehicle" ? "bg-violet text-status-foreground"
+              : "bg-primary-fill text-primary-foreground"
             )}
             style={{ top: box.top, left: box.left }}
           >
@@ -180,8 +180,9 @@ function EventCard({
         "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30",
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4",
-        selected ? "border-primary bg-primary/10" : "border-border",
-        event.status === "escalated" && "opacity-75"
+        selected ? "border-primary bg-primary/10" : "border-border"
+        /* Escalated cards used to fade to opacity-75, which dropped their text
+           below 4.5:1; the "Escalated" status badge already marks them. */
       )}
       style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >

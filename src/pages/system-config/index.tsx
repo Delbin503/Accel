@@ -63,9 +63,10 @@ const SECTIONS: { key: Section; label: string; icon: React.ElementType; descript
   { key: "security",         label: "Security",         icon: ShieldCheck,     description: "Auth policy & audit" },
 ];
 
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({ checked, onChange, disabled, ...aria }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; "aria-labelledby"?: string }) {
   return (
     <Switch
+      {...aria}
       disabled={disabled}
       checked={checked}
       onCheckedChange={(c) => onChange(c === true)}
@@ -78,7 +79,7 @@ function SectionCard({ title, description, action, children }: { title: string; 
     <div data-slot="system-config-section-card" className="overflow-hidden rounded-xl border border-border bg-card">
       <div data-slot="system-config-section-card-header" className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <div className="min-w-0">
-          <h3 className="text-md font-bold text-foreground">{title}</h3>
+          <h2 className="text-md font-bold text-foreground">{title}</h2>
           {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
@@ -89,14 +90,20 @@ function SectionCard({ title, description, action, children }: { title: string; 
 }
 
 function PrefRow({ icon: Icon, title, description, control }: { icon?: React.ElementType; title: string; description?: string; control: React.ReactNode }) {
+  // A Toggle control is named by the row title (it has no visible label of its own).
+  const titleId = React.useId();
+  const labelledControl =
+    React.isValidElement<{ "aria-labelledby"?: string }>(control) && control.type === Toggle
+      ? React.cloneElement(control, { "aria-labelledby": titleId })
+      : control;
   return (
     <div data-slot="system-config-pref-row" className="flex items-start gap-3 rounded-lg border border-border bg-background px-3.5 py-3">
       {Icon && <Icon className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />}
       <div className="min-w-0 flex-1">
-        <p className="text-base font-semibold text-foreground">{title}</p>
+        <p id={titleId} className="text-base font-semibold text-foreground">{title}</p>
         {description && <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p>}
       </div>
-      <div className="flex-shrink-0">{control}</div>
+      <div className="flex-shrink-0">{labelledControl}</div>
     </div>
   );
 }
@@ -124,18 +131,18 @@ function GeneralSection() {
       <SectionCard title="Organization" description="Your workspace identity.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization Name</label>
-            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} aria-invalid={!orgName.trim()} className="h-9 text-base" />
+            <label htmlFor="cfg-organization-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization Name</label>
+            <Input id="cfg-organization-name" value={orgName} onChange={(e) => setOrgName(e.target.value)} aria-invalid={!orgName.trim()} className="h-9 text-base" />
             {!orgName.trim() && <p className="mt-1 text-xs text-severity-critical">Organization name is required.</p>}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization ID</label>
-            <Input value={orgId} disabled className="h-9 font-mono text-base" />
+            <label htmlFor="cfg-organization-id" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Organization ID</label>
+            <Input id="cfg-organization-id" value={orgId} disabled className="h-9 font-mono text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Site</label>
+            <label htmlFor="cfg-default-site" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Site</label>
             <Select value={defaultSite} onValueChange={(v) => setDefaultSite(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-default-site" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="astra">Astra HQ</SelectItem>
                 <SelectItem value="fedex">FedEx Changi</SelectItem>
@@ -144,9 +151,9 @@ function GeneralSection() {
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Timezone</label>
+            <label htmlFor="cfg-default-timezone" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Timezone</label>
             <Select value={defaultTz} onValueChange={(v) => setDefaultTz(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-default-timezone" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent position="popper" className="max-h-72">
                 {TIMEZONES.map((tz) => (
                   <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
@@ -155,9 +162,9 @@ function GeneralSection() {
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Language</label>
+            <label htmlFor="cfg-default-language" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Language</label>
             <Select value={language} disabled>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-default-language" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="zh">中文</SelectItem>
@@ -172,9 +179,9 @@ function GeneralSection() {
       <SectionCard title="Date & Time" description="Format used across timestamps and exports.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date format</label>
+            <label htmlFor="cfg-date-format" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date format</label>
             <Select value={dateFormat} onValueChange={(v) => setDateFormat(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-date-format" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="DD MMM YYYY">DD MMM YYYY</SelectItem>
                 <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
@@ -294,7 +301,7 @@ function UserAccessSection() {
   const ROLE_STYLES: Record<UserRole, { bg: string; text: string; label: string }> = {
     owner: { bg: "bg-success/15",   text: "text-success",      label: "Owner" },
     admin: { bg: "bg-info/15",      text: "text-info",         label: "Admin" },
-    user:  { bg: "bg-secondary/15", text: "text-secondary",    label: "User" },
+    user:  { bg: "bg-secondary/15", text: "text-secondary-foreground", label: "User" },
   };
 
   return (
@@ -686,9 +693,9 @@ function CameraDefaultsSection() {
       <SectionCard title="Stream Defaults" description="Applied to every newly added camera.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Codec</label>
+            <label htmlFor="cfg-codec" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Codec</label>
             <Select value={codec} onValueChange={(v) => setCodec(v as "h264" | "h265")}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-codec" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="h264">H.264</SelectItem>
                 <SelectItem value="h265">H.265 / HEVC</SelectItem>
@@ -696,9 +703,9 @@ function CameraDefaultsSection() {
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resolution</label>
+            <label htmlFor="cfg-resolution" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resolution</label>
             <Select value={resolution} onValueChange={(v) => setResolution(v)}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-resolution" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="1280x720">1280x720</SelectItem>
                 <SelectItem value="1920x1080">1920x1080</SelectItem>
@@ -718,8 +725,8 @@ function CameraDefaultsSection() {
               className="w-full" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">RTSP Port</label>
-            <Input type="number" value={rtspPort} onChange={(e) => setRtspPort(Number(e.target.value) || 554)} className="h-9 text-base" />
+            <label htmlFor="cfg-rtsp-port" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">RTSP Port</label>
+            <Input id="cfg-rtsp-port" type="number" value={rtspPort} onChange={(e) => setRtspPort(Number(e.target.value) || 554)} className="h-9 text-base" />
           </div>
         </div>
       </SectionCard>
@@ -839,9 +846,9 @@ function NvrDefaultsSection() {
 
       <SectionCard title="Recording Files" description="How a NVR splits footage into video files.">
         <div className="max-w-sm">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max. length per video</label>
+          <label htmlFor="cfg-max-length-per-video" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max. length per video</label>
           <Select value={maxVideoLength} onValueChange={setMaxVideoLength}>
-            <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="cfg-max-length-per-video" className="h-9 w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
               {MAX_VIDEO_LENGTHS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
@@ -859,18 +866,18 @@ function NvrDefaultsSection() {
       <SectionCard title="Hardware Defaults">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default channel count</label>
+            <label htmlFor="cfg-default-channel-count" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default channel count</label>
             <Select value={String(defaultChannelCount)} onValueChange={(v) => setDefaultChannelCount(Number(v))}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-default-channel-count" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[8, 16, 32, 64].map((n) => <SelectItem key={n} value={String(n)}>{n} channels</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Health check every</label>
+            <label htmlFor="cfg-health-check-every" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Health check every</label>
             <Select value={String(healthCheckInterval)} onValueChange={(v) => setHealthCheckInterval(Number(v))}>
-              <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="cfg-health-check-every" className="h-9 w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[15, 30, 60, 120, 300].map((s) => <SelectItem key={s} value={String(s)}>{s} s</SelectItem>)}
               </SelectContent>
@@ -995,22 +1002,22 @@ function SecuritySection() {
       <SectionCard title="Session & Password" description="Account lifecycle settings.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session Timeout (minutes)</label>
-            <Input type="number" min={5} max={1440} step={5}
+            <label htmlFor="cfg-session-timeout-minutes" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session Timeout (minutes)</label>
+            <Input id="cfg-session-timeout-minutes" type="number" min={5} max={1440} step={5}
               value={sessionTimeout}
               onChange={(e) => setSessionTimeout(Math.max(5, Math.min(1440, Number(e.target.value))))}
               className="h-9 text-center font-mono text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Minimum Password Length</label>
-            <Input type="number" min={8} max={64}
+            <label htmlFor="cfg-minimum-password-length" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Minimum Password Length</label>
+            <Input id="cfg-minimum-password-length" type="number" min={8} max={64}
               value={passwordMinLength}
               onChange={(e) => setPasswordMinLength(Math.max(8, Math.min(64, Number(e.target.value))))}
               className="h-9 text-center font-mono text-base" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password Expiry (days)</label>
-            <Input type="number" min={0} max={365}
+            <label htmlFor="cfg-password-expiry-days" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password Expiry (days)</label>
+            <Input id="cfg-password-expiry-days" type="number" min={0} max={365}
               value={passwordExpiry}
               onChange={(e) => setPasswordExpiry(Math.max(0, Math.min(365, Number(e.target.value))))}
               className="h-9 text-center font-mono text-base" />
@@ -1069,7 +1076,7 @@ export default function SystemConfigPage() {
                 <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink" : "text-muted-foreground")}>{s.description}</p>
                 </div>
               </ItemButton>
             );

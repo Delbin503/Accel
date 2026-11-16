@@ -333,7 +333,7 @@ const CASE_COLUMNS: DataTableColumn<IncidentCase>[] = [
   },
   {
     key: "open",
-    header: "",
+    header: <span className="sr-only">Open case</span>,
     cell: () => (
       <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-ink" />
     ),
@@ -520,7 +520,7 @@ export default function IncidentCasesPage({
           )}
         </p>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-          <SelectTrigger className="w-auto text-sm">
+          <SelectTrigger aria-label="Sort cases" className="w-auto text-sm">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>

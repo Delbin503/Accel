@@ -214,7 +214,7 @@ function WizardShell({
               <Play className="size-3 fill-media-foreground text-media-foreground" />
             </div>
             <p className="text-md font-bold tracking-tight">Accel</p>
-            <span className="ml-1 hidden rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary sm:inline">
+            <span className="ml-1 hidden rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-3xs font-bold uppercase tracking-wider text-secondary-foreground sm:inline">
               On-Premise
             </span>
           </Link>

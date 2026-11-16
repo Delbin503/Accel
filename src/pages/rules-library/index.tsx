@@ -288,7 +288,7 @@ function RuleFilterPanel({
 
 /* ── Row action menu ─────────────────────────────────────────────────────── */
 
-function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function RowActionMenu({ label, onEdit, onDelete }: { label: string; onEdit: () => void; onDelete: () => void }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
@@ -302,7 +302,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 
   return (
     <div data-slot="row-action-menu" className="relative" ref={ref}>
-      <Button variant="ghost" size="icon-sm"
+      <Button variant="ghost" size="icon-sm" aria-label={label} aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
         className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted"
       >
@@ -959,6 +959,7 @@ export default function RulesLibraryPage({
       stopRowClick: true,
       cell: (rule) => (
         <RowActionMenu
+          label={`Actions for ${rule.name}`}
           onEdit={() => openEdit(rule)}
           onDelete={() => setDeleteId(rule.id)}
         />
@@ -1004,7 +1005,7 @@ export default function RulesLibraryPage({
         </p>
         <div className="flex-shrink-0">
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="h-9 w-[160px]">
+            <SelectTrigger aria-label="Sort rules" className="h-9 w-[160px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

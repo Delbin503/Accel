@@ -261,7 +261,7 @@ export default function ProfilePage() {
           <div className="flex size-20 items-center justify-center rounded-full bg-primary-fill text-2xl font-bold text-primary-foreground">
             {initials}
           </div>
-          <Button variant="ghost" size="icon-sm" className="hover:bg-background dark:hover:bg-background absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-background text-muted-foreground transition-colors hover:text-foreground">
+          <Button variant="ghost" size="icon-sm" aria-label="Change profile photo" className="hover:bg-background dark:hover:bg-background absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-background text-muted-foreground transition-colors hover:text-foreground">
             <Camera className="size-3.5" />
           </Button>
         </div>
@@ -280,11 +280,11 @@ export default function ProfilePage() {
       <SectionCard title="Personal Info" description="Your name and contact details.">
         <div data-slot="profile-page-personal-form" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="profile-first-name" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
               First Name
             </label>
-            <Input
+            <Input id="profile-first-name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="e.g. Delbin"
@@ -292,11 +292,11 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="profile-last-name" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <UserIcon className="size-3" />
               Last Name
             </label>
-            <Input
+            <Input id="profile-last-name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="e.g. Arkar"
@@ -304,26 +304,26 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="profile-email-address" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Mail className="size-3" />
               Email Address
             </label>
-            <Input value={email} disabled className="h-9 text-base" />
+            <Input id="profile-email-address" value={email} disabled className="h-9 text-base" />
             <p className="mt-1 text-xs text-muted-foreground">Email cannot be changed. Contact your admin.</p>
           </div>
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="profile-phone" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Phone className="size-3" />
               Phone
             </label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+65 9123 4567" className="h-9 font-mono text-base" />
+            <Input id="profile-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+65 9123 4567" className="h-9 font-mono text-base" />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="profile-department" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Building2 className="size-3" />
               Department
             </label>
-            <Input
+            <Input id="profile-department"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               placeholder="e.g. Security Operations"

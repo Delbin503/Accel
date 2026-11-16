@@ -1000,7 +1000,7 @@ export default function DashboardPage({
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Type</p>
               <p className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">Activity</p>
             </div>
-            <div className="h-[268px] overflow-y-auto">
+            <div tabIndex={0} aria-label="Recent activity" className="h-[268px] overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {recentActivity.map((a) => {
                 const ks = ACTIVITY_KIND_STYLES[a.kind];
                 return (

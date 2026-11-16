@@ -2135,7 +2135,7 @@ export default function NvrDevicesPage({
       cell: (n) => (
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${n.name}`} className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
               <MoreHorizontal className="size-4" />
             </Button>
           </PopoverTrigger>
@@ -2269,7 +2269,7 @@ export default function NvrDevicesPage({
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon-sm"
+              <Button variant="outline" size="icon-sm" aria-label="Previous page"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"
@@ -2279,7 +2279,7 @@ export default function NvrDevicesPage({
               <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground">of {pageCount}</span>
               </span>
-              <Button variant="outline" size="icon-sm"
+              <Button variant="outline" size="icon-sm" aria-label="Next page"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
                 className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent"

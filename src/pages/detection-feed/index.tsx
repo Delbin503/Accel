@@ -145,8 +145,9 @@ function EventCard({
         "relative grid cursor-pointer rounded-xl border border-l-[3px] bg-card p-3.5 transition-all hover:bg-muted/30",
         "grid-cols-[140px_1fr] gap-3",
         "sm:grid-cols-[140px_1fr_auto] sm:gap-4",
-        selected ? "border-primary bg-primary/10" : "border-border",
-        event.status === "escalated" && "opacity-75"
+        selected ? "border-primary bg-primary/10" : "border-border"
+        /* Escalated cards used to fade to opacity-75, which dropped their text
+           below 4.5:1; the "Escalated" status badge already marks them. */
       )}
       style={{ borderLeftColor: `var(--severity-${event.severity})` }}
     >

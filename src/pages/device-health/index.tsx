@@ -627,7 +627,7 @@ export default function DeviceHealthPage({
                 : `${(page - 1) * pageSize + 1} – ${Math.min(page * pageSize, filtered.length)} of ${filtered.length}`}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon-sm"
+              <Button variant="outline" size="icon-sm" aria-label="Previous page"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="bg-transparent hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:bg-transparent flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"
@@ -637,7 +637,7 @@ export default function DeviceHealthPage({
               <span className="px-2 text-sm text-foreground">
                 {page} <span className="text-muted-foreground">of {pageCount}</span>
               </span>
-              <Button variant="outline" size="icon-sm"
+              <Button variant="outline" size="icon-sm" aria-label="Next page"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
                 className="bg-transparent hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:bg-transparent flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground disabled:opacity-40"

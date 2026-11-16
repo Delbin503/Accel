@@ -268,7 +268,7 @@ Steps:
 **Why:** futureproof = you can change things safely. Without tests, every token tweak is a gamble.
 
 - [x] Vitest 5 + Testing Library + jsdom (2026-11-16): `npm test`, tests in `src/test/` (the registry check would treat `.tsx` in component folders as components). 14 tests: DataTable (row click + Enter/Space, `stopRowClick`, selection + indeterminate select-all, loading / inline empty), DetailDrawer (named dialog, page slot, close button, Esc), DescriptionList (`<dl>` pairing, em dash), Stepper (states, `aria-current`), ModalField label linking (text / password / select), ToolbarSearch name, OtpField typing, Slider thumb names. Mutation-checked: breaking ModalSelect's `id` fails the suite
-  - [ ] More tests as components change: FilterPanel, Modal focus trap, TimeSelect, DateRangeBar, SegmentedControl
+  - [x] More tests (2026-11-17): FilterDropdown/FilterPanel, DateRangeBar, SegmentedControl, TimeSelect, Modal focus trap → 24 tests. They caught a real bug: closing a Modal/Sheet dropped keyboard focus on <body>; Dialog and Sheet now return focus to whatever opened them (`hooks/use-restore-focus`)
 - [x] Visual regression via Chromatic (2026-11-17): every story snapshotted in light **and** dark (`parameters.chromatic.modes`), `npm run chromatic` (CLI 18.14.4, `--exit-zero-on-changes`), CI step after the a11y gate. ⏸ **Needs you:** create the Chromatic project and add `CHROMATIC_PROJECT_TOKEN` as a Bitbucket repository variable — until then the step prints "skipped"
 - [x] Storybook a11y gate (2026-11-16): `npm run test:a11y` builds Storybook and `scripts/check-a11y.mjs` runs axe over every story in light + dark against the static build (serves it itself; puppeteer-core + system Chrome/Chromium via `CHROME_PATH`; honours story `a11y` rule exceptions; report in `.ds-ops-reports/`). Passes: 216 stories × 2 themes, 0 violations
 - [x] CI on every pull request (2026-11-16, `bitbucket-pipelines.yml`, Node 22, two parallel steps): (1) token / slot / registry guardrails, `npm run build`, prototype typecheck, `npm test`; (2) Storybook build + a11y gate (Chromium from apt), report kept as an artifact. The existing `main` → Vercel deploy step is unchanged. All steps pass locally. **Not yet run on Bitbucket** — it runs on the first PR after this is pushed
@@ -281,7 +281,9 @@ Steps:
     - One `eslint-disable` (with reason): `PasswordStrengthBar` re-exports `isStrongPassword` for the frozen legacy dev profile page
     - All 21 prototype pages load with no console errors; drawers/modals exercised headlessly (open A → B, reset on reopen, prefill)
   - [x] **run-analysis** lint errors fixed (2026-11-17) and the `--ignore-pattern` dropped: ESLint now runs on the whole repo with 0 problems and blocks PRs
-  - [ ] `CameraFormModal` re-loads its form whenever its parent re-renders (`initial` is a new object each render) — pre-existing; key the reset on the camera id
+  - [x] `CameraFormModal` no longer reloads on parent re-render (`initial` memoized on the edited camera)
+- [x] **Page-level accessibility (2026-11-17):** axe on all 22 prototype pages (the real app pages) went 617 → 0 elements, in dark and light: sidebar is the main navigation landmark, auth pages have <main>, 43 unnamed buttons named, contrast fixes (faded escalated cards, `text-secondary` used as text, `text-primary` → `text-primary-ink`, opacity on text), labels linked, heading levels, focusable scroll region. Audit script: scratchpad `pages-axe.mjs` (`THEME=light`) — turn into `scripts/check-a11y-pages.mjs` + CI next
+  - [ ] DismissedDrawer box labels still use `opacity-60` (only visible with the drawer open, so the audit can't see it)
 - [ ] `/design-system-ops:accessibility-per-component` for keyboard and screen-reader notes
 
 **Done when:** a PR that changes a token shows a visual diff of every affected component before merge, and CI is green on main.

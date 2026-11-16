@@ -83,7 +83,7 @@ export default function QuickActionsConfigPage() {
                   <p
                     className={cn(
                       "mt-0.5 text-2xs leading-snug",
-                      active ? "text-primary-ink/70" : "text-muted-foreground"
+                      active ? "text-primary-ink" : "text-muted-foreground"
                     )}
                   >
                     {s.description}

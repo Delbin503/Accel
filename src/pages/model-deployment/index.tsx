@@ -160,7 +160,7 @@ function WizardColumn({
     <div data-slot="wizard-column" className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div data-slot="wizard-column-header" className="flex-shrink-0 space-y-2 border-b border-border px-4 py-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-md font-bold text-foreground">{title}</h3>
+          <h2 className="text-md font-bold text-foreground">{title}</h2>
           <span
             className={cn(
               "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-bold tabular-nums",

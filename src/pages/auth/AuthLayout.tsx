@@ -27,6 +27,10 @@ export function AuthLayout({
     <div data-slot="auth-layout" className="relative min-h-screen text-foreground">
       <AuthBackground />
 
+      {/* Landmarks: the corner links sit in a <header> (`contents`, so the
+          absolutely positioned links lay out as before); the form is <main>. */}
+      {(!hideBrand || cancelHref) && (
+      <header data-slot="auth-layout-header" className="contents">
       {!hideBrand && (
         <Link
           to="/signin"
@@ -49,12 +53,14 @@ export function AuthLayout({
           Cancel
         </Link>
       )}
+      </header>
+      )}
 
-      <div className="flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
+      <main data-slot="auth-layout-main" className="flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
         <div data-slot="auth-layout-content" className={wide ? "w-full max-w-[1024px]" : "w-full max-w-[420px]"}>
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

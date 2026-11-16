@@ -3019,7 +3019,7 @@ export default function UserManagementPage({
       cell: (u) => (
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${u.fullName}`} className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
               <MoreHorizontal className="size-4" />
             </Button>
           </PopoverTrigger>

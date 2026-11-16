@@ -144,7 +144,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
       card.isDefault ? "border-primary/40 bg-primary/[0.02]" : "border-border"
     )}>
       <div className="flex size-9 items-center justify-center rounded-lg bg-secondary/15">
-        <CreditCard className={cn("size-4", brandColors[card.brand] ?? "text-secondary")} />
+        <CreditCard className={cn("size-4", brandColors[card.brand] ?? "text-secondary-foreground")} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -164,7 +164,7 @@ function PaymentCardRow({ card, onSetDefault, onRemove, canRemove }: {
           </Button>
         )}
         {canRemove && (
-          <Button variant="ghost" size="icon-sm" onClick={onRemove}
+          <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label={`Remove ${card.brand} card ending ${card.last4}`}
             className="dark:hover:bg-severity-critical/10 hover:text-severity-critical flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10">
             <Trash2 className="size-3" />
           </Button>
@@ -941,7 +941,7 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
     },
     {
       key: "open",
-      header: "",
+      header: <span className="sr-only">Open invoice</span>,
       align: "right",
       className: "px-3",
       headClassName: "whitespace-nowrap",

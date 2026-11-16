@@ -345,10 +345,10 @@ function DismissedRow({
               />
               <span
                 className={cn(
-                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold text-media-foreground",
-                  box.variant === "person"  ? "bg-info"
-                  : box.variant === "vehicle" ? "bg-violet"
-                  : "bg-primary"
+                  "absolute -translate-y-full rounded-sm px-0.5 py-px text-3xs font-semibold",
+                  box.variant === "person"  ? "bg-info text-status-foreground"
+                  : box.variant === "vehicle" ? "bg-violet text-status-foreground"
+                  : "bg-primary-fill text-primary-foreground"
                 )}
                 style={{ top: box.top, left: box.left }}
               >

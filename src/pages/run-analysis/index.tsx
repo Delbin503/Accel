@@ -199,14 +199,17 @@ function MoreTagsPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/* A hover preview inside a clickable card, so it can't be a real <button>
+            (nested interactive). role="button" makes the popover's aria-expanded valid. */}
         <span
+          role="button"
           onMouseEnter={show}
           onMouseLeave={scheduleHide}
           onClick={(e) => {
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          className="cursor-pointer rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink transition-colors hover:bg-primary/20"
         >
           {label}
         </span>
@@ -328,7 +331,7 @@ function ModelSummaryRow({ model }: { model: ModelData }) {
       <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
         {model.sequenceIds.length} Steps
       </span>
-      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary">
+      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-2xs font-semibold text-primary-ink">
         {model.attachedRuleIds.length} Rules
       </span>
     </div>
@@ -386,14 +389,14 @@ function ModelChooserCard({
               selected ? "border-primary/30 bg-primary/10" : "border-border bg-muted"
             )}
           >
-            <Icon className={cn("size-4", selected ? "text-primary" : "text-muted-foreground")} />
+            <Icon className={cn("size-4", selected ? "text-primary-ink" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
             <TruncatedText
               text={model.name}
               className={cn(
                 "text-base font-bold",
-                selected ? "text-primary" : "text-foreground"
+                selected ? "text-primary-ink" : "text-foreground"
               )}
             />
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -419,7 +422,7 @@ function ModelChooserCard({
           )}
         </div>
       ) : (
-        <span className="text-xs italic text-muted-foreground/40">No tag</span>
+        <span className="text-xs italic text-muted-foreground">No tag</span>
       )}
     </button>
   );
@@ -517,7 +520,7 @@ function ModelConfigurePanel({
       <div className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-            <Icon className="size-5 text-primary" />
+            <Icon className="size-5 text-primary-ink" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -559,7 +562,7 @@ function ModelConfigurePanel({
                   className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5"
                 >
                   <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/30" />
-                  <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
+                  <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary-ink">
                     {idx + 1}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -602,7 +605,7 @@ function ModelConfigurePanel({
                       <TagChip key={t} label={t} />
                     ))}
                     {rule.tags.length > 3 && (
-                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
+                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink">
                         +{rule.tags.length - 3}
                       </span>
                     )}
@@ -788,7 +791,7 @@ function VideoUploader({
     >
       <UploadCloud className="size-9 text-muted-foreground/50" />
       <p className="text-base text-muted-foreground">
-        <span className="font-semibold text-primary">Upload a file</span> or drag and drop
+        <span className="font-semibold text-primary-ink">Upload a file</span> or drag and drop
       </p>
       <p className="text-xs text-muted-foreground/60">
         Supported: MP4, MOV, AVI · Max 100 MB
@@ -823,7 +826,7 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-            <Icon className="size-4 text-primary" />
+            <Icon className="size-4 text-primary-ink" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -856,7 +859,7 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                     key={step.id}
                     className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-1.5"
                   >
-                    <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-3xs font-bold text-primary">
+                    <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-3xs font-bold text-primary-ink">
                       {idx + 1}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -871,7 +874,7 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                             "rounded border px-1.5 py-px font-mono text-3xs font-bold uppercase",
                             ext === "json"
                               ? "border-info/30 bg-info/10 text-info"
-                              : "border-primary/30 bg-primary/10 text-primary"
+                              : "border-primary/30 bg-primary/10 text-primary-ink"
                           )}
                         >
                           {ext}
@@ -906,7 +909,7 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
                         <TagChip key={t} label={t} />
                       ))}
                       {rule.tags.length > 3 && (
-                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">
+                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary-ink">
                           +{rule.tags.length - 3}
                         </span>
                       )}
@@ -978,7 +981,7 @@ function StepResultRow({ step, idx }: { step: StepResult; idx: number }) {
           : "border-severity-critical/40 bg-severity-critical/[0.08]"
       )}
     >
-      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
+      <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary-ink">
         {idx + 1}
       </span>
       <div className="min-w-0 flex-1">
@@ -1372,7 +1375,7 @@ function AnalysisLoadingScreen({ stage, onCancel }: { stage: number; onCancel: (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <h1 className="text-xl font-bold text-foreground">Run Analysis</h1>
         </div>
       </div>
 
@@ -1457,7 +1460,7 @@ function AnalysisFailedScreen({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <h1 className="text-xl font-bold text-foreground">Run Analysis</h1>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <Button variant="outline" size="sm" onClick={onShowHistory} className="gap-1.5">
@@ -2095,7 +2098,7 @@ function SelectStep({
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <h1 className="text-xl font-bold text-foreground">Run Analysis</h1>
         </div>
         {!isLoading && (
           <div className="flex flex-shrink-0 items-center gap-2 pt-1">
@@ -2129,7 +2132,7 @@ function SelectStep({
             <span className={cn(
               "rounded-full border px-2.5 py-1 text-xs font-semibold",
               selectedModelIds.length > 0
-                ? "border-primary/40 bg-primary/10 text-primary"
+                ? "border-primary/40 bg-primary/10 text-primary-ink"
                 : "border-border bg-muted text-muted-foreground"
             )}>
               {selectedModelIds.length} / {maxModels} selected
@@ -2175,7 +2178,7 @@ function SelectStep({
                 })}
                 {tagFilter.length > 0 && (
                   <button onClick={() => setTagFilter([])}
-                    className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary">
+                    className="mt-1 w-full rounded px-2 py-1.5 text-center text-xs text-muted-foreground underline hover:text-primary-ink">
                     Clear all
                   </button>
                 )}
@@ -2238,7 +2241,7 @@ function SelectStep({
               <Plus className="size-6" />
             </div>
             <p className="text-base">Select a model to configure</p>
-            <p className="text-xs text-muted-foreground/70">
+            <p className="text-xs text-muted-foreground">
               Add up to {maxModels} to run them against the same clip in one pass.
             </p>
           </div>
@@ -2330,7 +2333,7 @@ function UploadStep({
       {/* Top actions */}
       <div className="flex flex-shrink-0 items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Run Analysis</h2>
+          <h1 className="text-xl font-bold text-foreground">Run Analysis</h1>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
           <RunQuotaButton
@@ -2407,7 +2410,7 @@ function UploadStep({
             >
               <div className="border-b border-border bg-muted/20 px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="size-3.5 text-primary" />
+                  <Sparkles className="size-3.5 text-primary-ink" />
                   <p className="text-base font-bold text-foreground">SOP VLM for Reasoning</p>
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -2526,7 +2529,7 @@ export function RunConfirmModal({
               Tokens to be consumed
             </span>
             {tokenCost > 0 ? (
-              <span className="flex items-center gap-2 font-mono text-3xl font-bold text-primary">
+              <span className="flex items-center gap-2 font-mono text-3xl font-bold text-primary-ink">
                 <CoinIcon className="size-6" />
                 {tokenCost.toLocaleString()}
               </span>
@@ -2714,7 +2717,7 @@ export function PurchaseRunsModal({
             <p className="text-2xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               Token Balance
             </p>
-            <p className="mt-2 flex items-center justify-center gap-2.5 font-mono text-4xl font-bold text-primary">
+            <p className="mt-2 flex items-center justify-center gap-2.5 font-mono text-4xl font-bold text-primary-ink">
               <CoinIcon className="size-7" />
               {tokenBalance.toLocaleString()}
             </p>
@@ -2843,7 +2846,7 @@ export function PurchaseRunsModal({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); openEditCard(pm); }}
-                        className="text-sm font-medium text-primary hover:underline"
+                        className="text-sm font-medium text-primary-ink hover:underline"
                       >
                         Edit
                       </button>
@@ -3170,7 +3173,7 @@ function AllFindingsPanel({ modelRuns }: { modelRuns: ModelRun[] }) {
               className={cn(
                 "rounded-md border px-2 py-1 text-xs font-semibold transition-colors",
                 filter === f.key
-                  ? "border-primary/40 bg-primary/10 text-primary"
+                  ? "border-primary/40 bg-primary/10 text-primary-ink"
                   : "border-border text-muted-foreground hover:text-foreground"
               )}
             >
@@ -3305,7 +3308,7 @@ function ResultStep({
       {/* Top bar */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Analysis Result</h2>
+          <h1 className="text-xl font-bold text-foreground">Analysis Result</h1>
           <p className="text-base text-muted-foreground">{currentRun?.name ?? modelName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
@@ -3396,7 +3399,7 @@ function ResultStep({
                 onClick={() => setResultView(key)}
                 className={cn(
                   "relative flex items-center gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
-                  resultView === key ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  resultView === key ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="size-3.5" />
@@ -3826,7 +3829,7 @@ function HistoryTab({
   const HistoryHeader = (
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h2 className="text-xl font-bold text-foreground">Analysis History</h2>
+        <h1 className="text-xl font-bold text-foreground">Analysis History</h1>
       </div>
       <div className="flex flex-shrink-0 items-center gap-2 pt-1">
         <Button variant="ghost" size="sm" onClick={onBackToAnalysis} className="gap-1.5 text-base">
@@ -4033,7 +4036,7 @@ function HistoryTab({
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="ml-2 text-muted-foreground underline hover:text-primary"
+            className="ml-2 text-muted-foreground underline hover:text-primary-ink"
           >
             Clear all
           </button>
@@ -4088,13 +4091,13 @@ function HistoryTab({
                   className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                    <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
                       {a.id}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1.5">
-                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary">
+                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
                         {a.name}
                       </span>
                       <div className="flex flex-wrap items-center gap-1">

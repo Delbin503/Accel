@@ -411,7 +411,7 @@ export default function SiteOverviewPage({
       cell: (site) => (
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${site.name}`} className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
               <MoreHorizontal className="size-4" />
             </Button>
           </PopoverTrigger>

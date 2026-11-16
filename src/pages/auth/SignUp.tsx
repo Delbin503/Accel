@@ -98,7 +98,7 @@ const PLAN_ICONS: Record<CloudPlanId, React.ElementType> = {
 const PLAN_COLORS: Record<CloudPlanId, { bg: string; border: string; text: string }> = {
   "starter-cloud": { bg: "bg-info/10", border: "border-info/40", text: "text-info" },
   "standard-cloud": { bg: "bg-primary/10", border: "border-primary/40", text: "text-primary-ink" },
-  "professional-cloud": { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary" },
+  "professional-cloud": { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary-foreground" },
 };
 
 const COUNTRY_CODES: { code: string; name: string }[] = [

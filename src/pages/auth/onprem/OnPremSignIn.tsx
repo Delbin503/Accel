@@ -158,7 +158,7 @@ export default function OnPremSignInPage() {
               Activate license, configure the site, add members.
             </p>
           </div>
-          <span className="text-xl text-secondary">→</span>
+          <span className="text-xl text-secondary-foreground">→</span>
         </Link>
 
         <p data-slot="on-prem-sign-in-page-footer" className="mt-6 text-center font-mono text-2xs text-muted-foreground">

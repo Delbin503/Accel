@@ -32,7 +32,7 @@ function RestartButton({ onRestart }: { onRestart: () => void }) {
       data-slot="restart-flow-button"
       onClick={onRestart}
       title="Restart flow"
-      className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground opacity-40 shadow-floating transition-opacity h-auto hover:opacity-100 hover:text-foreground hover:bg-card dark:hover:bg-card"
+      className="fixed top-2 right-16 z-[var(--z-tooltip)] flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-floating transition-colors h-auto hover:text-foreground hover:bg-card dark:hover:bg-card"
     >
       <RotateCcw className="size-3.5" />
       Restart flow
@@ -44,10 +44,10 @@ function RestartButton({ onRestart }: { onRestart: () => void }) {
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div data-slot="auth-shell" className="min-h-screen w-full bg-background">
-      <div data-slot="auth-shell-toolbar" className="absolute right-4 top-4 z-10">
+      <header data-slot="auth-shell-toolbar" className="absolute right-4 top-4 z-10">
         <ThemeToggle />
-      </div>
-      {children}
+      </header>
+      <main data-slot="auth-shell-main">{children}</main>
     </div>
   );
 }

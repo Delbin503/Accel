@@ -25,7 +25,7 @@ const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
 
 const PLAN_COLORS: Record<PlanTier, { bg: string; border: string; text: string }> = {
   starter:       { bg: "bg-info/10",      border: "border-info/40",      text: "text-info" },
-  professional:  { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary" },
+  professional:  { bg: "bg-secondary/10", border: "border-secondary/40", text: "text-secondary-foreground" },
   enterprise:    { bg: "bg-success/10",   border: "border-success/40",   text: "text-success" },
 };
 

@@ -230,7 +230,10 @@ function MoreTagsPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/* A hover preview inside a clickable card, so it can't be a real <button>
+            (nested interactive). role="button" makes the popover's aria-expanded valid. */}
         <span
+          role="button"
           onMouseEnter={show}
           onMouseLeave={scheduleHide}
           onClick={(e) => {
