@@ -5,15 +5,15 @@
  */
 import * as React from "react";
 import { Layers, Search, Check } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { cn } from "@accel/ui/lib/utils";
 import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
 import { ASSIGNEES } from "@/mocks/incidentCases";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 export interface EscalateFormData {
   title: string;

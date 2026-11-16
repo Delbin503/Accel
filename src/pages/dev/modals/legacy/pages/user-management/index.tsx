@@ -5,17 +5,17 @@
  */
 import * as React from "react";
 import { Search, ChevronDown, Check, ShieldCheck, ShieldOff, Mail, MapPin, Trash2, Crown, CircleUser, AlertTriangle, RotateCcw, Calendar, Ban, Clock } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { DEFAULT_DIAL_CODE, splitPhone } from "@/lib/dialCodes";
-import { PhoneField } from "@/components/shared/PhoneField";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { cn } from "@accel/ui/lib/utils";
+import { DEFAULT_DIAL_CODE, splitPhone } from "@accel/ui/lib/dialCodes";
+import { PhoneField } from "@accel/ui/components/shared/PhoneField";
 import { USER_SITES, USER_ROLE_LABELS } from "@/mocks/users";
 import type { Suspension, UserData, UserRole } from "@/types/users";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ── Role badge ──────────────────────────────────────────────────────────── */
 

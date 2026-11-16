@@ -23,11 +23,10 @@ definitions:
           - npm run build                 # tsc -b + vite build
           - npm run typecheck:prototypes
           - npm test
-          # ESLint gates everything except run-analysis, which is still being
-          # reworked; once it lints clean, drop the --ignore-pattern and the
-          # second (report-only) line.
-          - npx eslint . --ignore-pattern "src/pages/run-analysis/**"
-          - npx eslint "src/pages/run-analysis/**" || true
+          # Full ESLint: React hooks / fast-refresh rules + design-system
+          # guardrails (pre-existing guardrail debt is baselined in
+          # eslint-suppressions.json; new violations fail).
+          - npx eslint .
     - step: &a11y
         name: Storybook build + accessibility (axe, light and dark)
         caches:

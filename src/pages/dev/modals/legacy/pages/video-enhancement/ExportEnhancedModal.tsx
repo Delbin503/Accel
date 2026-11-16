@@ -5,10 +5,10 @@
  */
 import * as React from "react";
 import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import { fmtSize, type DayRecording } from "@/mocks/dayRecordings";
 import { TypeChip } from "@/pages/video-enhancement/TypeChip";
 

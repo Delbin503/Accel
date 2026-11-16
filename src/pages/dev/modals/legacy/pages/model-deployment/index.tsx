@@ -4,8 +4,8 @@
  * Generated; do not edit. The live components are in src/pages/model-deployment/index.tsx.
  */
 import { Rocket, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
 import type { ModelData } from "@/types/modelManagement";
 import type { CameraData } from "@/types/cameras";
 import type { SiteSummary, AreaSummary } from "@/types/deployments";

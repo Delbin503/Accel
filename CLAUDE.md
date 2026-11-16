@@ -47,7 +47,7 @@ src/                         # the Accel app
 └── index.css        # imports @accel/ui/styles.css, adds app-only styles
 ```
 
-**Imports.** App code and prototypes import the design system from `@accel/ui`: deep paths (`@accel/ui/components/ui/button`, `@accel/ui/lib/utils`) or the barrel (`import { Button, KpiCard } from "@accel/ui"`). Inside `packages/ui`, use relative imports only — ESLint blocks `@/…` (app code) and `@accel/ui` self-imports there. The old `@/components/ui|shared|…` paths still resolve (compatibility aliases in `aliases.ts`) for files not yet moved over; don't use them in new code.
+**Imports.** App code and prototypes import the design system from `@accel/ui`: deep paths (`@accel/ui/components/ui/button`, `@accel/ui/lib/utils`) or the barrel (`import { Button, KpiCard } from "@accel/ui"`). Inside `packages/ui`, use relative imports only — ESLint blocks `@/…` (app code) and `@accel/ui` self-imports there. The old `@/components/ui|shared|…` paths no longer exist.
 
 ---
 

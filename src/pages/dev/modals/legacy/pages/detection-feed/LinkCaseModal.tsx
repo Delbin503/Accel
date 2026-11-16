@@ -5,10 +5,10 @@
  */
 import * as React from "react";
 import { FolderOpen, Check, MapPin, User, ArrowUpRight, Search } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { cn } from "@accel/ui/lib/utils";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
 import { CaseStatusBadge } from "@/pages/incident-cases";

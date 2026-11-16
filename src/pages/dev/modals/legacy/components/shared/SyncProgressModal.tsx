@@ -5,9 +5,9 @@
  */
 import * as React from "react";
 import { CheckCircle2, CircleDot, LoaderCircle, X } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
 
 /**
  * Canonical "device is syncing" progress modal. Replaces the two hand-rolled

@@ -5,15 +5,15 @@
  */
 import * as React from "react";
 import { Mail, MapPin, AlertTriangle, Crown, ShieldCheck, CircleUser, Lock as LockIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_SEATS } from "@/mocks/licenses";
 import { USER_ROLE_LABELS } from "@/mocks/users";
 import type { UserRole } from "@/types/users";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 type InviteRole = "admin" | "user";
 

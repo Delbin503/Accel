@@ -7,7 +7,7 @@ import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
 import { SystemStatusMenu } from "@/components/app/SystemStatusMenu";
 import { UserMenu } from "@/components/app/UserMenu";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@accel/ui/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
 import DashboardPage from "@/pages/dashboard";
 import { AcceptOwnershipModal, type OwnershipRequest } from "@/pages/user-management/AcceptOwnershipModal";

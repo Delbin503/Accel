@@ -4,10 +4,10 @@
  * Generated; do not edit. The live components are in src/pages/run-analysis/index.tsx.
  */
 import { CheckCircle2, Trash2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
 import { CoinIcon } from "@/components/app/CoinIcon";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 /** Human "8 Min 50 Sec" / "10 Min" / "45 Sec" for a duration in seconds. */
 function formatMinSec(sec: number): string {

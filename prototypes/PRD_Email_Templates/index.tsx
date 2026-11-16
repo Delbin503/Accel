@@ -9,8 +9,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { OwnershipLanding } from "./OwnershipLanding";
 import "./proto.css";

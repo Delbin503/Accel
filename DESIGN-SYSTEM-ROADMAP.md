@@ -16,7 +16,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 **Needs you:**
 1. **Renew the Bitbucket token**, then commit and push (push branch `design-updates-nov-6` on `sigmawaveai/vibe-coding-accel`). The first PR runs the new pipeline (checks + a11y).
-2. **Commit your run-analysis and email-template work.** That unblocks removing the deprecated aliases (a major-version change), the compatibility import aliases, and the last 4 ESLint errors.
+2. ~~Commit your run-analysis and email-template work~~ ✅ committed (`0f98bfc`); its lint errors and the compatibility import aliases are done (`3b3614a`). Removing the deprecated tokens/props (a major version) is now unblocked
 3. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` in Bitbucket for visual snapshots.
 4. Phase 7 decisions: is Figma the source of truth? When to adopt DTCG / Style Dictionary?
 
@@ -280,7 +280,7 @@ Steps:
     - Two stale-memo bugs fixed on the way: custom date ranges in Detection Feed (app + prototype) didn't re-filter after the first apply
     - One `eslint-disable` (with reason): `PasswordStrengthBar` re-exports `isStrongPassword` for the frozen legacy dev profile page
     - All 21 prototype pages load with no console errors; drawers/modals exercised headlessly (open A → B, reset on reopen, prefill)
-  - [ ] **run-analysis**: 4 ESLint errors in the uncommitted page (3 components created during render, 1 setState in an effect). Fix when committing it, then drop the `--ignore-pattern` from the pipeline
+  - [x] **run-analysis** lint errors fixed (2026-11-17) and the `--ignore-pattern` dropped: ESLint now runs on the whole repo with 0 problems and blocks PRs
   - [ ] `CameraFormModal` re-loads its form whenever its parent re-renders (`initial` is a new object each render) — pre-existing; key the reset on the camera id
 - [ ] `/design-system-ops:accessibility-per-component` for keyboard and screen-reader notes
 
@@ -302,7 +302,7 @@ Steps:
   - Tooling moved: token/slot/registry checks, ESLint scopes (one baseline key renamed, same count), Storybook globs, Vitest, tsconfigs, shadcn CLI (`components.json` → writes into the package)
   - Verified: both typechecks, lint, 14 tests, app build (package classes present in the CSS), Storybook build + a11y gate (216 × 2, 0 violations), all prototype pages render with unchanged content
 - [x] Prototypes and app consume `@accel/ui`. **Done-when check passed:** a fresh Vite + React app (outside the repo) installing the packed tarball (`npm pack`) imports `Button, KpiCard, KpiGrid, StatusBadge, DataTable, Stepper` from `"@accel/ui"` + `@import "@accel/ui/styles.css"`, builds, and renders correctly in dark and light (fonts must be loaded by the app — documented in `packages/ui/README.md`)
-  - [ ] Move the remaining 27 files off the compatibility aliases once run-analysis / email templates are committed, then delete those aliases
+  - [x] Remaining 27 files moved to `@accel/ui` imports and the compatibility aliases deleted (2026-11-17)
 - [x] Versioning (2026-11-16): semver policy for a design system in `packages/ui/README.md#versioning` (major = removed/renamed/changed default; minor = new or deprecated; patch = fixes keeping documented behaviour); `packages/ui/CHANGELOG.md` (Keep a Changelog) with 0.1.0 as the baseline and the current deprecations listed; `scripts/check-changelog.mjs` (`npm run lint:changelog`) runs on PRs — package changes need an Unreleased entry or a version bump (tested: fails without, passes with entry / bump / first release). Release steps in the README
 - [x] Theming guide (2026-11-16): `docs/theming.md` — override the 7-step brand ramp (`--palette-orange-*`) on `:root`, optionally `--font-sans` / `--radius`; contrast rules per ramp step; a teal example verified on the prototypes (buttons, nav, avatars, rings all switch; only logo artwork stays)
 

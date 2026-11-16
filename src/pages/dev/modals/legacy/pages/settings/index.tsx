@@ -6,9 +6,9 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
 
 /** Typed-confirmation gate — the owner's delete is irreversible and unrecoverable. */
 const DELETE_PHRASE = "DELETE";

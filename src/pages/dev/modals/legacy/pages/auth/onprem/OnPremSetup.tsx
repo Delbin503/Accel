@@ -5,11 +5,11 @@
  */
 import * as React from "react";
 import { Lock, AlertCircle, ShieldCheck, Mail, Crown, CircleUser, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_SEATS } from "@/mocks/licenses";
 import type { UserRole } from "@/types/users";
 

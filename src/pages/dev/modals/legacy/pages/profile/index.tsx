@@ -6,11 +6,11 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { PasswordStrengthBar, isStrongPassword } from "@accel/ui/components/shared/PasswordStrengthBar";
+import { cn } from "@accel/ui/lib/utils";
 
 export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [current, setCurrent] = React.useState("");

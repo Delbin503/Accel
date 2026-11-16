@@ -4,10 +4,10 @@
  * Generated; do not edit. The live components are in src/pages/recordings/index.tsx.
  */
 import { Download, Package, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/formatters";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
+import { formatDate } from "@accel/ui/lib/formatters";
 import { TONE_CLASSES, typeById, type RecordingTypeId } from "@/lib/recordingTypes";
 import { DAYS, fmtSize, type DayRecording } from "@/mocks/dayRecordings";
 

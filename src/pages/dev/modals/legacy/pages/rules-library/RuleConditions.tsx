@@ -5,12 +5,12 @@
  */
 import * as React from "react";
 import { ChevronDown, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { templateFor } from "@/lib/ruleTemplates";
 import { CONDITION_PARAM_META, EVENT_TEMPLATES, OBJECT_CLASSES, RULE_ZONES } from "@/mocks/ruleTemplates";
 import type { ConditionParamId, DurationUnit, RuleCondition } from "@/types/ruleTemplates";

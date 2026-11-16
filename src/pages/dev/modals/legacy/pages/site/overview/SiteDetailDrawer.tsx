@@ -5,13 +5,13 @@
  */
 import * as React from "react";
 import { Trash2, Check, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";

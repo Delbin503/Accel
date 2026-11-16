@@ -5,12 +5,12 @@
  */
 import * as React from "react";
 import { CircleDot, Maximize2, Pause, Play, RotateCcw, RotateCw, Video, Volume2, VolumeX, ZoomIn, ZoomOut } from "lucide-react";
-import { Modal, ModalContent } from "@/components/shared/Modal";
-import { DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent } from "@accel/ui/components/shared/Modal";
+import { DialogTitle } from "@accel/ui/components/ui/dialog";
+import { cn } from "@accel/ui/lib/utils";
 import { RECORDING_TYPES, TONE_CLASSES } from "@/lib/recordingTypes";
-import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "@/components/shared/PlaybackControls";
-import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "@/lib/playback";
+import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "@accel/ui/components/shared/PlaybackControls";
+import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "@accel/ui/lib/playback";
 import { periodsFor, type DayRecording } from "@/mocks/dayRecordings";
 
 /* The player is a pop-up now, not the first thing in the drawer — a camera-day

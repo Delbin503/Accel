@@ -5,10 +5,10 @@
  */
 import * as React from "react";
 import { CreditCard, Plus, Sparkles, Zap, Rocket, Check, AlertTriangle, RefreshCw, CalendarClock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import { PLANS, SEAT_PRICING, type Invoice, type PlanTier } from "@/mocks/licenses";
 
 /* ── Saved card type ──────────────────────────────────────────────────────── */

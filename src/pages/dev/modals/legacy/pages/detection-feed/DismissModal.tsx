@@ -5,10 +5,10 @@
  */
 import * as React from "react";
 import { Info, Layers } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { cn } from "@accel/ui/lib/utils";
 import type { DetectionEvent } from "@/types/detection";
 
 const FP_REASONS = [

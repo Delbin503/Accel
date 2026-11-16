@@ -5,17 +5,17 @@
  */
 import * as React from "react";
 import { Search, Check, Plus, AlertTriangle, HardDrive, Clock, Link2, Eye, EyeOff } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import type { CameraData } from "@/types/cameras";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ── Link NVR modal — pick an NVR + free channel at the camera's site ── */
 

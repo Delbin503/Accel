@@ -5,18 +5,18 @@
  */
 import * as React from "react";
 import { Search, ChevronDown, Check, X, Plus, AlertTriangle, Trash2, Video, Link2, Unlink, Download, Sparkles, CheckCircle2, Eye, EyeOff } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalSubheader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { storageBandFor } from "@/types/nvr";
 import type { NvrData, NvrStatus, StorageBand, NvrChannel } from "@/types/nvr";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
 

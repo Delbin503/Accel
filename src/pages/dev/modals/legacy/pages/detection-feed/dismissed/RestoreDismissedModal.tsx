@@ -1,6 +1,6 @@
 import { RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 import type { DismissedEvent } from "@/types/detection";
 
 /**

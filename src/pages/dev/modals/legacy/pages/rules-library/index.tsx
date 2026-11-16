@@ -4,8 +4,8 @@
  * Generated; do not edit. The live components are in src/pages/rules-library/index.tsx.
  */
 import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
 
 /* ── Delete modal ────────────────────────────────────────────────────────── */
 

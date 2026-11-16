@@ -5,13 +5,13 @@
  */
 import * as React from "react";
 import { Plus, Search, X, Trash2, UploadCloud, BookOpen, Layers, Check, LoaderCircle, FileCheck2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { Progress } from "@accel/ui/components/ui/progress";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import type { ModelStep } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity } from "@/types/rules";
 

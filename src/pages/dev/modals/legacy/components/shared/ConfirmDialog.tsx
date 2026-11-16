@@ -6,9 +6,9 @@
 import * as React from "react";
 import { LoaderCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
 
 /**
  * Canonical confirm / destructive-action modal. Replaces the 9 hand-rolled

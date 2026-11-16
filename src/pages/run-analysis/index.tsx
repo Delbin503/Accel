@@ -55,27 +55,27 @@ import {
   CreditCard,
   Minus,
 } from "lucide-react";
-import { formatDuration } from "@/lib/formatters";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { formatDuration } from "@accel/ui/lib/formatters";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+} from "@accel/ui/components/shared/Modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+} from "@accel/ui/components/ui/select";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 import { CoinIcon } from "@/components/app/CoinIcon";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import { MOCK_VLMS, MOCK_PAST_ANALYSES, buildFindings } from "@/mocks/runAnalysis";
@@ -352,7 +352,7 @@ function ModelChooserCard({
   disabled: boolean;
   onClick: () => void;
 }) {
-  const Icon = getIconComp(model.iconKey);
+  const Icon = ICON_MAP[model.iconKey] ?? Shield;
   return (
     <button
       onClick={onClick}
@@ -505,7 +505,7 @@ function ModelConfigurePanel({
   allRules: RuleData[];
   onNext: () => void;
 }) {
-  const Icon = getIconComp(model.iconKey);
+  const Icon = ICON_MAP[model.iconKey] ?? Shield;
   const sequence = model.sequenceIds
     .map((id) => model.steps.find((s) => s.id === id))
     .filter(Boolean) as ModelData["steps"];
@@ -808,7 +808,7 @@ function VideoUploader({
 
 function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: RuleData[] }) {
   const [open, setOpen] = React.useState(true);
-  const Icon = getIconComp(model.iconKey);
+  const Icon = ICON_MAP[model.iconKey] ?? Shield;
 
   const sequence = model.sequenceIds
     .map((id) => model.steps.find((s) => s.id === id))
@@ -1058,8 +1058,8 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
 
 /* ── Score cards ─────────────────────────────────────────────────────────── */
 
-import { KpiCard as SharedKpiCard, type KpiAccent } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { KpiCard as SharedKpiCard, type KpiAccent } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
 
 function ScoreHeroCard({ result, compact = false }: { result: AnalysisResult; compact?: boolean }) {
   const tone = result.status;
@@ -2606,12 +2606,15 @@ export function PurchaseRunsModal({
   const [cvc, setCvc] = React.useState("");
   const [cardErrors, setCardErrors] = React.useState<{ name?: string; number?: string; expiry?: string; cvc?: string }>({});
 
-  React.useEffect(() => {
+  // Reset the card form each time the modal opens (adjust state during render).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setCardErrors({});
       setCardForm(null);
     }
-  }, [open]);
+  }
 
   const customTokens = customMinutes * TOKENS_PER_MINUTE;
   const customPrice = Math.round(customTokens * CUSTOM_TOKEN_RATE * 100) / 100;
