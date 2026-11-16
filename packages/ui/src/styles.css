@@ -101,7 +101,6 @@
   --color-primary-ink:         var(--primary-ink);
   --color-primary-hover:       var(--primary-hover);
   --color-primary-active:      var(--primary-active);
-  --color-primary-muted:       var(--primary-muted);   /* DEPRECATED — use bg-primary/10 */
   --color-secondary:           var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted:               var(--muted);
@@ -120,25 +119,10 @@
   --color-severity-high:     var(--severity-high);
   --color-severity-medium:   var(--severity-medium);
   --color-severity-low:      var(--severity-low);
-  /* DEPRECATED sev-* — renamed to severity-*; kept for prototypes/ and in-flight work */
-  --color-sev-critical:      var(--sev-critical);
-  --color-sev-critical-soft: var(--sev-critical-soft);
-  --color-sev-high:          var(--sev-high);
-  --color-sev-high-soft:     var(--sev-high-soft);
-  --color-sev-medium:        var(--sev-medium);
-  --color-sev-medium-soft:   var(--sev-medium-soft);
-  --color-sev-low:           var(--sev-low);
-  --color-sev-low-soft:      var(--sev-low-soft);
   --color-success:           var(--success);
-  --color-success-soft:      var(--success-soft);   /* DEPRECATED — use bg-success/15 */
   --color-warning:           var(--warning);
-  --color-warning-soft:      var(--warning-soft);   /* DEPRECATED — use bg-warning/15 */
   --color-info:              var(--info);
-  --color-info-soft:         var(--info-soft);   /* DEPRECATED — use bg-info/15 */
   --color-violet:            var(--violet);   /* categorical tone: AI/model, vehicles, NVR, action-taken */
-  /* DEPRECATED — prototypes/ and in-flight work only; use bg-violet / bg-violet/15 */
-  --color-purple:            var(--purple);
-  --color-purple-soft:       var(--purple-soft);
 
   /* Chart palette */
   --color-chart-1: var(--chart-1);
@@ -292,28 +276,12 @@
   --severity-high:     var(--palette-tangerine-700);
   --severity-medium:   var(--warning);
   --severity-low:      var(--info);
-  /* DEPRECATED — renamed to severity-* */
-  --sev-critical:      var(--severity-critical);
-  --sev-high:          var(--severity-high);
-  --sev-medium:        var(--severity-medium);
-  --sev-low:           var(--severity-low);
 
   /* Tints — use opacity modifiers on the base token, from this scale:
        /5  hover wash on rows    /10 subtle fill (chips, selected rows)
        /15 status tint (badges)  /20–/30 tint borders
-     DEPRECATED: the *-soft, primary-muted and purple tokens below are kept only for
-     prototypes/ and in-flight work. Use bg-success/15, bg-primary/10 instead. */
-  --soft-alpha:        12%;
-  --primary-muted:     color-mix(in srgb, var(--primary) 8%, transparent);
-  --success-soft:      color-mix(in srgb, var(--success) var(--soft-alpha), transparent);
-  --warning-soft:      color-mix(in srgb, var(--warning) var(--soft-alpha), transparent);
-  --info-soft:         color-mix(in srgb, var(--info) var(--soft-alpha), transparent);
-  --purple:            var(--violet);       /* renamed → --violet */
-  --purple-soft:       color-mix(in srgb, var(--violet) var(--soft-alpha), transparent);
-  --sev-critical-soft: color-mix(in srgb, var(--severity-critical) var(--soft-alpha), transparent);
-  --sev-high-soft:     color-mix(in srgb, var(--severity-high) var(--soft-alpha), transparent);
-  --sev-medium-soft:   var(--warning-soft);
-  --sev-low-soft:      var(--info-soft);
+     (The old *-soft, primary-muted, purple and sev-* tokens were removed in
+     @accel/ui 1.0.0 — see packages/ui/CHANGELOG.md.) */
 
   /* Elevation — Tailwind utilities shadow-raised / shadow-floating / shadow-modal.
        raised  → cards, inputs, tabs, segmented controls (resting on the page)
@@ -383,9 +351,6 @@
   --severity-critical:      var(--palette-red-500);
   --severity-high:          var(--palette-tangerine-500);
 
-  /* Deprecated tints (see :root) */
-  --soft-alpha:             15%;
-  --primary-muted:          color-mix(in srgb, var(--primary) 12%, transparent);
 
   /* Elevation — black shadows vanish on dark surfaces; go deeper */
   --elevation-raised:  0 1px 2px 0 hsl(0 0% 0% / 0.40);

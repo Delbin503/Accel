@@ -432,59 +432,69 @@ export const Deprecated: Story = {
       title="Deprecated"
       description={
         <p>
-          Tokens marked <Code>DEPRECATED</Code> in <Code>src/index.css</Code>. They are kept only for{" "}
-          <Code>prototypes/</Code> and in-flight work, and ESLint rejects the old names in app code. The{" "}
-          {deprecatedBridge.length} matching <Code>@theme</Code> mappings (<Code>--color-sev-*</Code>…) go away with them.
+          Tokens marked <Code>DEPRECATED</Code> in <Code>styles.css</Code>: they keep working until the next major
+          version, and ESLint rejects the old names in app code.{" "}
+          {deprecatedBridge.length > 0 && <>Their {deprecatedBridge.length} <Code>@theme</Code> mappings go away with them.</>}
         </p>
       }
     >
-      <Section title={`${deprecated.length} deprecated tokens`}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <span className="sr-only">Swatch</span>
-              </TableHead>
-              <TableHead>Token</TableHead>
-              <TableHead>Old utility</TableHead>
-              <TableHead>Replace with</TableHead>
-              <TableHead>Source note</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {deprecated.map((t) => (
-              <TableRow key={t.name}>
-                <TableCell className="whitespace-normal">{t.isColor && <Swatch token={t.name} />}</TableCell>
-                <TableCell className="whitespace-normal">
-                  <code className="font-mono text-xs font-semibold text-foreground">{t.name}</code>
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  <span className="flex flex-wrap gap-1">
-                    {t.utilities.map((u) => (
-                      <Code key={u}>{u}</Code>
-                    ))}
-                  </span>
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  {t.replacement ? (
-                    <span className="flex flex-col items-start gap-1">
-                      <Code>{replacementUtility(t.replacement)}</Code>
-                      {t.replacement.startsWith("--") && (
-                        <code className="font-mono text-2xs text-muted-foreground">{t.replacement}</code>
-                      )}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Opacity modifier on the base token</span>
-                  )}
-                </TableCell>
-                <TableCell className="max-w-xs whitespace-normal">
-                  <span className="text-xs text-muted-foreground">{deprecationSentence(t.deprecationNote)}</span>
-                </TableCell>
+      {deprecated.length === 0 ? (
+        <Section title="Nothing deprecated">
+          <p className="text-sm text-muted-foreground">
+            No token is deprecated right now. The old <Code>sev-*</Code>, <Code>purple</Code>, <Code>*-soft</Code> and{" "}
+            <Code>primary-muted</Code> names were removed in @accel/ui 1.0.0 (see <Code>packages/ui/CHANGELOG.md</Code>);
+            ESLint still rejects them. When a token is marked <Code>DEPRECATED</Code> in <Code>styles.css</Code>, it shows up here.
+          </p>
+        </Section>
+      ) : (
+        <Section title={`${deprecated.length} deprecated tokens`}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <span className="sr-only">Swatch</span>
+                </TableHead>
+                <TableHead>Token</TableHead>
+                <TableHead>Old utility</TableHead>
+                <TableHead>Replace with</TableHead>
+                <TableHead>Source note</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Section>
+            </TableHeader>
+            <TableBody>
+              {deprecated.map((t) => (
+                <TableRow key={t.name}>
+                  <TableCell className="whitespace-normal">{t.isColor && <Swatch token={t.name} />}</TableCell>
+                  <TableCell className="whitespace-normal">
+                    <code className="font-mono text-xs font-semibold text-foreground">{t.name}</code>
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <span className="flex flex-wrap gap-1">
+                      {t.utilities.map((u) => (
+                        <Code key={u}>{u}</Code>
+                      ))}
+                    </span>
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    {t.replacement ? (
+                      <span className="flex flex-col items-start gap-1">
+                        <Code>{replacementUtility(t.replacement)}</Code>
+                        {t.replacement.startsWith("--") && (
+                          <code className="font-mono text-2xs text-muted-foreground">{t.replacement}</code>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Opacity modifier on the base token</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-xs whitespace-normal">
+                    <span className="text-xs text-muted-foreground">{deprecationSentence(t.deprecationNote)}</span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Section>
+      )}
     </Page>
   ),
 };

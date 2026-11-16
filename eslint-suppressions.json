@@ -1,7 +1,7 @@
 {
   "prototypes/PRD_Email_Templates/index.tsx": {
     "no-restricted-syntax": {
-      "count": 11
+      "count": 9
     }
   },
   "src/pages/auth/SignIn.tsx": {
@@ -41,12 +41,7 @@
   },
   "src/pages/run-analysis/index.tsx": {
     "no-restricted-syntax": {
-      "count": 154
-    }
-  },
-  "packages/ui/src/components/shared/KpiCard.tsx": {
-    "no-restricted-syntax": {
-      "count": 7
+      "count": 89
     }
   }
 }

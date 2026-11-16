@@ -115,7 +115,7 @@ function getIconComp(key: string) { return ICON_MAP[key] ?? Shield; }
 function StatusPill({ status }: { status: RunStatus }) {
   const map: Record<RunStatus, { bg: string; text: string; dot: string; label: string }> = {
     passed:  { bg: "bg-success/15 border-success/30",           text: "text-success",       dot: "bg-success",       label: "Passed" },
-    failed:  { bg: "bg-sev-critical/15 border-sev-critical/30", text: "text-sev-critical",  dot: "bg-sev-critical",  label: "Failed" },
+    failed:  { bg: "bg-severity-critical/15 border-severity-critical/30", text: "text-severity-critical",  dot: "bg-severity-critical",  label: "Failed" },
     warning: { bg: "bg-warning/15 border-warning/30",   text: "text-warning",   dot: "bg-warning",   label: "Warning" },
   };
   const s = map[status];
@@ -138,7 +138,7 @@ function StatusPill({ status }: { status: RunStatus }) {
 const RULE_SEV: Record<RuleSeverity, { bg: string; text: string; dot: string; label: string }> = {
   low:      { bg: "bg-info/15",         text: "text-info",         dot: "bg-info",         label: "Low" },
   medium:   { bg: "bg-warning/15",      text: "text-warning",      dot: "bg-warning",      label: "Medium" },
-  critical: { bg: "bg-sev-critical/15", text: "text-sev-critical", dot: "bg-sev-critical", label: "Critical" },
+  critical: { bg: "bg-severity-critical/15", text: "text-severity-critical", dot: "bg-severity-critical", label: "Critical" },
 };
 
 function RuleSeverityBadge({ severity }: { severity: RuleSeverity }) {
@@ -161,7 +161,7 @@ function TagChip({ label, tone = "default" }: { label: string; tone?: "default" 
   const map = {
     default: "border-border bg-muted text-muted-foreground",
     passed:  "border-success/30 bg-success/10 text-success",
-    failed:  "border-sev-critical/30 bg-sev-critical/10 text-sev-critical",
+    failed:  "border-severity-critical/30 bg-severity-critical/10 text-severity-critical",
     warning: "border-warning/30 bg-warning/10 text-warning",
     tested:  "border-info/30 bg-info/10 text-info",
   };
@@ -471,7 +471,7 @@ function SelectedModelsPanel({
               <button
                 onClick={() => onRemove(m.id)}
                 title="Remove from run"
-                className="flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-sev-critical/10 hover:text-sev-critical"
+                className="flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-severity-critical/10 hover:text-severity-critical"
               >
                 <X className="size-3.5" />
               </button>
@@ -735,7 +735,7 @@ function VideoUploader({
           <div className="absolute left-3 top-3">
             <button
               onClick={onClear}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-sev-critical/40 bg-sev-critical/15 px-2.5 py-1 text-xs font-semibold text-sev-critical transition-colors hover:bg-sev-critical/25"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-severity-critical/40 bg-severity-critical/15 px-2.5 py-1 text-xs font-semibold text-severity-critical transition-colors hover:bg-severity-critical/25"
             >
               <Trash2 className="size-3" />
               Delete
@@ -783,7 +783,7 @@ function VideoUploader({
       onDrop={onDrop}
       className={cn(
         "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40",
-        invalid && "border-sev-critical"
+        invalid && "border-severity-critical"
       )}
     >
       <UploadCloud className="size-9 text-muted-foreground/50" />
@@ -927,7 +927,7 @@ function SelectedModelCard({ model, allRules }: { model: ModelData; allRules: Ru
 const LOG_DOT: Record<LogEventLevel, string> = {
   info:    "border-info",
   passed:  "border-success",
-  failed:  "border-sev-critical",
+  failed:  "border-severity-critical",
   warning: "border-warning",
 };
 
@@ -952,7 +952,7 @@ function LogRow({ entry, isLast }: { entry: ActivityLogEntry; isLast: boolean })
         <p
           className={cn(
             "text-base font-semibold leading-snug",
-            isFailed ? "text-sev-critical" : "text-foreground"
+            isFailed ? "text-severity-critical" : "text-foreground"
           )}
         >
           {entry.title}
@@ -975,7 +975,7 @@ function StepResultRow({ step, idx }: { step: StepResult; idx: number }) {
         "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
         passed
           ? "border-success/30 bg-success/[0.07]"
-          : "border-sev-critical/40 bg-sev-critical/[0.08]"
+          : "border-severity-critical/40 bg-severity-critical/[0.08]"
       )}
     >
       <span className="flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-2xs font-bold text-primary">
@@ -990,7 +990,7 @@ function StepResultRow({ step, idx }: { step: StepResult; idx: number }) {
           "rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
           passed
             ? "border-success/30 bg-success/15 text-success"
-            : "border-sev-critical/30 bg-sev-critical/15 text-sev-critical"
+            : "border-severity-critical/30 bg-severity-critical/15 text-severity-critical"
         )}
       >
         {passed ? "Passed" : "Failed"}
@@ -1013,7 +1013,7 @@ function FinalResultRow({ entry }: { entry: FinalResultEntry }) {
           "rounded-full border px-2 py-0.5 text-3xs font-bold uppercase tracking-wider",
           passed
             ? "border-success/30 bg-success/15 text-success"
-            : "border-sev-critical/30 bg-sev-critical/15 text-sev-critical"
+            : "border-severity-critical/30 bg-severity-critical/15 text-severity-critical"
         )}
       >
         {passed ? "Passed" : "Failed"}
@@ -1029,7 +1029,7 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
   const tone = {
     high:   "border-success/30 bg-success/10 text-success",
     medium: "border-warning/30 bg-warning/10 text-warning",
-    low:    "border-sev-critical/30 bg-sev-critical/10 text-sev-critical",
+    low:    "border-severity-critical/30 bg-severity-critical/10 text-severity-critical",
   }[rule.confidence];
 
   return (
@@ -1058,32 +1058,32 @@ function TriggeredRuleRow({ rule }: { rule: TriggeredRuleSummary }) {
 
 /* ── Score cards ─────────────────────────────────────────────────────────── */
 
-import { KpiCard as SharedKpiCard, type KpiAccent } from "@accel/ui/components/shared/KpiCard";
+import { KpiCard as SharedKpiCard, type KpiTone } from "@accel/ui/components/shared/KpiCard";
 import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
 
 function ScoreHeroCard({ result, compact = false }: { result: AnalysisResult; compact?: boolean }) {
   const tone = result.status;
-  const accent: KpiAccent =
+  const kpiTone: KpiTone =
     tone === "passed" ? "success" :
-    tone === "failed" ? "sev-critical" :
+    tone === "failed" ? "severity-critical" :
     "warning";
   // Status moves into the SUB row (sentence-cased label) so the LABEL row stays uncluttered.
   const statusLabel = tone === "passed" ? "Passed" : tone === "failed" ? "Failed" : "Warning";
   return (
     <SharedKpiCard
       compact={compact}
-      accent={accent}
+      tone={kpiTone}
       label="Score"
       value={`${result.score}%`}
       sub={
         <span className={cn("inline-flex items-center gap-1.5 font-semibold",
           tone === "passed" ? "text-success" :
-          tone === "failed" ? "text-sev-critical" :
+          tone === "failed" ? "text-severity-critical" :
           "text-warning"
         )}>
           <span className={cn("size-1.5 rounded-full",
             tone === "passed" ? "bg-success" :
-            tone === "failed" ? "bg-sev-critical" :
+            tone === "failed" ? "bg-severity-critical" :
             "bg-warning"
           )} />
           {statusLabel}
@@ -1094,8 +1094,8 @@ function ScoreHeroCard({ result, compact = false }: { result: AnalysisResult; co
 }
 
 function MiniScoreCard({ label, value, tone, sub, compact = false }: { label: string; value: string; tone: "success" | "warning"; sub?: React.ReactNode; compact?: boolean }) {
-  const accent: KpiAccent = tone === "success" ? "success" : "warning";
-  return <SharedKpiCard compact={compact} accent={accent} label={label} value={value} sub={sub} />;
+  const kpiTone: KpiTone = tone === "success" ? "success" : "warning";
+  return <SharedKpiCard compact={compact} tone={kpiTone} label={label} value={value} sub={sub} />;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -1481,10 +1481,10 @@ function AnalysisFailedScreen({
 
       <Stepper current="result" />
 
-      <div className="overflow-hidden rounded-xl border border-sev-critical/30 bg-card">
-        <div className="flex items-start gap-3 border-b border-sev-critical/25 bg-sev-critical/[0.06] px-5 py-4">
-          <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-sev-critical/15">
-            <XCircle className="size-5 text-sev-critical" />
+      <div className="overflow-hidden rounded-xl border border-severity-critical/30 bg-card">
+        <div className="flex items-start gap-3 border-b border-severity-critical/25 bg-severity-critical/[0.06] px-5 py-4">
+          <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-severity-critical/15">
+            <XCircle className="size-5 text-severity-critical" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-base font-bold text-foreground">Analysis run failed</p>
@@ -1492,7 +1492,7 @@ function AnalysisFailedScreen({
               The pipeline did not complete. No results have been generated.
             </p>
           </div>
-          <span className="mt-1 flex-shrink-0 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
+          <span className="mt-1 flex-shrink-0 rounded border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-severity-critical">
             {failure.code}
           </span>
         </div>
@@ -1948,8 +1948,8 @@ function ModelListEmptyCTA() {
 
 function ContentError({ onRetry }: { onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] py-20 text-muted-foreground">
-      <AlertTriangle className="size-8 text-sev-critical" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] py-20 text-muted-foreground">
+      <AlertTriangle className="size-8 text-severity-critical" />
       <p className="text-sm text-foreground">Couldn't load analysis history.</p>
       {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>}
     </div>
@@ -2023,7 +2023,7 @@ function RunQuotaButton({
       className={cn(
         "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
         depleted
-          ? "border-sev-critical/40 bg-sev-critical/10 text-sev-critical hover:bg-sev-critical/15"
+          ? "border-severity-critical/40 bg-severity-critical/10 text-severity-critical hover:bg-severity-critical/15"
           : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
         className
       )}
@@ -2373,7 +2373,7 @@ function UploadStep({
                   className="h-10 text-base"
                   aria-invalid={!!errors.name}
                 />
-                {errors.name && <p className="mt-1 text-xs text-sev-critical">{errors.name}</p>}
+                {errors.name && <p className="mt-1 text-xs text-severity-critical">{errors.name}</p>}
               </div>
 
               <div>
@@ -2389,7 +2389,7 @@ function UploadStep({
                   onClear={() => setUploadedFile(null)}
                   invalid={!!errors.file}
                 />
-                {errors.file && <p className="mt-1 text-xs text-sev-critical">{errors.file}</p>}
+                {errors.file && <p className="mt-1 text-xs text-severity-critical">{errors.file}</p>}
               </div>
             </div>
           </div>
@@ -2402,7 +2402,7 @@ function UploadStep({
             <div
               className={cn(
                 "overflow-hidden rounded-xl border border-border bg-card",
-                errors.vlm && "border-sev-critical"
+                errors.vlm && "border-severity-critical"
               )}
             >
               <div className="border-b border-border bg-muted/20 px-4 py-3">
@@ -2428,7 +2428,7 @@ function UploadStep({
                 ))}
               </div>
             </div>
-            {errors.vlm && <p className="mt-1 text-xs text-sev-critical">{errors.vlm}</p>}
+            {errors.vlm && <p className="mt-1 text-xs text-severity-critical">{errors.vlm}</p>}
           </div>
 
           {/* ── Column 3: selected model(s) ── */}
@@ -2850,7 +2850,7 @@ export function PurchaseRunsModal({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeCard(pm.id); }}
-                        className="text-sm font-medium text-sev-critical hover:underline"
+                        className="text-sm font-medium text-severity-critical hover:underline"
                       >
                         Remove
                       </button>
@@ -2868,7 +2868,7 @@ export function PurchaseRunsModal({
                     <div className="col-span-2">
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name on Card</label>
                       <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Delbin Arkar" aria-invalid={!!cardErrors.name} />
-                      {cardErrors.name && <p className="mt-1 text-xs text-sev-critical">{cardErrors.name}</p>}
+                      {cardErrors.name && <p className="mt-1 text-xs text-severity-critical">{cardErrors.name}</p>}
                     </div>
                     <div className="col-span-2">
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Number</label>
@@ -2879,7 +2879,7 @@ export function PurchaseRunsModal({
                         className="font-mono"
                         aria-invalid={!!cardErrors.number}
                       />
-                      {cardErrors.number && <p className="mt-1 text-xs text-sev-critical">{cardErrors.number}</p>}
+                      {cardErrors.number && <p className="mt-1 text-xs text-severity-critical">{cardErrors.number}</p>}
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</label>
@@ -2893,7 +2893,7 @@ export function PurchaseRunsModal({
                         className="font-mono"
                         aria-invalid={!!cardErrors.expiry}
                       />
-                      {cardErrors.expiry && <p className="mt-1 text-xs text-sev-critical">{cardErrors.expiry}</p>}
+                      {cardErrors.expiry && <p className="mt-1 text-xs text-severity-critical">{cardErrors.expiry}</p>}
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">CVC</label>
@@ -2904,7 +2904,7 @@ export function PurchaseRunsModal({
                         className="font-mono"
                         aria-invalid={!!cardErrors.cvc}
                       />
-                      {cardErrors.cvc && <p className="mt-1 text-xs text-sev-critical">{cardErrors.cvc}</p>}
+                      {cardErrors.cvc && <p className="mt-1 text-xs text-severity-critical">{cardErrors.cvc}</p>}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -2964,19 +2964,19 @@ function VerdictBadge({
         "flex items-center gap-2 rounded-lg border px-3 py-1.5",
         isApproved
           ? "border-success/40 bg-success/10"
-          : "border-sev-critical/40 bg-sev-critical/10"
+          : "border-severity-critical/40 bg-severity-critical/10"
       )}
     >
       {isApproved ? (
         <CheckCircle2 className="size-4 text-success" />
       ) : (
-        <XCircle className="size-4 text-sev-critical" />
+        <XCircle className="size-4 text-severity-critical" />
       )}
       <div className="leading-tight">
         <p
           className={cn(
             "text-sm font-bold",
-            isApproved ? "text-success" : "text-sev-critical"
+            isApproved ? "text-success" : "text-severity-critical"
           )}
         >
           {isApproved ? "Approved for Deployment" : "Rejected — Needs Improvement"}
@@ -3038,7 +3038,7 @@ function RunMetadataBar({
 const ROLLUP_STYLES: Record<RunRollupStatus, { label: string; text: string; bg: string; border: string; bar: string }> = {
   passed: { label: "All checks passed", text: "text-success",      bg: "bg-success/[0.06]",      border: "border-success/30",      bar: "bg-success" },
   mixed:  { label: "Mixed result",      text: "text-warning",      bg: "bg-warning/[0.06]",      border: "border-warning/30",      bar: "bg-warning" },
-  failed: { label: "Checks failed",     text: "text-sev-critical", bg: "bg-sev-critical/[0.06]", border: "border-sev-critical/30", bar: "bg-sev-critical" },
+  failed: { label: "Checks failed",     text: "text-severity-critical", bg: "bg-severity-critical/[0.06]", border: "border-severity-critical/30", bar: "bg-severity-critical" },
 };
 
 /** Per-model colour for the segmented bar and the model chips. */
@@ -3046,7 +3046,7 @@ function modelTone(mr: ModelRun) {
   if (mr.runState === "failed") return { bar: "bg-muted-foreground/40", text: "text-muted-foreground", dot: "bg-muted-foreground/60" };
   if (mr.status === "passed")   return { bar: "bg-success",             text: "text-success",          dot: "bg-success" };
   if (mr.status === "warning")  return { bar: "bg-warning",             text: "text-warning",          dot: "bg-warning" };
-  return { bar: "bg-sev-critical", text: "text-sev-critical", dot: "bg-sev-critical" };
+  return { bar: "bg-severity-critical", text: "text-severity-critical", dot: "bg-severity-critical" };
 }
 
 /**
@@ -3117,7 +3117,7 @@ function UnifiedFindingRow({ finding }: { finding: UnifiedFinding }) {
   return (
     <div className="flex items-start gap-3 px-4 py-2.5">
       {failed ? (
-        <XCircle className="mt-0.5 size-3.5 flex-shrink-0 text-sev-critical" />
+        <XCircle className="mt-0.5 size-3.5 flex-shrink-0 text-severity-critical" />
       ) : (
         <CheckCircle2 className="mt-0.5 size-3.5 flex-shrink-0 text-success" />
       )}
@@ -3155,7 +3155,7 @@ function AllFindingsPanel({ modelRuns }: { modelRuns: ModelRun[] }) {
           <p className="text-base font-bold text-foreground">All findings</p>
           <p className="text-xs text-muted-foreground">
             {all.length} result{all.length === 1 ? "" : "s"} across {modelRuns.length} model{modelRuns.length === 1 ? "" : "s"}
-            {failedTotal > 0 && <> · <span className="text-sev-critical">{failedTotal} failed</span></>}
+            {failedTotal > 0 && <> · <span className="text-severity-critical">{failedTotal} failed</span></>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -3325,7 +3325,7 @@ function ResultStep({
                 variant="outline"
                 size="sm"
                 onClick={() => onSetVerdict("rejected")}
-                className="gap-1.5 border-sev-critical/40 text-sev-critical hover:bg-sev-critical/10 hover:text-sev-critical"
+                className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
               >
                 <XCircle className="size-3.5" />
                 Reject
@@ -3585,19 +3585,19 @@ function VLMReasoningPanel({
   onToggle: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-purple/30 bg-card">
+    <div className="overflow-hidden rounded-xl border border-violet/30 bg-card">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-purple-soft"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-violet-soft"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="size-3.5 text-purple" />
+          <Sparkles className="size-3.5 text-violet" />
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             VLM Reasoning
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded border border-purple/40 bg-purple-soft px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-purple">
+          <span className="rounded border border-violet/40 bg-violet-soft px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-violet">
             AI-Generated · {clipSeconds}s Clip
           </span>
           <ChevronUp
@@ -3609,8 +3609,8 @@ function VLMReasoningPanel({
         </div>
       </button>
       {open && (
-        <div className="border-t border-purple/20 px-4 py-3">
-          <div className="rounded-lg border border-purple/20 bg-purple-soft p-4">
+        <div className="border-t border-violet/20 px-4 py-3">
+          <div className="rounded-lg border border-violet/20 bg-violet-soft p-4">
             <p className="text-base leading-relaxed text-muted-foreground">
               {reasoning}
             </p>
@@ -3640,49 +3640,49 @@ const HISTORY_KPI_CONFIGS: {
   key: HistoryKpiFilter;
   label: string;
   sub: string;
-  accent: KpiAccent;
+  tone: KpiTone;
   getValue: (items: PastAnalysis[]) => number;
 }[] = [
   {
     key: "all",
     label: "Total Analyses",
     sub: "All recorded runs",
-    accent: "primary",
+    tone: "primary",
     getValue: (items) => items.length,
   },
   {
     key: "passed",
     label: "Passed",
     sub: "Model met the bar",
-    accent: "success",
+    tone: "success",
     getValue: (items) => items.filter((a) => a.status === "passed").length,
   },
   {
     key: "failed",
     label: "Failed",
     sub: "Model below threshold",
-    accent: "sev-critical",
+    tone: "severity-critical",
     getValue: (items) => items.filter((a) => a.status === "failed").length,
   },
   {
     key: "approved",
     label: "Approved",
     sub: "Cleared for deployment",
-    accent: "info",
+    tone: "info",
     getValue: (items) => items.filter((a) => a.verdict === "approved").length,
   },
   {
     key: "rejected",
     label: "Rejected",
     sub: "Needs improvement",
-    accent: "purple",
+    tone: "violet",
     getValue: (items) => items.filter((a) => a.verdict === "rejected").length,
   },
   {
     key: "pipeline-error",
     label: "Script Errors",
     sub: "Run failed mid-flow",
-    accent: "warning",
+    tone: "warning",
     getValue: (items) => items.filter((a) => a.runState === "failed").length,
   },
 ];
@@ -3703,7 +3703,7 @@ function HistoryKpiCard({
       label={config.label}
       value={config.getValue(items)}
       sub={config.sub}
-      accent={config.accent}
+      tone={config.tone}
       active={active}
       onClick={onClick}
     />
@@ -3820,7 +3820,7 @@ function HistoryTab({
   function getScoreTone(score: number) {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
-    return "text-sev-critical";
+    return "text-severity-critical";
   }
 
   const HistoryHeader = (
@@ -4099,7 +4099,7 @@ function HistoryTab({
                       </span>
                       <div className="flex flex-wrap items-center gap-1">
                         {a.runState === "failed" && (
-                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-sev-critical">
+                          <span className="inline-flex items-center gap-1 rounded border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-severity-critical">
                             <AlertTriangle className="size-2.5" />
                             Script Error
                           </span>
@@ -4111,7 +4111,7 @@ function HistoryTab({
                           </span>
                         )}
                         {a.verdict === "rejected" && (
-                          <span className="inline-flex items-center gap-1 rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-sev-critical">
+                          <span className="inline-flex items-center gap-1 rounded border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-severity-critical">
                             <XCircle className="size-2.5" />
                             Rejected
                           </span>
@@ -4162,7 +4162,7 @@ function HistoryTab({
                         <div className="my-1 border-t border-border" />
                         <button
                           onClick={() => setPendingDeleteId(a.id)}
-                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-sev-critical hover:bg-sev-critical/10"
+                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10"
                         >
                           <Trash2 className="size-3.5" />
                           Delete
@@ -4325,12 +4325,12 @@ export function HistoryDetailDrawer({
             <div className="space-y-4">
               {/* Verdict badge / Pipeline error chip */}
               {analysis.runState === "failed" && analysis.failure && (
-                <div className="flex items-start gap-3 rounded-xl border border-sev-critical/30 bg-sev-critical/[0.05] px-4 py-3">
-                  <XCircle className="size-5 flex-shrink-0 text-sev-critical" />
+                <div className="flex items-start gap-3 rounded-xl border border-severity-critical/30 bg-severity-critical/[0.05] px-4 py-3">
+                  <XCircle className="size-5 flex-shrink-0 text-severity-critical" />
                   <div className="flex-1">
                     <div className="mb-0.5 flex items-center justify-between">
-                      <p className="text-base font-semibold text-sev-critical">Pipeline failure</p>
-                      <span className="rounded border border-sev-critical/30 bg-sev-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-sev-critical">
+                      <p className="text-base font-semibold text-severity-critical">Pipeline failure</p>
+                      <span className="rounded border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-px font-mono text-2xs font-bold uppercase tracking-wider text-severity-critical">
                         {analysis.failure.code}
                       </span>
                     </div>

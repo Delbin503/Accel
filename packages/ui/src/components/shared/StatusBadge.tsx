@@ -15,7 +15,6 @@ const DOT_TONE: Record<NonNullable<VariantProps<typeof statusBadgeVariants>["ton
   warning: "bg-warning",
   info: "bg-info",
   violet: "bg-violet",
-  purple: "bg-violet",
   primary: "bg-primary",
   neutral: "bg-muted-foreground",
 };

@@ -457,7 +457,7 @@ function applyPreviewScheme(html: string, scheme: "light" | "dark"): string {
 const CATEGORIES = [...new Set(TEMPLATES.map((t) => t.category))];
 
 const PRIORITY_STYLES: Record<Template["priority"], string> = {
-  P1: "bg-sev-critical/15 text-sev-critical",
+  P1: "bg-severity-critical/15 text-severity-critical",
   P2: "bg-warning/15 text-warning",
   P3: "bg-muted text-muted-foreground",
 };
@@ -721,7 +721,7 @@ function App() {
                   onClick={() => setId(attachment.templateId)}
                   className="mt-2.5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-left transition-colors hover:border-primary/50"
                 >
-                  <span className="flex h-7 w-6 items-center justify-center rounded-sm bg-sev-critical text-3xs font-bold text-primary-foreground">
+                  <span className="flex h-7 w-6 items-center justify-center rounded-sm bg-severity-critical text-3xs font-bold text-primary-foreground">
                     PDF
                   </span>
                   <span className="flex flex-col">

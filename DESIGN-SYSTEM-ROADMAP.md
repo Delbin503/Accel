@@ -106,7 +106,7 @@ ESLint still reports **226 problems that predate this work** (mostly React-hooks
   - Bug fixed: "Most popular" badge in onboarding was white on light grey (invisible in light mode)
   - Remaining 124: 114 in `run-analysis/index.tsx` (WIP), 7 `KpiCard` deprecated aliases, 3 auth logo glows (coloured `shadow-secondary`, accepted exception)
 - [x] **Tier-3 audit items:** `--radius-xs` defined; `src/App.css` deleted; `bg-camera-feed` routed through `--camera-feed-from/to` → palette. *Spacing role tokens moved to Phase 3*: components don't follow one rhythm yet (SectionCard alone mixes px-4/px-5 and four py values), so they get named when component APIs are unified
-- [ ] **Remove deprecated aliases.** ⏸ *Blocked on:* (a) your run-analysis work being committed, and (b) Phase 2B migrating the prototypes. Then delete every `DEPRECATED` / `@deprecated` line (`purple`, `sev-*`, `*-soft`, `primary-muted`, KpiCard/StatusBadge aliases) and run `npm run lint:prune`
+- [x] **Removed deprecated names (2026-11-17, @accel/ui 1.0.0):** 29 tokens (`sev-*`, `purple`, `*-soft`, `primary-muted`, `--soft-alpha`), KpiCard `accent` / `KpiAccent`, `"purple"` / `"sev-*"` tones; last callers (run-analysis, email templates) migrated; lint baseline pruned 184 → 110. ESLint keeps rejecting the old names
 - [x] Re-check: `npm run lint:tokens` passes (223 tokens, 40 primitives); contrast matrix shows 0 AA failures; typecheck and production build pass
 
 **Done when:** theme-audit shows no AA failures in either theme; lint baseline from Phase 1 is zero; `grep -r DEPRECATED src/index.css` returns nothing.

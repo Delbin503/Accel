@@ -37,16 +37,7 @@ export type KpiTone =
   | "info"
   | "secondary"
   | "violet"
-  /** @deprecated Renamed to "violet" — kept for prototypes and in-flight pages. */
-  | "purple"
-  /** @deprecated Renamed to "severity-*" — kept for prototypes and in-flight pages. */
-  | "sev-critical"
-  | "sev-medium"
-  | "sev-low"
   | "muted";
-
-/** @deprecated Renamed to `KpiTone`. */
-export type KpiAccent = KpiTone;
 
 const ACCENT_DOT: Record<KpiTone, string> = {
   primary:        "bg-primary",
@@ -58,10 +49,6 @@ const ACCENT_DOT: Record<KpiTone, string> = {
   info:           "bg-info",
   secondary:      "bg-secondary",
   violet:         "bg-violet",
-  purple:         "bg-violet",
-  "sev-critical": "bg-severity-critical",
-  "sev-medium":   "bg-severity-medium",
-  "sev-low":      "bg-severity-low",
   muted:          "bg-muted-foreground/40",
 };
 
@@ -97,8 +84,6 @@ export interface KpiCardProps {
   icon?: React.ElementType;
   /** Semantic colour of the dot beside the label. Defaults to "primary". */
   tone?: KpiTone;
-  /** @deprecated Renamed to `tone` — kept for prototypes and in-flight pages. */
-  accent?: KpiTone;
   /** Click handler. When provided, the card is rendered as a button with hover state. */
   onClick?: () => void;
   /** Active filter state — shows the "Active" chip and primary border. */
@@ -117,7 +102,6 @@ export function KpiCard({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   icon: _Icon,
   tone,
-  accent,
   onClick,
   active = false,
   compact = false,
@@ -145,7 +129,7 @@ export function KpiCard({
     >
       {/* Label row — the accent dot replaces the old coloured top stroke */}
       <div data-slot="kpi-card-header" className="flex min-w-0 items-center gap-2">
-        <span data-slot="kpi-card-accent" className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[tone ?? accent ?? "primary"])} />
+        <span data-slot="kpi-card-accent" className={cn("size-1.5 shrink-0 rounded-full", ACCENT_DOT[tone ?? "primary"])} />
         <TruncatedText data-slot="kpi-card-label" className={cn("min-w-0 flex-1 font-medium text-muted-foreground", compact ? "text-sm" : "text-base")}>
           {label}
         </TruncatedText>

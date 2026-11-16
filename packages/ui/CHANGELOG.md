@@ -6,6 +6,19 @@ Every pull request that changes `packages/ui/` adds a line under **Unreleased** 
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-11-17
+
+First stable version. Removes everything 0.1.0 deprecated.
+
+### Removed (breaking)
+- **Tokens and their utilities:** `sev-critical|high|medium|low` (and `*-soft`) → `severity-*`; `purple` / `purple-soft` → `violet`; `success-soft`, `warning-soft`, `info-soft` → `bg-{tone}/15`; `primary-muted` → `bg-primary/10`; the internal `--soft-alpha`. 29 tokens in all (223 → 194).
+- **KpiCard:** the `accent` prop (use `tone`) and the `KpiAccent` type (use `KpiTone`).
+- **Tone values** `"purple"` and `"sev-critical" | "sev-medium" | "sev-low"` on KpiCard and StatusBadge → `"violet"`, `"severity-*"`.
+- **App import paths** `@/components/ui|shared|charts|custom|layout` and `@/lib/utils|formatters|…` → `@accel/ui/…` (the compatibility aliases are gone).
+
+### Migrating
+Find and replace in class strings: `-sev-` → `-severity-`, `-purple` → `-violet`, `bg-X-soft` → `bg-X/15`, `bg-primary-muted` → `bg-primary/10`; in KpiCard props, `accent=` → `tone=`. ESLint still flags the old names, so `npm run lint` lists anything missed.
+
 ## [0.1.0] — 2026-11-16
 
 First version as a package. Everything below existed in the app before and was extracted to `packages/ui` unchanged in behaviour.

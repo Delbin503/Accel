@@ -6,7 +6,7 @@ const meta: Meta<typeof KpiCard> = {
   component: KpiCard,
   tags: ["autodocs"],
   argTypes: {
-    accent: {
+    tone: {
       control: "select",
       options: [
         "primary",
@@ -32,7 +32,7 @@ export const Default: Story = {
     label: "Total Alerts",
     value: 142,
     sub: "Across all sites",
-    accent: "primary",
+    tone: "primary",
   },
 };
 
@@ -75,7 +75,7 @@ export const ActiveFilter: Story = {
     label: "Critical Alerts",
     value: 3,
     sub: "Click to clear filter",
-    accent: "severity-critical",
+    tone: "severity-critical",
     active: true,
     onClick: () => {},
   },
