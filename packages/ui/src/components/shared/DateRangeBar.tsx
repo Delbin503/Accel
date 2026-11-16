@@ -122,6 +122,7 @@ export function DateRangeBar({
             data-slot="date-range-bar-preset"
             key={p.key}
             type="button"
+            aria-pressed={isActive}
             onClick={() => onSelect(p.key)}
             className={cn(PILL_BASE, isActive ? PILL_ACTIVE : PILL_INACTIVE)}
           >

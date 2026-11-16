@@ -349,7 +349,7 @@ function ActivityText({ text }: { text: string }) {
     const start = m.index ?? 0;
     if (start > last) parts.push(text.slice(last, start));
     parts.push(
-      <span key={`${start}-${m[0]}`} className="rounded bg-secondary/10 px-1 py-px font-mono text-2xs font-semibold text-secondary">
+      <span key={`${start}-${m[0]}`} className="rounded bg-secondary px-1 py-px font-mono text-2xs font-semibold text-secondary-foreground">
         {m[0]}
       </span>
     );

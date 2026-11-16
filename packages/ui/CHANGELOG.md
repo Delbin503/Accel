@@ -6,6 +6,10 @@ Every pull request that changes `packages/ui/` adds a line under **Unreleased** 
 
 ## [Unreleased]
 
+### Fixed
+- DateRangeBar preset pills and FilterDropdown options expose their selected state to screen readers (`aria-pressed`).
+- Dialog and Sheet (so Modal, ConfirmDialog, DetailDrawer) return keyboard focus to whatever opened them when they close. Before, focus fell to the page body unless they were opened from a `DialogTrigger`.
+
 ## [1.0.0] — 2026-11-17
 
 First stable version. Removes everything 0.1.0 deprecated.

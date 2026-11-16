@@ -398,7 +398,8 @@ export function AppSidebar({
 } = {}) {
   return (
     <>
-    <Sidebar collapsible="icon">
+    {/* The sidebar is the app's main navigation landmark (screen-reader "nav" jump). */}
+    <Sidebar collapsible="icon" role="navigation" aria-label="Main navigation">
       {/* Same height as the top bar, so the logo, the edge toggle and the
           breadcrumb all sit on one line. */}
       <SidebarHeader className="h-12 justify-center py-0">
@@ -432,7 +433,12 @@ export function AppSidebar({
 
       <SidebarRail />
     </Sidebar>
-    <SidebarEdgeToggle />
+    {/* The edge toggle is fixed outside the sidebar (see SidebarEdgeToggle), so it
+        gets its own landmark — otherwise it is page content outside any landmark.
+        `contents` keeps the wrapper out of layout. */}
+    <nav data-slot="app-sidebar-edge-toggle-nav" aria-label="Sidebar" className="contents">
+      <SidebarEdgeToggle />
+    </nav>
     </>
   );
 }

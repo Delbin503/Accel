@@ -46,3 +46,4 @@ export * from "./lib/utils";
 export * from "./lib/formatters";
 export * from "./lib/tokens";
 export * from "./hooks/use-mobile";
+export * from "./hooks/use-restore-focus";

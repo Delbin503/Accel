@@ -5,6 +5,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "../../lib/utils"
+import { useRestoreFocus } from "../../hooks/use-restore-focus"
 // Accel: overlay body text is the app's text-base (13px), not 16px (text-lg/6),
 // so unsized text in dialogs, sheets and popovers matches the pages behind them.
 
@@ -55,11 +56,16 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  // Accel: focus goes back to whatever opened the sheet (row, button, menu
+  // item) — see hooks/use-restore-focus.
+  const focus = useRestoreFocus(onOpenAutoFocus, onCloseAutoFocus)
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -78,6 +84,8 @@ function SheetContent({
           className
         )}
         {...props}
+        onOpenAutoFocus={focus.onOpenAutoFocus}
+        onCloseAutoFocus={focus.onCloseAutoFocus}
       >
         {children}
         {showCloseButton && (

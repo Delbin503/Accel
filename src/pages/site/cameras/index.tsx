@@ -1678,6 +1678,10 @@ export default function CamerasPage({
   }
 
   const editingCamera = modal?.kind === "edit" ? cameras.find((c) => c.id === modal.cameraId) : null;
+  // Stable while the edited camera is unchanged — CameraFormModal reloads its
+  // fields whenever `initial` changes identity, so building it inline would
+  // wipe what the user typed on every re-render of this page.
+  const editingInitial = React.useMemo(() => (editingCamera ? fromCamera(editingCamera) : null), [editingCamera]);
   const deletingCamera = modal?.kind === "delete" ? cameras.find((c) => c.id === modal.cameraId) : null;
   const syncingCamera = modal?.kind === "nvr-sync" ? cameras.find((c) => c.id === modal.cameraId) : null;
   const undeployingDep = modal?.kind === "undeploy" ? deployments.find((d) => d.id === modal.deploymentId) : null;
@@ -1781,7 +1785,7 @@ export default function CamerasPage({
       cell: (c) => (
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${c.name}`} className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
               <MoreHorizontal className="size-4" />
             </Button>
           </PopoverTrigger>
@@ -1996,7 +2000,7 @@ export default function CamerasPage({
       <CameraFormModal
         open={modal?.kind === "edit"}
         mode="edit"
-        initial={editingCamera ? fromCamera(editingCamera) : null}
+        initial={editingInitial}
         takenIds={cameras.map((c) => c.id)}
         onClose={() => setModal(null)}
         onSubmit={handleEdit}

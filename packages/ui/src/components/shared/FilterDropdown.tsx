@@ -69,6 +69,7 @@ function FilterDropdown({ label, options, selected, onChange, className }: Filte
               data-slot="filter-dropdown-option"
               key={opt.value}
               type="button"
+              aria-pressed={checked}
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-base text-muted-foreground hover:bg-muted hover:text-foreground"
             >
