@@ -24,7 +24,7 @@
     "test:a11y:pages": "vite build --config prototypes/vite.config.ts --logLevel warn && node scripts/check-a11y-pages.mjs"
   },
   "dependencies": {
-    "@accel/ui": "1.0.0",
+    "@accel/ui": "1.1.0",
     "@base-ui/react": "^1.5.0",
     "@fontsource-variable/geist": "^5.2.9",
     "@radix-ui/react-slot": "^1.2.4",

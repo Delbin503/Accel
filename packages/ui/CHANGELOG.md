@@ -6,6 +6,10 @@ Every pull request that changes `packages/ui/` adds a line under **Unreleased** 
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-11-16
+
+Backwards compatible: new spacing tokens and a SectionCard prop, plus accessibility fixes. Nothing to change in your code.
+
 ### Added
 - Spacing role tokens `--spacing-card` (16px), `--spacing-section` (16px), `--spacing-inline` (8px), `--spacing-page` (24px) → `p-card`, `gap-section`, `gap-inline`, `p-page`. KpiCard, DescriptionList and Toolbar use them (same values, no visual change).
 - SectionCard `headingLevel` (2 | 3 | 4, default 3) to keep the page outline in order under a page `h1`.

@@ -12,7 +12,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 *Updated 2026-11-17 (end of day).*
 
-**State:** Phases 0–6 are done, merged into `main` and deployed to Vercel production. `@accel/ui` is **1.0.0** in `packages/ui` (npm workspace); the app and prototypes import it.
+**State:** Phases 0–6 are done, merged into `main` and deployed to Vercel production. `@accel/ui` is **1.0.0** in `packages/ui` (npm workspace); the app and prototypes import it. **1.1.0** is ready on branch `release/ui-1.1.0`, waiting to be merged.
 
 **How work flows now**
 - Branch → pull request into `main` → the PR pipeline runs the guardrails (tokens, layer names, registry, changelog), build, both typechecks, 24 interaction tests, ESLint, the Storybook a11y gate (217 stories × light/dark) and the page a11y gate (26 pages × light/dark). Chromatic is wired up but skipped until a token is added.
@@ -25,7 +25,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 - **Nothing.** Every item in Phases 0–6 is done, merged into `main` and deployed, and every pull request is checked.
 
 #### Recommended (small — Claude can do these)
-- [ ] **Release `@accel/ui` 1.1.0.** `packages/ui/CHANGELOG.md` → `[Unreleased]` holds what was merged since 1.0.0 (page accessibility fixes, focus return in Dialog/Sheet, `aria-pressed` on filters / presets / clickable KpiCards, spacing role tokens, SectionCard `headingLevel`). All additions or fixes → **minor**: move them under `## [1.1.0] — <date>`, set `version` to `1.1.0` in `packages/ui/package.json` (and the `@accel/ui` dependency in the root `package.json`), run the gates, merge.
+- [x] **Release `@accel/ui` 1.1.0.** Done on branch `release/ui-1.1.0` (2026-11-16): the Unreleased lines moved under `## [1.1.0]`, `version` set to 1.1.0 in `packages/ui/package.json`, the root `package.json` and the lockfile. Every gate passes. **Left:** push the branch, open a PR into `main`, merge (merging deploys production).
 - [ ] **Tidy merged branches** on Bitbucket: `design-updates-nov-6`, `design-system-a11y-ci`, `docs-start-here` are all in `main` and can be deleted (confirm first).
 - [ ] **Check the last two `main` pipelines** (`d97729a`, `5205d22`, docs only) appeared in Pipelines. If not, nothing to do — production already runs the latest app code.
 

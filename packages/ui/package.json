@@ -1,6 +1,6 @@
 {
   "name": "@accel/ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Accel design system \u2014 tokens, primitives, composites and charts (React + Tailwind v4).",
   "type": "module",
