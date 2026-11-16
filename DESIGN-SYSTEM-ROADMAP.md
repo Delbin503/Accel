@@ -16,7 +16,7 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 **How work flows now**
 - Branch → pull request into `main` → the PR pipeline runs the guardrails (tokens, layer names, registry, changelog), build, both typechecks, 24 interaction tests, ESLint, the Storybook a11y gate (217 stories × light/dark) and the page a11y gate (26 pages × light/dark). Chromatic is wired up but skipped until a token is added.
-- Merging into `main` deploys production (Vercel). After a **UI merge**, check that a `main` pipeline started; if not, **Run pipeline → main** (Bitbucket bug BCLOUD-19094 — see CLAUDE.md "Deploys").
+- Merging into `main` deploys production (Vercel). Bitbucket can take several minutes to start the `main` pipeline; if none has appeared after ~10 minutes, **Run pipeline → main** (see CLAUDE.md "Deploys").
 - Changes under `packages/ui` need a line under `[Unreleased]` in `packages/ui/CHANGELOG.md` (CI checks it); version by `packages/ui/README.md#versioning`.
 
 **Needs you (optional)**
