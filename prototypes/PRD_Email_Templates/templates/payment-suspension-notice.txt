@@ -1,0 +1,53 @@
+Accel — Your workspace has been suspended
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+The Accel invoice for {{orgName}} — {{amountDue}} for {{planName}}, covering
+{{billingPeriod}} — was due on {{dueDate}} and is still unpaid 7 days later.
+As a result, workspace access was suspended on {{suspendedAt}}.
+
+Invoice details
+---------------
+Invoice:         {{invoiceId}}
+Amount overdue:  {{amountDue}}
+Plan:            {{planName}}
+Billing period:  {{billingPeriod}}
+Due date:        {{dueDate}}
+Suspended on:    {{suspendedAt}}
+
+What this means
+---------------
+Paused while suspended:        Kept safe:
+  x Live monitoring              + Sites & cameras
+  x Detection alerts             + Detection rules
+  x New recordings               + Team & roles
+  x Member sign-in               + Workspace settings
+
+Pay and everything comes back. Access is restored automatically as soon as
+the payment clears — nothing to set up again.
+
+As the Owner you can still sign in to Billing to pay. Questions? Contact
+{{supportEmail}}.
+
+Pay & restore access: {{invoiceUrl}}
+
+Already paid? Access comes back once the payment clears — bank transfers can
+take up to 2 business days.
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

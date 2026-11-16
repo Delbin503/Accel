@@ -33,6 +33,8 @@ import accountDeletedHtml from "./templates/account-deleted.html?raw";
 import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw";
 import paymentSuccessfulHtml from "./templates/payment-successful.html?raw";
 import planChangedHtml from "./templates/plan-changed.html?raw";
+import paymentReminderBeforeDueHtml from "./templates/payment-reminder-before-due.html?raw";
+import paymentSuspensionNoticeHtml from "./templates/payment-suspension-notice.html?raw";
 import incidentCaseReportHtml from "./templates/incident-case-report.html?raw";
 import runAnalysisReportHtml from "./templates/run-analysis-report.html?raw";
 import criticalIncidentHtml from "./templates/critical-incident.html?raw";
@@ -143,9 +145,9 @@ const TEMPLATES: Template[] = [
     category: "Account & Authentication",
     priority: "P1",
     whenSent:
-      "Once, when someone signs up for Accel themselves (Cloud onboarding: Sign Up → Verify email) and the account is created. Walks them through the rest of setup — Create site → Choose plan → Invite team.",
+      "Once, when a self-serve sign-up has finished Cloud onboarding (site created, plan chosen, team invited or skipped) and lands on the dashboard for the first time. Confirms the setup and links to the dashboard.",
     audience: "The new self-serve user, who becomes the workspace Owner.",
-    mergeTags: ["{{firstName}}", "{{email}}", "{{signInMethod}}", "{{createdAt}}", "{{setupUrl}}", "{{helpUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{email}}", "{{planName}}", "{{siteName}}", "{{cameraCount}}", "{{completedAt}}", "{{dashboardUrl}}", "{{helpUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/welcome-new-account.html",
     html: welcomeNewAccountHtml,
   },
@@ -317,6 +319,34 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{orgName}}", "{{oldPlan}}", "{{newPlan}}", "{{newPrice}}", "{{effectiveDate}}", "{{newLimits}}", "{{usageChanges}}", "{{changedBy}}", "{{changedAt}}", "{{billingUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/plan-changed.html",
     html: planChangedHtml,
+  },
+  {
+    id: "payment-reminder-before-due",
+    name: "Payment Reminder (7 days before due)",
+    kind: "email",
+    subject: "Payment due in 7 days · {{invoiceId}}",
+    category: "Billing & Subscription",
+    priority: "P1",
+    whenSent:
+      "7 days before an open invoice's due date, if it is not yet paid. Followed by the Suspension Notice if the invoice is still unpaid 7 days after the due date.",
+    audience: "The client's workspace Owner / billing contact.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{planName}}", "{{invoiceId}}", "{{amountDue}}", "{{billingPeriod}}", "{{issuedAt}}", "{{dueDate}}", "{{invoiceUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/payment-reminder-before-due.html",
+    html: paymentReminderBeforeDueHtml,
+  },
+  {
+    id: "payment-suspension-notice",
+    name: "Suspension Notice (7 days after due)",
+    kind: "email",
+    subject: "Your Accel workspace is suspended",
+    category: "Billing & Subscription",
+    priority: "P1",
+    whenSent:
+      "When the 7 days after an invoice's due date end and it is still unpaid — sent the moment workspace access is suspended. Access returns automatically once the payment clears.",
+    audience: "The client's workspace Owner / billing contact.",
+    mergeTags: ["{{firstName}}", "{{orgName}}", "{{planName}}", "{{invoiceId}}", "{{amountDue}}", "{{billingPeriod}}", "{{issuedAt}}", "{{dueDate}}", "{{suspendedAt}}", "{{invoiceUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/payment-suspension-notice.html",
+    html: paymentSuspensionNoticeHtml,
   },
   {
     id: "critical-incident",

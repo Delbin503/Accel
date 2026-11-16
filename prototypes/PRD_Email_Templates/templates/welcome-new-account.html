@@ -2,11 +2,12 @@
 <!--
   Accel — Welcome / New Account (transactional, P1). LIGHT + DARK.
 
-  Sent once, the moment someone signs up for Accel on their own (Cloud
-  onboarding: Sign Up → Verify email) and the account exists. It is NOT the
-  invited-member welcome (welcome.html) — this reader has no workspace, no
-  sites and no team yet, so the email walks them through the rest of setup:
-  Create site → Choose plan → Invite team, the same order as the in-app wizard.
+  Sent once, when someone who signed up on their own (Cloud onboarding) has
+  FINISHED setup — site created, plan chosen, team invited or skipped — and
+  lands on the dashboard for the first time. Setup is already done, so this is
+  not a to-do list: it confirms what is now in place and sends them to the
+  dashboard. It is NOT the invited-member welcome
+  (welcome.html).
 
   CANONICAL SHELL — identical to payment-successful.html / welcome.html:
   browser bar, centred wordmark, 30px centred hero, bold greeting, 14px body,
@@ -17,22 +18,24 @@
 
   Content decisions
   -----------------
-  · The detail card confirms what was created — sign-in email, role (Owner),
-    sign-in method and an absolute {{createdAt}} with timezone — so a reader
-    who did NOT sign up can spot it at once.
-  · Setup steps are numbered text, not images, so they survive blocked images.
-  · One CTA, "Continue setup", to {{setupUrl}}: it resumes the onboarding
-    wizard at whichever step they left. No password, code or token in the link.
-  · Section 7b is the "wasn't you?" line with the support address, as on every
+  · The detail card confirms the finished setup — workspace, sign-in email,
+    role (Owner), plan and first site — so a reader who did NOT sign up can
+    spot it at once.
+  · One CTA, "Go to dashboard", to {{dashboardUrl}}. No password, code or
+    token in the link.
+  · Section 8b is the "wasn't you?" line with the support address, as on every
     account-security email.
 
   Merge tags
   ----------
   {{firstName}}    e.g. "Alex"
+  {{orgName}}      e.g. "Astra Corp"  (the workspace)
   {{email}}        e.g. "alex@astracorp.com"  (the sign-in email)
-  {{signInMethod}} e.g. "Email & password" / "Google"
-  {{createdAt}}    e.g. "13 Nov 2026, 09:12 UTC+08"
-  {{setupUrl}}     resumes Cloud onboarding at the next unfinished step
+  {{planName}}     e.g. "Pro · Annual"
+  {{siteName}}     e.g. "Changi Warehouse"  (the site created during setup)
+  {{cameraCount}}  e.g. "12"
+  {{completedAt}}  e.g. "13 Nov 2026, 09:40 UTC+08"  (when setup finished)
+  {{dashboardUrl}} link to the Accel dashboard
   {{helpUrl}}      e.g. "https://help.accel.com/getting-started"
   {{webviewUrl}}   hosted browser version of this email
   {{supportEmail}} e.g. "support@accel.com"
@@ -101,7 +104,7 @@
   </head>
   <body class="page" style="margin:0; padding:0; background-color:#F2F1EF; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F2F1EF; opacity:0;">
-      Your Accel account is ready. Three quick steps and your first site is live.
+      You're all set — {{orgName}} is ready on Accel. Your dashboard is ready.
       &#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;
     </div>
 
@@ -143,79 +146,44 @@
             <tr>
               <td class="px t-body" style="padding:16px 32px 0 32px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
                 <p style="margin:0;">
-                  Thanks for signing up &mdash; your Accel account is ready. Accel turns the cameras you already have into a safety and compliance monitor: AI watches every feed, flags what breaks your rules, and keeps the evidence for you.
+                  You&rsquo;re all set &mdash; <strong class="t-strong" style="font-weight:600; color:#111111;">{{orgName}}</strong> is up and running on Accel. Your site, plan and
+                  team are in place, and your dashboard is ready. From here, Accel watches your cameras, flags
+                  what breaks your rules, and keeps the evidence for you.
                 </p>
               </td>
             </tr>
 
-            <!-- 6 · Detail card — what was created -->
+            <!-- 6 · Detail card — the finished setup -->
             <tr>
               <td class="px" style="padding:24px 32px 0 32px;">
                 <table role="presentation" class="kv" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F4F4F6" style="background-color:#F4F4F6; border-radius:12px;">
                   <tr>
                     <td style="padding:24px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; mso-line-height-rule:exactly;">
-                      <p class="kv-label" style="margin:0; color:#4B4B4B;">Sign-in email: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{email}}</span></p>
+                      <p class="kv-label" style="margin:0; color:#4B4B4B;">Workspace: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{orgName}}</span></p>
+                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Sign-in email: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{email}}</span></p>
                       <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Your role: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">Owner</span></p>
-                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Signed up with: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{signInMethod}}</span></p>
-                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Created: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{createdAt}}</span></p>
+                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Plan: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{planName}}</span></p>
+                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">First site: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{siteName}} &middot; {{cameraCount}} cameras</span></p>
+                      <p class="kv-label" style="margin:16px 0 0 0; color:#4B4B4B;">Set up on: <span class="kv-value" style="font-weight:500; color:#4B4B4B;">{{completedAt}}</span></p>
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
 
-            <!-- 7 · Notice block — the remaining setup, in wizard order -->
-            <tr>
-              <td class="px" style="padding:24px 32px 0 32px;">
-                <p class="t-strong" style="margin:0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:20px; font-weight:700; color:#111111;">Finish setting up in 3 steps</p>
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;">
-                      <tr>
-                        <td width="36" valign="top" style="padding:0 0 0 0;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                            <td align="center" valign="middle" width="24" height="24" bgcolor="#FE5C01" style="width:24px; height:24px; background-color:#FE5C01; border-radius:12px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:24px; font-weight:700; color:#FFFFFF;">1</td>
-                          </tr></table>
-                        </td>
-                        <td valign="top" class="t-body" style="padding:0 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
-                          <strong class="t-strong" style="font-weight:600; color:#111111;">Create your first site</strong> &mdash; name the location and add the cameras you want Accel to watch.
-                        </td>
-                      </tr>
-                      <tr>
-                        <td width="36" valign="top" style="padding:16px 0 0 0;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                            <td align="center" valign="middle" width="24" height="24" bgcolor="#FE5C01" style="width:24px; height:24px; background-color:#FE5C01; border-radius:12px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:24px; font-weight:700; color:#FFFFFF;">2</td>
-                          </tr></table>
-                        </td>
-                        <td valign="top" class="t-body" style="padding:16px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
-                          <strong class="t-strong" style="font-weight:600; color:#111111;">Choose a plan</strong> &mdash; pick the plan that fits your sites and cameras. You can change it any time.
-                        </td>
-                      </tr>
-                      <tr>
-                        <td width="36" valign="top" style="padding:16px 0 0 0;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                            <td align="center" valign="middle" width="24" height="24" bgcolor="#FE5C01" style="width:24px; height:24px; background-color:#FE5C01; border-radius:12px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:12px; line-height:24px; font-weight:700; color:#FFFFFF;">3</td>
-                          </tr></table>
-                        </td>
-                        <td valign="top" class="t-body" style="padding:16px 0 0 0; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
-                          <strong class="t-strong" style="font-weight:600; color:#111111;">Invite your team</strong> &mdash; add supervisors and operators so alerts reach the right people.
-                        </td>
-                      </tr>
-                </table>
-              </td>
-            </tr>
-
-<!-- 8 · CTA — left-aligned -->
+            <!-- 8 · CTA — left-aligned -->
             <tr>
               <td class="px" align="left" style="padding:24px 32px 0 32px;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
                   <td align="center" bgcolor="#FE5C01" style="border-radius:8px;">
                     <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{setupUrl}}" style="height:48px;v-text-anchor:middle;width:180px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{dashboardUrl}}" style="height:48px;v-text-anchor:middle;width:190px;" arcsize="17%" fillcolor="#FE5C01" stroke="f">
                       <w:anchorlock/>
-                      <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;">Continue setup</center>
+                      <center style="color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;">Go to dashboard</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-- -->
-                    <a class="btn-a" href="{{setupUrl}}" style="display:inline-block; padding:12px 28px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Continue setup</a>
+                    <a class="btn-a" href="{{dashboardUrl}}" style="display:inline-block; padding:12px 28px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Go to dashboard</a>
                     <!--<![endif]-->
                   </td>
                 </tr></table>
@@ -225,7 +193,7 @@
             <!-- 8b · Help + "wasn't you?" -->
             <tr>
               <td class="px t-body" style="padding:24px 32px 0 32px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:24px; color:#4B4B4B; mso-line-height-rule:exactly;">
-                <p style="margin:0;">New to Accel? The <a href="{{helpUrl}}" style="color:#FE5C01; font-weight:600; text-decoration:none;">getting-started guide</a> covers each step in a few minutes.</p>
+                <p style="margin:0;">Want a tour? The <a href="{{helpUrl}}" style="color:#FE5C01; font-weight:600; text-decoration:none;">getting-started guide</a> walks through the dashboard in a few minutes.</p>
                 <p style="margin:16px 0 0 0;">Didn&rsquo;t create this account? Don&rsquo;t click anything above &mdash; email <a href="mailto:{{supportEmail}}" style="color:#FE5C01; font-weight:600; text-decoration:none;">{{supportEmail}}</a> and we&rsquo;ll close it.</p>
               </td>
             </tr>

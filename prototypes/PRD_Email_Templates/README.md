@@ -27,7 +27,7 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 3 | **Password Reset Request** | P1 | User requests a reset — delivers a code (not a link). |
 | 4 | **Password Changed / Reset Confirmation** | P1 | After a password change (self or admin-forced). |
 | 5 | **Two-Factor Authentication Changed** | P2 | User enables/disables 2FA (`{{action}}`). |
-| 24 | **Welcome / New Account** | P1 | Someone signs up on their own (Sign Up → Verify email). Confirms the account and walks them through Create site → Choose plan → Invite team. |
+| 24 | **Welcome / New Account** | P1 | A self-serve sign-up finishes onboarding (site, plan, team) and reaches the dashboard for the first time. Confirms the setup and links to the dashboard. |
 | 6 | **Welcome / Account Activated** | P1 | An **invited** member finishes setup + verification. (Self sign-ups get Welcome / New Account instead.) |
 | 7 | **User Invitation** | P1 | Admin invites someone. Faithful build of the Figma reference and the base every other email follows. |
 | 8 | **Role Changed** | P2 | Admin changes a user's role. |
@@ -40,6 +40,8 @@ Open `http://localhost:5174/PRD_Email_Templates/`.
 | 12 | **Update Payment Method** | P1 | Subscription charge declined or card expired, before the retry. |
 | 21 | **Payment Successful** | P1 | A subscription charge goes through — sign-up checkout, renewal, or an upgrade. The receipt, with the invoice PDF attached. |
 | 22 | **Plan Changed** | P1 | Owner switches plan from Billing — upgrade or downgrade, listing anything the Reduce usage modal let go of. |
+| 25 | **Payment Reminder (7 days before due)** | P1 | 7 days before an unpaid invoice's due date. Amount, plan, period and due date; warns that access is suspended 7 days after the due date. |
+| 26 | **Suspension Notice (7 days after due)** | P1 | The invoice is still unpaid when the 7 days after its due date end — workspace access is suspended. Says what stops, what's kept, and that paying restores access. |
 | 14 | **Critical Incident Alert** | P1 | The moment a critical detection opens a case — to that site's critical rota. |
 | 15 | **Daily Activity Digest** | P2 | 23:59 every day, with the Daily Activity Report attached as a PDF. |
 | 16 | **Weekly Summary** | P2 | Every Monday 08:00 — detections, cases and SLA performance for the week before. |

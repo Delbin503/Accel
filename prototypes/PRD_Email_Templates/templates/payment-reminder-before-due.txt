@@ -1,0 +1,51 @@
+Accel — Your payment is due in 7 days
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+This is a friendly reminder that the Accel invoice for {{orgName}} is due on
+{{dueDate}} — {{amountDue}} for {{planName}}, covering {{billingPeriod}}.
+Please pay by the due date so monitoring carries on without interruption.
+
+Invoice details
+---------------
+Invoice:         {{invoiceId}}
+Amount due:      {{amountDue}}
+Plan:            {{planName}}
+Billing period:  {{billingPeriod}}
+Issued on:       {{issuedAt}}
+Due date:        {{dueDate}}
+
+How to pay
+----------
+1. Open the invoice — use the link below; it opens Billing, where you sign
+   in as usual.
+2. Pay by card or bank transfer — any time before {{dueDate}}.
+3. Get your receipt — the paid invoice and receipt are emailed to you as
+   soon as the payment clears.
+
+! Still unpaid 7 days after the due date? Workspace access is suspended
+  until the invoice is settled.
+
+Pay invoice: {{invoiceUrl}}
+
+Already paid? You can ignore this reminder — bank transfers can take up to
+2 business days to show.
+We never ask for card details by email.
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

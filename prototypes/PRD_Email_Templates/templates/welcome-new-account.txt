@@ -4,30 +4,23 @@ View this email in your browser: {{webviewUrl}}
 
 Dear {{firstName}},
 
-Thanks for signing up — your Accel account is ready. Accel turns the cameras
-you already have into a safety and compliance monitor: AI watches every feed,
-flags what breaks your rules, and keeps the evidence for you.
+You're all set — {{orgName}} is up and running on Accel. Your site, plan and
+team are in place, and your dashboard is ready. From here, Accel watches your
+cameras, flags what breaks your rules, and keeps the evidence for you.
 
-Your account
-------------
-Sign-in email:   {{email}}
-Your role:       Owner
-Signed up with:  {{signInMethod}}
-Created:         {{createdAt}}
+Your workspace
+--------------
+Workspace:      {{orgName}}
+Sign-in email:  {{email}}
+Your role:      Owner
+Plan:           {{planName}}
+First site:     {{siteName}} · {{cameraCount}} cameras
+Set up on:      {{completedAt}}
 
-Finish setting up in 3 steps
-----------------------------
-1. Create your first site — name the location and add the cameras you want
-   Accel to watch.
-2. Choose a plan — pick the plan that fits your sites and cameras. You can
-   change it any time.
-3. Invite your team — add supervisors and operators so alerts reach the
-   right people.
+Go to dashboard: {{dashboardUrl}}
 
-Continue setup: {{setupUrl}}
-
-New to Accel? The getting-started guide covers each step in a few minutes:
-{{helpUrl}}
+Want a tour? The getting-started guide walks through the dashboard in a few
+minutes: {{helpUrl}}
 
 Didn't create this account? Don't click anything above — email
 {{supportEmail}} and we'll close it.
