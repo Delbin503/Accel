@@ -10,17 +10,20 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 ## ▶ Start here (next session)
 
-*Updated 2026-11-16.*
+*Updated 2026-11-17.*
 
-**State:** Phases 0–6 are done except items that need you. Everything after commit `cf0ee2d` is **uncommitted** in the working tree, and `cf0ee2d` itself isn't pushed (the Bitbucket token returns 403).
+**State:** Phases 0–6 are done, merged into `main` and deployed to Vercel production. `@accel/ui` is **1.0.0** in `packages/ui` (npm workspace); the app and prototypes import it.
 
-**Needs you:**
-1. **Renew the Bitbucket token**, then commit and push (push branch `design-updates-nov-6` on `sigmawaveai/vibe-coding-accel`). The first PR runs the new pipeline (checks + a11y).
-2. ~~Commit your run-analysis and email-template work~~ ✅ committed (`0f98bfc`); its lint errors and the compatibility import aliases are done (`3b3614a`). Removing the deprecated tokens/props (a major version) is now unblocked
-3. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` in Bitbucket for visual snapshots.
-4. Phase 7 decisions: is Figma the source of truth? When to adopt DTCG / Style Dictionary?
+**How work flows now**
+- Branch → pull request into `main` → the PR pipeline runs the guardrails (tokens, layer names, registry, changelog), build, both typechecks, 24 interaction tests, ESLint, the Storybook a11y gate (217 stories × light/dark) and the page a11y gate (26 pages × light/dark). Chromatic is wired up but skipped until a token is added.
+- Merging into `main` deploys production (Vercel). After a **UI merge**, check that a `main` pipeline started; if not, **Run pipeline → main** (Bitbucket bug BCLOUD-19094 — see CLAUDE.md "Deploys").
+- Changes under `packages/ui` need a line under `[Unreleased]` in `packages/ui/CHANGELOG.md` (CI checks it); version by `packages/ui/README.md#versioning`.
 
-**Open questions:** ~~all three answered (2026-11-17)~~ — dialogs/sheets/popovers use 13px `text-base`; the v3 `w-[--radix-…-trigger-width]` syntax fixed to `w-(--…)` in DepartmentSelect, rule conditions, rule template form and user management; brand artwork colours are tokens (`--brand-mark`, `--brand-coin`, `--brand-coin-ink`).
+**Needs you (optional)**
+1. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` as a Bitbucket repository variable → visual snapshots of every story in light and dark on each PR.
+2. **Phase 7 decisions:** is Figma the source of truth (then mirror tokens as Figma variables)? When to adopt DTCG / Style Dictionary (only when a second platform needs tokens)? Who approves new components?
+
+**Open in Phases 0–6:** nothing. Phase 7 (below) is ongoing and waits on the decisions above.
 
 ---
 

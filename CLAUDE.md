@@ -295,6 +295,7 @@ All color usage must be expressed with semantic tokens — those automatically h
 - **Changelog** — any change under `packages/ui/` adds a line under `## [Unreleased]` in `packages/ui/CHANGELOG.md`, written for the people using the components (`npm run lint:changelog` checks it). Decide major / minor / patch with the table in `packages/ui/README.md#versioning`; deprecate before removing.
 - **Visual snapshots (Chromatic)** — every story is snapshotted in light and dark (`parameters.chromatic.modes` in `.storybook/preview.tsx`). In CI it runs once the `CHROMATIC_PROJECT_TOKEN` repository variable is set; review visual changes in Chromatic before merging. Locally: `CHROMATIC_PROJECT_TOKEN=… npm run chromatic`.
 - Pull requests run these in Bitbucket Pipelines (`bitbucket-pipelines.yml`): guardrail checks, `npm run build`, prototype typecheck, tests, the a11y gate and Chromatic.
+- **Deploys** — every push to `main` runs the `main` pipeline, which deploys to Vercel production (needs the `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` repository variables). **Merging a PR with Bitbucket's Merge button does not always start it** (known Bitbucket bug BCLOUD-19094). After a UI merge, check Pipelines; if no run started for `main`, use **Run pipeline → branch `main` → `branches: main`**. Merging locally and pushing to `main` always triggers it.
 
 ## Code Conventions
 
