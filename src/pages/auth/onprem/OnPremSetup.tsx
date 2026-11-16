@@ -24,35 +24,35 @@ import {
   CircleUser,
   MapPin,
   Phone,
-  Search,
   ChevronDown,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { ItemButton } from "@/components/ui/item";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@accel/ui/components/ui/button";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
+} from "@accel/ui/components/shared/Modal";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@accel/ui/components/ui/select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/popover";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { makeBlankSite } from "@/mocks/sites";
@@ -102,6 +102,9 @@ interface Member {
   role: MemberRole;
   departments: string[];
 }
+
+/** Members table row: the bootstrap owner first, then pending invites. */
+type MemberTableRow = { kind: "owner"; id: string } | (Member & { kind: "member" });
 
 const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -286,12 +289,13 @@ export default function OnPremSetupPage({
   function pickLicenseFile() {
     // Demo dropzone: simulate a chosen file, then auto-validate.
     const name = `entitlement-account.lic`;
+    // Picking a new file starts validation (the effect below runs the timer).
+    if (name !== licenseFile) setLicenseStatus("validating");
     setLicenseFile(name);
   }
 
   React.useEffect(() => {
     if (!licenseFile) return;
-    setLicenseStatus("validating");
     const invalid = /bad|invalid/i.test(licenseFile);
     const t = setTimeout(() => {
       if (invalid) {
@@ -739,6 +743,80 @@ export default function OnPremSetupPage({
 
   const seatUsage = computeMemberSeatUsage(members);
 
+  // The bootstrap account owner is already provisioned and heads the list.
+  const memberRows: MemberTableRow[] = [
+    { kind: "owner", id: "__owner" },
+    ...members.map((m): MemberTableRow => ({ ...m, kind: "member" })),
+  ];
+  const memberColumns: DataTableColumn<MemberTableRow>[] = [
+    {
+      key: "member",
+      header: "MEMBER",
+      cell: (row) =>
+        row.kind === "owner" ? (
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-success/15 font-mono text-sm font-semibold text-success">
+              <Crown className="size-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground">
+                Account Owner
+                <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">{bootstrapUsername}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+              <Mail className="size-3.5 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground">
+                {row.email.split("@")[0]}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">{row.email}</p>
+            </div>
+          </div>
+        ),
+    },
+    {
+      key: "role",
+      header: "ROLE",
+      cell: (row) => <RoleBadge role={row.kind === "owner" ? "owner" : row.role} />,
+    },
+    {
+      key: "status",
+      header: "STATUS",
+      cell: (row) =>
+        row.kind === "owner" ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
+            Active
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
+            Pending
+          </span>
+        ),
+    },
+    {
+      key: "action",
+      header: "ACTION",
+      cell: (row) =>
+        row.kind === "owner" ? null : (
+          <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="icon-sm"
+              onClick={() => removeMember(row.id)}
+              className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
+              aria-label="Remove invite"
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          </div>
+        ),
+    },
+  ];
+
   return (
     <WizardShell wide currentStep="operators" onCancel={() => navigate("/on-premise/signin")}>
       <BackLink onClick={goBack} />
@@ -761,85 +839,14 @@ export default function OnPremSetupPage({
 
       <div data-slot="on-prem-setup-page-members-list" className="mt-3 flex max-h-[calc(100vh-26rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
         <div className="flex-1 overflow-y-auto [&>[data-slot=table-container]]:overflow-visible">
-          <Table className="text-[length:inherit] w-full">
-            <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-              <TableRow className="hover:bg-transparent border-b border-border text-left">
-                {["MEMBER", "ROLE", "STATUS", "ACTION"].map((h) => (
-                  <TableHead
-                    key={h}
-                    className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                  >
-                    {h}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/60">
-              {/* Bootstrap account owner — already provisioned. */}
-              <TableRow className="text-base transition-colors hover:bg-muted/20">
-                <TableCell className="whitespace-normal px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-success/15 font-mono text-sm font-semibold text-success">
-                      <Crown className="size-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground">
-                        Account Owner
-                        <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
-                      </p>
-                      <p className="font-mono text-xs text-muted-foreground">{bootstrapUsername}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-normal px-4 py-3">
-                  <RoleBadge role="owner" />
-                </TableCell>
-                <TableCell className="whitespace-normal px-4 py-3">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
-                    Active
-                  </span>
-                </TableCell>
-                <TableCell className="whitespace-normal px-4 py-3" />
-              </TableRow>
-
-              {members.map((m) => (
-                <TableRow key={m.id} className="text-base transition-colors hover:bg-muted/20">
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Mail className="size-3.5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground">
-                          {m.email.split("@")[0]}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">{m.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <RoleBadge role={m.role} />
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
-                      Pending
-                    </span>
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon-sm"
-                        onClick={() => removeMember(m.id)}
-                        className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 flex size-7 items-center justify-center rounded-md border border-severity-critical/30 text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
-                        aria-label="Remove invite"
-                      >
-                        <Trash2 className="size-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            variant="list"
+            stickyHeader
+            columns={memberColumns}
+            data={memberRows}
+            getRowId={(row) => row.id}
+            getRowClassName={() => "transition-colors"}
+          />
         </div>
 
         <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
@@ -897,13 +904,17 @@ export function MemberModal({
   const [role, setRole] = React.useState<MemberRole>("user");
   const [departments, setDepartments] = React.useState<string[]>([]);
 
-  React.useEffect(() => {
+  // Clear the form each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setEmails("");
       setRole("user");
       setDepartments([]);
     }
-  }, [open]);
+  }
 
   const parsed = React.useMemo(() => parseEmails(emails), [emails]);
 
@@ -978,7 +989,7 @@ export function MemberModal({
                 );
               })}
             </div>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
@@ -994,11 +1005,11 @@ export function MemberModal({
             >
               <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate text-foreground">{siteName || "Your new site"}</span>
-              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
+              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground">
                 <Lock className="size-3" /> Locked to current site
               </span>
             </div>
-            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Additional sites can be added later from the Sites page.
             </p>
           </div>
@@ -1053,7 +1064,7 @@ export function MemberModal({
                   : "focus:border-primary"
               )}
             />
-            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {parsed.invalid.length > 0 && (
@@ -1225,15 +1236,14 @@ function PhoneField({
           </ItemButton>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
-          <div className="relative mb-1">
-            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search country or code"
-              className="py-0 shadow-none dark:bg-background focus-visible:ring-0 focus-visible:border-primary h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            />
-          </div>
+          <ToolbarSearch
+            size="sm"
+            value={query}
+            onChange={setQuery}
+            placeholder="Search country or code"
+            className="mb-1"
+            inputClassName="py-0 shadow-none dark:bg-background focus-visible:ring-0 focus-visible:border-primary h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
           <div className="max-h-56 overflow-y-auto">
             {list.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">

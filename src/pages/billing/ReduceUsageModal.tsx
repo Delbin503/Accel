@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Building2, Camera, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 import { PLANS, type PlanTier } from "@/mocks/licenses";
 import { limitOf, type UsageMember, type UsageSite } from "./usageLimits";
 

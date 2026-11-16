@@ -9,9 +9,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useNavigate as useAppNavigate } from "react-router-dom";
-import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-} from "recharts";
+import { BarChart, LineChart } from "@accel/ui/components/charts";
 import {
   ArrowDown,
   ArrowUp,
@@ -32,14 +30,15 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { KpiCard } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { KpiCard } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
+import type { CameraData } from "@/types/cameras";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
@@ -63,7 +62,10 @@ import {
   shiftPanel,
   type PanelId,
 } from "./taDashboardLayout";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
+
+/** Stable empty list for the forced empty state (keeps memo deps stable). */
+const NO_CAMERAS: CameraData[] = [];
 
 /* Dashboard, made customizable for Phase 1.3.
 
@@ -524,7 +526,7 @@ function PanelDrawer({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground">{def.title}</p>
                   <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">{def.description}</p>
-                  <p className="mt-1 text-3xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  <p className="mt-1 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {def.width === "full" ? "Full width" : "Half width"}
                   </p>
                 </div>
@@ -723,7 +725,7 @@ export function TaDashboard({
   const scaleMany = scale === "many";
   const camerasRaw = useCamerasStore((s) => s.cameras);
   const sitesRaw = useSitesStore((s) => s.sites);
-  const cameras = emptyMode ? [] : camerasRaw;
+  const cameras = emptyMode ? NO_CAMERAS : camerasRaw;
   const sites = emptyMode ? [] : sitesRaw;
   const status = useSystemStatus();
 
@@ -1039,31 +1041,17 @@ export function TaDashboard({
               onChange={setSelectedSites}
             />
             <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={siteTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                  <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                    cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3 }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
-                  {chartSiteOptions
-                    .filter((s) => selectedSites.includes(s.name))
-                    .map((s) => (
-                      <Line
-                        key={s.name}
-                        type="monotone"
-                        dataKey={s.name}
-                        stroke={s.color}
-                        strokeWidth={2}
-                        dot={{ r: 2.5 }}
-                        activeDot={{ r: 4 }}
-                      />
-                    ))}
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChart
+                data={siteTrend}
+                xKey="day"
+                series={chartSiteOptions
+                  .filter((s) => selectedSites.includes(s.name))
+                  .map((s) => ({ key: s.name, label: s.name, color: s.color }))}
+                dots
+                showLegend
+                yAxis={{ show: true }}
+                className="h-full"
+              />
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {detectionsBySite
@@ -1310,27 +1298,18 @@ export function TaDashboard({
           {/* 20-site preview: the chart keeps ~52px per site and scrolls sideways. */}
           <div className={cn("h-[260px]", scaleMany && "overflow-x-auto")}>
           <div className={cn("h-full", scaleMany && "min-w-[1040px]")}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                <XAxis
-                  dataKey="name"
-                  stroke="var(--muted-foreground)"
-                  fontSize={11}
-                  interval={0}
-                  angle={scaleMany ? -45 : -12}
-                  textAnchor="end"
-                  height={scaleMany ? 64 : 50}
-                />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                  cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                />
-                <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="var(--severity-critical)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart
+              data={camerasBySite}
+              xKey="name"
+              stacked
+              series={[
+                { key: "online", label: "Online", color: "var(--success)" },
+                { key: "offline", label: "Offline", color: "var(--severity-critical)" },
+              ]}
+              xAxis={{ angle: scaleMany ? -45 : -12, interval: 0, height: scaleMany ? 64 : 50 }}
+              yAxis={{ show: true }}
+              className="h-full"
+            />
           </div>
         </div>
         <div className="mt-2 flex items-center justify-center gap-4 text-xs">
@@ -1372,7 +1351,7 @@ export function TaDashboard({
                 >
                   <div className="min-w-0">
                     <TruncatedText text={a.whenRelative} className="font-mono text-2xs text-muted-foreground" />
-                    <TruncatedText text={a.module} className="mt-0.5 text-2xs text-muted-foreground/60" />
+                    <TruncatedText text={a.module} className="mt-0.5 text-2xs text-muted-foreground" />
                   </div>
                   <div>
                     <span
@@ -1527,7 +1506,7 @@ export function TaDashboard({
         showingLabel={
           <>
             Showing <strong className="text-foreground">{dateLabel}</strong>
-            <span className="ml-2 text-muted-foreground/60">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
+            <span className="ml-2 text-muted-foreground">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
           </>
         }
       />

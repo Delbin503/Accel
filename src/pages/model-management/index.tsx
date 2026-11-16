@@ -41,22 +41,22 @@ import {
   LoaderCircle,
   FileCheck2,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@accel/ui/components/ui/progress";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_MODELS, MODEL_TAGS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import type { ModelData, ModelStep, ExtractedRule } from "@/types/modelManagement";
@@ -103,7 +103,7 @@ function getIconComp(key: string): React.ComponentType<{ className?: string }> {
 /* ── Icon picker ─────────────────────────────────────────────────────────── */
 
 function IconPicker({ current, onChange }: { current: string; onChange: (key: string) => void }) {
-  const IconComp = getIconComp(current);
+  const IconComp = MODEL_ICONS[current] ?? Shield;
 
   return (
     <Popover>
@@ -119,7 +119,7 @@ function IconPicker({ current, onChange }: { current: string; onChange: (key: st
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-3" sideOffset={6} align="start">
-        <p className="mb-2.5 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/50">
+        <p className="mb-2.5 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground">
           Choose Icon
         </p>
         <div data-slot="icon-picker-grid" className="grid grid-cols-5 gap-1.5">
@@ -250,7 +250,7 @@ function MoreTagsPopover({
         align="start"
         className="z-[var(--z-popover)] w-56 p-3"
       >
-        <p className="mb-2 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground/55">
+        <p className="mb-2 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground">
           All Tags · {allTags.length}
         </p>
         <div className="flex flex-wrap gap-1">
@@ -390,7 +390,7 @@ function SectionHeader({
         )}
       </div>
       {description && (
-        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground/70">{description}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
       )}
     </div>
   );
@@ -409,7 +409,7 @@ function ModelCard({
 }) {
   const visibleTags = model.tags.slice(0, 3);
   const extraTags = model.tags.length - 3;
-  const IconComp = getIconComp(model.iconKey);
+  const IconComp = MODEL_ICONS[model.iconKey] ?? Shield;
 
   return (
     <ItemButton variant="plain" selected={selected} data-slot="model-card"
@@ -468,7 +468,7 @@ function ModelCard({
           )}
         </div>
       ) : (
-        <span className="text-xs italic text-muted-foreground/40">No tags</span>
+        <span className="text-xs italic text-muted-foreground">No tags</span>
       )}
     </ItemButton>
   );
@@ -543,7 +543,7 @@ function UploadDropzone({
       ) : (
         <p className="text-center text-sm text-muted-foreground">{primary}</p>
       )}
-      <p className="text-center text-xs text-muted-foreground/80">{hint}</p>
+      <p className="text-center text-xs text-muted-foreground">{hint}</p>
       {/* eslint-disable-next-line no-restricted-syntax -- hidden file input, no visible UI */}
       <input
         ref={inputRef}
@@ -1123,7 +1123,7 @@ function IconAction({
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       title={title}
       className={cn("px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10", 
-        "flex size-6 items-center justify-center rounded text-muted-foreground/70 transition-colors",
+        "flex size-6 items-center justify-center rounded text-muted-foreground transition-colors",
         tone === "danger" ? "hover:bg-severity-critical/10 hover:text-severity-critical" : "hover:bg-primary/10 hover:text-primary-ink"
       )}
     >
@@ -1186,7 +1186,7 @@ function SequenceItem({
       {editable && (
         <Button variant="ghost" size="icon-xs"
           onClick={onRemoveFromSequence}
-          className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
+          className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-severity-critical/10 ml-1 flex size-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-severity-critical/10 hover:text-severity-critical group-hover:opacity-100"
           title="Remove from sequence (moves to Customize)"
         >
           <X className="size-3" />
@@ -1670,13 +1670,12 @@ function ModelDetailPanel({
   // Reset edit state only when switching to a *different* model — not on the
   // initial mount, so a panel opened via startInEdit (returning from +Add Rule)
   // stays in edit mode.
-  const mountedIdRef = React.useRef(model.id);
-  React.useEffect(() => {
-    if (mountedIdRef.current === model.id) return;
-    mountedIdRef.current = model.id;
+  const [prevModelId, setPrevModelId] = React.useState(model.id);
+  if (prevModelId !== model.id) {
+    setPrevModelId(model.id);
     setDraft(modelToDraft(model));
     setIsEditing(false);
-  }, [model.id]);
+  }
 
   // Let the page hide the model list while this panel is in edit mode.
   React.useEffect(() => {
@@ -1831,12 +1830,12 @@ function ModelDetailPanel({
                   <Calendar className="size-3" />
                   {model.createdAtDisplay}
                 </span>
-                <span className="text-muted-foreground/30">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Layers className="size-3" />
                   {model.sequenceIds.length} Steps
                 </span>
-                <span className="text-muted-foreground/30">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <BookOpen className="size-3" />
                   {model.attachedRuleIds.length} Rules
@@ -2283,8 +2282,29 @@ export default function ModelManagementPage({
   forcedState?: "normal" | "empty";
 } = {}) {
   const isEmptyState = forcedState === "empty";
-  const [models, setModels] = React.useState<ModelData[]>(isEmptyState ? [] : MOCK_MODELS);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  // Apply any edits made to an extracted rule on the Rule Library builder page.
+  const extractedResult = (location.state as {
+    extractedResult?: { modelId: string; ruleId: string; patch: Partial<ExtractedRule> };
+  } | null)?.extractedResult;
+  const [models, setModels] = React.useState<ModelData[]>(() => {
+    const base = isEmptyState ? [] : MOCK_MODELS;
+    const result = extractedResult;
+    if (!result) return base;
+    return base.map((mdl) =>
+      mdl.id === result.modelId
+        ? {
+            ...mdl,
+            extractedRules: mdl.extractedRules.map((r) =>
+              r.id === result.ruleId ? { ...r, ...result.patch } : r
+            ),
+          }
+        : mdl
+    );
+  });
+  // Re-open the model editor when returning from "+Add Rule" (/models?model=<id>).
+  const [selectedId, setSelectedId] = React.useState<string | null>(() => searchParams.get("model"));
   const [search, setSearch] = React.useState("");
   const [tagFilter, setTagFilter] = React.useState<string[]>([]);
   const [tagFilterOpen, setTagFilterOpen] = React.useState(false);
@@ -2293,35 +2313,15 @@ export default function ModelManagementPage({
   const [editing, setEditing] = React.useState(false);
   // Model id that should open directly in edit mode (set when returning from
   // the Rule Library's "+Add Rule" flow via /models?model=<id>&edit=1).
-  const [openEditForId, setOpenEditForId] = React.useState<string | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
+  const [openEditForId] = React.useState<string | null>(() =>
+    searchParams.get("model") && searchParams.get("edit") ? searchParams.get("model") : null
+  );
 
-  // Re-open the model editor when returning from "+Add Rule" (/models?model=<id>),
-  // and apply any edits made to an extracted rule on the Rule Library builder page.
+  // Clear the one-shot URL params / router state that seeded the initial state above.
   React.useEffect(() => {
     const m = searchParams.get("model");
-    if (m) {
-      setSelectedId(m);
-      if (searchParams.get("edit")) setOpenEditForId(m);
-    }
 
-    const result = (location.state as {
-      extractedResult?: { modelId: string; ruleId: string; patch: Partial<ExtractedRule> };
-    } | null)?.extractedResult;
-    if (result) {
-      setModels((prev) =>
-        prev.map((mdl) =>
-          mdl.id === result.modelId
-            ? {
-                ...mdl,
-                extractedRules: mdl.extractedRules.map((r) =>
-                  r.id === result.ruleId ? { ...r, ...result.patch } : r
-                ),
-              }
-            : mdl
-        )
-      );
+    if (extractedResult) {
       toast.success("Extracted rule updated");
       window.history.replaceState({}, "");
     }

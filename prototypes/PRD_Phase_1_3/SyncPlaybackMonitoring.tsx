@@ -20,17 +20,17 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ItemButton } from "@/components/ui/item";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import type { CameraData } from "@/types/cameras";
@@ -43,10 +43,10 @@ import {
   isZoomed,
   timestampAt,
   type PlaybackState,
-} from "@/lib/playback";
-import { ScrubTrack, ZoomSurface } from "@/components/shared/PlaybackControls";
+} from "@accel/ui/lib/playback";
+import { ScrubTrack, ZoomSurface } from "@accel/ui/components/shared/PlaybackControls";
 import { CameraFrameLayer, CameraPlayerModal, OfflineFrameLayer, TilePlayerBar } from "./cameraPlayer";
-import { FloatingBar } from "@/components/shared/FloatingBar";
+import { FloatingBar } from "@accel/ui/components/shared/FloatingBar";
 import { VisitorKpis } from "./VisitorKpis";
 import { visitorStats } from "./visitorStats";
 

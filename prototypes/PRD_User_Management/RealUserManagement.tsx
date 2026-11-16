@@ -1,7 +1,7 @@
 import * as React from "react";
 import { UserPlus } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
 import UserManagementPage from "@/pages/user-management";
 import { UserTableSkeleton, ErrorState, type ForcedState } from "./shared";
 

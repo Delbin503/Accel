@@ -118,7 +118,7 @@ function Crosshair({ className }: { className?: string }) {
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"
-        className="text-muted-foreground/30"
+        className="text-muted-foreground"
       />
     </svg>
   );

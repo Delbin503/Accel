@@ -36,21 +36,23 @@ import {
   Box,
   Radar,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { ConfirmDialog } from "@accel/ui/components/shared/ConfirmDialog";
+import { cn } from "@accel/ui/lib/utils";
 import { REID_CATEGORY, isDeployable, useReidModelsStore } from "./reidModels";
 import { ReidCalibrationDrawer } from "./ReidCalibration";
 import { ReidZoneMapCard } from "./ReidSiteMap";
@@ -66,15 +68,15 @@ import {
 import type { ModelData } from "./reidModels";
 import type { CameraData, BoundaryZone } from "@/types/cameras";
 import { DrawZoneModal } from "@/components/app/DrawZoneModal";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
 import type {
   DeploymentData,
   DeploymentStatus,
   SiteSummary,
   AreaSummary,
 } from "@/types/deployments";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 
 /* ── Model icon map (subset, shared with Model Management) ───────────────── */
 
@@ -86,7 +88,6 @@ const MODEL_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>
   box: Box,
   radar: Radar,
 };
-function getModelIcon(key: string) { return MODEL_ICON_MAP[key] ?? Shield; }
 
 /* ── Status pill (deployment + site + area share Online/Offline tone) ────── */
 
@@ -196,15 +197,7 @@ function WizardColumn({
           </span>
         </div>
         <p className="text-sm text-muted-foreground">{description}</p>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="h-9 pl-9 text-base"
-          />
-        </div>
+        <ToolbarSearch value={search} onChange={onSearchChange} placeholder={searchPlaceholder} className="sm:w-full" />
       </div>
       <div data-slot="wizard-column-list" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {children}
@@ -224,7 +217,7 @@ function ModelCard({
   selected: boolean;
   onClick: () => void;
 }) {
-  const Icon = getModelIcon(model.iconKey);
+  const Icon = MODEL_ICON_MAP[model.iconKey] ?? Shield;
   return (
     <ItemButton variant="plain" data-slot="model-card"
       onClick={onClick}
@@ -456,7 +449,7 @@ function SummaryField({
   return (
     <div className={cn("min-w-0", className)}>
       <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
-        <span className="truncate font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
+        <span className="truncate font-mono text-3xs uppercase tracking-widest text-muted-foreground">{label}</span>
         {count !== undefined && (
           <span className={cn(
             "inline-flex h-4 min-w-4 flex-shrink-0 items-center justify-center rounded-full px-1 text-3xs font-bold tabular-nums",
@@ -466,7 +459,7 @@ function SummaryField({
           </span>
         )}
       </div>
-      <TruncatedText text={value ?? placeholder} className={cn("text-base font-semibold", value ? "text-foreground" : "text-muted-foreground/60")} />
+      <TruncatedText text={value ?? placeholder} className={cn("text-base font-semibold", value ? "text-foreground" : "text-muted-foreground")} />
     </div>
   );
 }
@@ -573,9 +566,13 @@ export function DeployWizard({
   const [cameraSearch, setCameraSearch] = React.useState("");
 
   const [modelId, setModelId] = React.useState<string | null>(null);
-  const [siteId, setSiteId] = React.useState<string | null>(null);
-  const [areaIds, setAreaIds] = React.useState<string[]>([]);
-  const [cameraIds, setCameraIds] = React.useState<string[]>([]);
+  // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
+  // location.state.prefill = { siteId, areaId, cameraId, ... }
+  const location = useLocation();
+  const prefill = (location.state as { prefill?: { siteId?: string; areaId?: string; cameraId?: string } } | null)?.prefill;
+  const [siteId, setSiteId] = React.useState<string | null>(() => prefill?.siteId || null);
+  const [areaIds, setAreaIds] = React.useState<string[]>(() => (prefill?.areaId ? [prefill.areaId] : []));
+  const [cameraIds, setCameraIds] = React.useState<string[]>(() => (prefill?.cameraId ? [prefill.cameraId] : []));
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   /* A Re-ID deployment waiting on the confirm modal: its calibrated zones, and
@@ -590,15 +587,8 @@ export function DeployWizard({
   const [calibrating, setCalibrating] = React.useState(false);
   const models = useReidModelsStore((s) => s.models);
 
-  // ── Pre-fill from Camera Drawer "Deploy Model" navigation ────────────
-  // location.state.prefill = { siteId, areaId, cameraId, ... }
-  const location = useLocation();
   React.useEffect(() => {
-    const prefill = (location.state as { prefill?: { siteId?: string; areaId?: string; cameraId?: string } } | null)?.prefill;
     if (!prefill) return;
-    if (prefill.siteId)  setSiteId(prefill.siteId);
-    if (prefill.areaId)  setAreaIds([prefill.areaId]);
-    if (prefill.cameraId) setCameraIds([prefill.cameraId]);
     // Clear the state so a refresh doesn't re-apply
     window.history.replaceState({}, document.title);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1024,7 +1014,7 @@ export function DeployConfirmModal({
 function KvRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-border/40 pb-2 last:border-0 last:pb-0">
-      <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground/60">{label}</span>
+      <span className="font-mono text-3xs uppercase tracking-widest text-muted-foreground">{label}</span>
       <span className="text-sm font-semibold text-foreground">{value}</span>
     </div>
   );
@@ -1237,7 +1227,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: "suc
                               "text-severity-critical";
   return (
     <div className="rounded-md border border-border/60 bg-background px-2 py-1.5">
-      <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
+      <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={cn("mt-0.5 font-mono text-base font-bold leading-none", txt)}>{value}</p>
     </div>
   );
@@ -1301,7 +1291,8 @@ export function ModelDeploymentsDrawer({
   function toggleRow(id: string) {
     setSelected((s) => {
       const next = new Set(s);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -1333,7 +1324,44 @@ export function ModelDeploymentsDrawer({
   }
 
   const selectedCount = selected.size;
-  const allChecked = rows.length > 0 && selectedCount === rows.length;
+
+  const cameraColumns: DataTableColumn<DeploymentData>[] = [
+    {
+      key: "camera", header: "CAMERA",
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <Button variant="link"
+            onClick={(e) => { e.stopPropagation(); onOpenCamera(d.cameraId); }}
+            className="h-auto p-0 border-0 text-left font-semibold text-foreground hover:text-primary-ink"
+          >
+            {d.cameraName}
+          </Button>
+          <span className="font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
+        </div>
+      ),
+    },
+    {
+      key: "location", header: "LOCATION", className: "text-muted-foreground", headClassName: "",
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground">{d.areaName}</span>
+          <span className="text-2xs">{d.siteName}</span>
+        </div>
+      ),
+    },
+    { key: "status", header: "STATUS", cell: (d) => <StatusPill status={d.status} /> },
+    { key: "events", header: "EVENTS", className: "font-mono text-foreground", headClassName: "", cell: (d) => d.eventCount.toLocaleString() },
+    {
+      key: "deployed", header: "DEPLOYED", className: "text-xs text-muted-foreground", headClassName: "",
+      cell: (d) => (
+        <span className="flex items-center gap-1.5">
+          <Calendar className="size-3" />
+          {d.deployedAtDisplay}
+        </span>
+      ),
+    },
+  ];
+
 
   return (
     <div data-slot="model-deployments-drawer" className="fixed inset-0 z-50">
@@ -1368,28 +1396,24 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {isReid && (
-          <div data-slot="model-deployments-drawer-tabs" role="tablist" aria-label="Deployment details" className="flex flex-shrink-0 gap-1 border-b border-border bg-card px-5">
+          <Tabs data-slot="model-deployments-drawer-tabs" value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex-shrink-0 gap-0">
+            <TabsList variant="line" aria-label="Deployment details" className="w-full items-stretch rounded-none border-b border-border p-0 group-data-[orientation=horizontal]/tabs:h-auto justify-start gap-1 bg-card px-5">
             {([
               { key: "cameras", label: "Cameras", count: model.totalCameras },
               { key: "map", label: "Zone map", count: zoneMaps.length },
             ] as const).map((t) => (
-              <Button variant="ghost"
+              <TabsTrigger
                 key={t.key}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => setTab(t.key)}
-                className={cn(
-                  "h-auto rounded-none border-0 hover:bg-transparent", "-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors",
-                  tab === t.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
+                value={t.key}
+                className="h-auto rounded-none border-0 border-b-2 border-transparent -mb-px gap-1.5 py-2.5 font-semibold text-muted-foreground hover:text-foreground after:hidden data-[state=active]:border-primary data-[state=active]:text-foreground dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-primary flex-none px-3 text-sm"
               >
                 {t.key === "map" && <MapPin className="size-3.5" />}
                 {t.label}
                 <span className="rounded-full bg-muted px-1.5 text-2xs text-muted-foreground">{t.count}</span>
-              </Button>
+              </TabsTrigger>
             ))}
-          </div>
+            </TabsList>
+          </Tabs>
         )}
 
         {showMap ? (
@@ -1411,15 +1435,7 @@ export function ModelDeploymentsDrawer({
         <>
         {/* Camera search */}
         <div data-slot="model-deployments-drawer-search" className="flex-shrink-0 border-b border-border bg-card/40 px-5 py-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={cameraSearch}
-              onChange={(e) => setCameraSearch(e.target.value)}
-              placeholder="Search cameras by name or ID…"
-              className="h-9 pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={cameraSearch} onChange={setCameraSearch} placeholder="Search cameras by name or ID…" className="sm:w-full" />
         </div>
 
         {/* Filter row */}
@@ -1440,71 +1456,31 @@ export function ModelDeploymentsDrawer({
         </div>
 
         {/* Camera table */}
-        <div data-slot="model-deployments-drawer-table" className="flex-1 overflow-auto">
+        <div data-slot="model-deployments-drawer-table" className="flex min-h-0 flex-1 flex-col overflow-auto">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
               <Video className="size-8 opacity-30" />
               <p className="text-base">No cameras match the current filters.</p>
             </div>
           ) : (
-            <Table className="w-full">
-              <TableHeader className="sticky top-0 bg-muted/30 backdrop-blur">
-                <TableRow className="border-b border-border text-left">
-                  <TableHead className="w-10 px-4 py-2.5">
-                    <Checkbox checked={allChecked} onCheckedChange={() => toggleAll()} className="size-3.5" aria-label="Select all" />
-                  </TableHead>
-                  {["CAMERA", "LOCATION", "STATUS", "EVENTS", "DEPLOYED"].map((h) => (
-                    <TableHead key={h} className="px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {rows.map((d) => {
-                  const isSel = selected.has(d.id);
-                  return (
-                    <TableRow
-                      key={d.id}
-                      onClick={() => toggleRow(d.id)}
-                      className={cn(
-                        "cursor-pointer text-base transition-colors",
-                        isSel ? "bg-primary/[0.05]" : "hover:bg-muted/20"
-                      )}
-                    >
-                      <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox checked={isSel} onCheckedChange={() => toggleRow(d.id)} className="size-3.5" />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col gap-0.5">
-                          <Button variant="link"
-                            onClick={(e) => { e.stopPropagation(); onOpenCamera(d.cameraId); }}
-                            className="h-auto p-0 border-0 text-left font-semibold text-foreground hover:text-primary-ink"
-                          >
-                            {d.cameraName}
-                          </Button>
-                          <span className="font-mono text-2xs text-muted-foreground">{d.cameraId}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-muted-foreground">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-foreground">{d.areaName}</span>
-                          <span className="text-2xs">{d.siteName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3"><StatusPill status={d.status} /></TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-foreground">{d.eventCount.toLocaleString()}</TableCell>
-                      <TableCell className="px-4 py-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="size-3" />
-                          {d.deployedAtDisplay}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DataTable
+              variant="list"
+              stickyHeader
+              containerClassName="flex-1"
+              columns={cameraColumns}
+              data={rows}
+              getRowId={(d) => d.id}
+              onRowClick={(d) => toggleRow(d.id)}
+              getRowClassName={(d) =>
+                selected.has(d.id) ? "bg-primary/[0.05] hover:bg-primary/[0.05] data-[state=selected]:bg-primary/[0.05]" : undefined
+              }
+              selection={{
+                selectedIds: selected,
+                onToggle: (id) => toggleRow(id),
+                onToggleAll: () => toggleAll(),
+                getRowLabel: (d) => `Select ${d.cameraName}`,
+              }}
+            />
           )}
         </div>
 
@@ -1556,7 +1532,7 @@ export function ModelDeploymentsDrawer({
       >
         <div className="space-y-3">
           <div className="rounded-[var(--radius)] border border-border bg-muted/30">
-            <p className="border-b border-border px-3 py-2 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60">
+            <p className="border-b border-border px-3 py-2 font-mono text-2xs uppercase tracking-widest text-muted-foreground">
               Affected cameras ({selectedCount})
             </p>
             {/* Capped so a 50-camera selection can't push the footer off-screen. */}
@@ -1697,20 +1673,17 @@ export function ReidModelDeployment({
         </PageHeader.Content>
         {forcedState !== "loading" && (
           <PageHeader.Actions>
-            <div data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
-              <Button variant="ghost" onClick={() => setTab("deploy")}
-                className={cn("border-0", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                  tab === "deploy" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+            <SegmentedControl type="single" value={tab} onValueChange={(v) => v && setTab(v as typeof tab)} aria-label="Model Deployment view"
+              className="h-7 gap-0 rounded-md border border-border bg-background p-0.5">
+              <SegmentedControlItem value="deploy" className="h-full gap-1.5 rounded px-2.5 font-semibold data-[state=off]:hover:bg-muted data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none data-[state=on]:hover:text-primary-foreground">
                 <Plus className="size-3.5" />
                 Deploy
-              </Button>
-              <Button variant="ghost" onClick={() => setTab("history")}
-                className={cn("border-0", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                  tab === "history" ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+              </SegmentedControlItem>
+              <SegmentedControlItem value="history" className="h-full gap-1.5 rounded px-2.5 font-semibold data-[state=off]:hover:bg-muted data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none data-[state=on]:hover:text-primary-foreground">
                 <FileText className="size-3.5" />
                 Models
-              </Button>
-            </div>
+              </SegmentedControlItem>
+            </SegmentedControl>
           </PageHeader.Actions>
         )}
       </PageHeader>

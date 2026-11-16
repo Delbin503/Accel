@@ -40,5 +40,5 @@ Feed). If any of them later grows a real fetch, add a `StateTester` then.
 
 Nothing here needs promoting. All four pages already live in `src/pages/`
 (`profile`, `settings`, `billing`, `system-info`) and the dropdown itself is real,
-in `src/components/layout/AppSidebar.tsx`. `index.tsx` — the router, the
+in `src/components/app/AppSidebar.tsx`. `index.tsx` — the router, the
 `SignedOut` stand-in and the back-to-top button — is prototype-only scaffolding.

@@ -7,25 +7,25 @@ import {
   Mail, Globe, SlidersHorizontal, ChevronUp,
   XCircle, RotateCcw, Ban, ArrowRight, LayoutGrid, CalendarClock,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { ConfirmDialog } from "@accel/ui/components/shared/ConfirmDialog";
+import { FilterDropdown } from "@accel/ui/components/shared/FilterDropdown";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
 import {
   PLANS, MOCK_INVOICES, SEAT_PRICING, ACCOUNT_SUBSCRIPTION,
@@ -186,9 +186,13 @@ export function AddCardModal({ open, onClose, onSave }: {
   const [cvc, setCvc] = React.useState("");
   const [errors, setErrors] = React.useState<{ cardName?: string; cardNumber?: string; expiry?: string; cvc?: string }>({});
 
-  React.useEffect(() => {
+  // Clear the form each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) { setCardName(""); setCardNumber(""); setExpiry(""); setCvc(""); setErrors({}); }
-  }, [open]);
+  }
 
   const cleaned = cardNumber.replace(/\s/g, "");
   const last4 = cleaned.slice(-4);
@@ -268,11 +272,16 @@ export function RetryPaymentModal({ open, invoice, cards, onClose, onAddCard, on
   onAddCard: () => void;
   onConfirm: (cardId: string) => void;
 }) {
-  const [selected, setSelected] = React.useState<string>("");
+  const defaultCardId = () => cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "";
+  const [selected, setSelected] = React.useState<string>(() => (open ? defaultCardId() : ""));
 
-  React.useEffect(() => {
-    if (open) setSelected(cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "");
-  }, [open, cards]);
+  // Preselect the default card when the modal opens or the card list changes
+  // (adjusted during render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ open, cards });
+  if (prevSync.open !== open || prevSync.cards !== cards) {
+    setPrevSync({ open, cards });
+    if (open) setSelected(defaultCardId());
+  }
 
   if (!invoice) return null;
   const total = invoice.amount + Math.round(invoice.amount * 0.07);
@@ -343,11 +352,16 @@ export function PurchasePlanModal({ tier, cycle, cards, onClose, onAddCard, onCo
   onAddCard: () => void;
   onConfirm: (cardId: string) => void;
 }) {
-  const [selected, setSelected] = React.useState<string>("");
+  const defaultCardId = () => cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "";
+  const [selected, setSelected] = React.useState<string>(() => (tier ? defaultCardId() : ""));
 
-  React.useEffect(() => {
-    if (tier) setSelected(cards.find((c) => c.isDefault)?.id ?? cards[0]?.id ?? "");
-  }, [tier, cards]);
+  // Preselect the default card when a plan is chosen or the card list changes
+  // (adjusted during render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ tier, cards });
+  if (prevSync.tier !== tier || prevSync.cards !== cards) {
+    setPrevSync({ tier, cards });
+    if (tier) setSelected(defaultCardId());
+  }
 
   if (!tier) return null;
   const plan = PLANS[tier];
@@ -859,77 +873,95 @@ function InvoicesTable({ invoices, onOpen, onRetry }: {
   onOpen: (inv: Invoice) => void;
   onRetry: (inv: Invoice) => void;
 }) {
+  const columns: DataTableColumn<Invoice>[] = [
+    {
+      key: "issued",
+      header: "ISSUED",
+      className: "whitespace-nowrap text-sm text-foreground",
+      headClassName: "whitespace-nowrap",
+      cell: (inv) => inv.issuedDisplay,
+    },
+    {
+      key: "invoice",
+      header: "INVOICE",
+      className: "whitespace-nowrap",
+      cell: (inv) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{inv.id}</span>
+      ),
+    },
+    {
+      key: "period",
+      header: "PERIOD",
+      className: "whitespace-nowrap text-sm font-medium text-foreground transition-colors group-hover:text-primary-ink",
+      headClassName: "whitespace-nowrap",
+      cell: (inv) => inv.periodDisplay,
+    },
+    {
+      key: "plan",
+      header: "SUBSCRIPTION PLAN",
+      headClassName: "whitespace-nowrap",
+      cell: (inv) => {
+        const color = PLAN_COLORS[inv.planTier];
+        const PlanIcon = PLAN_ICONS[inv.planTier];
+        return (
+          <div className="flex items-center gap-2">
+            <div className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
+              <PlanIcon className={cn("size-3", color.text)} />
+            </div>
+            <span className="text-sm font-medium text-foreground">{inv.planName}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      header: "STATUS",
+      headClassName: "whitespace-nowrap",
+      cell: (inv) => (
+        <div className="flex items-center gap-2">
+          <StatusBadge tone={INVOICE_TONE[inv.status]}>{INVOICE_STATUS[inv.status].label}</StatusBadge>
+          {inv.status === "failed" && (
+            <Button variant="ghost" size="xs"
+              onClick={(e) => { e.stopPropagation(); onRetry(inv); }}
+              className="h-auto border-0 shrink whitespace-normal justify-start dark:hover:bg-severity-critical/10 hover:text-severity-critical inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-severity-critical hover:bg-severity-critical/10"
+            >
+              <RefreshCw className="size-2.5" /> Retry
+            </Button>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "amount",
+      header: "AMOUNT",
+      align: "right",
+      className: "whitespace-nowrap font-mono text-sm font-bold text-foreground",
+      headClassName: "whitespace-nowrap",
+      cell: (inv) => `$${inv.amount.toLocaleString()}`,
+    },
+    {
+      key: "open",
+      header: "",
+      align: "right",
+      className: "px-3",
+      headClassName: "whitespace-nowrap",
+      cell: () => (
+        <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
+      ),
+    },
+  ];
+
   return (
     <div data-slot="invoices-table" className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="overflow-x-auto">
-        <Table className="text-base w-full">
-          <TableHeader className="bg-muted/30">
-            <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-left">
-              {["ISSUED", "INVOICE", "PERIOD", "SUBSCRIPTION PLAN", "STATUS", "AMOUNT", ""].map((h, i) => (
-                <TableHead
-                  key={h || `col-${i}`}
-                  className={cn("h-auto font-bold",
-                    "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
-                    h === "AMOUNT" && "text-right"
-                  )}
-                >
-                  {h}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-border/60">
-            {invoices.length === 0 ? (
-              <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent">
-                <TableCell colSpan={7} className="whitespace-normal px-4 py-10 text-center text-sm italic text-muted-foreground">
-                  No invoices match the current filters.
-                </TableCell>
-              </TableRow>
-            ) : invoices.map((inv) => {
-              const color = PLAN_COLORS[inv.planTier];
-              const PlanIcon = PLAN_ICONS[inv.planTier];
-              return (
-              <TableRow
-                key={inv.id}
-                onClick={() => onOpen(inv)}
-                className="has-aria-expanded:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
-              >
-                <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{inv.issuedDisplay}</TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-3">
-                  <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{inv.id}</span>
-                </TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:text-primary-ink">{inv.periodDisplay}</TableCell>
-                <TableCell className="whitespace-normal px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className={cn("flex size-6 flex-shrink-0 items-center justify-center rounded border", color.border, color.bg)}>
-                      <PlanIcon className={cn("size-3", color.text)} />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">{inv.planName}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-normal px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <StatusBadge tone={INVOICE_TONE[inv.status]}>{INVOICE_STATUS[inv.status].label}</StatusBadge>
-                    {inv.status === "failed" && (
-                      <Button variant="ghost" size="xs"
-                        onClick={(e) => { e.stopPropagation(); onRetry(inv); }}
-                        className="h-auto border-0 shrink whitespace-normal justify-start dark:hover:bg-severity-critical/10 hover:text-severity-critical inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-severity-critical hover:bg-severity-critical/10"
-                      >
-                        <RefreshCw className="size-2.5" /> Retry
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-3 text-right font-mono text-sm font-bold text-foreground">${inv.amount.toLocaleString()}</TableCell>
-                <TableCell className="whitespace-normal px-3 py-3 text-right">
-                  <ChevronRight className="ml-auto size-4 text-muted-foreground/40 transition-colors group-hover:text-primary-ink" />
-                </TableCell>
-              </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        variant="list"
+        columns={columns}
+        data={invoices}
+        getRowId={(inv) => inv.id}
+        onRowClick={onOpen}
+        getRowClassName={() => "transition-colors"}
+        empty={{ variant: "inline", title: "No invoices match the current filters." }}
+      />
     </div>
   );
 }

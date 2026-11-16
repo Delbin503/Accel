@@ -6,11 +6,11 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { cn } from "@accel/ui/lib/utils";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
 
@@ -41,12 +41,16 @@ export function LinkCaseModal({
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState("");
 
-  React.useEffect(() => {
+  // Reset the picker each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setSelectedCaseId(null);
       setQuery("");
     }
-  }, [open]);
+  }
 
   /* Only show Open and In-Review cases from the same site */
   const eligible = cases.filter(

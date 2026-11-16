@@ -1,28 +1,36 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  Activity, Cable, Calendar, CircleCheck, MoreHorizontal, Pencil, Plus, Radio, RefreshCw, Search, Trash2, X,
+  Activity, Cable, Calendar, CircleCheck, MoreHorizontal, Pencil, Plus, Radio, RefreshCw, Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerHeader,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { Toolbar, ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { FilterDropdown } from "@accel/ui/components/shared/FilterDropdown";
+import { ConfirmDialog } from "@accel/ui/components/shared/ConfirmDialog";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import {
   CONNECTIONS, DEVICE_TYPES, DEVICE_TYPE_INFO, TA_AREAS, TA_SITES, USE_CASES, nextDeviceId, useDevicesStore, useSessionsStore,
   type Connection, type DeviceStatus, type DeviceType, type ExternalDevice,
 } from "./taData";
 import { useTaModelsStore } from "./taModels";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 
 /* Site › External Devices — new page for the Training Assessment module.
 
@@ -194,15 +202,6 @@ function DeviceModal({
 
 /* ── Drawer ────────────────────────────────────────────────────────────── */
 
-function Kv({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2 text-base">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("text-right text-foreground", mono && "font-mono text-sm")}>{value}</span>
-    </div>
-  );
-}
-
 function DeviceDrawer({
   device, onClose, onEdit, onRemove, onTest, onToggleSessions,
 }: {
@@ -221,42 +220,38 @@ function DeviceDrawer({
   const recent = sessions.filter((s) => s.devices.includes(device.id)).slice(0, 4);
 
   return (
-    <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div data-slot="device-drawer-header" className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">{device.id}</span>
-                <StatusBadge tone={STATUS_TONE[device.status]}>{STATUS_LABEL[device.status]}</StatusBadge>
-                <span className="rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">{device.type}</span>
-              </div>
-              <SheetTitle className="text-lg text-foreground">{device.name}</SheetTitle>
-              <p className="text-sm text-muted-foreground">{device.model} · {device.siteName} › {device.areaName}</p>
-            </div>
-            <div className="flex flex-shrink-0 items-center gap-2">
+    <DetailDrawer open onOpenChange={(v) => !v && onClose()} size="lg">
+        <DetailDrawerHeader
+          data-slot="device-drawer-header"
+          actions={
+            <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={onTest}><RefreshCw className="size-3.5" />Test Connection</Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}><Pencil className="size-3.5" />Edit</Button>
-              <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close" className="border-0 flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
-                <X className="size-4" />
-              </Button>
             </div>
+          }
+        >
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-xs text-muted-foreground">{device.id}</span>
+            <StatusBadge tone={STATUS_TONE[device.status]}>{STATUS_LABEL[device.status]}</StatusBadge>
+            <span className="rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">{device.type}</span>
           </div>
-        </SheetHeader>
+          <DetailDrawerTitle>{device.name}</DetailDrawerTitle>
+          <DetailDrawerDescription>{device.model} · {device.siteName} › {device.areaName}</DetailDrawerDescription>
+        </DetailDrawerHeader>
 
-        <div data-slot="device-drawer-body" className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <DetailDrawerBody data-slot="device-drawer-body" className="gap-4 px-5 py-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border bg-card px-4 py-2">
               <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pairing</p>
-              <div className="divide-y divide-border/60">
-                <Kv label="Paired to" value={<strong>{device.unit}</strong>} />
-                <Kv label="Area" value={`${device.areaName} · ${device.siteName}`} />
-                <Kv label="Connection" value={device.connection} />
-                <Kv label="Address" value={device.address} mono />
-                <Kv label="Serial" value={device.serial} mono />
-                <Kv label="Firmware" value={device.firmware} mono />
-                <Kv label="Last active" value={device.lastSeenDisplay} />
-              </div>
+              <DescriptionList layout="inline">
+                <DescriptionItem label="Paired to"><strong>{device.unit}</strong></DescriptionItem>
+                <DescriptionItem label="Area">{`${device.areaName} · ${device.siteName}`}</DescriptionItem>
+                <DescriptionItem label="Connection">{device.connection}</DescriptionItem>
+                <DescriptionItem label="Address" mono>{device.address}</DescriptionItem>
+                <DescriptionItem label="Serial" mono>{device.serial}</DescriptionItem>
+                <DescriptionItem label="Firmware" mono>{device.firmware}</DescriptionItem>
+                <DescriptionItem label="Last active">{device.lastSeenDisplay}</DescriptionItem>
+              </DescriptionList>
             </div>
             <div className="flex flex-col gap-4">
               <div className="rounded-xl border border-border bg-card p-4">
@@ -310,9 +305,8 @@ function DeviceDrawer({
             <Trash2 className="size-3.5" />
             Remove device
           </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawerBody>
+    </DetailDrawer>
   );
 }
 
@@ -397,6 +391,80 @@ export function TaExternalDevices() {
     toast.success(`${id} removed`, { description: "Deployments that used it keep running on cameras only." });
   }
 
+  const HEAD = "whitespace-nowrap";
+  const deviceColumns: DataTableColumn<ExternalDevice>[] = [
+    {
+      key: "id", header: "ID", className: "whitespace-nowrap", headClassName: HEAD,
+      cell: (d) => <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{d.id}</span>,
+    },
+    {
+      key: "name", header: "NAME · MODEL", headClassName: HEAD,
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-semibold text-foreground group-hover:text-primary-ink">{d.name}</span>
+          <span className="font-mono text-xs text-muted-foreground">{d.model}</span>
+        </div>
+      ),
+    },
+    { key: "type", header: "TYPE", className: "whitespace-nowrap text-foreground", headClassName: HEAD, cell: (d) => d.type },
+    { key: "status", header: "STATUS", headClassName: HEAD, cell: (d) => <StatusBadge tone={STATUS_TONE[d.status]}>{STATUS_LABEL[d.status]}</StatusBadge> },
+    {
+      key: "paired", header: "PAIRED TO", headClassName: HEAD,
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground">{d.unit}</span>
+          <span className="text-xs text-muted-foreground">{d.areaName} · {d.siteName}</span>
+        </div>
+      ),
+    },
+    {
+      key: "connection", header: "CONNECTION", headClassName: HEAD,
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground">{d.connection}</span>
+          <span className="font-mono text-xs text-muted-foreground">{d.address}</span>
+        </div>
+      ),
+    },
+    {
+      key: "sessions", header: "IN SESSIONS", headClassName: HEAD,
+      cell: (d) => d.useInSessions
+        ? <span className="inline-flex items-center gap-1 text-sm text-success"><CircleCheck className="size-3.5" />Yes</span>
+        : <span className="text-sm text-muted-foreground">Off</span>,
+    },
+    {
+      key: "lastActive", header: "LAST ACTIVE", className: "whitespace-nowrap text-muted-foreground", headClassName: HEAD,
+      cell: (d) => <span className="flex items-center gap-1.5"><Calendar className="size-3" />{d.lastSeenDisplay}</span>,
+    },
+    {
+      key: "action", header: "ACTION", headClassName: HEAD, stopRowClick: true,
+      cell: (d) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${d.id}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain" onClick={() => setDrawerId(d.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+              <Radio className="size-3.5 text-muted-foreground" />View details
+            </ItemButton>
+            <ItemButton variant="plain" onClick={() => testConnection(d)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+              <RefreshCw className="size-3.5 text-muted-foreground" />Test connection
+            </ItemButton>
+            <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("edit"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+              <Pencil className="size-3.5 text-muted-foreground" />Edit device
+            </ItemButton>
+            <div className="my-1 border-t border-border" />
+            <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
+              <Trash2 className="size-3.5" />Remove
+            </ItemButton>
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
+
   const KPIS: { key: KpiKey; label: string; sub: string; accent: "primary" | "success" | "warning" | "info" | "severity-critical"; value: number }[] = [
     { key: "all", label: "Total devices", sub: "Across all sites", accent: "primary", value: devices.length },
     { key: "online", label: "Online", sub: "Sending readings", accent: "success", value: devices.filter((d) => d.status === "online").length },
@@ -426,14 +494,11 @@ export function TaExternalDevices() {
         ))}
       </KpiGrid>
 
-      <div data-slot="ta-external-devices-page-filters" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by ID, name, model, address or bay…" className="h-9 pl-9 text-base" />
-        </div>
+      <Toolbar data-slot="ta-external-devices-page-filters" className="rounded-xl border border-border bg-card px-3 py-2.5">
+        <ToolbarSearch value={search} onChange={setSearch} placeholder="Search by ID, name, model, address or bay…" className="min-w-[220px] flex-1 sm:w-full" />
         <FilterDropdown label="All sites" options={TA_SITES.map((s) => ({ value: s.id, label: s.name }))} selected={sites} onChange={setSites} className="w-44" />
         <FilterDropdown label="All types" options={DEVICE_TYPES.map((t) => ({ value: t, label: t }))} selected={types} onChange={setTypes} className="w-44" />
-      </div>
+      </Toolbar>
 
       <p className="text-base text-muted-foreground">
         <strong className="text-foreground">{filtered.length}</strong> {filtered.length === 1 ? "device" : "devices"} match current filters
@@ -458,76 +523,13 @@ export function TaExternalDevices() {
         </div>
       ) : (
         <div data-slot="ta-external-devices-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-b border-border text-left">
-                  {["ID", "NAME · MODEL", "TYPE", "STATUS", "PAIRED TO", "CONNECTION", "IN SESSIONS", "LAST ACTIVE", "ACTION"].map((h) => (
-                    <TableHead key={h} className="whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {filtered.map((d) => (
-                  <TableRow key={d.id} onClick={() => setDrawerId(d.id)} className="group cursor-pointer text-base transition-colors hover:bg-muted/20">
-                    <TableCell className="whitespace-nowrap px-4 py-3"><span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{d.id}</span></TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-foreground group-hover:text-primary-ink">{d.name}</span>
-                        <span className="font-mono text-xs text-muted-foreground">{d.model}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-3 text-foreground">{d.type}</TableCell>
-                    <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[d.status]}>{STATUS_LABEL[d.status]}</StatusBadge></TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{d.unit}</span>
-                        <span className="text-xs text-muted-foreground">{d.areaName} · {d.siteName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{d.connection}</span>
-                        <span className="font-mono text-xs text-muted-foreground">{d.address}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      {d.useInSessions
-                        ? <span className="inline-flex items-center gap-1 text-sm text-success"><CircleCheck className="size-3.5" />Yes</span>
-                        : <span className="text-sm text-muted-foreground">Off</span>}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Calendar className="size-3" />{d.lastSeenDisplay}</span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${d.id}`} className="flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-44 p-1" align="end">
-                          <ItemButton variant="plain" onClick={() => setDrawerId(d.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
-                            <Radio className="size-3.5 text-muted-foreground" />View details
-                          </ItemButton>
-                          <ItemButton variant="plain" onClick={() => testConnection(d)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
-                            <RefreshCw className="size-3.5 text-muted-foreground" />Test connection
-                          </ItemButton>
-                          <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("edit"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
-                            <Pencil className="size-3.5 text-muted-foreground" />Edit device
-                          </ItemButton>
-                          <div className="my-1 border-t border-border" />
-                          <ItemButton variant="plain" onClick={() => { setDrawerId(d.id); setModal("remove"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-severity-critical hover:bg-severity-critical/10">
-                            <Trash2 className="size-3.5" />Remove
-                          </ItemButton>
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={deviceColumns}
+            data={filtered}
+            getRowId={(d) => d.id}
+            onRowClick={(d) => setDrawerId(d.id)}
+          />
         </div>
       )}
 

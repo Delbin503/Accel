@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
+import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/app/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
 import { DownloadsIndicator } from "@/components/app/DownloadsIndicator";
@@ -16,7 +16,7 @@ import {
   QuickActionsTrigger,
 } from "@/components/app/GlobalSearchTrigger";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@accel/ui/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
 
 /* Real pages — the palette's navigation actions are only worth testing if they

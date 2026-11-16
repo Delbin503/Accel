@@ -13,28 +13,29 @@ import {
   X,
   CheckSquare,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+} from "@accel/ui/components/shared/Modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import { SkeletonList, ErrorState, type ForcedState } from "./shared";
-import { ItemButton } from "@/components/ui/item";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
-import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
+import { SeverityBadge } from "@/pages/detection-feed/shared";
+import { parseEventText } from "@/pages/detection-feed/shared-utils";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "@/pages/detection-feed/dismissed/DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -427,7 +428,8 @@ export default function DismissedEventsPage({
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -542,7 +544,7 @@ export default function DismissedEventsPage({
         <div className="flex items-center gap-3">
           <p className="text-base text-muted-foreground">
             <strong className="text-foreground">{visible.length}</strong> events
-            {hasFilters && <span className="ml-1 text-muted-foreground/70">match current filters</span>}
+            {hasFilters && <span className="ml-1 text-muted-foreground">match current filters</span>}
           </p>
           {restoredIds.size > 0 && (
             <span className="flex items-center gap-1.5 text-sm text-success">

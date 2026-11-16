@@ -1,7 +1,7 @@
 import * as React from "react";
 import { FlaskConical } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
 
 /* ──────────────────────────────────────────────────────────────────────────
    PROTOTYPE-ONLY. Shared chrome for every prototype's State Tester:

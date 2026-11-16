@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import { AuthLayout } from "./AuthLayout";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_USERS } from "@/mocks/users";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
 
 export default function SignInPage() {
   const navigate = useNavigate();

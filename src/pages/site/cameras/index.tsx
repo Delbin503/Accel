@@ -1,12 +1,11 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import cameraLiveSample from "@/assets/camera-live-sample.webp";
 import {
-  Search,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
@@ -35,19 +34,19 @@ import {
   EyeOff,
   Settings,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TimeSelect } from "@/components/shared/TimeSelect";
+} from "@accel/ui/components/shared/Modal";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
 import {
   CheckList,
   CheckListEmpty,
@@ -61,18 +60,29 @@ import {
   ModalSelect,
   ModalTextInput,
   OptionChips,
-} from "@/components/shared/ModalForm";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/ModalForm";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { cn } from "@accel/ui/lib/utils";
 import { CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_DEPLOYMENTS } from "@/mocks/deployments";
 import { getRecordingsForCamera } from "@/mocks/recordings";
 import type { CameraData, CameraStatus } from "@/types/cameras";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
 import { RecordingCard } from "@/components/app/RecordingCard";
 import { SyncProgressModal } from "@/components/app/SyncProgressModal";
 import type { DeploymentData } from "@/types/deployments";
@@ -301,15 +311,7 @@ function FilterPanel({
 
       {open && (
         <div data-slot="cameras-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by ID, name, IP, or NVR…"
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search by ID, name, IP, or NVR…" className="sm:w-full" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { key: "site"   as const, label: "Site",   opts: CAMERA_SITES },
@@ -336,17 +338,6 @@ function FilterPanel({
 }
 
 /* ── Drawer sub-components ───────────────────────────────────────────────── */
-
-function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
-    </div>
-  );
-}
 
 // Unified compact StatCard — delegates to the shared KpiCard so accent bar + sizing match.
 function StatCard({
@@ -421,6 +412,9 @@ function CameraDrawerError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** Stable empty list for the forced empty state (keeps memo deps stable). */
+const NO_CAMERAS: CameraData[] = [];
+
 const RECORDING_DATE_FILTERS: { key: string; label: string }[] = [
   { key: "all",       label: "All" },
   { key: "today",     label: "Today" },
@@ -443,9 +437,12 @@ export function LinkNvrModal({
   const [search, setSearch] = React.useState("");
   const [selection, setSelection] = React.useState<{ nvrId: string; channel: number } | null>(null);
 
-  React.useEffect(() => {
+  // Reset each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) { setSearch(""); setSelection(null); }
-  }, [open]);
+  }
 
   if (!camera) return null;
 
@@ -579,7 +576,11 @@ export function CameraDrawer({
   const [retried, setRetried] = React.useState(false);
   const phase: DrawerAsync = retried ? "idle" : asyncState;
 
-  React.useEffect(() => {
+  // Reset the drawer whenever it opens or switches to another camera.
+  const cameraId = camera?.id;
+  const [prevReset, setPrevReset] = React.useState({ open, cameraId });
+  if (prevReset.open !== open || prevReset.cameraId !== cameraId) {
+    setPrevReset({ open, cameraId });
     if (open) {
       setTab("overview");
       setRecordingSearch("");
@@ -589,7 +590,7 @@ export function CameraDrawer({
       setSelectedRecordingIds(new Set());
       setRetried(false);
     }
-  }, [open, camera?.id]);
+  }
 
   const recordings = React.useMemo(
     () => (camera ? getRecordingsForCamera(camera.id) : []),
@@ -622,82 +623,61 @@ export function CameraDrawer({
   });
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
-        {/* Header */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          {camera ? (
-            <div data-slot="camera-drawer-header" className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                  <StatusPill status={camera.status} />
-                </div>
-                <div className="mb-1 flex items-center gap-2">
-                  <SheetTitle className="min-w-0 text-lg font-bold"><TruncatedText text={camera.name} /></SheetTitle>
-                  <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
-                    {camera.id}
-                  </span>
-                </div>
-                <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <MapPin className="size-3" />
-                  {camera.siteName} · {camera.areaName}
-                </p>
-              </div>
-              <Button variant="ghost" size="icon-sm"
-                onClick={onClose}
-                className="mt-0.5 size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-              >
-                <X className="size-4" />
-              </Button>
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
+      {/* Header */}
+      <DetailDrawerHeader data-slot="camera-drawer-header">
+        {camera ? (
+          <>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatusPill status={camera.status} />
             </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-md text-muted-foreground">Camera not found</SheetTitle>
-              <Button variant="ghost" size="icon-sm"
-                onClick={onClose}
-                className="size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-              >
-                <X className="size-4" />
-              </Button>
+            <div className="flex min-w-0 items-center gap-2">
+              <DetailDrawerTitle><TruncatedText text={camera.name} /></DetailDrawerTitle>
+              <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">
+                {camera.id}
+              </span>
             </div>
-          )}
+            <DetailDrawerDescription className="gap-x-1.5">
+              <MapPin />
+              {camera.siteName} · {camera.areaName}
+            </DetailDrawerDescription>
+          </>
+        ) : (
+          <DetailDrawerTitle className="text-md font-normal text-muted-foreground">Camera not found</DetailDrawerTitle>
+        )}
 
-          {/* Tabs */}
-          {camera && (
-            <div data-slot="camera-drawer-tabs" className="mt-3 flex items-center gap-1 border-b border-transparent">
-              {[
-                { key: "overview" as const,   label: "Overview",   icon: Layers },
-                { key: "recordings" as const, label: "Recordings", icon: FileVideo, badge: recordings.length },
-              ].map(({ key, label, icon: Icon, badge }) => (
-                <ItemButton variant="plain" selected={tab === key}
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={cn(
-                    "relative w-auto gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
-                    tab === key
-                      ? "text-primary-ink"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className="size-3.5" />
-                  {label}
-                  {badge != null && badge > 0 && (
-                    <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
-                      {badge}
-                    </span>
-                  )}
-                  {tab === key && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
-                  )}
-                </ItemButton>
-              ))}
-            </div>
-          )}
-        </SheetHeader>
+        {/* Tabs */}
+        {camera && (
+          <div data-slot="camera-drawer-tabs" className="mt-1.5 flex items-center gap-1 border-b border-transparent">
+            {[
+              { key: "overview" as const,   label: "Overview",   icon: Layers },
+              { key: "recordings" as const, label: "Recordings", icon: FileVideo, badge: recordings.length },
+            ].map(({ key, label, icon: Icon, badge }) => (
+              <ItemButton variant="plain" selected={tab === key}
+                key={key}
+                onClick={() => setTab(key)}
+                className={cn(
+                  "relative w-auto gap-1.5 px-3 py-2 text-base font-semibold transition-colors",
+                  tab === key
+                    ? "text-primary-ink"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="size-3.5" />
+                {label}
+                {badge != null && badge > 0 && (
+                  <span className="ml-0.5 rounded-full bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
+                    {badge}
+                  </span>
+                )}
+                {tab === key && (
+                  <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
+                )}
+              </ItemButton>
+            ))}
+          </div>
+        )}
+      </DetailDrawerHeader>
 
         {/* Detail-fetch states */}
         {camera && phase === "loading" && <CameraDrawerSkeleton />}
@@ -707,7 +687,7 @@ export function CameraDrawer({
 
         {/* Body */}
         {camera && phase === "idle" && tab === "overview" && (
-          <div data-slot="camera-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
+          <DetailDrawerBody data-slot="camera-drawer-body">
             {/* Live feed */}
             <div data-slot="camera-drawer-live-feed" className="overflow-hidden rounded-xl border border-border bg-card">
               <div className="relative aspect-video w-full overflow-hidden bg-media-raised">
@@ -796,74 +776,51 @@ export function CameraDrawer({
             </div>
 
             {/* Device Info — full KV grid */}
-            <div data-slot="camera-drawer-device-info">
-              <SectionTitle>Device Info</SectionTitle>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-                {(
-                  [
-                    ["Camera Name",     camera.name],
-                    ["Camera ID",       <span className="font-mono text-xs text-primary-ink">{camera.id}</span>],
-                    ["Status",          <StatusPill status={camera.status} />],
-                    ["Last Activity",   camera.lastSeenDisplay],
-                    ["Site Location",   camera.siteName],
-                    ["Area Name",       camera.areaName],
-                    ["IP Address",      <span className="font-mono text-xs">{camera.ipAddress}</span>],
-                    ["RTSP Port",       <span className="font-mono text-xs">{camera.rtspPort}</span>],
-                    ["Username",        <span className="font-mono text-xs">{camera.username || "—"}</span>],
-                    ["Password",        <RevealValue value={camera.password} />],
-                    ["Active Since",    camera.activeAtDisplay],
-                    ["Events (24h)",    <span className="font-semibold">{camera.recentEventCount}</span>],
-                    ["Active Models",   <span className="font-semibold">{deployments.filter((d) => d.status === "active").length}</span>],
-                    ["Retention",       `${camera.recording.retentionDays} days`],
-                  ] as [string, React.ReactNode][]
-                ).map(([label, value]) => (
-                  <div key={label as string} className="flex flex-col gap-0.5">
-                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      {label}
-                    </span>
-                    <span className="text-base font-medium text-foreground">{value}</span>
-                  </div>
-                ))}
+            <DetailDrawerSection data-slot="camera-drawer-device-info" title="Device Info">
+              <DescriptionList columns={2} variant="card">
+                <DescriptionItem label="Camera Name">{camera.name}</DescriptionItem>
+                <DescriptionItem label="Camera ID" mono><span className="text-primary-ink">{camera.id}</span></DescriptionItem>
+                <DescriptionItem label="Status"><StatusPill status={camera.status} /></DescriptionItem>
+                <DescriptionItem label="Last Activity">{camera.lastSeenDisplay}</DescriptionItem>
+                <DescriptionItem label="Site Location">{camera.siteName}</DescriptionItem>
+                <DescriptionItem label="Area Name">{camera.areaName}</DescriptionItem>
+                <DescriptionItem label="IP Address" mono>{camera.ipAddress}</DescriptionItem>
+                <DescriptionItem label="RTSP Port" mono>{camera.rtspPort}</DescriptionItem>
+                <DescriptionItem label="Username" mono>{camera.username || "—"}</DescriptionItem>
+                <DescriptionItem label="Password"><RevealValue value={camera.password} /></DescriptionItem>
+                <DescriptionItem label="Active Since">{camera.activeAtDisplay}</DescriptionItem>
+                <DescriptionItem label="Events (24h)"><span className="font-semibold">{camera.recentEventCount}</span></DescriptionItem>
+                <DescriptionItem label="Active Models"><span className="font-semibold">{deployments.filter((d) => d.status === "active").length}</span></DescriptionItem>
+                <DescriptionItem label="Retention">{`${camera.recording.retentionDays} days`}</DescriptionItem>
                 {extraFields.map((field) =>
                   field.drawerCell ? (
-                    <div key={field.header} className="col-span-2 flex flex-col gap-1.5 border-t border-border pt-2.5">
-                      <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        {field.drawerLabel ?? field.header}
-                      </span>
+                    <DescriptionItem
+                      key={field.header}
+                      wide
+                      label={field.drawerLabel ?? field.header}
+                      className="gap-1.5 border-t border-border pt-2.5"
+                    >
                       {field.drawerCell(camera)}
-                    </div>
+                    </DescriptionItem>
                   ) : null
                 )}
-              </div>
-            </div>
+              </DescriptionList>
+            </DetailDrawerSection>
 
             {/* Stream + Video Specs */}
-            <div data-slot="camera-drawer-stream">
-              <SectionTitle>Stream Specifications</SectionTitle>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-                {(
-                  [
-                    ["Codec",         camera.stream.codec.toUpperCase()],
-                    ["Resolution",    <span className="font-mono text-xs">{camera.stream.resolution}</span>],
-                    ["Frame Rate",    `${camera.stream.frameRate} fps`],
-                    ["Bitrate",       <span className="font-mono text-xs">{camera.recording.bitrateKbps} kbps</span>],
-                    ["Schedule",      <span className="capitalize">{camera.recording.schedule.replace(/-/g, " ")}</span>],
-                    ["RTSP URL",      <span className="break-all font-mono text-xs text-foreground">{camera.rtspUrl}</span>],
-                  ] as [string, React.ReactNode][]
-                ).map(([label, value]) => (
-                  <div key={label as string} className={cn("flex flex-col gap-0.5", label === "RTSP URL" && "col-span-2")}>
-                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      {label}
-                    </span>
-                    <span className="text-base font-medium text-foreground">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <DetailDrawerSection data-slot="camera-drawer-stream" title="Stream Specifications">
+              <DescriptionList columns={2} variant="card">
+                <DescriptionItem label="Codec">{camera.stream.codec.toUpperCase()}</DescriptionItem>
+                <DescriptionItem label="Resolution" mono>{camera.stream.resolution}</DescriptionItem>
+                <DescriptionItem label="Frame Rate">{`${camera.stream.frameRate} fps`}</DescriptionItem>
+                <DescriptionItem label="Bitrate" mono>{camera.recording.bitrateKbps} kbps</DescriptionItem>
+                <DescriptionItem label="Schedule"><span className="capitalize">{camera.recording.schedule.replace(/-/g, " ")}</span></DescriptionItem>
+                <DescriptionItem label="RTSP URL" mono wide><span className="break-all">{camera.rtspUrl}</span></DescriptionItem>
+              </DescriptionList>
+            </DetailDrawerSection>
 
             {/* NVR Storage */}
-            <div data-slot="camera-drawer-storage">
-              <SectionTitle>NVR Storage</SectionTitle>
+            <DetailDrawerSection data-slot="camera-drawer-storage" title="NVR Storage">
               {nvr && camera.nvrId && camera.nvrName ? (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
                   <ItemButton variant="plain"
@@ -910,23 +867,15 @@ export function CameraDrawer({
                   </Button>
                 </div>
               )}
-            </div>
-          </div>
+            </DetailDrawerSection>
+          </DetailDrawerBody>
         )}
 
         {camera && phase === "idle" && tab === "recordings" && (
-          <div data-slot="camera-drawer-recordings" className="flex-1 space-y-4 overflow-y-auto p-5">
+          <DetailDrawerBody data-slot="camera-drawer-recordings" className="gap-4">
             {/* Search + date filters */}
             <div data-slot="camera-drawer-recordings-filters" className="space-y-3">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={recordingSearch}
-                  onChange={(e) => setRecordingSearch(e.target.value)}
-                  placeholder="Search by recording ID or area…"
-                  className="h-9 w-full pl-9 text-base"
-                />
-              </div>
+              <ToolbarSearch value={recordingSearch} onChange={setRecordingSearch} placeholder="Search by recording ID or area…" className="sm:w-full" />
               <SegmentedControl
                 type="single"
                 variant="outline"
@@ -984,7 +933,7 @@ export function CameraDrawer({
               recording{filteredRecordings.length === 1 ? "" : "s"}
               {camera.nvrId && (
                 <>
-                  <span className="mx-1.5 text-muted-foreground/40">·</span>
+                  <span className="mx-1.5 text-muted-foreground">·</span>
                   Stored on {camera.nvrName} · Channel {camera.channel}
                 </>
               )}
@@ -1019,7 +968,8 @@ export function CameraDrawer({
                       selected={selectedRecordingIds.has(r.id)}
                       onToggle={() => setSelectedRecordingIds((curr) => {
                         const next = new Set(curr);
-                        next.has(r.id) ? next.delete(r.id) : next.add(r.id);
+                        if (next.has(r.id)) next.delete(r.id);
+                        else next.add(r.id);
                         return next;
                       })}
                       onOpen={() => navigate("/recordings", { state: { openRecordingId: r.id } })}
@@ -1028,7 +978,7 @@ export function CameraDrawer({
                 </div>
               </>
             )}
-          </div>
+          </DetailDrawerBody>
         )}
 
         {/* Floating selection bar inside drawer */}
@@ -1064,30 +1014,31 @@ export function CameraDrawer({
 
         {/* Footer */}
         {camera && phase === "idle" && (
-          <div data-slot="camera-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
-            <Button size="sm" className="gap-1.5" onClick={onEdit}>
-              <Pencil className="size-3.5" />
-              Edit Camera
-            </Button>
-            {camera.nvrId && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={onNvrSync}>
-                <RefreshCw className="size-3.5" />
-                NVR Sync
+          <DetailDrawerFooter data-slot="camera-drawer-footer" className="gap-2">
+            <DetailDrawerFooterStart className="gap-2">
+              <Button size="sm" className="gap-1.5" onClick={onEdit}>
+                <Pencil className="size-3.5" />
+                Edit Camera
               </Button>
-            )}
+              {camera.nvrId && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={onNvrSync}>
+                  <RefreshCw className="size-3.5" />
+                  NVR Sync
+                </Button>
+              )}
+            </DetailDrawerFooterStart>
             <Button
               variant="outline"
               size="sm"
-              className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
+              className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
               onClick={onDelete}
             >
               <Trash2 className="size-3.5" />
               Delete Camera
             </Button>
-          </div>
+          </DetailDrawerFooter>
         )}
-      </SheetContent>
-    </Sheet>
+    </DetailDrawer>
   );
 }
 
@@ -1219,15 +1170,17 @@ export function CameraFormModal({
   const [errors, setErrors] = React.useState<{ name?: string; ipAddress?: string; siteId?: string; areaId?: string; username?: string; password?: string }>({});
   const [linkNvr, setLinkNvr] = React.useState(false);
 
-  React.useEffect(() => {
+  // Load the form each time the modal opens (or the camera being edited changes).
+  const [prevLoad, setPrevLoad] = React.useState<{ open: boolean; initial: CameraFormFields | null }>({ open: false, initial: null });
+  if (prevLoad.open !== open || prevLoad.initial !== initial) {
+    setPrevLoad({ open, initial });
     if (open) {
       const next = initial ?? emptyForm(takenIds);
       setFields(next);
       setErrors({});
       setLinkNvr(!!next.nvrId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial]);
+  }
 
   function toggleLinkNvr(checked: boolean) {
     setLinkNvr(checked);
@@ -1260,29 +1213,27 @@ export function CameraFormModal({
       .map((c) => c.channel);
   }, [selectedNvr, mode, initial]);
 
-  // When site changes, reset NVR if it's not at the new site
-  React.useEffect(() => {
+  // When site changes, reset NVR if it's not at the new site.
+  // (`undefined` initial value so this also runs on the first render, as the effect did.)
+  const [prevSiteId, setPrevSiteId] = React.useState<string | undefined>(undefined);
+  if (fields.siteId !== prevSiteId) {
+    setPrevSiteId(fields.siteId);
     if (fields.nvrId && selectedNvr && selectedNvr.siteId !== fields.siteId) {
       setFields((curr) => ({ ...curr, nvrId: "", channel: null }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.siteId]);
+  }
 
   // When NVR changes, ensure channel is valid; default to first available
-  React.useEffect(() => {
-    if (!fields.nvrId) {
+  const nvrKey = `${fields.nvrId}|${availableChannels.length}`;
+  const [prevNvrKey, setPrevNvrKey] = React.useState<string | undefined>(undefined);
+  if (nvrKey !== prevNvrKey) {
+    setPrevNvrKey(nvrKey);
+    if (!fields.nvrId || availableChannels.length === 0) {
       if (fields.channel != null) setFields((curr) => ({ ...curr, channel: null }));
-      return;
-    }
-    if (availableChannels.length === 0) {
-      if (fields.channel != null) setFields((curr) => ({ ...curr, channel: null }));
-      return;
-    }
-    if (fields.channel == null || !availableChannels.includes(fields.channel)) {
+    } else if (fields.channel == null || !availableChannels.includes(fields.channel)) {
       setFields((curr) => ({ ...curr, channel: availableChannels[0] }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.nvrId, availableChannels.length]);
+  }
 
   /**
    * The schedule is only asked for once the camera has somewhere to record to.
@@ -1570,7 +1521,7 @@ export default function CamerasPage({
   const location = useLocation();
   const isEmptyState = forcedState === "empty";
   const storeCameras = useCamerasStore((s) => s.cameras);
-  const cameras = isEmptyState ? [] : storeCameras;
+  const cameras = isEmptyState ? NO_CAMERAS : storeCameras;
   const addCamera = useCamerasStore((s) => s.addCamera);
   const updateCamera = useCamerasStore((s) => s.updateCamera);
   const deleteCameraFromStore = useCamerasStore((s) => s.deleteCamera);
@@ -1578,16 +1529,21 @@ export default function CamerasPage({
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<CameraFilters>(EMPTY_FILTERS);
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
-  const [drawerId, setDrawerId] = React.useState<string | null>(null);
+  // A camera to open can arrive as router state (e.g. from the ⌘K palette).
+  const incomingCameraId = (location.state as { openCameraId?: string } | null)?.openCameraId;
+  const [drawerId, setDrawerId] = React.useState<string | null>(incomingCameraId ?? null);
+  const [prevLocationState, setPrevLocationState] = React.useState(location.state);
+  if (location.state !== prevLocationState) {
+    setPrevLocationState(location.state);
+    if (incomingCameraId) setDrawerId(incomingCameraId);
+  }
 
   React.useEffect(() => {
-    const incoming = (location.state as { openCameraId?: string } | null)?.openCameraId;
-    if (incoming) {
-      setDrawerId(incoming);
+    if (incomingCameraId) {
       // Clear the state so a back/forward doesn't re-trigger.
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.state, location.pathname, navigate]);
+  }, [incomingCameraId, location.state, location.pathname, navigate]);
   const [page, setPage] = React.useState(1);
   const [modal, setModal] = React.useState<
     | { kind: "add" }
@@ -1732,6 +1688,148 @@ export default function CamerasPage({
     MOCK_DEPLOYMENTS.push(...deployments);
   }, [deployments]);
 
+  const cameraColumns: DataTableColumn<CameraData>[] = [
+    {
+      key: "id",
+      header: "ID",
+      cell: (c) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {c.id}
+        </span>
+      ),
+    },
+    {
+      key: "name",
+      header: "NAME",
+      cell: (c) => (
+        <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
+          {c.name}
+        </span>
+      ),
+    },
+    { key: "status", header: "STATUS", cell: (c) => <StatusPill status={c.status} /> },
+    {
+      key: "ip",
+      header: "IP",
+      className: "font-mono text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (c) => c.ipAddress,
+    },
+    {
+      key: "location",
+      header: "LOCATION",
+      className: "text-muted-foreground",
+      headClassName: "",
+      cell: (c) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground">{c.areaName}</span>
+          <span className="text-xs">{c.siteName}</span>
+        </div>
+      ),
+    },
+    {
+      key: "nvr",
+      header: "NVR · CH",
+      className: "text-muted-foreground",
+      headClassName: "",
+      cell: (c) =>
+        c.nvrId && c.channel ? (
+          <Button variant="outline" size="xs"
+            onClick={(e) => { e.stopPropagation(); navigate(`/site/nvr?nvr=${c.nvrId}`); }}
+            className="h-auto gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs font-normal text-info hover:bg-info/15 hover:text-info dark:border-info/20 dark:bg-info/5 dark:hover:bg-info/15"
+          >
+            <HardDrive className="size-3" />
+            <span className="font-mono">{c.nvrId}</span>
+            <span className="text-muted-foreground">· Ch {c.channel}</span>
+          </Button>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-md border border-warning/20 bg-warning/5 px-2 py-1 text-xs text-warning">
+            <AlertTriangle className="size-3" />
+            Unlinked
+          </span>
+        ),
+    },
+    {
+      key: "events",
+      header: "EVENTS 24H",
+      className: "font-semibold text-foreground",
+      headClassName: "",
+      cell: (c) => c.recentEventCount,
+    },
+    {
+      key: "active",
+      header: "ACTIVE",
+      className: "text-muted-foreground",
+      headClassName: "",
+      cell: (c) => (
+        <div className="flex items-center gap-1.5">
+          <Calendar className="size-3" />
+          {c.lastSeenDisplay}
+        </div>
+      ),
+    },
+    ...extraColumns.map((col): DataTableColumn<CameraData> => ({
+      key: `extra-${col.header}`,
+      header: col.header,
+      stopRowClick: true,
+      cell: (c) => col.cell(c),
+    })),
+    {
+      key: "action",
+      header: "ACTION",
+      stopRowClick: true,
+      cell: (c) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain"
+              onClick={() => setDrawerId(c.id)}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+            >
+              <Video className="size-3.5 text-muted-foreground" />
+              View details
+            </ItemButton>
+            <ItemButton variant="plain"
+              onClick={() => setModal({ kind: "edit", cameraId: c.id })}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+            >
+              <Pencil className="size-3.5 text-muted-foreground" />
+              Edit camera
+            </ItemButton>
+            <ItemButton variant="plain"
+              onClick={() => setModal({ kind: "edit", cameraId: c.id })}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+            >
+              <Settings className="size-3.5 text-muted-foreground" />
+              Edit Config
+            </ItemButton>
+            {c.nvrId && (
+              <ItemButton variant="plain"
+                onClick={() => navigate(`/site/nvr?nvr=${c.nvrId}`)}
+                className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+              >
+                <HardDrive className="size-3.5 text-muted-foreground" />
+                Open NVR
+              </ItemButton>
+            )}
+            <div className="my-1 border-t border-border" />
+            <ItemButton variant="plain"
+              onClick={() => setModal({ kind: "delete", cameraId: c.id })}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10"
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </ItemButton>
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
+
   return (
     <div data-slot="cameras-page" className="flex flex-col gap-4">
       <PageHeader>
@@ -1812,130 +1910,14 @@ export default function CamerasPage({
         </div>
       ) : (
         <div data-slot="cameras-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
-                  {["ID", "NAME", "STATUS", "IP", "LOCATION", "NVR · CH", "EVENTS 24H", "ACTIVE", ...extraColumns.map((c) => c.header), "ACTION"].map((h) => (
-                    <TableHead
-                      key={h}
-                      className="h-auto px-0 whitespace-normal text-current font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {pageItems.map((c) => (
-                  <TableRow
-                    key={c.id}
-                    onClick={() => setDrawerId(c.id)}
-                    className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
-                  >
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                        {c.id}
-                      </span>
-                    </TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
-                        {c.name}
-                      </span>
-                    </TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3"><StatusPill status={c.status} /></TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">
-                      {c.ipAddress}
-                    </TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{c.areaName}</span>
-                        <span className="text-xs">{c.siteName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
-                      {c.nvrId && c.channel ? (
-                        <Button variant="outline" size="xs"
-                          onClick={(e) => { e.stopPropagation(); navigate(`/site/nvr?nvr=${c.nvrId}`); }}
-                          className="h-auto gap-1.5 rounded-md border border-info/20 bg-info/5 px-2 py-1 text-xs font-normal text-info hover:bg-info/15 hover:text-info dark:border-info/20 dark:bg-info/5 dark:hover:bg-info/15"
-                        >
-                          <HardDrive className="size-3" />
-                          <span className="font-mono">{c.nvrId}</span>
-                          <span className="text-muted-foreground">· Ch {c.channel}</span>
-                        </Button>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-warning/20 bg-warning/5 px-2 py-1 text-xs text-warning">
-                          <AlertTriangle className="size-3" />
-                          Unlinked
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3 font-semibold text-foreground">{c.recentEventCount}</TableCell>
-                    <TableCell className="p-0 whitespace-normal px-4 py-3 text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="size-3" />
-                        {c.lastSeenDisplay}
-                      </div>
-                    </TableCell>
-                    {extraColumns.map((col) => (
-                      <TableCell key={col.header} className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        {col.cell(c)}
-                      </TableCell>
-                    ))}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-44 p-1" align="end">
-                          <ItemButton variant="plain"
-                            onClick={() => setDrawerId(c.id)}
-                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
-                          >
-                            <Video className="size-3.5 text-muted-foreground" />
-                            View details
-                          </ItemButton>
-                          <ItemButton variant="plain"
-                            onClick={() => setModal({ kind: "edit", cameraId: c.id })}
-                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
-                          >
-                            <Pencil className="size-3.5 text-muted-foreground" />
-                            Edit camera
-                          </ItemButton>
-                          <ItemButton variant="plain"
-                            onClick={() => setModal({ kind: "edit", cameraId: c.id })}
-                            className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
-                          >
-                            <Settings className="size-3.5 text-muted-foreground" />
-                            Edit Config
-                          </ItemButton>
-                          {c.nvrId && (
-                            <ItemButton variant="plain"
-                              onClick={() => navigate(`/site/nvr?nvr=${c.nvrId}`)}
-                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
-                            >
-                              <HardDrive className="size-3.5 text-muted-foreground" />
-                              Open NVR
-                            </ItemButton>
-                          )}
-                          <div className="my-1 border-t border-border" />
-                          <ItemButton variant="plain"
-                            onClick={() => setModal({ kind: "delete", cameraId: c.id })}
-                            className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10"
-                          >
-                            <Trash2 className="size-3.5" />
-                            Delete
-                          </ItemButton>
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={cameraColumns}
+            data={pageItems}
+            getRowId={(c) => c.id}
+            onRowClick={(c) => setDrawerId(c.id)}
+            getRowClassName={() => "transition-colors"}
+          />
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
@@ -1953,7 +1935,7 @@ export default function CamerasPage({
                 <ChevronLeft className="size-3.5" />
               </Button>
               <span className="px-2 text-sm text-foreground">
-                {page} <span className="text-muted-foreground/60">of {pageCount}</span>
+                {page} <span className="text-muted-foreground">of {pageCount}</span>
               </span>
               <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}

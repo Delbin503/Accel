@@ -1,7 +1,7 @@
 /* Brand mark for the invite screens, matching the PRD design.
 
    NOTE: the app has two other marks — the sidebar's triangle-and-swoosh
-   (components/layout/AppSidebar) and the auth pages' inline Play badge
+   (components/app/AppSidebar) and the auth pages' inline Play badge
    (pages/auth/AuthLayout). Worth unifying them into one brand component. */
 
 /** Accel brand mark — matches the sidebar logo (orange play triangle + wordmark). */

@@ -1,14 +1,15 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Box, CheckCircle2, Cctv, Info, Layers, RotateCcw, Square } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { USE_CASES, USE_CASE_KEYS, type PoseMode, type UseCaseKey } from "./taData";
 import { requiredCameras, unitReadiness, usePoseStore, type FewerCameras, type Smoothing } from "./taPose";
 import { useTaModelsStore } from "./taModels";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ItemButton } from "@/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* System Configuration › Camera Defaults › Assessment Cameras & Pose.
 
@@ -98,21 +99,14 @@ export function TaPoseDefaults() {
     <div data-slot="ta-pose-defaults-page" className="flex flex-col gap-4">
       {/* Use case + scope */}
       <div data-slot="ta-pose-defaults-page-toolbar" className="flex flex-wrap items-center justify-between gap-3">
-        <div data-slot="button-group" className="flex h-8 items-center rounded-md border border-border bg-background p-0.5">
+        <SegmentedControl type="single" value={uc} onValueChange={(v) => v && setUc(v as UseCaseKey)} aria-label="Use case"
+          className="h-8 gap-0 rounded-md border border-border bg-background p-0.5">
           {USE_CASE_KEYS.map((k) => (
-            <Button variant="ghost"
-              key={k}
-              type="button"
-              onClick={() => setUc(k)}
-              className={cn(
-                "border-0", "inline-flex h-full items-center rounded px-3 text-sm font-semibold transition-colors",
-                uc === k ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
+            <SegmentedControlItem key={k} value={k} className="h-full rounded px-3 font-semibold data-[state=off]:hover:bg-muted data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none data-[state=on]:hover:text-primary-foreground">
               {USE_CASES[k].label}
-            </Button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
         <div className="flex items-center gap-3">
           <p className="text-xs text-muted-foreground">
             Applies to {models.length === 0 ? "every new " + u.label.toLowerCase() + " model" : models.map((m) => m.name).join(", ")}

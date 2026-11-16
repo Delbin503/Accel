@@ -1,37 +1,15 @@
 import * as React from "react";
-import { ChevronDown, Search } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ItemButton } from "@/components/ui/item";
-import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { cn } from "@accel/ui/lib/utils";
+import { COUNTRY_CODES } from "./phoneCodes";
 
 /* Copied verbatim from src/pages/user-management (EditUserModal) so the invite
    setup form's phone field matches the live app exactly. Prototype-only. */
-
-export const COUNTRY_CODES: { code: string; name: string }[] = [
-  { code: "+65", name: "Singapore" },
-  { code: "+60", name: "Malaysia" },
-  { code: "+62", name: "Indonesia" },
-  { code: "+66", name: "Thailand" },
-  { code: "+63", name: "Philippines" },
-  { code: "+84", name: "Vietnam" },
-  { code: "+91", name: "India" },
-  { code: "+86", name: "China" },
-  { code: "+852", name: "Hong Kong" },
-  { code: "+81", name: "Japan" },
-  { code: "+82", name: "South Korea" },
-  { code: "+61", name: "Australia" },
-  { code: "+64", name: "New Zealand" },
-  { code: "+44", name: "United Kingdom" },
-  { code: "+1", name: "United States" },
-  { code: "+971", name: "United Arab Emirates" },
-  { code: "+966", name: "Saudi Arabia" },
-  { code: "+49", name: "Germany" },
-  { code: "+33", name: "France" },
-];
-
-export const DEFAULT_DIAL_CODE = "+65";
 
 export function PhoneField({
   dialCode,
@@ -64,15 +42,14 @@ export function PhoneField({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
-          <div className="relative mb-1">
-            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search country or code"
-              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
-            />
-          </div>
+          <ToolbarSearch
+            size="sm"
+            value={query}
+            onChange={setQuery}
+            placeholder="Search country or code"
+            className="mb-1"
+            inputClassName="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
+          />
           <div data-slot="phone-field-country-list" className="max-h-56 overflow-y-auto">
             {list.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">No match</p>

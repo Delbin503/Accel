@@ -32,20 +32,21 @@ import {
   ChevronDown,
   Plus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/shared";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Slider } from "@accel/ui/components/ui/slider";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { EmptyState } from "@accel/ui/components/shared";
+import { cn } from "@accel/ui/lib/utils";
 import { useNvrDefaultsStore } from "@/stores/useNvrDefaultsStore";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
 import { RecordingSchedule } from "../RecordingSchedule";
 import { TaPoseDefaults } from "./TaPoseDefaults";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@accel/ui/components/ui/table";
 
 type Section =
   | "general"
@@ -198,36 +199,30 @@ function GeneralSection() {
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time format</label>
-            <div className="flex gap-1.5">
+            <SegmentedControl type="single" variant="outline" value={timeFormat} onValueChange={(v) => v && setTimeFormat(v as typeof timeFormat)} aria-label="Time format"
+              className="flex w-auto flex-nowrap">
               {(["24h", "12h"] as const).map((opt) => (
-                <Button variant="ghost" key={opt} onClick={() => setTimeFormat(opt)}
-                  className={cn(
-                    "h-auto", "flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    timeFormat === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
-                  )}>
+                <SegmentedControlItem key={opt} value={opt} className="h-auto flex-1 rounded-md bg-transparent px-3 py-2 text-sm font-semibold hover:bg-transparent data-[state=on]:border-primary data-[state=on]:hover:bg-primary/10">
                   {opt === "24h" ? "24-hour (15:30)" : "12-hour (3:30 PM)"}
-                </Button>
+                </SegmentedControlItem>
               ))}
-            </div>
+            </SegmentedControl>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Week starts on</label>
-            <div className="flex gap-1.5">
+            <SegmentedControl type="single" variant="outline" value={weekStart} onValueChange={(v) => v && setWeekStart(v as typeof weekStart)} aria-label="Week starts on"
+              className="flex w-auto flex-nowrap">
               {(["mon", "sun"] as const).map((opt) => (
-                <Button variant="ghost" key={opt} onClick={() => setWeekStart(opt)}
-                  className={cn(
-                    "h-auto", "relative flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors",
-                    weekStart === opt ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:text-foreground"
-                  )}>
+                <SegmentedControlItem key={opt} value={opt} className="relative h-auto flex-1 rounded-md bg-transparent px-3 py-2 text-sm font-semibold hover:bg-transparent data-[state=on]:border-primary data-[state=on]:hover:bg-primary/10">
                   {opt === "mon" ? "Monday" : "Sunday"}
                   {opt === "mon" && (
                     <span className="ml-1.5 inline-flex items-center rounded-full border border-success/40 bg-success/10 px-1.5 py-px text-3xs font-bold uppercase tracking-wider text-success">
                       Default
                     </span>
                   )}
-                </Button>
+                </SegmentedControlItem>
               ))}
-            </div>
+            </SegmentedControl>
           </div>
         </div>
       </SectionCard>
@@ -315,7 +310,7 @@ function UserAccessSection() {
         <div className="overflow-x-auto">
           <Table className="w-full text-left text-base">
             <TableHeader>
-              <TableRow className="border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+              <TableRow className="border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground">
                 <TableHead className="px-3 py-2.5 font-semibold">Permission</TableHead>
                 {(["owner", "admin", "user"] as UserRole[]).map((r) => {
                   const rs = ROLE_STYLES[r];
@@ -344,7 +339,7 @@ function UserAccessSection() {
                         <TableCell key={r} className="px-3 py-3 text-center">
                           <span
                             title={`Not available for ${r}`}
-                            className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-2xs text-muted-foreground/50"
+                            className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-2xs text-muted-foreground"
                           >
                             —
                           </span>
@@ -1037,9 +1032,13 @@ function SecuritySection() {
  *  (Camera Defaults); the Phase 1 module opens on General like the real page. */
 export function TaSystemConfig({ initialSection = "camera-defaults" }: { initialSection?: Section } = {}) {
   const [section, setSection] = React.useState<Section>(initialSection);
-  const [dirty, setDirty] = React.useState(false);
-
-  React.useEffect(() => { setDirty(true); }, [section]);
+  // Dirty from the start, and again whenever the section changes.
+  const [dirty, setDirty] = React.useState(true);
+  const [prevSection, setPrevSection] = React.useState(section);
+  if (section !== prevSection) {
+    setPrevSection(section);
+    setDirty(true);
+  }
 
   function save() {
     toast.success("System configuration saved", { description: "Changes applied across the workspace." });
@@ -1076,7 +1075,7 @@ export function TaSystemConfig({ initialSection = "camera-defaults" }: { initial
                 <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground/70")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground")}>{s.description}</p>
                 </div>
               </ItemButton>
             );

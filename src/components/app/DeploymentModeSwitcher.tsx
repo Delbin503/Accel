@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Cloud, HardDrive } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 /**
  * Segmented control shown at the top of the sign-in pages so users can
@@ -69,7 +69,7 @@ function Segment({
         data-slot="deployment-mode-switcher-segment-hint"
         className={cn(
           "text-3xs font-semibold uppercase tracking-wider",
-          active ? "text-primary-foreground/85" : "text-muted-foreground/70"
+          active ? "text-primary-foreground/85" : "text-muted-foreground"
         )}
       >
         {hint}

@@ -1,8 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, ClipboardCheck, ScanFace } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import { MERGED_INTO_PHASE_ONE, PAGES } from "./pages";
-import { AppSidebar } from "@/components/layout/AppSidebar";
+import { AppSidebar } from "@/components/app/AppSidebar";
 import { ProtoBreadcrumb, type Crumb } from "../_shared/ProtoBreadcrumb";
 import { REID_NAV, REID_PAGES, REID_TITLE, isReidPath, reidNavLabel } from "./reid/reidNav";
 import { TA_ANALYSIS, TA_NAV, TA_RESULT_PATH, TA_ROUTES, TA_TITLE, isTaPath, taNavLabel } from "./assessment/taNav";
@@ -190,7 +190,7 @@ export function ReidNotInModule() {
       </p>
       <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
         <Link to={REID_PAGES[0].path} className="text-primary-ink hover:underline">Go to {REID_PAGES[0].title}</Link>
-        <span className="text-muted-foreground/40">·</span>
+        <span className="text-muted-foreground">·</span>
         <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">Back to Phase 1.3</Link>
       </div>
     </div>
@@ -211,7 +211,7 @@ export function TaNotInModule() {
       </p>
       <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
         <Link to={TA_ROUTES.dashboard} className="text-primary-ink hover:underline">Go to Dashboard</Link>
-        <span className="text-muted-foreground/40">·</span>
+        <span className="text-muted-foreground">·</span>
         <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">Back to Phase 1.3</Link>
       </div>
     </div>

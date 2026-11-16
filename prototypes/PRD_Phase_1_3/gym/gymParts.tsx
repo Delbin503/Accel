@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import {
   PX_PER_CM, SEG, SESSION, TARGET, barPathOf, bodyAt, depthAt, fmtClock, phaseTime, type Phase, type Rep,
 } from "./gymSession";

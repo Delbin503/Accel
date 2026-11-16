@@ -1,13 +1,13 @@
 import { ArrowUpRight, LocateFixed, Radar, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { DETECTION_CARDS_ATTR } from "../cameraPlayer";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import type { Severity } from "@/types/detection";
 import { agoLabel, plainSummary, type LiveDetection } from "./liveDetections";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* Live detections on the camera wall — the side panel's Detections tab and the
    card stack in the bottom corner. Both open the event in the Detection Feed. */

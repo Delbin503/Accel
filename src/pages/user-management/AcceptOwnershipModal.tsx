@@ -1,10 +1,10 @@
 import * as React from "react";
 import { ArrowRight, Check, Crown, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Label } from "@accel/ui/components/ui/label";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 
 /* Where the "Accept ownership" button in the Ownership Transfer Request email
    lands. The transfer is only a request until the chosen member confirms it

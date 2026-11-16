@@ -1,6 +1,6 @@
 import { FlaskConical } from "lucide-react";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ONPREM_SCREENS, type OnPremScreen, type AsyncMode } from "./shared";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ONPREM_SCREENS, type OnPremScreen, type AsyncMode } from "./screens";
 
 /* ──────────────────────────────────────────────────────────────────────────
    PROTOTYPE-ONLY. Jumps to any screen in the On-Premise onboarding flow and

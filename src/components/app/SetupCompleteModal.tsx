@@ -1,12 +1,12 @@
 import { ArrowRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
+} from "@accel/ui/components/shared/Modal";
 
 /**
  * Onboarding "You're all set" modal.

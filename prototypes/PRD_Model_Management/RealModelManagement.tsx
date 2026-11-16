@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
 import ModelManagementPage from "@/pages/model-management";
 import { ModelSkeleton, ErrorState, NoResultsState, type ForcedState } from "./shared";
 

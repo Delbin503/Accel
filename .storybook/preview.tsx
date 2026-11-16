@@ -1,5 +1,6 @@
 import type { Preview } from "@storybook/react-vite";
-import React from "react";
+import { ThemeRoot } from "./ThemeRoot";
+import { applyTheme } from "./theme";
 import "../src/index.css";
 
 const preview: Preview = {
@@ -15,22 +16,22 @@ const preview: Preview = {
       },
     },
   },
+  // Theme <html> before the story renders, so nothing paints (or animates
+  // via transition-colors) from the wrong theme first.
+  beforeEach: ({ globals }) => {
+    applyTheme(globals.theme ?? "dark");
+  },
   decorators: [
-    (Story, context) => {
-      const theme = context.globals.theme ?? "dark";
-      return (
-        <div className={theme}>
-          <div className="min-h-screen bg-background p-6 text-foreground">
-            <Story />
-          </div>
-        </div>
-      );
-    },
+    (Story, context) => (
+      <ThemeRoot theme={context.globals.theme ?? "dark"}>
+        <Story />
+      </ThemeRoot>
+    ),
   ],
   parameters: {
     options: {
       storySort: {
-        order: ["Introduction", "Foundations", "UI", "Shared", "Charts"],
+        order: ["Introduction", "Foundations", "Guidelines", "UI", "Shared", "Charts"],
       },
     },
     controls: {

@@ -6,10 +6,10 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ProgressRow } from "@/components/shared/ProgressRow";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
+import { ProgressRow } from "@accel/ui/components/shared/ProgressRow";
 
 /**
  * Canonical "device is syncing" progress modal (NVR devices + Cameras): one
@@ -84,7 +84,8 @@ export function SyncProgressModal({
                     data-slot="sync-progress-modal-stage-label"
                     className={cn(
                       "truncate",
-                      active ? "font-semibold text-foreground" : stageDone ? "text-muted-foreground" : "text-muted-foreground/50"
+                      // Done vs upcoming is carried by the icon; the label stays AA-readable.
+                      active ? "font-semibold text-foreground" : "text-muted-foreground"
                     )}
                   >
                     {stage}

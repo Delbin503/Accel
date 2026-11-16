@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Check, CreditCard, Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 
 export interface PaymentReceipt {
   /** Formatted amount charged, e.g. "S$2,083". */

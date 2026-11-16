@@ -21,7 +21,11 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const DIRS = ["ui", "shared", "app", "custom", "charts", "layout"].map((d) => join(ROOT, "src/components", d));
+// Design-system folders live in the @accel/ui package; app/ stays in the app.
+const DIRS = [
+  ...["ui", "shared", "custom", "charts", "layout"].map((d) => join(ROOT, "packages/ui/src/components", d)),
+  join(ROOT, "src/components/app"),
+];
 
 // Components that render no DOM of their own (route guards, providers, logic-only).
 const NO_DOM = new Set(["RequireRole.tsx", "RequireOnboarding.tsx"]);

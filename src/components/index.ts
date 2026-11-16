@@ -1,9 +1,3 @@
-// Re-exports from each component sub-folder.
-// components/ui/ is intentionally excluded — shadcn components are
-// imported directly from @/components/ui/<name> to keep tree-shaking intact.
-
-export * from "./custom";
-export * from "./layout";
-export * from "./charts";
-export * from "./shared";
+// App components barrel. Design-system components now come from the
+// @accel/ui package (packages/ui) — import those from "@accel/ui" directly.
 export * from "./app";

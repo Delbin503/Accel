@@ -1,9 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-} from "recharts";
+import { BarChart, LineChart } from "@accel/ui/components/charts";
 import {
   FolderOpen,
   ArrowUpRight,
@@ -21,15 +19,15 @@ import {
   TriangleAlert,
   X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { KpiCard, KpiGrid, type KpiTrend } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { KpiCard, KpiGrid, type KpiTrend } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
@@ -37,12 +35,6 @@ import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { useSystemStatus, SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
-
-/* ── Zone severity thresholds (configurable in System Config) ───────── */
-export const ZONE_SEVERITY_THRESHOLDS = {
-  critical: 5,
-  warning: 2,
-};
 
 /* Reference "today" for date-range filtering — matches newest event in mocks. */
 const REFERENCE_TODAY = "2026-05-19";
@@ -576,7 +568,7 @@ export default function DashboardPage() {
         showingLabel={
           <>
             Showing <strong className="text-foreground">{dateLabel}</strong>
-            <span className="ml-2 text-muted-foreground/60">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
+            <span className="ml-2 text-muted-foreground">· {eventsInRange} event{eventsInRange === 1 ? "" : "s"}</span>
           </>
         }
       />
@@ -658,31 +650,17 @@ export default function DashboardPage() {
                   onChange={setSelectedSites}
                 />
                 <div data-slot="dashboard-page-detections-chart" className="h-[240px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={siteTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                      <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={11} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                      <Tooltip
-                        contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                        cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3 }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
-                      {chartSiteOptions
-                        .filter((s) => selectedSites.includes(s.name))
-                        .map((s) => (
-                        <Line
-                          key={s.name}
-                          type="monotone"
-                          dataKey={s.name}
-                          stroke={s.color}
-                          strokeWidth={2}
-                          dot={{ r: 2.5 }}
-                          activeDot={{ r: 4 }}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <LineChart
+                    data={siteTrend}
+                    xKey="day"
+                    series={chartSiteOptions
+                      .filter((s) => selectedSites.includes(s.name))
+                      .map((s) => ({ key: s.name, label: s.name, color: s.color }))}
+                    dots
+                    showLegend
+                    yAxis={{ show: true }}
+                    className="h-full"
+                  />
                 </div>
                 <div data-slot="dashboard-page-detections-sites" className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {detectionsBySite
@@ -923,19 +901,18 @@ export default function DashboardPage() {
             Sites <ArrowUpRight className="size-3" />
           </Button>}>
           <div data-slot="dashboard-page-cameras-chart" className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={camerasBySite} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} interval={0} angle={-12} textAnchor="end" height={50} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                  cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                />
-                <Bar dataKey="online"  stackId="a" fill="var(--success)"      radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="var(--severity-critical)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart
+              data={camerasBySite}
+              xKey="name"
+              stacked
+              series={[
+                { key: "online", label: "Online", color: "var(--success)" },
+                { key: "offline", label: "Offline", color: "var(--severity-critical)" },
+              ]}
+              xAxis={{ angle: -12, interval: 0 }}
+              yAxis={{ show: true }}
+              className="h-full"
+            />
           </div>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -975,7 +952,7 @@ export default function DashboardPage() {
                   >
                     <div className="min-w-0">
                       <TruncatedText text={a.whenRelative} className="font-mono text-2xs text-muted-foreground" />
-                      <TruncatedText text={a.module} className="mt-0.5 text-2xs text-muted-foreground/60" />
+                      <TruncatedText text={a.module} className="mt-0.5 text-2xs text-muted-foreground" />
                     </div>
                     <div>
                       <span

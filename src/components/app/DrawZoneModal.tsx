@@ -6,10 +6,10 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { cn } from "@accel/ui/lib/utils";
 import type { BoundaryZone } from "@/types/cameras";
 
 /**
@@ -60,26 +60,35 @@ export function DrawZoneModal({
   /** Copies the active camera's zones onto every other selected camera. */
   applyToAll?: { onClick: () => void; disabled?: boolean };
 }) {
+  const findInitialZone = () =>
+    open && initialEditingZoneId ? existingZones.find((z) => z.id === initialEditingZoneId) : null;
   const [label, setLabel] = React.useState("");
   // null = no draft, else a draft new zone the user is drawing/positioning
   const [draft, setDraft] = React.useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [editingZoneId, setEditingZoneId] = React.useState<string | null>(null);
-  const [editingLabel, setEditingLabel] = React.useState("");
+  const [editingZoneId, setEditingZoneId] = React.useState<string | null>(() => findInitialZone()?.id ?? null);
+  const [editingLabel, setEditingLabel] = React.useState(() => findInitialZone()?.label ?? "");
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const drawRef = React.useRef<{ startX: number; startY: number; mode: "draw" | "move" | null }>({ startX: 0, startY: 0, mode: null });
   const isEditingInitialZone = Boolean(initialEditingZoneId);
 
-  React.useEffect(() => {
+  // While open, reset the draft and editing state whenever the modal opens, the
+  // initial zone changes or the zone list changes — adjusted during render
+  // (React's "storing information from previous renders") instead of an effect.
+  const [prevReset, setPrevReset] = React.useState({ open, initialEditingZoneId, existingZones });
+  if (
+    prevReset.open !== open ||
+    prevReset.initialEditingZoneId !== initialEditingZoneId ||
+    prevReset.existingZones !== existingZones
+  ) {
+    setPrevReset({ open, initialEditingZoneId, existingZones });
     if (open) {
-      const initialZone = initialEditingZoneId
-        ? existingZones.find((z) => z.id === initialEditingZoneId)
-        : null;
+      const initialZone = findInitialZone();
       setLabel("");
       setDraft(null);
       setEditingZoneId(initialZone?.id ?? null);
       setEditingLabel(initialZone?.label ?? "");
     }
-  }, [open, initialEditingZoneId, existingZones]);
+  }
 
   // Live-edited box for the currently-edited existing zone
   const editingZone = editingZoneId ? existingZones.find((z) => z.id === editingZoneId) : null;
@@ -199,7 +208,7 @@ export function DrawZoneModal({
               <label
                 data-slot="draw-zone-modal-camera-picker-label"
                 htmlFor="zone-camera-picker"
-                className="flex-shrink-0 font-mono text-2xs uppercase tracking-widest text-muted-foreground/60"
+                className="flex-shrink-0 font-mono text-2xs uppercase tracking-widest text-muted-foreground"
               >
                 Camera
               </label>
@@ -432,7 +441,7 @@ export function DrawZoneModal({
                       <span data-slot="draw-zone-modal-zones-row-index" className={cn("font-mono text-2xs font-bold", isEditing ? "text-warning" : "text-info")}>{i + 1}</span>
                       <span data-slot="draw-zone-modal-zones-row-id" className="rounded bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{z.id}</span>
                       <span data-slot="draw-zone-modal-zones-row-label" className="flex-1 text-base font-semibold text-foreground">{z.label}</span>
-                      <span data-slot="draw-zone-modal-zones-row-box" className="hidden font-mono text-2xs text-muted-foreground/70 sm:inline">
+                      <span data-slot="draw-zone-modal-zones-row-box" className="hidden font-mono text-2xs text-muted-foreground sm:inline">
                         [{z.box.map((n) => n.toFixed(2)).join(", ")}]
                       </span>
                       {/* Explicit Edit + Delete buttons (always visible) */}

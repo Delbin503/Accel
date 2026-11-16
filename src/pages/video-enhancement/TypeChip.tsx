@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { TONE_CLASSES, typeById } from "@/lib/recordingTypes";
 import type { DayRecording } from "@/mocks/dayRecordings";
 

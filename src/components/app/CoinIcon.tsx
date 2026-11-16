@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 /**
  * Accel token coin — brand icon used for Run Analysis credits.

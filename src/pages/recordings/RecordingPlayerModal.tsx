@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import {
   CircleDot,
   Maximize2,
@@ -13,12 +13,12 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { Modal, ModalContent } from "@/components/shared/Modal";
-import { DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { Modal, ModalContent } from "@accel/ui/components/shared/Modal";
+import { DialogTitle } from "@accel/ui/components/ui/dialog";
+import { cn } from "@accel/ui/lib/utils";
 import { RECORDING_TYPES, TONE_CLASSES } from "@/lib/recordingTypes";
-import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "@/components/shared/PlaybackControls";
-import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "@/lib/playback";
+import { IconButton, PlaybackSettingsMenu, ZoomSurface } from "@accel/ui/components/shared/PlaybackControls";
+import { LIVE_STATE, NO_ZOOM, isZoomed, zoomPercent, zoomTransform, type PlaybackState } from "@accel/ui/lib/playback";
 import { periodsFor, type DayRecording } from "@/mocks/dayRecordings";
 
 /* The player is a pop-up now, not the first thing in the drawer — a camera-day
@@ -91,11 +91,11 @@ function PlayerBody({ recording, zoomArmed, setZoomArmed }: {
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Video className="size-3" />
             {recording.cameraId}
-            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground">·</span>
             {recording.startsAtDisplay} – {recording.endsAtDisplay}
-            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground">·</span>
             <span className="font-mono">{recording.durationDisplay}</span>
-            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground">·</span>
             <span className="font-mono">{recording.resolution}</span>
           </p>
         </div>

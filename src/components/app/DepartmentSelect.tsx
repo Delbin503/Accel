@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Check, ChevronDown, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { cn } from "@accel/ui/lib/utils";
 import { DEPARTMENTS } from "@/mocks/departments";
 
 export interface DepartmentSelectProps {

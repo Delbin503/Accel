@@ -3,21 +3,22 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BarChart3, CalendarClock, Check, ChevronRight, CircleCheck, CircleDot, Download, Dumbbell, FileDown, FileText, FlagTriangleRight,
-  ChevronDown, ChevronUp, HeartPulse, MoreHorizontal, Plus, Radio, Search, SlidersHorizontal, Upload, User, Users, X,
+  ChevronDown, ChevronUp, HeartPulse, MoreHorizontal, Plus, Radio, SlidersHorizontal, Upload, User, Users, X,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { FloatingBar } from "@/components/shared/FloatingBar";
-import { LineChart } from "@/components/charts";
-import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Button } from "@accel/ui/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { FilterDropdown } from "@accel/ui/components/shared/FilterDropdown";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { FloatingBar } from "@accel/ui/components/shared/FloatingBar";
+import { LineChart } from "@accel/ui/components/charts";
+import { cn } from "@accel/ui/lib/utils";
 import {
   GROUP_RESULTS, SESSION_STATUS_LABEL, reportsFor, TA_AREAS, TA_SITES, USE_CASES, USE_CASE_KEYS,
   useDevicesStore, useReportsStore, useSessionsStore,
@@ -25,8 +26,8 @@ import {
 } from "./taData";
 import { useTaModelsStore } from "./taModels";
 import { TA_ANALYSIS, TA_RESULT_PATH } from "./taNav";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 
 /* Training Assessment module — Performance & Posture.
 
@@ -55,7 +56,6 @@ const STATUS_TONE: Record<SessionStatus, "info" | "critical" | "warning" | "succ
 };
 
 
-const TH = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60";
 const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted";
 const LABEL = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
@@ -120,10 +120,7 @@ function FiltersBar({ chips, activeCount, search, onSearch, placeholder, childre
       </div>
       {open && (
         <div data-slot="filters-bar-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder={placeholder} className="h-9 w-full pl-9 text-base" />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearch} placeholder={placeholder} className="sm:w-full" />
           {children}
         </div>
       )}
@@ -153,50 +150,73 @@ function sessionMatches(s: TaSession, q: string) {
   return [s.id, s.name, s.modelName, s.deployment, s.coach, USE_CASES[s.useCase].label].join(" ").toLowerCase().includes(q);
 }
 
-const SESSION_HEAD = ["ID", "SESSION", "USE CASE", "TYPE", "WHERE", "WHEN", "STATUS", "ACTION"];
 const USE_CASE_FILTER = USE_CASE_KEYS.map((k) => ({ value: k, label: USE_CASES[k].label }));
 const TYPE_FILTER: { value: SessionKind; label: string }[] = [
   { value: "Individual", label: "Individual" },
   { value: "Group", label: "Group" },
 ];
-/* The Action column stays pinned to the right edge, so the ⋯ menu is reachable
-   even when a narrow window scrolls the table sideways. */
-// Opaque mixes of the header and row-hover tints, so pinned cells hide what scrolls under them.
-const STICKY_TH = "sticky right-0 bg-[color-mix(in_srgb,var(--muted)_30%,var(--card))]";
-const STICKY_TD = "sticky right-0 bg-card px-4 py-3 group-hover:bg-[color-mix(in_srgb,var(--muted)_20%,var(--card))]";
-const ROW_MENU = "flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground";
+/* The Action column stays pinned to the right edge (DataTable `sticky: "right"`),
+   so the ⋯ menu is reachable even when a narrow window scrolls the table sideways. */
+const ROW_MENU = "flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground";
+const HEAD = "whitespace-nowrap";
 
-/** ID · Session · Use case · Type · Where · When — the cells both tabs share. */
-function SessionCells({ s }: { s: TaSession }) {
-  const u = USE_CASES[s.useCase];
-  const n = s.participants.length;
-  const kind = sessionKind(s);
-  const KindIcon = kind === "Group" ? Users : User;
-  return (
-    <>
-      <TableCell className="whitespace-nowrap px-4 py-3">
-        <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{s.id}</span>
-      </TableCell>
-      <TableCell className="min-w-[160px] px-4 py-3">
+/** ID · Session · Use case · Type · Where · When · Status — the columns both tabs share. */
+const SESSION_COLUMNS: DataTableColumn<TaSession>[] = [
+  {
+    key: "id", header: "ID", className: "whitespace-nowrap", headClassName: HEAD,
+    cell: (s) => <span className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{s.id}</span>,
+  },
+  {
+    key: "session", header: "SESSION", className: "min-w-[160px]", headClassName: HEAD,
+    cell: (s) => (
+      <>
         <p className="font-semibold text-foreground group-hover:text-primary-ink">{s.name}</p>
         <p className="text-xs text-muted-foreground">{s.coach}</p>
-      </TableCell>
-      <TableCell className="px-4 py-3"><UseCaseChip uc={s.useCase} /></TableCell>
-      <TableCell className="whitespace-nowrap px-4 py-3">
-        <p className="inline-flex items-center gap-1.5 text-foreground"><KindIcon className="size-3.5 text-muted-foreground" />{kind}</p>
-        <p className="text-xs text-muted-foreground">{n} {n === 1 ? u.person : u.people}</p>
-      </TableCell>
-      <TableCell className="min-w-[140px] px-4 py-3">
-        <p className="text-foreground">{s.deployment}</p>
-        <p className="text-xs text-muted-foreground">{s.units.length} {s.units.length === 1 ? u.unit : u.units}{s.devices.length > 0 ? ` · ${s.devices.length} device${s.devices.length === 1 ? "" : "s"}` : " · no device"}</p>
-      </TableCell>
-      <TableCell className="whitespace-nowrap px-4 py-3">
+      </>
+    ),
+  },
+  { key: "useCase", header: "USE CASE", headClassName: HEAD, cell: (s) => <UseCaseChip uc={s.useCase} /> },
+  {
+    key: "type", header: "TYPE", className: "whitespace-nowrap", headClassName: HEAD,
+    cell: (s) => {
+      const u = USE_CASES[s.useCase];
+      const n = s.participants.length;
+      const kind = sessionKind(s);
+      const KindIcon = kind === "Group" ? Users : User;
+      return (
+        <>
+          <p className="inline-flex items-center gap-1.5 text-foreground"><KindIcon className="size-3.5 text-muted-foreground" />{kind}</p>
+          <p className="text-xs text-muted-foreground">{n} {n === 1 ? u.person : u.people}</p>
+        </>
+      );
+    },
+  },
+  {
+    key: "where", header: "WHERE", className: "min-w-[140px]", headClassName: HEAD,
+    cell: (s) => {
+      const u = USE_CASES[s.useCase];
+      return (
+        <>
+          <p className="text-foreground">{s.deployment}</p>
+          <p className="text-xs text-muted-foreground">{s.units.length} {s.units.length === 1 ? u.unit : u.units}{s.devices.length > 0 ? ` · ${s.devices.length} device${s.devices.length === 1 ? "" : "s"}` : " · no device"}</p>
+        </>
+      );
+    },
+  },
+  {
+    key: "when", header: "WHEN", className: "whitespace-nowrap", headClassName: HEAD,
+    cell: (s) => (
+      <>
         <p className="text-foreground">{s.date}</p>
         <p className="text-xs text-muted-foreground">{s.time} · {s.source}</p>
-      </TableCell>
-    </>
-  );
-}
+      </>
+    ),
+  },
+  {
+    key: "status", header: "STATUS", headClassName: HEAD,
+    cell: (s) => <StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge>,
+  },
+];
 
 /* ── New session ───────────────────────────────────────────────────────── */
 
@@ -324,21 +344,20 @@ function NewSessionModal({ open, onClose, onCreate }: { open: boolean; onClose: 
                 <p className={cn(LABEL, "mb-0")}>{u.units} · from this deployment</p>
                 <span className="text-xs text-muted-foreground">{units.length} of {area?.units.length} selected</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <SegmentedControl type="multiple" variant="outline" value={units} onValueChange={setUnits} aria-label={u.units}>
                 {area?.units.map((un) => {
                   const on = units.includes(un);
                   const dev = devices.find((d) => d.areaId === areaId && d.unit === un && d.useInSessions);
                   return (
-                    <Button variant="ghost" key={un} type="button" aria-pressed={on} onClick={() => setUnits((cur) => (on ? cur.filter((x) => x !== un) : [...cur, un]))}
-                      className={cn("h-auto", "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors",
-                        on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-background text-muted-foreground hover:border-primary/30")}>
+                    <SegmentedControlItem key={un} value={un}
+                      className="h-auto rounded-lg bg-background px-2.5 py-1.5 text-sm hover:bg-background hover:text-muted-foreground hover:border-primary/30 data-[state=on]:border-primary/50 data-[state=on]:hover:border-primary/50 data-[state=on]:hover:bg-primary/10 data-[state=on]:hover:text-primary-ink">
                       {on && <Check className="size-3" strokeWidth={3} />}
                       {un}
                       {dev && <span title={`${dev.id} · ${dev.type}`}><Radio className="size-3 text-info" /></span>}
-                    </Button>
+                    </SegmentedControlItem>
                   );
                 })}
-              </div>
+              </SegmentedControl>
               <p className="mt-1.5 text-2xs text-muted-foreground">
                 Only these cameras are analysed.{areaDevices.length > 0 && ` ${areaDevices.length} external device${areaDevices.length === 1 ? "" : "s"} (${areaDevices.map((d) => d.id).join(", ")}) add their readings.`}
               </p>
@@ -459,6 +478,42 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
 
   const openResult = (id: string) => navigate(`${TA_RESULT_PATH}?session=${id}`);
 
+  const sessionTabColumns: DataTableColumn<TaSession>[] = [
+    ...SESSION_COLUMNS,
+    {
+      key: "action", header: "ACTION", headClassName: HEAD, sticky: "right", stopRowClick: true,
+      cell: (s) => (
+        /* The "⋯" menu the other pages' tables use. */
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            {s.status === "scheduled" ? (
+              <ItemButton variant="plain" onClick={() => start(s)} className={MENU_ITEM}>
+                <CircleDot className="size-3.5 text-muted-foreground" />
+                Start session
+              </ItemButton>
+            ) : (
+              <>
+                <ItemButton variant="plain" onClick={() => openResult(s.id)} className={MENU_ITEM}>
+                  <BarChart3 className="size-3.5 text-muted-foreground" />
+                  View results
+                </ItemButton>
+                <ItemButton variant="plain" onClick={() => end(s)} className={MENU_ITEM}>
+                  <CircleCheck className="size-3.5 text-muted-foreground" />
+                  End session
+                </ItemButton>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
+
   return (
     <div data-slot="sessions-tab" className="flex flex-col gap-4">
       <KpiGrid cols={3}>
@@ -500,55 +555,15 @@ function SessionsTab({ onShowResults, creating, onCreating }: { onShowResults: (
         </div>
       ) : (
         <div data-slot="sessions-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-b border-border text-left">
-                  {SESSION_HEAD.map((h) => <TableHead key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</TableHead>)}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {filtered.map((s) => {
-                  const hasResults = s.status === "live";
-                  return (
-                    <TableRow key={s.id} onClick={() => hasResults && openResult(s.id)} className={cn("group text-base transition-colors", hasResults && "cursor-pointer hover:bg-muted/20")}>
-                      <SessionCells s={s} />
-                      <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></TableCell>
-                      {/* The "⋯" menu the other pages' tables use. */}
-                      <TableCell className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-44 p-1" align="end">
-                            {s.status === "scheduled" ? (
-                              <ItemButton variant="plain" onClick={() => start(s)} className={MENU_ITEM}>
-                                <CircleDot className="size-3.5 text-muted-foreground" />
-                                Start session
-                              </ItemButton>
-                            ) : (
-                              <>
-                                <ItemButton variant="plain" onClick={() => openResult(s.id)} className={MENU_ITEM}>
-                                  <BarChart3 className="size-3.5 text-muted-foreground" />
-                                  View results
-                                </ItemButton>
-                                <ItemButton variant="plain" onClick={() => end(s)} className={MENU_ITEM}>
-                                  <CircleCheck className="size-3.5 text-muted-foreground" />
-                                  End session
-                                </ItemButton>
-                              </>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={sessionTabColumns}
+            data={filtered}
+            getRowId={(s) => s.id}
+            onRowClick={(s) => s.status === "live" && openResult(s.id)}
+            // Only live sessions have results to open.
+            getRowClassName={(s) => (s.status === "live" ? undefined : "cursor-default hover:bg-transparent")}
+          />
         </div>
       )}
 
@@ -601,6 +616,33 @@ function GroupResults({ session }: { session: TaSession }) {
     : g.scoreValue;
   const rows = g.noRank ? [...session.participants].sort((a, b) => a.name.localeCompare(b.name)) : session.participants;
   const open = (p: Participant) => p.attempts > 0 && navigate(analysisHref(session.useCase, p.name, session.id));
+  const columns: DataTableColumn<Participant>[] = [
+    {
+      key: "person", header: u.person.toUpperCase(), headClassName: HEAD,
+      cell: (p) => (
+        <>
+          <p className="font-semibold text-foreground group-hover:text-primary-ink">{p.name}</p>
+          <p className="text-xs text-muted-foreground">{p.detail}</p>
+        </>
+      ),
+    },
+    { key: "unit", header: u.unit.toUpperCase(), headClassName: HEAD, className: "text-muted-foreground", cell: (p) => p.unit },
+    { key: "items", header: u.items.toUpperCase(), headClassName: HEAD, className: "text-foreground", cell: (p) => p.attempts || "—" },
+    { key: "score", header: session.useCase === "physio" ? "PROGRESS TO GOAL" : "SCORE", headClassName: HEAD, className: "font-semibold text-foreground", cell: (p) => p.score },
+    {
+      key: "change", header: "CHANGE", headClassName: HEAD,
+      cell: (p) => <span className={p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-severity-critical" : "text-muted-foreground"}>{p.change}</span>,
+    },
+    { key: "fault", header: session.useCase === "physio" ? "MAIN COMPENSATION" : "TOP FAULT", headClassName: HEAD, className: "text-foreground", cell: (p) => p.topFault },
+    {
+      key: "open", header: "", headClassName: HEAD, className: "whitespace-nowrap text-right",
+      cell: (p) => p.attempts > 0 ? (
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{TA_ANALYSIS[session.useCase].label}<ChevronRight className="size-4" /></span>
+      ) : (
+        <span className="text-xs text-muted-foreground">No {u.items} yet</span>
+      ),
+    },
+  ];
 
   return (
     <div data-slot="group-results" className="flex flex-col gap-4">
@@ -635,37 +677,15 @@ function GroupResults({ session }: { session: TaSession }) {
           </div>
           <span className="whitespace-nowrap text-xs text-muted-foreground">{rows.filter((p) => p.attempts > 0).length} of {rows.length} {u.people} with results</span>
         </div>
-        <div className="overflow-x-auto">
-          <Table className="w-full">
-            <TableHeader className="bg-muted/30">
-              <TableRow className="border-b border-border text-left">
-                {[u.person.toUpperCase(), u.unit.toUpperCase(), u.items.toUpperCase(), session.useCase === "physio" ? "PROGRESS TO GOAL" : "SCORE", "CHANGE", session.useCase === "physio" ? "MAIN COMPENSATION" : "TOP FAULT", ""].map((h) => <TableHead key={h} className={TH}>{h}</TableHead>)}
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/60">
-              {rows.map((p) => (
-                <TableRow key={p.name} onClick={() => open(p)} className={cn("group text-base", p.attempts > 0 && "cursor-pointer hover:bg-muted/20")}>
-                  <TableCell className="px-4 py-3">
-                    <p className="font-semibold text-foreground group-hover:text-primary-ink">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.detail}</p>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-muted-foreground">{p.unit}</TableCell>
-                  <TableCell className="px-4 py-3 text-foreground">{p.attempts || "—"}</TableCell>
-                  <TableCell className="px-4 py-3 font-semibold text-foreground">{p.score}</TableCell>
-                  <TableCell className={cn("px-4 py-3", p.change.startsWith("+") ? "text-success" : p.change.startsWith("−") ? "text-severity-critical" : "text-muted-foreground")}>{p.change}</TableCell>
-                  <TableCell className="px-4 py-3 text-foreground">{p.topFault}</TableCell>
-                  <TableCell className="whitespace-nowrap px-4 py-3 text-right">
-                    {p.attempts > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground group-hover:text-primary-ink">{TA_ANALYSIS[session.useCase].label}<ChevronRight className="size-4" /></span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No {u.items} yet</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          variant="list"
+          columns={columns}
+          data={rows}
+          getRowId={(p) => p.name}
+          onRowClick={open}
+          // Only people with results open an analysis.
+          getRowClassName={(p) => (p.attempts > 0 ? undefined : "cursor-default hover:bg-transparent")}
+        />
       </div>
 
       <div data-slot="group-results-charts" className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -716,8 +736,6 @@ function ResultsTab({ sessionId, onSession, focus }: {
     return !q || sessionMatches(s, q) || s.participants.some((p) => p.name.toLowerCase().includes(q));
   });
   const hasFilters = !!search || ucs.length > 0 || types.length > 0 || sessionFilter !== "all";
-  const shownSelected = filtered.filter((s) => selected.has(s.id)).length;
-  const allShown = filtered.length > 0 && shownSelected === filtered.length;
 
   function viewResults(s: TaSession) {
     navigate(sessionKind(s) === "Group" ? `${TA_RESULT_PATH}?session=${s.id}` : analysisHref(s.useCase, s.participants[0].name, s.id));
@@ -735,6 +753,32 @@ function ResultsTab({ sessionId, onSession, focus }: {
       return next;
     });
   }
+
+  const resultColumns: DataTableColumn<TaSession>[] = [
+    ...SESSION_COLUMNS,
+    {
+      key: "action", header: "ACTION", headClassName: HEAD, sticky: "right", stopRowClick: true,
+      cell: (s) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain" onClick={() => viewResults(s)} className={MENU_ITEM}>
+              <BarChart3 className="size-3.5 text-muted-foreground" />
+              View results
+            </ItemButton>
+            <ItemButton variant="plain" onClick={() => exportPdf(s)} className={MENU_ITEM}>
+              <Download className="size-3.5 text-muted-foreground" />
+              Export PDF
+            </ItemButton>
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
 
   function exportSelected(format: "PDF" | "CSV") {
     const n = selected.size;
@@ -779,60 +823,24 @@ function ResultsTab({ sessionId, onSession, focus }: {
         </div>
       ) : (
         <div data-slot="results-tab-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-b border-border text-left">
-                  <TableHead className={cn(TH, "w-10")}>
-                    <Checkbox
-                      checked={allShown ? true : shownSelected > 0 ? "indeterminate" : false}
-                      onCheckedChange={() => setSelected((cur) => {
-                        const next = new Set(cur);
-                        filtered.forEach((s) => (allShown ? next.delete(s.id) : next.add(s.id)));
-                        return next;
-                      })}
-                      aria-label="Select every session shown"
-                    />
-                  </TableHead>
-                  {SESSION_HEAD.map((h) => <TableHead key={h} className={cn(TH, h === "ACTION" && STICKY_TH)}>{h}</TableHead>)}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {filtered.map((s) => {
-                  const on = selected.has(s.id);
-                  return (
-                    <TableRow key={s.id} onClick={() => viewResults(s)}
-                      className={cn("group cursor-pointer text-base transition-colors hover:bg-muted/20", on && "bg-primary/5")}>
-                      <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox checked={on} onCheckedChange={() => toggle(s.id)} aria-label={`Select ${s.name}`} />
-                      </TableCell>
-                      <SessionCells s={s} />
-                      <TableCell className="px-4 py-3"><StatusBadge tone={STATUS_TONE[s.status]}>{SESSION_STATUS_LABEL[s.status]}</StatusBadge></TableCell>
-                      <TableCell className={STICKY_TD} onClick={(e) => e.stopPropagation()}>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${s.name}`} className={cn("border-0", ROW_MENU)}>
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-44 p-1" align="end">
-                            <ItemButton variant="plain" onClick={() => viewResults(s)} className={MENU_ITEM}>
-                              <BarChart3 className="size-3.5 text-muted-foreground" />
-                              View results
-                            </ItemButton>
-                            <ItemButton variant="plain" onClick={() => exportPdf(s)} className={MENU_ITEM}>
-                              <Download className="size-3.5 text-muted-foreground" />
-                              Export PDF
-                            </ItemButton>
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={resultColumns}
+            data={filtered}
+            getRowId={(s) => s.id}
+            onRowClick={viewResults}
+            getRowClassName={(s) => (selected.has(s.id) ? "bg-primary/5 data-[state=selected]:bg-primary/5" : undefined)}
+            selection={{
+              selectedIds: selected,
+              onToggle: (id) => toggle(id),
+              onToggleAll: (checked) => setSelected((cur) => {
+                const next = new Set(cur);
+                filtered.forEach((s) => (checked ? next.add(s.id) : next.delete(s.id)));
+                return next;
+              }),
+              getRowLabel: (s) => `Select ${s.name}`,
+            }}
+          />
         </div>
       )}
 
@@ -882,19 +890,19 @@ export function TaSessions() {
           <PageHeader.Title>Performance & Posture</PageHeader.Title>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <div role="tablist" aria-label="Performance & Posture view" data-slot="button-group" className="flex h-7 items-center rounded-md border border-border bg-background p-0.5">
+          <SegmentedControl type="single" value={tab} onValueChange={(v) => v && setTab(v as Tab)} aria-label="Performance & Posture view"
+            className="h-7 gap-0 rounded-md border border-border bg-background p-0.5">
             {TABS.map((t) => {
               const Icon = t.icon;
               return (
-                <Button variant="ghost" key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-                  className={cn("border-0", "inline-flex h-full items-center gap-1.5 rounded px-2.5 text-sm font-semibold transition-colors",
-                    tab === t.key ? "bg-primary-fill text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <SegmentedControlItem key={t.key} value={t.key}
+                  className="h-full gap-1.5 rounded px-2.5 font-semibold data-[state=off]:hover:bg-muted data-[state=on]:bg-primary-fill data-[state=on]:text-primary-foreground data-[state=on]:shadow-none data-[state=on]:hover:text-primary-foreground">
                   <Icon className="size-3.5" />
                   {t.label}
-                </Button>
+                </SegmentedControlItem>
               );
             })}
-          </div>
+          </SegmentedControl>
           {/* Sessions' main action, top right, as on every list page. */}
           {tab === "sessions" && (
             <Button size="sm" className="gap-1.5" onClick={() => setCreating(true)}>

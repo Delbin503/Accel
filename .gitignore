@@ -26,3 +26,7 @@ dist-ssr
 # Prototype build output
 dist-prototypes
 .vercel
+
+# Storybook build + design-system-ops reports (generated)
+storybook-static
+.ds-ops-reports

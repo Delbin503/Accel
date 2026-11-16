@@ -1,0 +1,447 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Scan this package's components for classes, wherever it is installed. */
+@source "./";
+
+/* Class-based dark mode — <html class="dark"> toggled by ThemeProvider */
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Tailwind theme layer
+   Maps CSS custom properties → Tailwind utility classes.
+   Actual values are set in the :root / .dark blocks below.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Fonts */
+  --font-sans:    "Manrope", sans-serif;
+  --font-mono:    "JetBrains Mono", monospace;
+  --font-heading: var(--font-sans);
+
+  /* ── Type scale ──────────────────────────────────────────────────────────
+     Dense dashboard scale. Generates text-3xs … text-4xl utilities, each
+     paired with a line-height. `text-base` (13px) is the body default.
+     Migration map from legacy arbitrary values:
+       9px→text-3xs  10px→text-2xs  11px→text-xs  12px→text-sm  13px→text-base
+       14/15px→text-md  16/17px→text-lg  18px→text-xl  20/22px→text-2xl
+       24/26px→text-3xl  28px→text-4xl
+     Resize the whole product by editing these 10 values — nothing else. */
+  --text-3xs:               0.5625rem;  /*  9px */
+  --text-3xs--line-height:  0.75rem;    /* 12px */
+  --text-2xs:               0.625rem;   /* 10px */
+  --text-2xs--line-height:  0.875rem;   /* 14px */
+  --text-xs:                0.6875rem;  /* 11px */
+  --text-xs--line-height:   1rem;       /* 16px */
+  --text-sm:                0.75rem;    /* 12px */
+  --text-sm--line-height:   1rem;       /* 16px */
+  --text-base:              0.8125rem;  /* 13px — body default */
+  --text-base--line-height: 1.125rem;   /* 18px */
+  --text-md:                0.875rem;   /* 14px */
+  --text-md--line-height:   1.25rem;    /* 20px */
+  --text-lg:                1rem;       /* 16px */
+  --text-lg--line-height:   1.375rem;   /* 22px */
+  --text-xl:                1.125rem;   /* 18px */
+  --text-xl--line-height:   1.625rem;   /* 26px */
+  --text-2xl:               1.375rem;   /* 22px */
+  --text-2xl--line-height:  1.75rem;    /* 28px */
+  --text-3xl:               1.5rem;     /* 24px */
+  --text-3xl--line-height:  2rem;       /* 32px */
+  --text-4xl:               1.75rem;    /* 28px */
+  --text-4xl--line-height:  2.25rem;    /* 36px */
+
+  /* ── Easing tokens — generates ease-standard / ease-emphasized ──────────── */
+  --ease-standard:    cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized:  cubic-bezier(0.3, 0, 0, 1);
+
+  /* ── Motion durations (use via duration-[var(--duration-fast)]) ─────────── */
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   320ms;
+
+  /* ── Z-index scale (use via z-[var(--z-modal)]) ─────────────────────────── */
+  --z-base:     1;
+  --z-dropdown: 10;
+  --z-sticky:   20;
+  --z-overlay:  30;
+  --z-drawer:   40;
+  --z-modal:    50;
+  --z-popover:  55;   /* popovers/menus opened from inside a modal or drawer */
+  --z-toast:    60;
+  --z-tooltip:  70;
+
+  /* ── Icon-size convention (documentation — apply with size-* utilities) ───
+       size-3  (12px) → inline badge / chip icons
+       size-4  (16px) → button icons, input adornments, list-row icons
+       size-5  (20px) → section-header icons, empty-state icons
+       size-6+ (24px+) → hero / feature icons only
+     ── Spacing rhythm convention ────────────────────────────────────────────
+       card padding      → p-4
+       section gaps       → gap-3
+       inline / icon gaps → gap-1.5
+       page section stack → space-y-4 */
+
+  /* Semantic colors */
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  /* Labels on solid status fills, and media surfaces (dark in both themes) */
+  --color-status-foreground:   var(--status-foreground);
+  --color-media:               var(--media);
+  --color-media-raised:        var(--media-raised);
+  --color-scrim:               var(--scrim);
+  --color-media-foreground:    var(--media-foreground);
+  /* Extended primary state tokens — bg-primary-fill, text-primary-ink, bg-primary-hover… */
+  --color-primary-fill:        var(--primary-fill);
+  --color-primary-ink:         var(--primary-ink);
+  --color-primary-hover:       var(--primary-hover);
+  --color-primary-active:      var(--primary-active);
+  --color-primary-muted:       var(--primary-muted);   /* DEPRECATED — use bg-primary/10 */
+  --color-secondary:           var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-destructive:         var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:              var(--border);
+  --color-input:               var(--input);
+  --color-ring:                var(--ring);
+
+  /* ── Severity & status semantic tokens ───────────────────────────────────
+     Generates: text-severity-critical, bg-severity-critical/15, border-severity-critical…  */
+  --color-severity-critical: var(--severity-critical);
+  --color-severity-high:     var(--severity-high);
+  --color-severity-medium:   var(--severity-medium);
+  --color-severity-low:      var(--severity-low);
+  /* DEPRECATED sev-* — renamed to severity-*; kept for prototypes/ and in-flight work */
+  --color-sev-critical:      var(--sev-critical);
+  --color-sev-critical-soft: var(--sev-critical-soft);
+  --color-sev-high:          var(--sev-high);
+  --color-sev-high-soft:     var(--sev-high-soft);
+  --color-sev-medium:        var(--sev-medium);
+  --color-sev-medium-soft:   var(--sev-medium-soft);
+  --color-sev-low:           var(--sev-low);
+  --color-sev-low-soft:      var(--sev-low-soft);
+  --color-success:           var(--success);
+  --color-success-soft:      var(--success-soft);   /* DEPRECATED — use bg-success/15 */
+  --color-warning:           var(--warning);
+  --color-warning-soft:      var(--warning-soft);   /* DEPRECATED — use bg-warning/15 */
+  --color-info:              var(--info);
+  --color-info-soft:         var(--info-soft);   /* DEPRECATED — use bg-info/15 */
+  --color-violet:            var(--violet);   /* categorical tone: AI/model, vehicles, NVR, action-taken */
+  /* DEPRECATED — prototypes/ and in-flight work only; use bg-violet / bg-violet/15 */
+  --color-purple:            var(--purple);
+  --color-purple-soft:       var(--purple-soft);
+
+  /* Chart palette */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
+
+  /* Elevation — shadow-raised / shadow-floating / shadow-modal (values in :root/.dark) */
+  --shadow-raised:  var(--elevation-raised);
+  --shadow-floating: var(--elevation-floating);
+  --shadow-modal:   var(--elevation-modal);
+
+  /* Radius scale */
+  --radius-xs:  calc(var(--radius) * 0.25);   /* 2px — swatches, tiny markers */
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Token tiers
+     1. PRIMITIVES — raw values. The only place a literal colour may appear.
+        Never use them in components; they have no Tailwind utilities.
+     2. SEMANTIC   — roles (surface, brand, feedback, severity). Always
+        var(--primitive) references. The only tier that changes per theme.
+     3. COMPONENT  — sidebar-* and chart-*: reference semantic tokens
+        (chart-2…5 reference primitives — a categorical palette has no role).
+   Contexts that can't read CSS vars (print, PDF, email) use the paper
+   palette in src/lib/tokens.ts — keep its roles aligned with these.
+   Naming: primitives --palette-{hue}-{step} · semantic --{role}[-{state}]
+   · severity --severity-{level} · component --{component}-{role}
+   · scales --{category}-{size|intent} (text-sm, z-modal, duration-fast).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── 1. Primitives (theme-independent) ─────────────────────────────────── */
+:root {
+  /* Neutrals — step = (100 − lightness) × 10, so palette-neutral-930 is 7% lightness */
+  --palette-neutral-0:    hsl(0 0% 100%);
+  --palette-neutral-30:   hsl(0 0% 97%);
+  --palette-neutral-40:   hsl(0 0% 96%);
+  --palette-neutral-50:   hsl(0 0% 95%);
+  --palette-neutral-80:   hsl(0 0% 92%);
+  --palette-neutral-100:  hsl(0 0% 90%);
+  --palette-neutral-150:  hsl(0 0% 85%);
+  --palette-neutral-400:  hsl(0 0% 60%);
+  --palette-neutral-600:  hsl(0 0% 37%);   /* light muted text: 4.5:1 on muted (tab lists, chips) */
+  --palette-neutral-850:  hsl(0 0% 15%);
+  --palette-neutral-870:  hsl(0 0% 13%);
+  --palette-neutral-900:  hsl(0 0% 10%);
+  --palette-neutral-910:  hsl(0 0% 9%);
+  --palette-neutral-920:  hsl(0 0% 8%);
+  --palette-neutral-930:  hsl(0 0% 7%);
+  --palette-neutral-960:  hsl(0 0% 4%);
+  --palette-neutral-1000: hsl(0 0% 0%);
+  --palette-umber-900:    hsl(24 50% 11%);   /* warm dark — camera-feed placeholder */
+
+  /* Brand orange */
+  --palette-orange-50:    hsl(20 95% 95%);
+  --palette-orange-300:   hsl(20 95% 75%);
+  --palette-orange-500:   hsl(20 95% 55%);
+  --palette-orange-600:   hsl(20 95% 42%);   /* fills under white text — 4.5:1 */
+  --palette-orange-700:   hsl(20 95% 33%);   /* light-mode orange text (4.5:1 on its /10 tint); fill hover */
+  --palette-orange-800:   hsl(20 80% 30%);
+  --palette-orange-950:   hsl(20 80% 12%);
+
+  /* Feedback / severity hues.
+     500 = bright, for dark surfaces. 600/700 = ink, for the light theme.
+     Lightness is tuned so text clears WCAG AA 4.5:1 on every surface
+     (background, card, muted, sidebar) and on its own /15 tint chip. */
+  --palette-red-500:       hsl(0 84% 69%);    /* dark: destructive + severity-critical; 4.5:1 on its tint over selected rows */
+  --palette-red-600:       hsl(0 74% 40%);
+  --palette-tangerine-500: hsl(30 95% 52%);   /* severity-high — deliberately off the brand hue */
+  --palette-tangerine-700: hsl(17 88% 34%);
+  --palette-amber-500:     hsl(40 96% 50%);
+  --palette-amber-700:     hsl(35 92% 26%);
+  --palette-green-500:     hsl(142 70% 45%);
+  --palette-green-700:     hsl(142 72% 23%);
+  --palette-blue-500:      hsl(214 87% 61%);
+  --palette-blue-600:      hsl(214 80% 39%);
+  --palette-violet-500:    hsl(270 95% 71%);
+  --palette-violet-600:    hsl(270 75% 49.5%);
+
+  /* Categorical (charts) */
+  --palette-sky-600:      hsl(199 89% 48%);
+  --palette-emerald-600:  hsl(158 64% 40%);
+  --palette-indigo-500:   hsl(262 80% 58%);
+}
+
+/* ── 2. Semantic + 3. Component — base (light) values; .dark overrides ── */
+:root {
+  /* Surfaces */
+  --background:             var(--palette-neutral-30);
+  --foreground:             var(--palette-neutral-900);
+  --card:                   var(--palette-neutral-0);
+  --card-foreground:        var(--foreground);
+  --popover:                var(--card);
+  --popover-foreground:     var(--foreground);
+  --muted:                  var(--palette-neutral-80);
+  --muted-foreground:       var(--palette-neutral-600);
+  --secondary:              var(--muted);      /* shadcn needs both names — same role */
+  --secondary-foreground:   var(--palette-neutral-850);
+  --accent:                 var(--palette-orange-50);  /* shadcn "accent" = hover/selected tint */
+  --accent-foreground:      var(--palette-orange-800);
+  --border:                 var(--palette-neutral-150);
+  --input:                  var(--border);
+  --radius:                 0.5rem;
+
+  /* Brand / action */
+  --primary:                var(--palette-orange-500);
+  --primary-foreground:     var(--palette-neutral-0);
+  /* The bright brand orange (--primary) fails AA under white labels (2.99:1)
+     and as text on light surfaces. Solid fills that carry a label use
+     primary-fill; orange text uses primary-ink. Rings, tints, borders, dots
+     and charts keep the bright --primary. */
+  --primary-fill:           var(--palette-orange-600);
+  --primary-hover:          var(--palette-orange-700);   /* fill hover */
+  --primary-active:         var(--palette-orange-800);   /* fill pressed */
+  --primary-ink:            var(--palette-orange-700);
+  --ring:                   var(--primary);
+  /* Action colour for destructive buttons. Same value as severity-critical
+     today (AA leaves no room to soften it), but a separate token: an action
+     and an alarm may need to diverge later. */
+  --destructive:            var(--palette-red-600);
+  --destructive-foreground: var(--palette-neutral-0);
+
+  /* Feedback — ink weights in light so text-* clears 4.5:1 on white and on
+     its own /15 badge tint over the page background (axe, 2026-11-15);
+     .dark switches to the bright 500s. Fills/dots use the same token. */
+  --success:           var(--palette-green-700);
+  --warning:           var(--palette-amber-700);
+  --info:              var(--palette-blue-600);
+  --violet:            var(--palette-violet-600);   /* categorical tone, no single role */
+
+  /* Severity — medium/low are explicit aliases of warning/info */
+  --severity-critical: var(--palette-red-600);
+  --severity-high:     var(--palette-tangerine-700);
+  --severity-medium:   var(--warning);
+  --severity-low:      var(--info);
+  /* DEPRECATED — renamed to severity-* */
+  --sev-critical:      var(--severity-critical);
+  --sev-high:          var(--severity-high);
+  --sev-medium:        var(--severity-medium);
+  --sev-low:           var(--severity-low);
+
+  /* Tints — use opacity modifiers on the base token, from this scale:
+       /5  hover wash on rows    /10 subtle fill (chips, selected rows)
+       /15 status tint (badges)  /20–/30 tint borders
+     DEPRECATED: the *-soft, primary-muted and purple tokens below are kept only for
+     prototypes/ and in-flight work. Use bg-success/15, bg-primary/10 instead. */
+  --soft-alpha:        12%;
+  --primary-muted:     color-mix(in srgb, var(--primary) 8%, transparent);
+  --success-soft:      color-mix(in srgb, var(--success) var(--soft-alpha), transparent);
+  --warning-soft:      color-mix(in srgb, var(--warning) var(--soft-alpha), transparent);
+  --info-soft:         color-mix(in srgb, var(--info) var(--soft-alpha), transparent);
+  --purple:            var(--violet);       /* renamed → --violet */
+  --purple-soft:       color-mix(in srgb, var(--violet) var(--soft-alpha), transparent);
+  --sev-critical-soft: color-mix(in srgb, var(--severity-critical) var(--soft-alpha), transparent);
+  --sev-high-soft:     color-mix(in srgb, var(--severity-high) var(--soft-alpha), transparent);
+  --sev-medium-soft:   var(--warning-soft);
+  --sev-low-soft:      var(--info-soft);
+
+  /* Elevation — Tailwind utilities shadow-raised / shadow-floating / shadow-modal.
+       raised  → cards, inputs, tabs, segmented controls (resting on the page)
+       floating → popovers, dropdowns, tooltips, toasts, floating panels
+       modal   → dialogs, sheets, drawers, auth cards */
+  --elevation-raised:  0 1px 2px 0 hsl(0 0% 0% / 0.06);
+  --elevation-floating: 0 4px 12px -2px hsl(0 0% 0% / 0.10), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
+  --elevation-modal:   0 20px 48px -12px hsl(0 0% 0% / 0.25);
+
+  /* Text/icons on a SOLID status fill (bg-success, bg-severity-critical/95…).
+     Status fills are bright in dark mode, so labels flip to near-black there. */
+  --status-foreground: var(--palette-neutral-0);
+
+  /* Media — video players, camera tiles, snapshots, floor plans. These sit on
+     imagery that is dark in both themes, so they are NOT themed.
+       media / media-raised → solid backdrop behind a frame
+       scrim                → translucent layer over a frame (bg-scrim/60)
+       media-foreground     → text, icons, hairlines on media (text-media-foreground/85) */
+  --media:             var(--palette-neutral-960);
+  --media-raised:      var(--palette-neutral-910);
+  --scrim:             var(--palette-neutral-1000);
+  --media-foreground:  var(--palette-neutral-0);
+  --camera-feed-from:  var(--palette-umber-900);    /* bg-camera-feed placeholder gradient */
+  --camera-feed-to:    var(--palette-neutral-900);
+
+  /* Component: chart — anchored on brand, same in both themes */
+  --chart-1: var(--primary);
+  --chart-2: var(--palette-sky-600);
+  --chart-3: var(--palette-emerald-600);
+  --chart-4: var(--palette-indigo-500);
+  --chart-5: var(--palette-amber-500);
+
+  /* Component: sidebar */
+  --sidebar:                    var(--palette-neutral-40);
+  --sidebar-foreground:         var(--foreground);
+  --sidebar-primary:            var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent:             var(--palette-neutral-100);
+  --sidebar-accent-foreground:  var(--secondary-foreground);
+  --sidebar-border:             var(--border);
+  --sidebar-ring:               var(--ring);
+}
+
+/* ── Dark theme (<html class="dark"> — the default) ────────────────────────
+   Overrides semantic/component tokens only — never primitives. Everything
+   not listed here (brand, chart, aliases) is identical in dark. */
+.dark {
+  --background:             var(--palette-neutral-930);
+  --foreground:             var(--palette-neutral-50);
+  --card:                   var(--palette-neutral-910);
+  --muted:                  var(--palette-neutral-870);
+  --muted-foreground:       var(--palette-neutral-400);
+  --secondary-foreground:   var(--foreground);
+  --accent:                 var(--palette-orange-950);
+  --accent-foreground:      var(--palette-orange-300);
+  --border:                 var(--palette-neutral-850);
+  --primary-ink:            var(--primary);             /* bright orange passes on dark */
+  --status-foreground:      var(--palette-neutral-930);
+  --destructive:            var(--palette-red-500);
+  --destructive-foreground: var(--palette-neutral-930);   /* bright red needs dark text (AA) */
+
+  /* Feedback + severity — bright values read well on dark surfaces */
+  --success:                var(--palette-green-500);
+  --warning:                var(--palette-amber-500);
+  --info:                   var(--palette-blue-500);
+  --violet:                 var(--palette-violet-500);
+  --severity-critical:      var(--palette-red-500);
+  --severity-high:          var(--palette-tangerine-500);
+
+  /* Deprecated tints (see :root) */
+  --soft-alpha:             15%;
+  --primary-muted:          color-mix(in srgb, var(--primary) 12%, transparent);
+
+  /* Elevation — black shadows vanish on dark surfaces; go deeper */
+  --elevation-raised:  0 1px 2px 0 hsl(0 0% 0% / 0.40);
+  --elevation-floating: 0 8px 24px -4px hsl(0 0% 0% / 0.55), 0 2px 6px -2px hsl(0 0% 0% / 0.40);
+  --elevation-modal:   0 24px 64px -12px hsl(0 0% 0% / 0.70);
+
+  /* Sidebar — 1% lighter than card so it reads as a separate surface */
+  --sidebar:                var(--palette-neutral-920);
+  --sidebar-accent:         var(--palette-neutral-870);
+  --sidebar-border:         var(--palette-neutral-870);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Base element styles
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Thin, minimal scrollbars across every scrollable area (Firefox + WebKit). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Surface utilities
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Camera / CCTV feed placeholder surface — warm-dark gradient behind live
+   tiles, recording thumbnails and detection snapshots. Replaces ad-hoc
+   raw-hex gradients so every camera surface is identical. */
+@utility bg-camera-feed {
+  background-image: linear-gradient(135deg, var(--camera-feed-from) 0%, var(--camera-feed-to) 100%);
+}

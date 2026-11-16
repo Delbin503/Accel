@@ -6,16 +6,17 @@ import {
 import {
   Award, CircleCheck, CircleDashed, CircleX, Crosshair, Dumbbell, FileDown, Info, Pause, Play, RotateCcw, Share2, TrendingDown, TrendingUp,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ItemButton } from "@/components/ui/item";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@accel/ui/components/ui/table";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
 import laneCctv from "@/assets/aar/prone-shooter-lane.webp";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import {
   BADGES, BEST_SHOT, CLICK_MM, COMPARISONS, CUES, FIRER, HOME_DRILLS, METHOD_NOTE, PLATOON_BINS, PREVIOUS_MET_TOTAL, SESSION_META,
   UNIT_AVERAGES, WEAKEST_SHOT, factorsMetTotal, shotNotes, FLINCH_LIMIT_MM, GRADE_BANDS, MISS_MM, PEERS, PREVIOUS, PREVIOUS_OVERALL, RANKED_RECS, REC_DETAIL,
@@ -209,7 +210,7 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
         </Button>
       </TooltipTrigger>
@@ -637,40 +638,35 @@ function ShotNotes({ shot }: { shot: Shot }) {
 
 /* Every shot of the session in one table — the old Shot Summary. */
 function ShotTable({ selected, onSelect }: { selected: number; onSelect: (n: number) => void }) {
-  const head = "px-1.5 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground";
+  const head = "h-auto whitespace-normal bg-card px-1.5 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground";
+  const cell = "whitespace-normal px-1.5 py-1.5 font-mono text-2xs";
+  const headers = [["#", "Shot"], ["Pts", "Points"], ["Aim", "From aim, mm"], ["Breath", "Breathing at the shot"], ["Wob", "Wobble in the last 1 s, mm"], ["Flinch", "Flinch, mm"], ["Off", "Ends off aim 2 s after, mm"], ["M/S", "Muzzle / shoulder peak, mm"]] as const;
+  const cells: ((s: Shot) => React.ReactNode)[] = [
+    (s) => <span className="font-semibold text-foreground">{s.n}</span>,
+    (s) => isHit(s) ? <span className="text-foreground">{points(s)}</span> : <span className="text-severity-critical">Miss</span>,
+    (s) => <span className="text-muted-foreground">{radius(s).toFixed(1)}</span>,
+    (s) => <span className={firedInPause(s) ? "text-muted-foreground" : "text-severity-critical"}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</span>,
+    (s) => <span className={s.wobbleMm > WOBBLE_LIMIT_MM ? "text-severity-critical" : "text-muted-foreground"}>{s.wobbleMm.toFixed(1)}</span>,
+    (s) => <span className={flinched(s) ? "text-severity-critical" : "text-muted-foreground"}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</span>,
+    (s) => <span className={settled(s) ? "text-muted-foreground" : "text-severity-critical"}>{s.settleMm.toFixed(1)}</span>,
+    (s) => <span className="text-muted-foreground">{s.muzzlePeakMm}/{s.shoulderPeakMm}</span>,
+  ];
+  const columns: DataTableColumn<Shot>[] = headers.map(([h, full], i) => ({
+    key: h, header: <span title={full}>{h}</span>, className: cell, headClassName: head, cell: cells[i],
+  }));
   return (
     <div data-slot="shot-table" className="min-h-0 flex-1 overflow-auto">
-      <Table className="w-full border-collapse">
-        <TableHeader className="sticky top-0 bg-card">
-          <TableRow className="border-0 hover:bg-transparent border-b border-border">
-            {([["#", "Shot"], ["Pts", "Points"], ["Aim", "From aim, mm"], ["Breath", "Breathing at the shot"], ["Wob", "Wobble in the last 1 s, mm"], ["Flinch", "Flinch, mm"], ["Off", "Ends off aim 2 s after, mm"], ["M/S", "Muzzle / shoulder peak, mm"]] as const).map(([h, full]) => <TableHead key={h} title={full} className={cn("h-auto px-0 whitespace-normal text-current", head)}>{h}</TableHead>)}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {SHOTS.map((s) => {
-            const hit = isHit(s);
-            const cell = "px-1.5 py-1.5 font-mono text-2xs";
-            return (
-              <TableRow
-                key={s.n}
-                tabIndex={0}
-                onClick={() => onSelect(s.n)}
-                onKeyDown={(e) => e.key === "Enter" && onSelect(s.n)}
-                className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", s.n === selected && "bg-muted", !hit && "bg-severity-critical/[0.05]")}
-              >
-                <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold text-foreground")}>{s.n}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, hit ? "text-foreground" : "text-severity-critical")}>{hit ? points(s) : "Miss"}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{radius(s).toFixed(1)}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, firedInPause(s) ? "text-muted-foreground" : "text-severity-critical")}>{BREATH_LABEL[s.breath].replace("Natural ", "")}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, s.wobbleMm > WOBBLE_LIMIT_MM ? "text-severity-critical" : "text-muted-foreground")}>{s.wobbleMm.toFixed(1)}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, flinched(s) ? "text-severity-critical" : "text-muted-foreground")}>{s.flinchMm === null ? "n/a" : s.flinchMm.toFixed(1)}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, settled(s) ? "text-muted-foreground" : "text-severity-critical")}>{s.settleMm.toFixed(1)}</TableCell>
-                <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{s.muzzlePeakMm}/{s.shoulderPeakMm}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      {/* The table's own scroller is switched off so the sticky header pins to this panel's scroll. */}
+      <DataTable
+        className="w-full border-collapse"
+        containerClassName="overflow-visible"
+        stickyHeader
+        columns={columns}
+        data={SHOTS}
+        getRowId={(s) => String(s.n)}
+        onRowClick={(s) => onSelect(s.n)}
+        getRowClassName={(s) => cn("border-border/60", s.n === selected && "bg-muted", !isHit(s) && "bg-severity-critical/[0.05]")}
+      />
       <p className="px-2 py-1.5 text-3xs text-muted-foreground">Distances in mm. Red: missed the limit (wobble {WOBBLE_LIMIT_MM}, flinch {FLINCH_LIMIT_MM}, settle {SETTLE_LIMIT_MM}).</p>
     </div>
   );
@@ -1173,23 +1169,13 @@ function Standing() {
           </div>
         </div>
       </div>
-      <Table className="w-full shrink-0 border-collapse">
-        <TableHeader>
-          <TableRow className="border-0 hover:bg-transparent border-b border-border text-left text-3xs uppercase text-muted-foreground">
-            <TableHead className="h-auto px-0 whitespace-normal text-current py-1 pr-1 font-semibold">Compared with</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Place</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Better than</TableHead><TableHead className="h-auto px-0 whitespace-normal text-current px-1 py-1 font-semibold">Avg</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {COMPARISONS.map((c) => (
-            <TableRow key={c.group} className="border-0 hover:bg-transparent border-b border-border/60 text-2xs last:border-0">
-              <TableCell className="p-0 whitespace-normal py-1 pr-1 font-semibold text-foreground">{c.group}</TableCell>
-              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.place}</TableCell>
-              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.betterThan}%</TableCell>
-              <TableCell className="p-0 whitespace-normal px-1 py-1 font-mono text-muted-foreground">{c.average}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        className="w-full shrink-0 border-collapse"
+        columns={COMPARISON_COLUMNS}
+        data={COMPARISONS}
+        getRowId={(c) => c.group}
+        getRowClassName={() => "border-border/60 text-2xs hover:bg-transparent"}
+      />
       <div className="grid shrink-0 grid-cols-2 gap-1">
         {BADGES.map((b) => (
           <div key={b.title} className="flex items-start gap-1.5 rounded-md border border-border bg-background px-2 py-1">
@@ -1201,6 +1187,15 @@ function Standing() {
     </div>
   );
 }
+
+/* "Compared with" table under the platoon chart. */
+const CMP_HEAD = "h-auto whitespace-normal py-1 text-3xs font-semibold uppercase text-muted-foreground";
+const COMPARISON_COLUMNS: DataTableColumn<(typeof COMPARISONS)[number]>[] = [
+  { key: "group", header: "Compared with", className: "whitespace-normal py-1 pl-0 pr-1 font-semibold text-foreground", headClassName: cn(CMP_HEAD, "pl-0 pr-1"), cell: (c) => c.group },
+  { key: "place", header: "Place", className: "whitespace-normal px-1 py-1 font-mono text-muted-foreground", headClassName: cn(CMP_HEAD, "px-1"), cell: (c) => c.place },
+  { key: "better", header: "Better than", className: "whitespace-normal px-1 py-1 font-mono text-muted-foreground", headClassName: cn(CMP_HEAD, "px-1"), cell: (c) => `${c.betterThan}%` },
+  { key: "avg", header: "Avg", className: "whitespace-normal px-1 py-1 font-mono text-muted-foreground", headClassName: cn(CMP_HEAD, "px-1"), cell: (c) => c.average },
+];
 
 /* ── Live cues ───────────────────────────────────────────────────────── */
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import {
   ChevronRight,
   ChevronLeft,
@@ -23,13 +23,13 @@ import {
   ModalSubheader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { makeBlankSite, generatedFloorPlan, AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";
@@ -90,7 +90,10 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
   const [errors, setErrors] = React.useState<{ name?: string; address?: string; area?: string }>({});
   const fileRef = React.useRef<HTMLInputElement | null>(null);
 
-  React.useEffect(() => {
+  // Reset the wizard each time it opens.
+  const [prevReset, setPrevReset] = React.useState({ open, accentChoices });
+  if (prevReset.open !== open || prevReset.accentChoices !== accentChoices) {
+    setPrevReset({ open, accentChoices });
     if (open) {
       setStep("details");
       setName(""); setAddress(""); setTimezone(DEFAULT_TIMEZONE); setDescription("");
@@ -99,7 +102,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
       setFloorPlanUrl(null); setFloorPlanName(""); setFloorPlanLabel("");
       setErrors({});
     }
-  }, [open, accentChoices]);
+  }
 
   const stepIdx = STEPS.findIndex((s) => s.key === step);
 
@@ -261,7 +264,7 @@ export function CreateSiteWizard({ open, onClose, onCreate, accentChoices }: Pro
                   <span className="text-sm text-muted-foreground">to</span>
                   <TimeSelect value={opTo} onChange={setOpTo} aria-label="Closing time" className="min-w-0 flex-1" />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground/70">Daily window when this site is operational.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Daily window when this site is operational.</p>
               </div>
               <div>
                 <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

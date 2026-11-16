@@ -5,17 +5,17 @@ import {
   ArrowRight, ArrowLeft, Check, Sparkles, Zap, Rocket, CreditCard, Lock,
   AlertCircle, Building2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import { AuthLayout } from "./AuthLayout";
 import { OnboardingProgress } from "./OnboardingProgress";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useSubscriptionsStore } from "@/stores/useSubscriptionsStore";
 import { PLANS, type PlanTier } from "@/mocks/licenses";
-import { cn } from "@/lib/utils";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { cn } from "@accel/ui/lib/utils";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 
 const PLAN_ICONS: Record<PlanTier, React.ElementType> = {
   starter: Sparkles,

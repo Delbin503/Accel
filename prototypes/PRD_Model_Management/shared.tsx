@@ -1,7 +1,7 @@
 import * as React from "react";
 import { AlertCircle, Boxes, ChevronDown, Plus, Search, SearchX } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 
 /** Dev-only forced states for the State Tester (prototype-only). */
 export type ForcedState = "normal" | "loading" | "empty" | "noresults" | "error";

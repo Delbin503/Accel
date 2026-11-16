@@ -1,15 +1,15 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@accel/ui/components/ui/button";
+import { Textarea } from "@accel/ui/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+} from "@accel/ui/components/ui/dropdown-menu";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 import type { DetectionEvent } from "@/types/detection";
 
 /**

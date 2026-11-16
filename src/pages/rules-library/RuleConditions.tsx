@@ -1,24 +1,24 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import { ChevronDown, Pencil, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+} from "@accel/ui/components/shared/Modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { newCondition, templateFor } from "@/lib/ruleTemplates";
 import {
   CONDITION_PARAM_META,

@@ -1,14 +1,14 @@
 import * as React from "react";
 import { Eye, EyeOff, CircleAlert, CircleUser } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Input } from "@accel/ui/components/ui/input";
 import { DepartmentSelect } from "@/components/app/DepartmentSelect";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { AccelMark } from "./AccelMark";
 import { roleLabel, type InviteContext } from "./shared";
-import { PhoneField } from "@/components/shared/PhoneField";
-import { DEFAULT_DIAL_CODE } from "@/lib/dialCodes";
+import { PhoneField } from "@accel/ui/components/shared/PhoneField";
+import { DEFAULT_DIAL_CODE } from "@accel/ui/lib/dialCodes";
 
 export interface AccountProfile {
   firstName: string;

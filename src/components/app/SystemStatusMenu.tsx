@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronDown, Cctv, HardDrive, Server } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { cn } from "@accel/ui/lib/utils";
 import {
   useSystemStatus,
   SYSTEM_HEALTH_PRESENTATION,

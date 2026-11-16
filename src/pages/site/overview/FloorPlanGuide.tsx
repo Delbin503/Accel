@@ -1,5 +1,5 @@
 import { MousePointer2, Video } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 /* ── "How to draw an area" demo — cycles through clicking each corner ──── */
 

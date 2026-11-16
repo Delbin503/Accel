@@ -5,10 +5,10 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ChoiceDropdown } from "@/components/shared/ChoiceDropdown";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { ChoiceDropdown } from "@accel/ui/components/shared/ChoiceDropdown";
 import type { DetectionEvent } from "@/types/detection";
 
 const FP_REASONS = [
@@ -57,12 +57,16 @@ export function DismissModal({ event, bulkCount, open, onClose, onConfirm }: Dis
   const [selectedReason, setSelectedReason] = React.useState("wrong-class");
   const [notes, setNotes] = React.useState("");
 
-  React.useEffect(() => {
+  // Reset the form each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setSelectedReason("wrong-class");
       setNotes("");
     }
-  }, [open]);
+  }
 
   const model = event ? event.model.replace(/\.\d+$/, ".3") : "accel-vms v4.3";
 

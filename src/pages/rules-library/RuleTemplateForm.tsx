@@ -1,22 +1,22 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
-import { Button } from "@/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
 import { Check, ChevronDown, Plus, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@accel/ui/components/ui/collapsible";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import {
   availableFields,
   newClassParams,
@@ -188,7 +188,7 @@ function ParamRow({
           onClick={onRemove}
           title={`Remove ${meta.label}`}
           aria-label={`Remove ${meta.label}`}
-          className="size-5 rounded text-muted-foreground/60 dark:hover:bg-severity-critical/10 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-severity-critical/10 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="size-5 rounded text-muted-foreground dark:hover:bg-severity-critical/10 transition-colors duration-[var(--duration-fast)] ease-standard hover:bg-severity-critical/10 hover:text-severity-critical focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3" />
         </Button>

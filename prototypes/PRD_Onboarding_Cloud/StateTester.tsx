@@ -1,6 +1,6 @@
 import { FlaskConical } from "lucide-react";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { CLOUD_SCREENS, type CloudScreen, type AsyncMode } from "./shared";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { CLOUD_SCREENS, type CloudScreen, type AsyncMode } from "./screens";
 
 /* ──────────────────────────────────────────────────────────────────────────
    PROTOTYPE-ONLY. Jumps to any screen in the Cloud onboarding flow and injects

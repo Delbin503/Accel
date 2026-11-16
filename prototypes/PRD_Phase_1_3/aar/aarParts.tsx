@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { FLINCH_LIMIT_MM, SESSION, SETTLE_LIMIT_MM, SHOTS, flinched, swayPath, type Shot, type SwayWindow } from "./aarSession";
 
 /* Drawn pieces of the AAR dashboard. */

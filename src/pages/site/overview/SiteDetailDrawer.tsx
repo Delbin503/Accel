@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -25,30 +25,40 @@ import {
   ChevronDown,
   Info,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { KpiCard as SharedKpiCard } from "@/components/shared/KpiCard";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { CoachMark } from "@/components/custom/coach-mark";
-import { GuideGifModal } from "@/components/custom/guide-gif-modal";
+} from "@accel/ui/components/shared/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { KpiCard as SharedKpiCard } from "@accel/ui/components/shared/KpiCard";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { ConfirmDialog } from "@accel/ui/components/shared/ConfirmDialog";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { CoachMark } from "@accel/ui/components/custom/coach-mark";
+import { GuideGifModal } from "@accel/ui/components/custom/guide-gif-modal";
 import {
   renderDrawAreaFrame, DRAW_AREA_FRAME_COUNT,
   renderPlaceCameraFrame, PLACE_CAMERA_FRAME_COUNT,
 } from "./FloorPlanGuide";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE, timezoneLabel } from "@/lib/timezones";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
@@ -516,7 +526,12 @@ export function EditAreaModal({ area, open, onClose, onSave }: { area: AreaShape
   const [name, setName] = React.useState("");
   const [color, setColor] = React.useState(AREA_PALETTE[0]);
   const [nameErr, setNameErr] = React.useState<string | null>(null);
-  React.useEffect(() => { if (open && area) { setName(area.name); setColor(area.color); setNameErr(null); } }, [open, area]);
+  // Load the area's values when the modal opens (or the area changes while open).
+  const [prevLoad, setPrevLoad] = React.useState<{ open: boolean; area: AreaShape | null }>({ open: false, area: null });
+  if (prevLoad.open !== open || prevLoad.area !== area) {
+    setPrevLoad({ open, area });
+    if (open && area) { setName(area.name); setColor(area.color); setNameErr(null); }
+  }
   if (!area) return null;
   const dirty = name !== area.name || color !== area.color;
   function handleSave() {
@@ -577,14 +592,17 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
   const [opFrom, setOpFrom] = React.useState(DEFAULT_OPERATING_HOURS.from);
   const [opTo, setOpTo] = React.useState(DEFAULT_OPERATING_HOURS.to);
   const [errors, setErrors] = React.useState<{ name?: string; address?: string }>({});
-  React.useEffect(() => {
+  // Load the site's values when the modal opens (or the site changes while open).
+  const [prevLoad, setPrevLoad] = React.useState<{ open: boolean; site: SiteData | null }>({ open: false, site: null });
+  if (prevLoad.open !== open || prevLoad.site !== site) {
+    setPrevLoad({ open, site });
     if (open && site) {
       setName(site.name); setAddress(site.address); setDescription(site.description ?? ""); setTimezone(site.timezone);
       setOpFrom(site.operatingHours?.from ?? DEFAULT_OPERATING_HOURS.from);
       setOpTo(site.operatingHours?.to ?? DEFAULT_OPERATING_HOURS.to);
       setErrors({});
     }
-  }, [open, site]);
+  }
   if (!site) return null;
   const dirty = name !== site.name || address !== site.address || description !== (site.description ?? "") || timezone !== site.timezone
     || opFrom !== (site.operatingHours?.from ?? DEFAULT_OPERATING_HOURS.from)
@@ -653,7 +671,12 @@ export function EditSiteModal({ site, open, onClose, onSave }: { site: SiteData 
 
 export function DeleteSiteModal({ site, open, onClose, onConfirm }: { site: SiteData | null; open: boolean; onClose: () => void; onConfirm: () => void }) {
   const [confirm, setConfirm] = React.useState("");
-  React.useEffect(() => { if (open) setConfirm(""); }, [open]);
+  // Clear the confirmation each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) setConfirm("");
+  }
   if (!site) return null;
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
@@ -697,28 +720,32 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   const [drafting, setDrafting] = React.useState<{ points: [number, number][]; color: string } | null>(null);
   const [selected, setSelected] = React.useState<{ type: "area" | "camera"; id: string } | null>(null);
   const [editAreaTarget, setEditAreaTarget] = React.useState<AreaShape | null>(null);
-  const [editSiteOpen, setEditSiteOpen] = React.useState(false);
-  const [deleteSiteOpen, setDeleteSiteOpen] = React.useState(false);
-
   // Open the Edit Site modal straight away when launched from the table "Edit Site" action.
-  React.useEffect(() => {
-    if (open && initialEdit) setEditSiteOpen(true);
-  }, [open, initialEdit, siteId]);
+  const [editSiteOpen, setEditSiteOpen] = React.useState(open && initialEdit);
+  const [deleteSiteOpen, setDeleteSiteOpen] = React.useState(false);
   const [pendingCameraId, setPendingCameraId] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (open) {
+  // Reset the drawer whenever it opens or switches to another site.
+  const [prevOpenState, setPrevOpenState] = React.useState({ open, siteId, initialEdit });
+  if (prevOpenState.open !== open || prevOpenState.siteId !== siteId || prevOpenState.initialEdit !== initialEdit) {
+    const openOrSiteChanged = prevOpenState.open !== open || prevOpenState.siteId !== siteId;
+    setPrevOpenState({ open, siteId, initialEdit });
+    if (open && initialEdit) setEditSiteOpen(true);
+    if (openOrSiteChanged && open) {
       setFloorPlanOpen(false);
       setTool("select");
       setDrafting(null);
       setSelected(null);
       setPendingCameraId(null);
     }
-  }, [open, siteId]);
+  }
 
-  React.useEffect(() => {
+  // Leaving the draw-area tool discards any half-drawn area.
+  const [prevTool, setPrevTool] = React.useState(tool);
+  if (tool !== prevTool) {
+    setPrevTool(tool);
     if (tool !== "draw-area") setDrafting(null);
-  }, [tool]);
+  }
 
   React.useEffect(() => {
     // When a pending camera is set, auto-drop near the centre of the canvas.
@@ -802,27 +829,19 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
         {/* Header — site title with identifying metadata. */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div data-slot="site-detail-drawer-header" className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <SheetTitle className="text-lg font-bold leading-snug">{site.name}</SheetTitle>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {site.id} · {site.address || "No address yet"} · {site.timezone}
-              </p>
-            </div>
-            <Button variant="ghost" size="icon-sm" onClick={onClose} className="mt-0.5 size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
-              <X className="size-4" />
-            </Button>
-          </div>
-        </SheetHeader>
+        <DetailDrawerHeader data-slot="site-detail-drawer-header">
+          <DetailDrawerTitle className="leading-snug">{site.name}</DetailDrawerTitle>
+          <DetailDrawerDescription>
+            {site.id} · {site.address || "No address yet"} · {site.timezone}
+          </DetailDrawerDescription>
+        </DetailDrawerHeader>
 
-        <div data-slot="site-detail-drawer-body" className="flex-1 overflow-y-auto p-5">
+        <DetailDrawerBody data-slot="site-detail-drawer-body">
           <OverviewTab site={site} siteCameras={siteCameras} onlineCount={onlineCount} placedCount={placedCount}
             onGoFloorPlan={() => setFloorPlanOpen(true)} />
-        </div>
+        </DetailDrawerBody>
 
         {/* Floor plan lives in its own modal so the editor gets the full width
             it needs instead of being squeezed into the drawer. */}
@@ -875,19 +894,20 @@ export function SiteDetailDrawer({ siteId, open, onClose, initialEdit = false }:
           onConfirm={confirmDeleteSite} />
 
         {/* Footer */}
-        <div data-slot="site-detail-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
-          <Button className="gap-1.5" onClick={() => setEditSiteOpen(true)}>
-            <Edit3 className="size-3.5" />
-            Edit Site
-          </Button>
-          <Button variant="outline" className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
+        <DetailDrawerFooter data-slot="site-detail-drawer-footer" className="gap-2">
+          <DetailDrawerFooterStart className="gap-2">
+            <Button className="gap-1.5" onClick={() => setEditSiteOpen(true)}>
+              <Edit3 className="size-3.5" />
+              Edit Site
+            </Button>
+          </DetailDrawerFooterStart>
+          <Button variant="outline" className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
             onClick={() => setDeleteSiteOpen(true)}>
             <Trash2 className="size-3.5" />
             Delete Site
           </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawerFooter>
+    </DetailDrawer>
   );
 }
 
@@ -990,55 +1010,41 @@ function OverviewTab({
       </div>
 
       {/* ── Site Details — directly under quick counts ── */}
-      <div data-slot="site-detail-overview-details">
-        <SiteSectionTitle>Site Details</SiteSectionTitle>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-          {([
-            ["Site ID",        <span className="font-mono text-xs text-primary-ink">{site.id}</span>],
-            ["Name",           <span>{site.name}</span>],
-            ["Address",        <span>{site.address || "—"}</span>],
-            ["Timezone",       <span>{timezoneLabel(site.timezone)}</span>],
-            ["Operating Hours",
-              site.operatingHours
-                ? <span className="font-mono text-xs">{site.operatingHours.from} – {site.operatingHours.to}</span>
-                : <span className="text-muted-foreground">—</span>
-            ],
-            ["Created",        <span>{site.createdAtDisplay}</span>],
-            ["Floor Plan",     <span>{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</span>],
-          ] as [string, React.ReactNode][]).map(([label, value]) => (
-            <div key={label as string} className="flex flex-col gap-0.5">
-              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-              <span className="text-base font-medium text-foreground">{value}</span>
-            </div>
-          ))}
-          <div className="col-span-2 flex flex-col gap-0.5">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Description</span>
-            <span className={cn("text-base font-medium", site.description ? "text-foreground" : "text-muted-foreground")}>
-              {site.description || "—"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <DetailDrawerSection data-slot="site-detail-overview-details" title="Site Details">
+        <DescriptionList columns={2} variant="card">
+          <DescriptionItem label="Site ID" mono><span className="text-primary-ink">{site.id}</span></DescriptionItem>
+          <DescriptionItem label="Name">{site.name}</DescriptionItem>
+          <DescriptionItem label="Address">{site.address || "—"}</DescriptionItem>
+          <DescriptionItem label="Timezone">{timezoneLabel(site.timezone)}</DescriptionItem>
+          <DescriptionItem label="Operating Hours" mono={!!site.operatingHours}>
+            {site.operatingHours ? <>{site.operatingHours.from} – {site.operatingHours.to}</> : undefined}
+          </DescriptionItem>
+          <DescriptionItem label="Created">{site.createdAtDisplay}</DescriptionItem>
+          <DescriptionItem label="Floor Plan">{site.floorPlan ? (site.floorPlan.label ?? "Uploaded") : "Not uploaded"}</DescriptionItem>
+          <DescriptionItem label="Description" wide>{site.description || undefined}</DescriptionItem>
+        </DescriptionList>
+      </DetailDrawerSection>
 
       {/* ── Camera Health — expandable rows; click a row to see the cameras in that bucket ── */}
-      <div data-slot="site-detail-overview-camera-health">
-        <SiteSectionTitle
-          aside={
-            <span className="inline-flex items-center gap-1.5 rounded bg-success/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
-              <span className={cn("size-1.5 rounded-full",
-                failed > 0 ? "bg-severity-critical" :
-                offlineOnly > 0 ? "bg-muted-foreground" :
-                "bg-success"
-              )} />
-              Live status
-            </span>
-          }
-        >
+      <DetailDrawerSection
+        data-slot="site-detail-overview-camera-health"
+        title={
           <span className="flex items-center gap-2">
             <Video className="size-3.5 text-info" />
             Camera Health
           </span>
-        </SiteSectionTitle>
+        }
+        action={
+          <span className="inline-flex items-center gap-1.5 rounded bg-success/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success">
+            <span className={cn("size-1.5 rounded-full",
+              failed > 0 ? "bg-severity-critical" :
+              offlineOnly > 0 ? "bg-muted-foreground" :
+              "bg-success"
+            )} />
+            Live status
+          </span>
+        }
+      >
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           {([
             { key: "online",  label: "Online",  dot: "bg-success",          accent: "text-success",       items: camerasByStatus.online },
@@ -1076,7 +1082,7 @@ function OverviewTab({
                         <Video className="size-3 flex-shrink-0 text-muted-foreground/60" />
                         <span className="font-mono text-foreground">{c.id}</span>
                         <TruncatedText text={c.name} className="text-muted-foreground" />
-                        <span className="ml-auto text-2xs text-muted-foreground/70">{c.areaName}</span>
+                        <span className="ml-auto text-2xs text-muted-foreground">{c.areaName}</span>
                       </li>
                     ))}
                   </ul>
@@ -1085,23 +1091,24 @@ function OverviewTab({
             );
           })}
         </div>
-      </div>
+      </DetailDrawerSection>
 
       {/* ── NVR Health (one site can have multiple NVRs) ── */}
-      <div data-slot="site-detail-overview-nvr-health">
-        <SiteSectionTitle
-          aside={
-            <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-info">
-              <HardDrive className="size-3" />
-              {siteNvrs.length} unit{siteNvrs.length === 1 ? "" : "s"}
-            </span>
-          }
-        >
+      <DetailDrawerSection
+        data-slot="site-detail-overview-nvr-health"
+        title={
           <span className="flex items-center gap-2">
             <HardDrive className="size-3.5 text-info" />
             NVR Health
           </span>
-        </SiteSectionTitle>
+        }
+        action={
+          <span className="inline-flex items-center gap-1.5 rounded bg-info/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-info">
+            <HardDrive className="size-3" />
+            {siteNvrs.length} unit{siteNvrs.length === 1 ? "" : "s"}
+          </span>
+        }
+      >
         {siteNvrs.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card px-4 py-6 text-center text-sm italic text-muted-foreground">
             No NVRs linked to this site.
@@ -1166,23 +1173,11 @@ function OverviewTab({
             })}
           </div>
         )}
-      </div>
+      </DetailDrawerSection>
 
       {/* hidden — keeps lint happy for unused imports referenced via children below if any */}
       <span className="hidden">
         <Building2 /><MapPin /><Clock /><Calendar /><CircleDot />{onGoFloorPlan === undefined ? null : null}<HardDrive /></span>
-    </div>
-  );
-}
-
-/* ── Small section title, matches EventDrawer.SectionTitle ──────────── */
-function SiteSectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
     </div>
   );
 }

@@ -1,75 +1,23 @@
-import * as React from "react";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Stepper } from "@accel/ui/components/shared/Stepper";
 
 export type OnPremStepKey = "license" | "owner" | "site" | "operators";
 
-const STEPS: { key: OnPremStepKey; label: string }[] = [
-  { key: "license", label: "Activate License" },
-  { key: "owner", label: "Owner Details" },
-  { key: "site", label: "Configure Site" },
-  { key: "operators", label: "Add Members" },
+const STEPS: { id: OnPremStepKey; label: string }[] = [
+  { id: "license", label: "Activate License" },
+  { id: "owner", label: "Owner Details" },
+  { id: "site", label: "Configure Site" },
+  { id: "operators", label: "Add Members" },
 ];
 
-/**
- * On-Premise variant of the wizard step bar.
- *
- * Same visual treatment as AuthStepBar (chip + label + thin connector),
- * but labelled for the offline first-run setup flow.
- */
+/** On-premise first-run step indicator — the shared Stepper with the setup steps. */
 export function OnPremStepBar({ current }: { current: OnPremStepKey }) {
-  const idx = STEPS.findIndex((s) => s.key === current);
   return (
-    <div data-slot="on-prem-step-bar" className="mx-auto flex w-full max-w-[640px] items-center gap-1.5 sm:gap-2">
-      {STEPS.map((s, i) => {
-        const done = i < idx;
-        const active = i === idx;
-        return (
-          <React.Fragment key={s.key}>
-            <div data-slot="on-prem-step-bar-step" className="flex shrink-0 items-center gap-1.5">
-              <span
-                data-slot="on-prem-step-bar-chip"
-                className={cn(
-                  "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
-                  done
-                    ? "border-primary bg-primary-fill text-primary-foreground"
-                    : active
-                      ? "border-primary bg-primary/15 text-primary-ink"
-                      : "border-border text-muted-foreground/70"
-                )}
-              >
-                {done ? <Check className="size-3" strokeWidth={3} /> : i + 1}
-              </span>
-              <span
-                data-slot="on-prem-step-bar-label"
-                className={cn(
-                  "hidden text-xs font-semibold transition-colors sm:inline",
-                  done
-                    ? "text-primary-ink"
-                    : active
-                      ? "text-foreground"
-                      : "text-muted-foreground/70"
-                )}
-              >
-                {s.label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <span
-                data-slot="on-prem-step-bar-connector"
-                className={cn(
-                  "h-px flex-1 transition-colors",
-                  done
-                    ? "bg-primary"
-                    : active
-                      ? "bg-primary/30"
-                      : "bg-border"
-                )}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
+    <Stepper
+      data-slot="on-prem-step-bar"
+      steps={STEPS}
+      current={STEPS.findIndex((s) => s.id === current)}
+      aria-label="Setup progress"
+      className="mx-auto max-w-160"
+    />
   );
 }

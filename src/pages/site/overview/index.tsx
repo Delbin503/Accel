@@ -1,12 +1,11 @@
 import * as React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ItemButton } from "@/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   MapPin,
   Plus,
-  Search,
   Image as ImageIcon,
   MoreHorizontal,
   Trash2,
@@ -19,12 +18,11 @@ import {
   ChevronUp,
   Check,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { CreateSiteWizard } from "./CreateSiteWizard";
@@ -33,8 +31,9 @@ import { SITE_ACCENT_COLORS } from "@/mocks/sites";
 import { PLANS, ACCOUNT_SUBSCRIPTION } from "@/mocks/licenses";
 import type { SiteData } from "@/types/sites";
 import type { CameraData } from "@/types/cameras";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 function SiteMiniThumb({ site }: { site: SiteData }) {
   if (site.floorPlan?.imageUrl) {
@@ -63,14 +62,14 @@ function CameraHealthCell({ cameras }: { cameras: CameraData[] }) {
   const total   = cameras.length;
   const offline = total - online;
   if (total === 0) {
-    return <span className="text-sm text-muted-foreground/60">—</span>;
+    return <span className="text-sm text-muted-foreground">—</span>;
   }
   const allOnline = offline === 0;
   return (
     <div className="flex items-center gap-2">
       <Video className={cn("size-3", allOnline ? "text-success" : "text-muted-foreground")} />
       <span className="font-mono text-sm font-semibold text-foreground">
-        {online}<span className="text-muted-foreground/60">/{total}</span>
+        {online}<span className="text-muted-foreground">/{total}</span>
       </span>
       {offline > 0 && (
         <span className="inline-flex items-center gap-1 rounded-full border border-severity-critical/30 bg-severity-critical/10 px-1.5 py-0.5 text-2xs font-semibold text-severity-critical">
@@ -224,15 +223,7 @@ function FilterPanel({
 
       {open && (
         <div data-slot="site-overview-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search sites by name, address or description…"
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search sites by name, address or description…" className="sm:w-full" />
           <div className="grid grid-cols-2 gap-3">
             {[
               { key: "status" as const, label: "Status", opts: SITE_STATUS_OPTS },
@@ -273,14 +264,16 @@ export default function SiteOverviewPage({
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<SiteFilters>(EMPTY_FILTERS);
   const [wizardOpen, setWizardOpen] = React.useState(false);
-  const [drawerSiteId, setDrawerSiteId] = React.useState<string | null>(null);
+  const [drawerSiteId, setDrawerSiteId] = React.useState<string | null>(params.siteId ?? null);
   const [editFromMenu, setEditFromMenu] = React.useState(false);
 
   // Sync deep-link route /site/:siteId
-  React.useEffect(() => {
-    if (params.siteId) setDrawerSiteId(params.siteId);
-    else setDrawerSiteId(null);
-  }, [params.siteId, location.pathname]);
+  const routeKey = `${params.siteId ?? ""}|${location.pathname}`;
+  const [prevRouteKey, setPrevRouteKey] = React.useState(routeKey);
+  if (routeKey !== prevRouteKey) {
+    setPrevRouteKey(routeKey);
+    setDrawerSiteId(params.siteId ?? null);
+  }
 
   const filtered = sites.filter((s) => {
     if (filters.status.length > 0 && !filters.status.includes(s.status)) return false;
@@ -331,6 +324,119 @@ export default function SiteOverviewPage({
       toast.success(`${site.name} created`);
     }
   }
+
+  const siteColumns: DataTableColumn<SiteData>[] = [
+    {
+      key: "id",
+      header: "SITE ID",
+      cell: (site) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {site.id}
+        </span>
+      ),
+    },
+    {
+      key: "site",
+      header: "SITE",
+      cell: (site) => (
+        <div className="flex items-center gap-2.5">
+          <SiteMiniThumb site={site} />
+          <div className="min-w-0">
+            <TruncatedText
+              text={site.name}
+              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
+            />
+            <TruncatedText
+              title={site.address || "No address yet"}
+              className="text-xs text-muted-foreground"
+            >
+              <MapPin className="mr-0.5 inline size-2.5" />
+              {site.address || "No address yet"}
+            </TruncatedText>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "floorPlan",
+      header: "FLOOR PLAN",
+      cell: (site) =>
+        site.floorPlan ? (
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
+            <ImageIcon className="size-3" />
+            Ready
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
+            Missing
+          </span>
+        ),
+    },
+    {
+      key: "areas",
+      header: "AREAS",
+      cell: (site) => (
+        <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-foreground">
+          <Shapes className="size-3 text-muted-foreground" />
+          {site.areas.length}
+        </span>
+      ),
+    },
+    {
+      key: "cameras",
+      header: "CAMERAS",
+      cell: (site) => <CameraHealthCell cameras={cameras.filter((c) => c.siteId === site.id)} />,
+    },
+    {
+      key: "operating",
+      header: "OPERATING",
+      className: "font-mono text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (site) =>
+        site.operatingHours
+          ? <>{site.operatingHours.from}<span className="text-muted-foreground"> – </span>{site.operatingHours.to}</>
+          : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "created",
+      header: "CREATED",
+      className: "text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (site) => site.createdAtDisplay,
+    },
+    {
+      key: "action",
+      header: "ACTION",
+      stopRowClick: true,
+      cell: (site) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain" onClick={() => openSite(site.id)}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
+              <ArrowUpRight className="size-3.5 text-muted-foreground" />
+              Open Site
+            </ItemButton>
+            <ItemButton variant="plain" onClick={() => editSite(site.id)}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
+              <Edit3 className="size-3.5 text-muted-foreground" />
+              Edit Site
+            </ItemButton>
+            <div className="my-1 border-t border-border" />
+            <ItemButton variant="plain" onClick={() => openSite(site.id)}
+              className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10">
+              <Trash2 className="size-3.5" />
+              Delete Site
+            </ItemButton>
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
 
   return (
     <div data-slot="site-overview-page" className="flex flex-col gap-4">
@@ -426,108 +532,14 @@ export default function SiteOverviewPage({
         </div>
       ) : (
         <div data-slot="site-overview-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
-                  {["SITE ID", "SITE", "FLOOR PLAN", "AREAS", "CAMERAS", "OPERATING", "CREATED", "ACTION"].map((h) => (
-                    <TableHead key={h}
-                      className="h-auto px-0 whitespace-normal text-current font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60">
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {filtered.map((site) => {
-                  const siteCams = cameras.filter((c) => c.siteId === site.id);
-                  return (
-                    <TableRow key={site.id}
-                      onClick={() => openSite(site.id)}
-                      className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20">
-                      <TableCell className="p-0 whitespace-normal px-4 py-3">
-                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                          {site.id}
-                        </span>
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <SiteMiniThumb site={site} />
-                          <div className="min-w-0">
-                            <TruncatedText
-                              text={site.name}
-                              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
-                            />
-                            <TruncatedText
-                              title={site.address || "No address yet"}
-                              className="text-xs text-muted-foreground"
-                            >
-                              <MapPin className="mr-0.5 inline size-2.5" />
-                              {site.address || "No address yet"}
-                            </TruncatedText>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3">
-                        {site.floorPlan ? (
-                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
-                            <ImageIcon className="size-3" />
-                            Ready
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
-                            Missing
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-foreground">
-                          <Shapes className="size-3 text-muted-foreground" />
-                          {site.areas.length}
-                        </span>
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3">
-                        <CameraHealthCell cameras={siteCams} />
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">
-                        {site.operatingHours
-                          ? <>{site.operatingHours.from}<span className="text-muted-foreground/50"> – </span>{site.operatingHours.to}</>
-                          : <span className="text-muted-foreground/50">—</span>}
-                      </TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3 text-sm text-muted-foreground">{site.createdAtDisplay}</TableCell>
-                      <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-44 p-1" align="end">
-                            <ItemButton variant="plain" onClick={() => openSite(site.id)}
-                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
-                              <ArrowUpRight className="size-3.5 text-muted-foreground" />
-                              Open Site
-                            </ItemButton>
-                            <ItemButton variant="plain" onClick={() => editSite(site.id)}
-                              className="gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted">
-                              <Edit3 className="size-3.5 text-muted-foreground" />
-                              Edit Site
-                            </ItemButton>
-                            <div className="my-1 border-t border-border" />
-                            <ItemButton variant="plain" onClick={() => openSite(site.id)}
-                              className="gap-2 rounded px-2 py-1.5 text-sm text-severity-critical hover:bg-severity-critical/10">
-                              <Trash2 className="size-3.5" />
-                              Delete Site
-                            </ItemButton>
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={siteColumns}
+            data={filtered}
+            getRowId={(site) => site.id}
+            onRowClick={(site) => openSite(site.id)}
+            getRowClassName={() => "transition-colors"}
+          />
         </div>
       )}
 

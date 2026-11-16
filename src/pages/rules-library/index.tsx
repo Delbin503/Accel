@@ -1,11 +1,10 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Plus,
-  Search,
   ChevronDown,
   ChevronUp,
   X,
@@ -19,27 +18,28 @@ import {
   Check,
   SlidersHorizontal,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+} from "@accel/ui/components/shared/Modal";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+} from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { cn } from "@accel/ui/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 import {
   MOCK_RULES,
   ALL_TAGS,
@@ -261,15 +261,7 @@ function RuleFilterPanel({
 
       {open && (
         <div data-slot="rule-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by rule ID, name, tag…"
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search by rule ID, name, tag…" className="sm:w-full" />
           <div className="grid grid-cols-2 gap-3">
             {[
               { key: "severity" as const, label: "Severity",  opts: SEVERITY_OPTS },
@@ -312,7 +304,7 @@ function RowActionMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
     <div data-slot="row-action-menu" className="relative" ref={ref}>
       <Button variant="ghost" size="icon-sm"
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted"
+        className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted"
       >
         <MoreHorizontal className="size-4" />
       </Button>
@@ -738,14 +730,29 @@ export default function RulesLibraryPage({
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  // Work out once, on mount, whether we arrived to edit a specific rule:
+  // - from Model Management "Edit" on a model-extracted rule (router state handoff) → edit it
+  //   on the full builder page; saving bounces back to the model editor.
+  // - from Model Management "Edit" on a library rule (?edit=<id>) → jump straight to its builder.
+  const [initialEntry] = React.useState(() => {
+    const handoff = (location.state as { extractedEdit?: { rule: RuleData; modelId: string; ruleId: string; returnTo: string; sourceModel?: string } } | null)?.extractedEdit ?? null;
+    if (handoff) return { handoff, rule: handoff.rule };
+    const editId = searchParams.get("edit");
+    const target = editId ? (isEmptyState ? [] : MOCK_RULES).find((r) => r.id === editId) : undefined;
+    return { handoff: null, rule: target ?? null };
+  });
   // Set when we arrived here to edit a model's extracted rule — save bounces back to the model.
-  const extractedHandoff = React.useRef<{ returnTo: string; modelId: string; ruleId: string } | null>(null);
+  const extractedHandoff = React.useRef<{ returnTo: string; modelId: string; ruleId: string } | null>(
+    initialEntry.handoff
+      ? { returnTo: initialEntry.handoff.returnTo, modelId: initialEntry.handoff.modelId, ruleId: initialEntry.handoff.ruleId }
+      : null
+  );
   /** Model file an extracted rule came from — titles the builder when set. */
-  const [sourceModel, setSourceModel] = React.useState<string | null>(null);
-  const initialView = searchParams.get("new") === "true" ? "builder" : "list";
+  const [sourceModel] = React.useState<string | null>(initialEntry.handoff?.sourceModel ?? null);
+  const initialView = initialEntry.rule || searchParams.get("new") === "true" ? "builder" : "list";
   const [view, setView] = React.useState<"list" | "builder">(initialView);
-  const [builderMode, setBuilderMode] = React.useState<"create" | "edit">("create");
-  const [editingRule, setEditingRule] = React.useState<RuleData | null>(null);
+  const [builderMode, setBuilderMode] = React.useState<"create" | "edit">(initialEntry.rule ? "edit" : "create");
+  const [editingRule, setEditingRule] = React.useState<RuleData | null>(initialEntry.rule);
   const [rules, setRules] = React.useState<RuleData[]>(isEmptyState ? [] : MOCK_RULES);
   const [search, setSearch] = React.useState("");
   const [filters, setFilters] = React.useState<RuleFilters>(EMPTY_RULE_FILTERS);
@@ -764,27 +771,13 @@ export default function RulesLibraryPage({
   const cameFromModel = React.useRef(searchParams.get("new") === "true");
   const returnModelId = React.useRef(searchParams.get("model"));
   React.useEffect(() => {
-    // Opened from Model Management "Edit" on a model-extracted rule → edit it on the full
-    // builder page; saving bounces back to the model editor.
-    const handoff = (location.state as { extractedEdit?: { rule: RuleData; modelId: string; ruleId: string; returnTo: string; sourceModel?: string } } | null)?.extractedEdit;
-    if (handoff) {
-      extractedHandoff.current = { returnTo: handoff.returnTo, modelId: handoff.modelId, ruleId: handoff.ruleId };
-      setSourceModel(handoff.sourceModel ?? null);
-      setEditingRule(handoff.rule);
-      setBuilderMode("edit");
-      setView("builder");
+    // The handoff / ?edit= entry was applied to the initial state above; just clear it.
+    if (initialEntry.handoff) {
       window.history.replaceState({}, "");
       return;
     }
-    // Opened from Model Management "Edit" on a library rule → jump straight to its builder.
     const editId = searchParams.get("edit");
     if (editId) {
-      const target = rules.find((r) => r.id === editId);
-      if (target) {
-        setEditingRule(target);
-        setBuilderMode("edit");
-        setView("builder");
-      }
       setSearchParams({}, { replace: true });
     } else if (searchParams.get("new") === "true") {
       setSearchParams({}, { replace: true });
@@ -904,6 +897,75 @@ export default function RulesLibraryPage({
     );
   }
 
+  const ruleColumns: DataTableColumn<RuleData>[] = [
+    {
+      key: "id",
+      header: "RULE ID",
+      headClassName: "w-[120px]",
+      cell: (rule) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {rule.id}
+        </span>
+      ),
+    },
+    {
+      key: "name",
+      header: "RULE NAME",
+      headClassName: "w-[210px]",
+      cell: (rule) => (
+        <div className="flex flex-col items-start gap-1.5">
+          <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary-ink">
+            {rule.name}
+          </span>
+          <SeverityBadge severity={rule.severity} />
+        </div>
+      ),
+    },
+    {
+      key: "description",
+      header: "RULE DESCRIPTION",
+      cell: (rule) => <TruncatedText text={rule.description} className="line-clamp-2 text-base text-muted-foreground" />,
+    },
+    {
+      key: "tags",
+      header: "TAG",
+      headClassName: "w-[260px]",
+      stopRowClick: true,
+      cell: (rule) => <ExpandableTags tags={rule.tags} />,
+    },
+    {
+      key: "created",
+      header: (
+        <Button variant="link"
+          onClick={() => setSortBy((s) => (s === "newest" ? "oldest" : "newest"))}
+          className="h-auto gap-1 rounded-none border-0 p-0 text-2xs font-bold text-muted-foreground hover:text-foreground hover:no-underline"
+        >
+          CREATED
+          <ArrowUpDown className="size-3 opacity-40" />
+        </Button>
+      ),
+      headClassName: "w-[180px]",
+      cell: (rule) => (
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Calendar className="size-3 flex-shrink-0" />
+          {rule.createdAtDisplay}
+        </div>
+      ),
+    },
+    {
+      key: "action",
+      header: "ACTION",
+      headClassName: "w-[64px]",
+      stopRowClick: true,
+      cell: (rule) => (
+        <RowActionMenu
+          onEdit={() => openEdit(rule)}
+          onDelete={() => setDeleteId(rule.id)}
+        />
+      ),
+    },
+  ];
+
   return (
     <div data-slot="rules-library-page" className="flex flex-col gap-4">
       <PageHeader>
@@ -980,96 +1042,15 @@ export default function RulesLibraryPage({
         )
       ) : (
         <div data-slot="rules-library-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full min-w-[820px] border-collapse">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
-                  {(
-                    [
-                      { label: "RULE ID",          cls: "w-[120px]" },
-                      { label: "RULE NAME",        cls: "w-[210px]" },
-                      { label: "RULE DESCRIPTION", cls: "" },
-                      { label: "TAG",              cls: "w-[260px]" },
-                      { label: "CREATED",          cls: "w-[180px]", sort: true },
-                      { label: "ACTION",           cls: "w-[64px]" },
-                    ] as { label: string; cls: string; sort?: boolean }[]
-                  ).map(({ label, cls, sort }) => (
-                    <TableHead
-                      key={label}
-                      className={cn("h-auto px-0 whitespace-normal text-current font-bold", 
-                        "px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
-                        cls
-                      )}
-                    >
-                      {sort ? (
-                        <Button variant="link"
-                          onClick={() => setSortBy((s) => (s === "newest" ? "oldest" : "newest"))}
-                          className="h-auto gap-1 rounded-none border-0 p-0 text-2xs font-bold text-muted-foreground/60 hover:text-foreground hover:no-underline"
-                        >
-                          {label}
-                          <ArrowUpDown className="size-3 opacity-40" />
-                        </Button>
-                      ) : (
-                        label
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {filtered.map((rule) => (
-                  <TableRow
-                    key={rule.id}
-                    onClick={() => openEdit(rule)}
-                    className="border-b-0 hover:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
-                  >
-                    {/* Rule ID */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                        {rule.id}
-                      </span>
-                    </TableCell>
-
-                    {/* Rule Name + Severity badge */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <div className="flex flex-col items-start gap-1.5">
-                        <span className="text-base font-semibold text-foreground transition-colors group-hover:text-primary-ink">
-                          {rule.name}
-                        </span>
-                        <SeverityBadge severity={rule.severity} />
-                      </div>
-                    </TableCell>
-
-                    {/* Description */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <TruncatedText text={rule.description} className="line-clamp-2 text-base text-muted-foreground" />
-                    </TableCell>
-
-                    {/* Tags */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <ExpandableTags tags={rule.tags} />
-                    </TableCell>
-
-                    {/* Created */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3">
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Calendar className="size-3 flex-shrink-0" />
-                        {rule.createdAtDisplay}
-                      </div>
-                    </TableCell>
-
-                    {/* Action */}
-                    <TableCell className="p-0 whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <RowActionMenu
-                        onEdit={() => openEdit(rule)}
-                        onDelete={() => setDeleteId(rule.id)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            className="min-w-[820px] border-collapse"
+            columns={ruleColumns}
+            data={filtered}
+            getRowId={(rule) => rule.id}
+            onRowClick={openEdit}
+            getRowClassName={() => "transition-colors"}
+          />
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { Check, MapPin, CreditCard } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 const STEPS = [
   { key: "site",         label: "Create site",         icon: MapPin },

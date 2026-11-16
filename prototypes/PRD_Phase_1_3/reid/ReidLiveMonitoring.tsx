@@ -30,14 +30,15 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@accel/ui/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { cn } from "@accel/ui/lib/utils";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import type { CameraData } from "@/types/cameras";
@@ -50,16 +51,16 @@ import {
   isZoomed,
   timestampAt,
   type PlaybackState,
-} from "@/lib/playback";
-import { ScrubTrack, ZoomSurface } from "@/components/shared/PlaybackControls";
+} from "@accel/ui/lib/playback";
+import { ScrubTrack, ZoomSurface } from "@accel/ui/components/shared/PlaybackControls";
 import { CameraFrameLayer, CameraPlayerModal, OfflineFrameLayer, TilePlayerBar } from "../cameraPlayer";
-import { FloatingBar } from "@/components/shared/FloatingBar";
+import { FloatingBar } from "@accel/ui/components/shared/FloatingBar";
 import { mapForCamera, mapLabel, useReidMapsStore } from "./reidMaps";
 import { allTrackStates, type TrackState } from "./weaponTracks";
 import { MapExpandModal, TrackingPanel, WeaponBadges } from "./ReidTracking";
 import { DetectionCardStack, DetectionsPanel } from "./ReidDetections";
 import { feedDrawerPath, useLiveDetectionsStore, type LiveDetection } from "./liveDetections";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* Live Monitoring, rebuilt for the Phase 1.3 synchronised-playback proposal,
    laid out as one camera wall: sites · grid view · search, then the grid,
@@ -405,18 +406,13 @@ function SidePanel({
         className="flex max-h-[80vh] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card lg:absolute lg:inset-0 lg:max-h-none"
       >
         {tabs.length > 1 ? (
-        <div data-slot="side-panel-tabs" role="tablist" aria-label="Side panel" className="flex flex-shrink-0 border-b border-border">
+        <Tabs data-slot="side-panel-tabs" value={tab} onValueChange={(v) => setTab(v as PanelTab)} className="flex-shrink-0 gap-0">
+          <TabsList variant="line" aria-label="Side panel" className="w-full items-stretch rounded-none border-b border-border p-0 group-data-[orientation=horizontal]/tabs:h-auto gap-0">
           {tabs.map((t) => (
-            <Button variant="ghost"
+            <TabsTrigger
               key={t}
-              type="button"
-              role="tab"
-              aria-selected={tab === t}
-              onClick={() => setTab(t)}
-              className={cn(
-                "h-auto rounded-none border-0 hover:bg-transparent", "-mb-px inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-xs font-semibold transition-colors",
-                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
+              value={t}
+              className="h-auto rounded-none border-0 border-b-2 border-transparent -mb-px gap-1.5 py-2.5 font-semibold text-muted-foreground hover:text-foreground after:hidden data-[state=active]:border-primary data-[state=active]:text-foreground dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-primary text-xs"
             >
               {t === "cameras" && "Cameras"}
               {t === "tracking" && <><Crosshair className="size-3.5" /> Tracking</>}
@@ -427,9 +423,10 @@ function SidePanel({
               {t === "detections" && detectionCount > 0 && (
                 <span className="rounded-full bg-warning/15 px-1.5 text-3xs font-bold text-warning">{detectionCount}</span>
               )}
-            </Button>
+            </TabsTrigger>
           ))}
-        </div>
+          </TabsList>
+        </Tabs>
         ) : (
           /* One tab is not a choice — it is just the panel's heading. */
           <div className="flex flex-shrink-0 items-center gap-1.5 border-b border-border px-3 py-2.5 text-xs font-semibold text-foreground">

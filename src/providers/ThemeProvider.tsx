@@ -1,18 +1,9 @@
 import * as React from "react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { ThemeContext, type Theme } from "./theme-context";
 
-type Theme = "dark" | "light";
-
-interface ThemeContextValue {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
-}
-
-// ─── Context ──────────────────────────────────────────────────────────────────
-
-const ThemeContext = React.createContext<ThemeContextValue | undefined>(undefined);
+// ThemeContext and useTheme live in ./theme-context.ts so this file only exports
+// components (React Fast Refresh).
 
 // Must match the key used in the anti-FOUC script in index.html.
 const STORAGE_KEY = "dashboard-theme";
@@ -55,12 +46,4 @@ export function ThemeProvider({ children, defaultTheme = "dark" }: ThemeProvider
       {children}
     </ThemeContext.Provider>
   );
-}
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
-export function useTheme(): ThemeContextValue {
-  const ctx = React.useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within a <ThemeProvider>.");
-  return ctx;
 }

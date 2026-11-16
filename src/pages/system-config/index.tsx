@@ -24,18 +24,18 @@ import {
   ChevronDown,
   Plus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ItemButton } from "@/components/ui/item";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/shared";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@accel/ui/components/ui/table";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Slider } from "@accel/ui/components/ui/slider";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { EmptyState } from "@accel/ui/components/shared";
+import { cn } from "@accel/ui/lib/utils";
 import { useNvrDefaultsStore } from "@/stores/useNvrDefaultsStore";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { UserRole } from "@/types/users";
@@ -304,7 +304,7 @@ function UserAccessSection() {
         <div data-slot="system-config-user-access-table" className="overflow-x-auto">
           <Table className="w-full text-left text-base">
             <TableHeader>
-              <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+              <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-2xs font-mono uppercase tracking-[0.15em] text-muted-foreground">
                 <TableHead className="h-auto whitespace-normal text-inherit px-3 py-2.5 font-semibold">Permission</TableHead>
                 {(["owner", "admin", "user"] as UserRole[]).map((r) => {
                   const rs = ROLE_STYLES[r];
@@ -333,7 +333,7 @@ function UserAccessSection() {
                         <TableCell key={r} className="whitespace-normal px-3 py-3 text-center">
                           <span
                             title={`Not available for ${r}`}
-                            className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-2xs text-muted-foreground/50"
+                            className="inline-flex size-5 items-center justify-center rounded border border-dashed border-border/60 text-2xs text-muted-foreground"
                           >
                             —
                           </span>
@@ -1026,9 +1026,13 @@ function SecuritySection() {
 
 export default function SystemConfigPage() {
   const [section, setSection] = React.useState<Section>("general");
-  const [dirty, setDirty] = React.useState(false);
-
-  React.useEffect(() => { setDirty(true); }, [section]);
+  // Dirty from the start, and again whenever the section changes.
+  const [dirty, setDirty] = React.useState(true);
+  const [prevSection, setPrevSection] = React.useState(section);
+  if (section !== prevSection) {
+    setPrevSection(section);
+    setDirty(true);
+  }
 
   function save() {
     toast.success("System configuration saved", { description: "Changes applied across the workspace." });
@@ -1065,7 +1069,7 @@ export default function SystemConfigPage() {
                 <Icon className={cn("mt-0.5 size-4 flex-shrink-0", active ? "text-primary-ink" : "")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-tight">{s.label}</p>
-                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground/70")}>{s.description}</p>
+                  <p className={cn("mt-0.5 text-2xs leading-snug", active ? "text-primary-ink/70" : "text-muted-foreground")}>{s.description}</p>
                 </div>
               </ItemButton>
             );

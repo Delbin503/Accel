@@ -15,25 +15,26 @@ import {
   Zap,
 } from "lucide-react";
 import { SkeletonList, ErrorState, ListFooter, type ForcedState } from "./shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ItemButton } from "@/components/ui/item";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { cn } from "@accel/ui/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
 import type { EscalateFormData } from "@/pages/detection-feed/EscalateModal";
-import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
+import { SeverityBadge } from "@/pages/detection-feed/shared";
+import { parseEventText } from "@/pages/detection-feed/shared-utils";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
 import { EscalateModal } from "@/pages/detection-feed/EscalateModal";
 import { DismissModal } from "@/pages/detection-feed/DismissModal";
 import { LinkCaseModal } from "@/pages/detection-feed/LinkCaseModal";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -626,7 +627,7 @@ export default function DetectionFeedPage({
     }
 
     return [...ev].sort(SORTERS[sort]);
-  }, [allEvents, datePreset, kpiFilter, filters, search, sort]);
+  }, [allEvents, datePreset, dateFrom, dateTo, kpiFilter, filters, search, sort]);
 
   const isSelecting = selectedIds.size > 0;
 
@@ -639,9 +640,14 @@ export default function DetectionFeedPage({
     loadedCount >= visibleEvents.length ? "caught-up" : "more";
 
   // Reset the window whenever the filter scope changes.
-  React.useEffect(() => {
+  const [prevScope, setPrevScope] = React.useState({ datePreset, kpiFilter, filters, search });
+  if (
+    prevScope.datePreset !== datePreset || prevScope.kpiFilter !== kpiFilter ||
+    prevScope.filters !== filters || prevScope.search !== search
+  ) {
+    setPrevScope({ datePreset, kpiFilter, filters, search });
     setLoadedCount(PAGE);
-  }, [datePreset, kpiFilter, filters, search]);
+  }
 
   // Live simulation — drives the "N new events" pill (real state only).
   React.useEffect(() => {
@@ -698,7 +704,8 @@ export default function DetectionFeedPage({
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }

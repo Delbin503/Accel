@@ -1,0 +1,30 @@
+import { cva } from "class-variance-authority"
+
+// Accel: the variants live in this .ts file (not badge.tsx) so badge.tsx only
+// exports components, which React Fast Refresh needs.
+// Accel: solid fills under labels use primary-fill and orange text uses
+// primary-ink — the bright --primary fails WCAG AA there (2.99:1).
+
+export const badgeVariants = cva(
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary-fill text-primary-foreground [a&]:hover:bg-primary-hover",
+        secondary:
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+        // Accel: on-colour comes from the destructive-foreground token (dark text on the
+        // bright dark-mode red, for AA), so the dark:bg-destructive/60 dimming is dropped.
+        destructive:
+          "bg-destructive text-destructive-foreground focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+        outline:
+          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        link: "text-primary-ink underline-offset-4 [a&]:hover:underline",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)

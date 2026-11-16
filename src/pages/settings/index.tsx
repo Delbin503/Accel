@@ -13,20 +13,20 @@ import {
   Trash2,
   Send,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ItemButton } from "@/components/ui/item";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Switch } from "@accel/ui/components/ui/switch";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
-import { useTheme } from "@/providers/ThemeProvider";
+} from "@accel/ui/components/shared/Modal";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { cn } from "@accel/ui/lib/utils";
+import { useTheme } from "@/providers/theme-context";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { MOCK_USERS } from "@/mocks/users";
 

@@ -8,17 +8,18 @@ import {
   Check, ChevronLeft, ChevronRight, CircleCheck, CircleMinus, CircleX, Dumbbell, Eraser, FileDown, Info, Pause, PenLine, Play, Share2, Trophy,
   TrendingDown, TrendingUp, TriangleRight, Unplug, X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ItemButton } from "@/components/ui/item";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@accel/ui/components/ui/table";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import { DrawLayer, type Mark, type Tool } from "../golf/golfParts";
 import {
   BEST_REP, FAULTS, GOOD_PCT_TO_ADD, GRADE_BANDS, LIFTER, PHASES, PREVIOUS, REPS, SENSOR_LOST_AT, SESSION, SETS, STATS, STOP_AT, TARGET, WEAKEST_REP, WINDOW,
@@ -170,7 +171,7 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
         </Button>
       </TooltipTrigger>
@@ -307,10 +308,10 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
 
   const step = (d: number) => onPhase(PHASE_ORDER[Math.max(0, Math.min(PHASE_ORDER.length - 1, PHASE_ORDER.indexOf(phase) + d))]);
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
-    <Button variant="ghost" size="icon-xs" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink hover:bg-primary/15 hover:text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+    <SegmentedControlItem value={t} aria-label={label} title={label}
+      className="grid size-6 place-items-center rounded px-0 hover:bg-muted data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none data-[state=on]:hover:bg-primary/15 data-[state=on]:hover:text-primary-ink">
       <Icon className="size-3.5" />
-    </Button>
+    </SegmentedControlItem>
   );
 
   return (
@@ -322,8 +323,13 @@ function VideoPanel({ className, rep, phase, device, onPhase, onSelect }: {
       bodyClassName="p-0"
       action={
         <div className="flex items-center gap-1">
-          {toolBtn("line", PenLine, "Draw a line")}
-          {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
+          {/* Picking the active tool again puts it down (back to "none"). */}
+          <SegmentedControl type="single" aria-label="Drawing tool" value={tool === "none" ? "" : tool}
+            onValueChange={(next) => setTool(next ? (next as Tool) : "none")}
+            className="gap-1 rounded-none bg-transparent p-0">
+            {toolBtn("line", PenLine, "Draw a line")}
+            {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
+          </SegmentedControl>
           <Button variant="ghost" size="icon-xs" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
             className="grid size-6 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40">
             <Eraser className="size-3.5" />
@@ -921,6 +927,41 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
+  /* Offline: mark set 4's estimated cells; with no sensor the column headers carry the tag. */
+  const approx = (r: Rep) => (device === "offline" && !sensorMeasured(r, device) ? "≈" : "");
+  const cells: Record<string, (r: Rep) => React.ReactNode> = {
+    Set: (r) => <span className={cn("font-semibold", r.rep === 1 ? "text-foreground" : "text-transparent")}>{r.set}</span>,
+    Rep: (r) => <span className="text-foreground">{r.rep}</span>,
+    Score: (r) => <span className={cn("font-semibold", TONE_TEXT[repTone(r)])}>{repScore(r)}</span>,
+    Depth: (r) => <span className={red(r.depth < TARGET.depth)}>{signed(r.depth)}</span>,
+    Lean: (r) => <span className={red(r.lean > TARGET.lean)}>{r.lean}</span>,
+    Hips: (r) => <span className={red(r.hipRise > TARGET.hipRise)}>{r.hipRise}</span>,
+    Drift: (r) => <span className={red(r.drift > TARGET.drift)}>{r.drift.toFixed(1)}</span>,
+    Speed: (r) => <span className="text-foreground">{approx(r)}{velIn(r, device).toFixed(2)}</span>,
+    Loss: (r) => {
+      const loss = repLossIn(r, device);
+      return <span className={red(loss > TARGET.velLoss)}>{loss ? `${approx(r)}${lossText(loss)}` : "—"}</span>;
+    },
+    Down: (r) => <span className={red(r.ecc < TARGET.ecc[0])}>{r.ecc.toFixed(1)}</span>,
+    Up: (r) => <span className="text-muted-foreground">{r.con.toFixed(2)}</span>,
+    Lockout: (r) => <span className={red(r.lockout < TARGET.lockout)}>{r.lockout}</span>,
+    Knee: (r) => <span className="text-muted-foreground" title="Needs front camera">{r.knee ?? "n/a"}</span>,
+    Faults: (r) => {
+      const faults = findingsFor(r);
+      return faults.length ? (
+        <span className="flex flex-wrap gap-1">
+          {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
+        </span>
+      ) : <span className="text-3xs text-muted-foreground">None</span>;
+    },
+  };
+  const columns: DataTableColumn<Rep>[] = cols.map(([h, full]) => ({
+    key: h,
+    header: <span title={full}>{h}{device === "none" && (h === "Speed" || h === "Loss") && <EstTag className="ml-1" />}</span>,
+    headClassName: "h-auto whitespace-normal px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground",
+    className: cn(cell, h === "Faults" && "font-sans"),
+    cell: cells[h],
+  }));
   return (
     <section data-slot="rep-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <header data-slot="rep-table-header" className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -930,53 +971,14 @@ function RepTable({ selected, device, onSelect }: { selected: string; device: De
           {device === "none" ? " · speed and loss est. from video" : device === "offline" ? " · ≈ set 4 speed est. from video" : ""}
         </span>
       </header>
-      <div className="overflow-x-auto">
-        <Table className="w-full border-collapse">
-          <TableHeader>
-            <TableRow className="border-0 hover:bg-transparent border-b border-border">
-              {cols.map(([h, full]) => (
-                <TableHead key={h} title={full} className="h-auto px-0 whitespace-normal text-current px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">
-                  {h}{device === "none" && (h === "Speed" || h === "Loss") && <EstTag className="ml-1" />}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {REPS.map((r) => {
-              const sc = repScore(r);
-              const faults = findingsFor(r);
-              const loss = repLossIn(r, device);
-              /* Offline: mark set 4's estimated cells; with no sensor the column headers carry the tag. */
-              const approx = device === "offline" && !sensorMeasured(r, device) ? "≈" : "";
-              return (
-                <TableRow key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
-                  className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.rep === 1 && r.set > 1 && "border-t-2 border-t-border", r.id === selected && "bg-muted")}>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", r.rep === 1 ? "text-foreground" : "text-transparent")}>{r.set}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-foreground")}>{r.rep}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", TONE_TEXT[repTone(r)])}>{sc}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.depth < TARGET.depth))}>{signed(r.depth)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lean > TARGET.lean))}>{r.lean}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.hipRise > TARGET.hipRise))}>{r.hipRise}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.drift > TARGET.drift))}>{r.drift.toFixed(1)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-foreground")}>{approx}{velIn(r, device).toFixed(2)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(loss > TARGET.velLoss))}>{loss ? `${approx}${lossText(loss)}` : "—"}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.ecc < TARGET.ecc[0]))}>{r.ecc.toFixed(1)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{r.con.toFixed(2)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lockout < TARGET.lockout))}>{r.lockout}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground/60")} title="Needs front camera">{r.knee ?? "n/a"}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans")}>
-                    {faults.length ? (
-                      <span className="flex flex-wrap gap-1">
-                        {faults.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
-                      </span>
-                    ) : <span className="text-3xs text-muted-foreground">None</span>}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        className="w-full border-collapse"
+        columns={columns}
+        data={REPS}
+        getRowId={(r) => r.id}
+        onRowClick={(r) => onSelect(r.id)}
+        getRowClassName={(r) => cn("border-border/60", r.rep === 1 && r.set > 1 && "border-t-2 border-t-border", r.id === selected && "bg-muted")}
+      />
     </section>
   );
 }

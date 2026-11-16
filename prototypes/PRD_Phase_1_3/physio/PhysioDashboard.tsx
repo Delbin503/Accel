@@ -7,20 +7,20 @@ import {
 import {
   Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, FileDown, Info, Lock, Pause, Play, Share2, ShieldCheck, Sparkles, TrendingDown, TrendingUp, Undo2, Unplug, X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { ItemButton } from "@/components/ui/item";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import { useDeviceMode, type DeviceMode } from "../assessment/deviceState";
 import { DeviceOfflineBanner, DevicePreviewSwitch, DeviceStatusValue, NeedsDevice } from "../assessment/deviceMode";
 import {
-  BASELINE, EXERCISES, EXPECTED_BAND, EX_ORDER, FAULTS, HEALTHY, HOME_PROGRAMME, KEY_MOMENT, LIMIT, MEASURES, MOMENTS, PATIENT,
+  BASELINE, EXERCISES, EXPECTED_BAND, EX_ORDER, FAULTS, HEALTHY, KEY_MOMENT, LIMIT, MEASURES, MOMENTS, PATIENT,
   PLAN_CHANGES, PLATE, PLATE_OFFLINE_AT, PREVIOUS, PROGRESS, REPS, REVIEW_BELOW, TIMELINE_WEEKS, TODAY, VISIT, VISITS,
   checksFor, dischargeFor, failedChecks, findingsFor, fmtClock, gaitSteps, goalWeek, hasLoad, loadSpan, lrFor, lrOfVisit, measuresFor, methodNote, momentTime,
   progressOf, repById, repName, repSeries, repsOf, scoredChecks, suggestedPlan,
@@ -32,8 +32,11 @@ import { RangeGauge, RoomFrame } from "./physioParts";
    Assessment: the overview fits a laptop screen (summary, movement video with
    the 3D pose, range of motion, the picked rep's review, signals, measures vs
    goal and the clinician's programme decision), and the full report follows
-   below it (recovery curve, pain, every rep, discharge criteria, notes and
+   below it (recovery curve, every rep, discharge criteria, notes and
    sign-off).
+
+   Nothing here comes from a patient app — there isn't one yet — so pain
+   scores and home-programme adherence are left out until it exists.
 
    One rep is "picked" at a time and every panel follows it. The patient is
    only ever compared with their own baseline and goal: no grades, no ranks.
@@ -206,7 +209,7 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto shrink-0 rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto shrink-0 rounded-none text-muted-foreground hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
         </Button>
       </TooltipTrigger>
@@ -277,23 +280,13 @@ function SummaryStrip({ name, open, device }: { name: string; open: number; devi
       delta: <Delta now={lr.now} before={lr.last} lowerIsBetter unit="%" />,
     },
     {
-      label: "Pain", value: <>{TODAY.painBefore} → {TODAY.painAfter}<span className="text-xs text-muted-foreground"> /10</span></>, tone: "text-foreground",
-      info: "Pain the patient reported before and after today's exercises, 0 (none) to 10 (worst).",
-      delta: <Delta now={TODAY.painAfter} before={PREVIOUS.painAfter} lowerIsBetter />,
-    },
-    {
-      label: "Adherence", value: `${TODAY.adherence}%`, tone: TODAY.adherence >= LIMIT.adherence ? "text-success" : "text-warning",
-      info: "Home exercises done this week out of those planned, logged in the patient app.",
-      delta: <Delta now={TODAY.adherence} before={PREVIOUS.adherence!} unit="%" />,
-    },
-    {
       label: "To review", value: String(open), tone: open ? "text-warning" : "text-success",
       info: `AI findings under ${REVIEW_BELOW}% confidence wait for the physio to confirm or dismiss. Findings at ${REVIEW_BELOW}% or more are kept unless dismissed.`,
       delta: <span className="text-muted-foreground">{open ? "Under 80% sure" : "All reviewed"}</span>,
     },
   ];
   return (
-    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.5fr)_minmax(0,1.6fr)_repeat(5,minmax(0,0.95fr))]">
+    <div data-slot="summary-strip" className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.5fr)_minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]">
       <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 lg:col-span-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-2xs font-bold text-primary-ink">{initialsOf(name)}</span>
         <div className="min-w-0 flex-1">
@@ -724,7 +717,6 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
   className?: string; plan: Plan; approved: boolean; onPlan: (p: Plan) => void; onApprove: (v: boolean) => void;
 }) {
   const suggestion = suggestedPlan();
-  const adding = approved && plan === "progress";
   return (
     <Panel className={className} title="Clinician" meta="Programme change needs approval">
       <div data-slot="clinician-panel-content" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
@@ -771,30 +763,6 @@ function ClinicianPanel({ className, plan, approved, onPlan, onApprove }: {
             )}
           </div>
         </div>
-        <div>
-          <p className="mb-1 flex items-center gap-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-            Home programme · this week
-            <InfoTip text="Exercises the patient does at home, and how many days they logged them in the patient app this week." />
-          </p>
-          <ul className="flex flex-col gap-0.5">
-            {HOME_PROGRAMME.map((e) => (
-              <li key={e.name} className="flex items-center gap-2 rounded-md bg-background px-2 py-px">
-                <span className="truncate text-xs font-semibold text-foreground">{e.name}</span>
-                <span className="shrink-0 font-mono text-3xs text-muted-foreground">{e.dose}</span>
-                <span className="ml-auto flex shrink-0 gap-0.5" aria-label={`${e.done} of ${e.planned} days`} title={`${e.done} of ${e.planned} days`}>
-                  {Array.from({ length: e.planned }, (_, i) => <span key={i} className={cn("size-1.5 rounded-full", i < e.done ? "bg-success" : "bg-muted-foreground/30")} />)}
-                </span>
-              </li>
-            ))}
-            {adding && (
-              <li className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-2 py-0.5">
-                <span className="truncate text-xs font-semibold text-foreground">Step-ups</span>
-                <span className="shrink-0 font-mono text-3xs text-muted-foreground">3 × 8 · 10 cm</span>
-                <span className="ml-auto shrink-0 rounded bg-primary/15 px-1 text-3xs font-bold uppercase text-primary-ink">New</span>
-              </li>
-            )}
-          </ul>
-        </div>
       </div>
     </Panel>
   );
@@ -818,11 +786,11 @@ function FullReport(props: {
   );
 }
 
-const CURVE_TABS: [Exclude<MeasureKey, "adherence">, string][] = [["flex", "Knee bend"], ["lag", "Straighten"], ["sts", "Sit-to-stand"], ["lr", "Left–right"]];
+const CURVE_TABS: [MeasureKey, string][] = [["flex", "Knee bend"], ["lag", "Straighten"], ["sts", "Sit-to-stand"], ["lr", "Left–right"]];
 
-/* Recovery across visits against the usual timeline after a knee replacement, plus pain. */
+/* Recovery across visits against the usual timeline after a knee replacement. */
 function RecoverySection({ device }: { device: DeviceMode }) {
-  const [key, setKey] = React.useState<Exclude<MeasureKey, "adherence">>("flex");
+  const [key, setKey] = React.useState<MeasureKey>("flex");
   const m = measuresFor(device).find((x) => x.key === key)!;
   const lrTag = lrFor(device).tag;
   const gw = goalWeek();
@@ -838,7 +806,7 @@ function RecoverySection({ device }: { device: DeviceMode }) {
   const ahead = lowerIsBetter ? m.now < lo : m.now > hi;
   return (
     <section data-slot="recovery-section" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-      <div className="rounded-xl border border-border bg-card p-3 lg:col-span-8">
+      <div className="rounded-xl border border-border bg-card p-3 lg:col-span-12">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-bold text-foreground">Recovery</h3>
           <span className="text-2xs text-muted-foreground">By week since surgery · vs usual recovery</span>
@@ -872,26 +840,6 @@ function RecoverySection({ device }: { device: DeviceMode }) {
           {key === "lr" && device === "offline" && <span>Today: no force-plate load on sit-to-stand {loadSpan(device).without}</span>}
         </p>
       </div>
-      <div className="rounded-xl border border-border bg-card p-3 lg:col-span-4">
-        <div className="mb-2 flex items-baseline gap-2">
-          <h3 className="text-sm font-bold text-foreground">Pain</h3>
-          <span className="text-2xs text-muted-foreground">0–10, before and after each visit</span>
-        </div>
-        <div className="h-52">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={VISITS} margin={{ top: 8, right: 12, left: -24, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
-              <XAxis dataKey="wk" {...AXIS} fontSize={10} tickFormatter={(v) => `wk ${v}`} />
-              <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} {...AXIS} fontSize={10} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={(v) => `Week ${v}`} formatter={(v, n) => [`${v}/10`, n === "painBefore" ? "Before" : "After"]} />
-              <ReferenceLine y={LIMIT.pain} stroke="var(--success)" strokeDasharray="4 3" />
-              <Line type="monotone" dataKey="painBefore" stroke="var(--warning)" strokeWidth={1.8} dot={{ r: 2.5, fill: "var(--warning)" }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="painAfter" stroke="var(--info)" strokeWidth={1.8} dot={{ r: 2.5, fill: "var(--info)" }} isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <p className="mt-1 text-3xs text-muted-foreground"><Swatch c="bg-warning" />Before <Swatch c="bg-info" />After <Swatch c="border-success" dashed />Discharge ≤ {LIMIT.pain}</p>
-      </div>
     </section>
   );
 }
@@ -904,56 +852,61 @@ function RepTable({ device, selected, onSelect }: { device: DeviceMode; selected
   ];
   const cell = "px-2 py-1.5 font-mono text-2xs whitespace-nowrap";
   const red = (bad: boolean) => (bad ? "text-severity-critical" : "text-muted-foreground");
+  const cells: Record<string, (r: Rep) => React.ReactNode> = {
+    Rep: (r) => <span className="font-semibold text-foreground">{repName(r)}</span>,
+    Time: (r) => <span className="text-muted-foreground">{fmtClock(r.at)}</span>,
+    Bend: (r) => <span className={cn("font-semibold", r.flex >= EXERCISES[r.ex].need ? "text-foreground" : "text-severity-critical")}>{r.flex}</span>,
+    Short: (r) => <span className={red(r.lag > LIMIT.lag)}>{r.lag}</span>,
+    Speed: (r) => (
+      <span className={r.ex === "rom" ? red(r.speed > LIMIT.romSpeed) : r.ex === "sts" ? red(r.hold < LIMIT.stsLower) : "text-muted-foreground"}>
+        {r.ex === "rom" ? `${r.speed}°/s` : r.ex === "sts" ? `${r.hold.toFixed(1)} s` : "—"}
+      </span>
+    ),
+    Hold: (r) => <span className={r.ex === "rom" ? red(r.hold < LIMIT.hold) : "text-muted-foreground"}>{r.ex === "rom" ? r.hold.toFixed(1) : "—"}</span>,
+    Hip: (r) => <span className={red(r.hipHike > LIMIT.hipHike)}>{r.hipHike.toFixed(1)}</span>,
+    Trunk: (r) => <span className={red(r.trunkLean > LIMIT.trunkLean)}>{r.trunkLean}</span>,
+    "L–R": (r) => {
+      const load = hasLoad(r, device);
+      return (
+        <span className={r.ex === "rom" || !load ? "text-muted-foreground" : red(r.lr > LIMIT.lr)} title={load ? undefined : `Needs ${PLATE.toLowerCase()}`}>
+          {r.ex === "rom" || !load ? "—" : r.lr}
+        </span>
+      );
+    },
+    Checks: (r) => {
+      const checks = scoredChecks(r, device);
+      return <span className={TONE_TEXT[repTone(r, device)]}>{checks.filter((c) => c.ok).length}/{checks.length}</span>;
+    },
+    Findings: (r) => {
+      const fs = findingsFor(r);
+      return fs.length ? (
+        <span className="flex flex-wrap gap-1">
+          {fs.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
+        </span>
+      ) : <span className="text-3xs text-muted-foreground">None</span>;
+    },
+  };
+  const columns: DataTableColumn<Rep>[] = cols.map(([h, full]) => ({
+    key: h,
+    header: <span title={full}>{h}</span>,
+    headClassName: "h-auto whitespace-normal px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground",
+    className: cn(cell, (h === "Rep" || h === "Findings") && "font-sans"),
+    cell: cells[h],
+  }));
   return (
     <section data-slot="rep-table" className="overflow-hidden rounded-xl border border-border bg-card">
       <header data-slot="rep-table-header" className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h3 className="text-sm font-bold text-foreground">Every rep</h3>
         <span className="text-2xs text-muted-foreground">Click a row to review that rep above</span>
       </header>
-      <div className="overflow-x-auto">
-        <Table className="w-full border-collapse">
-          <TableHeader>
-            <TableRow className="border-0 hover:bg-transparent border-b border-border">
-              {cols.map(([h, full]) => <TableHead key={h} title={full} className="h-auto px-0 whitespace-normal text-current px-2 py-1.5 text-left text-3xs font-semibold uppercase text-muted-foreground">{h}</TableHead>)}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {REPS.map((r) => {
-              const checks = scoredChecks(r, device);
-              const met = checks.filter((c) => c.ok).length;
-              const load = hasLoad(r, device);
-              const fs = findingsFor(r);
-              const need = EXERCISES[r.ex].need;
-              return (
-                <TableRow key={r.id} tabIndex={0} onClick={() => onSelect(r.id)} onKeyDown={(e) => e.key === "Enter" && onSelect(r.id)}
-                  className={cn("border-0 hover:bg-transparent", "cursor-pointer border-b border-border/60 last:border-0 hover:bg-muted/50", r.id === selected && "bg-muted")}>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans font-semibold text-foreground")}>{repName(r)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "text-muted-foreground")}>{fmtClock(r.at)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-semibold", r.flex >= need ? "text-foreground" : "text-severity-critical")}>{r.flex}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.lag > LIMIT.lag))}>{r.lag}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" ? red(r.speed > LIMIT.romSpeed) : r.ex === "sts" ? red(r.hold < LIMIT.stsLower) : "text-muted-foreground")}>
-                    {r.ex === "rom" ? `${r.speed}°/s` : r.ex === "sts" ? `${r.hold.toFixed(1)} s` : "—"}
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" ? red(r.hold < LIMIT.hold) : "text-muted-foreground")}>{r.ex === "rom" ? r.hold.toFixed(1) : "—"}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.hipHike > LIMIT.hipHike))}>{r.hipHike.toFixed(1)}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, red(r.trunkLean > LIMIT.trunkLean))}>{r.trunkLean}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, r.ex === "rom" || !load ? "text-muted-foreground" : red(r.lr > LIMIT.lr))} title={load ? undefined : `Needs ${PLATE.toLowerCase()}`}>
-                    {r.ex === "rom" || !load ? "—" : r.lr}
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, TONE_TEXT[repTone(r, device)])}>{met}/{checks.length}</TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", cell, "font-sans")}>
-                    {fs.length ? (
-                      <span className="flex flex-wrap gap-1">
-                        {fs.map((f) => <span key={f.key} className="rounded bg-severity-critical/10 px-1 py-px text-3xs font-semibold text-severity-critical">{FAULTS[f.key].label}</span>)}
-                      </span>
-                    ) : <span className="text-3xs text-muted-foreground">None</span>}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        className="w-full border-collapse"
+        columns={columns}
+        data={REPS}
+        getRowId={(r) => r.id}
+        onRowClick={(r) => onSelect(r.id)}
+        getRowClassName={(r) => cn("border-border/60", r.id === selected && "bg-muted")}
+      />
     </section>
   );
 }
@@ -992,7 +945,7 @@ function SignOffCard({ className, name, onSelect, open, approved, plan, signed, 
   className?: string; name: string; onSelect: (id: string) => void; open: { rep: Rep; f: Finding }[]; approved: boolean; plan: Plan; signed: boolean; onSign: (v: boolean) => void; onShare: () => void;
 }) {
   const [note, setNote] = React.useState(
-    `Good week. Bend up to ${TODAY.flex}°, pain ${TODAY.painBefore} → ${TODAY.painAfter}. Hip hike on sit-to-stand when tired: cue “level hips”. Review in 1 week.`,
+    `Good week. Bend up to ${TODAY.flex}°, ${TODAY.lag}° short of straight. Hip hike on sit-to-stand when tired: cue “level hips”. Review in 1 week.`,
   );
   const ready = open.length === 0 && approved;
   const steps: { label: string; done: boolean; action?: React.ReactNode }[] = [

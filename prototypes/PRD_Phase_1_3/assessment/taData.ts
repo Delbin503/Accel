@@ -478,7 +478,7 @@ export interface TaReport {
 export const REPORT_TITLE: Record<UseCaseKey, { individual: string; group: string; sections: string[]; share: string[] }> = {
   golf: { individual: "Swing report", group: "Clinic summary", sections: ["Score & grade", "Best swing clip", "Faults", "Swing log", "Drills", "Coach notes"], share: ["Golfer app", "Email", "PDF"] },
   gym: { individual: "Lifter summary", group: "Class report", sections: ["Form score", "Rep clips", "Top fault + cue", "Rep & set log", "PT notes"], share: ["Lifter app", "CSV", "PDF"] },
-  physio: { individual: "Visit report", group: "Class summary", sections: ["Measures vs goal", "Video clips (face blurred)", "Test log", "Home programme", "Clinician notes"], share: ["Patient app", "PDF", "Referrer email"] },
+  physio: { individual: "Visit report", group: "Class summary", sections: ["Measures vs goal", "Video clips (face blurred)", "Test log", "Programme changes", "Clinician notes"], share: ["Patient app", "PDF", "Referrer email"] },
 };
 
 /** Sessions just finished, whose reports are still being reviewed rather than sent. */

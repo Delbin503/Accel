@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { readdirSync, existsSync } from "fs";
 import { resolve } from "path";
+import { aliases } from "../aliases";
 
 const prototypeRoot = __dirname;
 
@@ -23,9 +24,8 @@ export default defineConfig({
   root: prototypeRoot,
   base: "/",
   resolve: {
-    alias: {
-      "@": resolve(__dirname, "../src"),
-    },
+    // @accel/ui (packages/ui) + the app's "@" — see aliases.ts.
+    alias: aliases,
   },
   build: {
     rollupOptions: { input },

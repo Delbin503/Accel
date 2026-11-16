@@ -4,11 +4,6 @@
       "count": 11
     }
   },
-  "src/components/shared/KpiCard.tsx": {
-    "no-restricted-syntax": {
-      "count": 7
-    }
-  },
   "src/pages/auth/SignIn.tsx": {
     "no-restricted-syntax": {
       "count": 1
@@ -47,6 +42,11 @@
   "src/pages/run-analysis/index.tsx": {
     "no-restricted-syntax": {
       "count": 154
+    }
+  },
+  "packages/ui/src/components/shared/KpiCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
     }
   }
 }

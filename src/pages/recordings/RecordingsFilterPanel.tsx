@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import { Check, ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { CAMERA_AREAS, CAMERA_SITES, MOCK_CAMERAS } from "@/mocks/cameras";
 import { LISTED_TYPE_IDS, typeById } from "@/lib/recordingTypes";
 import { BOOKMARK_OPTS, type RecordingFilters } from "./recordingFilters";

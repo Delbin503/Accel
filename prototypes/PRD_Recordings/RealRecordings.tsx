@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/layout/PageHeader";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import RecordingsPage from "@/pages/recordings";
 import { RecordingsSkeleton, ErrorState, type ForcedState } from "./shared";
 

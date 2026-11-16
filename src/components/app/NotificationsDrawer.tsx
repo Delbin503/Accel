@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom";
 import {
   Bell, AlertTriangle, FolderOpen, Server, Users as UsersIcon, CreditCard, CheckCheck, Calendar, ArrowUpRight,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  DetailDrawer,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { Button } from "@accel/ui/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
 import { useNotificationsStore, type NotificationItem, type NotificationKind } from "@/stores/useNotificationsStore";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 const KIND_STYLES: Record<NotificationKind, { bg: string; text: string; icon: React.ElementType; label: string }> = {
   incident: { bg: "bg-severity-critical/15", text: "text-severity-critical", icon: AlertTriangle, label: "Incident" },
@@ -118,187 +125,191 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
   ];
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        data-slot="notifications-drawer"
-        side="right"
-        className="flex w-[min(440px,92vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
-        <SheetHeader data-slot="notifications-drawer-header" className="flex-shrink-0 border-b border-border px-5 py-4">
-          <SheetTitle data-slot="notifications-drawer-title" className="inline-flex items-center gap-2 pr-8 text-base font-bold">
-            <Bell className="size-4 text-primary-ink" />
-            Notifications
-            {unreadCount > 0 && (
-              <span data-slot="notifications-drawer-unread-count" className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-status-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </SheetTitle>
-          <p data-slot="notifications-drawer-summary" className="mt-0.5 text-sm text-muted-foreground">
-            {filtered.length} of {items.length} shown
-          </p>
-        </SheetHeader>
-
-        {/* Filter bar */}
-        <div data-slot="notifications-drawer-filters" className="flex flex-shrink-0 flex-col gap-2 border-b border-border px-5 py-3">
-          <div data-slot="notifications-drawer-date-pills" className="flex items-center gap-1.5 overflow-x-auto">
-            <span data-slot="notifications-drawer-date-label" className="inline-flex flex-shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Calendar className="size-3" />
-              Date
+    // List drawer: only the shell, header and footer come from DetailDrawer —
+    // the filter bar and grouped list are notification-specific.
+    <DetailDrawer
+      data-slot="notifications-drawer"
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      size="md"
+      className="w-[min(440px,92vw)]"
+    >
+      <DetailDrawerHeader data-slot="notifications-drawer-header" className="flex-shrink-0">
+        <DetailDrawerTitle data-slot="notifications-drawer-title" className="inline-flex items-center gap-2 text-base">
+          <Bell className="size-4 text-primary-ink" />
+          Notifications
+          {unreadCount > 0 && (
+            <span data-slot="notifications-drawer-unread-count" className="inline-flex items-center justify-center rounded-full bg-severity-critical px-1.5 py-0.5 text-2xs font-bold text-status-foreground">
+              {unreadCount}
             </span>
-            {DATE_PILLS.map((p) => {
-              const active = range === p.key;
-              return (
-                <button
-                  data-slot="notifications-drawer-date-pill"
-                  key={p.key}
-                  onClick={() => setRange(p.key)}
-                  className={cn(
-                    "flex-shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary/10 text-primary-ink"
-                      : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                  )}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Custom date range — collapsible. Two date inputs side by side. */}
-          {range === "custom" && (
-            <div data-slot="notifications-drawer-custom-range" className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
-              <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
-                <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">From</span>
-                <input
-                  data-slot="notifications-drawer-custom-input"
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  max={customTo}
-                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
-                />
-              </label>
-              <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
-                <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">To</span>
-                <input
-                  data-slot="notifications-drawer-custom-input"
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  min={customFrom}
-                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
-                />
-              </label>
-            </div>
           )}
-          <div data-slot="notifications-drawer-toolbar" className="flex items-center justify-between gap-2">
-            <label data-slot="notifications-drawer-unread-toggle" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <input data-slot="notifications-drawer-unread-checkbox"
-                type="checkbox"
-                checked={showUnreadOnly}
-                onChange={(e) => setShowUnreadOnly(e.target.checked)}
-                className="size-3 accent-primary"
-              />
-              Unread only
-            </label>
-            <button
-              data-slot="notifications-drawer-mark-all"
-              onClick={markAllRead}
-              disabled={unreadCount === 0}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary-ink transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
-            >
-              <CheckCheck className="size-3" />
-              Mark all as read
-            </button>
-          </div>
+        </DetailDrawerTitle>
+        <DetailDrawerDescription data-slot="notifications-drawer-summary">
+          {filtered.length} of {items.length} shown
+        </DetailDrawerDescription>
+      </DetailDrawerHeader>
+
+      {/* Filter bar */}
+      <div data-slot="notifications-drawer-filters" className="flex flex-shrink-0 flex-col gap-2 border-b border-border px-5 py-3">
+        <div data-slot="notifications-drawer-date-pills" className="flex items-center gap-1.5 overflow-x-auto">
+          <span data-slot="notifications-drawer-date-label" className="inline-flex flex-shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Calendar className="size-3" />
+            Date
+          </span>
+          {DATE_PILLS.map((p) => {
+            const active = range === p.key;
+            return (
+              <button
+                data-slot="notifications-drawer-date-pill"
+                key={p.key}
+                onClick={() => setRange(p.key)}
+                className={cn(
+                  "flex-shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+                  active
+                    ? "border-primary bg-primary/10 text-primary-ink"
+                    : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                {p.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* List */}
-        <div data-slot="notifications-drawer-list" className="flex-1 overflow-y-auto">
-          {grouped.length === 0 ? (
-            <div data-slot="notifications-drawer-empty" className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-muted-foreground">
-              <Bell className="size-8 opacity-30" />
-              <p data-slot="notifications-drawer-empty-title" className="text-base font-medium">No notifications match the current filters.</p>
-              <p data-slot="notifications-drawer-empty-description" className="text-xs">Try widening the date range or unchecking "Unread only".</p>
-            </div>
-          ) : (
-            grouped.map(([day, group]) => (
-              <div data-slot="notifications-drawer-group" key={day}>
-                <div data-slot="notifications-drawer-group-heading" className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-card/95 px-5 py-1.5 text-2xs font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
-                  {fmtGroupHeading(day)}
-                </div>
-                <ul data-slot="notifications-drawer-group-items" className="divide-y divide-border/60">
-                  {group.map((n) => {
-                    const k = KIND_STYLES[n.kind];
-                    const Icon = k.icon;
-                    return (
-                      <li data-slot="notifications-drawer-item" key={n.id}>
-                        <button
-                          data-slot="notifications-drawer-item-button"
-                          onClick={() => handleClick(n)}
-                          className={cn(
-                            "group flex w-full items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40",
-                            !n.read && "bg-primary/[0.03]"
-                          )}
-                        >
-                          <div data-slot="notifications-drawer-item-icon" className={cn(
-                            "flex size-8 flex-shrink-0 items-center justify-center rounded-lg",
-                            k.bg, k.text
-                          )}>
-                            <Icon className="size-4" />
-                          </div>
-                          <div data-slot="notifications-drawer-item-body" className="min-w-0 flex-1">
-                            <div data-slot="notifications-drawer-item-meta" className="flex items-center gap-2">
-                              <span data-slot="notifications-drawer-item-kind" className={cn(
-                                "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
-                                k.bg, k.text, "border-current/30"
-                              )}>
-                                {k.label}
-                              </span>
-                              <span data-slot="notifications-drawer-item-time" className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
-                              {!n.read && (
-                                <span data-slot="notifications-drawer-item-new" className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary-ink">
-                                  <span data-slot="notifications-drawer-item-new-dot" className="size-1.5 rounded-full bg-primary" />
-                                  New
-                                </span>
-                              )}
-                            </div>
-                            <p data-slot="notifications-drawer-item-title" className={cn(
-                              "mt-1 text-base font-semibold",
-                              n.read ? "text-foreground" : "text-foreground"
+        {/* Custom date range — collapsible. Two date inputs side by side. */}
+        {range === "custom" && (
+          <div data-slot="notifications-drawer-custom-range" className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2">
+            <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+              <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">From</span>
+              <input
+                data-slot="notifications-drawer-custom-input"
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                max={customTo}
+                className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
+              />
+            </label>
+            <label data-slot="notifications-drawer-custom-field" className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+              <span data-slot="notifications-drawer-custom-field-label" className="font-semibold uppercase tracking-wider text-2xs">To</span>
+              <input
+                data-slot="notifications-drawer-custom-input"
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                min={customFrom}
+                className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground"
+              />
+            </label>
+          </div>
+        )}
+        <div data-slot="notifications-drawer-toolbar" className="flex items-center justify-between gap-2">
+          <label data-slot="notifications-drawer-unread-toggle" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <input data-slot="notifications-drawer-unread-checkbox"
+              type="checkbox"
+              checked={showUnreadOnly}
+              onChange={(e) => setShowUnreadOnly(e.target.checked)}
+              className="size-3 accent-primary"
+            />
+            Unread only
+          </label>
+          <button
+            data-slot="notifications-drawer-mark-all"
+            onClick={markAllRead}
+            disabled={unreadCount === 0}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-primary-ink transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
+          >
+            <CheckCheck className="size-3" />
+            Mark all as read
+          </button>
+        </div>
+      </div>
+
+      {/* List */}
+      <div data-slot="notifications-drawer-list" className="flex-1 overflow-y-auto">
+        {grouped.length === 0 ? (
+          <div data-slot="notifications-drawer-empty" className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-muted-foreground">
+            <Bell className="size-8 opacity-30" />
+            <p data-slot="notifications-drawer-empty-title" className="text-base font-medium">No notifications match the current filters.</p>
+            <p data-slot="notifications-drawer-empty-description" className="text-xs">Try widening the date range or unchecking "Unread only".</p>
+          </div>
+        ) : (
+          grouped.map(([day, group]) => (
+            <div data-slot="notifications-drawer-group" key={day}>
+              <div data-slot="notifications-drawer-group-heading" className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-card/95 px-5 py-1.5 text-2xs font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
+                {fmtGroupHeading(day)}
+              </div>
+              <ul data-slot="notifications-drawer-group-items" className="divide-y divide-border/60">
+                {group.map((n) => {
+                  const k = KIND_STYLES[n.kind];
+                  const Icon = k.icon;
+                  return (
+                    <li data-slot="notifications-drawer-item" key={n.id}>
+                      <button
+                        data-slot="notifications-drawer-item-button"
+                        onClick={() => handleClick(n)}
+                        className={cn(
+                          "group flex w-full items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40",
+                          !n.read && "bg-primary/[0.03]"
+                        )}
+                      >
+                        <div data-slot="notifications-drawer-item-icon" className={cn(
+                          "flex size-8 flex-shrink-0 items-center justify-center rounded-lg",
+                          k.bg, k.text
+                        )}>
+                          <Icon className="size-4" />
+                        </div>
+                        <div data-slot="notifications-drawer-item-body" className="min-w-0 flex-1">
+                          <div data-slot="notifications-drawer-item-meta" className="flex items-center gap-2">
+                            <span data-slot="notifications-drawer-item-kind" className={cn(
+                              "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-3xs font-bold uppercase tracking-wider",
+                              k.bg, k.text, "border-current/30"
                             )}>
-                              {n.title}
-                            </p>
-                            <TruncatedText
-                              data-slot="notifications-drawer-item-description"
-                              text={n.description}
-                              className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
-                            />
-                            {n.href && (
-                              <span data-slot="notifications-drawer-item-link" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
-                                Open <ArrowUpRight className="size-3" />
+                              {k.label}
+                            </span>
+                            <span data-slot="notifications-drawer-item-time" className="font-mono text-2xs text-muted-foreground">{relTime(n.createdAt)}</span>
+                            {!n.read && (
+                              <span data-slot="notifications-drawer-item-new" className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-primary-ink">
+                                <span data-slot="notifications-drawer-item-new-dot" className="size-1.5 rounded-full bg-primary" />
+                                New
                               </span>
                             )}
                           </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))
-          )}
-        </div>
+                          <p data-slot="notifications-drawer-item-title" className={cn(
+                            "mt-1 text-base font-semibold",
+                            n.read ? "text-foreground" : "text-foreground"
+                          )}>
+                            {n.title}
+                          </p>
+                          <TruncatedText
+                            data-slot="notifications-drawer-item-description"
+                            text={n.description}
+                            className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
+                          />
+                          {n.href && (
+                            <span data-slot="notifications-drawer-item-link" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
+                              Open <ArrowUpRight className="size-3" />
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        )}
+      </div>
 
-        <div data-slot="notifications-drawer-footer" className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-border bg-card px-5 py-3">
+      <DetailDrawerFooter data-slot="notifications-drawer-footer" className="flex-shrink-0 gap-2 py-3">
+        <DetailDrawerFooterStart>
           <p data-slot="notifications-drawer-footer-summary" className="text-xs text-muted-foreground">
             <strong data-slot="notifications-drawer-footer-count" className="text-foreground">{unreadCount}</strong> unread
           </p>
-          <Button data-slot="notifications-drawer-close" variant="outline" onClick={onClose}>Close</Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawerFooterStart>
+        <Button data-slot="notifications-drawer-close" variant="outline" onClick={onClose}>Close</Button>
+      </DetailDrawerFooter>
+    </DetailDrawer>
   );
 }

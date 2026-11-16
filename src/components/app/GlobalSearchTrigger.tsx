@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Search, Zap } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
 import { useCommandPaletteStore } from "@/stores/useCommandPaletteStore";
 
 /** ⌘ on Apple platforms, Ctrl everywhere else. */

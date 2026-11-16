@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { useTheme } from "@/providers/ThemeProvider";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { useTheme } from "@/providers/theme-context";
+import { AppLayout } from "@/components/app/AppLayout";
 import {
   RequireOnboarding,
   RedirectIfAuthed,

@@ -1,9 +1,17 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { X, MapPin, Clock, Shield, Cpu, Sparkles, Check, ChevronDown, Info, GitMerge } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { Button } from "@accel/ui/components/ui/button";
+import { cn } from "@accel/ui/lib/utils";
 import type { AnyEntity, PersonEntity, AssetEntity, VehicleEntity, EntityTimelineEntry, PossibleIdentityMatch } from "@/types/entities";
 import type { Severity } from "@/types/detection";
 
@@ -53,8 +61,8 @@ function SeverityChip({ severity }: { severity: Severity }) {
 
 /* ── KPI card ────────────────────────────────────────────────────────────── */
 
-import { KpiCard as SharedKpiCard, type KpiTone } from "@/components/shared/KpiCard";
-import { ItemButton } from "@/components/ui/item";
+import { KpiCard as SharedKpiCard, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* ── Timeline entry row ──────────────────────────────────────────────────── */
 
@@ -215,12 +223,7 @@ function EntityKpiRow({
 
 function DetectedTimeline({ entries }: { entries: EntityTimelineEntry[] }) {
   return (
-    <div data-slot="entity-drawer-timeline">
-      <div className="mb-2.5">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Detected Timeline
-        </span>
-      </div>
+    <DetailDrawerSection data-slot="entity-drawer-timeline" title="Detected Timeline">
       {entries.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border py-8 text-center text-base text-muted-foreground">
           No detections recorded.
@@ -232,7 +235,7 @@ function DetectedTimeline({ entries }: { entries: EntityTimelineEntry[] }) {
           ))}
         </div>
       )}
-    </div>
+    </DetailDrawerSection>
   );
 }
 
@@ -300,7 +303,7 @@ function PossibleMatchCard({
           <p className="mt-0.5 text-xs text-muted-foreground">
             {match.candidateLabel} · {match.reasonLabel}
           </p>
-          <p className="mt-0.5 text-2xs text-muted-foreground/80">
+          <p className="mt-0.5 text-2xs text-muted-foreground">
             {match.candidateDetections} prior detection{match.candidateDetections === 1 ? "" : "s"} · last seen {match.candidateLastSeen}
           </p>
         </div>
@@ -387,9 +390,10 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
   const rejectedCount = matches.filter((m) => verdicts[m.candidateId] === "rejected").length;
 
   return (
-    <div data-slot="entity-drawer-possible-matches">
-      <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+    <DetailDrawerSection
+      data-slot="entity-drawer-possible-matches"
+      title={
+        <span className="inline-flex items-center gap-1.5">
           <Sparkles className="size-3 text-info" />
           Possible Identity Matches
           {pending > 0 && (
@@ -398,12 +402,15 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
             </span>
           )}
         </span>
+      }
+      action={
         <Button variant="link" onClick={() => setShowInfo((v) => !v)}
           className="h-auto gap-1 border-0 p-0 text-xs font-normal text-muted-foreground underline underline-offset-auto hover:text-primary-ink">
           <Info className="size-3" />
           {showInfo ? "Hide" : "How does this work?"}
         </Button>
-      </div>
+      }
+    >
 
       {/* Merge confirmation banner — auto-dismisses after 10s */}
       {approvedMatch && mergeBannerVisible && (
@@ -452,7 +459,7 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
             onReject={() => reject(m)} />
         ))}
       </div>
-    </div>
+    </DetailDrawerSection>
   );
 }
 
@@ -461,16 +468,13 @@ function PossibleMatchesSection({ entity, matches }: { entity: PersonEntity; mat
 function LinkedCasesSection({ linkedCases }: { linkedCases: import("@/types/entities").EntityLinkedCase[] }) {
   if (linkedCases.length === 0) return null;
   return (
-    <div data-slot="entity-drawer-linked-cases">
-      <div className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Linked Cases
-      </div>
+    <DetailDrawerSection data-slot="entity-drawer-linked-cases" title="Linked Cases">
       <div className="space-y-2">
         {linkedCases.map((c) => (
           <LinkedCaseCard key={c.id} {...c} />
         ))}
       </div>
-    </div>
+    </DetailDrawerSection>
   );
 }
 
@@ -486,28 +490,18 @@ function PersonBody({ entity }: { entity: PersonEntity }) {
       />
 
       {/* Meta grid — First Seen removed */}
-      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-        {(
-          [
-            ["Person ID", <span className="font-mono text-xs text-info">{entity.id}</span>],
-            ["Last Seen", `${entity.lastSeen} (${entity.lastSeenAgo})`],
-            [
-              "Sites Observed",
-              <span className="flex flex-wrap gap-1">
-                {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
-                ))}
-              </span>,
-            ],
-            ["Identification", entity.identified ? "Identified" : "Unidentified"],
-          ] as [string, React.ReactNode][]
-        ).map(([label, value]) => (
-          <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-base font-medium text-foreground">{value}</span>
-          </div>
-        ))}
-      </div>
+      <DescriptionList data-slot="entity-drawer-details" columns={2} variant="card">
+        <DescriptionItem label="Person ID" mono><span className="text-info">{entity.id}</span></DescriptionItem>
+        <DescriptionItem label="Last Seen">{`${entity.lastSeen} (${entity.lastSeenAgo})`}</DescriptionItem>
+        <DescriptionItem label="Sites Observed">
+          <span className="flex flex-wrap gap-1">
+            {entity.sitesObserved.map((s) => (
+              <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
+            ))}
+          </span>
+        </DescriptionItem>
+        <DescriptionItem label="Identification">{entity.identified ? "Identified" : "Unidentified"}</DescriptionItem>
+      </DescriptionList>
 
       {entity.possibleMatches && entity.possibleMatches.length > 0 && (
         <PossibleMatchesSection entity={entity} matches={entity.possibleMatches} />
@@ -530,30 +524,20 @@ function AssetBody({ entity }: { entity: AssetEntity }) {
         priorIncidents={entity.priorEventCount ?? 0}
       />
 
-      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-        {(
-          [
-            ["Asset ID",       <span className="font-mono text-xs text-primary-ink">{entity.id}</span>],
-            ["Asset Title",    entity.type || "Unidentified Object"],
-            ["Asset Type",     deriveAssetType(entity)],
-            [
-              "Sites Observed",
-              <span className="flex flex-wrap gap-1">
-                {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
-                ))}
-              </span>,
-            ],
-            ["Last Seen",      deriveLastSeen(entity.timeline)],
-            ["Identification", entity.identified ? "Identified" : "Unidentified"],
-          ] as [string, React.ReactNode][]
-        ).map(([label, value]) => (
-          <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-base font-medium text-foreground">{value}</span>
-          </div>
-        ))}
-      </div>
+      <DescriptionList data-slot="entity-drawer-details" columns={2} variant="card">
+        <DescriptionItem label="Asset ID" mono><span className="text-primary-ink">{entity.id}</span></DescriptionItem>
+        <DescriptionItem label="Asset Title">{entity.type || "Unidentified Object"}</DescriptionItem>
+        <DescriptionItem label="Asset Type">{deriveAssetType(entity)}</DescriptionItem>
+        <DescriptionItem label="Sites Observed">
+          <span className="flex flex-wrap gap-1">
+            {entity.sitesObserved.map((s) => (
+              <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
+            ))}
+          </span>
+        </DescriptionItem>
+        <DescriptionItem label="Last Seen">{deriveLastSeen(entity.timeline)}</DescriptionItem>
+        <DescriptionItem label="Identification">{entity.identified ? "Identified" : "Unidentified"}</DescriptionItem>
+      </DescriptionList>
 
       <DetectedTimeline entries={entity.timeline} />
       <LinkedCasesSection linkedCases={entity.linkedCases} />
@@ -572,30 +556,20 @@ function VehicleBody({ entity }: { entity: VehicleEntity }) {
         priorIncidents={entity.priorEventCount ?? 0}
       />
 
-      <div data-slot="entity-drawer-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-        {(
-          [
-            ["Asset ID",       <span className="font-mono text-xs text-success">{entity.id}</span>],
-            ["Asset Title",    deriveVehicleTitle(entity)],
-            ["Asset Type",     "Vehicle"],
-            [
-              "Sites Observed",
-              <span className="flex flex-wrap gap-1">
-                {entity.sitesObserved.map((s) => (
-                  <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
-                ))}
-              </span>,
-            ],
-            ["Last Seen",      deriveLastSeen(entity.timeline)],
-            ["Identification", entity.identified ? "Identified" : "Unidentified"],
-          ] as [string, React.ReactNode][]
-        ).map(([label, value]) => (
-          <div key={label as string} className="flex flex-col gap-0.5">
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-            <span className="text-base font-medium text-foreground">{value}</span>
-          </div>
-        ))}
-      </div>
+      <DescriptionList data-slot="entity-drawer-details" columns={2} variant="card">
+        <DescriptionItem label="Asset ID" mono><span className="text-success">{entity.id}</span></DescriptionItem>
+        <DescriptionItem label="Asset Title">{deriveVehicleTitle(entity)}</DescriptionItem>
+        <DescriptionItem label="Asset Type">Vehicle</DescriptionItem>
+        <DescriptionItem label="Sites Observed">
+          <span className="flex flex-wrap gap-1">
+            {entity.sitesObserved.map((s) => (
+              <span key={s} className="rounded bg-muted px-1.5 py-px text-xs text-muted-foreground">{s}</span>
+            ))}
+          </span>
+        </DescriptionItem>
+        <DescriptionItem label="Last Seen">{deriveLastSeen(entity.timeline)}</DescriptionItem>
+        <DescriptionItem label="Identification">{entity.identified ? "Identified" : "Unidentified"}</DescriptionItem>
+      </DescriptionList>
 
       <DetectedTimeline entries={entity.timeline} />
       <LinkedCasesSection linkedCases={entity.linkedCases} />
@@ -646,76 +620,53 @@ export function EntityDrawer({ entity, open, onClose }: EntityDrawerProps) {
   const badge = entity ? KIND_BADGE[entity.kind] : null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-[min(680px,48vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
-        {/* Header */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          {entity ? (
-            <div data-slot="entity-drawer-header" className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                  {badge && (
-                    <span className={badge.className}>
-                      <Shield className="size-2.5" />
-                      {badge.label}
-                    </span>
-                  )}
-                  {entity.identified ? (
-                    <span className="rounded border border-success/20 bg-success/15 px-1.5 py-px text-2xs font-semibold text-success">
-                      Identified
-                    </span>
-                  ) : (
-                    <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
-                      Unidentified
-                    </span>
-                  )}
-                </div>
-                <SheetTitle className="font-mono text-lg font-bold leading-snug">
-                  {entity.id}
-                </SheetTitle>
-                <p className="mt-0.5 text-base text-muted-foreground">{entitySubtitle(entity)}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={onClose}
-                className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-md text-muted-foreground">Entity not found</SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={onClose}
-                className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-          )}
-        </SheetHeader>
-
-        {/* Body */}
-        {entity && (
-          <div data-slot="entity-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
-            {entity.kind === "person" ? (
-              <PersonBody entity={entity as PersonEntity} />
-            ) : entity.kind === "vehicle" ? (
-              <VehicleBody entity={entity as VehicleEntity} />
+    <DetailDrawer
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      size="md"
+      className="w-[min(680px,48vw)]"
+    >
+      {/* Header */}
+      {entity ? (
+        <DetailDrawerHeader data-slot="entity-drawer-header">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {badge && (
+              <span className={badge.className}>
+                <Shield className="size-2.5" />
+                {badge.label}
+              </span>
+            )}
+            {entity.identified ? (
+              <span className="rounded border border-success/20 bg-success/15 px-1.5 py-px text-2xs font-semibold text-success">
+                Identified
+              </span>
             ) : (
-              <AssetBody entity={entity as AssetEntity} />
+              <span className="rounded border border-border bg-muted px-1.5 py-px text-2xs font-semibold text-muted-foreground">
+                Unidentified
+              </span>
             )}
           </div>
-        )}
-      </SheetContent>
-    </Sheet>
+          <DetailDrawerTitle className="font-mono leading-snug">{entity.id}</DetailDrawerTitle>
+          <DetailDrawerDescription className="text-base">{entitySubtitle(entity)}</DetailDrawerDescription>
+        </DetailDrawerHeader>
+      ) : (
+        <DetailDrawerHeader>
+          <DetailDrawerTitle className="text-md font-normal text-muted-foreground">Entity not found</DetailDrawerTitle>
+        </DetailDrawerHeader>
+      )}
+
+      {/* Body */}
+      {entity && (
+        <DetailDrawerBody data-slot="entity-drawer-body">
+          {entity.kind === "person" ? (
+            <PersonBody entity={entity as PersonEntity} />
+          ) : entity.kind === "vehicle" ? (
+            <VehicleBody entity={entity as VehicleEntity} />
+          ) : (
+            <AssetBody entity={entity as AssetEntity} />
+          )}
+        </DetailDrawerBody>
+      )}
+    </DetailDrawer>
   );
 }

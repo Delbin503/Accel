@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import { type VisitorStats } from "./visitorStats";
 
 /* A split count reads as a fraction inside a KPI card — "168 / 163" looks like

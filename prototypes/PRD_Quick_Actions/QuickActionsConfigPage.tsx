@@ -2,10 +2,10 @@ import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { Bell, Brain, Building2, Clock, Command, Database, ShieldCheck, Users, Video, Webhook } from "lucide-react";
 
-import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { cn } from "@/lib/utils";
-import { ItemButton } from "@/components/ui/item";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
+import { cn } from "@accel/ui/lib/utils";
+import { ItemButton } from "@accel/ui/components/ui/item";
 import { QuickActionsSection } from "./QuickActionsSection";
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export default function QuickActionsConfigPage() {
                   <p
                     className={cn(
                       "mt-0.5 text-2xs leading-snug",
-                      active ? "text-primary-ink/70" : "text-muted-foreground/70"
+                      active ? "text-primary-ink/70" : "text-muted-foreground"
                     )}
                   >
                     {s.description}

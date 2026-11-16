@@ -13,32 +13,33 @@ import {
   Link2,
   CheckSquare,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { FilterDropdown } from "@accel/ui/components/shared/FilterDropdown";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
 import { MOCK_EVENTS, DATE_GROUPS, FILTER_OPTIONS, MOCK_DISMISSED } from "@/mocks/detectionFeed";
 import type { DetectionEvent } from "@/types/detection";
 import type { EscalateFormData } from "./EscalateModal";
-import { SeverityBadge, parseEventText } from "./shared";
+import { SeverityBadge } from "./shared";
+import { parseEventText } from "./shared-utils";
 import { EventDrawer } from "./EventDrawer";
 import { EscalateModal } from "./EscalateModal";
 import { DismissModal } from "./DismissModal";
 import { LinkCaseModal } from "./LinkCaseModal";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -506,7 +507,7 @@ export default function DetectionFeedPage() {
     }
 
     return ev;
-  }, [allEvents, datePreset, kpiFilter, filters, search]);
+  }, [allEvents, datePreset, dateFrom, dateTo, kpiFilter, filters, search]);
 
   const isSelecting = selectedIds.size > 0;
 
@@ -560,7 +561,8 @@ export default function DetectionFeedPage() {
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }

@@ -1,5 +1,5 @@
 import { AlertCircle, Users, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
 
 /** Dev-only forced states for the State Tester (prototype-only). */
 export type ForcedState = "normal" | "loading" | "empty" | "error";

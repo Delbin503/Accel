@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShieldOff, Mail, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
 import { AuthLayout } from "./AuthLayout";
 import type { Suspension } from "@/types/users";
 
@@ -86,7 +86,7 @@ export default function AccountSuspendedPage() {
           </Button>
         </div>
 
-        <p data-slot="account-suspended-page-footer" className="mt-6 text-center text-xs text-muted-foreground/70">
+        <p data-slot="account-suspended-page-footer" className="mt-6 text-center text-xs text-muted-foreground">
           Support replies within one business day at{" "}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}

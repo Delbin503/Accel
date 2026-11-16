@@ -19,10 +19,10 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { cn } from "@accel/ui/lib/utils";
 import {
   CONTEXT_FACTS,
   INCIDENT_ID,

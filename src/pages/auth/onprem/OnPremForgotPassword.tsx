@@ -2,11 +2,11 @@ import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import { AuthLayout } from "../AuthLayout";
-import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
-import { cn } from "@/lib/utils";
+import { PasswordStrengthBar } from "@accel/ui/components/shared/PasswordStrengthBar";
+import { cn } from "@accel/ui/lib/utils";
 
 type Step = "email" | "code" | "reset" | "done";
 

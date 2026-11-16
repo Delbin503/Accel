@@ -2,12 +2,12 @@ import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
 import { AuthLayout } from "./AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@accel/ui/lib/utils";
+import { Input } from "@accel/ui/components/ui/input";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
 
 export default function SignInVerifyPage() {
   const navigate = useNavigate();

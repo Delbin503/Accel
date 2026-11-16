@@ -5,16 +5,14 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@accel/ui/components/ui/tooltip";
 import OnPremSignInPage from "@/pages/auth/onprem/OnPremSignIn";
 import OnPremSignInVerifyPage from "@/pages/auth/onprem/OnPremSignInVerify";
 import OnPremForgotPasswordPage from "@/pages/auth/onprem/OnPremForgotPassword";
 import OnPremSetupPage from "@/pages/auth/onprem/OnPremSetup";
 import { StateTester } from "./StateTester";
+import { ONPREM_SCREENS, type OnPremScreen, type AsyncMode } from "./screens";
 import {
-  ONPREM_SCREENS,
-  type OnPremScreen,
-  type AsyncMode,
   LoadingPreview,
   ErrorPreview,
   DonePreview,

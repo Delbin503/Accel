@@ -1,5 +1,5 @@
 import { ClipboardCheck, Radio } from "lucide-react";
-import { NAV_GROUPS, type NavGroup, type NavItem } from "@/components/layout/AppSidebar";
+import { NAV_GROUPS, type NavGroup, type NavItem } from "@/components/app/nav-groups";
 
 /* Training Assessment module — kept apart from the other Phase 1.3 proposals
    and from the Re-ID module, the same way the Re-ID module is.

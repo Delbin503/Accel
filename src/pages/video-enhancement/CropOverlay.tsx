@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { dragRect, type CropRect, type Handle } from "./cropRect";
 
 /* The box drawn over the video while cropping. Drag inside it to move it,

@@ -1,21 +1,28 @@
 import * as React from "react";
-import { X, Play, Settings, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Settings, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@accel/ui/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+  type DetailDrawerSectionProps,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { cn } from "@accel/ui/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
 import type { DetectionEvent } from "@/types/detection";
 import type { AnyEntity } from "@/types/entities";
-import { SeverityBadge, parseEventText } from "./shared";
+import { SeverityBadge } from "./shared";
+import { parseEventText } from "./shared-utils";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
-import { KpiCard as SharedKpiCard, type KpiTone } from "@/components/shared/KpiCard";
-import { ItemButton } from "@/components/ui/item";
+import { KpiCard as SharedKpiCard, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* ── Thumbnail with bounding boxes ──────────────────────────────────────── */
 
@@ -23,7 +30,7 @@ function DrawerThumb({ event }: { event: DetectionEvent }) {
   const frame = eventImage(event.id);
 
   return (
-    <div data-slot="event-drawer-media" className="relative mb-4 h-[280px] overflow-hidden rounded-xl bg-camera-feed">
+    <div data-slot="event-drawer-media" className="relative h-[280px] shrink-0 overflow-hidden rounded-xl bg-camera-feed">
       {frame && (
         <img
           src={frame}
@@ -111,7 +118,11 @@ const ENTITY_CARD: Record<
   vehicle: { label: "Vehicle Box", accent: "text-violet",  getId: (e) => e.vehicleId },
 };
 
-export function DetectionConfidenceSection({ event }: { event: DetectionEvent }) {
+export function DetectionConfidenceSection({
+  event,
+  className,
+  ...props
+}: { event: DetectionEvent } & Omit<DetailDrawerSectionProps, "title" | "action" | "children">) {
   const [evalExpanded, setEvalExpanded] = React.useState(false);
 
   function parseScore(label: string): number {
@@ -140,16 +151,16 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
     : "grid-cols-1";
 
   return (
-    <div className="space-y-3">
-      {/* Header row */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Detection Confidence
-        </span>
+    <DetailDrawerSection
+      title="Detection Confidence"
+      action={
         <span className="font-mono text-2xs text-muted-foreground">
           trigger threshold ≥ {threshold / 100}
         </span>
-      </div>
+      }
+      className={cn("gap-3", className)}
+      {...props}
+    >
 
       {/* Entity score cards — uniform compact KPI pattern */}
       {entityCards.length === 0 ? (
@@ -271,7 +282,7 @@ export function DetectionConfidenceSection({ event }: { event: DetectionEvent })
           </div>
         )}
       </div>
-    </div>
+    </DetailDrawerSection>
   );
 }
 
@@ -286,15 +297,15 @@ function ModelCard({ event }: { event: DetectionEvent }) {
       </div>
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
         <div>
-          <span className="font-semibold text-muted-foreground/70">Model ID: </span>
+          <span className="font-semibold text-muted-foreground">Model ID: </span>
           {event.useCaseId}
         </div>
         <div>
-          <span className="font-semibold text-muted-foreground/70">Trained: </span>
+          <span className="font-semibold text-muted-foreground">Trained: </span>
           {event.modelTrainedDate}
         </div>
         <div>
-          <span className="font-semibold text-muted-foreground/70">Last eval mAP: </span>
+          <span className="font-semibold text-muted-foreground">Last eval mAP: </span>
           {event.modelMaP}
         </div>
       </div>
@@ -302,53 +313,27 @@ function ModelCard({ event }: { event: DetectionEvent }) {
   );
 }
 
-/* ── Section heading ─────────────────────────────────────────────────────── */
-
-function SectionTitle({
-  children,
-  aside,
-}: {
-  children: React.ReactNode;
-  aside?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
-    </div>
-  );
-}
-
 /* ── Detail grid ─────────────────────────────────────────────────────────── */
 
 function DetailGrid({ event }: { event: DetectionEvent }) {
-  const rows: Array<[string, React.ReactNode]> = [
-    ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
-    ["Detection Type", event.typeLabel],
-    ...(event.assetId
-      ? [["Asset ID", <span className="font-mono text-xs text-primary-ink">{event.assetId}</span>] as [string, React.ReactNode]]
-      : []),
-    ...(event.personId
-      ? [["Person ID", <span className="font-mono text-xs text-primary-ink">{event.personId}</span>] as [string, React.ReactNode]]
-      : []),
-    ["Area", event.areaDisplay],
-    ["Camera", event.camera],
-    ["Site", event.siteDisplay],
-  ];
-
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-      {rows.map(([label, value]) => (
-        <div key={label as string} className="flex flex-col gap-0.5">
-          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {label}
-          </span>
-          <span className="text-base font-medium text-foreground">{value}</span>
-        </div>
-      ))}
-    </div>
+    <DescriptionList columns={2} variant="card">
+      <DescriptionItem label="Model ID" mono>{event.useCaseId}</DescriptionItem>
+      <DescriptionItem label="Detection Type">{event.typeLabel}</DescriptionItem>
+      {event.assetId && (
+        <DescriptionItem label="Asset ID" mono>
+          <span className="text-primary-ink">{event.assetId}</span>
+        </DescriptionItem>
+      )}
+      {event.personId && (
+        <DescriptionItem label="Person ID" mono>
+          <span className="text-primary-ink">{event.personId}</span>
+        </DescriptionItem>
+      )}
+      <DescriptionItem label="Area">{event.areaDisplay}</DescriptionItem>
+      <DescriptionItem label="Camera">{event.camera}</DescriptionItem>
+      <DescriptionItem label="Site">{event.siteDisplay}</DescriptionItem>
+    </DescriptionList>
   );
 }
 
@@ -370,7 +355,7 @@ const EVENT_ENTITY_STYLE: Record<string, { borderColor: string; chipClass: strin
   vehicle: { borderColor: "var(--success)", chipClass: "border-success/25 bg-success/10 text-success", label: "Vehicle" },
 };
 
-export function inferEntityKind(id: string): string {
+function inferEntityKind(id: string): string {
   if (id.startsWith("PER-")) return "person";
   if (id.startsWith("VEH-")) return "vehicle";
   return "asset";
@@ -416,11 +401,11 @@ export function EventEntityCard({
       return (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">RE-ID:</span>
+            <span className="font-semibold text-muted-foreground">RE-ID:</span>
             {(entity.reIdConfidence / 100).toFixed(3)}
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">Detections:</span>
+            <span className="font-semibold text-muted-foreground">Detections:</span>
             {entity.totalDetections}
           </span>
         </div>
@@ -431,7 +416,7 @@ export function EventEntityCard({
       return (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">Registered:</span>
+            <span className="font-semibold text-muted-foreground">Registered:</span>
             {entity.registeredTo}
           </span>
         </div>
@@ -486,9 +471,14 @@ interface EventDrawerProps {
 export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: EventDrawerProps) {
   const [viewEntity, setViewEntity] = React.useState<AnyEntity | null>(null);
 
-  React.useEffect(() => {
+  // Close the entity sub-drawer when a different event is shown (adjusted
+  // during render rather than in an effect).
+  const eventId = event?.id;
+  const [prevEventId, setPrevEventId] = React.useState(eventId);
+  if (eventId !== prevEventId) {
+    setPrevEventId(eventId);
     setViewEntity(null);
-  }, [event?.id]);
+  }
 
   const eventEntities = React.useMemo(() => {
     if (!event) return [];
@@ -505,117 +495,94 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
 
   return (
     <>
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
-        {/* Header */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div data-slot="event-drawer-header" className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <SeverityBadge severity={event.severity} />
-              </div>
-              <SheetTitle className="text-lg font-bold leading-snug">
-                {event.typeLabel}
-              </SheetTitle>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        </SheetHeader>
-
-        {/* Scrollable body */}
-        <div data-slot="event-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
-          <DrawerThumb event={event} />
-
-          {/* Event Summary */}
-          <div data-slot="event-drawer-summary">
-            <SectionTitle>Event Summary</SectionTitle>
-            <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
-              {parseEventText(event.summary)}
-            </div>
-          </div>
-
-          {/* VLM Reasoning */}
-          <div data-slot="event-drawer-reasoning">
-            <SectionTitle
-              aside={
-                <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
-                  AI-generated · 8s clip
-                </span>
-              }
-            >
-              <span className="flex items-center gap-2">
-                <Sparkles className="size-3.5 text-violet" />
-                VLM Reasoning
-              </span>
-            </SectionTitle>
-            <VlmBlock text={event.vlmReasoning} />
-          </div>
-
-          {/* Detected By */}
-          <div data-slot="event-drawer-model">
-            <SectionTitle
-              aside={
-                <Button variant="link" className="h-auto border-0 p-0 text-2xs font-normal text-violet underline-offset-auto hover:underline">View model →</Button>
-              }
-            >
-              Detected By
-            </SectionTitle>
-            <ModelCard event={event} />
-          </div>
-
-          {/* Detection Details */}
-          <div data-slot="event-drawer-details">
-            <SectionTitle>Detection Details</SectionTitle>
-            <DetailGrid event={event} />
-          </div>
-
-          {/* Detection Confidence */}
-          <div data-slot="event-drawer-confidence">
-            <DetectionConfidenceSection event={event} />
-          </div>
-
-          {/* Entities Involved */}
-          {eventEntities.length > 0 && (
-            <div data-slot="event-drawer-entities">
-              <SectionTitle
-                aside={
-                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
-                    {eventEntities.length}
-                  </span>
-                }
-              >
-                Entities Involved
-              </SectionTitle>
-              <div className="space-y-2">
-                {eventEntities.map(({ id, entity }) => (
-                  <EventEntityCard
-                    key={id}
-                    entityId={id}
-                    entity={entity}
-                    onViewInfo={entity ? () => setViewEntity(entity) : undefined}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
+      {/* Header */}
+      <DetailDrawerHeader data-slot="event-drawer-header">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <SeverityBadge severity={event.severity} />
         </div>
+        <DetailDrawerTitle className="leading-snug">{event.typeLabel}</DetailDrawerTitle>
+        <DetailDrawerDescription>
+          {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
+        </DetailDrawerDescription>
+      </DetailDrawerHeader>
 
-        {/* Footer */}
-        <div data-slot="event-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+      {/* Scrollable body */}
+      <DetailDrawerBody data-slot="event-drawer-body">
+        <DrawerThumb event={event} />
+
+        {/* Event Summary */}
+        <DetailDrawerSection data-slot="event-drawer-summary" title="Event Summary">
+          <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
+            {parseEventText(event.summary)}
+          </div>
+        </DetailDrawerSection>
+
+        {/* VLM Reasoning */}
+        <DetailDrawerSection
+          data-slot="event-drawer-reasoning"
+          title={
+            <span className="flex items-center gap-2">
+              <Sparkles className="size-3.5 text-violet" />
+              VLM Reasoning
+            </span>
+          }
+          action={
+            <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
+              AI-generated · 8s clip
+            </span>
+          }
+        >
+          <VlmBlock text={event.vlmReasoning} />
+        </DetailDrawerSection>
+
+        {/* Detected By */}
+        <DetailDrawerSection
+          data-slot="event-drawer-model"
+          title="Detected By"
+          action={
+            <Button variant="link" className="h-auto border-0 p-0 text-2xs font-normal text-violet underline-offset-auto hover:underline">View model →</Button>
+          }
+        >
+          <ModelCard event={event} />
+        </DetailDrawerSection>
+
+        {/* Detection Details */}
+        <DetailDrawerSection data-slot="event-drawer-details" title="Detection Details">
+          <DetailGrid event={event} />
+        </DetailDrawerSection>
+
+        {/* Detection Confidence */}
+        <DetectionConfidenceSection data-slot="event-drawer-confidence" event={event} />
+
+        {/* Entities Involved */}
+        {eventEntities.length > 0 && (
+          <DetailDrawerSection
+            data-slot="event-drawer-entities"
+            title="Entities Involved"
+            action={
+              <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
+                {eventEntities.length}
+              </span>
+            }
+          >
+            <div className="space-y-2">
+              {eventEntities.map(({ id, entity }) => (
+                <EventEntityCard
+                  key={id}
+                  entityId={id}
+                  entity={entity}
+                  onViewInfo={entity ? () => setViewEntity(entity) : undefined}
+                />
+              ))}
+            </div>
+          </DetailDrawerSection>
+        )}
+      </DetailDrawerBody>
+
+      {/* Footer — case actions left, Dismiss right */}
+      <DetailDrawerFooter data-slot="event-drawer-footer">
+        <DetailDrawerFooterStart className="gap-2">
           {event.status === "escalated" && event.caseId ? (
             <Button variant="outline" size="sm">
               View {event.caseId} →
@@ -640,20 +607,20 @@ export function EventDrawer({ event, open, onClose, onEscalate, onDismiss }: Eve
               Link Existing Case
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
-            onClick={() => {
-              onClose();
-              onDismiss();
-            }}
-          >
-            Dismiss
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawerFooterStart>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-severity-critical hover:bg-severity-critical/10 hover:text-severity-critical"
+          onClick={() => {
+            onClose();
+            onDismiss();
+          }}
+        >
+          Dismiss
+        </Button>
+      </DetailDrawerFooter>
+    </DetailDrawer>
 
     <EntityDrawer
       entity={viewEntity}

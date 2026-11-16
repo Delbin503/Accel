@@ -1,4 +1,4 @@
-export { cn } from "./utils";
+export { cn } from "@accel/ui/lib/utils";
 export { queryClient } from "./queryClient";
 export {
   formatRelativeTime,
@@ -10,4 +10,4 @@ export {
   formatBytes,
   formatCurrency,
   formatNumber,
-} from "./formatters";
+} from "@accel/ui/lib/formatters";

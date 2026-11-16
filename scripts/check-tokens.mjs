@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Token guardrail for src/index.css — run with `npm run lint:tokens`.
+ * Token guardrail for packages/ui/src/styles.css — run with `npm run lint:tokens`.
  *
  * Enforces the naming and tier rules written in the index.css header:
  *   1. Every custom property is kebab-case.
@@ -11,13 +11,13 @@
  *   4. Every var(--x) in the file points at a token that exists.
  *
  * Exits 1 with a list of problems, so it can gate CI alongside ESLint.
- * Optional argument: a CSS file path (defaults to src/index.css).
+ * Optional argument: a CSS file path (defaults to packages/ui/src/styles.css).
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
 
-const FILE = process.argv[2] ?? fileURLToPath(new URL("../src/index.css", import.meta.url));
+const FILE = process.argv[2] ?? fileURLToPath(new URL("../packages/ui/src/styles.css", import.meta.url));
 const css = readFileSync(FILE, "utf8");
 
 // Variables provided by Tailwind/libraries at runtime, not declared here.
@@ -94,7 +94,7 @@ for (const block of blocks) {
 if (problems.length) {
   console.error(`Token check failed — ${problems.length} problem(s):\n`);
   for (const p of problems) console.error("  " + p);
-  console.error("\nRules: see the naming/tier header in src/index.css.");
+  console.error("\nRules: see the naming/tier header in packages/ui/src/styles.css.");
   process.exit(1);
 }
 const count = defined.size;

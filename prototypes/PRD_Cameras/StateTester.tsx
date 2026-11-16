@@ -1,5 +1,5 @@
 import { FlaskConical } from "lucide-react";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 import type { ForcedState, DrawerAsync } from "./shared";
 
 /* ──────────────────────────────────────────────────────────────────────────

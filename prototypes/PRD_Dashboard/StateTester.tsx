@@ -1,6 +1,6 @@
 import { FlaskConical } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { cn } from "@accel/ui/lib/utils";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 import type { ForcedState, HealthMode, ScaleMode } from "./states";
 
 /* PROTOTYPE-ONLY. Forces the view state + System Health for testing. Not promoted to src. */

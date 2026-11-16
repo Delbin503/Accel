@@ -2,8 +2,8 @@ import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Command, Search, Settings2 } from "lucide-react";
 import { useCommandPaletteStore } from "@/stores/useCommandPaletteStore";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* PROTOTYPE-ONLY: cheat-sheet panel so a reviewer knows what to try. */
 

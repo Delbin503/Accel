@@ -4,15 +4,15 @@ import { toast } from "sonner";
 import {
   ArrowRight, ArrowLeft, Building2, MapPin, Globe2, Plus, Trash2, Check, AlertCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
 import { AuthLayout } from "./AuthLayout";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { AREA_PALETTE } from "@/mocks/sites";
 import type { AreaShape, SiteData } from "@/types/sites";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { OnboardingProgress } from "./OnboardingProgress";
 
@@ -151,7 +151,7 @@ export default function OnboardingSitePage() {
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Timezone <span className="text-muted-foreground/60">(Optional)</span>
+              Timezone <span className="text-muted-foreground">(Optional)</span>
             </label>
             <div className="relative">
               <Globe2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -171,7 +171,7 @@ export default function OnboardingSitePage() {
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Areas <span className="text-muted-foreground/60">(at least 1 required)</span>
+                Areas <span className="text-muted-foreground">(at least 1 required)</span>
               </label>
               <Button variant="link" onClick={addArea}
                 className="h-auto gap-1 border-0 p-0 text-sm font-semibold text-primary-ink underline-offset-auto hover:underline">

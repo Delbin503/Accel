@@ -5,17 +5,17 @@ import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, Responsiv
 import {
   Check, ChevronLeft, ChevronRight, CircleCheck, CircleDashed, CircleX, Eraser, FileDown, Info, PenLine, Play, Pause, Share2, Target, TrendingDown, TrendingUp, TriangleRight, WifiOff, X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@accel/ui/components/ui/table";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@accel/ui/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { cn } from "@accel/ui/lib/utils";
 import {
   BEST_SWING, FAULTS, GOAL_SCORE, GOLFER, GRADE_BANDS, LESSONS, MONITOR_OFFLINE_FROM, PHASES, PREVIOUS, SESSION, STATS, SWINGS, TARGET, WEAKEST_SWING, WINDOW,
   findingsFor, fmtClock, fundamentalsFor, gradeOf, hasBallFor, inRange, inSequence, methodNoteFor, phaseTime, rankedFaults, sequenceSeries, shapeOf, smash, spineLost,
@@ -168,7 +168,7 @@ function InfoTip({ text }: { text: string }) {
   return (
     <UiTooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground/70 hover:bg-transparent transition-colors hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={text} className="inline-flex size-auto rounded-none text-muted-foreground hover:bg-transparent transition-colors hover:text-foreground">
           <Info className="size-3" />
         </Button>
       </TooltipTrigger>
@@ -296,10 +296,10 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
   const step = (d: number) => onPhase(PHASE_ORDER[Math.max(0, Math.min(PHASE_ORDER.length - 1, PHASE_ORDER.indexOf(phase) + d))]);
   const pct = (sec: number) => `${(sec / SESSION.lengthSec) * 100}%`;
   const toolBtn = (t: Exclude<Tool, "none">, Icon: typeof PenLine, label: string) => (
-    <Button variant="ghost" size="icon-xs" aria-label={label} title={label} aria-pressed={tool === t} onClick={() => setTool(tool === t ? "none" : t)}
-      className={cn("grid size-6 place-items-center rounded transition-colors", tool === t ? "bg-primary/15 text-primary-ink hover:bg-primary/15 hover:text-primary-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+    <SegmentedControlItem value={t} aria-label={label} title={label}
+      className="grid size-6 place-items-center rounded px-0 hover:bg-muted data-[state=on]:bg-primary/15 data-[state=on]:text-primary-ink data-[state=on]:shadow-none data-[state=on]:hover:bg-primary/15 data-[state=on]:hover:text-primary-ink">
       <Icon className="size-3.5" />
-    </Button>
+    </SegmentedControlItem>
   );
 
   return (
@@ -311,8 +311,13 @@ function VideoPanel({ className, swing, ball, view, phase, onView, onPhase, onSe
       bodyClassName="p-0"
       action={
         <div className="flex items-center gap-1">
-          {toolBtn("line", PenLine, "Draw a line")}
-          {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
+          {/* Picking the active tool again puts it down (back to "none"). */}
+          <SegmentedControl type="single" aria-label="Drawing tool" value={tool === "none" ? "" : tool}
+            onValueChange={(next) => setTool(next ? (next as Tool) : "none")}
+            className="gap-1 rounded-none bg-transparent p-0">
+            {toolBtn("line", PenLine, "Draw a line")}
+            {toolBtn("angle", TriangleRight, "Measure an angle (3 clicks)")}
+          </SegmentedControl>
           <Button variant="ghost" size="icon-xs" aria-label="Clear drawings" title="Clear drawings" disabled={!marks.length} onClick={() => setMarks([])}
             className="grid size-6 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40">
             <Eraser className="size-3.5" />

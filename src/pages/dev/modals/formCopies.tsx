@@ -1,20 +1,20 @@
 import * as React from "react";
 import { ChevronDown, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/dropdown-menu";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES } from "@/lib/timezones";
 import { AREA_PALETTE } from "@/mocks/sites";
 import { ASSIGNEES } from "@/mocks/incidentCases";

@@ -9,14 +9,14 @@ import {
   X,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { SectionCard } from "@/components/shared/SectionCard";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Label } from "@accel/ui/components/ui/label";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { SectionCard } from "@accel/ui/components/shared/SectionCard";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
+import { cn } from "@accel/ui/lib/utils";
 import {
   QUICK_ACTIONS,
   actionsForRole,

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import { NAV_GROUPS } from "@/components/layout/AppSidebar";
-import { cn } from "@/lib/utils";
+import { NAV_GROUPS } from "@/components/app/nav-groups";
+import { cn } from "@accel/ui/lib/utils";
 
 /* ──────────────────────────────────────────────────────────────────────────
    PROTOTYPE-ONLY. Top-bar breadcrumb — "Manage › Site › Cameras".

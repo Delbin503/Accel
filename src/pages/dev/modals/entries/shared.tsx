@@ -1,6 +1,6 @@
 import { SetupCompleteModal } from "@/components/app/SetupCompleteModal";
 import { NotificationsDrawer } from "@/components/app/NotificationsDrawer";
-import { GuideGifModal } from "@/components/custom/guide-gif-modal";
+import { GuideGifModal } from "@accel/ui/components/custom/guide-gif-modal";
 import {
   renderDrawAreaFrame, DRAW_AREA_FRAME_COUNT,
   renderPlaceCameraFrame, PLACE_CAMERA_FRAME_COUNT,

@@ -1,9 +1,9 @@
 import * as React from "react";
 import { CheckCircle2, CircleDot, LoaderCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Progress } from "@accel/ui/components/ui/progress";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 
 /**
  * Gallery-only copies of the progress modals in the new confirm style:

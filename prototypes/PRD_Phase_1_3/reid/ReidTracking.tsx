@@ -1,12 +1,12 @@
 import { Crosshair, Maximize2, MapPinned, Pin, PinOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import { cameraPose } from "./calibrationGeometry";
 import { mapLabel, type ReidMap } from "./reidMaps";
 import { TRAIL_SEC, trackWhere, zonesFor, type TrackState } from "./weaponTracks";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* Re-ID tracking — the Live Monitoring pieces.
 

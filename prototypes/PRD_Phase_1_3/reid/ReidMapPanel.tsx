@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Maximize2, MapPinned, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { KpiCard } from "@/components/shared/KpiCard";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { KpiCard } from "@accel/ui/components/shared/KpiCard";
+import { cn } from "@accel/ui/lib/utils";
 import { mapLabel, useReidMapsStore } from "./reidMaps";
 import { MapExpandModal, TrackMap, TrackRow } from "./ReidTracking";
 import { TRAIL_SEC, allTrackStates, personCounts, type TrackState } from "./weaponTracks";

@@ -1,7 +1,23 @@
 {
+  "//": "Solution config. compilerOptions.paths is here for the shadcn CLI, which reads aliases from tsconfig.json; the real settings are in tsconfig.app.json.",
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@accel/ui/*": [
+        "./packages/ui/src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
 }

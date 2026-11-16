@@ -1,12 +1,13 @@
 import * as React from "react";
 import { AlertTriangle, Check, ChevronDown, Clock, Copy, Info, MapPin, Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { formatTimeOfDay } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { formatTimeOfDay } from "@accel/ui/lib/formatters";
+import { cn } from "@accel/ui/lib/utils";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
 import type { SiteData } from "@/types/sites";
@@ -404,33 +405,35 @@ function WeeklySchedule({ site, config, activeDay, onActiveDay, onChange, onPatc
 
       {/* The whole week at a glance — one letter a day, with a dot for how it
           records. Picking a day opens it below. */}
-      <div data-slot="weekly-schedule-day-tabs" role="tablist" aria-label="Day of week" className="mt-3 flex flex-wrap gap-1">
+      <SegmentedControl
+        type="single"
+        variant="outline"
+        data-slot="weekly-schedule-day-tabs"
+        aria-label="Day of week"
+        value={activeDay}
+        onValueChange={(v) => v && onActiveDay(v as Weekday)}
+        className="mt-3 gap-1"
+      >
         {WEEKDAYS.map((w) => {
           const wd = config.days[w.id];
           const mode = DAY_MODES.find((m) => m.id === wd.mode)!;
           const picked = w.id === activeDay;
           return (
-            <ItemButton
+            <SegmentedControlItem
               key={w.id}
-              variant="plain"
-              role="tab"
-              aria-selected={picked}
+              value={w.id}
               aria-label={`${w.label} — ${mode.label}`}
               title={`${w.label} — ${mode.label}`}
-              onClick={() => onActiveDay(w.id)}
-              className={cn(
-                "flex size-8 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors",
-                picked ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
-              )}
+              className="size-8 flex-col gap-0.5 rounded-md bg-transparent px-0 hover:border-primary/40 hover:bg-transparent data-[state=on]:border-primary data-[state=on]:hover:border-primary data-[state=on]:hover:bg-primary/10"
             >
               <span className={cn("text-xs font-semibold leading-none", picked ? "text-foreground" : "text-muted-foreground")}>
                 {w.initial}
               </span>
               <span className={cn("size-1 rounded-full", mode.dot)} />
-            </ItemButton>
+            </SegmentedControlItem>
           );
         })}
-      </div>
+      </SegmentedControl>
 
       <div data-slot="weekly-schedule-day-editor" className="mt-3 rounded-md border border-border px-3.5 py-3">
         <label className={FIELD_LABEL}>{d.label} records</label>
@@ -667,7 +670,7 @@ function CoverageStrip({ site, schedule }: { site: SiteData; schedule: SiteSched
             <span key={def.id} className="flex items-center gap-1.5 text-2xs text-muted-foreground">
               <span className={cn("size-1.5 rounded-full", TONE_CLASSES[def.tone].dot)} />
               {def.label}
-              {def.id === "motion" && <span className="text-muted-foreground/60">· inside standby, when triggered</span>}
+              {def.id === "motion" && <span className="text-muted-foreground">· inside standby, when triggered</span>}
             </span>
           ))}
         </div>

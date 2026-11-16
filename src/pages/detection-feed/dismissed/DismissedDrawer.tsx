@@ -1,15 +1,21 @@
 import * as React from "react";
-import { X, Play, Settings, Sparkles, RotateCcw, MessageSquare } from "lucide-react";
+import { Play, Settings, Sparkles, RotateCcw, MessageSquare } from "lucide-react";
+import { Button } from "@accel/ui/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
-import { SeverityBadge, parseEventText } from "../shared";
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
+import { SeverityBadge } from "../shared";
+import { parseEventText } from "../shared-utils";
 import { FP_REASON_LABELS } from "@/mocks/detectionFeed";
 import { ENTITY_PROFILES } from "@/mocks/entities";
 import { DetectionConfidenceSection, EventEntityCard } from "../EventDrawer";
@@ -45,7 +51,7 @@ function ReasonChip({ reason }: { reason: FpReason }) {
 function DrawerThumb({ item }: { item: DismissedEvent }) {
   const { event } = item;
   return (
-    <div data-slot="dismissed-drawer-media" className="relative mb-4 h-[200px] overflow-hidden rounded-xl bg-camera-feed">
+    <div data-slot="dismissed-drawer-media" className="relative h-[200px] shrink-0 overflow-hidden rounded-xl bg-camera-feed">
       {event.bboxes.map((box, i) => (
         <React.Fragment key={i}>
           <div
@@ -89,55 +95,30 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
   );
 }
 
-/* ── Section heading ─────────────────────────────────────────────────────── */
-
-function SectionTitle({
-  children,
-  aside,
-}: {
-  children: React.ReactNode;
-  aside?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
-    </div>
-  );
-}
-
 /* ── Detection details grid ──────────────────────────────────────────────── */
 
 function DetailGrid({ item }: { item: DismissedEvent }) {
   const { event } = item;
-  const rows: Array<[string, React.ReactNode]> = [
-    ["Model ID", <span className="font-mono text-xs">{event.useCaseId}</span>],
-    ["Detection Type", event.typeLabel],
-    ...(event.assetId
-      ? [["Asset ID", <span className="font-mono text-xs text-primary-ink">{event.assetId}</span>] as [string, React.ReactNode]]
-      : []),
-    ...(event.personId
-      ? [["Person ID", <span className="font-mono text-xs text-primary-ink">{event.personId}</span>] as [string, React.ReactNode]]
-      : []),
-    ["Area", event.areaDisplay],
-    ["Camera", event.camera],
-    ["Site", event.siteDisplay],
-    ["Dismissed by", item.dismissedBy],
-    ["Dismissed at", item.dismissedAtDisplay],
-  ];
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-      {rows.map(([label, value]) => (
-        <div key={label as string} className="flex flex-col gap-0.5">
-          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {label}
-          </span>
-          <span className="text-base font-medium text-foreground">{value}</span>
-        </div>
-      ))}
-    </div>
+    <DescriptionList columns={2} variant="card">
+      <DescriptionItem label="Model ID" mono>{event.useCaseId}</DescriptionItem>
+      <DescriptionItem label="Detection Type">{event.typeLabel}</DescriptionItem>
+      {event.assetId && (
+        <DescriptionItem label="Asset ID" mono>
+          <span className="text-primary-ink">{event.assetId}</span>
+        </DescriptionItem>
+      )}
+      {event.personId && (
+        <DescriptionItem label="Person ID" mono>
+          <span className="text-primary-ink">{event.personId}</span>
+        </DescriptionItem>
+      )}
+      <DescriptionItem label="Area">{event.areaDisplay}</DescriptionItem>
+      <DescriptionItem label="Camera">{event.camera}</DescriptionItem>
+      <DescriptionItem label="Site">{event.siteDisplay}</DescriptionItem>
+      <DescriptionItem label="Dismissed by">{item.dismissedBy}</DescriptionItem>
+      <DescriptionItem label="Dismissed at">{item.dismissedAtDisplay}</DescriptionItem>
+    </DescriptionList>
   );
 }
 
@@ -152,9 +133,9 @@ function ModelCard({ item }: { item: DismissedEvent }) {
         <span className="font-mono text-base font-bold text-violet">{event.model}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1.5 text-xs text-muted-foreground">
-        <div><span className="font-semibold text-muted-foreground/70">Model ID: </span>{event.useCaseId}</div>
-        <div><span className="font-semibold text-muted-foreground/70">Trained: </span>{event.modelTrainedDate}</div>
-        <div><span className="font-semibold text-muted-foreground/70">Last eval mAP: </span>{event.modelMaP}</div>
+        <div><span className="font-semibold text-muted-foreground">Model ID: </span>{event.useCaseId}</div>
+        <div><span className="font-semibold text-muted-foreground">Trained: </span>{event.modelTrainedDate}</div>
+        <div><span className="font-semibold text-muted-foreground">Last eval mAP: </span>{event.modelMaP}</div>
       </div>
     </div>
   );
@@ -178,126 +159,107 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
     .map((id) => ({ id, entity: ENTITY_PROFILES[id] as AnyEntity | undefined }));
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
-        {/* Header */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div data-slot="dismissed-drawer-header" className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <SeverityBadge severity={event.severity} />
-                <ReasonChip reason={item.reason} />
-              </div>
-              <SheetTitle className="text-lg font-bold leading-snug">
-                <TruncatedText text={event.typeLabel} />
-              </SheetTitle>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        </SheetHeader>
-
-        {/* Scrollable body */}
-        <div data-slot="dismissed-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
-          <DrawerThumb item={item} />
-
-          {/* Operator Notes — highlighted first since this is the key dismissal context */}
-          {item.notes && (
-            <div data-slot="dismissed-drawer-notes">
-              <SectionTitle>
-                <span className="flex items-center gap-2">
-                  <MessageSquare className="size-3.5 text-severity-medium" />
-                  Operator Notes
-                </span>
-              </SectionTitle>
-              <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-4 text-base leading-relaxed text-foreground">
-                {item.notes}
-              </div>
-            </div>
-          )}
-
-          {/* Original Detection Summary */}
-          <div data-slot="dismissed-drawer-summary">
-            <SectionTitle>Original Detection Summary</SectionTitle>
-            <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
-              {parseEventText(event.summary)}
-            </div>
-          </div>
-
-          {/* VLM Reasoning */}
-          {event.vlmReasoning && (
-            <div data-slot="dismissed-drawer-reasoning">
-              <SectionTitle
-                aside={
-                  <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
-                    AI-generated · 8s clip
-                  </span>
-                }
-              >
-                <span className="flex items-center gap-2">
-                  <Sparkles className="size-3.5 text-violet" />
-                  VLM Reasoning
-                </span>
-              </SectionTitle>
-              <div className="relative rounded-lg border border-violet/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
-                {parseEventText(event.vlmReasoning)}
-              </div>
-            </div>
-          )}
-
-          {/* Detected By */}
-          <div data-slot="dismissed-drawer-model">
-            <SectionTitle>Detected By</SectionTitle>
-            <ModelCard item={item} />
-          </div>
-
-          {/* Detection Details */}
-          <div data-slot="dismissed-drawer-details">
-            <SectionTitle>Detection Details</SectionTitle>
-            <DetailGrid item={item} />
-          </div>
-
-          {/* Detection Confidence (parity with active event drawer) */}
-          <div data-slot="dismissed-drawer-confidence">
-            <DetectionConfidenceSection event={event} />
-          </div>
-
-          {/* Entities Involved */}
-          {eventEntities.length > 0 && (
-            <div data-slot="dismissed-drawer-entities">
-              <SectionTitle
-                aside={
-                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
-                    {eventEntities.length}
-                  </span>
-                }
-              >
-                Entities Involved
-              </SectionTitle>
-              <div className="space-y-2">
-                {eventEntities.map(({ id, entity }) => (
-                  <EventEntityCard key={id} entityId={id} entity={entity} />
-                ))}
-              </div>
-            </div>
-          )}
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
+      {/* Header */}
+      <DetailDrawerHeader data-slot="dismissed-drawer-header">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <SeverityBadge severity={event.severity} />
+          <ReasonChip reason={item.reason} />
         </div>
+        <DetailDrawerTitle className="leading-snug">
+          <TruncatedText text={event.typeLabel} />
+        </DetailDrawerTitle>
+        <DetailDrawerDescription>
+          {event.id} · {event.useCaseId} · {event.dateDisplay}, {event.time}
+        </DetailDrawerDescription>
+      </DetailDrawerHeader>
 
-        {/* Footer */}
-        <div data-slot="dismissed-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+      {/* Scrollable body */}
+      <DetailDrawerBody data-slot="dismissed-drawer-body">
+        <DrawerThumb item={item} />
+
+        {/* Operator Notes — highlighted first since this is the key dismissal context */}
+        {item.notes && (
+          <DetailDrawerSection
+            data-slot="dismissed-drawer-notes"
+            title={
+              <span className="flex items-center gap-2">
+                <MessageSquare className="size-3.5 text-severity-medium" />
+                Operator Notes
+              </span>
+            }
+          >
+            <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-4 text-base leading-relaxed text-foreground">
+              {item.notes}
+            </div>
+          </DetailDrawerSection>
+        )}
+
+        {/* Original Detection Summary */}
+        <DetailDrawerSection data-slot="dismissed-drawer-summary" title="Original Detection Summary">
+          <div className="rounded-lg border border-border bg-card p-4 text-base leading-relaxed text-muted-foreground">
+            {parseEventText(event.summary)}
+          </div>
+        </DetailDrawerSection>
+
+        {/* VLM Reasoning */}
+        {event.vlmReasoning && (
+          <DetailDrawerSection
+            data-slot="dismissed-drawer-reasoning"
+            title={
+              <span className="flex items-center gap-2">
+                <Sparkles className="size-3.5 text-violet" />
+                VLM Reasoning
+              </span>
+            }
+            action={
+              <span className="rounded bg-violet/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet">
+                AI-generated · 8s clip
+              </span>
+            }
+          >
+            <div className="relative rounded-lg border border-violet/25 bg-[linear-gradient(135deg,hsl(270_95%_65%/0.06),hsl(270_95%_65%/0.02))] p-4 text-base leading-relaxed text-muted-foreground">
+              {parseEventText(event.vlmReasoning)}
+            </div>
+          </DetailDrawerSection>
+        )}
+
+        {/* Detected By */}
+        <DetailDrawerSection data-slot="dismissed-drawer-model" title="Detected By">
+          <ModelCard item={item} />
+        </DetailDrawerSection>
+
+        {/* Detection Details */}
+        <DetailDrawerSection data-slot="dismissed-drawer-details" title="Detection Details">
+          <DetailGrid item={item} />
+        </DetailDrawerSection>
+
+        {/* Detection Confidence (parity with active event drawer) */}
+        <DetectionConfidenceSection data-slot="dismissed-drawer-confidence" event={event} />
+
+        {/* Entities Involved */}
+        {eventEntities.length > 0 && (
+          <DetailDrawerSection
+            data-slot="dismissed-drawer-entities"
+            title="Entities Involved"
+            action={
+              <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
+                {eventEntities.length}
+              </span>
+            }
+          >
+            <div className="space-y-2">
+              {eventEntities.map(({ id, entity }) => (
+                <EventEntityCard key={id} entityId={id} entity={entity} />
+              ))}
+            </div>
+          </DetailDrawerSection>
+        )}
+      </DetailDrawerBody>
+
+      {/* Footer */}
+      <DetailDrawerFooter data-slot="dismissed-drawer-footer">
+        <DetailDrawerFooterStart className="gap-2">
           <Button
             size="sm"
             className="gap-1.5"
@@ -309,11 +271,11 @@ export function DismissedDrawer({ item, open, onClose, onRestore }: DismissedDra
             <RotateCcw className="size-3.5" />
             Restore to Feed
           </Button>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawerFooterStart>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          Close
+        </Button>
+      </DetailDrawerFooter>
+    </DetailDrawer>
   );
 }

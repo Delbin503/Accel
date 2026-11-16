@@ -1,7 +1,7 @@
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/providers/ThemeProvider";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { useTheme } from "@/providers/theme-context";
+import { cn } from "@accel/ui/lib/utils";
 
 interface ThemeToggleProps {
   className?: string;

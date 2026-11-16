@@ -1,5 +1,5 @@
 import { Brain, Cpu, TriangleAlert, Video } from "lucide-react";
-import { NAV_GROUPS, type NavGroup, type NavItem } from "@/components/layout/AppSidebar";
+import { NAV_GROUPS, type NavGroup, type NavItem } from "@/components/app/nav-groups";
 import DetectionFeedPage from "@/pages/detection-feed";
 import { ReidLiveMonitoring } from "./ReidLiveMonitoring";
 import { ReidModelManagement } from "./ReidModelManagement";

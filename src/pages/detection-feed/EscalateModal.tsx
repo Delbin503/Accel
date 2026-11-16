@@ -5,16 +5,16 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { cn } from "@accel/ui/lib/utils";
 import type { DetectionEvent, Severity } from "@/types/detection";
 import type { CaseAssignee } from "@/types/incidents";
 import { ASSIGNEES } from "@/mocks/incidentCases";
-import { ChoiceDropdown } from "@/components/shared/ChoiceDropdown";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
+import { ChoiceDropdown } from "@accel/ui/components/shared/ChoiceDropdown";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 
 export interface EscalateFormData {
   title: string;
@@ -54,26 +54,42 @@ export function EscalateModal({
   onConfirm,
 }: EscalateModalProps) {
   const isBulk = (bulkCount ?? 0) > 1;
-  const [pickedSev, setPickedSev] = React.useState<Severity>("medium");
+  // Prefill for the event (or bulk selection) — null leaves the field as is.
+  const prefill = (): { sev: Severity; title: string } | null =>
+    !open
+      ? null
+      : event
+        ? { sev: event.severity, title: `${event.typeLabel} — ${event.siteDisplay} ${event.camera}` }
+        : isBulk
+          ? { sev: "medium", title: `Bulk escalation — ${bulkCount} selected events` }
+          : null;
+  const [pickedSev, setPickedSev] = React.useState<Severity>(() => prefill()?.sev ?? "medium");
   const [assignee, setAssignee] = React.useState<CaseAssignee>(ASSIGNEES[0]);
   const [notes, setNotes] = React.useState("");
-  const [title, setTitle] = React.useState("");
+  const [title, setTitle] = React.useState(() => prefill()?.title ?? "");
   const [titleErr, setTitleErr] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
+  // Re-prefill when the modal opens or its target changes (adjusted during
+  // render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ open, event, isBulk, bulkCount });
+  if (
+    prevSync.open !== open ||
+    prevSync.event !== event ||
+    prevSync.isBulk !== isBulk ||
+    prevSync.bulkCount !== bulkCount
+  ) {
+    setPrevSync({ open, event, isBulk, bulkCount });
     if (open) {
-      if (event) {
-        setPickedSev(event.severity);
-        setTitle(`${event.typeLabel} — ${event.siteDisplay} ${event.camera}`);
-      } else if (isBulk) {
-        setPickedSev("medium");
-        setTitle(`Bulk escalation — ${bulkCount} selected events`);
+      const next = prefill();
+      if (next) {
+        setPickedSev(next.sev);
+        setTitle(next.title);
       }
       setNotes("");
       setAssignee(ASSIGNEES[0]);
       setTitleErr(null);
     }
-  }, [open, event, isBulk, bulkCount]);
+  }
 
   const sla = SLA_BY_SEVERITY[pickedSev];
 

@@ -1,10 +1,56 @@
-image: node:20
+image: node:22
+
+definitions:
+  caches:
+    npm: ~/.npm
+  steps:
+    # Design-system quality gates — run on every pull request.
+    - step: &checks
+        name: Lint guardrails, changelog, typecheck, tests, build
+        clone:
+          depth: full          # the changelog check diffs against the PR's target branch
+        caches:
+          - npm
+        script:
+          - npm ci
+          # packages/ui changes need a CHANGELOG entry (or a version bump)
+          - git fetch origin "$BITBUCKET_PR_DESTINATION_BRANCH"
+          - npm run lint:changelog
+          # Token / layer-name / registry guardrails (must pass)
+          - npm run lint:tokens
+          - npm run lint:slots
+          - npm run lint:components
+          - npm run build                 # tsc -b + vite build
+          - npm run typecheck:prototypes
+          - npm test
+          # ESLint gates everything except run-analysis, which is still being
+          # reworked; once it lints clean, drop the --ignore-pattern and the
+          # second (report-only) line.
+          - npx eslint . --ignore-pattern "src/pages/run-analysis/**"
+          - npx eslint "src/pages/run-analysis/**" || true
+    - step: &a11y
+        name: Storybook build + accessibility (axe, light and dark)
+        caches:
+          - npm
+        script:
+          - apt-get update && apt-get install -y --no-install-recommends chromium
+          - npm ci
+          - npm run build-storybook -- --quiet
+          - CHROME_PATH=/usr/bin/chromium node scripts/check-a11y.mjs
+        artifacts:
+          - .ds-ops-reports/**
 
 pipelines:
+  pull-requests:
+    "**":
+      - parallel:
+          - step: *checks
+          - step: *a11y
   branches:
     main:
       - step:
           name: Deploy to Vercel
+          image: node:20
           caches:
             - node
           script:

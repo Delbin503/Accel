@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@accel/ui/components/shared/Modal";
 import { MOCK_CAMERAS } from "@/mocks/cameras";
 import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import type { DayRecording } from "@/mocks/dayRecordings";

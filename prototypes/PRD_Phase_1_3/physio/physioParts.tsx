@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 import {
   EXERCISES, HEALTHY, LIMIT, MOMENTS, BASELINE, compAt, fmtClock, gaitHip, gaitPhase, kneeAt, momentTime, repsOf, type Moment, type Rep, type View,
 } from "./physioSession";

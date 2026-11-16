@@ -25,22 +25,22 @@ import {
   GripVertical,
   Save,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-import { cn } from "@/lib/utils";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
+import { cn } from "@accel/ui/lib/utils";
 import { cameraFrame, OFFLINE_FRAME } from "@/mocks/cameraFrames";
 import { useCamerasStore } from "@/stores/useCamerasStore";
 import { useSitesStore } from "@/stores/useSitesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { useLiveMonitoringStore, type CustomLayout, type CustomTile } from "@/stores/useLiveMonitoringStore";
 import type { CameraData } from "@/types/cameras";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 
 /* ── View modes ──────────────────────────────────────────────────────── */
 
@@ -627,7 +627,7 @@ function GridSizeControl({
           +
         </Button>
       </div>
-      <span className="text-muted-foreground/60">×</span>
+      <span className="text-muted-foreground">×</span>
       {/* Rows */}
       <div className="inline-flex items-center gap-0.5">
         <Button
@@ -947,7 +947,7 @@ function CustomView({
             })}
           </div>
           {editing && (
-            <p className="mt-3 text-center text-xs text-muted-foreground/70">
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               Grid is {GRID_COLS}×{GRID_ROWS} · Drag the corner handle to resize · Drop on the grid to reposition
             </p>
           )}
@@ -1057,13 +1057,12 @@ export default function LiveMonitoringPage({
     });
   }, [allCameras, siteFilter, search, pinned]);
 
-  React.useEffect(() => {
-    if (!selectedCameraId && filteredCameras.length > 0) {
-      setSelectedCameraId(filteredCameras[0].id);
-    } else if (selectedCameraId && !filteredCameras.find((c) => c.id === selectedCameraId)) {
-      setSelectedCameraId(filteredCameras[0]?.id ?? "");
-    }
-  }, [filteredCameras, selectedCameraId]);
+  // Keep the selection on a visible camera (adjusted during render, not in an effect).
+  if (!selectedCameraId && filteredCameras.length > 0) {
+    setSelectedCameraId(filteredCameras[0].id);
+  } else if (selectedCameraId && !filteredCameras.find((c) => c.id === selectedCameraId)) {
+    setSelectedCameraId(filteredCameras[0]?.id ?? "");
+  }
 
   const selectedSiteInfo =
     siteFilter.length === 1 ? sites.find((s) => s.id === siteFilter[0]) :

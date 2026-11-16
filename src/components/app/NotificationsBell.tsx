@@ -1,9 +1,9 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
 import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import { NotificationsDrawer } from "@/components/app/NotificationsDrawer";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils";
 
 interface NotificationsBellProps {
   className?: string;

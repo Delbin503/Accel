@@ -25,11 +25,11 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/command";
+import { Button } from "@accel/ui/components/ui/button";
+import { Skeleton } from "@accel/ui/components/ui/skeleton";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { cn } from "@accel/ui/lib/utils";
 import {
   useGlobalSearch,
   matches,

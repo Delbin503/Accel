@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ArrowUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
+import { Button } from "@accel/ui/components/ui/button";
+import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/app/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
 import { SystemStatusMenu } from "@/components/app/SystemStatusMenu";
@@ -12,7 +12,7 @@ import { UserMenu } from "@/components/app/UserMenu";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@accel/ui/components/ui/tooltip";
 /* Phase 1.3's System Configuration, merged into Phase 1: the real page plus the
    weekly Recording Schedule under Camera Defaults and a frame-rate dropdown. */
 import { SystemConfigRecording } from "../PRD_Phase_1_3/SystemConfigRecording";

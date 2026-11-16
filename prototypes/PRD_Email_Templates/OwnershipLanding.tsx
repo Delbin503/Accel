@@ -2,7 +2,7 @@ import * as React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/layout/AppSidebar";
+import { AppSidebar, SidebarProvider, SidebarTrigger } from "@/components/app/AppSidebar";
 import { ProtoBreadcrumb } from "../_shared/ProtoBreadcrumb";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
 import { SystemStatusMenu } from "@/components/app/SystemStatusMenu";

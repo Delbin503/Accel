@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Search,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
@@ -14,19 +13,19 @@ import {
   MapPin,
   Database,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_CAMERAS, CAMERA_SITES, CAMERA_AREAS } from "@/mocks/cameras";
 import { MOCK_NVRS } from "@/mocks/nvr";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { ListLoadingState, ListErrorState } from "@/components/shared/PageStates";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
+import { ListLoadingState, ListErrorState } from "@accel/ui/components/shared/PageStates";
 import { storageBandFor } from "@/types/nvr";
 import type { CameraData } from "@/types/cameras";
 import type { NvrData } from "@/types/nvr";
@@ -338,15 +337,7 @@ function FilterPanel({
 
       {open && (
         <div data-slot="device-health-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by ID, name, or IP…"
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search by ID, name, or IP…" className="sm:w-full" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { key: "site"   as const, label: "Site",   opts: CAMERA_SITES },
@@ -447,6 +438,80 @@ export default function DeviceHealthPage({
     setPage(1);
   }
 
+  const deviceColumns: DataTableColumn<DeviceRow>[] = [
+    {
+      key: "id",
+      header: "DEVICE ID",
+      cell: (d) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {d.id}
+        </span>
+      ),
+    },
+    {
+      key: "name",
+      header: "NAME",
+      cell: (d) => (
+        <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
+          {d.name}
+        </span>
+      ),
+    },
+    { key: "type", header: "TYPE", cell: (d) => <TypePill type={d.type} /> },
+    { key: "status", header: "STATUS", cell: (d) => <HealthPill status={d.health} /> },
+    {
+      key: "location",
+      header: "LOCATION",
+      className: "text-muted-foreground",
+      headClassName: "",
+      cell: (d) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground">{d.areaName}</span>
+          <span className="inline-flex items-center gap-1 text-xs">
+            <MapPin className="size-2.5" />
+            {d.siteName}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "ip",
+      header: "IP",
+      className: "font-mono text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (d) => d.ip,
+    },
+    {
+      key: "disk",
+      header: "DISK USAGE",
+      cell: (d) =>
+        d.type === "nvr" && d.diskPct != null && d.diskBand && d.diskDisplay ? (
+          <DiskBar pct={d.diskPct} band={d.diskBand} display={d.diskDisplay} />
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Database className="size-3 opacity-50" />
+            n/a
+          </span>
+        ),
+    },
+    {
+      key: "lastSync",
+      header: "LAST SYNC",
+      className: "text-muted-foreground",
+      headClassName: "",
+      cell: (d) => (
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-sm",
+            d.health === "online" ? "text-success" : "text-muted-foreground"
+          )}
+        >
+          {d.lastSeenDisplay}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div data-slot="device-health-page" className="flex flex-col gap-4">
       <PageHeader>
@@ -545,74 +610,14 @@ export default function DeviceHealthPage({
         </div>
       ) : (
         <div data-slot="device-health-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="text-base w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent has-aria-expanded:bg-transparent border-b border-border text-left">
-                  {["DEVICE ID", "NAME", "TYPE", "STATUS", "LOCATION", "IP", "DISK USAGE", "LAST SYNC"].map((h) => (
-                    <TableHead
-                      key={h}
-                      className="h-auto font-bold whitespace-normal px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {pageItems.map((d) => (
-                  <TableRow
-                    key={d.id}
-                    onClick={() => openDevice(d)}
-                    className="has-aria-expanded:bg-transparent group cursor-pointer text-base transition-colors hover:bg-muted/20"
-                  >
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                        {d.id}
-                      </span>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <span className="font-semibold text-foreground transition-colors group-hover:text-primary-ink">
-                        {d.name}
-                      </span>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3"><TypePill type={d.type} /></TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3"><HealthPill status={d.health} /></TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{d.areaName}</span>
-                        <span className="inline-flex items-center gap-1 text-xs">
-                          <MapPin className="size-2.5" />
-                          {d.siteName}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-sm text-muted-foreground">{d.ip}</TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      {d.type === "nvr" && d.diskPct != null && d.diskBand && d.diskDisplay ? (
-                        <DiskBar pct={d.diskPct} band={d.diskBand} display={d.diskDisplay} />
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/60">
-                          <Database className="size-3 opacity-50" />
-                          n/a
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 text-muted-foreground">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 text-sm",
-                          d.health === "online" ? "text-success" : "text-muted-foreground"
-                        )}
-                      >
-                        {d.lastSeenDisplay}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={deviceColumns}
+            data={pageItems}
+            getRowId={(d) => d.id}
+            onRowClick={openDevice}
+            getRowClassName={() => "transition-colors"}
+          />
 
           {/* Pagination */}
           <div data-slot="device-health-page-pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
@@ -630,7 +635,7 @@ export default function DeviceHealthPage({
                 <ChevronLeft className="size-3.5" />
               </Button>
               <span className="px-2 text-sm text-foreground">
-                {page} <span className="text-muted-foreground/60">of {pageCount}</span>
+                {page} <span className="text-muted-foreground">of {pageCount}</span>
               </span>
               <Button variant="outline" size="icon-sm"
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}

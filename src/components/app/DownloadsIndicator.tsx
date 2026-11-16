@@ -1,9 +1,9 @@
 import { Download, Package } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { formatBytes } from "@/lib/formatters";
+import { Button } from "@accel/ui/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Progress } from "@accel/ui/components/ui/progress";
+import { cn } from "@accel/ui/lib/utils";
+import { formatBytes } from "@accel/ui/lib/formatters";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
 
 /* Top-bar download button. A plain download icon; while an export runs, a

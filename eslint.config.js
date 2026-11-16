@@ -123,8 +123,8 @@ export default defineConfig([
   {
     // Enforce the design system in app code (not stories/foundations docs, which
     // name banned patterns as examples, nor the .storybook config).
-    files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/**/*.stories.{ts,tsx}', 'src/foundations/**', '.storybook/**'],
+    files: ['src/**/*.{ts,tsx}', 'packages/ui/src/**/*.{ts,tsx}'],
+    ignores: ['**/*.stories.{ts,tsx}', 'packages/ui/src/foundations/**', '.storybook/**'],
     rules: {
       'no-restricted-syntax': designSystemGuardrails,
     },
@@ -135,6 +135,30 @@ export default defineConfig([
     files: ['src/pages/**/*.{ts,tsx}', 'prototypes/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': pageGuardrails,
+    },
+  },
+  {
+    // The design-system package stands alone: no app imports ("@/…") and no
+    // self-imports through "@accel/ui" — use relative paths inside the package.
+    // (Components added with the shadcn CLI arrive with "@accel/ui/…" imports;
+    // make them relative.)
+    files: ['packages/ui/src/**/*.{ts,tsx}', 'packages/ui/test/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['@/*'], message: 'packages/ui must not import app code (@/…). Move the dependency into the package or keep the component in the app.' },
+          { group: ['@accel/ui', '@accel/ui/*'], message: 'Inside packages/ui, import with relative paths, not @accel/ui.' },
+        ],
+      }],
+    },
+  },
+  {
+    // Entry files mount the app with createRoot; they are never a Fast Refresh
+    // boundary, so "only export components" doesn't apply (Vite's templates
+    // exempt main.tsx the same way). Keep shared components out of them.
+    files: ['src/main.tsx', 'prototypes/main.tsx', 'prototypes/PRD_*/index.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

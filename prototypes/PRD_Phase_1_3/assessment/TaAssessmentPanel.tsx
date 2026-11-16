@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Radio } from "lucide-react";
-import { KpiCard } from "@/components/shared/KpiCard";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { KpiCard } from "@accel/ui/components/shared/KpiCard";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
 import {
   GROUP_RESULTS, SESSION_STATUS_LABEL, TA_AREAS, USE_CASES, useDevicesStore, useSessionsStore,
   type SessionStatus, type UseCaseKey,
 } from "./taData";
 import { TA_RESULT_PATH, TA_ROUTES } from "./taNav";
-import { Button } from "@/components/ui/button";
-import { ItemButton } from "@/components/ui/item";
+import { Button } from "@accel/ui/components/ui/button";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* Golf, Gym and Physio Assessment — one panel each on the customizable
    dashboard, so each can be placed or removed on its own and shows only its

@@ -1,8 +1,8 @@
 import * as React from "react";
 import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { cn } from "@accel/ui/lib/utils";
 import { AccelMark } from "./AccelMark";
 
 const LENGTH = 6;

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -23,25 +23,35 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
-import { formatDate, formatTimeOfDay } from "@/lib/formatters";
+import { Button } from "@accel/ui/components/ui/button";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@accel/ui/components/ui/tooltip";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
+import { formatDate, formatTimeOfDay } from "@accel/ui/lib/formatters";
 import { findSiteById } from "@/mocks/sites";
 import { TONE_CLASSES, typeById, type RecordingTypeId } from "@/lib/recordingTypes";
 import { ALL_RECORDINGS, DAYS, cameraDayFiles, fmtSize, motionClipsFor, videoPartsFor, type DayRecording } from "@/mocks/dayRecordings";
 import { EMPTY_FILTERS, type RecordingFilters } from "./recordingFilters";
 import { FilterPanel } from "./RecordingsFilterPanel";
 import { RecordingPlayerModal } from "./RecordingPlayerModal";
-import { FloatingBar } from "@/components/shared/FloatingBar";
+import { FloatingBar } from "@accel/ui/components/shared/FloatingBar";
 import { MOCK_NVRS } from "@/mocks/nvr";
 import { MOCK_RECORDINGS } from "@/mocks/recordings";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
@@ -164,8 +174,7 @@ function recDate(rec: DayRecording): { date: string; time: string } {
 
 /* Built like the User Management table — same header, dividers, ID column,
    pills and "⋯" action menu — so the two lists read alike. */
-const HEAD = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60";
-const CELL = "px-4 py-3";
+const HEAD = "whitespace-nowrap px-4 py-2.5 font-mono text-2xs font-normal uppercase tracking-[0.15em] text-muted-foreground";
 const MENU_ITEM = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted";
 
 function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleAll, onToggleBookmark, onOpen, onDelete }: {
@@ -178,122 +187,143 @@ function RecordingTable({ items, selectedIds, bookmarkedIds, onToggle, onToggleA
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const selectedHere = items.filter((r) => selectedIds.has(r.id)).length;
-  const all = selectedHere === items.length;
+  const columns: DataTableColumn<DayRecording>[] = [
+    {
+      key: "id",
+      header: "REC ID",
+      headClassName: HEAD,
+      cell: (rec) => (
+        <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {rec.id}
+        </span>
+      ),
+    },
+    /* About a third of the row: wide enough to read, never the whole gap,
+       and it truncates rather than push the table past the page. */
+    {
+      key: "recording",
+      header: "Recording",
+      className: "w-[34%] max-w-0",
+      headClassName: HEAD,
+      cell: (rec) => (
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+            <Video className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <TruncatedText text={rec.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
+              {/* A bookmark keeps a recording out of any delete. */}
+              {bookmarkedIds.has(rec.id) && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
+            </div>
+            <TruncatedText text={`${rec.cameraId} · ${rec.areaName} · ${rec.siteName}`} className="text-xs text-muted-foreground" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      headClassName: HEAD,
+      cell: (rec) => (
+        <div className="flex flex-col items-start gap-1">
+          <TypeChip type={rec.type} />
+          {/* Plain text, so the type pill stays the one thing that reads as a type. */}
+          {rec.standby && (
+            <span className="whitespace-nowrap pl-1 text-xs text-muted-foreground">
+              + standby
+              {rec.standby.clipCount > 0 && `, ${rec.standby.clipCount} motion clip${rec.standby.clipCount === 1 ? "" : "s"}`}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    /* Date over time, each with its icon as the other modules' tables show them. */
+    {
+      key: "date",
+      header: "Date",
+      className: "whitespace-nowrap",
+      headClassName: HEAD,
+      cell: (rec) => {
+        const { date, time } = recDate(rec);
+        return (
+          <>
+            <p className="flex items-center gap-1.5 text-sm text-foreground">
+              <Calendar className="size-3 shrink-0 text-muted-foreground" />
+              {date}
+            </p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3 shrink-0" />
+              {time}
+            </p>
+          </>
+        );
+      },
+    },
+    {
+      key: "duration",
+      header: "Duration / Size",
+      className: "whitespace-nowrap",
+      headClassName: HEAD,
+      cell: (rec) => (
+        <>
+          <p className="text-foreground">{rec.durationDisplay}</p>
+          <p className="text-xs text-muted-foreground">{rec.fileSizeDisplay}</p>
+        </>
+      ),
+    },
+    {
+      key: "action",
+      header: "Action",
+      headClassName: HEAD,
+      stopRowClick: true,
+      cell: (rec) => {
+        const bookmarked = bookmarkedIds.has(rec.id);
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${rec.id} · ${rec.cameraName}`} className="size-7 rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-44 p-1" align="end">
+              <ItemButton variant="plain" onClick={() => onOpen(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
+                <Play className="size-3.5 text-muted-foreground" />
+                View recording
+              </ItemButton>
+              <ItemButton variant="plain" onClick={() => onToggleBookmark(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
+                <Star className={cn("size-3.5", bookmarked ? "fill-warning text-warning" : "text-muted-foreground")} />
+                {bookmarked ? "Remove bookmark" : "Bookmark"}
+              </ItemButton>
+              <div className="my-1 border-t border-border" />
+              <ItemButton variant="plain" onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-severity-critical hover:bg-severity-critical/10")}>
+                <Trash2 className="size-3.5" />
+                Delete
+              </ItemButton>
+            </PopoverContent>
+          </Popover>
+        );
+      },
+    },
+  ];
+
   return (
     <div data-slot="recording-table" className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="overflow-x-auto">
-        <Table className="w-full">
-          <TableHeader className="bg-muted/30">
-            <TableRow className="border-0 hover:bg-transparent border-b border-border text-left">
-              <TableHead className={cn("h-auto px-0 whitespace-normal text-current", HEAD, "w-10 [&:has([role=checkbox])]:pr-4 [&>[role=checkbox]]:translate-y-0")}>
-                <Checkbox
-                  checked={all ? true : selectedHere > 0 ? "indeterminate" : false}
-                  onCheckedChange={() => onToggleAll(!all)}
-                  aria-label="Select every recording on this page"
-                />
-              </TableHead>
-              {["REC ID", "Recording", "Type", "Date", "Duration / Size", "Action"].map((h) => (
-                <TableHead key={h} className={cn("h-auto px-0 whitespace-normal text-current", HEAD)}>{h}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-border/60">
-            {items.map((rec) => {
-              const selected = selectedIds.has(rec.id);
-              const bookmarked = bookmarkedIds.has(rec.id);
-              const label = `${rec.id} · ${rec.cameraName}`;
-              const { date, time } = recDate(rec);
-              return (
-                <TableRow
-                  key={rec.id}
-                  tabIndex={0}
-                  onClick={() => onOpen(rec.id)}
-                  onKeyDown={(e) => e.key === "Enter" && onOpen(rec.id)}
-                  className={cn("border-b-0 hover:bg-transparent", "group cursor-pointer text-base transition-colors hover:bg-muted/20", selected && "bg-primary/5")}
-                >
-                  <TableCell className={cn("p-0 whitespace-normal", CELL, "[&:has([role=checkbox])]:pr-4 [&>[role=checkbox]]:translate-y-0")} onClick={(e) => e.stopPropagation()}>
-                    <Checkbox checked={selected} onCheckedChange={() => onToggle(rec.id)} aria-label={`Select ${label}`} />
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", CELL)}>
-                    <span className="whitespace-nowrap font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                      {rec.id}
-                    </span>
-                  </TableCell>
-                  {/* About a third of the row: wide enough to read, never the whole gap,
-                      and it truncates rather than push the table past the page. */}
-                  <TableCell className={cn("p-0 whitespace-normal", CELL, "w-[34%] max-w-0")}>
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-                        <Video className="size-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <TruncatedText text={rec.cameraName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
-                          {/* A bookmark keeps a recording out of any delete. */}
-                          {bookmarked && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Bookmarked" />}
-                        </div>
-                        <TruncatedText text={`${rec.cameraId} · ${rec.areaName} · ${rec.siteName}`} className="text-xs text-muted-foreground" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", CELL)}>
-                    <div className="flex flex-col items-start gap-1">
-                      <TypeChip type={rec.type} />
-                      {/* Plain text, so the type pill stays the one thing that reads as a type. */}
-                      {rec.standby && (
-                        <span className="whitespace-nowrap pl-1 text-xs text-muted-foreground">
-                          + standby
-                          {rec.standby.clipCount > 0 && `, ${rec.standby.clipCount} motion clip${rec.standby.clipCount === 1 ? "" : "s"}`}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  {/* Date over time, each with its icon as the other modules' tables show them. */}
-                  <TableCell className={cn("p-0 whitespace-normal", CELL, "whitespace-nowrap")}>
-                    <p className="flex items-center gap-1.5 text-sm text-foreground">
-                      <Calendar className="size-3 shrink-0 text-muted-foreground" />
-                      {date}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="size-3 shrink-0" />
-                      {time}
-                    </p>
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", CELL, "whitespace-nowrap")}>
-                    <p className="text-foreground">{rec.durationDisplay}</p>
-                    <p className="text-xs text-muted-foreground">{rec.fileSizeDisplay}</p>
-                  </TableCell>
-                  <TableCell className={cn("p-0 whitespace-normal", CELL)} onClick={(e) => e.stopPropagation()}>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${label}`} className="size-7 rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground dark:hover:bg-muted">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-44 p-1" align="end">
-                        <ItemButton variant="plain" onClick={() => onOpen(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
-                          <Play className="size-3.5 text-muted-foreground" />
-                          View recording
-                        </ItemButton>
-                        <ItemButton variant="plain" onClick={() => onToggleBookmark(rec.id)} className={cn(MENU_ITEM, "text-foreground")}>
-                          <Star className={cn("size-3.5", bookmarked ? "fill-warning text-warning" : "text-muted-foreground")} />
-                          {bookmarked ? "Remove bookmark" : "Bookmark"}
-                        </ItemButton>
-                        <div className="my-1 border-t border-border" />
-                        <ItemButton variant="plain" onClick={() => onDelete(rec.id)} className={cn(MENU_ITEM, "text-severity-critical hover:bg-severity-critical/10")}>
-                          <Trash2 className="size-3.5" />
-                          Delete
-                        </ItemButton>
-                      </PopoverContent>
-                    </Popover>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        variant="list"
+        columns={columns}
+        data={items}
+        getRowId={(rec) => rec.id}
+        onRowClick={(rec) => onOpen(rec.id)}
+        getRowClassName={(rec) => cn("transition-colors", selectedIds.has(rec.id) && "bg-primary/5 data-[state=selected]:bg-primary/5")}
+        selection={{
+          selectedIds,
+          onToggle: (id) => onToggle(id),
+          onToggleAll: (checked) => onToggleAll(checked),
+          selectAllLabel: "Select every recording on this page",
+          getRowLabel: (rec) => `Select ${rec.id} · ${rec.cameraName}`,
+        }}
+      />
     </div>
   );
 }
@@ -310,37 +340,34 @@ function hoursSource(rec: DayRecording): string | null {
 function InfoGrid({ rec }: { rec: DayRecording }) {
   const { date } = recDate(rec);
   const source = hoursSource(rec);
-  const rows: [string, React.ReactNode][] = [
-    ["Recording ID", <span className="font-mono text-xs">{rec.id}</span>],
-    ["Type", <TypeChip type={rec.type} />],
-    ["Camera", <span className="font-mono text-xs">{rec.cameraId}</span>],
-    ["Camera Name", rec.cameraName],
-    ["Site", rec.siteName],
-    ["Area", rec.areaName],
-    ["NVR", <span className="inline-flex items-center gap-1.5"><HardDrive className="size-3 text-info" /><span className="font-mono">{rec.nvrId ?? "—"}</span></span>],
-    ["Resolution", <span className="font-mono text-xs">{rec.resolution} · {rec.fps} fps</span>],
-    ["Date", date],
-    ["Window", <span className="font-mono text-xs">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>],
-    ["Duration", <span className="font-mono text-xs">{rec.durationDisplay}</span>],
-    ["Size", <span className="font-mono text-xs">{rec.fileSizeDisplay}</span>],
-    ...(rec.standby
-      ? ([
-          ["Standby Window", <span className="font-mono text-xs">{rec.standby.startsAtDisplay} – {rec.standby.endsAtDisplay} · {rec.standby.durationDisplay}</span>],
-          ["Motion-Based Clips", <span className="font-mono text-xs">{rec.standby.clipCount} · {rec.standby.motion?.durationDisplay} in total</span>],
-        ] as [string, React.ReactNode][])
-      : []),
-    ...(source ? [["Hours From", source] as [string, React.ReactNode]] : []),
-  ];
-
   return (
-    <div data-slot="recording-info-grid" className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-      {rows.map(([label, value]) => (
-        <div key={label} className="flex flex-col gap-0.5">
-          <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-          <span className="text-base font-medium text-foreground">{value}</span>
-        </div>
-      ))}
-    </div>
+    <DescriptionList data-slot="recording-info-grid" columns={2} variant="card">
+      <DescriptionItem label="Recording ID" mono>{rec.id}</DescriptionItem>
+      <DescriptionItem label="Type"><TypeChip type={rec.type} /></DescriptionItem>
+      <DescriptionItem label="Camera" mono>{rec.cameraId}</DescriptionItem>
+      <DescriptionItem label="Camera Name">{rec.cameraName}</DescriptionItem>
+      <DescriptionItem label="Site">{rec.siteName}</DescriptionItem>
+      <DescriptionItem label="Area">{rec.areaName}</DescriptionItem>
+      <DescriptionItem label="NVR">
+        <span className="inline-flex items-center gap-1.5"><HardDrive className="size-3 text-info" /><span className="font-mono">{rec.nvrId ?? "—"}</span></span>
+      </DescriptionItem>
+      <DescriptionItem label="Resolution" mono>{rec.resolution} · {rec.fps} fps</DescriptionItem>
+      <DescriptionItem label="Date">{date}</DescriptionItem>
+      <DescriptionItem label="Window" mono>{rec.startsAtDisplay} – {rec.endsAtDisplay}</DescriptionItem>
+      <DescriptionItem label="Duration" mono>{rec.durationDisplay}</DescriptionItem>
+      <DescriptionItem label="Size" mono>{rec.fileSizeDisplay}</DescriptionItem>
+      {rec.standby && (
+        <>
+          <DescriptionItem label="Standby Window" mono>
+            {rec.standby.startsAtDisplay} – {rec.standby.endsAtDisplay} · {rec.standby.durationDisplay}
+          </DescriptionItem>
+          <DescriptionItem label="Motion-Based Clips" mono>
+            {rec.standby.clipCount} · {rec.standby.motion?.durationDisplay} in total
+          </DescriptionItem>
+        </>
+      )}
+      {source && <DescriptionItem label="Hours From">{source}</DescriptionItem>}
+    </DescriptionList>
   );
 }
 
@@ -377,7 +404,7 @@ function PlayRow({ rec, title, onPlay, selected, onSelect }: {
           <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="size-2.5" />
             <span className="font-mono">{rec.startsAtDisplay} – {rec.endsAtDisplay}</span>
-            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground">·</span>
             <span className="font-mono">{rec.durationDisplay}</span>
           </span>
         </span>
@@ -429,149 +456,146 @@ export function RecordingDrawer({ rec, open, bookmarked, onClose, onDelete, onEx
   const { date } = recDate(rec);
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0">
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <TypeChip type={rec.type} />
-                <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{rec.id}</span>
-              </div>
-              <SheetTitle className="mb-1 min-w-0 text-lg font-bold">
-                <TruncatedText text={`${rec.cameraName} · ${date}`} />
-              </SheetTitle>
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <Video className="size-3" />
-                {rec.cameraId}
-                <span className="text-muted-foreground/40">·</span>
-                <MapPin className="size-3" />
-                {rec.areaName} · {rec.siteName}
-                <span className="text-muted-foreground/40">·</span>
-                <Clock className="size-3" />
-                <span className="font-mono">{rec.durationDisplay}</span>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="font-mono">{rec.fileSizeDisplay}</span>
-              </div>
-            </div>
-            <div className="mt-0.5 flex flex-shrink-0 items-center gap-1">
-              <BookmarkButton
-                bookmarked={bookmarked}
-                onToggle={onToggleBookmark}
-                label={`${rec.id} · ${rec.cameraName}`}
-                className={cn("size-7", !bookmarked && "text-muted-foreground hover:text-foreground")}
-              />
-              <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close"
-                className="size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted">
-                <X className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </SheetHeader>
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
+      <DetailDrawerHeader
+        data-slot="recording-drawer-header"
+        actions={
+          <BookmarkButton
+            bookmarked={bookmarked}
+            onToggle={onToggleBookmark}
+            label={`${rec.id} · ${rec.cameraName}`}
+            className={cn("size-7", !bookmarked && "text-muted-foreground hover:text-foreground")}
+          />
+        }
+      >
+        <div className="flex flex-wrap items-center gap-1.5">
+          <TypeChip type={rec.type} />
+          <span className="rounded border border-border bg-muted px-1.5 py-px font-mono text-2xs text-muted-foreground">{rec.id}</span>
+        </div>
+        <DetailDrawerTitle>
+          <TruncatedText text={`${rec.cameraName} · ${date}`} />
+        </DetailDrawerTitle>
+        <DetailDrawerDescription>
+          <Video />
+          {rec.cameraId}
+          <span className="text-muted-foreground">·</span>
+          <MapPin />
+          {rec.areaName} · {rec.siteName}
+          <span className="text-muted-foreground">·</span>
+          <Clock />
+          <span className="font-mono">{rec.durationDisplay}</span>
+          <span className="text-muted-foreground">·</span>
+          <span className="font-mono">{rec.fileSizeDisplay}</span>
+        </DetailDrawerDescription>
+      </DetailDrawerHeader>
 
-        <div data-slot="recording-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
-          <div data-slot="recording-drawer-info">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording Info</p>
-            <InfoGrid rec={rec} />
-          </div>
+      <DetailDrawerBody data-slot="recording-drawer-body">
+        <DetailDrawerSection data-slot="recording-drawer-info" title="Recording Info">
+          <InfoGrid rec={rec} />
+        </DetailDrawerSection>
 
-          {/* The hours the camera was open for — the recording this row is. */}
-          <div data-slot="recording-drawer-hours">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Recording</p>
-              {/* Nothing to choose between when a day is one recording. */}
-              {multi && (
-                <label className="flex cursor-pointer items-center gap-2 text-2xs text-muted-foreground">
-                  <Checkbox
-                    checked={selected.size === items.length}
-                    onCheckedChange={() => setSelected(selected.size === items.length ? new Set() : new Set(allIds))}
-                    aria-label="Select every recording for export"
-                  />
-                  {selected.size} of {items.length} selected for export
-                </label>
-              )}
-            </div>
-            <div data-slot="recording-drawer-parts" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {parts.map((p) => (
+        {/* The hours the camera was open for — the recording this row is. */}
+        <DetailDrawerSection
+          data-slot="recording-drawer-hours"
+          title="Recording"
+          action={
+            /* Nothing to choose between when a day is one recording. */
+            multi && (
+              <label className="flex cursor-pointer items-center gap-2 text-2xs text-muted-foreground">
+                <Checkbox
+                  checked={selected.size === items.length}
+                  onCheckedChange={() => setSelected(selected.size === items.length ? new Set() : new Set(allIds))}
+                  aria-label="Select every recording for export"
+                />
+                {selected.size} of {items.length} selected for export
+              </label>
+            )
+          }
+        >
+          <div data-slot="recording-drawer-parts" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+            {parts.map((p) => (
+              <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
+                selected={multi ? selected.has(p.id) : undefined}
+                onSelect={multi ? () => toggle(p.id) : undefined}
+                title={<PartTitle type={rec.type} rec={p} />} />
+            ))}
+          </div>
+          {parts.length > 1 && maxMinutes && (
+            <p className="text-2xs text-muted-foreground">
+              Stored as {parts.length} videos of up to {formatVideoLength(maxMinutes)} each — Max. length per video
+              in System Configuration → NVR Defaults.
+            </p>
+          )}
+        </DetailDrawerSection>
+
+        {/* Operation only — the rest of the day. Standby covers the closed
+            hours, and the motion it caught splits into a clip each. */}
+        {standby && (
+          <DetailDrawerSection
+            data-slot="recording-drawer-standby"
+            title="Outside Operation Hours"
+            action={
+              <p className="text-2xs text-muted-foreground">
+                Standby · {standby.durationDisplay}
+                {standbyParts.length > 1 && ` in ${standbyParts.length} videos`}
+                {clips.length > 0 && ` · ${clips.length} motion clip${clips.length === 1 ? "" : "s"}`}
+              </p>
+            }
+          >
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+              {standbyParts.map((p) => (
                 <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
-                  selected={multi ? selected.has(p.id) : undefined}
-                  onSelect={multi ? () => toggle(p.id) : undefined}
-                  title={<PartTitle type={rec.type} rec={p} />} />
+                  selected={selected.has(p.id)}
+                  onSelect={() => toggle(p.id)}
+                  title={<PartTitle type="standby" rec={p} />} />
+              ))}
+              {clips.map((clip, i) => (
+                <PlayRow key={clip.id} rec={clip} onPlay={() => onPlay(clip)}
+                  selected={selected.has(clip.id)}
+                  onSelect={() => toggle(clip.id)}
+                  title={<><TypeChip type="motion" /><span className="text-xs text-foreground">Clip {i + 1} of {clips.length}</span></>} />
               ))}
             </div>
-            {parts.length > 1 && maxMinutes && (
-              <p className="mt-2 text-2xs text-muted-foreground">
-                Stored as {parts.length} videos of up to {formatVideoLength(maxMinutes)} each — Max. length per video
-                in System Configuration → NVR Defaults.
-              </p>
-            )}
-          </div>
+            <p className="text-2xs text-muted-foreground">
+              Standby runs from closing to opening. Motion-based recording runs inside it: each clip starts
+              when motion is detected and ends once it stops.
+            </p>
+          </DetailDrawerSection>
+        )}
+      </DetailDrawerBody>
 
-          {/* Operation only — the rest of the day. Standby covers the closed
-              hours, and the motion it caught splits into a clip each. */}
-          {standby && (
-            <div data-slot="recording-drawer-standby">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Outside Operation Hours</p>
-                <p className="text-2xs text-muted-foreground">
-                  Standby · {standby.durationDisplay}
-                  {standbyParts.length > 1 && ` in ${standbyParts.length} videos`}
-                  {clips.length > 0 && ` · ${clips.length} motion clip${clips.length === 1 ? "" : "s"}`}
-                </p>
-              </div>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-                {standbyParts.map((p) => (
-                  <PlayRow key={p.id} rec={p} onPlay={() => onPlay(p)}
-                    selected={selected.has(p.id)}
-                    onSelect={() => toggle(p.id)}
-                    title={<PartTitle type="standby" rec={p} />} />
-                ))}
-                {clips.map((clip, i) => (
-                  <PlayRow key={clip.id} rec={clip} onPlay={() => onPlay(clip)}
-                    selected={selected.has(clip.id)}
-                    onSelect={() => toggle(clip.id)}
-                    title={<><TypeChip type="motion" /><span className="text-xs text-foreground">Clip {i + 1} of {clips.length}</span></>} />
-                ))}
-              </div>
-              <p className="mt-2 text-2xs text-muted-foreground">
-                Standby runs from closing to opening. Motion-based recording runs inside it: each clip starts
-                when motion is detected and ends once it stops.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div data-slot="recording-drawer-footer" className="flex items-center justify-end gap-3 border-t border-border bg-card px-5 py-3.5">
-          {bookmarked && (
-            <p className="mr-auto inline-flex items-center gap-1.5 text-xs text-warning">
+      <DetailDrawerFooter data-slot="recording-drawer-footer">
+        {bookmarked && (
+          <DetailDrawerFooterStart>
+            <p className="inline-flex items-center gap-1.5 text-xs text-warning">
               <Lock className="size-3" />
               Bookmarked — remove the bookmark before it can be deleted.
             </p>
-          )}
-          {/* Export is never blocked by a bookmark — it takes a copy, it does not remove anything. */}
-          <Button
-            variant="outline"
-            className="gap-1.5"
-            disabled={chosen.length === 0}
-            onClick={() => onExport(chosen)}
-            aria-label={chosen.length === 0 ? "Select a recording to export" : `Export ${chosen.length} recording${chosen.length === 1 ? "" : "s"} from ${rec.id} as a zip`}
-          >
-            <Package className="size-3.5" />
-            Export{multi && ` (${chosen.length})`}
-          </Button>
-          <Button
-            variant="outline"
-            disabled={bookmarked}
-            aria-label={bookmarked ? `${rec.id} is bookmarked and cannot be deleted` : "Delete recording"}
-            className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
-            onClick={onDelete}
-          >
-            <Trash2 className="size-3.5" />
-            Delete Recording
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+          </DetailDrawerFooterStart>
+        )}
+        {/* Export is never blocked by a bookmark — it takes a copy, it does not remove anything. */}
+        <Button
+          variant="outline"
+          className="gap-1.5"
+          disabled={chosen.length === 0}
+          onClick={() => onExport(chosen)}
+          aria-label={chosen.length === 0 ? "Select a recording to export" : `Export ${chosen.length} recording${chosen.length === 1 ? "" : "s"} from ${rec.id} as a zip`}
+        >
+          <Package className="size-3.5" />
+          Export{multi && ` (${chosen.length})`}
+        </Button>
+        <Button
+          variant="outline"
+          disabled={bookmarked}
+          aria-label={bookmarked ? `${rec.id} is bookmarked and cannot be deleted` : "Delete recording"}
+          className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-3.5" />
+          Delete Recording
+        </Button>
+      </DetailDrawerFooter>
+    </DetailDrawer>
   );
 }
 
@@ -1033,7 +1057,7 @@ export default function RecordingsPage({
               <ChevronLeft className="size-3.5" />
             </Button>
             <span className="px-2 text-sm text-foreground">
-              {safePage} <span className="text-muted-foreground/60">of {pageCount}</span>
+              {safePage} <span className="text-muted-foreground">of {pageCount}</span>
             </span>
             <Button variant="outline" size="icon-sm" onClick={() => setPage(Math.min(pageCount, safePage + 1))} disabled={safePage === pageCount} aria-label="Next page"
               className="size-7 rounded border border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-transparent hover:text-foreground disabled:opacity-40 dark:border-border dark:bg-transparent dark:hover:bg-transparent">

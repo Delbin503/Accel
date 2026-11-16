@@ -13,15 +13,15 @@ import {
   SlidersHorizontal,
   Layers,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ItemButton } from "@/components/ui/item";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { KpiCard, KpiGrid } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { KpiCard, KpiGrid } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES, type ActivityKind, type ActivityLog } from "@/mocks/activityLogs";
 
 /* ── Date range filter ───────────────────────────────────────────────── */
@@ -295,13 +295,13 @@ export default function ActivityLogsPage() {
                   <p className="text-sm leading-snug text-foreground">
                     <ActivityText text={l.text} />
                   </p>
-                  <p className="mt-0.5 inline-flex items-center gap-2 text-2xs text-muted-foreground/80">
+                  <p className="mt-0.5 inline-flex items-center gap-2 text-2xs text-muted-foreground">
                     <span className="font-semibold">{l.actor.name}</span>
-                    <span className="text-muted-foreground/40">·</span>
+                    <span className="text-muted-foreground">·</span>
                     <span>{l.module}</span>
                     {l.ipAddress && (
                       <>
-                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-muted-foreground">·</span>
                         <span className="font-mono">{l.ipAddress}</span>
                       </>
                     )}
@@ -411,7 +411,7 @@ function TypeFilterDropdown({ options, selected, counts, onChange }: {
                 {checked && <Check className="size-2.5 text-primary-foreground" strokeWidth={3} />}
               </div>
               <span className="flex-1">{o.label}</span>
-              <span className="font-mono text-2xs text-muted-foreground/60">{count}</span>
+              <span className="font-mono text-2xs text-muted-foreground">{count}</span>
             </ItemButton>
           );
         })}

@@ -2,13 +2,11 @@ import * as React from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  Search,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   SlidersHorizontal,
   Check,
-  X,
   Users as UsersIcon,
   Shield,
   ShieldCheck,
@@ -33,24 +31,35 @@ import {
   ArrowRight,
   LoaderCircle,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { ItemButton } from "@/components/ui/item";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { cn } from "@/lib/utils";
-import { DEFAULT_DIAL_CODE, splitPhone } from "@/lib/dialCodes";
-import { PhoneField } from "@/components/shared/PhoneField";
+} from "@accel/ui/components/shared/Modal";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { Button } from "@accel/ui/components/ui/button";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { Input } from "@accel/ui/components/ui/input";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { cn } from "@accel/ui/lib/utils";
+import { DEFAULT_DIAL_CODE, splitPhone } from "@accel/ui/lib/dialCodes";
+import { PhoneField } from "@accel/ui/components/shared/PhoneField";
 import {
   MOCK_USERS,
   USER_SITES,
@@ -63,10 +72,10 @@ import {
 } from "@/mocks/users";
 import { MOCK_SEATS, ORG_LICENSE_INFO } from "@/mocks/licenses";
 import type { SitePermission, Suspension, UserData, UserRole, UserStatus } from "@/types/users";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 import { DEPARTMENTS } from "@/mocks/departments";
-import { OtpField } from "@/components/shared/OtpField";
+import { OtpField } from "@accel/ui/components/shared/OtpField";
 
 const DEPARTMENT_OPTIONS: { value: string; label: string }[] = DEPARTMENTS.map((d) => ({
   value: d,
@@ -315,15 +324,7 @@ function FilterPanel({
 
       {open && (
         <div data-slot="user-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by name, email, or user ID…"
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search by name, email, or user ID…" className="sm:w-full" />
           {/* One row — three columns on the main view, two when Status is hidden. */}
           <div data-slot="user-filter-panel-grid"
             className={cn(
@@ -372,17 +373,6 @@ function SitesCell({ user }: { user: UserData }) {
 }
 
 /* ── Drawer helpers ──────────────────────────────────────────────────────── */
-
-function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
-  return (
-    <div data-slot="section-title" className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
-    </div>
-  );
-}
 
 function StatCard({ label, value, valueClass, sub }: { label: string; value: React.ReactNode; valueClass?: string; sub?: React.ReactNode }) {
   // Derive accent from valueClass so the shared accent bar matches the value tint.
@@ -500,24 +490,12 @@ function SuspensionInfoCard({ suspension, onReinstate }: { suspension: Suspensio
           Reinstate
         </Button>
       </div>
-      <div data-slot="suspension-info-card-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended From</p>
-          <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.startedAtDisplay}</p>
-        </div>
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Ends</p>
-          <p className="mt-0.5 text-sm font-semibold text-severity-critical">{suspension.endsAtDisplay}</p>
-        </div>
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Suspended By</p>
-          <p className="mt-0.5 text-sm font-medium text-foreground">{suspension.suspendedBy}</p>
-        </div>
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Duration</p>
-          <p className="mt-0.5 text-sm font-medium text-foreground">{SUSPEND_DURATION_LABEL[suspension.preset]}</p>
-        </div>
-      </div>
+      <DescriptionList data-slot="suspension-info-card-details" columns={2} className="border-t border-severity-critical/15 pt-3 text-sm">
+        <DescriptionItem label="Suspended From">{suspension.startedAtDisplay}</DescriptionItem>
+        <DescriptionItem label="Ends"><span className="font-semibold text-severity-critical">{suspension.endsAtDisplay}</span></DescriptionItem>
+        <DescriptionItem label="Suspended By">{suspension.suspendedBy}</DescriptionItem>
+        <DescriptionItem label="Duration">{SUSPEND_DURATION_LABEL[suspension.preset]}</DescriptionItem>
+      </DescriptionList>
       {suspension.note && (
         <div data-slot="suspension-info-card-note" className="mt-3 rounded-lg border border-severity-critical/15 bg-card px-3 py-2.5">
           <p className="mb-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Note</p>
@@ -563,22 +541,13 @@ function DeletedAccountInfoCard({
           Restore
         </Button>
       </div>
-      <div data-slot="deleted-account-info-card-details" className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-severity-critical/15 pt-3">
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted On</p>
-          <p className="mt-0.5 text-sm font-semibold text-severity-critical">{deletedAtDisplay}</p>
-        </div>
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Deleted By</p>
-          <p className="mt-0.5 text-sm font-medium text-foreground">{deletedBy}</p>
-        </div>
+      <DescriptionList data-slot="deleted-account-info-card-details" columns={2} className="border-t border-severity-critical/15 pt-3 text-sm">
+        <DescriptionItem label="Deleted On"><span className="font-semibold text-severity-critical">{deletedAtDisplay}</span></DescriptionItem>
+        <DescriptionItem label="Deleted By">{deletedBy}</DescriptionItem>
         {deleteReason && (
-          <div className="col-span-2">
-            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Reason</p>
-            <p className="mt-0.5 text-sm leading-relaxed text-foreground">{deleteReason}</p>
-          </div>
+          <DescriptionItem label="Reason" wide><span className="font-normal leading-relaxed">{deleteReason}</span></DescriptionItem>
         )}
-      </div>
+      </DescriptionList>
     </div>
   );
 }
@@ -620,59 +589,38 @@ export function UserDrawer({
 }: UserDrawerProps) {
   const isDeleted = mode === "deleted";
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
-      >
+    <DetailDrawer open={open} onOpenChange={(v) => !v && onClose()} size="lg">
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <SheetHeader className="border-b border-border bg-card px-5 py-4">
+        <DetailDrawerHeader data-slot="user-drawer-header">
           {user ? (
-            <div data-slot="user-drawer-header" className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-1 items-start gap-3">
-                <Avatar user={user} size={44} />
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                    <RoleBadge role={user.role} />
-                    {user.isCurrentUser && (
-                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-                        You
-                      </span>
-                    )}
-                  </div>
-                  <SheetTitle className="min-w-0 text-lg font-bold">
-                    <TruncatedText text={user.fullName} />
-                  </SheetTitle>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {user.email}
-                    {user.lastSignInRelative && ` · Last sign-in: ${user.lastSignInRelative}`}
-                  </p>
+            <div className="flex min-w-0 items-start gap-3">
+              <Avatar user={user} size={44} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <RoleBadge role={user.role} />
+                  {user.isCurrentUser && (
+                    <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
+                      You
+                    </span>
+                  )}
                 </div>
+                <DetailDrawerTitle>
+                  <TruncatedText text={user.fullName} />
+                </DetailDrawerTitle>
+                <DetailDrawerDescription>
+                  {user.email}
+                  {user.lastSignInRelative && ` · Last sign-in: ${user.lastSignInRelative}`}
+                </DetailDrawerDescription>
               </div>
-              <Button variant="ghost" size="icon-sm"
-                onClick={onClose}
-                className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted mt-0.5 flex size-7 flex-shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-4" />
-              </Button>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-md text-muted-foreground">User not found</SheetTitle>
-              <Button variant="ghost" size="icon-sm"
-                onClick={onClose}
-                className="px-0 border-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
+            <DetailDrawerTitle className="text-md font-normal text-muted-foreground">User not found</DetailDrawerTitle>
           )}
-        </SheetHeader>
+        </DetailDrawerHeader>
 
         {/* ── Body ───────────────────────────────────────────────────────── */}
         {user ? (
-          <div data-slot="user-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
+          <DetailDrawerBody data-slot="user-drawer-body">
             {isDeleted && deletedMeta && (
               <DeletedAccountInfoCard
                 deletedAtDisplay={deletedMeta.deletedAtDisplay}
@@ -688,8 +636,7 @@ export function UserDrawer({
             )}
 
             {/* Overview KPIs */}
-            <div data-slot="user-drawer-overview">
-              <SectionTitle>Overview</SectionTitle>
+            <DetailDrawerSection data-slot="user-drawer-overview" title="Overview">
               <div className="grid grid-cols-3 gap-3">
                 <StatCard label="Cases Owned" value={user.cases30d} sub="Last 30 days" />
                 <StatCard
@@ -706,55 +653,41 @@ export function UserDrawer({
                 />
                 <StatCard label="Sign-ins" value={user.signIns30d} sub="Last 30 days" />
               </div>
-            </div>
+            </DetailDrawerSection>
 
             {/* Member details */}
-            <div data-slot="user-drawer-details">
-              <SectionTitle>Member Details</SectionTitle>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-                {(
-                  ([
-                    ["First Name",    user.firstName || "—"],
-                    ...(!isDeleted ? [["Status", <StatusPill status={user.status} />] as [string, React.ReactNode]] : []),
-                    ["Last Name",     user.lastName || "—"],
-                    ["Role",          <RoleBadge role={user.role} />],
-                    ["Phone",         <span className="font-mono text-xs">{user.phone ?? "—"}</span>],
-                    ["User ID",       <span className="font-mono text-xs text-primary-ink">{user.id}</span>],
-                    [
-                      "Department",
-                      user.departments.length > 0 ? (
-                        <span className="flex flex-wrap gap-1">
-                          {user.departments.map((d) => (
-                            <span
-                              key={d}
-                              className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary-ink"
-                            >
-                              {d}
-                            </span>
-                          ))}
+            <DetailDrawerSection data-slot="user-drawer-details" title="Member Details">
+              <DescriptionList columns={2} variant="card">
+                <DescriptionItem label="First Name">{user.firstName || "—"}</DescriptionItem>
+                {!isDeleted && <DescriptionItem label="Status"><StatusPill status={user.status} /></DescriptionItem>}
+                <DescriptionItem label="Last Name">{user.lastName || "—"}</DescriptionItem>
+                <DescriptionItem label="Role"><RoleBadge role={user.role} /></DescriptionItem>
+                <DescriptionItem label="Phone" mono>{user.phone ?? "—"}</DescriptionItem>
+                <DescriptionItem label="User ID" mono><span className="text-primary-ink">{user.id}</span></DescriptionItem>
+                <DescriptionItem label="Department">
+                  {user.departments.length > 0 ? (
+                    <span className="flex flex-wrap gap-1">
+                      {user.departments.map((d) => (
+                        <span
+                          key={d}
+                          className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary-ink"
+                        >
+                          {d}
                         </span>
-                      ) : (
-                        "—"
-                      ),
-                    ],
-                    ["Email",         user.email],
-                    ["Created On",    user.createdAtDisplay],
-                    ["Last Active",   user.lastActiveDisplay],
-                  ] as [string, React.ReactNode][])
-                ).map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-0.5">
-                    <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      {label}
+                      ))}
                     </span>
-                    <span className="text-base font-medium text-foreground">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ) : (
+                    "—"
+                  )}
+                </DescriptionItem>
+                <DescriptionItem label="Email">{user.email}</DescriptionItem>
+                <DescriptionItem label="Created On">{user.createdAtDisplay}</DescriptionItem>
+                <DescriptionItem label="Last Active">{user.lastActiveDisplay}</DescriptionItem>
+              </DescriptionList>
+            </DetailDrawerSection>
 
             {/* Site permissions — no Manage button (Fix #2) */}
-            <div data-slot="user-drawer-sites">
-              <SectionTitle>Site Permissions ({user.sitePermissions.length})</SectionTitle>
+            <DetailDrawerSection data-slot="user-drawer-sites" title={`Site Permissions (${user.sitePermissions.length})`}>
               {user.sitePermissions.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                   No site access granted.
@@ -788,11 +721,10 @@ export function UserDrawer({
                   ))}
                 </div>
               )}
-            </div>
+            </DetailDrawerSection>
 
             {/* Role & Access */}
-            <div data-slot="user-drawer-role">
-              <SectionTitle>Role & Access</SectionTitle>
+            <DetailDrawerSection data-slot="user-drawer-role" title="Role & Access">
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
                   <RoleBadge role={user.role} />
@@ -805,12 +737,11 @@ export function UserDrawer({
                   <span className="font-semibold text-foreground">System Configuration → Role Permissions</span>.
                 </p>
               </div>
-            </div>
+            </DetailDrawerSection>
 
             {/* Authentication — wired buttons (Fix #2) */}
             {!isDeleted && (
-            <div data-slot="user-drawer-auth">
-              <SectionTitle>Authentication</SectionTitle>
+            <DetailDrawerSection data-slot="user-drawer-auth" title="Authentication">
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3">
                   <KeyRound className="size-4 text-muted-foreground" />
@@ -848,12 +779,11 @@ export function UserDrawer({
                   </Button>
                 </div>
               </div>
-            </div>
+            </DetailDrawerSection>
             )}
 
             {/* Activities */}
-            <div data-slot="user-drawer-activity">
-              <SectionTitle>User Activities</SectionTitle>
+            <DetailDrawerSection data-slot="user-drawer-activity" title="User Activities">
               {user.activities.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                   No activity yet.
@@ -884,8 +814,8 @@ export function UserDrawer({
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </DetailDrawerSection>
+          </DetailDrawerBody>
         ) : (
           <div data-slot="user-drawer-empty" className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
             <AlertTriangle className="size-8 opacity-20" />
@@ -895,12 +825,12 @@ export function UserDrawer({
 
         {/* ── Footer ─────────────────────────────────────────────────────── */}
         {user && (
-          <div data-slot="user-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+          <DetailDrawerFooter data-slot="user-drawer-footer" className="gap-2">
             {isDeleted ? (
               <Button
                 variant="outline"
                 size="sm"
-                className="ml-auto gap-1.5 border-success/40 text-success hover:bg-success/10"
+                className="gap-1.5 border-success/40 text-success hover:bg-success/10"
                 onClick={() => onRestore?.()}
               >
                 <RotateCcw className="size-3.5" />
@@ -908,18 +838,20 @@ export function UserDrawer({
               </Button>
             ) : (
               <>
-                <UpdateUserMenu
-                  isSuspended={user.status === "suspended"}
-                  onEdit={onEdit}
-                  onChangeRole={onChangeRole}
-                  onManageSite={onManageSite}
-                  onSuspend={onSuspend}
-                  onReinstate={onReinstate}
-                />
+                <DetailDrawerFooterStart className="gap-2">
+                  <UpdateUserMenu
+                    isSuspended={user.status === "suspended"}
+                    onEdit={onEdit}
+                    onChangeRole={onChangeRole}
+                    onManageSite={onManageSite}
+                    onSuspend={onSuspend}
+                    onReinstate={onReinstate}
+                  />
+                </DetailDrawerFooterStart>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-auto gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
+                  className="gap-1.5 border-severity-critical/40 text-severity-critical hover:bg-severity-critical/10"
                   onClick={onDelete}
                 >
                   <Trash2 className="size-3.5" />
@@ -927,10 +859,9 @@ export function UserDrawer({
                 </Button>
               </>
             )}
-          </div>
+          </DetailDrawerFooter>
         )}
-      </SheetContent>
-    </Sheet>
+    </DetailDrawer>
   );
 }
 
@@ -972,9 +903,12 @@ export function InviteUsersModal({
   const [departments, setDepartments] = React.useState<string[]>([]);
   const [errors, setErrors] = React.useState<{ emails?: string; sites?: string; departments?: string }>({});
 
-  React.useEffect(() => {
+  // Reset the form each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) { setEmails(""); setRole("user"); setSites([]); setDepartments([]); setErrors({}); }
-  }, [open]);
+  }
 
   const parsed = React.useMemo(() => parseEmails(emails), [emails]);
   const seatsLeft = seatUsage[role].available;
@@ -982,7 +916,11 @@ export function InviteUsersModal({
   const noSeats = seatsLeft === 0;
 
   // Clear validation errors as the user edits emails / site selection.
-  React.useEffect(() => { setErrors({}); }, [emails, sites, departments]);
+  const [prevInputs, setPrevInputs] = React.useState({ emails, sites, departments });
+  if (prevInputs.emails !== emails || prevInputs.sites !== sites || prevInputs.departments !== departments) {
+    setPrevInputs({ emails, sites, departments });
+    setErrors({});
+  }
 
   function handleSend() {
     const next: { emails?: string; sites?: string; departments?: string } = {};
@@ -1048,7 +986,7 @@ export function InviteUsersModal({
                 );
               })}
             </div>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
@@ -1148,7 +1086,7 @@ export function InviteUsersModal({
                 parsed.invalid.length > 0 && "border-severity-critical/40 focus:border-severity-critical"
               )}
             />
-            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {errors.emails && <p className="mt-1 text-xs text-severity-critical">{errors.emails}</p>}
@@ -1237,7 +1175,7 @@ function SeatPill({
           <div className="flex items-center gap-1.5">
             <Icon className={cn("size-3", cfg.text)} />
             <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-            <span className="ml-auto text-2xs text-muted-foreground/60">{pct}%</span>
+            <span className="ml-auto text-2xs text-muted-foreground">{pct}%</span>
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className={cn("text-lg font-bold leading-none", cfg.text)}>{assigned}</span>
@@ -1268,7 +1206,7 @@ function SeatPill({
           </div>
           {breakdown && breakdown.map((b) => (
             <div key={b.label} className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 text-muted-foreground/70">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
                 {b.icon && <b.icon className={cn("size-3", b.iconClass)} />}
                 {b.label}
               </span>
@@ -1312,7 +1250,7 @@ export function SeatStrip({ usage, billingCycle }: { usage: Record<UserRole, Sea
         <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Seat Usage
         </div>
-        <span className="text-2xs text-muted-foreground/70">Hover or click each tier to see breakdown</span>
+        <span className="text-2xs text-muted-foreground">Hover or click each tier to see breakdown</span>
       </div>
       <div data-slot="seat-strip-grid" className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         <SeatPill
@@ -1383,7 +1321,10 @@ export function ChangeRoleModal({
   const [verifyStep, setVerifyStep] = React.useState<"password" | "checking" | "code">("password");
   const isBulk = users.length > 1;
 
-  React.useEffect(() => {
+  // Reset when the modal opens (or the target role changes while open).
+  const [prevReset, setPrevReset] = React.useState({ open, initial });
+  if (prevReset.open !== open || prevReset.initial !== initial) {
+    setPrevReset({ open, initial });
     if (open) {
       setRole(initial);
       setShowPurchase(false);
@@ -1395,7 +1336,7 @@ export function ChangeRoleModal({
       setPassword("");
       setVerifyStep("password");
     }
-  }, [open, initial]);
+  }
 
   // Simulated password check — about a second, then the code is sent.
   const ownerEmail = allUsers.find((user) => user.role === "owner")?.email ?? users[0]?.email;
@@ -1622,17 +1563,7 @@ export function ChangeRoleModal({
               <label htmlFor="ownership-successor-search" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Search workspace users
               </label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="ownership-successor-search"
-                  value={successorSearch}
-                  onChange={(event) => setSuccessorSearch(event.target.value)}
-                  placeholder="Search by name, email, or user ID"
-                  className="h-9 pl-9 text-base"
-                  autoFocus
-                />
-              </div>
+              <ToolbarSearch value={successorSearch} onChange={setSuccessorSearch} id="ownership-successor-search" placeholder="Search by name, email, or user ID" autoFocus className="sm:w-full" />
             </div>
             <div className="space-y-2">
               {successorCandidates.length > 0 ? (
@@ -1888,7 +1819,12 @@ export function ManageSiteModal({
   const isBulk = users.length > 1;
   const isDirty = sites.slice().sort().join("|") !== initialSitesKey;
 
-  React.useEffect(() => { if (open) { setSites(initialSites); setSiteSearch(""); } }, [open, initialSitesKey]);
+  // Reset when the modal opens (or the selected users' sites change while open).
+  const [prevReset, setPrevReset] = React.useState({ open, initialSitesKey });
+  if (prevReset.open !== open || prevReset.initialSitesKey !== initialSitesKey) {
+    setPrevReset({ open, initialSitesKey });
+    if (open) { setSites(initialSites); setSiteSearch(""); }
+  }
 
   if (users.length === 0) return null;
 
@@ -1939,18 +1875,14 @@ export function ManageSiteModal({
                 className="h-auto px-0 border-0 rounded-none font-normal gap-0 whitespace-normal text-xs text-muted-foreground underline hover:text-primary-ink">
                 Select all
               </Button>
-              <span className="text-muted-foreground/40">·</span>
+              <span className="text-muted-foreground">·</span>
               <Button variant="link" onClick={() => setSites([])}
                 className="h-auto px-0 border-0 rounded-none font-normal gap-0 whitespace-normal text-xs text-muted-foreground underline hover:text-primary-ink">
                 Clear
               </Button>
             </div>
           </div>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={siteSearch} onChange={(e) => setSiteSearch(e.target.value)}
-              placeholder="Search sites…" className="h-9 pl-9 text-base" />
-          </div>
+          <ToolbarSearch value={siteSearch} onChange={setSiteSearch} placeholder="Search sites…" className="sm:w-full" />
         </ModalBody>
         <ModalBody className="space-y-1.5">
           {visibleSites.length === 0 ? (
@@ -2010,7 +1942,10 @@ export function EditUserModal({
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const [departments, setDepartments] = React.useState<string[]>([]);
 
-  React.useEffect(() => {
+  // Load the user's details when the modal opens (or the user changes while open).
+  const [prevLoad, setPrevLoad] = React.useState<{ open: boolean; user: UserData | null }>({ open: false, user: null });
+  if (prevLoad.open !== open || prevLoad.user !== user) {
+    setPrevLoad({ open, user });
     if (open && user) {
       // Treat placeholder "—" values as empty so the placeholder text shows.
       const clean = (v: string) => (v === "—" || v.trim() === "" ? "" : v);
@@ -2021,7 +1956,7 @@ export function EditUserModal({
       setPhoneNumber(parsed.number);
       setDepartments(user.departments);
     }
-  }, [open, user]);
+  }
 
   if (!user) return null;
 
@@ -2162,7 +2097,10 @@ export function SuspendUserModal({
   const [endDate, setEndDate] = React.useState<string>(fmtInput(addDays(today, 7)));
   const [note, setNote] = React.useState("");
 
-  React.useEffect(() => {
+  // Reset the form each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       const now = new Date();
       setPreset("7d");
@@ -2170,7 +2108,7 @@ export function SuspendUserModal({
       setEndDate(fmtInput(addDays(now, 7)));
       setNote("");
     }
-  }, [open]);
+  }
 
   if (users.length === 0) return null;
   const isBulk = users.length > 1;
@@ -2372,9 +2310,12 @@ export function DeleteUserModal({
 }) {
   const [note, setNote] = React.useState("");
 
-  React.useEffect(() => {
+  // Reset the note each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) setNote("");
-  }, [open]);
+  }
 
   if (users.length === 0) return null;
   const isBulk = users.length > 1;
@@ -2526,6 +2467,71 @@ function DeletedUsersPage({
   const hasMore = visibleCount < filtered.length;
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
   const drawerUser = drawerId ? users.find((u) => u.id === drawerId) ?? null : null;
+  const deletedColumns: DataTableColumn<DeletedUserData>[] = [
+    {
+      key: "id",
+      header: "USER ID",
+      cell: (u) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{u.id}</span>
+      ),
+    },
+    {
+      key: "user",
+      header: "USER",
+      cell: (u) => (
+        <div className="flex items-center gap-2.5">
+          <Avatar user={u} size={32} />
+          <div className="min-w-0">
+            <TruncatedText text={u.fullName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
+            <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
+          </div>
+        </div>
+      ),
+    },
+    { key: "role", header: "ROLE", cell: (u) => <RoleBadge role={u.role} /> },
+    { key: "sites", header: "SITES", cell: (u) => <SitesCell user={u} /> },
+    {
+      key: "deletedOn",
+      header: "DELETED ON",
+      className: "text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (u) => u.deletedAtDisplay,
+    },
+    {
+      key: "action",
+      header: "ACTION",
+      stopRowClick: true,
+      cell: (u) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm"
+              className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50"
+              aria-label={`Actions for ${u.fullName}`}
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain"
+              onClick={() => setDrawerId(u.id)}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+            >
+              <CircleUser className="size-3.5 text-muted-foreground" />
+              View details
+            </ItemButton>
+            <ItemButton variant="plain"
+              onClick={() => onRestore(u)}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
+            >
+              <RotateCcw className="size-3.5" />
+              Restore User
+            </ItemButton>
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
+
   return (
     <div data-slot="deleted-users-page" className="flex flex-col gap-4">
       <PageHeader>
@@ -2602,75 +2608,14 @@ function DeletedUsersPage({
         </div>
       ) : (
         <div data-slot="deleted-users-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="text-[length:inherit] w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent border-b border-border text-left">
-                  {["USER ID", "USER", "ROLE", "SITES", "DELETED ON", "ACTION"].map((h) => (
-                    <TableHead
-                      key={h}
-                      className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {visibleItems.map((u) => (
-                  <TableRow
-                    key={u.id}
-                    onClick={() => setDrawerId(u.id)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
-                  >
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">{u.id}</span>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar user={u} size={32} />
-                        <div className="min-w-0">
-                          <TruncatedText text={u.fullName} className="font-semibold text-foreground transition-colors group-hover:text-primary-ink" />
-                          <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3"><RoleBadge role={u.role} /></TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3"><SitesCell user={u} /></TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">{u.deletedAtDisplay}</TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon-sm"
-                            className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50"
-                            aria-label={`Actions for ${u.fullName}`}
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-44 p-1" align="end">
-                          <ItemButton variant="plain"
-                            onClick={() => setDrawerId(u.id)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-                          >
-                            <CircleUser className="size-3.5 text-muted-foreground" />
-                            View details
-                          </ItemButton>
-                          <ItemButton variant="plain"
-                            onClick={() => onRestore(u)}
-                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
-                          >
-                            <RotateCcw className="size-3.5" />
-                            Restore User
-                          </ItemButton>
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={deletedColumns}
+            data={visibleItems}
+            getRowId={(u) => u.id}
+            onRowClick={(u) => setDrawerId(u.id)}
+            getRowClassName={() => "transition-colors"}
+          />
           <div data-slot="deleted-users-page-footer" className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">
             {hasMore && (
               <Button
@@ -2952,10 +2897,15 @@ export default function UserManagementPage({
   }
 
   function handleRestoreDeletedUser(user: DeletedUserData) {
-    const { deletedAtDisplay: _deletedAtDisplay, deletedAtMs: _deletedAtMs, deletedBy: _deletedBy, deleteReason: _deleteReason, ...restoredUser } = user;
+    // Strip the deletion metadata to get back a plain UserData.
+    const restoredUser: Partial<DeletedUserData> = { ...user };
+    delete restoredUser.deletedAtDisplay;
+    delete restoredUser.deletedAtMs;
+    delete restoredUser.deletedBy;
+    delete restoredUser.deleteReason;
     setDeletedUsers((curr) => curr.filter((u) => u.id !== user.id));
     setUsers((curr) => [
-      { ...restoredUser, status: "active" as UserStatus, suspension: undefined },
+      { ...(restoredUser as UserData), status: "active" as UserStatus, suspension: undefined },
       ...curr,
     ]);
     setToast({ kind: "success", message: `${user.fullName} restored to User Management.` });
@@ -3020,6 +2970,104 @@ export default function UserManagementPage({
       />
     );
   }
+
+  const userColumns: DataTableColumn<UserData>[] = [
+    {
+      key: "id",
+      header: "USER ID",
+      cell: (u) => (
+        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+          {u.id}
+        </span>
+      ),
+    },
+    {
+      key: "user",
+      header: "USER",
+      cell: (u) => (
+        <div className="flex items-center gap-2.5">
+          <Avatar user={u} size={32} />
+          <div className="min-w-0">
+            <TruncatedText
+              title={u.isCurrentUser ? `${u.fullName} (You)` : u.fullName}
+              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
+            >
+              {u.fullName}
+              {u.isCurrentUser && (
+                <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
+              )}
+            </TruncatedText>
+            <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
+          </div>
+        </div>
+      ),
+    },
+    { key: "role", header: "ROLE", cell: (u) => <RoleBadge role={u.role} /> },
+    { key: "status", header: "STATUS", cell: (u) => <StatusPill status={u.status} /> },
+    { key: "sites", header: "SITES", cell: (u) => <SitesCell user={u} /> },
+    {
+      key: "lastActive",
+      header: "LAST ACTIVE",
+      className: "text-sm text-muted-foreground",
+      headClassName: "",
+      cell: (u) => u.lastActiveDisplay,
+    },
+    {
+      key: "action",
+      header: "ACTION",
+      stopRowClick: true,
+      cell: (u) => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-44 p-1" align="end">
+            <ItemButton variant="plain"
+              onClick={() => setDrawerId(u.id)}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+            >
+              <CircleUser className="size-3.5 text-muted-foreground" />
+              View details
+            </ItemButton>
+            <ItemButton variant="plain"
+              onClick={() => openDialog("change-role", [u.id])}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+            >
+              <Shield className="size-3.5 text-muted-foreground" />
+              Change Role
+            </ItemButton>
+            <ItemButton variant="plain"
+              onClick={() => openDialog("manage-site", [u.id])}
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+            >
+              <MapPin className="size-3.5 text-muted-foreground" />
+              Manage Site
+            </ItemButton>
+            <div className="my-1 border-t border-border" />
+            {u.status === "suspended" ? (
+              <ItemButton variant="plain"
+                onClick={() => openDialog("reinstate", [u.id])}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
+              >
+                <RotateCcw className="size-3.5" />
+                Reinstate
+              </ItemButton>
+            ) : (
+              <ItemButton variant="plain"
+                onClick={() => openDialog("suspend", [u.id])}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-warning hover:bg-warning/10"
+              >
+                <ShieldOff className="size-3.5" />
+                Suspend User
+              </ItemButton>
+            )}
+          </PopoverContent>
+        </Popover>
+      ),
+    },
+  ];
 
   return (
     <div data-slot="user-management-page" className="flex flex-col gap-4">
@@ -3146,108 +3194,14 @@ export default function UserManagementPage({
         </div>
       ) : (
         <div data-slot="user-management-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="text-[length:inherit] w-full">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent border-b border-border text-left">
-                  {["USER ID", "USER", "ROLE", "STATUS", "SITES", "LAST ACTIVE", "ACTION"].map((h) => (
-                    <TableHead
-                      key={h}
-                      className="h-auto whitespace-normal font-bold px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/60">
-                {visibleItems.map((u) => (
-                  <TableRow
-                    key={u.id}
-                    onClick={() => setDrawerId(u.id)}
-                    className="group cursor-pointer text-base transition-colors hover:bg-muted/20"
-                  >
-                      <TableCell className="whitespace-normal px-4 py-3">
-                        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-                          {u.id}
-                        </span>
-                      </TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar user={u} size={32} />
-                          <div className="min-w-0">
-                            <TruncatedText
-                              title={u.isCurrentUser ? `${u.fullName} (You)` : u.fullName}
-                              className="font-semibold text-foreground transition-colors group-hover:text-primary-ink"
-                            >
-                              {u.fullName}
-                              {u.isCurrentUser && (
-                                <span className="ml-1.5 text-xs font-medium text-muted-foreground">(You)</span>
-                              )}
-                            </TruncatedText>
-                            <TruncatedText text={u.email} className="text-xs text-muted-foreground" />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3"><RoleBadge role={u.role} /></TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3"><StatusPill status={u.status} /></TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3"><SitesCell user={u} /></TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">{u.lastActiveDisplay}</TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" className="px-0 font-normal gap-0 text-[length:inherit] whitespace-normal dark:hover:bg-muted aria-expanded:bg-transparent flex size-7 items-center justify-center rounded border border-transparent text-muted-foreground/50 transition-colors hover:border-border hover:bg-muted hover:text-foreground aria-expanded:text-muted-foreground/50">
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-44 p-1" align="end">
-                            <ItemButton variant="plain"
-                              onClick={() => setDrawerId(u.id)}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-                            >
-                              <CircleUser className="size-3.5 text-muted-foreground" />
-                              View details
-                            </ItemButton>
-                            <ItemButton variant="plain"
-                              onClick={() => openDialog("change-role", [u.id])}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-                            >
-                              <Shield className="size-3.5 text-muted-foreground" />
-                              Change Role
-                            </ItemButton>
-                            <ItemButton variant="plain"
-                              onClick={() => openDialog("manage-site", [u.id])}
-                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-                            >
-                              <MapPin className="size-3.5 text-muted-foreground" />
-                              Manage Site
-                            </ItemButton>
-                            <div className="my-1 border-t border-border" />
-                            {u.status === "suspended" ? (
-                              <ItemButton variant="plain"
-                                onClick={() => openDialog("reinstate", [u.id])}
-                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-success hover:bg-success/10"
-                              >
-                                <RotateCcw className="size-3.5" />
-                                Reinstate
-                              </ItemButton>
-                            ) : (
-                              <ItemButton variant="plain"
-                                onClick={() => openDialog("suspend", [u.id])}
-                                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-warning hover:bg-warning/10"
-                              >
-                                <ShieldOff className="size-3.5" />
-                                Suspend User
-                              </ItemButton>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                    </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            columns={userColumns}
+            data={visibleItems}
+            getRowId={(u) => u.id}
+            onRowClick={(u) => setDrawerId(u.id)}
+            getRowClassName={() => "transition-colors"}
+          />
 
           {/* Load more — newest 20 shown first, older entries loaded on demand */}
           <div data-slot="user-management-page-footer" className="flex flex-col items-center gap-2 border-t border-border px-4 py-3">

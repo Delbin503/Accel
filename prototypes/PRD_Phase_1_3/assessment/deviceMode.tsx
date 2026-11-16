@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Plug, Unplug, WifiOff } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { TA_ROUTES } from "./taNav";
 import { DEVICE_MODES, type DeviceMode } from "./deviceState";
 

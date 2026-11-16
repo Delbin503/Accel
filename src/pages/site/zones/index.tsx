@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/layout/PageHeader";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import { LayoutGrid } from "lucide-react";
 
 export default function ZonesPage() {

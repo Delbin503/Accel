@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import {
-  Search,
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
@@ -11,25 +10,26 @@ import {
   MapPin,
   Calendar,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@accel/ui/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/layout/PageHeader";
+} from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import { SeverityBadge } from "@/pages/detection-feed/shared";
-import { CaseStatusBadge, STATUS_CONFIG } from "@/pages/incident-cases/shared";
+import { CaseStatusBadge } from "@/pages/incident-cases/shared";
+import { STATUS_CONFIG } from "@/pages/incident-cases/shared-data";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { CaseDrawer } from "@/pages/incident-cases/CaseDrawer";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { ListLoadingState, ListErrorState } from "@/components/shared/PageStates";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
+import { ListLoadingState, ListErrorState } from "@accel/ui/components/shared/PageStates";
 import type { IncidentCase, CaseStatus } from "@/types/incidents";
 
 /** Prototype hook — forces the page's data-state (loading / empty / error). */
@@ -52,10 +52,10 @@ const EMPTY_FILTERS: CaseFilters = { status: [], severity: [], site: [] };
 
 /* ─── KPI cards ──────────────────────────────────────────────────────────── */
 
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
-import { DateRangeBar } from "@/components/shared/DateRangeBar";
-import { ItemButton } from "@/components/ui/item";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
+import { DateRangeBar } from "@accel/ui/components/shared/DateRangeBar";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
 
 const KPI_CONFIGS: {
   key: KpiFilter;
@@ -228,15 +228,7 @@ function FilterPanel({
 
       {open && (
         <div data-slot="incident-cases-filter-panel-body" className="space-y-3 rounded-b-xl border-t border-border bg-background px-4 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by case ID, title or assignee..."
-              className="h-9 w-full pl-9 text-base"
-            />
-          </div>
+          <ToolbarSearch value={search} onChange={onSearchChange} placeholder="Search by case ID, title or assignee..." className="sm:w-full" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
@@ -263,22 +255,32 @@ function FilterPanel({
   );
 }
 
-/* ─── Table row ──────────────────────────────────────────────────────────── */
+/* ─── Table columns ─────────────────────────────────────────────────────────── */
 
-function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
-  return (
-    <TableRow data-slot="incident-case-row"
-      onClick={onClick}
-      style={{ boxShadow: `inset 3px 0 0 var(--severity-${c.severity})` }}
-      className="group cursor-pointer border-border/60 text-base transition-colors hover:bg-muted/20"
-    >
-      <TableCell className="whitespace-normal px-4 py-3">
-        <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
-          {c.id}
-        </span>
-      </TableCell>
+/** Severity accent stripe on the row's left edge. */
+const SEVERITY_STRIPE: Record<IncidentCase["severity"], string> = {
+  critical: "shadow-[inset_3px_0_0_var(--severity-critical)]",
+  medium: "shadow-[inset_3px_0_0_var(--severity-medium)]",
+  low: "shadow-[inset_3px_0_0_var(--severity-low)]",
+};
 
-      <TableCell className="whitespace-normal max-w-[260px] px-4 py-3">
+const CASE_COLUMNS: DataTableColumn<IncidentCase>[] = [
+  {
+    key: "id",
+    header: "CASE ID",
+    cell: (c) => (
+      <span className="font-mono text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary-ink">
+        {c.id}
+      </span>
+    ),
+  },
+  {
+    key: "title",
+    header: "TITLE / SITE",
+    className: "max-w-[260px]",
+    headClassName: "",
+    cell: (c) => (
+      <>
         <TruncatedText
           text={c.title}
           className="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary-ink"
@@ -287,49 +289,61 @@ function CaseRow({ c, onClick }: { c: IncidentCase; onClick: () => void }) {
           <MapPin className="size-2.5 flex-shrink-0" />
           {c.siteDisplay}
         </div>
-      </TableCell>
-
-      <TableCell className="whitespace-normal px-4 py-3 text-center">
-        <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
-          {c.incidentIds.length}
-        </span>
-      </TableCell>
-
-      <TableCell className="whitespace-normal px-4 py-3">
-        <SeverityBadge severity={c.severity} />
-      </TableCell>
-
-      <TableCell className="whitespace-normal px-4 py-3">
-        <CaseStatusBadge status={c.status} />
-      </TableCell>
-
-      <TableCell className="whitespace-normal px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary-ink">
-            {c.assignedTo.name.charAt(0)}
-          </div>
-          <div>
-            <div className="text-base font-medium text-foreground">{c.assignedTo.name}</div>
-            <div className="font-mono text-xs text-muted-foreground">{c.assignedTo.id}</div>
-          </div>
+      </>
+    ),
+  },
+  {
+    key: "events",
+    header: "EVENTS",
+    align: "center",
+    cell: (c) => (
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
+        {c.incidentIds.length}
+      </span>
+    ),
+  },
+  { key: "severity", header: "SEVERITY", cell: (c) => <SeverityBadge severity={c.severity} /> },
+  { key: "status", header: "STATUS", cell: (c) => <CaseStatusBadge status={c.status} /> },
+  {
+    key: "assignee",
+    header: "ASSIGNED TO",
+    cell: (c) => (
+      <div className="flex items-center gap-2">
+        <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary-ink">
+          {c.assignedTo.name.charAt(0)}
         </div>
-      </TableCell>
-
-      <TableCell className="px-4 py-3">
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Calendar className="size-3 flex-shrink-0" />
-          {c.createdAtDisplay}
+        <div>
+          <div className="text-base font-medium text-foreground">{c.assignedTo.name}</div>
+          <div className="font-mono text-xs text-muted-foreground">{c.assignedTo.id}</div>
         </div>
-      </TableCell>
-
-      <TableCell className="whitespace-normal px-4 py-3">
-        <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-ink" />
-      </TableCell>
-    </TableRow>
-  );
-}
+      </div>
+    ),
+  },
+  {
+    key: "created",
+    header: "CREATED",
+    className: "whitespace-nowrap",
+    headClassName: "",
+    cell: (c) => (
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Calendar className="size-3 flex-shrink-0" />
+        {c.createdAtDisplay}
+      </div>
+    ),
+  },
+  {
+    key: "open",
+    header: "",
+    cell: () => (
+      <ArrowUpRight className="size-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-ink" />
+    ),
+  },
+];
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
+
+/* Stable empty list for the forced-empty prototype view (keeps memo deps stable). */
+const NO_CASES: IncidentCase[] = [];
 
 export default function IncidentCasesPage({
   forcedState = "normal",
@@ -341,7 +355,7 @@ export default function IncidentCasesPage({
   const location = useLocation();
   const storeCases = useIncidentCasesStore((s) => s.cases);
   // Prototype-only: force a zero-data view without touching the store.
-  const cases = forcedState === "empty" ? [] : storeCases;
+  const cases = forcedState === "empty" ? NO_CASES : storeCases;
 
   const [kpiFilter, setKpiFilter] = React.useState<KpiFilter>("all");
   const [filters, setFilters] = React.useState<CaseFilters>(EMPTY_FILTERS);
@@ -546,39 +560,15 @@ export default function IncidentCasesPage({
         </div>
       ) : (
         <div data-slot="incident-cases-page-table" className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="overflow-x-auto">
-            <Table className="w-full min-w-[860px] border-collapse">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-border text-left hover:bg-transparent">
-                  {[
-                    { label: "CASE ID" },
-                    { label: "TITLE / SITE" },
-                    { label: "EVENTS", center: true },
-                    { label: "SEVERITY" },
-                    { label: "STATUS" },
-                    { label: "ASSIGNED TO" },
-                    { label: "CREATED" },
-                    { label: "" },
-                  ].map(({ label, center }, i) => (
-                    <TableHead
-                      key={i}
-                      className={cn(
-                        "h-auto whitespace-normal px-4 py-2.5 font-mono font-bold text-2xs uppercase tracking-[0.15em] text-muted-foreground/60",
-                        center && "text-center"
-                      )}
-                    >
-                      {label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => (
-                  <CaseRow key={c.id} c={c} onClick={() => setDrawerCaseId(c.id)} />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            variant="list"
+            className="min-w-[860px] border-collapse"
+            columns={CASE_COLUMNS}
+            data={filtered}
+            getRowId={(c) => c.id}
+            onRowClick={(c) => setDrawerCaseId(c.id)}
+            getRowClassName={(c) => cn("transition-colors", SEVERITY_STRIPE[c.severity])}
+          />
         </div>
       )}
         </>

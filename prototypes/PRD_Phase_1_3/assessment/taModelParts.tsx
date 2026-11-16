@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Check, ClipboardList, Plus, Target } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
 import { USE_CASES, USE_CASE_KEYS, type UseCaseKey } from "./taData";
 import type { AssessmentInfo } from "./taModels";
-import { Button } from "@/components/ui/button";
+import { Button } from "@accel/ui/components/ui/button";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 
 /* Assessment pieces of Model Management: the basic info a Training Assessment
    model carries — its use case and the activities it assesses — as a form
@@ -27,9 +28,6 @@ export function ActivitiesPicker({
   const [custom, setCustom] = React.useState("");
   const options = [...new Set([...USE_CASES[useCase].activities, ...value])];
 
-  function toggle(a: string) {
-    onChange(value.includes(a) ? value.filter((x) => x !== a) : [...value, a]);
-  }
   function addCustom() {
     const v = custom.trim();
     if (!v) return;
@@ -39,26 +37,21 @@ export function ActivitiesPicker({
 
   return (
     <div data-slot="activities-picker" className={cn("rounded-lg border bg-background p-2.5", invalid ? "border-severity-critical" : "border-border")}>
-      <div className="flex flex-wrap gap-1.5">
+      <SegmentedControl type="multiple" variant="outline" value={value} onValueChange={onChange} aria-label="Activities">
         {options.map((a) => {
           const on = value.includes(a);
           return (
-            <Button variant="ghost"
+            <SegmentedControlItem
               key={a}
-              type="button"
-              aria-pressed={on}
-              onClick={() => toggle(a)}
-              className={cn(
-                "h-auto", "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-medium transition-colors",
-                on ? "border-primary/50 bg-primary/10 text-primary-ink" : "border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:text-foreground",
-              )}
+              value={a}
+              className="h-auto gap-1 bg-muted/40 px-2.5 py-1 text-sm hover:bg-muted/40 hover:border-primary/30 data-[state=on]:border-primary/50 data-[state=on]:hover:border-primary/50 data-[state=on]:hover:bg-primary/10 data-[state=on]:hover:text-primary-ink"
             >
               {on && <Check className="size-3" strokeWidth={3} />}
               {a}
-            </Button>
+            </SegmentedControlItem>
           );
         })}
-      </div>
+      </SegmentedControl>
       <div className="mt-2 flex items-center gap-1.5">
         <Input
           value={custom}

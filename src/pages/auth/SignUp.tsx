@@ -28,34 +28,33 @@ import {
   ShieldCheck,
   CircleUser,
   Phone,
-  Search,
   ChevronDown,
   Lock as LockIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@accel/ui/components/ui/popover";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
+} from "@accel/ui/components/shared/Modal";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { TimeSelect } from "@/components/shared/TimeSelect";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { TimeSelect } from "@accel/ui/components/shared/TimeSelect";
+import { cn } from "@accel/ui/lib/utils";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSitesStore } from "@/stores/useSitesStore";
@@ -75,12 +74,15 @@ import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/app/AuthBackground";
 import { AuthStepBar, type AuthStepKey } from "@/components/app/AuthStepBar";
-import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ItemButton } from "@/components/ui/item";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PasswordStrengthBar } from "@accel/ui/components/shared/PasswordStrengthBar";
+import { isStrongPassword } from "@accel/ui/components/shared/password-strength";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
+import { Switch } from "@accel/ui/components/ui/switch";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { RadioGroup, RadioGroupItem } from "@accel/ui/components/ui/radio-group";
+import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/DataTable";
+import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
 
 /* ── Wizard steps ───────────────────────────────────────────────────── */
 type WizardStep = "account" | "plan" | "site" | "team";
@@ -129,6 +131,9 @@ interface InviteRow {
   role: InviteRole;
   departments: string[];
 }
+
+/** Members table row: the owner (the person signing up) first, then invites. */
+type MemberTableRow = { kind: "owner"; id: string } | (InviteRow & { kind: "invite" });
 
 /* Same role colour palette used in User Management. */
 const ROLE_STYLES: Record<UserRole, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -805,26 +810,11 @@ export default function SignUpPage({
           >
             Monthly
           </span>
-          <Button
-            variant="ghost"
-            aria-pressed={cycle === "annual"}
-            onClick={() =>
-              setCycle((c) => (c === "monthly" ? "annual" : "monthly"))
-            }
-            className={cn(
-              "relative h-5 w-9 rounded-full border-0 p-0 transition-colors active:not-aria-[haspopup]:translate-y-0",
-              cycle === "annual"
-                ? "bg-primary hover:bg-primary dark:hover:bg-primary"
-                : "bg-muted hover:bg-muted dark:hover:bg-muted"
-            )}
-          >
-            <span
-              className={cn(
-                "absolute top-0.5 left-0.5 size-4 rounded-full bg-primary-foreground shadow-raised transition-transform",
-                cycle === "annual" && "translate-x-4"
-              )}
-            />
-          </Button>
+          <Switch
+            checked={cycle === "annual"}
+            onCheckedChange={(on) => setCycle(on ? "annual" : "monthly")}
+            aria-label="Bill annually"
+          />
           <span
             className={cn(
               "text-sm font-semibold",
@@ -1430,6 +1420,87 @@ export default function SignUpPage({
       admin: mkSeat("admin", adminCount),
       user: mkSeat("user", userCount),
     };
+    // The person signing up is the owner and heads the list.
+    const memberRows: MemberTableRow[] = [
+      { kind: "owner", id: "__owner" },
+      ...invites.map((inv): MemberTableRow => ({ ...inv, kind: "invite" })),
+    ];
+    const memberColumns: DataTableColumn<MemberTableRow>[] = [
+      {
+        key: "user",
+        header: "USER",
+        cell: (row) =>
+          row.kind === "owner" ? (
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary-ink">
+                {fullName
+                  .split(" ")
+                  .map((p) => p[0]?.toUpperCase())
+                  .slice(0, 2)
+                  .join("") || "U"}
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-foreground">
+                  {fullName || "You"}
+                  <span className="ml-1.5 text-xs font-medium text-muted-foreground">
+                    (You)
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">{email}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                <Mail className="size-3.5 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-foreground">
+                  {row.email.split("@")[0]}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {row.email}
+                </p>
+              </div>
+            </div>
+          ),
+      },
+      {
+        key: "userId",
+        header: "USER ID",
+        className: "font-mono text-xs text-muted-foreground",
+        headClassName: "",
+        cell: (row) =>
+          row.kind === "owner" ? "USR-001" : <span className="text-muted-foreground">—</span>,
+      },
+      {
+        key: "role",
+        header: "ROLE",
+        cell: (row) => <RoleBadge role={row.kind === "owner" ? "owner" : row.role} />,
+      },
+      {
+        key: "status",
+        header: "STATUS",
+        cell: (row) =>
+          row.kind === "owner" ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
+              Active
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
+              Pending
+            </span>
+          ),
+      },
+      {
+        key: "includes",
+        header: "INCLUDES",
+        className: "text-sm text-muted-foreground",
+        headClassName: "",
+        cell: (row) => USER_ROLE_DESCRIPTIONS[row.kind === "owner" ? "owner" : row.role],
+      },
+    ];
+
     return (
       <WizardShell wide onCancel={() => navigate("/signin")} currentStep="team">
         <BackLink onClick={goBack} />
@@ -1453,95 +1524,14 @@ export default function SignUpPage({
         <div data-slot="sign-up-page-members-list" className="mt-3 flex max-h-[calc(100vh-22rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm">
           {/* The Table wrapper must not become the scroll container, or the sticky header stops sticking. */}
           <div className="flex-1 overflow-y-auto [&>[data-slot=table-container]]:overflow-visible">
-            <Table className="w-full">
-              <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-                <TableRow className="border-border text-left hover:bg-transparent">
-                  {["USER", "USER ID", "ROLE", "STATUS", "INCLUDES"].map((h) => (
-                    <TableHead
-                      key={h}
-                      className="h-auto whitespace-normal px-4 py-2.5 font-mono text-2xs font-bold uppercase tracking-[0.15em] text-muted-foreground/60"
-                    >
-                      {h}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="border-border/60 text-base transition-colors hover:bg-muted/20">
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary-ink">
-                        {fullName
-                          .split(" ")
-                          .map((p) => p[0]?.toUpperCase())
-                          .slice(0, 2)
-                          .join("") || "U"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground">
-                          {fullName || "You"}
-                          <span className="ml-1.5 text-xs font-medium text-muted-foreground">
-                            (You)
-                          </span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3 font-mono text-xs text-muted-foreground">
-                    USR-001
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <RoleBadge role="owner" />
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-success">
-                      Active
-                    </span>
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">
-                    {USER_ROLE_DESCRIPTIONS.owner}
-                  </TableCell>
-                </TableRow>
-
-                {invites.map((inv) => (
-                  <TableRow
-                    key={inv.id}
-                    className="border-border/60 text-base transition-colors hover:bg-muted/20"
-                  >
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
-                          <Mail className="size-3.5 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-foreground">
-                            {inv.email.split("@")[0]}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {inv.email}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-xs text-muted-foreground/50">
-                      —
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <RoleBadge role={inv.role} />
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-warning">
-                        Pending
-                      </span>
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3 text-sm text-muted-foreground">
-                      {USER_ROLE_DESCRIPTIONS[inv.role]}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              variant="list"
+              stickyHeader
+              columns={memberColumns}
+              data={memberRows}
+              getRowId={(row) => row.id}
+              getRowClassName={() => "transition-colors"}
+            />
           </div>
 
           <div className="flex-shrink-0 border-t border-border/60 bg-muted/10 px-4 py-2 text-right text-sm text-muted-foreground">
@@ -1688,15 +1678,14 @@ function PhoneField({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1.5">
-          <div className="relative mb-1">
-            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search country or code"
-              className="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
-            />
-          </div>
+          <ToolbarSearch
+            size="sm"
+            value={query}
+            onChange={setQuery}
+            placeholder="Search country or code"
+            className="mb-1"
+            inputClassName="h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-none md:text-sm dark:bg-background focus-visible:border-primary focus-visible:ring-0"
+          />
           <div className="max-h-56 overflow-y-auto">
             {list.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">
@@ -1846,13 +1835,17 @@ export function InviteUsersModal({
   const [role, setRole] = React.useState<InviteRole>("user");
   const [departments, setDepartments] = React.useState<string[]>([]);
 
-  React.useEffect(() => {
+  // Clear the form each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setEmails("");
       setRole("user");
       setDepartments([]);
     }
-  }, [open]);
+  }
 
   const parsed = React.useMemo(() => parseEmails(emails), [emails]);
 
@@ -1930,7 +1923,7 @@ export function InviteUsersModal({
                 );
               })}
             </div>
-            <p className="mt-1 text-2xs text-muted-foreground/70">
+            <p className="mt-1 text-2xs text-muted-foreground">
               Owner role can only be assigned via ownership transfer.
             </p>
           </div>
@@ -1946,11 +1939,11 @@ export function InviteUsersModal({
             >
               <MapPin className="size-3.5 flex-shrink-0 text-muted-foreground" />
               <TruncatedText text={siteName || "Your new site"} className="min-w-0 flex-1 text-foreground" />
-              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground/70">
+              <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted-foreground">
                 <LockIcon className="size-3" /> Locked to current site
               </span>
             </div>
-            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Additional sites can be added later from the Sites page.
             </p>
           </div>
@@ -2017,7 +2010,7 @@ export function InviteUsersModal({
                   : "focus:border-primary"
               )}
             />
-            <p className="mt-0.5 text-2xs text-muted-foreground/70">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Separate multiple emails with commas, spaces, or new lines.
             </p>
             {parsed.invalid.length > 0 && (

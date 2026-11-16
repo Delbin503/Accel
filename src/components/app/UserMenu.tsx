@@ -18,9 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@accel/ui/components/shared/ConfirmDialog";
+import { cn } from "@accel/ui/lib/utils";
 import { useAuthStore, type UserRole } from "@/stores/useAuthStore";
 
 /* ─── Role badge (mirrors User Management's RoleBadge) ───────────────────── */

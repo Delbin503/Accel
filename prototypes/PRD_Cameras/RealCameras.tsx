@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
 import CamerasPage from "@/pages/site/cameras";
 import { CameraTableSkeleton, ErrorState, type ForcedState, type DrawerAsync } from "./shared";
 

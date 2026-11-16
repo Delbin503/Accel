@@ -16,18 +16,19 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PasswordStrengthBar, isStrongPassword } from "@/components/shared/PasswordStrengthBar";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/shared/Modal";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { PasswordStrengthBar } from "@accel/ui/components/shared/PasswordStrengthBar";
+import { isStrongPassword } from "@accel/ui/components/shared/password-strength";
+import { cn } from "@accel/ui/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { MOCK_USERS } from "@/mocks/users";
 import { USER_ROLE_LABELS } from "@/mocks/users";
@@ -71,13 +72,16 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [errors, setErrors] = React.useState<{ current?: string; next?: string; confirm?: string }>({});
 
-  React.useEffect(() => {
+  // Reset the form each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setCurrent(""); setNext(""); setConfirm("");
       setShowCurrent(false); setShowNext(false); setShowConfirm(false);
       setErrors({});
     }
-  }, [open]);
+  }
 
   const matches = next.length > 0 && next === confirm;
 
@@ -149,7 +153,12 @@ export function ChangePasswordModal({ open, onClose }: { open: boolean; onClose:
 export function TwoFAModal({ open, onClose, onEnable }: { open: boolean; onClose: () => void; onEnable: () => void }) {
   const [code, setCode] = React.useState("");
   const [errors, setErrors] = React.useState<{ code?: string }>({});
-  React.useEffect(() => { if (open) { setCode(""); setErrors({}); } }, [open]);
+  // Reset the form each time the modal opens.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) { setCode(""); setErrors({}); }
+  }
 
   function submit() {
     if (code.length !== 6) {

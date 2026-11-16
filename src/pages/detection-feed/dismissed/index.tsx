@@ -13,21 +13,22 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
+import { cn } from "@accel/ui/lib/utils";
+import { PageHeader } from "@accel/ui/components/layout/PageHeader";
 import { MOCK_DISMISSED, FP_REASON_LABELS } from "@/mocks/detectionFeed";
-import { SeverityBadge, parseEventText } from "../shared";
-import { KpiCard, KpiGrid, type KpiTone } from "@/components/shared/KpiCard";
+import { SeverityBadge } from "../shared";
+import { parseEventText } from "../shared-utils";
+import { KpiCard, KpiGrid, type KpiTone } from "@accel/ui/components/shared/KpiCard";
 import { MapPin } from "lucide-react";
 import { DismissedDrawer } from "./DismissedDrawer";
 import type { DismissedEvent, FpReason } from "@/types/detection";
-import { FilterDropdown } from "@/components/shared/FilterDropdown";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { FilterDropdown } from "@accel/ui/components/shared/FilterDropdown";
+import { EmptyState } from "@accel/ui/components/shared/EmptyState";
 import { RestoreDismissedModal } from "./RestoreDismissedModal";
-import { ItemButton } from "@/components/ui/item";
+import { ItemButton } from "@accel/ui/components/ui/item";
 
 /* ── Reason chip ─────────────────────────────────────────────────────────── */
 
@@ -520,7 +521,7 @@ export default function DismissedEventsPage() {
         <div className="flex items-center gap-3">
           <p className="text-base text-muted-foreground">
             <strong className="text-foreground">{visible.length}</strong> events
-            {hasFilters && <span className="ml-1 text-muted-foreground/70">match current filters</span>}
+            {hasFilters && <span className="ml-1 text-muted-foreground">match current filters</span>}
           </p>
           {restoredIds.size > 0 && (
             <span className="flex items-center gap-1.5 text-sm text-success">

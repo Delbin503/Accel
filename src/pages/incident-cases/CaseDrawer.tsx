@@ -1,7 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  X,
   MapPin,
   Link2,
   UserCog,
@@ -14,7 +13,17 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DetailDrawer,
+  DetailDrawerBody,
+  DetailDrawerDescription,
+  DetailDrawerFooter,
+  DetailDrawerFooterStart,
+  DetailDrawerHeader,
+  DetailDrawerSection,
+  DetailDrawerTitle,
+} from "@accel/ui/components/shared/DetailDrawer";
+import { DescriptionItem, DescriptionList } from "@accel/ui/components/shared/DescriptionList";
 import {
   Modal,
   ModalContent,
@@ -22,25 +31,27 @@ import {
   ModalSubheader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@accel/ui/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ListErrorState } from "@/components/shared/PageStates";
-import { cn } from "@/lib/utils";
+} from "@accel/ui/components/ui/select";
+import { Textarea } from "@accel/ui/components/ui/textarea";
+import { Skeleton } from "@accel/ui/components/ui/skeleton";
+import { ListErrorState } from "@accel/ui/components/shared/PageStates";
+import { cn } from "@accel/ui/lib/utils";
 import { eventImage } from "@/mocks/detectionImages";
-import { SeverityBadge, parseEventText } from "@/pages/detection-feed/shared";
+import { SeverityBadge } from "@/pages/detection-feed/shared";
+import { parseEventText } from "@/pages/detection-feed/shared-utils";
 import { EventDrawer } from "@/pages/detection-feed/EventDrawer";
-import { CaseStatusBadge, STATUS_CONFIG } from "@/pages/incident-cases/shared";
+import { CaseStatusBadge } from "@/pages/incident-cases/shared";
+import { STATUS_CONFIG } from "@/pages/incident-cases/shared-data";
 import { useIncidentCasesStore } from "@/stores/useIncidentCasesStore";
 import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { ASSIGNEES } from "@/mocks/incidentCases";
@@ -49,29 +60,10 @@ import type { DetectionEvent, Severity } from "@/types/detection";
 import type { AnyEntity } from "@/types/entities";
 import { EntityDrawer } from "@/pages/incident-cases/EntityDrawer";
 import { ENTITY_PROFILES } from "@/mocks/entities";
-import { TruncatedText } from "@/components/shared/TruncatedText";
-import { PRINT_CALLOUT, PRINT_NEUTRAL, PRINT_SEVERITY, PRINT_TONE, type PrintTone } from "@/lib/tokens";
-import { ItemButton } from "@/components/ui/item";
-import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
-
-/* ── Section heading ─────────────────────────────────────────────────────── */
-
-function SectionTitle({
-  children,
-  aside,
-}: {
-  children: React.ReactNode;
-  aside?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      {aside}
-    </div>
-  );
-}
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
+import { PRINT_CALLOUT, PRINT_NEUTRAL, PRINT_SEVERITY, PRINT_TONE, type PrintTone } from "@accel/ui/lib/tokens";
+import { ItemButton } from "@accel/ui/components/ui/item";
+import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
 
 /* ── Linked incident thumbnail ───────────────────────────────────────────── */
 
@@ -185,9 +177,13 @@ export function ChangeStatusModal({
 }) {
   const [picked, setPicked] = React.useState<CaseStatus>(currentStatus);
 
-  React.useEffect(() => {
+  // Re-sync the pick when the modal opens or the case status changes
+  // (adjusted during render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ open, currentStatus });
+  if (prevSync.open !== open || prevSync.currentStatus !== currentStatus) {
+    setPrevSync({ open, currentStatus });
     if (open) setPicked(currentStatus);
-  }, [open, currentStatus]);
+  }
 
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
@@ -274,9 +270,13 @@ export function ReassignModal({
   const [search, setSearch] = React.useState("");
   const [roleFilter, setRoleFilter] = React.useState<"all" | "owner" | "admin" | "user">("all");
 
-  React.useEffect(() => {
+  // Reset the picker when the modal opens or the current assignee changes
+  // (adjusted during render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ open, current });
+  if (prevSync.open !== open || prevSync.current !== current) {
+    setPrevSync({ open, current });
     if (open) { setPicked(current); setSearch(""); setRoleFilter("all"); }
-  }, [open, current]);
+  }
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -416,14 +416,18 @@ export function LinkNewIncidentsModal({
   const [cameraFilter, setCameraFilter] = React.useState("all");
   const [search, setSearch] = React.useState("");
 
-  React.useEffect(() => {
+  // Reset the picker each time the modal opens (adjusted during render rather
+  // than in an effect).
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setSelectedIds(new Set());
       setAreaFilter("all");
       setCameraFilter("all");
       setSearch("");
     }
-  }, [open]);
+  }
 
   const candidates = React.useMemo(
     () =>
@@ -457,7 +461,8 @@ export function LinkNewIncidentsModal({
   function toggle(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -610,14 +615,23 @@ export function EditCaseModal({
   const [notes, setNotes] = React.useState(initialNotes);
   const [titleErr, setTitleErr] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
+  // Re-seed the form when the modal opens or the case values change
+  // (adjusted during render rather than in an effect).
+  const [prevSync, setPrevSync] = React.useState({ open, initialTitle, initialSeverity, initialNotes });
+  if (
+    prevSync.open !== open ||
+    prevSync.initialTitle !== initialTitle ||
+    prevSync.initialSeverity !== initialSeverity ||
+    prevSync.initialNotes !== initialNotes
+  ) {
+    setPrevSync({ open, initialTitle, initialSeverity, initialNotes });
     if (open) {
       setTitle(initialTitle);
       setSeverity(initialSeverity);
       setNotes(initialNotes);
       setTitleErr(null);
     }
-  }, [open, initialTitle, initialSeverity, initialNotes]);
+  }
 
   const unchanged =
     title.trim() === initialTitle && severity === initialSeverity && notes === initialNotes;
@@ -832,7 +846,6 @@ function handleExportPDF(
     )
     .join("");
 
-  /* eslint-disable-next-line no-useless-concat */
   const styleOpen = "<" + "style>";
   const styleClose = "<" + "/style>";
   w.document.write(`<!DOCTYPE html>
@@ -1176,11 +1189,11 @@ function EntityCard({
       return (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">RE-ID:</span>
+            <span className="font-semibold text-muted-foreground">RE-ID:</span>
             {(entity.reIdConfidence / 100).toFixed(3)}
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">Detections:</span>
+            <span className="font-semibold text-muted-foreground">Detections:</span>
             {entity.totalDetections}
           </span>
         </div>
@@ -1191,7 +1204,7 @@ function EntityCard({
       return (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground/70">Registered:</span>
+            <span className="font-semibold text-muted-foreground">Registered:</span>
             {entity.registeredTo}
           </span>
         </div>
@@ -1338,7 +1351,7 @@ interface CaseDrawerProps {
 /* Prototype-only loading skeleton for the drawer body. */
 function CaseDrawerSkeleton() {
   return (
-    <div data-slot="case-drawer-skeleton" className="flex-1 space-y-5 overflow-y-auto p-5">
+    <DetailDrawerBody data-slot="case-drawer-skeleton">
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex flex-col gap-1.5">
@@ -1347,13 +1360,13 @@ function CaseDrawerSkeleton() {
           </div>
         ))}
       </div>
-      <Skeleton className="h-16 w-full rounded-lg" />
+      <Skeleton className="h-16 w-full shrink-0 rounded-lg" />
       <div className="space-y-2">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-20 w-full rounded-lg" />
         ))}
       </div>
-    </div>
+    </DetailDrawerBody>
   );
 }
 
@@ -1374,7 +1387,11 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
   const [viewEvent, setViewEvent] = React.useState<DetectionEvent | null>(null);
   const [viewEntity, setViewEntity] = React.useState<AnyEntity | null>(null);
 
-  React.useEffect(() => {
+  // Reset filters, modals and sub-drawers when a different case is shown
+  // (adjusted during render rather than in an effect).
+  const [prevCaseId, setPrevCaseId] = React.useState(caseId);
+  if (caseId !== prevCaseId) {
+    setPrevCaseId(caseId);
     setAreaFilter("all");
     setCameraFilter("all");
     setStatusModal(false);
@@ -1384,13 +1401,14 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
     setDeleteModal(false);
     setViewEvent(null);
     setViewEntity(null);
-  }, [caseId]);
+  }
 
   const isActive = caseData?.status === "open" || caseData?.status === "in-review";
 
-  const allLinkedEvents = caseData
-    ? MOCK_EVENTS.filter((e) => caseData.incidentIds.includes(e.id))
-    : [];
+  const allLinkedEvents = React.useMemo(
+    () => (caseData ? MOCK_EVENTS.filter((e) => caseData.incidentIds.includes(e.id)) : []),
+    [caseData]
+  );
 
   const linkedAreas = [...new Set(allLinkedEvents.map((e) => e.areaDisplay))];
   const linkedCameras = [...new Set(allLinkedEvents.map((e) => e.camera))];
@@ -1461,279 +1479,229 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
 
   return (
     <>
-      <Sheet open={caseId !== null} onOpenChange={(v) => !v && onClose()}>
-        <SheetContent
-          side="right"
-          showCloseButton={false}
-          className="flex w-[min(860px,58vw)] max-w-[95vw] flex-col gap-0 p-0"
-        >
-          {/* ── Header ─────────────────────────────────────────────────────── */}
-          <SheetHeader className="border-b border-border bg-card px-5 py-4">
-            {forcedState === "loading" || forcedState === "error" ? (
-              <div className="flex items-center justify-between">
-                <SheetTitle className="text-md text-muted-foreground">
-                  {forcedState === "loading" ? "Loading case…" : "Couldn't load case"}
-                </SheetTitle>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={onClose}
-                  className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-            ) : caseData ? (
-              <div data-slot="case-drawer-header" className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                    <SeverityBadge severity={caseData.severity} />
-                    <CaseStatusBadge status={caseData.status} />
-                  </div>
-                  <SheetTitle className="text-lg font-bold leading-snug">
-                    {caseData.title}
-                  </SheetTitle>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {caseData.id} · {caseData.siteDisplay}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={onClose}
-                  className="mt-0.5 flex-shrink-0 rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <SheetTitle className="text-md text-muted-foreground">
-                  Case not found
-                </SheetTitle>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={onClose}
-                  className="rounded border-0 text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted"
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-            )}
-          </SheetHeader>
-
-          {/* ── Body ───────────────────────────────────────────────────────── */}
-          {forcedState === "loading" ? (
-            <CaseDrawerSkeleton />
-          ) : forcedState === "error" ? (
-            <div data-slot="case-drawer-error" className="flex flex-1 items-center justify-center p-5">
-              <ListErrorState onRetry={onRetry} title="Couldn't load this case" />
+      <DetailDrawer open={caseId !== null} onOpenChange={(v) => !v && onClose()} size="lg">
+        {/* ── Header ─────────────────────────────────────────────────────── */}
+        {forcedState === "loading" || forcedState === "error" ? (
+          <DetailDrawerHeader>
+            <DetailDrawerTitle className="text-md font-normal text-muted-foreground">
+              {forcedState === "loading" ? "Loading case…" : "Couldn't load case"}
+            </DetailDrawerTitle>
+          </DetailDrawerHeader>
+        ) : caseData ? (
+          <DetailDrawerHeader data-slot="case-drawer-header">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <SeverityBadge severity={caseData.severity} />
+              <CaseStatusBadge status={caseData.status} />
             </div>
-          ) : caseData ? (
-            <div data-slot="case-drawer-body" className="flex-1 space-y-5 overflow-y-auto p-5">
-              {/* Case Details */}
-              <div data-slot="case-drawer-details">
-                <SectionTitle>Case Details</SectionTitle>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border bg-card p-4">
-                  {(
-                    [
-                      [
-                        "Case ID",
-                        <span className="font-mono text-xs text-primary-ink">{caseData.id}</span>,
-                      ],
-                      ["Site", caseData.siteDisplay],
-                      ["Status", <CaseStatusBadge status={caseData.status} />],
-                      ["Severity", <SeverityBadge severity={caseData.severity} />],
-                      [
-                        "Assigned To",
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xs font-bold text-primary-ink">
-                            {caseData.assignedTo.name.charAt(0)}
-                          </span>
-                          <TruncatedText text={caseData.assignedTo.name} className="text-sm" />
-                          <span className="font-mono text-2xs text-muted-foreground">
-                            ({caseData.assignedTo.id})
-                          </span>
-                        </span>,
-                      ],
-                      [
-                        "Incidents",
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-px text-sm font-bold text-foreground">
-                          {caseData.incidentIds.length}
-                        </span>,
-                      ],
-                      ["Created", caseData.createdAtDisplay],
-                      ["Updated", caseData.updatedAtDisplay],
-                    ] as [string, React.ReactNode][]
-                  ).map(([label, value]) => (
-                    <div key={label} className="flex flex-col gap-0.5">
-                      <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        {label}
-                      </span>
-                      <span className="text-base font-medium text-foreground">{value}</span>
-                    </div>
+            <DetailDrawerTitle className="leading-snug">{caseData.title}</DetailDrawerTitle>
+            <DetailDrawerDescription>
+              {caseData.id} · {caseData.siteDisplay}
+            </DetailDrawerDescription>
+          </DetailDrawerHeader>
+        ) : (
+          <DetailDrawerHeader>
+            <DetailDrawerTitle className="text-md font-normal text-muted-foreground">
+              Case not found
+            </DetailDrawerTitle>
+          </DetailDrawerHeader>
+        )}
+
+        {/* ── Body ───────────────────────────────────────────────────────── */}
+        {forcedState === "loading" ? (
+          <CaseDrawerSkeleton />
+        ) : forcedState === "error" ? (
+          <div data-slot="case-drawer-error" className="flex flex-1 items-center justify-center p-5">
+            <ListErrorState onRetry={onRetry} title="Couldn't load this case" />
+          </div>
+        ) : caseData ? (
+          <DetailDrawerBody data-slot="case-drawer-body">
+            {/* Case Details */}
+            <DetailDrawerSection data-slot="case-drawer-details" title="Case Details">
+              <DescriptionList columns={2} variant="card">
+                <DescriptionItem label="Case ID" mono>
+                  <span className="text-primary-ink">{caseData.id}</span>
+                </DescriptionItem>
+                <DescriptionItem label="Site">{caseData.siteDisplay}</DescriptionItem>
+                <DescriptionItem label="Status">
+                  <CaseStatusBadge status={caseData.status} />
+                </DescriptionItem>
+                <DescriptionItem label="Severity">
+                  <SeverityBadge severity={caseData.severity} />
+                </DescriptionItem>
+                <DescriptionItem label="Assigned To">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xs font-bold text-primary-ink">
+                      {caseData.assignedTo.name.charAt(0)}
+                    </span>
+                    <TruncatedText text={caseData.assignedTo.name} className="text-sm" />
+                    <span className="font-mono text-2xs text-muted-foreground">
+                      ({caseData.assignedTo.id})
+                    </span>
+                  </span>
+                </DescriptionItem>
+                <DescriptionItem label="Incidents">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-px text-sm font-bold text-foreground">
+                    {caseData.incidentIds.length}
+                  </span>
+                </DescriptionItem>
+                <DescriptionItem label="Created">{caseData.createdAtDisplay}</DescriptionItem>
+                <DescriptionItem label="Updated">{caseData.updatedAtDisplay}</DescriptionItem>
+              </DescriptionList>
+            </DetailDrawerSection>
+
+            {/* Case Notes */}
+            {caseData.notes && (
+              <DetailDrawerSection data-slot="case-drawer-notes" title="Case Notes">
+                <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-3.5 text-base leading-relaxed text-foreground">
+                  {caseData.notes}
+                </div>
+              </DetailDrawerSection>
+            )}
+
+            {/* Entities Involved */}
+            {involvedEntities.length > 0 && (
+              <DetailDrawerSection
+                data-slot="case-drawer-entities"
+                title="Entities Involved"
+                action={
+                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
+                    {involvedEntities.length}
+                  </span>
+                }
+              >
+                <div className="space-y-2">
+                  {involvedEntities.map(({ id, entity }) => (
+                    <EntityCard
+                      key={id}
+                      entityId={id}
+                      entity={entity}
+                      onViewInfo={entity ? () => setViewEntity(entity) : undefined}
+                    />
                   ))}
                 </div>
-              </div>
+              </DetailDrawerSection>
+            )}
 
-              {/* Case Notes */}
-              {caseData.notes && (
-                <div data-slot="case-drawer-notes">
-                  <SectionTitle>Case Notes</SectionTitle>
-                  <div className="rounded-lg border border-severity-medium/25 bg-severity-medium/15 p-3.5 text-base leading-relaxed text-foreground">
-                    {caseData.notes}
-                  </div>
-                </div>
-              )}
-
-              {/* Entities Involved */}
-              {involvedEntities.length > 0 && (
-                <div data-slot="case-drawer-entities">
-                  <SectionTitle
-                    aside={
-                      <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
-                        {involvedEntities.length}
-                      </span>
-                    }
-                  >
-                    Entities Involved
-                  </SectionTitle>
-                  <div className="space-y-2">
-                    {involvedEntities.map(({ id, entity }) => (
-                      <EntityCard
-                        key={id}
-                        entityId={id}
-                        entity={entity}
-                        onViewInfo={entity ? () => setViewEntity(entity) : undefined}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Linked Incidents */}
-              <div data-slot="case-drawer-linked-incidents">
-                <SectionTitle
-                  aside={
-                    <div className="flex items-center gap-1.5">
-                      {(areaFilter !== "all" || cameraFilter !== "all") && (
-                        <Button
-                          variant="link"
-                          onClick={() => {
-                            setAreaFilter("all");
-                            setCameraFilter("all");
-                          }}
-                          className="h-auto border-0 p-0 text-xs font-normal text-muted-foreground hover:text-primary-ink hover:no-underline"
-                        >
-                          Clear ×
-                        </Button>
-                      )}
-                      <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
-                        {filteredEvents.length}
-                        {filteredEvents.length !== allLinkedEvents.length
-                          ? ` / ${allLinkedEvents.length}`
-                          : ""}
-                      </span>
-                    </div>
-                  }
-                >
-                  Linked Incidents
-                </SectionTitle>
-
-                {allLinkedEvents.length > 0 && (
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
-                      <SelectTrigger className="h-7 w-full text-xs">
-                        <SelectValue placeholder="All areas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All areas</SelectItem>
-                        {linkedAreas.map((a) => (
-                          <SelectItem key={a} value={a}>
-                            {a}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
-                      <SelectTrigger className="h-7 w-full text-xs">
-                        <SelectValue placeholder="All cameras" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All cameras</SelectItem>
-                        {linkedCameras.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <span className="text-xs text-muted-foreground">
-                      Click a card to view event details
-                    </span>
-                  </div>
-                )}
-
-                {allLinkedEvents.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-10 text-muted-foreground">
-                    <Link2 className="size-7 opacity-20" />
-                    <p className="text-base">No incidents linked yet.</p>
-                    {isActive && (
-                      <Button variant="ghost" size="sm" onClick={() => setLinkModal(true)}>
-                        Link incidents
-                      </Button>
-                    )}
-                  </div>
-                ) : filteredEvents.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-8 text-muted-foreground">
-                    <p className="text-base">No incidents match this filter.</p>
+            {/* Linked Incidents */}
+            <DetailDrawerSection
+              data-slot="case-drawer-linked-incidents"
+              title="Linked Incidents"
+              action={
+                <div className="flex items-center gap-1.5">
+                  {(areaFilter !== "all" || cameraFilter !== "all") && (
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant="link"
                       onClick={() => {
                         setAreaFilter("all");
                         setCameraFilter("all");
                       }}
+                      className="h-auto border-0 p-0 text-xs font-normal text-muted-foreground hover:text-primary-ink hover:no-underline"
                     >
-                      Clear filters
+                      Clear ×
                     </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {filteredEvents.map((e) => (
-                      <LinkedEventCard key={e.id} event={e} onView={() => setViewEvent(e)} />
-                    ))}
-                  </div>
-                )}
+                  )}
+                  <span className="rounded-full bg-muted px-2 py-px text-xs font-semibold text-muted-foreground">
+                    {filteredEvents.length}
+                    {filteredEvents.length !== allLinkedEvents.length
+                      ? ` / ${allLinkedEvents.length}`
+                      : ""}
+                  </span>
+                </div>
+              }
+            >
+              {allLinkedEvents.length > 0 && (
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v)}>
+                    <SelectTrigger className="h-7 w-full text-xs">
+                      <SelectValue placeholder="All areas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All areas</SelectItem>
+                      {linkedAreas.map((a) => (
+                        <SelectItem key={a} value={a}>
+                          {a}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={cameraFilter} onValueChange={(v) => setCameraFilter(v)}>
+                    <SelectTrigger className="h-7 w-full text-xs">
+                      <SelectValue placeholder="All cameras" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All cameras</SelectItem>
+                      {linkedCameras.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">
+                    Click a card to view event details
+                  </span>
+                </div>
+              )}
 
-                {unresolvedIds.length > 0 && (
-                  <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
-                    <p className="text-xs text-muted-foreground">
-                      <strong className="text-foreground">{unresolvedIds.length}</strong> additional
-                      incident{unresolvedIds.length > 1 ? "s" : ""} linked (details pending sync):{" "}
-                      <span className="font-mono text-2xs">{unresolvedIds.join(", ")}</span>
-                    </p>
-                  </div>
-                )}
-              </div>
+              {allLinkedEvents.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-10 text-muted-foreground">
+                  <Link2 className="size-7 opacity-20" />
+                  <p className="text-base">No incidents linked yet.</p>
+                  {isActive && (
+                    <Button variant="ghost" size="sm" onClick={() => setLinkModal(true)}>
+                      Link incidents
+                    </Button>
+                  )}
+                </div>
+              ) : filteredEvents.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-8 text-muted-foreground">
+                  <p className="text-base">No incidents match this filter.</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAreaFilter("all");
+                      setCameraFilter("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredEvents.map((e) => (
+                    <LinkedEventCard key={e.id} event={e} onView={() => setViewEvent(e)} />
+                  ))}
+                </div>
+              )}
 
-              {/* Case Activity */}
-              <div data-slot="case-drawer-activity">
-                <SectionTitle>Case Activity</SectionTitle>
-                <CaseActivityTimeline activity={caseData.activity} />
-              </div>
-            </div>
-          ) : (
-            <div data-slot="case-drawer-empty" className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-              <AlertTriangle className="size-8 opacity-20" />
-              <p className="text-sm">Case not found.</p>
-            </div>
-          )}
+              {unresolvedIds.length > 0 && (
+                <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                  <p className="text-xs text-muted-foreground">
+                    <strong className="text-foreground">{unresolvedIds.length}</strong> additional
+                    incident{unresolvedIds.length > 1 ? "s" : ""} linked (details pending sync):{" "}
+                    <span className="font-mono text-2xs">{unresolvedIds.join(", ")}</span>
+                  </p>
+                </div>
+              )}
+            </DetailDrawerSection>
 
-          {/* ── Footer ─────────────────────────────────────────────────────── */}
-          {caseData && forcedState !== "loading" && forcedState !== "error" && (
-            <div data-slot="case-drawer-footer" className="flex items-center gap-2 border-t border-border bg-card px-5 py-3.5">
+            {/* Case Activity */}
+            <DetailDrawerSection data-slot="case-drawer-activity" title="Case Activity">
+              <CaseActivityTimeline activity={caseData.activity} />
+            </DetailDrawerSection>
+          </DetailDrawerBody>
+        ) : (
+          <div data-slot="case-drawer-empty" className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+            <AlertTriangle className="size-8 opacity-20" />
+            <p className="text-sm">Case not found.</p>
+          </div>
+        )}
+
+        {/* ── Footer ─────────────────────────────────────────────────────── */}
+        {caseData && forcedState !== "loading" && forcedState !== "error" && (
+          <DetailDrawerFooter data-slot="case-drawer-footer">
+            <DetailDrawerFooterStart className="gap-2">
               <UpdateCaseMenu
                 isActive={!!isActive}
                 onChangeStatus={() => setStatusModal(true)}
@@ -1742,59 +1710,59 @@ export function CaseDrawer({ caseId, onClose, forcedState = "normal", onRetry }:
                 onEditCase={() => setEditModal(true)}
                 onDeleteCase={() => setDeleteModal(true)}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-auto gap-1.5 text-sm"
-                onClick={() => handleExportPDF(caseData, allLinkedEvents)}
-              >
-                <FileDown className="size-3.5" />
-                Export PDF
-              </Button>
-            </div>
-          )}
+            </DetailDrawerFooterStart>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-sm"
+              onClick={() => handleExportPDF(caseData, allLinkedEvents)}
+            >
+              <FileDown className="size-3.5" />
+              Export PDF
+            </Button>
+          </DetailDrawerFooter>
+        )}
 
-          {/* ── Modals ─────────────────────────────────────────────────────── */}
-          {caseData && (
-            <>
-              <ChangeStatusModal
-                open={statusModal}
-                currentStatus={caseData.status}
-                onClose={() => setStatusModal(false)}
-                onConfirm={handleStatusConfirm}
-              />
-              <ReassignModal
-                open={reassignModal}
-                current={caseData.assignedTo}
-                onClose={() => setReassignModal(false)}
-                onConfirm={handleReassignConfirm}
-              />
-              <LinkNewIncidentsModal
-                open={linkModal}
-                caseSite={caseData.site}
-                alreadyLinked={caseData.incidentIds}
-                onClose={() => setLinkModal(false)}
-                onConfirm={handleLinkConfirm}
-              />
-              <EditCaseModal
-                open={editModal}
-                title={caseData.title}
-                severity={caseData.severity}
-                notes={caseData.notes}
-                onClose={() => setEditModal(false)}
-                onConfirm={handleEditConfirm}
-              />
-              <DeleteCaseModal
-                open={deleteModal}
-                caseId={caseData.id}
-                caseTitle={caseData.title}
-                onClose={() => setDeleteModal(false)}
-                onConfirm={handleDeleteConfirm}
-              />
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+        {/* ── Modals ─────────────────────────────────────────────────────── */}
+        {caseData && (
+          <>
+            <ChangeStatusModal
+              open={statusModal}
+              currentStatus={caseData.status}
+              onClose={() => setStatusModal(false)}
+              onConfirm={handleStatusConfirm}
+            />
+            <ReassignModal
+              open={reassignModal}
+              current={caseData.assignedTo}
+              onClose={() => setReassignModal(false)}
+              onConfirm={handleReassignConfirm}
+            />
+            <LinkNewIncidentsModal
+              open={linkModal}
+              caseSite={caseData.site}
+              alreadyLinked={caseData.incidentIds}
+              onClose={() => setLinkModal(false)}
+              onConfirm={handleLinkConfirm}
+            />
+            <EditCaseModal
+              open={editModal}
+              title={caseData.title}
+              severity={caseData.severity}
+              notes={caseData.notes}
+              onClose={() => setEditModal(false)}
+              onConfirm={handleEditConfirm}
+            />
+            <DeleteCaseModal
+              open={deleteModal}
+              caseId={caseData.id}
+              caseTitle={caseData.title}
+              onClose={() => setDeleteModal(false)}
+              onConfirm={handleDeleteConfirm}
+            />
+          </>
+        )}
+      </DetailDrawer>
 
       {/* ── Nested event detail drawer ──────────────────────────────────── */}
       <EventDrawer

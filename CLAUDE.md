@@ -10,7 +10,7 @@ This is a **React + TypeScript dashboard**. All code generated here must follow 
 |------|---------|
 | React + TypeScript + Vite | App framework and bundler |
 | Tailwind CSS v4 | Styling — `@tailwindcss/vite` plugin, CSS-first config |
-| shadcn/ui | Base design system — owns `components/ui/` |
+| shadcn/ui | Base design system — owns `packages/ui/src/components/ui/` |
 | TanStack Query | Server state — data fetching, caching, loading/error states |
 | Zustand | Client state — UI state, preferences, ephemeral app state |
 | Lucide React | Icons — only icon library used in this project |
@@ -21,20 +21,33 @@ This is a **React + TypeScript dashboard**. All code generated here must follow 
 ## Folder Structure
 
 ```
-src/
+packages/ui/                 # @accel/ui — the design system (npm workspace; see packages/ui/README.md)
+├── src/
+│   ├── components/
+│   │   ├── ui/          # shadcn primitives — managed by shadcn CLI, we own the code
+│   │   ├── shared/      # reusable design-system composites
+│   │   ├── custom/      # custom components built on shadcn patterns (see conventions below)
+│   │   ├── layout/      # reusable page structure (PageHeader)
+│   │   └── charts/      # Recharts-based chart components
+│   ├── lib/             # cn(), formatters, tokens (paper palette), dialCodes, playback
+│   ├── hooks/           # use-mobile
+│   ├── foundations/     # Storybook: token reference, type, colour, motion…
+│   ├── docs/            # Storybook: usage guidelines, page patterns
+│   └── styles.css       # ALL design tokens + Tailwind theme + base styles
+└── test/                # Vitest interaction tests
+src/                         # the Accel app
 ├── components/
-│   ├── ui/          # shadcn primitives — managed by shadcn CLI, we own the code
-│   ├── shared/      # reusable design-system composites — no app state, routing or mock data
-│   ├── app/         # Accel-specific components (UserMenu, NotificationsBell, RequireRole, auth pieces…)
-│   ├── custom/      # custom components built on shadcn patterns (see conventions below)
-│   ├── layout/      # Sidebar, Header, page wrappers
-│   ├── charts/      # Recharts-based chart components
+│   ├── app/         # Accel-specific components (AppLayout, AppSidebar, UserMenu, NotificationsBell, RequireRole, auth pieces…)
+│   └── registry.json    # the approved-component list (package folders + app/)
 ├── pages/           # one file or folder per route
-├── lib/             # utilities — cn(), formatters, constants
-├── hooks/           # custom React hooks
+├── lib/             # app utilities (queryClient, quick actions, rule templates…)
+├── hooks/           # app hooks
 ├── stores/          # Zustand stores
-└── types/           # shared TypeScript types and interfaces
+├── types/           # shared TypeScript types and interfaces
+└── index.css        # imports @accel/ui/styles.css, adds app-only styles
 ```
+
+**Imports.** App code and prototypes import the design system from `@accel/ui`: deep paths (`@accel/ui/components/ui/button`, `@accel/ui/lib/utils`) or the barrel (`import { Button, KpiCard } from "@accel/ui"`). Inside `packages/ui`, use relative imports only — ESLint blocks `@/…` (app code) and `@accel/ui` self-imports there. The old `@/components/ui|shared|…` paths still resolve (compatibility aliases in `aliases.ts`) for files not yet moved over; don't use them in new code.
 
 ---
 
@@ -42,40 +55,41 @@ src/
 
 > **Design system & Storybook.** Run `npm run storybook` to browse the full
 > library. Before building anything, check what already exists:
-> - **`components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible), plus **SegmentedControl** (option groups, view switchers, filter chips), **Item / ItemButton** (clickable list rows and cards), **Slider** (range values).
-> - **`components/shared/`** — reusable design-system composites: `StatusBadge` (all status/severity/health pills, `tone=`), `KpiCard` (`tone=`), `SectionCard`, `EmptyState`, `PageStates`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `DateRangeBar`, `Modal`/`ModalForm`/`ConfirmDialog`, `DataTable`, `ChoiceDropdown`, `OtpField`, `PhoneField`, `TimeSelect`, `ProgressRow`, `TruncatedText`, `FloatingBar`, `PlaybackControls`. These must never import from `@/stores`, `@/mocks`, `@/pages` or the router.
+> - **`@accel/ui/components/ui/`** — shadcn primitives (Button, Select, Textarea, Switch, Tabs, Table, Pagination, Dialog, Sheet, Popover, DropdownMenu, Tooltip, Checkbox, RadioGroup, Progress, Label, Card, Chart, Avatar, Badge, Input, Separator, Skeleton, Collapsible), plus **SegmentedControl** (option groups, view switchers, filter chips), **Item / ItemButton** (clickable list rows and cards), **Slider** (range values).
+> - **`@accel/ui/components/shared/`** — reusable design-system composites: `StatusBadge` (all status/severity/health pills, `tone=`), `KpiCard` (`tone=`), `SectionCard`, `EmptyState`, `PageStates`, `FilterDropdown`, `FilterPanel`, `Toolbar`/`ToolbarSearch`, `DateRangeBar`, `Modal`/`ModalForm`/`ConfirmDialog`, `DataTable` (`variant="list"`, `selection`, `stickyHeader` — use it for every list table), `DetailDrawer` (record side panels), `DescriptionList` (label/value facts), `Stepper`, `ChoiceDropdown`, `OtpField`, `PhoneField`, `TimeSelect`, `ProgressRow`, `TruncatedText`, `FloatingBar`, `PlaybackControls`. These must never import from `@/stores`, `@/mocks`, `@/pages` or the router.
 > - **`components/app/`** — Accel-specific components that depend on app state, routing or product flows (`UserMenu`, `NotificationsBell`, `CommandPalette`, `RequireRole`, `DrawZoneModal`, auth/onboarding pieces). Not part of the reusable design system.
 > - **Prop vocabulary** — `variant` = visual style, `tone` = semantic colour (`success`, `warning`, `severity-critical`, `violet`…), `size` = scale. (`KpiCard accent=` is a deprecated alias of `tone`.)
 > - **`components/charts/`** — `AreaChart`, `BarChart`, `LineChart`, `DonutChart`.
-> - **`lib/formatters.ts`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.
+> - **`@accel/ui/lib/formatters`** — `formatRelativeTime`, `formatDuration`, `formatBytes`, `formatCurrency`, `daysBetween`, `shiftDate`, `formatDate`.
+> - **Re-skinning for another brand** — `docs/theming.md` (override the brand ramp on `:root`).
 
 ### 0. Building page UI — existing components only (ask before creating new ones)
 
 Pages in `src/pages/` are **composed from the approved components** in `src/components/registry.json` — never hand-rolled.
 
-1. **Look first.** Check `src/components/registry.json`, Storybook (`npm run storybook`) and the catalogue below for a component that fits — including its variants/props.
+1. **Look first.** Check `docs/choosing-components.md` (which component for which job), `src/components/registry.json`, Storybook (`npm run storybook`) and the catalogue below for a component that fits — including its variants/props.
 2. **Compose.** Build the page from those components. Small page-local helpers are fine *only* if they just arrange existing components; no new styled primitives (no raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<dialog>`, no direct Radix imports — lint blocks these in pages).
 3. **Nothing fits? STOP and ask the user before writing it.** Say what's missing, which existing components you considered and why they don't fit, and propose: name, folder (`ui` / `shared` / `charts` / `layout` / `custom`), props, and variants. Do not create the component until the user approves.
-4. **After approval:** build it in `src/components/<folder>/` following the conventions below (CVA, `cn()`, tokens), name every element with `data-slot` (`{component}-{part}`), add a `.stories.tsx`, and add it to `src/components/registry.json`.
+4. **After approval:** build it in `packages/ui/src/components/<folder>/` (Accel-specific: `src/components/app/`) following the conventions below (CVA, `cn()`, tokens), name every element with `data-slot` (`{component}-{part}`), add a `.stories.tsx`, and add it to `src/components/registry.json`.
 
 The same lint rules apply to `prototypes/` (the main UI) — run `npm run typecheck:prototypes` too, since `tsc -b` doesn't cover them. `npm run lint` enforces this: unregistered component files fail (`lint:components`), unnamed elements fail (`lint:slots`), raw primitives in pages fail (ESLint). Existing page debt is baselined in `eslint-suppressions.json` — never add to it.
 
-### 1. Prefer shadcn components from `components/ui/`
+### 1. Prefer shadcn components from `@accel/ui/components/ui/`
 
-Always reach for a shadcn primitive first. Check `components/ui/` before building anything new.
+Always reach for a shadcn primitive first. Check `packages/ui/src/components/ui/` before building anything new.
 
 ```tsx
 // Good — use the shadcn primitive
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@accel/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@accel/ui/components/ui/card";
 ```
 
 ### 2. Modifying a shadcn component
 
-When a shadcn component needs a tweak, **edit the file in `components/ui/` directly** — we own this code. Leave a comment explaining why.
+When a shadcn component needs a tweak, **edit the file in `packages/ui/src/components/ui/` directly** — we own this code. Leave a comment explaining why.
 
 ```tsx
-// In components/ui/button.tsx
+// In packages/ui/src/components/ui/button.tsx
 // Added `loading` variant to support async button states across the dashboard.
 const buttonVariants = cva(/* ... */, {
   variants: {
@@ -115,7 +129,7 @@ const badgeVariants = cva(
 
 **Use `cn()` for class merging:**
 ```tsx
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils"; // inside packages/ui: a relative path
 
 <div className={cn("base-classes", isActive && "active-class", className)} />
 ```
@@ -129,7 +143,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 **Use `forwardRef` and proper TypeScript types:**
 ```tsx
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils"; // inside packages/ui: a relative path
 
 export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -182,7 +196,7 @@ Do not install component libraries that duplicate shadcn functionality (Chakra U
 
 ### Type scale — never arbitrary `text-[Npx]`
 
-The dense dashboard type scale lives in `src/index.css` (`@theme`). Always use a
+The dense dashboard type scale lives in `packages/ui/src/styles.css` (`@theme`). Always use a
 token; arbitrary pixel sizes are blocked by ESLint (`no-restricted-syntax`).
 
 | Token | Size | Use |
@@ -206,15 +220,16 @@ token; arbitrary pixel sizes are blocked by ESLint (`no-restricted-syntax`).
 
 ### Other token scales
 
-- **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-dropdown/sticky/overlay/drawer/modal/popover/toast/tooltip` — `popover` for menus opened inside a modal or drawer). Never `z-[100]`.
+- **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-base/dropdown/sticky/overlay/drawer/modal/popover/toast/tooltip` — `popover` for menus opened inside a modal or drawer). Never `z-[100]`.
 - **Motion** — durations `--duration-fast` / `--duration-normal` / `--duration-slow` (e.g. `duration-[var(--duration-normal)]`) + `ease-standard` / `ease-emphasized`.
 - **Icon sizes** — `size-3` (badges), `size-4` (buttons/inputs/rows), `size-5` (section/empty-state), `size-6+` (hero only).
 - **Elevation** — `shadow-raised` (cards, inputs, tabs), `shadow-floating` (popovers, dropdowns, tooltips, toasts), `shadow-modal` (dialogs, sheets, drawers). Theme-aware. Never `shadow-sm` … `shadow-2xl`.
 - **Tints** — opacity modifiers on the base token: `/5` row hover wash, `/10` subtle fill (chips, selected rows), `/15` status tint (badges), `/20`–`/30` tint borders. The `*-soft` and `primary-muted` tokens are deprecated.
+- **Secondary text** — always full `text-muted-foreground` (it is tuned to 4.5:1). Never fade text with `text-muted-foreground/60` etc.; opacity modifiers on muted-foreground are for icons and decorative marks only.
 - **Brand orange** — `bg-primary-fill` for solid fills that carry a label (with `text-primary-foreground`); `text-primary-ink` for orange text. Bare `bg-primary` / `text-primary` fail WCAG AA there — keep `--primary` for rings, tints (`bg-primary/10`), borders, dots and charts.
 - **Labels on solid status fills** — `bg-success` / `bg-severity-critical/95` … take `text-status-foreground` (white in light, near-black in dark).
 - **Media** — video, camera tiles, snapshots, floor plans are dark in both themes: `bg-media`, `bg-media-raised`, `bg-scrim/60`, `text-media-foreground/85`, `bg-camera-feed`. Never raw `black`/`white`.
-- **Color tiers** — `src/index.css` has primitives (`--palette-orange-500`, `--palette-neutral-930`…) → semantic tokens → sidebar/chart component tokens. Components use semantic tokens only, never primitives. `violet` is a categorical tone (AI/model, vehicles, NVR, action-taken) — `purple` is its deprecated old name. Severity is `severity-critical/high/medium/low` (`sev-*` is the deprecated old name). Print/PDF/email HTML that can't read CSS vars uses the paper palette in `src/lib/tokens.ts`.
+- **Color tiers** — `packages/ui/src/styles.css` has primitives (`--palette-orange-500`, `--palette-neutral-930`…) → semantic tokens → sidebar/chart component tokens. Components use semantic tokens only, never primitives. `violet` is a categorical tone (AI/model, vehicles, NVR, action-taken) — `purple` is its deprecated old name. Severity is `severity-critical/high/medium/low` (`sev-*` is the deprecated old name). Print/PDF/email HTML that can't read CSS vars uses the paper palette in `src/lib/tokens.ts`.
 
 ### Semantic color tokens — never raw Tailwind palette colors
 
@@ -238,14 +253,14 @@ The design uses CSS variable-backed tokens. Always use those.
 
 ### Guardrails — `npm run lint` enforces the above
 
-`npm run lint` runs `scripts/check-tokens.mjs` (token naming and tier rules in `src/index.css`), `scripts/check-slots.mjs` (every element in a component has a `data-slot`), `scripts/check-components.mjs` (component registry) and ESLint, which bans in app code: Tailwind palette colours (`bg-red-500`, `bg-neutral-950`), raw `white`/`black`, `shadow-sm` … `shadow-2xl`, deprecated names (`sev-*`, `purple`, `*-soft`, `primary-muted`), arbitrary `z-[N]`, `rounded-[Npx]` and `text-[Npx]`, and `var(--palette-*)`.
+`npm run lint` runs `scripts/check-tokens.mjs` (token naming and tier rules in `packages/ui/src/styles.css`), `scripts/check-slots.mjs` (every element in a component has a `data-slot`), `scripts/check-components.mjs` (component registry) and ESLint, which bans in app code: Tailwind palette colours (`bg-red-500`, `bg-neutral-950`), raw `white`/`black`, `shadow-sm` … `shadow-2xl`, deprecated names (`sev-*`, `purple`, `*-soft`, `primary-muted`), arbitrary `z-[N]`, `rounded-[Npx]` and `text-[Npx]`, and `var(--palette-*)`.
 
 Violations that predate a rule are baselined in `eslint-suppressions.json`. **Never add to it** — fix the code instead. After fixing old violations, run `npm run lint:prune` to shrink the baseline.
 
 ### `cn()` for conditional classes
 
 ```tsx
-import { cn } from "@/lib/utils";
+import { cn } from "@accel/ui/lib/utils"; // inside packages/ui: a relative path
 
 <button
   className={cn(
@@ -270,6 +285,13 @@ All color usage must be expressed with semantic tokens — those automatically h
 ```
 
 ---
+
+### Tests and accessibility gates
+
+- `npm test` — Vitest + Testing Library interaction tests in `packages/ui/test/*.test.tsx` (not next to components: the registry check treats every `.tsx` in a component folder as a component). When you change a component's behaviour (keyboard, selection, labelling, open/close), add or update a test there.
+- `npm run test:a11y` — builds Storybook and runs axe over every story in light **and** dark (`scripts/check-a11y.mjs`). Must report 0 violations. A justified exception goes in that story's `parameters.a11y.config.rules`, with a comment saying why.
+- **Changelog** — any change under `packages/ui/` adds a line under `## [Unreleased]` in `packages/ui/CHANGELOG.md`, written for the people using the components (`npm run lint:changelog` checks it). Decide major / minor / patch with the table in `packages/ui/README.md#versioning`; deprecate before removing.
+- Pull requests run these in Bitbucket Pipelines (`bitbucket-pipelines.yml`): guardrail checks, `npm run build`, prototype typecheck, tests, and the a11y gate.
 
 ## Code Conventions
 

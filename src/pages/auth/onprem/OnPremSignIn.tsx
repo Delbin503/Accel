@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@accel/ui/components/ui/button";
+import { Input } from "@accel/ui/components/ui/input";
 import { AuthLayout } from "../AuthLayout";
-import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@accel/ui/lib/utils";
+import { Checkbox } from "@accel/ui/components/ui/checkbox";
 
 /**
  * On-Premise sign-in page.
@@ -140,7 +140,7 @@ export default function OnPremSignInPage() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-2xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+        <div className="my-5 flex items-center gap-3 text-2xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           <span className="h-px flex-1 bg-border" />
           first-run setup
           <span className="h-px flex-1 bg-border" />
@@ -161,7 +161,7 @@ export default function OnPremSignInPage() {
           <span className="text-xl text-secondary">→</span>
         </Link>
 
-        <p data-slot="on-prem-sign-in-page-footer" className="mt-6 text-center font-mono text-2xs text-muted-foreground/60">
+        <p data-slot="on-prem-sign-in-page-footer" className="mt-6 text-center font-mono text-2xs text-muted-foreground">
           Build 4.7.2-onprem · Air-gapped · No telemetry
         </p>
       </div>

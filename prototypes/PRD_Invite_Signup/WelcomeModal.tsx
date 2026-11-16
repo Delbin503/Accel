@@ -5,9 +5,9 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
-import { roleLabel, siteLabels, type InviteContext } from "./shared";
+} from "@accel/ui/components/shared/Modal";
+import { Button } from "@accel/ui/components/ui/button";
+import { roleLabel, siteLabels, type InviteContext } from "./invite";
 
 export function WelcomeModal({
   open,

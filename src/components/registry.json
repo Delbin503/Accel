@@ -37,6 +37,8 @@
       "ConfirmDialog",
       "DataTable",
       "DateRangeBar",
+      "DescriptionList",
+      "DetailDrawer",
       "EmptyState",
       "FilterDropdown",
       "FilterPanel",
@@ -52,6 +54,7 @@
       "ProgressRow",
       "SectionCard",
       "StatusBadge",
+      "Stepper",
       "TimeSelect",
       "Toolbar",
       "TruncatedText"
@@ -67,11 +70,11 @@
       "LineChart"
     ],
     "layout": [
-      "AppLayout",
-      "AppSidebar",
       "PageHeader"
     ],
     "app": [
+      "AppLayout",
+      "AppSidebar",
       "AuthBackground",
       "AuthStepBar",
       "CoinIcon",

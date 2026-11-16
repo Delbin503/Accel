@@ -1,6 +1,6 @@
 import { Play, MapPin, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/shared/TruncatedText";
+import { cn } from "@accel/ui/lib/utils";
+import { TruncatedText } from "@accel/ui/components/shared/TruncatedText";
 import type { RecordingDisplay } from "@/mocks/recordings";
 
 /* ── Mode chip ───────────────────────────────────────────────────────────── */

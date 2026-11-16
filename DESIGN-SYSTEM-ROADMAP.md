@@ -10,22 +10,17 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1–2 days · **L** ≈ 3–5 day
 
 ## ▶ Start here (next session)
 
-*Updated 2026-11-13, end of day.*
+*Updated 2026-11-16.*
 
-**State of the branch:** Phases 0–2 are committed and pushed (Bitbucket `design-updates-nov-6`, last push `02d6687`). **Today's later work is NOT committed yet** (Phase 2A below): layer names on every component, the slot/registry checks and the page guardrails. Your own WIP (`run-analysis/index.tsx`, `runAnalysisReport.ts`, email templates, website files) is still uncommitted and was never touched.
+**State:** Phases 0–6 are done except items that need you. Everything after commit `cf0ee2d` is **uncommitted** in the working tree, and `cf0ee2d` itself isn't pushed (the Bitbucket token returns 403).
 
-**Do these in order:**
+**Needs you:**
+1. **Renew the Bitbucket token**, then commit and push (push branch `design-updates-nov-6` on `sigmawaveai/vibe-coding-accel`). The first PR runs the new pipeline (checks + a11y).
+2. **Commit your run-analysis and email-template work.** That unblocks removing the deprecated aliases (a major-version change), the compatibility import aliases, and the last 4 ESLint errors.
+3. **Chromatic:** create a project and add `CHROMATIC_PROJECT_TOKEN` in Bitbucket for visual snapshots.
+4. Phase 7 decisions: is Figma the source of truth? When to adopt DTCG / Style Dictionary?
 
-1. ~~Commit + push Phase 2A~~ ✅ `d70e0b7`
-2. ~~Phase 2B: prototypes~~ ✅ tokens + raw elements done; needs committing
-3. ~~Phase 2C: name page sections~~ ✅ done 2026-11-14 (1,331 section names in 167 page files); needs committing
-4. Commit your run-analysis WIP when it's ready. That unblocks removing the deprecated aliases (end of Phase 2).
-5. **Phase 3** (component APIs): split, prop rename and app-page migration done 2026-11-15; left: adopt DataTable/Toolbar/chart wrappers, naming audit, spacing tokens, decision tree.
-
-**Open questions for you** (none block the steps above):
-- Dialogs, sheets and popovers render text at the browser default **16px**, because `body` sets no font size. Was 16px intended, or should it be the 13px `text-base`? It's a one-line fix either way.
-- `DepartmentSelect` uses v3 syntax `w-[--radix-popover-trigger-width]`, which Tailwind v4 ignores, so the dropdown width is probably wrong. Fix it?
-- Brand artwork (coin icon, sidebar logo, draw-zone placeholder) keeps raw hex. Add brand tokens, or leave it as artwork?
+**Open questions** (from earlier, still open): dialog text at 16px vs 13px `text-base`; `DepartmentSelect`'s v3 width syntax; brand artwork as tokens or artwork.
 
 ---
 
@@ -206,15 +201,29 @@ Steps:
 - [x] **Prop vocabulary**: `variant` = style, `tone` = semantic colour, `size` = scale. Only outlier was `KpiCard accent=` → `tone=` (88 uses, 25 type refs); `accent` / `KpiAccent` stay as deprecated aliases
 - [x] **Raw elements in `src/pages` → components**: 450 → 0 (one hidden file input excepted; run-analysis WIP and the dev gallery not touched). Same mapping as the prototypes. Follow-up fixes: `ItemButton variant="plain"` keeps its keyboard focus ring; table rows keep their dividers
 - [x] `registry.json` has separate `shared` (22) and `app` (21) groups; slot check covers `components/app`
-- [ ] **Adopt the built-but-unused components** (decided: keep and adopt):
-  - `DataTable`: 0 uses today; 11 files hand-assemble `Table` parts
-  - `Toolbar` / `ToolbarSearch`: 0 uses
-  - Chart wrappers (`AreaChart`, `BarChart`, `LineChart`, `DonutChart`): 1 file uses them, 8 import Recharts directly. Then add a lint rule banning direct `recharts` imports in pages
-  - `DeploymentModeSwitcher`: 0 uses; wire it in or retire it
-- [ ] Move remaining tab/picker groups kept as individual Buttons to `SegmentedControl` or `Tabs` where the look allows (Phase 1.3 assessment/Re-ID, option cards)
-- [ ] Run `/design-system-ops:naming-audit` on component names
+- [x] **Adopt the built-but-unused components** (2026-11-15):
+  - ✅ `ToolbarSearch` / `Toolbar`: 19 search fields and 2 filter rows converted (app pages + Phase 1.3)
+  - ✅ `DataTable` (was: 0 of ~25 tables fit the old API; fixed by the additions below). Old blockers: the house list style (muted header, eyebrow headers, `px-4`, dividers), row selection, sticky headers, clicks inside cells, keyboard row activation
+  - ✅ Chart wrappers (was: 0 dashboard charts fit; fixed below). Old blockers: no Y axis, no angled X labels, no dots, series keys with spaces break `var(--color-<key>)`. Sport-analytics charts (reference lines, dual axes, sparklines) legitimately stay on Recharts
+  - ✅ **API additions approved and built (2026-11-15)**, each with a story:
+    1. `DataTable variant="list"` (house list style) + `column.headClassName`
+    2. `column.stopRowClick` (clicks and keys inside the cell don't open the row)
+    3. `DataTable selection={{ selectedIds, onToggle, onToggleAll, getRowLabel }}` (checkbox column, indeterminate header)
+    4. `DataTable stickyHeader` + `containerClassName` (scroll height) + `column.sticky: "right"` (opaque fills match header, hover and selected rows); `ui/table` gained `containerClassName`
+    5. `getRowClassName(row)` + keyboard row activation (rows focusable, Enter/Space, focus outline)
+    6. `empty.variant="inline"`
+    7. Chart wrappers: `yAxis`, `xAxis` (angle adds left margin), `dots`, `referenceLines`, `valueFormatter` (new `ChartTooltipContent valueFormatter` in `ui/chart`). Marks use the resolved series colour, so keys with spaces work; an explicit Y domain clips bars
+    8. `ToolbarSearch size="sm"` + `inputClassName`
+  - ✅ **Adopted (2026-11-15):** 25 tables → `DataTable` (14 in app pages, 11 in Phase 1.3; selection on recordings, model-deployment ×3 and TaSessions; sticky headers on model-deployment, members tables and the AAR shot table; inline empty on billing and NVR). 8 dashboard charts (4 dashboards × trend line + cameras bar) → chart wrappers; those pages no longer import Recharts. 3 country-code searches → `ToolbarSearch size="sm"`. Left on ui/table by design: permission matrices (system-config ×3), A-vs-B comparison tables (gym, golf), the AAR cue×shot grid and grades table, the golf swing table (colSpan rows). `selection.selectAllLabel` added along the way
+  - Then: lint rule banning direct `recharts` imports in pages (baseline the sport charts)
+- [x] Move remaining tab/picker groups to `SegmentedControl` or `Tabs` (2026-11-15): 15 groups in 11 files — TaSessions (header switcher, units chips), ActivitiesPicker chips, TaModelDeployment (All/Cameras/Devices, Deploy/Models), Re-ID Live Monitoring + Model Deployment drawer tabs (`Tabs` line), Re-ID Deploy/Models, RecordingSchedule weekdays, golf/gym drawing tools (clicking the active tool still turns it off), TaPoseDefaults use case, TaSystemConfig time format + week start. Sign-up monthly/annual became a `Switch`. Kept: rich option cards (→ `ItemButton selected`), single toggles (`Button aria-pressed`), the prototype index tabs (plain HTML outside the design system)
+- [x] Component naming audit (2026-11-15). Names are clear overall; file naming follows the folder (ui/custom kebab-case like shadcn, others PascalCase). Findings, **proposals awaiting your OK** (renames change APIs):
+  - 🟠 **Duplicate concepts under different names:** `OptionChips` (ModalForm) duplicates `SegmentedControl type="multiple" variant="outline"`; `ModalSearchInput` duplicates `ToolbarSearch`; `IconButton` (PlaybackControls) duplicates `Button size="icon*"`. Proposal: migrate callers, deprecate the duplicates
+  - 🟡 **Player parts lack a common prefix:** `ChipRow`, `ScrubTrack`, `ZoomSurface` (exported from PlaybackControls) → `PlaybackChipRow`, `PlaybackScrubTrack`, `PlaybackZoomSurface`, matching `PlaybackSettingsMenu`
+  - 🟡 **`custom/` is a fourth bucket** with 2 components: `CoachMark` is reusable (→ shared), `GuideGifModal` is product onboarding (→ app). Proposal: fold `custom/` away
+  - ⚪ `ConfirmDialog` is built on `Modal`, not `Dialog` (fine as a common idiom; leave). `PageStates.tsx` exports `ListLoadingState` / `ListErrorState` (file name ≠ exports). `MODAL_NOTE` and `NAV_GROUPS` constants exported from component files trigger fast-refresh warnings → move to `lib/`
 - [ ] Add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) once components share one rhythm (moved from Phase 2)
-- [ ] Write a decision tree for overlapping pieces (Modal vs Dialog vs Sheet; ChoiceDropdown vs Select vs FilterDropdown; SegmentedControl vs Tabs; ItemButton vs Button) with `/design-system-ops:component-decision-tree`
+- [x] Decision guide: [docs/choosing-components.md](docs/choosing-components.md), covering overlays, single and multi choice, actions, data display, empty/loading/error, inputs and page structure. Linked from CLAUDE.md step 1 of "Building page UI"
 
 **Done when:** every component is in exactly one of design system / app; every design-system component uses the shared prop vocabulary; there's a written "which one do I use" decision tree.
 **Then →** Phase 4.
@@ -225,13 +234,29 @@ Steps:
 
 **Why:** a component nobody can find or understand gets rebuilt. Storybook is the catalogue other projects will browse.
 
-- [ ] Stories for **every** design-system component (today: shared 10/43, custom 0/2, layout 0/3, charts 1/4). Each covers default, variants, sizes, and loading/empty/error states where data-driven
-- [ ] Zero violations in the Storybook **a11y** panel (addon already installed)
-- [ ] `/design-system-ops:token-documentation`: token reference pages generated from `index.css`
-- [ ] `/design-system-ops:usage-guidelines`: do/don't for the top 10 components
-- [ ] `/design-system-ops:pattern-documentation`: page patterns (list page = KPI row + toolbar + table + drawer; detail drawer; wizard)
-- [ ] Update the Introduction story with the tier model, naming rules and roadmap link
-- [ ] Run `/design-system-ops:docs-coverage` to check for gaps
+- [x] Stories for **every** design-system component: 23 new story files (ui command/sidebar, 12 shared, 2 custom, 3 layout) + 5 more chart stories → **182 stories, all render without errors** (checked one by one in a running Storybook, 2026-11-15). `npm run storybook` or the `storybook` preview config
+- [x] Component issues found while writing stories, fixed: DateRangeBar `onClear` now renders its Clear link and its From/To labels are linked to their inputs; PhoneField option buttons get `type="button"` and its inputs get aria-labels; ModalField labels link to their control; ChoiceDropdown gets `disabled` + `className`; ProgressRow gets `className`; arbitrary `h-[88px]` / `max-w-[220px]` → `h-22` / `max-w-55`; `components/layout/index.ts` exports its components. Still open: TruncatedText reads a ref during render (`react-hooks/refs`) and needs a TooltipProvider above it; chart wrappers have no empty state
+- [x] Zero violations in the Storybook **a11y** panel (2026-11-15): axe over all 189 stories × light/dark went **108 → 0** (story×rule).
+  - Storybook fixes: the theme class now goes on `<html>` before render (`.storybook/theme.ts`, `beforeEach`), so root-resolved tokens and portalled overlays match the theme; a `TooltipProvider` wraps stories
+  - Tokens: light status inks (green/amber/blue/violet/red/tangerine) 4 lightness points darker so badges clear 4.5:1 on their /15 tint; light `--muted-foreground` 40% → 37%; light orange ink 36% → 33%; dark red-500 66% → 69%
+  - Components: DataTable list headers and ModalForm section titles use full `text-muted-foreground` (were /60, /80); sidebar group labels, version and credits likewise; inactive Tabs use `text-muted-foreground`; KpiCard badge tint /10; sidebar collapsible no longer puts a `<div>` inside the menu `<ul>`; CoachMark has a dialog name; decorative Command separators are `aria-hidden`; `Slider` puts `aria-label` on its thumbs (new `thumbLabels`); `ModalTextInput` / `ModalPasswordInput` take the `id` ModalField links its label to; DataTable `selection.selectAllLabel`
+  - Stories: labelled demo controls, `text-secondary` (a background token) no longer used as text, heading order
+  - Documented exceptions (story `parameters.a11y`): Command "Empty" (cmdk's empty listbox), CoachMark "Default" (pulse animation), ModalForm "Checklist" (disabled rows are exempt)
+  - Follow-up: page code still uses `text-muted-foreground/60`–`/70` for eyebrow labels in places; the same contrast issue applies there (Phase 5 a11y CI will catch it)
+- [x] Token reference generated from `index.css` (2026-11-15): Storybook **Foundations/Token Reference** (semantic colours by section, primitives, scales, deprecated → replacement). `src/foundations/tokenParser.ts` parses the CSS at build time (also runs in Node), so the page can't drift; 223 tokens, matching `check-tokens`. Comment/grouping slips it found in `index.css` fixed
+- [x] Usage guidelines (2026-11-15): Storybook **Guidelines/Usage** — live Do / Don't + rules for Button, StatusBadge, KpiCard, SectionCard, DataTable, Toolbar, Modal/ModalForm/ConfirmDialog, Sheet, SegmentedControl vs Tabs, EmptyState/PageStates
+- [x] Page patterns (2026-11-15): Storybook **Guidelines/Page patterns** — working list page (search, filters, KPI filter, row → drawer, delete via ConfirmDialog, loading/empty/error switch), detail drawer, 3-step form wizard (+ validation errors), each with a numbered anatomy
+  - ✅ **New components, approved and built (2026-11-15)**, each with stories, data-slots, registry entry and 0 axe violations:
+    - `DescriptionList` / `DescriptionItem` (shared): a real `<dl>`; `layout` stacked (drawer info grid) · inline (label left, value right), `columns` 1–3, `variant` card · plain, `mono`, `wide`, an em dash for empty values
+    - `Stepper` (shared): `<ol>` with `aria-current="step"`, done / active / upcoming states, `labels` always · sm-up (names stay available to screen readers). `AuthStepBar` and `OnPremStepBar` are now thin wrappers over it
+    - `DetailDrawer` (shared) on `Sheet`: `size` md · lg (today's `min(860px,58vw)`) · xl; `DetailDrawerHeader` (+ `actions`, built-in close), `Title`, `Description`, `Body`, `Section` (eyebrow title + action), `Footer` / `FooterStart`
+    - Page patterns and Usage guidelines now use them; decision guide and CLAUDE.md list them
+  - [x] **Adopted `DetailDrawer` + `DescriptionList` in every app drawer** (2026-11-15): 15 drawers in 12 files — recordings, cameras, NVR (detail + not-found), site overview, user management (+ suspension / deleted cards), external devices, event, dismissed, incident case (3 states), entity, notifications (shell only), Re-ID calibration. No `SheetContent` left in pages or prototypes. Hand-made close buttons removed (one built-in close each); info grids → `DescriptionList`; eyebrow sections → `DetailDrawerSection`; left-pushed footer items → `DetailDrawerFooterStart`. Checked headlessly and in the preview
+    - Component fixes from the migration: `DetailDrawerBody` children no longer shrink (a 280px video frame had collapsed to 0); `DetailDrawer` takes a page `data-slot` for its root
+    - Known: tabs in tabbed drawers sit in the header content column (no full-width slot under the header); on open, focus goes to the first control (tab / header action) instead of the close button
+  - Fixed on the way: `ModalSelect` takes ModalField's `id`; `ToolbarSearch` defaults its accessible name to the placeholder; Guidelines sort after Foundations in Storybook
+- [x] Introduction story: token tiers, naming rules, prop vocabulary, folder split, "ask before creating components"
+- [x] Docs coverage (2026-11-15): all 60 design-system components (ui, shared, layout, charts, custom) have stories and a usage note in `docs/choosing-components.md` or Guidelines. The 21 `app/` components have no stories by design (they need stores/router). Faded secondary text in pages (155 places) moved to full `text-muted-foreground`; rule added to CLAUDE.md
 
 **Done when:** docs-coverage shows every design-system component has a story and usage notes; a11y panel is clean; a newcomer can build a list page from Storybook alone.
 **Then →** Phase 5.
@@ -242,10 +267,21 @@ Steps:
 
 **Why:** futureproof = you can change things safely. Without tests, every token tweak is a gamble.
 
-- [ ] Add Vitest + Testing Library; interaction tests for stateful components (DataTable sort/paginate, FilterPanel, OtpField, Modal focus trap, TimeSelect)
-- [ ] Visual regression via Chromatic (addon already installed): snapshot every story in light **and** dark
-- [ ] Storybook a11y checks run in CI (`@storybook/test-runner` + axe)
-- [ ] `/design-system-ops:cicd-integration`: CI on every PR runs lint, typecheck, tests, Storybook build, Chromatic
+- [x] Vitest 5 + Testing Library + jsdom (2026-11-16): `npm test`, tests in `src/test/` (the registry check would treat `.tsx` in component folders as components). 14 tests: DataTable (row click + Enter/Space, `stopRowClick`, selection + indeterminate select-all, loading / inline empty), DetailDrawer (named dialog, page slot, close button, Esc), DescriptionList (`<dl>` pairing, em dash), Stepper (states, `aria-current`), ModalField label linking (text / password / select), ToolbarSearch name, OtpField typing, Slider thumb names. Mutation-checked: breaking ModalSelect's `id` fails the suite
+  - [ ] More tests as components change: FilterPanel, Modal focus trap, TimeSelect, DateRangeBar, SegmentedControl
+- [ ] Visual regression via Chromatic (addon already installed): snapshot every story in light **and** dark. ⏸ **Needs you:** a Chromatic account/project and its token as the `CHROMATIC_PROJECT_TOKEN` repository variable in Bitbucket; then add a `npx chromatic --exit-zero-on-changes` step to the PR pipeline
+- [x] Storybook a11y gate (2026-11-16): `npm run test:a11y` builds Storybook and `scripts/check-a11y.mjs` runs axe over every story in light + dark against the static build (serves it itself; puppeteer-core + system Chrome/Chromium via `CHROME_PATH`; honours story `a11y` rule exceptions; report in `.ds-ops-reports/`). Passes: 216 stories × 2 themes, 0 violations
+- [x] CI on every pull request (2026-11-16, `bitbucket-pipelines.yml`, Node 22, two parallel steps): (1) token / slot / registry guardrails, `npm run build`, prototype typecheck, `npm test`; (2) Storybook build + a11y gate (Chromium from apt), report kept as an artifact. The existing `main` → Vercel deploy step is unchanged. All steps pass locally. **Not yet run on Bitbucket** — it runs on the first PR after this is pushed
+  - [x] **ESLint debt cleared (2026-11-16): 205 errors + 17 warnings → 0** outside run-analysis, and ESLint now **blocks PRs** (`--ignore-pattern src/pages/run-analysis/**`; that page is reported only).
+    - Entry files (`main.tsx`, `prototypes/PRD_*/index.tsx`) exempt from fast-refresh in `eslint.config.js` — they mount with `createRoot` and are never a refresh boundary (81 errors)
+    - ~70 `set-state-in-effect`: reset-on-open / on-id-change effects → "adjust state during render" (prev-prop) pattern; mount-time reads (URL, `location.state`) → lazy `useState`; derived values computed; `use-mobile` → `useSyncExternalStore`
+    - Non-component exports moved to `.ts` files (`ui/button-variants`, `badge-variants`, `tabs-variants`, `sidebar-context`, `shared/status-badge-variants`, `password-strength`, `layout/nav-groups`, `providers/theme-context`, page `shared-data` / `screens` files); public names unchanged
+    - Components defined during render moved to lookups / module scope; hooks in story `render:` → named components; statement ternaries → `if`
+    - Two stale-memo bugs fixed on the way: custom date ranges in Detection Feed (app + prototype) didn't re-filter after the first apply
+    - One `eslint-disable` (with reason): `PasswordStrengthBar` re-exports `isStrongPassword` for the frozen legacy dev profile page
+    - All 21 prototype pages load with no console errors; drawers/modals exercised headlessly (open A → B, reset on reopen, prefill)
+  - [ ] **run-analysis**: 4 ESLint errors in the uncommitted page (3 components created during render, 1 setState in an effect). Fix when committing it, then drop the `--ignore-pattern` from the pipeline
+  - [ ] `CameraFormModal` re-loads its form whenever its parent re-renders (`initial` is a new object each render) — pre-existing; key the reset on the camera id
 - [ ] `/design-system-ops:accessibility-per-component` for keyboard and screen-reader notes
 
 **Done when:** a PR that changes a token shows a visual diff of every affected component before merge, and CI is green on main.
@@ -257,12 +293,18 @@ Steps:
 
 **Why:** "future reuse" means another product can install the system instead of copying files.
 
-- [ ] **Decide** packaging (see Decisions): monorepo package `packages/ui` (recommended) vs published npm package
-- [ ] `/design-system-ops:codebase-index`: dependency map, so nothing app-specific leaks into the package
-- [ ] Extract: tokens (`index.css` + `lib/tokens.ts`), `ui/`, design-system part of `shared/`, `charts/`, formatters, `cn()` → package with a barrel export and `peerDependencies` (react, tailwind, radix)
-- [ ] Point `prototypes/` at the package as the first consumer (proves it works outside the app)
-- [ ] Versioning: semver + `CHANGELOG.md`; use `/design-system-ops:version-bump-advisor` and `/design-system-ops:release-check` before each release
-- [ ] Theming hook for other brands: document which semantic tokens a product overrides (`--primary`, `--palette-*` brand ramp) to re-skin
+- [x] **Decided** (2026-11-16): monorepo package `packages/ui` (`@accel/ui`, npm workspace); publish later only if a separate repo needs it
+- [x] Dependency map (2026-11-16). **Package contents:** `ui/`, `shared/`, `charts/`, `custom/`, `layout/PageHeader`, tokens (`index.css`, `lib/tokens.ts`), `lib/{utils, formatters, dialCodes, playback}`, `hooks/use-mobile`. **Stays in the app:** the shell, `lib/{queryClient, quickActions, ruleTemplates, recordingTypes, timezones, zip}`, `hooks/{useGlobalSearch, useSystemStatus}`. **Peer deps:** react, react-dom, radix-ui, @base-ui/react (Button), class-variance-authority, clsx, tailwind-merge, lucide-react, cmdk, recharts, tailwindcss v4
+  - The only leak — `AppLayout` / `AppSidebar` / nav groups in `layout/` (router, brand asset, app components) — moved to `components/app/` (30 import lines updated; stories now "App/…"). Design-system folders now import nothing from stores, mocks, pages, assets, providers, app components or the router
+- [x] Extracted (2026-11-16) to `packages/ui`: `src/components/{ui,shared,charts,custom,layout}`, `src/lib/{utils,formatters,tokens,dialCodes,playback}`, `src/hooks/use-mobile`, `src/styles.css` (all tokens + theme + base; `@source "./"` so consumers scan it), `src/foundations`, `src/docs`, `test/`. Barrel `src/index.ts`; `exports` for `.`, `./styles.css`, `./*`; peer deps declared. Internal imports are relative (181 rewritten); ESLint blocks `@/…` and `@accel/ui` self-imports inside the package
+  - App `src/index.css` now `@import "@accel/ui/styles.css"` + app-only styles (auth animations, toast tweak)
+  - 469 imports in ~200 app/prototype files → `@accel/ui/…`. `aliases.ts` is shared by Vite (app + prototypes), Storybook and Vitest; compatibility aliases keep old `@/components/ui|shared|…` paths working for the uncommitted run-analysis / email-template work and the frozen legacy copies (27 files)
+  - Tooling moved: token/slot/registry checks, ESLint scopes (one baseline key renamed, same count), Storybook globs, Vitest, tsconfigs, shadcn CLI (`components.json` → writes into the package)
+  - Verified: both typechecks, lint, 14 tests, app build (package classes present in the CSS), Storybook build + a11y gate (216 × 2, 0 violations), all prototype pages render with unchanged content
+- [x] Prototypes and app consume `@accel/ui`. **Done-when check passed:** a fresh Vite + React app (outside the repo) installing the packed tarball (`npm pack`) imports `Button, KpiCard, KpiGrid, StatusBadge, DataTable, Stepper` from `"@accel/ui"` + `@import "@accel/ui/styles.css"`, builds, and renders correctly in dark and light (fonts must be loaded by the app — documented in `packages/ui/README.md`)
+  - [ ] Move the remaining 27 files off the compatibility aliases once run-analysis / email templates are committed, then delete those aliases
+- [x] Versioning (2026-11-16): semver policy for a design system in `packages/ui/README.md#versioning` (major = removed/renamed/changed default; minor = new or deprecated; patch = fixes keeping documented behaviour); `packages/ui/CHANGELOG.md` (Keep a Changelog) with 0.1.0 as the baseline and the current deprecations listed; `scripts/check-changelog.mjs` (`npm run lint:changelog`) runs on PRs — package changes need an Unreleased entry or a version bump (tested: fails without, passes with entry / bump / first release). Release steps in the README
+- [x] Theming guide (2026-11-16): `docs/theming.md` — override the 7-step brand ramp (`--palette-orange-*`) on `:root`, optionally `--font-sans` / `--radius`; contrast rules per ramp step; a teal example verified on the prototypes (buttons, nav, avatars, rings all switch; only logo artwork stays)
 
 **Done when:** a fresh Vite app can `import { Button, KpiCard } from "@accel/ui"` + import the CSS, and render correctly in both themes; prototypes use the package, not relative paths.
 **Then →** Phase 7.

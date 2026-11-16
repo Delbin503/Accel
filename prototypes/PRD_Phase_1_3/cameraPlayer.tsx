@@ -12,10 +12,10 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DialogTitle } from "@/components/ui/dialog";
-import { Modal, ModalContent } from "@/components/shared/Modal";
-import { cn } from "@/lib/utils";
+import { Button } from "@accel/ui/components/ui/button";
+import { DialogTitle } from "@accel/ui/components/ui/dialog";
+import { Modal, ModalContent } from "@accel/ui/components/shared/Modal";
+import { cn } from "@accel/ui/lib/utils";
 import { cameraFrame, OFFLINE_FRAME } from "@/mocks/cameraFrames";
 import type { CameraData } from "@/types/cameras";
 import {
@@ -28,8 +28,8 @@ import {
   zoomPercent,
   zoomTransform,
   type PlaybackState,
-} from "@/lib/playback";
-import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSurface } from "@/components/shared/PlaybackControls";
+} from "@accel/ui/lib/playback";
+import { IconButton, PlaybackSettingsMenu, ScrubTrack, ZoomSurface } from "@accel/ui/components/shared/PlaybackControls";
 
 /* The frame and the bar that sits over it — shared by the wall tiles, the hero
    player and the expand pop-up, so all three behave identically. */

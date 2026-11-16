@@ -1,40 +1,8 @@
-import * as React from "react";
 import type { Severity } from "@/types/detection";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
 
-/* ── Text parser ─────────────────────────────────────────────────────────────
-   Converts template strings into styled React nodes.
-   [[text]] → orange monospace ref chip
-   **text** → bold
-   !!text!! → warning-colored anomaly text
-   ──────────────────────────────────────────────────────────────────────────── */
-
-export function parseEventText(text: string): React.ReactNode {
-  const parts = text.split(/(\[\[.*?\]\]|\*\*.*?\*\*|!!.*?!!)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("[[") && part.endsWith("]]")) {
-      return (
-        <span
-          key={i}
-          className="cursor-pointer rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs font-medium text-primary-ink hover:border-primary"
-        >
-          {part.slice(2, -2)}
-        </span>
-      );
-    }
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("!!") && part.endsWith("!!")) {
-      return (
-        <span data-slot="reasoning-highlight" key={i} className="font-semibold text-severity-medium">
-          {part.slice(2, -2)}
-        </span>
-      );
-    }
-    return <React.Fragment key={i}>{part}</React.Fragment>;
-  });
-}
+// parseEventText and SEVERITY_BORDER live in ./shared-utils.tsx so this file
+// only exports components (React Fast Refresh).
 
 /* ── Severity badge ──────────────────────────────────────────────────────── */
 
@@ -47,11 +15,3 @@ const SEV_LABEL: Record<Severity, string> = {
 export function SeverityBadge({ severity }: { severity: Severity }) {
   return <StatusBadge tone={severity}>{SEV_LABEL[severity]}</StatusBadge>;
 }
-
-/* ── Severity left-border class ──────────────────────────────────────────── */
-
-export const SEVERITY_BORDER: Record<Severity, string> = {
-  critical: "border-l-severity-critical",
-  medium: "border-l-severity-medium",
-  low: "border-l-severity-low",
-};

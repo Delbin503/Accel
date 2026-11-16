@@ -54,8 +54,6 @@ export const LIMIT = {
   gaitSwing: 60,
   cadence: 100,
   stsTime: 12,
-  adherence: 80,
-  pain: 2,
 };
 
 /** The healthy (left) knee, measured at week 1. */
@@ -316,14 +314,6 @@ export function findingsFor(r: Rep): Finding[] {
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
 
-export const HOME_PROGRAMME: { name: string; dose: string; done: number; planned: number; isNew?: boolean }[] = [
-  { name: "Heel slides", dose: "3 × 15 · daily", done: 6, planned: 7 },
-  { name: "Quad sets", dose: "3 × 10 · daily", done: 7, planned: 7 },
-  { name: "Straight-leg raise", dose: "3 × 10 · daily", done: 6, planned: 7 },
-  { name: "Sit-to-stand", dose: "3 × 8 · 5 days", done: 4, planned: 5 },
-  { name: "Calf raises", dose: "2 × 15 · daily", done: 5, planned: 7 },
-];
-
 const romReps = repsOf("rom");
 const stsReps = repsOf("sts");
 const lrReps = REPS.filter((r) => r.ex !== "rom");
@@ -337,9 +327,6 @@ export const TODAY = {
   /** Step-length difference on the walk alone: what's left without the force plate. */
   lrWalk: Math.round(mean(walkReps.map((r) => r.lr))),
   sts: +stsReps.reduce((a, r) => a + r.rise + r.hold, 0).toFixed(1),
-  adherence: Math.round((HOME_PROGRAMME.reduce((a, e) => a + e.done, 0) / HOME_PROGRAMME.reduce((a, e) => a + e.planned, 0)) * 100),
-  painBefore: 3,
-  painAfter: 2,
   gaitSpeed: +mean(repsOf("gait").map((r) => r.gaitSpeed)).toFixed(2),
   cadence: Math.round(mean(repsOf("gait").map((r) => r.cadence))),
   reps: REPS.length,
@@ -348,24 +335,23 @@ export const TODAY = {
 /** Every visit so far, oldest first. Week 1 is the baseline; the last row is today.
  *  `lrWalk` is the step-length difference on the walk alone, read off the walkway camera. */
 export const VISITS = [
-  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 34, lrWalk: 30, painBefore: 6, painAfter: 6, adherence: null as number | null },
-  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 30, lrWalk: 26, painBefore: 5, painAfter: 5, adherence: 60 },
-  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 26, lrWalk: 21, painBefore: 5, painAfter: 4, adherence: 68 },
-  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 22, lrWalk: 17, painBefore: 4, painAfter: 4, adherence: 74 },
-  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 18, lrWalk: 13, painBefore: 4, painAfter: 3, adherence: 80 },
-  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr, lrWalk: TODAY.lrWalk, painBefore: TODAY.painBefore, painAfter: TODAY.painAfter, adherence: TODAY.adherence },
+  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 34, lrWalk: 30 },
+  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 30, lrWalk: 26 },
+  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 26, lrWalk: 21 },
+  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 22, lrWalk: 17 },
+  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 18, lrWalk: 13 },
+  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr, lrWalk: TODAY.lrWalk },
 ];
 export const BASELINE = VISITS[0];
 export const PREVIOUS = VISITS[VISITS.length - 2];
 
-export type MeasureKey = "flex" | "lag" | "sts" | "lr" | "adherence";
+export type MeasureKey = "flex" | "lag" | "sts" | "lr";
 
 export const MEASURES: { key: MeasureKey; label: string; title: string; group: string; unit: string; baseline: number; last: number; now: number; goal: number; info: string; digits?: number }[] = [
   { key: "flex", label: "Knee bend", title: "Mobility · bend", group: "Mobility", unit: "°", baseline: BASELINE.flex, last: PREVIOUS.flex, now: TODAY.flex, goal: LIMIT.goalFlex, info: "Most the right knee bent today, seated. Goal 125° lets you climb stairs and get up from a low chair." },
   { key: "lag", label: "Knee straighten", title: "Mobility · straighten", group: "Mobility", unit: "°", baseline: BASELINE.lag, last: PREVIOUS.lag, now: TODAY.lag, goal: LIMIT.lag, info: "How many degrees short of fully straight the knee stops (extension lag), averaged over the knee-bend reps. Goal: within 5°." },
   { key: "sts", label: "5 × sit-to-stand", title: "Strength & control", group: "Strength & control", unit: " s", baseline: BASELINE.sts, last: PREVIOUS.sts, now: TODAY.sts, goal: LIMIT.stsTime, digits: 1, info: "Time for five sit-to-stands without using the arms. Goal 12 s or less." },
   { key: "lr", label: "Left–right difference", title: "Symmetry", group: "Symmetry", unit: "%", baseline: BASELINE.lr, last: PREVIOUS.lr, now: TODAY.lr, goal: LIMIT.lr, info: "How unevenly weight and steps fall between the legs: force-plate load on sit-to-stand and step length on the walk. Goal 10% or less." },
-  { key: "adherence", label: "Home programme", title: "Adherence", group: "Adherence", unit: "%", baseline: VISITS[1].adherence!, last: PREVIOUS.adherence!, now: TODAY.adherence, goal: 90, info: "Home exercises done this week out of those planned, from the patient app. Week 2 was the first week of the programme." },
 ];
 
 /** 0–100: how far a value has come from baseline to goal. Works both ways (lower-is-better goals too). */
@@ -408,12 +394,13 @@ export const PLAN_CHANGES: Record<Plan, string[]> = {
 /** The model's suggestion and why, from today's numbers against the last visit. */
 export function suggestedPlan(): { plan: Plan; reasons: { label: string; ok: boolean }[] } {
   const hikeReps = stsReps.filter((r) => r.hipHike > LIMIT.hipHike).length;
+  const signed = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(n)}`;
   const reasons = [
-    { label: `Pain ${TODAY.painAfter}/10 after`, ok: TODAY.painAfter <= 3 },
-    { label: `Bend +${TODAY.flex - PREVIOUS.flex}°`, ok: TODAY.flex > PREVIOUS.flex },
-    { label: `Home ${TODAY.adherence}%`, ok: TODAY.adherence >= LIMIT.adherence },
+    { label: `Bend ${signed(TODAY.flex - PREVIOUS.flex)}°`, ok: TODAY.flex > PREVIOUS.flex },
+    { label: `Short of straight ${signed(TODAY.lag - PREVIOUS.lag)}°`, ok: TODAY.lag < PREVIOUS.lag },
     { label: `Hip hike ${hikeReps}/${stsReps.length} stands`, ok: hikeReps <= 1 },
   ];
+  /* Bend is the headline goal: progress on one miss as long as bend still improved. */
   const fails = reasons.filter((r) => !r.ok).length;
   return { plan: fails === 0 || (fails === 1 && reasons[0].ok) ? "progress" : fails <= 2 ? "hold" : "regress", reasons };
 }
@@ -425,8 +412,6 @@ export const DISCHARGE: { label: string; target: string; now: string; met: boole
   { label: "5 × sit-to-stand", target: `≤ ${LIMIT.stsTime} s`, now: `${TODAY.sts} s`, met: TODAY.sts <= LIMIT.stsTime },
   { label: "Walking speed", target: "≥ 1.0 m/s", now: `${TODAY.gaitSpeed} m/s`, met: TODAY.gaitSpeed >= 1 },
   { label: "Walks without a stick", target: "Yes", now: "Yes", met: true },
-  { label: "Pain after exercise", target: `≤ ${LIMIT.pain}/10`, now: `${TODAY.painAfter}/10`, met: TODAY.painAfter <= LIMIT.pain },
-  { label: "Home programme", target: `≥ ${LIMIT.adherence}%`, now: `${TODAY.adherence}%`, met: TODAY.adherence >= LIMIT.adherence },
 ];
 
 export const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
@@ -435,7 +420,7 @@ export const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.
 
 /* The force plate gives one thing: left–right load during sit-to-stand.
    Everything else is from the cameras (angles, compensations, the walk and
-   its step lengths) or the patient app. With no plate, left–right falls back
+   its step lengths). With no plate, left–right falls back
    to step length on the walk; when it drops out partway, the sit-to-stands
    after the drop have no load. */
 
