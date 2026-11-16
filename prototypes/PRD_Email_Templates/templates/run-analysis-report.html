@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+  Accel — Run Analysis Report (document export, P1). PRINT / PDF.
+
+  NOT an email. Run Analysis → a finished run → "Export PDF" opens this in a
+  new tab and sends it to the browser's print dialog. It sits in this gallery
+  because it follows the email look — wordmark header, #F4F4F6 detail cards,
+  #F6F5F4 footer band, #FE5C01 accent — so a report and an email from Accel
+  read as one family.
+
+  Source of truth: src/pages/run-analysis/runAnalysisReport.ts →
+  buildRunAnalysisReportHtml(). This file is that builder's output for the
+  sample run below; regenerate it after changing the builder.
+
+  Merge points: {{runId}} {{runName}} {{verdict}} {{modelName}} {{vlmName}}
+  {{startedBy}} {{completedAt}} {{runtime}} {{score}} {{stepsPassed}}
+  {{stepsTotal}} {{rulesTriggered}} {{rulesTotal}} {{clipSeconds}}
+  {{exportedAt}}. Repeating: one step row per step, one rule row per triggered
+  rule, one observation per timestamp, and one model block per model in a
+  multi-model run.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>test-run-analysis-12-nov-2026-part-2 — Run Analysis Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; color: #4B4B4B; background: #FFFFFF;
+      font-size: 12px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { max-width: 760px; margin: 0 auto; }
+    .accent { height: 4px; background: #FE5C01; }
+
+    /* Header — wordmark left, document label right */
+    .head { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 40px 22px; border-bottom: 1px solid #EEEEF0; }
+    .head svg { display: block; }
+    .doc { text-align: right; }
+    .doc-kind { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: #9CA3AF; }
+    .doc-ref { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #111111; margin-top: 3px; }
+
+    /* Hero */
+    .hero { padding: 32px 40px 8px; text-align: center; }
+    .eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: #FE5C01; }
+    h1 { font-size: 26px; line-height: 34px; font-weight: 500; letter-spacing: -0.6px; color: #1F2937; margin-top: 8px; overflow-wrap: anywhere; }
+    .pills { margin-top: 12px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; line-height: 18px; white-space: nowrap; }
+
+    .body { padding: 24px 40px 8px; }
+
+    /* Detail card — the email's #F4F4F6 key/value card */
+    .card { background: #F4F4F6; border-radius: 12px; padding: 18px 22px; }
+    .facts { width: 100%; border-collapse: collapse; }
+    .facts td { padding: 5px 0; vertical-align: top; font-size: 12px; }
+    .facts td.k { width: 110px; color: #6B7280; }
+    .facts td.v { color: #111111; font-weight: 500; overflow-wrap: anywhere; }
+
+    /* Model block */
+    .model { margin-top: 26px; }
+    .model + .model { border-top: 1px solid #EEEEF0; padding-top: 26px; }
+    .model-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .model-name { font-size: 15px; font-weight: 600; color: #111111; }
+    .notice { background: #FEF2F2; border-radius: 10px; padding: 12px 16px; color: #7F1D1D; font-size: 11.5px; margin-bottom: 14px; }
+
+    .kpis { display: flex; gap: 10px; }
+    .kpi { flex: 1 1 0; min-width: 0; background: #F4F4F6; border-radius: 12px; padding: 16px 18px; }
+    .kpi-label { font-size: 11px; color: #6B7280; }
+    .kpi-value { font-size: 28px; line-height: 36px; font-weight: 600; color: #111111; letter-spacing: -0.5px; margin-top: 2px; }
+    .kpi-value .of { font-size: 16px; color: #9CA3AF; font-weight: 500; }
+    .kpi-sub { font-size: 11px; color: #6B7280; }
+
+    h2 { font-size: 14px; font-weight: 700; color: #111111; margin: 26px 0 10px; display: flex; align-items: center; gap: 8px; }
+    h2 .count { font-size: 10px; font-weight: 600; color: #6B7280; background: #F4F4F6; border-radius: 999px; padding: 0 8px; line-height: 18px; }
+
+    table.data { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; font-size: 11.5px; }
+    table.data th { text-align: left; padding: 9px 12px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB;
+      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6B7280; }
+    table.data td { padding: 9px 12px; border-bottom: 1px solid #F1F1F3; vertical-align: middle; color: #4B4B4B; overflow-wrap: anywhere; }
+    table.data tr:last-child td { border-bottom: 0; }
+    .strong { color: #111111; font-weight: 500; }
+    .mono { font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; }
+    .num { width: 28px; color: #9CA3AF; }
+    .right, table.data th.right { text-align: right; }
+    .empty { color: #9CA3AF; font-style: italic; }
+
+    /* VLM reasoning */
+    .vlm { background: #F4F4F6; border-radius: 12px; padding: 18px 22px; }
+    .vlm-tag { display: inline-block; font-size: 10px; font-weight: 600; color: #FE5C01; background: #FFF1E8; border-radius: 999px; padding: 0 9px; line-height: 18px; margin-bottom: 4px; }
+    .vlm-h { font-size: 11px; font-weight: 700; color: #111111; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 12px; }
+    .vlm-p { font-size: 12px; color: #4B4B4B; margin-top: 4px; }
+    ul.obs { list-style: none; margin-top: 6px; }
+    ul.obs li { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid #E7E7EA; font-size: 12px; }
+    ul.obs li:first-child { border-top: 0; }
+    .ts { flex: 0 0 44px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 600; color: #FE5C01; padding-top: 1px; }
+
+    /* Footer band — matches the email footer */
+    .foot { margin-top: 32px; background: #F6F5F4; padding: 22px 40px 26px; font-size: 10.5px; line-height: 16px; color: #4B4B4B; }
+    .foot .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .foot a { color: #FE5C01; text-decoration: none; font-weight: 500; }
+    .foot .muted { color: #9CA3AF; margin-top: 6px; }
+
+    h2, .kpis, .vlm-h, ul.obs li, .model-head { break-inside: avoid; }
+    h2, .vlm-h { break-after: avoid; }
+    tr { break-inside: avoid; }
+    @media print { @page { size: A4; margin: 1.2cm 0; } .page { max-width: none; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="accent"></div>
+    <div class="head">
+      <svg width="112" height="43" viewBox="10 8 110 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accel" style="display:block;"><path d="M32.4233 7.64709L12.3529 41.2141H24.3408C28.2487 31.3687 32.1165 27.548 40.5882 22.3275L32.4233 7.64709Z" fill="#FE5C01"/><path d="M53.3717 26.2863C38.6929 28.3662 32.7562 33.384 25.3305 47.6471C28.9353 33.8212 33.1949 28.603 44.0521 24.0595C47.9968 24.51 50.0182 25.0238 53.3717 26.2863Z" fill="#FE5C01"/><path d="M37.5367 34.7811L40.4233 40.5543H50.815L45.1243 30.7399C42.2301 31.7791 40.5668 32.6701 37.5367 34.7811Z" fill="#FE5C01"/><path d="M67.7596 40.505H63.9796L63.8066 37.9109H57.7784L56.4937 40.505H52.8619L61.5584 23.7791H66.4748L67.7596 40.505ZM63.6831 35.1438L63.1643 27.1391L59.1125 35.1438H63.6831Z" fill="black"/><path d="M79.6948 40.505H70.8748C69.4913 40.505 68.923 40.0356 68.923 39.0226C68.923 38.7509 68.9725 38.4297 69.0466 38.0591L70.6525 30.4497C70.9983 28.7697 71.7395 28.0038 73.5183 28.0038H82.3383L81.696 31.0426H74.6548C74.1113 31.0426 73.963 31.1662 73.8395 31.7097L72.7772 36.7003C72.7525 36.8238 72.7278 36.9226 72.7278 37.0215C72.7278 37.2932 72.876 37.392 73.296 37.392H80.3372L79.6948 40.505Z" fill="black"/><path d="M92.5911 40.505H83.7711C82.3876 40.505 81.8193 40.0356 81.8193 39.0226C81.8193 38.7509 81.8687 38.4297 81.9429 38.0591L83.5487 30.4497C83.8946 28.7697 84.6358 28.0038 86.4146 28.0038H95.2346L94.5923 31.0426H87.5511C87.0076 31.0426 86.8593 31.1662 86.7358 31.7097L85.6734 36.7003C85.6487 36.8238 85.624 36.9226 85.624 37.0215C85.624 37.2932 85.7723 37.392 86.1923 37.392H93.2334L92.5911 40.505Z" fill="black"/><path d="M106.698 40.505H96.5685C95.1603 40.505 94.5921 40.0356 94.5921 39.0226C94.5921 38.7509 94.6415 38.4297 94.7156 38.0591L96.3215 30.4497C96.6674 28.7697 97.4085 28.0038 99.2121 28.0038H107.661C108.921 28.0038 109.416 28.4732 109.416 29.4368C109.416 29.7085 109.391 30.005 109.317 30.3509L108.279 35.2673H99.9532L100.373 33.192H105.413L105.784 31.512C105.809 31.3885 105.809 31.2897 105.809 31.1909C105.809 30.9438 105.685 30.845 105.29 30.845H100.324C99.7556 30.845 99.6321 30.9932 99.5085 31.5368L98.3474 36.9226C98.3227 37.0709 98.298 37.1944 98.298 37.2932C98.298 37.5897 98.4462 37.6638 98.8662 37.6638H107.291L106.698 40.505Z" fill="black"/><path d="M112.681 40.505H109.222L112.977 22.7662H116.436L112.681 40.505Z" fill="black"/></svg>
+      <div class="doc">
+        <div class="doc-kind">Run Analysis Report</div>
+        <div class="doc-ref">RUN-2026-1112-002</div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="eyebrow">Analysis result</div>
+      <h1>test-run-analysis-12-nov-2026-part-2</h1>
+      <div class="pills">
+        <span class="pill" style="color:#B45309;background:#FFF7E6">Pending review</span>
+        
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="card">
+        <table class="facts" role="presentation">
+          <tr><td class="k">Model</td><td class="v">Third Model</td></tr><tr><td class="k">VLM</td><td class="v">Gemini 3.6 Flash</td></tr><tr><td class="k">Started by</td><td class="v">Delbin Arkar</td></tr><tr><td class="k">Completed</td><td class="v">12 Nov 2026, 07:41</td></tr><tr><td class="k">Runtime</td><td class="v">32.642s</td></tr><tr><td class="k">Verdict</td><td class="v">Pending review</td></tr>
+        </table>
+      </div>
+
+      
+  <section class="model">
+    
+    
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">Score</div>
+        <div class="kpi-value" style="color:#B45309">0%</div>
+        <div class="kpi-sub">Warning</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Steps passed</div>
+        <div class="kpi-value">0<span class="of">/1</span></div>
+        <div class="kpi-sub">0% complete</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Rules triggered</div>
+        <div class="kpi-value">9<span class="of">/21</span></div>
+        <div class="kpi-sub">9 violations</div>
+      </div>
+    </div>
+
+    <h2>Step results <span class="count">1</span></h2>
+    <table class="data">
+        <thead><tr><th class="num">#</th><th>Step</th><th>Model</th><th class="right">Status</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td>
+            <td class="strong">Verify worker is wearing underwear</td>
+            <td class="mono">mxx-1200-xx-100-obb-medium</td>
+            <td class="right"><span class="pill" style="color:#B91C1C;background:#FEF2F2">Failed</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+    <h2>Triggered rules <span class="count">9</span></h2>
+    <table class="data">
+        <thead><tr><th>Rule</th><th>Detection type</th><th>Confidence</th><th class="right">Count</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="strong">Object Detected — Muzzle</td>
+            <td>Muzzle</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">15</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Detected — MXX-1200</td>
+            <td>MXX-1200</td>
+            <td><span class="pill" style="color:#B45309;background:#FFF7E6">Medium</span></td>
+            <td class="right mono">3</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Detected — XX-100</td>
+            <td>XX-100</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">25</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Enters Zone — Muzzle</td>
+            <td>Muzzle</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">15</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Enters Zone — MXX-1200</td>
+            <td>MXX-1200</td>
+            <td><span class="pill" style="color:#B45309;background:#FFF7E6">Medium</span></td>
+            <td class="right mono">3</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Enters Zone — XX-100</td>
+            <td>XX-100</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">25</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Exits Zone — Muzzle</td>
+            <td>Muzzle</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">15</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Exits Zone — MXX-1200</td>
+            <td>MXX-1200</td>
+            <td><span class="pill" style="color:#B45309;background:#FFF7E6">Medium</span></td>
+            <td class="right mono">3</td>
+          </tr>
+          <tr>
+            <td class="strong">Object Exits Zone — XX-100</td>
+            <td>XX-100</td>
+            <td><span class="pill" style="color:#15803D;background:#ECFDF3">High</span></td>
+            <td class="right mono">25</td>
+          </tr>
+        </tbody>
+      </table>
+
+    <h2>VLM reasoning</h2>
+    <div class="vlm">
+      <div class="vlm-tag">AI-generated · 51s clip</div>
+      <p class="vlm-h">Scene</p><p class="vlm-p">Top-down view of an indoor workspace with floor markings, computer equipment, and individuals handling red items.</p><p class="vlm-h">Timestamped observations</p><ul class="obs"><li><span class="ts">00:01</span><span>Overhead camera view begins, showing an indoor testing area with floor tape markings and personnel.</span></li><li><span class="ts">00:09</span><span>Detections for &quot;Muzzle&quot; and &quot;XX-100&quot; appear on screen as a person reaches down, matching rules &quot;Object Detected — Muzzle&quot; and &quot;Object Detected — XX-100&quot;.</span></li><li><span class="ts">00:14</span><span>A &quot;Muzzle&quot; bounding box is detected on a red item extended toward another person, matching &quot;Object Detected — Muzzle&quot;.</span></li><li><span class="ts">00:23</span><span>Detection boxes for &quot;XX-100&quot; and &quot;Muzzle&quot; frame the red item during hand-off between individuals, matching &quot;Object Detected — XX-100&quot; and &quot;Object Detected — Muzzle&quot;.</span></li><li><span class="ts">00:48</span><span>An &quot;XX-100&quot; bounding box is detected near an individual standing in the upper portion of the workspace, matching &quot;Object Detected — XX-100&quot;.</span></li><li><span class="ts">00:51</span><span>An &quot;MXX-1200&quot; bounding box is briefly detected near the upper-right area, matching &quot;Object Detected — MXX-1200&quot;.</span></li></ul><p class="vlm-h">Rule impact</p><p class="vlm-p">Detections for &quot;Muzzle&quot;, &quot;XX-100&quot;, and &quot;MXX-1200&quot; were successfully logged under the step &quot;Verify worker is wearing underwear&quot; according to the configured object detection rules.</p><p class="vlm-h">Overall</p><p class="vlm-p">The session captures multiple object detections (&quot;Muzzle&quot;, &quot;XX-100&quot;, and &quot;MXX-1200&quot;) throughout the interaction in accordance with the specified detector rules.</p>
+    </div>
+  </section>
+    </div>
+
+    <div class="foot">
+      <div class="row">
+        <span>Exported 12 Nov 2026, 07:45 from Accel Run Analysis</span>
+        <span><a href="https://accel.com/privacy">Privacy Policy</a> &nbsp;|&nbsp; <a href="https://accel.com/terms">Terms &amp; Conditions</a></span>
+      </div>
+      <div class="muted">&copy; 2026 Sigmawave AI. All Rights Reserved. Confidential — for internal review only.</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+Accel — Welcome to Accel
+
+View this email in your browser: {{webviewUrl}}
+
+Dear {{firstName}},
+
+Thanks for signing up — your Accel account is ready. Accel turns the cameras
+you already have into a safety and compliance monitor: AI watches every feed,
+flags what breaks your rules, and keeps the evidence for you.
+
+Your account
+------------
+Sign-in email:   {{email}}
+Your role:       Owner
+Signed up with:  {{signInMethod}}
+Created:         {{createdAt}}
+
+Finish setting up in 3 steps
+----------------------------
+1. Create your first site — name the location and add the cameras you want
+   Accel to watch.
+2. Choose a plan — pick the plan that fits your sites and cameras. You can
+   change it any time.
+3. Invite your team — add supervisors and operators so alerts reach the
+   right people.
+
+Continue setup: {{setupUrl}}
+
+New to Accel? The getting-started guide covers each step in a few minutes:
+{{helpUrl}}
+
+Didn't create this account? Don't click anything above — email
+{{supportEmail}} and we'll close it.
+
+Thanks,
+Sigmawave Support Team
+
+--
+You are receiving this email because this is an important message regarding
+your account and apps you are using. You are not allowed to unsubscribe from
+this type of message.
+
+Privacy Policy: https://accel.com/privacy
+Terms & Conditions: https://accel.com/terms
+Contact Us: {{supportEmail}}
+
+LinkedIn: https://www.linkedin.com/company/sigmawave-ai
+
+(c) 2026 Sigmawave AI. All Rights Reserved.

@@ -74,11 +74,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TruncatedText } from "@/components/shared/TruncatedText";
-import { CoinIcon } from "@/components/shared/CoinIcon";
+import { CoinIcon } from "@/components/app/CoinIcon";
 import { cn } from "@/lib/utils";
 import { MOCK_MODELS } from "@/mocks/modelManagement";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import { MOCK_VLMS, MOCK_PAST_ANALYSES, buildFindings } from "@/mocks/runAnalysis";
+import { exportRunAnalysisPdf } from "./runAnalysisReport";
 import type { ModelData } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity } from "@/types/rules";
 import type {
@@ -1166,6 +1167,28 @@ function modelRunsOf(a: PastAnalysis | null | undefined): ModelRun[] {
     failure: a.failure,
     result: a.result,
   }];
+}
+
+/** "12 Nov 2026, 07:45" — the export stamp printed in the report footer. */
+function exportStamp() {
+  const n = new Date();
+  return `${n.getDate()} ${n.toLocaleString("en-GB", { month: "short" })} ${n.getFullYear()}, ${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+}
+
+/** Exports a run as the branded Run Analysis Report (see runAnalysisReport.ts). */
+function exportRunReport(runs: ModelRun[], run: PastAnalysis | null, vlmName: string, fallbackName: string) {
+  exportRunAnalysisPdf({
+    runId: run?.id,
+    name: run?.name ?? fallbackName,
+    vlmName,
+    startedBy: run?.startedBy,
+    completedAt: run?.completedAtDisplay ?? run?.createdAtDisplay,
+    runtime: run?.runtimeDisplay,
+    verdict: run?.verdict ?? "pending",
+    verdictAt: run?.verdictAtDisplay,
+    models: runs.map((mr) => ({ modelName: mr.modelName, status: mr.status, runState: mr.runState, failure: mr.failure, result: mr.result })),
+    exportedAt: exportStamp(),
+  });
 }
 
 /**
@@ -3269,6 +3292,10 @@ function ResultStep({
   // acknowledgement of what failed rather than silently disabling the button.
   const canApprove = rollup !== "failed";
 
+  /* The branded Run Analysis Report — same look as Accel's emails — straight to the print dialog. */
+  const exportPdf = () => exportRunReport(modelRuns, currentRun, vlmName, modelName);
+
+
   return (
     <div className="space-y-5">
 
@@ -3283,7 +3310,7 @@ function ResultStep({
             <ArrowLeft className="size-3.5" />
             Go Back
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPdf}>
             <Download className="size-3.5" />
             Export PDF
           </Button>
@@ -4122,7 +4149,10 @@ function HistoryTab({
                           <FileText className="size-3.5 text-muted-foreground" />
                           View details
                         </button>
-                        <button className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted">
+                        <button
+                          onClick={() => exportRunReport(modelRunsOf(a), a, a.vlmName, a.modelName)}
+                          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                        >
                           <Download className="size-3.5 text-muted-foreground" />
                           Export report
                         </button>
@@ -4255,7 +4285,7 @@ export function HistoryDetailDrawer({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => exportRunReport(runs, analysis, analysis.vlmName, analysis.modelName)}>
               <Download className="size-3.5" />
               Export Result
             </Button>

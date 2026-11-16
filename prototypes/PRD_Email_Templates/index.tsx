@@ -22,6 +22,7 @@ import passwordResetHtml from "./templates/password-reset-request.html?raw";
 import passwordChangedHtml from "./templates/password-changed.html?raw";
 import twoFaHtml from "./templates/2fa-changed.html?raw";
 import welcomeHtml from "./templates/welcome.html?raw";
+import welcomeNewAccountHtml from "./templates/welcome-new-account.html?raw";
 import roleChangedHtml from "./templates/role-changed.html?raw";
 import ownershipHtml from "./templates/ownership-transfer.html?raw";
 import ownershipCodeHtml from "./templates/ownership-transfer-code.html?raw";
@@ -33,6 +34,7 @@ import updatePaymentMethodHtml from "./templates/update-payment-method.html?raw"
 import paymentSuccessfulHtml from "./templates/payment-successful.html?raw";
 import planChangedHtml from "./templates/plan-changed.html?raw";
 import incidentCaseReportHtml from "./templates/incident-case-report.html?raw";
+import runAnalysisReportHtml from "./templates/run-analysis-report.html?raw";
 import criticalIncidentHtml from "./templates/critical-incident.html?raw";
 import dailyDigestHtml from "./templates/daily-activity-digest.html?raw";
 import dailyReportHtml from "./templates/daily-activity-report.html?raw";
@@ -132,6 +134,20 @@ const TEMPLATES: Template[] = [
     mergeTags: ["{{firstName}}", "{{action}}", "{{changedAt}}", "{{email}}", "{{securityUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
     file: "templates/2fa-changed.html",
     html: twoFaHtml,
+  },
+  {
+    id: "welcome-new-account",
+    name: "Welcome / New Account",
+    kind: "email",
+    subject: "Welcome to Accel, {{firstName}}",
+    category: "Account & Authentication",
+    priority: "P1",
+    whenSent:
+      "Once, when someone signs up for Accel themselves (Cloud onboarding: Sign Up → Verify email) and the account is created. Walks them through the rest of setup — Create site → Choose plan → Invite team.",
+    audience: "The new self-serve user, who becomes the workspace Owner.",
+    mergeTags: ["{{firstName}}", "{{email}}", "{{signInMethod}}", "{{createdAt}}", "{{setupUrl}}", "{{helpUrl}}", "{{supportEmail}}", "{{webviewUrl}}"],
+    file: "templates/welcome-new-account.html",
+    html: welcomeNewAccountHtml,
   },
   {
     id: "welcome",
@@ -398,6 +414,24 @@ const TEMPLATES: Template[] = [
     ],
     file: "templates/incident-case-report.html",
     html: incidentCaseReportHtml,
+  },
+  {
+    id: "run-analysis-report",
+    name: "Run Analysis Report",
+    kind: "document",
+    subject: "test-run-analysis-12-nov-2026-part-2 — Run Analysis Report",
+    category: "Document export",
+    priority: "P1",
+    whenSent:
+      "On demand — Run Analysis → a finished run → Export PDF. Opens in a new tab and goes straight to the print dialog.",
+    audience: "Whoever reviews or approves the run; follows the email look so it reads as part of the same family.",
+    mergeTags: [
+      "{{runId}}", "{{runName}}", "{{verdict}}", "{{modelName}}", "{{vlmName}}", "{{startedBy}}",
+      "{{completedAt}}", "{{runtime}}", "{{score}}", "{{stepsPassed}}", "{{stepsTotal}}",
+      "{{rulesTriggered}}", "{{rulesTotal}}", "{{clipSeconds}}", "{{exportedAt}}",
+    ],
+    file: "templates/run-analysis-report.html",
+    html: runAnalysisReportHtml,
   },
 ];
 
