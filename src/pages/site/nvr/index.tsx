@@ -2173,7 +2173,7 @@ export default function NvrDevicesPage({
   ];
 
   return (
-    <div data-slot="nvr-devices-page" className="flex flex-col gap-4">
+    <div data-slot="nvr-devices-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>NVR Devices</PageHeader.Title>

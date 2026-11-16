@@ -475,7 +475,7 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
 }
 
 // Jumps between an email and the document it carries.
-const LINK_BUTTON = "inline-flex items-center gap-1 text-left font-medium text-primary hover:underline";
+const LINK_BUTTON = "inline-flex items-center gap-1 text-left font-medium text-primary-ink hover:underline";
 
 function App() {
   const [id, setId] = React.useState(TEMPLATES[0].id);
@@ -577,7 +577,7 @@ function App() {
                 Template
               </span>
               <Select value={id} onValueChange={setId}>
-                <SelectTrigger className="w-[280px]">
+                <SelectTrigger className="w-[280px]" aria-label="Template">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -628,7 +628,7 @@ function App() {
                 {tpl.mergeTags.map((m) => (
                   <code
                     key={m}
-                    className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-2xs text-primary"
+                    className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-2xs text-primary-ink"
                   >
                     {m}
                   </code>
@@ -688,7 +688,7 @@ function App() {
                           className={cn(
                             "flex items-center gap-1 rounded px-2 py-1 text-2xs font-semibold capitalize transition-colors",
                             scheme === s
-                              ? "bg-primary text-primary-foreground"
+                              ? "bg-primary-fill text-primary-foreground"
                               : "text-muted-foreground hover:text-foreground"
                           )}
                         >
@@ -721,7 +721,7 @@ function App() {
                   onClick={() => setId(attachment.templateId)}
                   className="mt-2.5 flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-left transition-colors hover:border-primary/50"
                 >
-                  <span className="flex h-7 w-6 items-center justify-center rounded-sm bg-severity-critical text-3xs font-bold text-primary-foreground">
+                  <span className="flex h-7 w-6 items-center justify-center rounded-sm bg-severity-critical text-3xs font-bold text-status-foreground">
                     PDF
                   </span>
                   <span className="flex flex-col">

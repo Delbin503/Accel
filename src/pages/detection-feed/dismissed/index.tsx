@@ -465,7 +465,7 @@ export default function DismissedEventsPage() {
   const hasFilters = !!(search || Object.values(filters).some((a) => a.length > 0));
 
   return (
-    <div data-slot="dismissed-events-page" className="flex flex-col gap-4">
+    <div data-slot="dismissed-events-page" className="flex flex-col gap-section">
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <PageHeader>
         <PageHeader.Content>

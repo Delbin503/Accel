@@ -2407,7 +2407,7 @@ export default function ModelManagementPage({
   }
 
   return (
-    <div data-slot="model-management-page" className="flex flex-col gap-4">
+    <div data-slot="model-management-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Management</PageHeader.Title>

@@ -71,7 +71,7 @@ export function AppLayout() {
               data-slot="app-layout-main"
               id="main-content"
               tabIndex={-1}
-              className="flex-1 overflow-auto p-6 focus:outline-none"
+              className="flex-1 overflow-auto p-page focus:outline-none"
             >
               <Outlet />
             </main>

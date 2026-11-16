@@ -1069,7 +1069,7 @@ export default function LiveMonitoringPage() {
     null;
 
   return (
-    <div data-slot="live-monitoring-page" className="flex flex-col gap-4">
+    <div data-slot="live-monitoring-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Live Monitoring</PageHeader.Title>

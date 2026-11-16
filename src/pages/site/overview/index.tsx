@@ -439,7 +439,7 @@ export default function SiteOverviewPage({
   ];
 
   return (
-    <div data-slot="site-overview-page" className="flex flex-col gap-4">
+    <div data-slot="site-overview-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Site Management</PageHeader.Title>

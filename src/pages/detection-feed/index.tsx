@@ -668,7 +668,7 @@ export default function DetectionFeedPage() {
   /* ─────────────────────────────────────────────────────────────────────── */
 
   return (
-    <div data-slot="detection-feed-page" className="flex flex-col gap-4">
+    <div data-slot="detection-feed-page" className="flex flex-col gap-section">
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <PageHeader>
         <PageHeader.Content>

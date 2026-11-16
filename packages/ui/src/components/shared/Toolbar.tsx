@@ -10,7 +10,7 @@ import { cn } from "../../lib/utils";
  */
 const Toolbar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div data-slot="toolbar" ref={ref} className={cn("flex flex-wrap items-center gap-2", className)} {...props} />
+    <div data-slot="toolbar" ref={ref} className={cn("flex flex-wrap items-center gap-inline", className)} {...props} />
   )
 );
 Toolbar.displayName = "Toolbar";

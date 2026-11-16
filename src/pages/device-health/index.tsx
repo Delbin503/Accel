@@ -513,7 +513,7 @@ export default function DeviceHealthPage({
   ];
 
   return (
-    <div data-slot="device-health-page" className="flex flex-col gap-4">
+    <div data-slot="device-health-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Device Health</PageHeader.Title>

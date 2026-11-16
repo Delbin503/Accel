@@ -297,7 +297,7 @@ export function VideoEnhancement() {
   const draftRatio = draft ? ASPECTS.find((a) => a.id === draft.aspect)?.ratio ?? null : null;
 
   return (
-    <div data-slot="video-enhancement-page" className="flex flex-col gap-4">
+    <div data-slot="video-enhancement-page" className="flex flex-col gap-section">
       {/* The sharpen kernel lives once, off-screen, and is referenced by filter url(). */}
       <svg width="0" height="0" className="absolute" aria-hidden="true">
         <defs>

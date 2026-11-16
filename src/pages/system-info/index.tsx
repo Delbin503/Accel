@@ -151,7 +151,7 @@ function copy(value: string) {
 
 export default function SystemInfoPage() {
   return (
-    <div data-slot="system-info-page" className="flex flex-col gap-4">
+    <div data-slot="system-info-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Info</PageHeader.Title>

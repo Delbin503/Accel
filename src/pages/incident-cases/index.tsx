@@ -451,7 +451,7 @@ export default function IncidentCasesPage({
   }, [cases, kpiFilter, filters, search, sortBy, datePreset, dateFrom, dateTo]);
 
   return (
-    <div data-slot="incident-cases-page" className="flex flex-col gap-4">
+    <div data-slot="incident-cases-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Incident Cases</PageHeader.Title>

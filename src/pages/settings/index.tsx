@@ -156,7 +156,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div data-slot="settings-page" className="flex flex-col gap-4">
+    <div data-slot="settings-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Settings</PageHeader.Title>

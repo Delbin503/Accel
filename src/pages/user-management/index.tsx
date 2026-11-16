@@ -2533,7 +2533,7 @@ function DeletedUsersPage({
   ];
 
   return (
-    <div data-slot="deleted-users-page" className="flex flex-col gap-4">
+    <div data-slot="deleted-users-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Deleted Users List</PageHeader.Title>
@@ -3070,7 +3070,7 @@ export default function UserManagementPage({
   ];
 
   return (
-    <div data-slot="user-management-page" className="flex flex-col gap-4">
+    <div data-slot="user-management-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>User Management</PageHeader.Title>

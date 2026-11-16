@@ -186,6 +186,7 @@ export function QuickActionsSection() {
     <div data-slot="quick-actions-section" className="flex flex-col gap-4">
       {/* Behaviour ------------------------------------------------------- */}
       <SectionCard
+        headingLevel={2}
         title="Palette behaviour"
         description={`${visibleCount} of ${QUICK_ACTIONS.length} actions available to the ${role} role`}
         action={
@@ -271,6 +272,7 @@ export function QuickActionsSection() {
 
       {/* Pinned order ---------------------------------------------------- */}
       <SectionCard
+        headingLevel={2}
         title="Pinned actions"
         description={`${pinned.length} of ${maxPins} slots used — this is the order the palette shows`}
       >
@@ -291,6 +293,7 @@ export function QuickActionsSection() {
 
       {/* Availability ---------------------------------------------------- */}
       <SectionCard
+        headingLevel={2}
         title="Available actions"
         description="Switch an action off to remove it from the palette for everyone."
         flushBody

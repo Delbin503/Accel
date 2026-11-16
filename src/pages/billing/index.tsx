@@ -1392,7 +1392,7 @@ export default function BillingPage() {
   );
 
   return (
-    <div data-slot="billing-page" className="flex flex-col gap-4">
+    <div data-slot="billing-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Billing & License</PageHeader.Title>

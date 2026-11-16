@@ -35,8 +35,8 @@ const descriptionListVariants = cva("min-w-0 text-base", {
     { layout: "stacked", columns: 1, class: "grid-cols-1" },
     { layout: "stacked", columns: 2, class: "grid-cols-1 sm:grid-cols-2" },
     { layout: "stacked", columns: 3, class: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" },
-    { layout: "stacked", variant: "card", class: "p-4" },
-    { layout: "inline", variant: "card", class: "px-4" },
+    { layout: "stacked", variant: "card", class: "p-card" },
+    { layout: "inline", variant: "card", class: "px-card" },
   ],
   defaultVariants: { layout: "stacked", columns: 2, variant: "plain" },
 });

@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "test:a11y": "storybook build --quiet && node scripts/check-a11y.mjs",
     "lint:changelog": "node scripts/check-changelog.mjs",
-    "chromatic": "chromatic --exit-zero-on-changes --project-token \"$CHROMATIC_PROJECT_TOKEN\""
+    "chromatic": "chromatic --exit-zero-on-changes --project-token \"$CHROMATIC_PROJECT_TOKEN\"",
+    "test:a11y:pages": "vite build --config prototypes/vite.config.ts --logLevel warn && node scripts/check-a11y-pages.mjs"
   },
   "dependencies": {
     "@accel/ui": "1.0.0",

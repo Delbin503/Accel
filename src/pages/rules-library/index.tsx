@@ -968,7 +968,7 @@ export default function RulesLibraryPage({
   ];
 
   return (
-    <div data-slot="rules-library-page" className="flex flex-col gap-4">
+    <div data-slot="rules-library-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Rule Library</PageHeader.Title>

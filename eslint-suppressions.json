@@ -1,7 +1,7 @@
 {
   "prototypes/PRD_Email_Templates/index.tsx": {
     "no-restricted-syntax": {
-      "count": 9
+      "count": 7
     }
   },
   "src/pages/auth/SignIn.tsx": {

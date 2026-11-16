@@ -59,6 +59,15 @@
   --duration-normal: 200ms;
   --duration-slow:   320ms;
 
+  /* ── Spacing roles — generates p-card, gap-section, gap-inline, p-page ────
+     Named for what they space, set to the values the app already uses most
+     (cards p-4, page sections gap-4, inline groups gap-2, page padding p-6).
+     Change the rhythm here, not in every component. */
+  --spacing-card:    1rem;     /* 16px — padding inside cards and panels */
+  --spacing-section: 1rem;     /* 16px — gap between sections of a page */
+  --spacing-inline:  0.5rem;   /*  8px — gap between items in a row (icon + label, chips, actions) */
+  --spacing-page:    1.5rem;   /* 24px — padding around page content */
+
   /* ── Z-index scale (use via z-[var(--z-modal)]) ─────────────────────────── */
   --z-base:     1;
   --z-dropdown: 10;

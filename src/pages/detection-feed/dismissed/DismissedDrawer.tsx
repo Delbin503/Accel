@@ -65,7 +65,8 @@ function DrawerThumb({ item }: { item: DismissedEvent }) {
           />
           <span
             className={cn(
-              "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-status-foreground opacity-60",
+              // The outline stays faded (dismissed); the label stays readable (AA).
+              "absolute -translate-y-full rounded-sm px-1 py-px text-3xs font-semibold text-status-foreground",
               box.variant === "person"  ? "bg-info"
               : box.variant === "vehicle" ? "bg-violet"
               : "bg-primary-fill text-primary-foreground"

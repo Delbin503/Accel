@@ -1543,7 +1543,7 @@ export default function ModelDeploymentPage({
   }
 
   return (
-    <div data-slot="model-deployment-page" className="flex flex-col gap-4">
+    <div data-slot="model-deployment-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Model Deployment</PageHeader.Title>

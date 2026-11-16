@@ -116,12 +116,14 @@ export function KpiCard({
     <Tag
       data-slot="kpi-card"
       type={onClick ? "button" : undefined}
+      // A clickable KPI is a filter toggle — announce whether it's on.
+      aria-pressed={onClick ? !!active : undefined}
       onClick={onClick}
       className={cn(
         "relative flex min-w-0 flex-col rounded-xl border bg-card text-left",
         "transition-colors duration-[var(--duration-fast)] ease-standard",
         // Fixed height keeps cards uniform across pages/drawers — matches the KPI skeletons.
-        compact ? "h-[104px] p-3.5" : "h-[120px] p-4",
+        compact ? "h-[104px] p-3.5" : "h-[120px] p-card",
         active ? "border-primary bg-primary/10" : "border-border",
         onClick && !active && "hover:border-muted-foreground/30 hover:bg-accent/40",
         className

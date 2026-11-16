@@ -145,7 +145,7 @@ export default function ActivityLogsPage() {
   }
 
   return (
-    <div data-slot="activity-logs-page" className="flex flex-col gap-4">
+    <div data-slot="activity-logs-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>Activity Log</PageHeader.Title>

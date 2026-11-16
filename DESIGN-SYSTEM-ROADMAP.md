@@ -222,7 +222,7 @@ Steps:
   - 🟡 **Player parts lack a common prefix:** `ChipRow`, `ScrubTrack`, `ZoomSurface` (exported from PlaybackControls) → `PlaybackChipRow`, `PlaybackScrubTrack`, `PlaybackZoomSurface`, matching `PlaybackSettingsMenu`
   - 🟡 **`custom/` is a fourth bucket** with 2 components: `CoachMark` is reusable (→ shared), `GuideGifModal` is product onboarding (→ app). Proposal: fold `custom/` away
   - ⚪ `ConfirmDialog` is built on `Modal`, not `Dialog` (fine as a common idiom; leave). `PageStates.tsx` exports `ListLoadingState` / `ListErrorState` (file name ≠ exports). `MODAL_NOTE` and `NAV_GROUPS` constants exported from component files trigger fast-refresh warnings → move to `lib/`
-- [ ] Add spacing role tokens (`p-card`, `gap-section`, `gap-inline`) once components share one rhythm (moved from Phase 2)
+- [x] Spacing role tokens (2026-11-17): `--spacing-card` 16px, `--spacing-section` 16px, `--spacing-inline` 8px, `--spacing-page` 24px — set to the most-used values (cards p-4 ×16, page sections gap-4 ×21, inline gap-2 ×47, page p-6). Adopted with no visual change in 21 page roots, AppLayout, KpiCard, DescriptionList, Toolbar
 - [x] Decision guide: [docs/choosing-components.md](docs/choosing-components.md), covering overlays, single and multi choice, actions, data display, empty/loading/error, inputs and page structure. Linked from CLAUDE.md step 1 of "Building page UI"
 
 **Done when:** every component is in exactly one of design system / app; every design-system component uses the shared prop vocabulary; there's a written "which one do I use" decision tree.
@@ -282,9 +282,9 @@ Steps:
     - All 21 prototype pages load with no console errors; drawers/modals exercised headlessly (open A → B, reset on reopen, prefill)
   - [x] **run-analysis** lint errors fixed (2026-11-17) and the `--ignore-pattern` dropped: ESLint now runs on the whole repo with 0 problems and blocks PRs
   - [x] `CameraFormModal` no longer reloads on parent re-render (`initial` memoized on the edited camera)
-- [x] **Page-level accessibility (2026-11-17):** axe on all 22 prototype pages (the real app pages) went 617 → 0 elements, in dark and light: sidebar is the main navigation landmark, auth pages have <main>, 43 unnamed buttons named, contrast fixes (faded escalated cards, `text-secondary` used as text, `text-primary` → `text-primary-ink`, opacity on text), labels linked, heading levels, focusable scroll region. Audit script: scratchpad `pages-axe.mjs` (`THEME=light`) — turn into `scripts/check-a11y-pages.mjs` + CI next
-  - [ ] DismissedDrawer box labels still use `opacity-60` (only visible with the drawer open, so the audit can't see it)
-- [ ] `/design-system-ops:accessibility-per-component` for keyboard and screen-reader notes
+- [x] **Page-level accessibility (2026-11-17):** axe on all 22 prototype pages (the real app pages) went 617 → 0 elements, in dark and light: sidebar is the main navigation landmark, auth pages have <main>, 43 unnamed buttons named, contrast fixes (faded escalated cards, `text-secondary` used as text, `text-primary` → `text-primary-ink`, opacity on text), labels linked, heading levels, focusable scroll region. Gate: `npm run test:a11y:pages` (`scripts/check-a11y-pages.mjs`, builds the prototypes and checks all 26 pages, light + dark) runs in the PR pipeline; the 4 pages not covered before (Email Templates, Interactive Demo, Quick Actions, Training Assessment) fixed too
+  - [x] DismissedDrawer box labels readable (outline stays faded)
+- [x] Accessibility notes per component (2026-11-17): Storybook **Guidelines/Accessibility** — keyboard, screen reader and "you provide" for 19 components, marking what tests cover. Clickable KpiCard now has `aria-pressed`; SectionCard gained `headingLevel`
 
 **Done when:** a PR that changes a token shows a visual diff of every affected component before merge, and CI is green on main.
 **Then →** Phase 6.

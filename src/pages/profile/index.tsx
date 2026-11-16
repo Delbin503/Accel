@@ -243,7 +243,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div data-slot="profile-page" className="flex flex-col gap-4">
+    <div data-slot="profile-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>My Profile</PageHeader.Title>

@@ -28,6 +28,8 @@ export interface SectionCardProps
   defaultOpen?: boolean;
   /** `sm` tightens the header and body for narrow side columns. */
   size?: "default" | "sm";
+  /** Heading level of the title, to keep the page outline in order (h1 page title → h2 sections). Default 3. */
+  headingLevel?: 2 | 3 | 4;
 }
 
 const SIZES = {
@@ -37,9 +39,10 @@ const SIZES = {
 
 const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
   (
-    { title, description, action, flushBody = false, bodyClassName, collapsible = false, defaultOpen = true, size = "default", className, children, ...props },
+    { title, description, action, flushBody = false, bodyClassName, collapsible = false, defaultOpen = true, size = "default", headingLevel = 3, className, children, ...props },
     ref
   ) => {
+    const Heading = `h${headingLevel}` as const;
     const sz = SIZES[size];
     return collapsible ? (
     <Collapsible
@@ -52,7 +55,7 @@ const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
       <div data-slot="section-card-header" className="flex items-center gap-3 border-b border-border group-data-[state=closed]/section:border-b-0">
         <CollapsibleTrigger data-slot="section-card-trigger" className={cn("flex min-w-0 flex-1 items-center gap-3 text-left", sz.header)}>
           <div data-slot="section-card-heading" className="min-w-0 flex-1">
-            <h3 data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</h3>
+            <Heading data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</Heading>
             {description && (
               <p data-slot="section-card-description" className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
             )}
@@ -72,7 +75,7 @@ const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
     >
       <div data-slot="section-card-header" className={cn("flex items-center justify-between gap-3 border-b border-border", sz.header)}>
         <div data-slot="section-card-heading" className="min-w-0">
-          <h3 data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</h3>
+          <Heading data-slot="section-card-title" className={cn("truncate text-foreground", sz.title)}>{title}</Heading>
           {description && (
             <p data-slot="section-card-description" className={cn("mt-0.5 truncate text-muted-foreground", sz.description)}>{description}</p>
           )}

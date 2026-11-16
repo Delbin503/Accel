@@ -221,6 +221,7 @@ token; arbitrary pixel sizes are blocked by ESLint (`no-restricted-syntax`).
 ### Other token scales
 
 - **Z-index** — use `z-[var(--z-modal)]` etc. (`--z-base/dropdown/sticky/overlay/drawer/modal/popover/toast/tooltip` — `popover` for menus opened inside a modal or drawer). Never `z-[100]`.
+- **Spacing roles** — `p-card` (16px, inside cards/panels), `gap-section` (16px, between page sections), `gap-inline` (8px, items in a row), `p-page` (24px, around page content). Prefer these over raw `p-4`/`gap-4`/`gap-2`/`p-6` when the spacing has that role, so the rhythm changes in one place.
 - **Motion** — durations `--duration-fast` / `--duration-normal` / `--duration-slow` (e.g. `duration-[var(--duration-normal)]`) + `ease-standard` / `ease-emphasized`.
 - **Icon sizes** — `size-3` (badges), `size-4` (buttons/inputs/rows), `size-5` (section/empty-state), `size-6+` (hero only).
 - **Elevation** — `shadow-raised` (cards, inputs, tabs), `shadow-floating` (popovers, dropdowns, tooltips, toasts), `shadow-modal` (dialogs, sheets, drawers). Theme-aware. Never `shadow-sm` … `shadow-2xl`.
@@ -290,6 +291,7 @@ All color usage must be expressed with semantic tokens — those automatically h
 
 - `npm test` — Vitest + Testing Library interaction tests in `packages/ui/test/*.test.tsx` (not next to components: the registry check treats every `.tsx` in a component folder as a component). When you change a component's behaviour (keyboard, selection, labelling, open/close), add or update a test there.
 - `npm run test:a11y` — builds Storybook and runs axe over every story in light **and** dark (`scripts/check-a11y.mjs`). Must report 0 violations. A justified exception goes in that story's `parameters.a11y.config.rules`, with a comment saying why.
+- `npm run test:a11y:pages` — builds the prototypes and runs axe on every page in light and dark (`scripts/check-a11y-pages.mjs`), excluding the dev-state tester panels. Must report 0 violations. New pages are picked up automatically.
 - **Changelog** — any change under `packages/ui/` adds a line under `## [Unreleased]` in `packages/ui/CHANGELOG.md`, written for the people using the components (`npm run lint:changelog` checks it). Decide major / minor / patch with the table in `packages/ui/README.md#versioning`; deprecate before removing.
 - **Visual snapshots (Chromatic)** — every story is snapshotted in light and dark (`parameters.chromatic.modes` in `.storybook/preview.tsx`). In CI it runs once the `CHROMATIC_PROJECT_TOKEN` repository variable is set; review visual changes in Chromatic before merging. Locally: `CHROMATIC_PROJECT_TOKEN=… npm run chromatic`.
 - Pull requests run these in Bitbucket Pipelines (`bitbucket-pipelines.yml`): guardrail checks, `npm run build`, prototype typecheck, tests, the a11y gate and Chromatic.

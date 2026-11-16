@@ -491,7 +491,7 @@ export default function DashboardPage() {
   const showAlertBanner = !!worstHealth && !alertAcknowledged;
 
   return (
-    <div data-slot="dashboard-page" className="flex flex-col gap-4">
+    <div data-slot="dashboard-page" className="flex flex-col gap-section">
       {showAlertBanner && worstHealth && (
         <div data-slot="dashboard-page-alert"
           className={cn(

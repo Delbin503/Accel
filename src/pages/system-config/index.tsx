@@ -1047,7 +1047,7 @@ export default function SystemConfigPage() {
   }
 
   return (
-    <div data-slot="system-config-page" className="flex flex-col gap-4">
+    <div data-slot="system-config-page" className="flex flex-col gap-section">
       <PageHeader>
         <PageHeader.Content>
           <PageHeader.Title>System Configuration</PageHeader.Title>
