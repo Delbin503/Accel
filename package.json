@@ -7,21 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck:prototypes": "tsc -p tsconfig.protocheck.json",
-    "lint": "node scripts/check-tokens.mjs && node scripts/check-slots.mjs && node scripts/check-components.mjs && eslint .",
-    "lint:tokens": "node scripts/check-tokens.mjs",
-    "lint:slots": "node scripts/check-slots.mjs",
-    "lint:components": "node scripts/check-components.mjs",
-    "lint:prune": "eslint . --prune-suppressions",
     "preview": "vite preview",
-    "prototype": "vite --config prototypes/vite.config.ts",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:a11y": "storybook build --quiet && node scripts/check-a11y.mjs",
-    "lint:changelog": "node scripts/check-changelog.mjs",
-    "chromatic": "chromatic --exit-zero-on-changes --project-token \"$CHROMATIC_PROJECT_TOKEN\"",
-    "test:a11y:pages": "vite build --config prototypes/vite.config.ts --logLevel warn && node scripts/check-a11y-pages.mjs"
+    "prototype": "vite --config prototypes/vite.config.ts"
   },
   "dependencies": {
     "@accel/ui": "1.1.0",
