@@ -1,13 +1,11 @@
 /* One patient's rehab visit in Clinic A: Ahmad Rahim, six weeks after a right
-   knee replacement. Knee-bend reps and sit-to-stand in Room 1 (two room
+   knee replacement. Knee-bend reps and sit-to-stand in Area 1 (two
    cameras 90° apart), then two 10 m walks past the walkway camera. Every
    number on the Rehab Analysis page is derived from the reps and visits below.
 
    Physio rules: a patient is only ever compared with their own week-1 baseline
    and goal, never ranked or graded against other patients; the visit report
    needs a clinician's sign-off before it is shared; faces are blurred. */
-
-import type { DeviceMode } from "../assessment/deviceState";
 
 export const PATIENT = {
   name: "Ahmad Rahim",
@@ -21,19 +19,18 @@ export const PATIENT = {
 
 export const VISIT = {
   clinic: "Clinic A",
-  room: "Room 1 + walkway",
+  area: "Area 1 + Walkway",
   clinician: "Dr. Lim",
   date: "Tue 11 Nov 2026 · 10:00",
   short: "11 Nov",
   lengthSec: 1080,
   fps: 60,
-  cameras: "Room front + side · walkway · 60 fps",
-  device: "Force plate FP-1",
+  cameras: "Front + side · walkway · 60 fps",
   model: "Rehab Movement Assessment v1.0",
 };
 
 export const METHOD_NOTE =
-  "Joint angles come from 3D pose read off two room cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera and left–right load comes from the force plate. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.";
+  "Joint angles come from 3D pose read off two area cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera, and left–right difference is step length on the walk. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.";
 
 /* ── Limits ──────────────────────────────────────────────────────────── */
 
@@ -91,9 +88,8 @@ export type Rep = {
   trunkLean: number;
   kneeCave: number;
   shrug: number;
-  /** Left–right difference, %: load on the force plate (sit-to-stand) or step length (walk). */
+  /** Walk only: left–right step-length difference, %. */
   lr: number;
-  /** Walk only. */
   cadence: number;
   stepR: number;
   stepL: number;
@@ -104,8 +100,8 @@ const base = { speed: 0, hold: 0, rise: 0, kneeCave: 0, shrug: 0, lr: 0, cadence
 
 const rom = (n: number, at: number, flex: number, lag: number, speed: number, hold: number, hipHike: number, trunkLean: number, shrug: number): Rep =>
   ({ ...base, id: `rom-${n}`, ex: "rom", n, at, flex, lag, speed, hold, hipHike, trunkLean, shrug });
-const sts = (n: number, at: number, flex: number, lag: number, rise: number, lower: number, hipHike: number, trunkLean: number, kneeCave: number, lr: number): Rep =>
-  ({ ...base, id: `sts-${n}`, ex: "sts", n, at, flex, lag, rise, hold: lower, hipHike, trunkLean, kneeCave, lr, shrug: 0.4 });
+const sts = (n: number, at: number, flex: number, lag: number, rise: number, lower: number, hipHike: number, trunkLean: number, kneeCave: number): Rep =>
+  ({ ...base, id: `sts-${n}`, ex: "sts", n, at, flex, lag, rise, hold: lower, hipHike, trunkLean, kneeCave, shrug: 0.4 });
 const walk = (n: number, at: number, flex: number, lag: number, cadence: number, stepR: number, stepL: number, gaitSpeed: number, hipHike: number, trunkLean: number): Rep =>
   ({ ...base, id: `gait-${n}`, ex: "gait", n, at, flex, lag, cadence, stepR, stepL, gaitSpeed, hipHike, trunkLean, lr: Math.round(((stepL - stepR) / stepL) * 100) });
 
@@ -118,11 +114,11 @@ export const REPS: Rep[] = [
   rom(6, 297, 105, 5, 63, 2.2, 2.6, 6, 0.9),
   rom(7, 330, 102, 6, 48, 3.1, 1.1, 4, 0.7),
   rom(8, 361, 99, 7, 66, 1.8, 2.9, 9, 1.8),
-  sts(1, 610, 92, 6, 1.6, 2.4, 1.4, 6, 4, 18),
-  sts(2, 628, 94, 5, 1.5, 2.2, 2.4, 8, 5, 16),
-  sts(3, 645, 93, 5, 1.7, 1.6, 2.6, 10, 9, 19),
-  sts(4, 662, 95, 4, 1.4, 2.5, 1.2, 5, 3, 13),
-  sts(5, 680, 91, 6, 2.0, 1.4, 2.8, 11, 6, 21),
+  sts(1, 610, 92, 6, 1.6, 2.4, 1.4, 6, 4),
+  sts(2, 628, 94, 5, 1.5, 2.2, 2.4, 8, 5),
+  sts(3, 645, 93, 5, 1.7, 1.6, 2.6, 10, 9),
+  sts(4, 662, 95, 4, 1.4, 2.5, 1.2, 5, 3),
+  sts(5, 680, 91, 6, 2.0, 1.4, 2.8, 11, 6),
   walk(1, 900, 54, 6, 98, 0.56, 0.63, 0.92, 1.8, 6),
   walk(2, 960, 56, 5, 101, 0.58, 0.64, 0.98, 1.5, 5),
 ];
@@ -248,10 +244,9 @@ export function gaitSteps(r: Rep) {
 
 /* ── Checks & findings ───────────────────────────────────────────────── */
 
-/** `na`: the check needs a device that gave no data for this rep, so it is shown greyed and not counted. */
-export type Check = { label: string; ok: boolean; note: string; na?: boolean };
+export type Check = { label: string; ok: boolean; note: string };
 
-export function checksFor(r: Rep, mode: DeviceMode = "connected"): Check[] {
+export function checksFor(r: Rep): Check[] {
   const hike = { label: "Hip hike", ok: r.hipHike <= LIMIT.hipHike, note: `${r.hipHike.toFixed(1)} cm · max ${LIMIT.hipHike}` };
   const lean = { label: "Trunk lean", ok: r.trunkLean <= LIMIT.trunkLean, note: `${r.trunkLean}° · max ${LIMIT.trunkLean}°` };
   const straight = { label: "Straightens", ok: r.lag <= LIMIT.lag, note: `${r.lag}° short · max ${LIMIT.lag}°` };
@@ -271,7 +266,6 @@ export function checksFor(r: Rep, mode: DeviceMode = "connected"): Check[] {
       { label: "Controlled lowering", ok: r.hold >= LIMIT.stsLower, note: `${r.hold.toFixed(1)} s · aim ${LIMIT.stsLower} s` },
       hike,
       lean,
-      { label: "Left–right load", ok: r.lr <= LIMIT.lr, note: `${r.lr}% · max ${LIMIT.lr}%`, na: !hasLoad(r, mode) },
     ];
   return [
     { label: "Bend in swing", ok: r.flex >= LIMIT.gaitSwing, note: `${r.flex}° · need ${LIMIT.gaitSwing}°` },
@@ -283,9 +277,7 @@ export function checksFor(r: Rep, mode: DeviceMode = "connected"): Check[] {
   ];
 }
 
-/** The checks a rep is judged on: those the missing device could not give are left out. */
-export const scoredChecks = (r: Rep, mode: DeviceMode = "connected") => checksFor(r, mode).filter((c) => !c.na);
-export const failedChecks = (r: Rep, mode: DeviceMode = "connected") => scoredChecks(r, mode).filter((c) => !c.ok).length;
+export const failedChecks = (r: Rep) => checksFor(r).filter((c) => !c.ok).length;
 
 export type FaultKey = "hipHike" | "trunkLean" | "kneeCave" | "shrug";
 
@@ -316,16 +308,14 @@ const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.le
 
 const romReps = repsOf("rom");
 const stsReps = repsOf("sts");
-const lrReps = REPS.filter((r) => r.ex !== "rom");
 const walkReps = repsOf("gait");
 
 export const TODAY = {
   flex: Math.max(...romReps.map((r) => r.flex)),
   bestRom: [...romReps].sort((a, b) => b.flex - a.flex)[0].id,
   lag: Math.round(mean(romReps.map((r) => r.lag))),
-  lr: Math.round(mean(lrReps.map((r) => r.lr))),
-  /** Step-length difference on the walk alone: what's left without the force plate. */
-  lrWalk: Math.round(mean(walkReps.map((r) => r.lr))),
+  /** Left–right step-length difference on the walk. */
+  lr: Math.round(mean(walkReps.map((r) => r.lr))),
   sts: +stsReps.reduce((a, r) => a + r.rise + r.hold, 0).toFixed(1),
   gaitSpeed: +mean(repsOf("gait").map((r) => r.gaitSpeed)).toFixed(2),
   cadence: Math.round(mean(repsOf("gait").map((r) => r.cadence))),
@@ -333,14 +323,14 @@ export const TODAY = {
 };
 
 /** Every visit so far, oldest first. Week 1 is the baseline; the last row is today.
- *  `lrWalk` is the step-length difference on the walk alone, read off the walkway camera. */
+ *  `lr` is the left–right step-length difference on the walk, read off the walkway camera. */
 export const VISITS = [
-  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 34, lrWalk: 30 },
-  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 30, lrWalk: 26 },
-  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 26, lrWalk: 21 },
-  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 22, lrWalk: 17 },
-  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 18, lrWalk: 13 },
-  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr, lrWalk: TODAY.lrWalk },
+  { wk: 1, date: "7 Oct", flex: 72, lag: 14, sts: 26.0, lr: 30 },
+  { wk: 2, date: "14 Oct", flex: 81, lag: 12, sts: 24.1, lr: 26 },
+  { wk: 3, date: "21 Oct", flex: 89, lag: 10, sts: 22.3, lr: 21 },
+  { wk: 4, date: "28 Oct", flex: 96, lag: 9, sts: 20.8, lr: 17 },
+  { wk: 5, date: "4 Nov", flex: 103, lag: 7, sts: 19.6, lr: 13 },
+  { wk: 6, date: VISIT.short, flex: TODAY.flex, lag: TODAY.lag, sts: TODAY.sts, lr: TODAY.lr },
 ];
 export const BASELINE = VISITS[0];
 export const PREVIOUS = VISITS[VISITS.length - 2];
@@ -351,7 +341,7 @@ export const MEASURES: { key: MeasureKey; label: string; title: string; group: s
   { key: "flex", label: "Knee bend", title: "Mobility · bend", group: "Mobility", unit: "°", baseline: BASELINE.flex, last: PREVIOUS.flex, now: TODAY.flex, goal: LIMIT.goalFlex, info: "Most the right knee bent today, seated. Goal 125° lets you climb stairs and get up from a low chair." },
   { key: "lag", label: "Knee straighten", title: "Mobility · straighten", group: "Mobility", unit: "°", baseline: BASELINE.lag, last: PREVIOUS.lag, now: TODAY.lag, goal: LIMIT.lag, info: "How many degrees short of fully straight the knee stops (extension lag), averaged over the knee-bend reps. Goal: within 5°." },
   { key: "sts", label: "5 × sit-to-stand", title: "Strength & control", group: "Strength & control", unit: " s", baseline: BASELINE.sts, last: PREVIOUS.sts, now: TODAY.sts, goal: LIMIT.stsTime, digits: 1, info: "Time for five sit-to-stands without using the arms. Goal 12 s or less." },
-  { key: "lr", label: "Left–right difference", title: "Symmetry", group: "Symmetry", unit: "%", baseline: BASELINE.lr, last: PREVIOUS.lr, now: TODAY.lr, goal: LIMIT.lr, info: "How unevenly weight and steps fall between the legs: force-plate load on sit-to-stand and step length on the walk. Goal 10% or less." },
+  { key: "lr", label: "Left–right difference", title: "Symmetry", group: "Symmetry", unit: "%", baseline: BASELINE.lr, last: PREVIOUS.lr, now: TODAY.lr, goal: LIMIT.lr, info: "How unevenly the legs share the walk: right vs left step length, read off the walkway camera. Goal 10% or less." },
 ];
 
 /** 0–100: how far a value has come from baseline to goal. Works both ways (lower-is-better goals too). */
@@ -415,73 +405,3 @@ export const DISCHARGE: { label: string; target: string; now: string; met: boole
 ];
 
 export const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
-
-/* ── Force plate ─────────────────────────────────────────────────────── */
-
-/* The force plate gives one thing: left–right load during sit-to-stand.
-   Everything else is from the cameras (angles, compensations, the walk and
-   its step lengths). With no plate, left–right falls back
-   to step length on the walk; when it drops out partway, the sit-to-stands
-   after the drop have no load. */
-
-export const PLATE = "Force plate";
-
-/** In the "went offline" preview the plate drops out as sit-to-stand 4 starts. */
-export const PLATE_OFFLINE_SEC = repById("sts-4").at;
-export const PLATE_OFFLINE_AT = fmtClock(PLATE_OFFLINE_SEC);
-
-/** Whether the rep has the force-plate load it needs. Only sit-to-stand uses the plate. */
-export const hasLoad = (r: Rep, mode: DeviceMode) => r.ex !== "sts" || mode === "connected" || (mode === "offline" && r.at < PLATE_OFFLINE_SEC);
-
-const nRange = (rs: Rep[]) => (rs.length > 1 ? `${rs[0].n}–${rs[rs.length - 1].n}` : rs.length ? `${rs[0].n}` : "");
-/** Sit-to-stand reps with and without plate load, as "1–3" / "4–5". */
-export const loadSpan = (mode: DeviceMode) => ({
-  with: nRange(stsReps.filter((r) => hasLoad(r, mode))),
-  without: nRange(stsReps.filter((r) => !hasLoad(r, mode))),
-});
-
-/** Today's left–right difference from what the plate gave, against the same measure on earlier visits. */
-export function lrFor(mode: DeviceMode): { now: number; last: number; baseline: number; tag: string | null; source: string } {
-  if (mode === "none")
-    return { now: TODAY.lrWalk, last: PREVIOUS.lrWalk, baseline: BASELINE.lrWalk, tag: "walk only", source: "step length on the walk only: no force plate this visit" };
-  if (mode === "offline") {
-    const span = loadSpan(mode);
-    return {
-      now: Math.round(mean(lrReps.filter((r) => hasLoad(r, mode)).map((r) => r.lr))), last: PREVIOUS.lr, baseline: BASELINE.lr, tag: "partial",
-      source: `force-plate load on sit-to-stand ${span.with} (the plate went offline at ${PLATE_OFFLINE_AT}, so none for ${span.without}) and step length on the walk`,
-    };
-  }
-  return { now: TODAY.lr, last: PREVIOUS.lr, baseline: BASELINE.lr, tag: null, source: "force-plate load on sit-to-stand and step length on the walk" };
-}
-
-/** A visit's left–right value on the same footing as today's. */
-export const lrOfVisit = (v: (typeof VISITS)[number], mode: DeviceMode) =>
-  mode === "none" ? v.lrWalk : v.wk === PATIENT.week ? lrFor(mode).now : v.lr;
-
-export function measuresFor(mode: DeviceMode): typeof MEASURES {
-  if (mode === "connected") return MEASURES;
-  const lr = lrFor(mode);
-  return MEASURES.map((m) =>
-    m.key === "lr"
-      ? { ...m, title: `Symmetry · ${lr.tag}`, baseline: lr.baseline, last: lr.last, now: lr.now, info: `How unevenly weight and steps fall between the legs, from ${lr.source}. Goal 10% or less.` }
-      : m,
-  );
-}
-
-export function dischargeFor(mode: DeviceMode): typeof DISCHARGE {
-  if (mode === "connected") return DISCHARGE;
-  const lr = lrFor(mode);
-  return DISCHARGE.map((d) =>
-    d.label === "Left–right difference"
-      ? { ...d, now: `${lr.now}%`, met: lr.now <= LIMIT.lr, note: mode === "none" ? "walk only · no force plate" : `no load on sit-to-stand ${loadSpan(mode).without}` }
-      : d,
-  );
-}
-
-export function methodNote(mode: DeviceMode) {
-  if (mode === "none")
-    return "Joint angles come from 3D pose read off two room cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera, and left–right difference comes from step length on the walk only: no force plate was connected. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.";
-  if (mode === "offline")
-    return `Joint angles come from 3D pose read off two room cameras 90° apart at 60 fps, strongly smoothed. Walking is timed off the walkway side camera. Left–right load comes from the force plate until it went offline at ${PLATE_OFFLINE_AT} (sit-to-stand ${loadSpan(mode).without} have none), plus step length on the walk. Every number is compared with this patient's own week-1 baseline and goal, never with other patients.`;
-  return METHOD_NOTE;
-}

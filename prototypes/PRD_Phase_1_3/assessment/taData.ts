@@ -52,7 +52,7 @@ export interface UseCase {
 
 export const USE_CASES: Record<UseCaseKey, UseCase> = {
   golf: {
-    key: "golf", label: "Golf", full: "Golf swing", person: "golfer", people: "golfers", unit: "bay", units: "bays",
+    key: "golf", label: "Golf", full: "Golf swing", person: "golfer", people: "golfers", unit: "area", units: "areas",
     item: "swing", items: "swings",
     activities: ["Driver", "Woods", "Irons", "Wedges", "Putting", "Chipping"],
     defaultActivities: ["Driver", "Woods", "Irons", "Wedges"],
@@ -63,13 +63,13 @@ export const USE_CASES: Record<UseCaseKey, UseCase> = {
     },
     resolution: "1080p",
     placement: "Face-on ≈ 3 m in front at chest height · Down-the-line ≈ 3 m behind on the hand line",
-    fewer: { reduced: "One view, so 2D only: no turn or X-factor. Sway and tempo still work.", reducedAllowed: true, block: "The bay can't go live until it has both cameras.", def: "reduced" },
+    fewer: { reduced: "One view, so 2D only: no turn or X-factor. Sway and tempo still work.", reducedAllowed: true, block: "The area can't go live until it has both cameras.", def: "reduced" },
     criteria: [["Posture hold (spine angle lost)", "≤ 5°"], ["Turn (X-factor at top)", "35–50°"], ["Sway", "≤ 4 cm"], ["Tempo", "3 : 1"]],
-    faults: ["Early extension", "Over-the-top", "Sway", "Out of sequence", "Reverse pivot"],
+    faults: ["Early extension", "Sway", "Out of sequence", "Reverse pivot"],
     deviceTypes: ["Launch monitor"],
   },
   gym: {
-    key: "gym", label: "Gym", full: "Gym / weightlifting", person: "lifter", people: "lifters", unit: "rack", units: "racks",
+    key: "gym", label: "Gym", full: "Gym / weightlifting", person: "lifter", people: "lifters", unit: "area", units: "areas",
     item: "set", items: "sets",
     activities: ["Back squat", "Deadlift", "Bench press", "Overhead press", "Front squat"],
     defaultActivities: ["Back squat", "Deadlift", "Bench press", "Overhead press"],
@@ -80,24 +80,24 @@ export const USE_CASES: Record<UseCaseKey, UseCase> = {
     },
     resolution: "1080p",
     placement: "Side ≈ 1 m high, 3–4 m away, looking along the bar · front camera optional for knee tracking",
-    fewer: { reduced: "Not needed in 2D: one side camera is the requirement.", reducedAllowed: true, block: "The rack can't go live until it has the cameras its mode needs.", def: "reduced" },
+    fewer: { reduced: "Not needed in 2D: one side camera is the requirement.", reducedAllowed: true, block: "The area can't go live until it has the cameras its mode needs.", def: "reduced" },
     criteria: [["Depth (hip crease vs knee)", "Below parallel"], ["Torso lean at bottom", "≤ 45°"], ["Bar path drift", "≤ 5 cm"], ["Knee tracking", "≤ 8°"]],
     faults: ["Knee cave", "Shallow depth", "Forward lean", "Back rounding", "Hips rise first", "Heel lift", "Bar drift"],
     deviceTypes: ["Bar speed sensor"],
   },
   physio: {
-    key: "physio", label: "Physio", full: "Physio / rehab", person: "patient", people: "patients", unit: "room", units: "rooms",
+    key: "physio", label: "Physio", full: "Physio / rehab", person: "patient", people: "patients", unit: "area", units: "areas",
     item: "test", items: "tests",
     activities: ["Range of motion", "Gait", "Standard tests", "Exercises", "Balance"],
     defaultActivities: ["Range of motion", "Gait", "Standard tests", "Exercises"],
     pose: { mode: "3d", fps: 60, fpsOptions: [30, 60, 120], smoothing: "Strong", keypoints: "Body + feet, left and right" },
     positions: {
-      "3d": { names: ["Room front", "Room side", "Walkway side"], required: 2, why: "Clinical joint angles need two views 90° apart. The walkway camera times gait." },
-      "2d": { names: ["Room side", "Walkway side"], required: 1, why: "One view gives timed tests and gait speed only. No clinical joint angles." },
+      "3d": { names: ["Front", "Side", "Walkway side"], required: 2, why: "Clinical joint angles need two views 90° apart. The walkway camera times gait." },
+      "2d": { names: ["Side", "Walkway side"], required: 1, why: "One view gives timed tests and gait speed only. No clinical joint angles." },
     },
     resolution: "1080p",
-    placement: "Room cameras ≈ 1 m high, ≈ 3 m away, 90° apart · walkway side camera ≈ 4–5 m back",
-    fewer: { reduced: "Not allowed: clinical angles need both views.", reducedAllowed: false, block: "The room can't go live until it has both cameras. Timed tests can still run on one camera.", def: "block" },
+    placement: "Cameras ≈ 1 m high, ≈ 3 m away, 90° apart · walkway side camera ≈ 4–5 m back",
+    fewer: { reduced: "Not allowed: clinical angles need both views.", reducedAllowed: false, block: "The area can't go live until it has both cameras. Timed tests can still run on one camera.", def: "block" },
     criteria: [["Knee flexion", "Patient goal 125°"], ["Knee extension lag", "≤ 5°"], ["Left–right difference", "≤ 10%"]],
     faults: ["Trunk lean", "Hip hike", "Knee cave", "Shoulder shrug"],
     deviceTypes: ["Depth camera", "Force plate"],
@@ -113,7 +113,7 @@ export interface TaArea {
   name: string;
   siteId: string;
   useCase: UseCaseKey;
-  /** Bays, racks or rooms in this area. */
+  /** The areas this deployment covers. */
   units: string[];
 }
 
@@ -142,20 +142,20 @@ export const TA_SITES: TaSite[] = [
   {
     id: "ma", name: "Main academy", useCase: "golf",
     areas: [
-      { id: "ma-bays", name: "Hitting bays", siteId: "ma", useCase: "golf", units: ["Bay 1", "Bay 2", "Bay 3", "Bay 4", "Bay 5", "Bay 6"] },
-      { id: "ma-short", name: "Short game area", siteId: "ma", useCase: "golf", units: ["Green 1"] },
+      { id: "ma-bays", name: "Driving range", siteId: "ma", useCase: "golf", units: ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5", "Area 6"] },
+      { id: "ma-short", name: "Short game area", siteId: "ma", useCase: "golf", units: ["Putting green"] },
     ],
   },
   {
     id: "dt", name: "Downtown gym", useCase: "gym",
     areas: [
-      { id: "dt-floor", name: "Strength floor", siteId: "dt", useCase: "gym", units: ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8"] },
+      { id: "dt-floor", name: "Strength floor", siteId: "dt", useCase: "gym", units: ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5", "Area 6", "Area 7", "Area 8"] },
     ],
   },
   {
     id: "ca", name: "Clinic A", useCase: "physio",
     areas: [
-      { id: "ca-rehab", name: "Rehab wing", siteId: "ca", useCase: "physio", units: ["Room 1", "Room 2", "Room 3"] },
+      { id: "ca-rehab", name: "Rehab wing", siteId: "ca", useCase: "physio", units: ["Area 1", "Area 2", "Area 3"] },
       { id: "ca-walk", name: "Gait walkway", siteId: "ca", useCase: "physio", units: ["Walkway"] },
     ],
   },
@@ -179,9 +179,9 @@ function buildCameras(): TaCamera[] {
         let positions = uc.positions["3d"].names;
         if (area.id === "ma-short") positions = ["Down-the-line"];
         if (area.id === "ca-walk") positions = ["Walkway side"];
-        if (area.id === "ca-rehab") positions = ["Room front", "Room side"];
-        if (area.useCase === "gym") positions = unit === "Rack 1" || unit === "Rack 2" ? ["Side", "Front"] : ["Side"];
-        if (unit === "Bay 6") positions = ["Face-on"];
+        if (area.id === "ca-rehab") positions = ["Front", "Side"];
+        if (area.useCase === "gym") positions = unit === "Area 1" || unit === "Area 2" ? ["Side", "Front"] : ["Side"];
+        if (area.useCase === "golf" && unit === "Area 6") positions = ["Face-on"];
         for (const position of positions) {
           const id = `CAM-${String(n).padStart(2, "0")}`;
           cams.push({
@@ -193,9 +193,9 @@ function buildCameras(): TaCamera[] {
             areaName: area.name,
             unit,
             position,
-            fps: area.useCase === "golf" ? (unit === "Bay 2" && position === "Down-the-line" ? 60 : 240) : area.useCase === "gym" ? (unit === "Rack 4" ? 30 : 60) : 60,
-            status: unit === "Bay 5" && position === "Down-the-line" ? "offline" : "online",
-            nvrId: unit === "Green 1" ? null : `NVR-${site.id.toUpperCase()}`,
+            fps: area.useCase === "golf" ? (unit === "Area 2" && position === "Down-the-line" ? 60 : 240) : area.useCase === "gym" ? (unit === "Area 4" ? 30 : 60) : 60,
+            status: unit === "Area 5" && position === "Down-the-line" ? "offline" : "online",
+            nvrId: unit === "Putting green" ? null : `NVR-${site.id.toUpperCase()}`,
           });
           n += 1;
         }
@@ -234,7 +234,7 @@ export interface ExternalDevice {
   siteName: string;
   areaId: string;
   areaName: string;
-  /** The bay, rack or room it is paired to. */
+  /** The area it is paired to. */
   unit: string;
   connection: Connection;
   address: string;
@@ -262,16 +262,16 @@ function device(
 }
 
 const SEED_DEVICES: ExternalDevice[] = [
-  device("LM-1", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Bay 1"),
-  device("LM-2", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Bay 2"),
-  device("LM-3", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Bay 3", { lastSeenDisplay: "2 min ago" }),
-  device("LM-4", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Bay 4"),
-  device("LM-5", "Launch monitor", "Photometric LM Mini", "ma", "ma-bays", "Bay 5", { status: "offline", lastSeenDisplay: "Yesterday, 21:40", firmware: "1.9.0" }),
-  device("BS-1", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Rack 1"),
-  device("BS-2", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Rack 2"),
-  device("BS-3", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Rack 4", { status: "pairing", lastSeenDisplay: "Pairing…" }),
-  device("BS-4", "Bar speed sensor", "Wearable bar sensor", "dt", "dt-floor", "Rack 5", { useInSessions: false, firmware: "3.1.0" }),
-  device("DC-1", "Depth camera", "Stereo depth D4", "ca", "ca-rehab", "Room 1"),
+  device("LM-1", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Area 1"),
+  device("LM-2", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Area 2"),
+  device("LM-3", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Area 3", { lastSeenDisplay: "2 min ago" }),
+  device("LM-4", "Launch monitor", "Radar LM Pro", "ma", "ma-bays", "Area 4"),
+  device("LM-5", "Launch monitor", "Photometric LM Mini", "ma", "ma-bays", "Area 5", { status: "offline", lastSeenDisplay: "Yesterday, 21:40", firmware: "1.9.0" }),
+  device("BS-1", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Area 1"),
+  device("BS-2", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Area 2"),
+  device("BS-3", "Bar speed sensor", "Linear transducer V2", "dt", "dt-floor", "Area 4", { status: "pairing", lastSeenDisplay: "Pairing…" }),
+  device("BS-4", "Bar speed sensor", "Wearable bar sensor", "dt", "dt-floor", "Area 5", { useInSessions: false, firmware: "3.1.0" }),
+  device("DC-1", "Depth camera", "Stereo depth D4", "ca", "ca-rehab", "Area 1"),
   device("FP-1", "Force plate", "Dual force plate 60", "ca", "ca-walk", "Walkway"),
 ];
 
@@ -337,63 +337,63 @@ export interface TaSession {
 }
 
 const GOLF_PEOPLE: Participant[] = [
-  { name: "Marcus Tan", detail: "HCP 14", unit: "Bay 4", attempts: 22, score: "78 · B", change: "+7", topFault: "Early extension", consent: true },
-  { name: "Aiden Lee", detail: "HCP 9", unit: "Bay 1", attempts: 19, score: "84 · B", change: "+2", topFault: "—", consent: true },
-  { name: "Wei Jie Ong", detail: "HCP 16", unit: "Bay 3", attempts: 17, score: "69 · C", change: "+1", topFault: "Sway", consent: true },
-  { name: "Priya Nair", detail: "HCP 18", unit: "Bay 2", attempts: 12, score: "66 · C", change: "new", topFault: "Over-the-top", consent: true },
-  { name: "Ethan Lim", detail: "HCP 12", unit: "Bay 5", attempts: 20, score: "81 · B", change: "+4", topFault: "Early extension", consent: true },
-  { name: "Chloe Ng", detail: "HCP 21", unit: "Bay 6", attempts: 18, score: "62 · D", change: "−2", topFault: "Early extension", consent: true },
+  { name: "Marcus Tan", detail: "HCP 14", unit: "Area 4", attempts: 22, score: "78 · B", change: "+7", topFault: "Early extension", consent: true },
+  { name: "Aiden Lee", detail: "HCP 9", unit: "Area 1", attempts: 19, score: "84 · B", change: "+2", topFault: "—", consent: true },
+  { name: "Wei Jie Ong", detail: "HCP 16", unit: "Area 3", attempts: 17, score: "69 · C", change: "+1", topFault: "Sway", consent: true },
+  { name: "Priya Nair", detail: "HCP 18", unit: "Area 2", attempts: 12, score: "66 · C", change: "new", topFault: "Sway", consent: true },
+  { name: "Ethan Lim", detail: "HCP 12", unit: "Area 5", attempts: 20, score: "81 · B", change: "+4", topFault: "Early extension", consent: true },
+  { name: "Chloe Ng", detail: "HCP 21", unit: "Area 6", attempts: 18, score: "62 · D", change: "−2", topFault: "Early extension", consent: true },
 ];
 
 const GYM_PEOPLE: Participant[] = [
-  { name: "Hannah Goh", detail: "1 yr training", unit: "Rack 4", attempts: 5, score: "77", change: "+5", topFault: "Knee cave", consent: true },
-  { name: "Ravi Kumar", detail: "3 yrs training", unit: "Rack 2", attempts: 6, score: "84", change: "+3", topFault: "—", consent: true },
-  { name: "Jason Teo", detail: "5 yrs training", unit: "Rack 5", attempts: 5, score: "72", change: "new", topFault: "Forward lean", consent: true },
-  { name: "Ben Ong", detail: "2 yrs training", unit: "Rack 1", attempts: 5, score: "86", change: "+1", topFault: "—", consent: true },
-  { name: "Nur Aisyah", detail: "6 months", unit: "Rack 3", attempts: 4, score: "70", change: "+6", topFault: "Knee cave", consent: true },
+  { name: "Hannah Goh", detail: "1 yr training", unit: "Area 4", attempts: 5, score: "77", change: "+5", topFault: "Knee cave", consent: true },
+  { name: "Ravi Kumar", detail: "3 yrs training", unit: "Area 2", attempts: 6, score: "84", change: "+3", topFault: "—", consent: true },
+  { name: "Jason Teo", detail: "5 yrs training", unit: "Area 5", attempts: 5, score: "72", change: "new", topFault: "Forward lean", consent: true },
+  { name: "Ben Ong", detail: "2 yrs training", unit: "Area 1", attempts: 5, score: "86", change: "+1", topFault: "—", consent: true },
+  { name: "Nur Aisyah", detail: "6 months", unit: "Area 3", attempts: 4, score: "70", change: "+6", topFault: "Knee cave", consent: true },
 ];
 
 const PHYSIO_PEOPLE: Participant[] = [
-  { name: "Mei Ling Chua", detail: "Left knee · post-op week 8", unit: "Room 1", attempts: 4, score: "78%", change: "+8%", topFault: "Trunk lean", consent: true },
-  { name: "Ahmad Rahim", detail: "Right knee · week 6", unit: "Room 1", attempts: 4, score: "64%", change: "+5%", topFault: "Hip hike", consent: true },
-  { name: "Grace Tan", detail: "Left knee · week 3", unit: "Room 2", attempts: 3, score: "52%", change: "new", topFault: "—", consent: true },
-  { name: "Daniel Wong", detail: "ACL repair · week 10", unit: "Room 2", attempts: 4, score: "81%", change: "+6%", topFault: "Trunk lean", consent: true },
+  { name: "Mei Ling Chua", detail: "Left knee · post-op week 8", unit: "Area 1", attempts: 4, score: "78%", change: "+8%", topFault: "Trunk lean", consent: true },
+  { name: "Ahmad Rahim", detail: "Right knee · week 6", unit: "Area 1", attempts: 4, score: "64%", change: "+5%", topFault: "Hip hike", consent: true },
+  { name: "Grace Tan", detail: "Left knee · week 3", unit: "Area 2", attempts: 3, score: "52%", change: "new", topFault: "—", consent: true },
+  { name: "Daniel Wong", detail: "ACL repair · week 10", unit: "Area 2", attempts: 4, score: "81%", change: "+6%", topFault: "Trunk lean", consent: true },
 ];
 
 const SEED_SESSIONS: TaSession[] = [
   {
     id: "SES-1042", name: "Junior squad clinic", useCase: "golf", modelName: "Golf Swing Assessment", siteId: "ma",
-    deployment: "Main academy bays", units: ["Bay 1", "Bay 2", "Bay 3", "Bay 4", "Bay 5", "Bay 6"], date: "Sat 8 Nov 2026", time: "09:00–10:30",
+    deployment: "Main academy range", units: ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5", "Area 6"], date: "Sat 8 Nov 2026", time: "09:00–10:30",
     source: "Live", status: "complete", coach: "Daniel Lim", participants: GOLF_PEOPLE, analysed: 148, captured: 162, flagged: 7, devices: ["LM-1", "LM-2", "LM-3", "LM-4"],
   },
   {
     id: "SES-1047", name: "6 pm barbell class", useCase: "gym", modelName: "Strength Technique Assessment", siteId: "dt",
-    deployment: "Strength floor", units: ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5"], date: "Mon 10 Nov 2026", time: "18:00–19:00",
+    deployment: "Strength floor", units: ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5"], date: "Mon 10 Nov 2026", time: "18:00–19:00",
     source: "Live", status: "complete", coach: "Sarah Koh", participants: GYM_PEOPLE, analysed: 268, captured: 284, flagged: 11, devices: ["BS-1", "BS-2"],
   },
   {
     id: "SES-1048", name: "Knee rehab class", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",
-    deployment: "Clinic A rehab", units: ["Room 1", "Room 2", "Walkway"], date: "Tue 11 Nov 2026", time: "10:00–11:00",
+    deployment: "Clinic A rehab", units: ["Area 1", "Area 2", "Walkway"], date: "Tue 11 Nov 2026", time: "10:00–11:00",
     source: "Live", status: "live", coach: "Dr. Lim", participants: PHYSIO_PEOPLE, analysed: 9, captured: 11, flagged: 1, devices: ["DC-1", "FP-1"],
   },
   {
     id: "SES-1049", name: "Academy squad lesson", useCase: "golf", modelName: "Golf Swing Assessment", siteId: "ma",
-    deployment: "Main academy bays", units: ["Bay 1", "Bay 2", "Bay 3"], date: "Wed 12 Nov 2026", time: "16:00–17:30",
+    deployment: "Main academy range", units: ["Area 1", "Area 2", "Area 3"], date: "Wed 12 Nov 2026", time: "16:00–17:30",
     source: "Live", status: "scheduled", coach: "Daniel Lim", participants: GOLF_PEOPLE.slice(0, 3).map((p) => ({ ...p, attempts: 0, score: "—", change: "—", topFault: "—" })), analysed: 0, captured: 0, flagged: 0, devices: ["LM-1", "LM-2", "LM-3"],
   },
   {
     id: "SES-1050", name: "Follow-up · Mei Ling Chua", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",
-    deployment: "Clinic A rehab", units: ["Room 1"], date: "Thu 13 Nov 2026", time: "09:30–10:15",
+    deployment: "Clinic A rehab", units: ["Area 1"], date: "Thu 13 Nov 2026", time: "09:30–10:15",
     source: "Live", status: "scheduled", coach: "Dr. Lim", participants: [{ ...PHYSIO_PEOPLE[0], attempts: 0, score: "—", change: "—", topFault: "—" }], analysed: 0, captured: 0, flagged: 0, devices: ["DC-1"],
   },
   {
     id: "SES-1039", name: "PT session · Ravi Kumar", useCase: "gym", modelName: "Strength Technique Assessment", siteId: "dt",
-    deployment: "Strength floor", units: ["Rack 2"], date: "Thu 6 Nov 2026", time: "07:00–08:00",
+    deployment: "Strength floor", units: ["Area 2"], date: "Thu 6 Nov 2026", time: "07:00–08:00",
     source: "Recorded", status: "complete", coach: "Sarah Koh", participants: [GYM_PEOPLE[1]], analysed: 31, captured: 32, flagged: 1, devices: [],
   },
   {
     id: "SES-1036", name: "Falls prevention class", useCase: "physio", modelName: "Rehab Movement Assessment", siteId: "ca",
-    deployment: "Clinic A rehab", units: ["Room 3", "Walkway"], date: "Tue 4 Nov 2026", time: "14:00–15:00",
+    deployment: "Clinic A rehab", units: ["Area 3", "Walkway"], date: "Tue 4 Nov 2026", time: "14:00–15:00",
     source: "Live", status: "complete", coach: "Dr. Lim", participants: PHYSIO_PEOPLE.slice(1), analysed: 21, captured: 23, flagged: 0, devices: ["FP-1"],
   },
 ];
@@ -430,7 +430,7 @@ export const GROUP_RESULTS: Record<UseCaseKey, GroupResults> = {
     trendTitle: "Group score by clinic",
     trend: [{ session: "11 Oct", score: 66 }, { session: "18 Oct", score: 68 }, { session: "25 Oct", score: 70 }, { session: "1 Nov", score: 71 }, { session: "8 Nov", score: 74 }],
     faultsTitle: "Common faults across the group",
-    faults: [["Early extension", 5], ["Sway", 3], ["Over-the-top", 2], ["Out of sequence", 1]],
+    faults: [["Early extension", 5], ["Sway", 4], ["Out of sequence", 1]],
     noRank: false,
     fundamentals: [["Setup", "A"], ["Turn", "B"], ["Sway", "C"], ["Posture hold", "D"], ["Sequence", "B"], ["Tempo", "A"]],
     drill: ["Chair drill", "For early extension · 3 × 10 swings"],

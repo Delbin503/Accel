@@ -189,7 +189,7 @@ function stsSide(r: Rep, m: Moment): Frame {
   };
 }
 
-function stsFront(r: Rep, m: Moment, noLoad: boolean): Frame {
+function stsFront(r: Rep, m: Moment): Frame {
   const t = momentTime(r, m);
   const f = kneeAt(r, t);
   const c = compAt(r, t);
@@ -221,7 +221,6 @@ function stsFront(r: Rep, m: Moment, noLoad: boolean): Frame {
     labels: [
       { x: 160, y: g.hip[1] - 6, text: `HIP HIKE ${r.hipHike.toFixed(1)} CM`, bad: r.hipHike > LIMIT.hipHike, anchor: "end" },
       { x: 300, y: 84, text: `TRUNK LEAN ${r.trunkLean}°`, bad: r.trunkLean > LIMIT.trunkLean },
-      noLoad ? { x: 300, y: 98, text: "LOAD L–R · NO FORCE PLATE" } : { x: 300, y: 98, text: `LOAD L–R ${r.lr}%`, bad: r.lr > LIMIT.lr },
       { x: 160, y: g.knee[1] + 4, text: `KNEE CAVE ${r.kneeCave}°`, bad: r.kneeCave > LIMIT.kneeCave, anchor: "end" },
     ],
   };
@@ -288,10 +287,10 @@ function walkSide(r: Rep, m: Moment): Frame {
 
 /* ── Frame ───────────────────────────────────────────────────────────── */
 
-function frameFor(r: Rep, view: View, m: Moment, noLoad: boolean): Frame {
+function frameFor(r: Rep, view: View, m: Moment): Frame {
   if (r.ex === "gait") return walkSide(r, m);
   if (r.ex === "rom") return view === "front" ? romFront(r, m) : romSide(r, m);
-  return view === "side" ? stsSide(r, m) : stsFront(r, m, noLoad);
+  return view === "side" ? stsSide(r, m) : stsFront(r, m);
 }
 
 function Skeleton({ pose, bones, bad, ghost }: { pose: Pose; bones: [string, string][]; bad: Set<string>; ghost?: boolean }) {
@@ -367,12 +366,11 @@ function BlurredHead({ at, filter }: { at: Pt; filter: string }) {
   );
 }
 
-const VIEW_LABEL: Record<View, string> = { front: "ROOM FRONT", side: "ROOM SIDE", walk: "WALKWAY SIDE" };
+const VIEW_LABEL: Record<View, string> = { front: "FRONT", side: "SIDE", walk: "WALKWAY SIDE" };
 
-/** `noLoad`: the force plate gave no load for this rep, so the HUD says so instead of a number. */
-export function RoomFrame({ rep, view, moment, showPose = true, noLoad = false, className }: { rep: Rep; view: View; moment: Moment; showPose?: boolean; noLoad?: boolean; className?: string }) {
+export function RoomFrame({ rep, view, moment, showPose = true, className }: { rep: Rep; view: View; moment: Moment; showPose?: boolean; className?: string }) {
   const uid = React.useId().replace(/:/g, "");
-  const fr = frameFor(rep, view, moment, noLoad);
+  const fr = frameFor(rep, view, moment);
   const t = momentTime(rep, moment);
   const shown = rep.ex === "gait" ? "walk" : view === "walk" ? "side" : view;
   return (
@@ -404,7 +402,7 @@ export function RoomFrame({ rep, view, moment, showPose = true, noLoad = false, 
         </g>
       )}
       <g className="font-mono" fontSize="10" fill={HUD}>
-        <text x="12" y="20">● REC  {rep.ex === "gait" ? "WALKWAY" : "ROOM 1"} · {VIEW_LABEL[shown]} · 60 FPS</text>
+        <text x="12" y="20">● REC  {rep.ex === "gait" ? "WALKWAY" : "AREA 1"} · {VIEW_LABEL[shown]} · 60 FPS</text>
         <text x="12" y="34">{fmtClock(rep.at + t)} · {EXERCISES[rep.ex].label.toUpperCase()} {rep.n} / {repsOf(rep.ex).length} · {MOMENTS[rep.ex][moment].toUpperCase()}</text>
         <rect x="378" y="10" width="90" height="15" rx="3" fill="rgb(0 0 0 / 0.45)" stroke="rgb(255 255 255 / 0.2)" />
         <text x="423" y="21" textAnchor="middle" fontSize="9">FACES BLURRED</text>

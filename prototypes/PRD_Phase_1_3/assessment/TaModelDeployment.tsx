@@ -8,7 +8,7 @@
    · the last column, Devices, picks cameras AND external devices (Site ›
      External Devices), filtered All · Devices (cameras) · External. Each card
      is badged Camera or External device; external devices sit beside the
-     cameras of the bay, rack or room they are paired to.
+     cameras of the area they are paired to.
    · a camera below an assessment model's pose frame rate is flagged
      (System Configuration › Camera Defaults)
    · devices skip the detection-zone step — they have no frame to draw on */

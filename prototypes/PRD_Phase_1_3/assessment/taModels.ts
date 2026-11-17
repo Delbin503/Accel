@@ -50,13 +50,13 @@ export const CATEGORY_ICON: Record<ModelCategory, string> = {
 /** The CV models an assessment model of each use case runs, in order. */
 export const CV_STEPS: Record<UseCaseKey, [label: string, action: string, file: string][]> = {
   golf: [
-    ["Person Re-ID · v1.4", "Find and follow each golfer in the bay", "person_reid_v14.onnx"],
+    ["Person Re-ID · v1.4", "Find and follow each golfer in the area", "person_reid_v14.onnx"],
     ["Pose 3D · v1.2", "Body, hands and feet keypoints from two views", "pose3d_v12.onnx"],
     ["Golf Swing Events · v1.0", "Address · takeaway · top · impact · finish", "golf_swing_events_v10.onnx"],
     ["Club & Ball Detector · v1.0", "Track the club head and the ball", "club_ball_v10.onnx"],
   ],
   gym: [
-    ["Person Re-ID · v1.4", "Find and follow each lifter at the rack", "person_reid_v14.onnx"],
+    ["Person Re-ID · v1.4", "Find and follow each lifter in the area", "person_reid_v14.onnx"],
     ["Pose 2D · v1.2", "Body and feet keypoints from the side view", "pose2d_v12.onnx"],
     ["Barbell Detector · v1.0", "Track the barbell and plates", "barbell_v10.onnx"],
   ],

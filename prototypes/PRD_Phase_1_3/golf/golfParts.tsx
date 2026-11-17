@@ -1,11 +1,11 @@
 import * as React from "react";
 import { cn } from "@accel/ui/lib/utils";
 import {
-  SESSION, SWINGS, TARGET, fmtClock, inRange, phaseTime, shapeOf, spineLost, xFactor, type Phase, type Swing,
+  SESSION, SWINGS, TARGET, fmtClock, inRange, phaseTime, spineLost, xFactor, type Phase, type Swing,
 } from "./golfSession";
 
-/* Drawn pieces of the Swing Assessment page: the pose frame for each camera,
-   the coach's drawing layer, and the shot dispersion plot. */
+/* Drawn pieces of the Swing Analysis page: the pose frame for each camera and
+   the coach's drawing layer. */
 
 export type View = "face" | "dtl";
 
@@ -116,9 +116,8 @@ function Body({ pose, bones }: { pose: Pose; bones: string[][] }) {
   );
 }
 
-/** `ball` false: no launch-monitor data for this swing, so the club path readout is left off. */
-export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = true, ball = true, className, children }: {
-  swing: Swing; view: View; phase: Phase; showPose?: boolean; ghost?: Swing; hud?: boolean; ball?: boolean; className?: string; children?: React.ReactNode;
+export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = true, className, children }: {
+  swing: Swing; view: View; phase: Phase; showPose?: boolean; ghost?: Swing; hud?: boolean; className?: string; children?: React.ReactNode;
 }) {
   const { pose, bad } = poseFor(swing, view, phase);
   const bones = view === "face" ? FACE_BONES : DTL_BONES;
@@ -144,11 +143,11 @@ export function SwingFrame({ swing, view, phase, showPose = true, ghost, hud = t
       <Body pose={pose} bones={bones} />
       {ghostPose && <Skeleton pose={ghostPose} bad={new Set()} bones={bones} ghost />}
       {showPose && <Skeleton pose={pose} bad={bad} bones={bones} />}
-      {showPose && (view === "face" ? <FaceLabels swing={swing} phase={phase} /> : <DtlLabels swing={swing} phase={phase} ball={ball} />)}
+      {showPose && (view === "face" ? <FaceLabels swing={swing} phase={phase} /> : <DtlLabels swing={swing} phase={phase} />)}
 
       {hud && (
         <g className="font-mono" fontSize="10" fill={HUD}>
-          <text x="12" y="20">● REC  {SESSION.bay.toUpperCase()} · {view === "face" ? "FACE-ON" : "DOWN-THE-LINE"} · {SESSION.trackingFps} FPS</text>
+          <text x="12" y="20">● REC  {SESSION.area.toUpperCase()} · {view === "face" ? "FACE-ON" : "DOWN-THE-LINE"} · {SESSION.trackingFps} FPS</text>
           <text x="12" y="34">{clock} · SWING {swing.n} / {SWINGS.length} · {phaseLabel}</text>
         </g>
       )}
@@ -214,10 +213,9 @@ function DtlGuides({ swing, phase }: { swing: Swing; phase: Phase }) {
   );
 }
 
-function DtlLabels({ swing, phase, ball }: { swing: Swing; phase: Phase; ball: boolean }) {
+function DtlLabels({ swing, phase }: { swing: Swing; phase: Phase }) {
   const lostBad = spineLost(swing) > TARGET.spineLost[1];
   const thrustBad = swing.pelvisThrust > TARGET.pelvisThrust[1];
-  const pathBad = !inRange(swing.clubPath, TARGET.clubPath);
   const setupBad = !inRange(swing.spineAddr, TARGET.spineAddr);
   return (
     <g className="font-mono" fontSize="10">
@@ -232,30 +230,8 @@ function DtlLabels({ swing, phase, ball }: { swing: Swing; phase: Phase; ball: b
         <>
           <text x="300" y="106" fill={lostBad ? BAD : OK}>SPINE {swing.spineAddr}° → {swing.spineImpact}°</text>
           <text x="300" y="120" fill={thrustBad ? BAD : OK}>HIPS +{swing.pelvisThrust.toFixed(1)} CM TO BALL</text>
-          {ball && (
-            <>
-              <text x="300" y="134" fill={pathBad ? BAD : OK}>PATH {swing.clubPath > 0 ? "+" : ""}{swing.clubPath.toFixed(1)}° {swing.clubPath < 0 ? "OUT-TO-IN" : "IN-TO-OUT"}</text>
-              <PathArrow path={swing.clubPath} bad={pathBad} />
-            </>
-          )}
         </>
       )}
-    </g>
-  );
-}
-
-/* The club's path through the ball, seen from above the line: drawn at the ball. */
-function PathArrow({ path, bad }: { path: number; bad: boolean }) {
-  const a = (path * 4 * Math.PI) / 180; // exaggerated so a few degrees read
-  const len = 34;
-  const cx = 310;
-  const cy = 252;
-  const dx = len * Math.cos(a);
-  const dy = len * Math.sin(a);
-  return (
-    <g stroke={bad ? BAD : OK} fill="none" strokeWidth="1.6">
-      <line x1={cx - dx} y1={cy + dy} x2={cx + dx} y2={cy - dy} />
-      <path d={`M${cx + dx} ${cy - dy} l-7 -3 m7 3 l-4 6`} />
     </g>
   );
 }
@@ -312,52 +288,5 @@ export function DrawLayer({ tool, marks, onAdd }: { tool: Tool; marks: Mark[]; o
         ))}
       </g>
     </g>
-  );
-}
-
-/* ── Shot dispersion ─────────────────────────────────────────────────── */
-
-const X_SPAN = 30; // yards either side of the target line
-const Y_MIN = 120;
-const Y_MAX = 175;
-
-/** Where each ball landed, seen from above: carry up the page, left/right of the target line across it. */
-export function Dispersion({ swings, focus, onSelect, className }: { swings: Swing[]; focus: number; onSelect: (n: number) => void; className?: string }) {
-  const W = 120;
-  const H = 120;
-  const x = (yd: number) => ((yd + X_SPAN) / (X_SPAN * 2)) * W;
-  const y = (carry: number) => H - ((carry - Y_MIN) / (Y_MAX - Y_MIN)) * H;
-  const avg = swings.reduce((a, s) => a + s.carry, 0) / swings.length;
-  return (
-    <svg viewBox={`-10 -4 ${W + 16} ${H + 16}`} className={cn("block size-full", className)} role="img" aria-label="Shot dispersion from above">
-      <rect x="0" y="0" width={W} height={H} rx="3" fill="var(--success)" fillOpacity="0.05" stroke="var(--border)" vectorEffect="non-scaling-stroke" />
-      {[130, 140, 150, 160, 170].map((c) => (
-        <g key={c}>
-          <line x1="0" x2={W} y1={y(c)} y2={y(c)} stroke="var(--border)" strokeOpacity="0.6" vectorEffect="non-scaling-stroke" />
-          <text x="-2" y={y(c) + 1.4} textAnchor="end" fontSize="4" fill="var(--muted-foreground)" className="font-mono">{c}</text>
-        </g>
-      ))}
-      <line x1={x(0)} x2={x(0)} y1="0" y2={H} stroke="var(--foreground)" strokeOpacity="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-      <line x1="0" x2={W} y1={y(avg)} y2={y(avg)} stroke="var(--primary)" strokeOpacity="0.7" strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
-      <text x={W - 1} y={y(avg) - 1.5} textAnchor="end" fontSize="4" fill="var(--primary)" className="font-mono">avg {Math.round(avg)}</text>
-      <text x={x(-X_SPAN) + 1} y={H + 7} fontSize="4" fill="var(--muted-foreground)" className="font-mono">L {X_SPAN}</text>
-      <text x={x(X_SPAN) - 1} y={H + 7} textAnchor="end" fontSize="4" fill="var(--muted-foreground)" className="font-mono">R {X_SPAN}</text>
-      <text x={x(0)} y={H + 7} textAnchor="middle" fontSize="4" fill="var(--muted-foreground)" className="font-mono">target</text>
-      {swings.map((s) => {
-        const shape = shapeOf(s);
-        const fill = shape === "Slice" || shape === "Hook" ? "var(--severity-critical)" : shape === "Fade" || shape === "Draw" ? "var(--info)" : "var(--success)";
-        const active = s.n === focus;
-        return (
-          <g key={s.n} transform={`translate(${x(s.offline)} ${y(s.carry)})`} role="button" tabIndex={0} className="cursor-pointer outline-none"
-            aria-label={`Swing ${s.n}: ${s.carry} yards, ${Math.abs(s.offline)} ${s.offline >= 0 ? "right" : "left"}, ${shape}`}
-            onClick={() => onSelect(s.n)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(s.n)}>
-            <title>{`Swing ${s.n} · ${s.carry} yd · ${Math.abs(s.offline)} yd ${s.offline >= 0 ? "right" : "left"} · ${shape}`}</title>
-            {active && <circle r="5.2" fill="none" stroke="var(--foreground)" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />}
-            <circle r="3.4" fill={fill} stroke="var(--card)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-            <text y="1.3" textAnchor="middle" fontSize="3.6" fontWeight="700" fill="var(--primary-foreground)" className="pointer-events-none font-mono">{s.n}</text>
-          </g>
-        );
-      })}
-    </svg>
   );
 }

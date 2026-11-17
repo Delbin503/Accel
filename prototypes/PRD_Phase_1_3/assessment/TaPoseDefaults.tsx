@@ -15,7 +15,7 @@ import { ItemButton } from "@accel/ui/components/ui/item";
 
    Pose settings moved here from the model wizard: they are a property of the
    cameras, not of a model. Picking 3D or 2D pose changes the camera
-   requirements right underneath — how many views each bay, rack or room
+   requirements right underneath — how many views each area
    needs, and at what frame rate — and the readiness check against the
    cameras already installed at each site. */
 

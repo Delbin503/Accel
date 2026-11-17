@@ -17,7 +17,7 @@ import {
   X,
   Trash2,
   Edit2,
-  SlidersHorizontal,
+  Pencil,
   GripVertical,
   UploadCloud,
   BookOpen,
@@ -2001,7 +2001,7 @@ function ModelDetailPanel({
                     aria-pressed={customizeOpen}
                     className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary-ink")}
                   >
-                    <SlidersHorizontal className="size-3" />
+                    <Pencil className="size-3" />
                     Customize
                     {poolSteps.length > 0 && (
                       <span className="rounded-full bg-muted px-1.5 font-mono text-2xs text-muted-foreground">

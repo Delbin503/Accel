@@ -4,10 +4,9 @@
    src/pages/model-management/index.tsx), so these changes stay out of the app
    and the Re-ID module. Against that page it adds:
    · a Performance & Posture category (the assessment models); Create Model
-     asks only for name, category and description — the use case and
-     activities are set afterwards in Edit Model, which also seeds nothing
-   · use case and activities on the model card and in the model detail, editable
-     in Edit Model
+     asks only for name, category and description
+   · use case and activities on the model card and in the model detail
+     (read-only: Edit Model doesn't change them)
    · assessment models are scored against criteria, so they need no rules: the
      rules column shows the criteria and faults instead
    Models come from the module's store, which Model Deployment reads too. */
@@ -22,7 +21,7 @@ import {
   X,
   Trash2,
   Edit2,
-  SlidersHorizontal,
+  Pencil,
   GripVertical,
   UploadCloud,
   BookOpen,
@@ -73,11 +72,11 @@ import { cn } from "@accel/ui/lib/utils";
 import { MODEL_TAGS } from "@/mocks/modelManagement";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@accel/ui/components/ui/select";
 import {
-  CATEGORY_ICON, MODEL_CATEGORIES, TA_CATEGORY, isAssessment, stepsFor, useTaModelsStore,
+  CATEGORY_ICON, MODEL_CATEGORIES, TA_CATEGORY, isAssessment, useTaModelsStore,
   type AssessmentInfo, type ModelCategory, type ModelData, type ModelStep,
 } from "./taModels";
 import { USE_CASES } from "./taData";
-import { AssessmentCriteriaColumn, AssessmentFields, AssessmentSummary } from "./taModelParts";
+import { AssessmentCriteriaColumn, AssessmentSummary } from "./taModelParts";
 import { MOCK_RULES } from "@/mocks/rulesLibrary";
 import type { ExtractedRule } from "@/types/modelManagement";
 import type { RuleData, RuleSeverity, ConditionRow } from "@/types/rules";
@@ -1451,12 +1450,11 @@ function EmptyDetailState() {
 
 /* ── Edit progress — Sequence / Rules completion (edit mode only) ────────── */
 
-function EditProgress({ sequenceCount, rulesCount, activityCount }: { sequenceCount: number; rulesCount: number; activityCount?: number }) {
+function EditProgress({ sequenceCount, rulesCount, assessment }: { sequenceCount: number; rulesCount: number; assessment?: boolean }) {
+  /* Assessment models are scored against criteria, not rules, so they track the sequence only. */
   const items = [
     { key: "sequence", label: "Sequence", icon: Layers, done: sequenceCount > 0, count: sequenceCount },
-    activityCount === undefined
-      ? { key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount }
-      : { key: "activities", label: "Activities", icon: Activity, done: activityCount > 0, count: activityCount },
+    ...(assessment ? [] : [{ key: "rules", label: "Rules", icon: BookOpen, done: rulesCount > 0, count: rulesCount }]),
   ];
   return (
     <div data-slot="edit-progress" className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-5 py-3">
@@ -1985,22 +1983,6 @@ function ModelDetailPanel({
                 suggestions={allTagsForModels}
               />
             </div>
-            {/* Use case and activities are set here, not in Create Model. */}
-            {isAssessment(model) && (
-              <AssessmentFields
-                compact
-                value={draft.assessment ?? { useCase: "", activities: [] }}
-                onChange={(v) => {
-                  if (!v.useCase) return;
-                  // The first use case picked seeds an empty sequence with its CV models.
-                  const seed = draft.steps.length === 0 ? stepsFor(v.useCase, model.id.toLowerCase()) : null;
-                  patchDraft({
-                    assessment: { useCase: v.useCase, activities: v.activities },
-                    ...(seed ? { steps: seed, sequenceIds: seed.map((st) => st.id) } : {}),
-                  });
-                }}
-              />
-            )}
           </div>
           </>
         ) : (
@@ -2024,7 +2006,7 @@ function ModelDetailPanel({
             <EditProgress
               sequenceCount={sequenceSteps.length}
               rulesCount={draft.extractedRules.length + attachedRules.length}
-              activityCount={draft.assessment?.activities.length}
+              assessment={isAssessment(model)}
             />
             {/* ── SEQUENCE section (edit mode) ── */}
             <div className="px-5 pb-5 pt-4">
@@ -2040,7 +2022,7 @@ function ModelDetailPanel({
                     aria-pressed={customizeOpen}
                     className={cn("gap-1.5", customizeOpen && "border-primary/50 text-primary-ink")}
                   >
-                    <SlidersHorizontal className="size-3" />
+                    <Pencil className="size-3" />
                     Customize
                     {poolSteps.length > 0 && (
                       <span className="rounded-full bg-muted px-1.5 font-mono text-2xs text-muted-foreground">
@@ -2478,8 +2460,7 @@ export function TaModelManagement() {
     let num = models.length + 1;
     while (models.some((m) => m.id === `Mdl_${String(num).padStart(3, "0")}`)) num += 1;
     const id = `Mdl_${String(num).padStart(3, "0")}`;
-    /* A Performance & Posture model starts empty: its use case, activities
-       and CV models are set in Edit Model. */
+    /* A Performance & Posture model starts empty: its CV models are added in Edit Model. */
     const newModel: ModelData = {
       id,
       name,
@@ -2500,7 +2481,7 @@ export function TaModelManagement() {
     setShowCreate(false);
     toast.success(`Model "${newModel.name}" created`, {
       description: isAssessment({ category })
-        ? "Set its use case and activities in Edit Model."
+        ? "Add its CV model steps in Edit Model."
         : "Add verification steps to upload model files and extract rules.",
     });
   }

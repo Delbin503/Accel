@@ -34,7 +34,6 @@ import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
 import { MOCK_NVRS } from "@/mocks/nvr";
-import { useSystemStatus, SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
 
 /* Reference "today" for date-range filtering — matches newest event in mocks. */
 const REFERENCE_TODAY = "2026-05-19";
@@ -479,8 +478,6 @@ export default function DashboardPage() {
      Same roll-up the top-bar status menu reads (cameras / NVRs / servers), so
      the header and this pill always agree. The resource metrics above drive
      the alert banner below, which is a separate concern. */
-  const systemStatus = useSystemStatus().overall;
-  const statusPresentation = SYSTEM_HEALTH_PRESENTATION[systemStatus];
 
   /* ── Inline alert banner — driven by the resource metrics, not fleet health ── */
   const worstHealth = healthMetrics.find((m) => m.tone === "crit")
@@ -537,21 +534,6 @@ export default function DashboardPage() {
           <PageHeader.Title>Dashboard</PageHeader.Title>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
-              statusPresentation.pill
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                statusPresentation.dot,
-                systemStatus === "healthy" && "animate-pulse"
-              )}
-            />
-            {statusPresentation.label}
-          </span>
         </PageHeader.Actions>
       </PageHeader>
 

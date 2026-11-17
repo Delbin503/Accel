@@ -1,35 +1,23 @@
-/* One golfer's 7-iron lesson at an indoor bay: ten swings read off a face-on and
-   a down-the-line camera, with launch-monitor data for each. Every number on
-   the Swing Assessment page is derived from the swings below. */
-
-import type { DeviceMode } from "../assessment/deviceState";
+/* One golfer's 7-iron lesson at an indoor academy area: ten swings read off a face-on and
+   a down-the-line camera. Every number on the Swing Analysis page is derived
+   from the swings below; there is no external device. */
 
 export const GOLFER = { name: "Marcus Tan", initials: "MT", id: "GA-0217", handicap: 14, academy: "Fairway Performance Academy" };
 
 export const SESSION = {
-  bay: "Bay 4",
+  area: "Area 4",
   club: "7-iron",
   coach: "Coach Daniel Lim",
   date: "8 Nov 2026 · 09:30",
   lengthSec: 1680,
   cameras: "Face-on + down-the-line · 240 fps",
-  launchMonitor: "Connected",
   model: "Golf Swing Assessment v1.2",
   trackingFps: 240,
   droppedFrames: 12,
 };
 
 export const METHOD_NOTE =
-  "Body angles come from 3D pose read off the face-on and down-the-line cameras at 240 fps. Ball and club data come from the bay's launch monitor. Targets are the coach's 7-iron reference for this golfer.";
-
-/** The method note for the launch monitor's state: everything body-related still comes from the cameras. */
-export function methodNoteFor(mode: DeviceMode) {
-  if (mode === "connected") return METHOD_NOTE;
-  const ball = mode === "none"
-    ? "Ball and club data weren't captured: no launch monitor was connected."
-    : `Ball and club data come from the bay's launch monitor, which went offline at ${fmtClock(swingByN(MONITOR_OFFLINE_FROM).at)}, so swings ${MONITOR_OFFLINE_FROM}–${SWINGS.length} have none.`;
-  return `Body angles come from 3D pose read off the face-on and down-the-line cameras at 240 fps. ${ball} Targets are the coach's 7-iron reference for this golfer.`;
-}
+  "Body angles come from 3D pose read off the face-on and down-the-line cameras at 240 fps. Targets are the coach's 7-iron reference for this golfer.";
 
 /* ── Swings ──────────────────────────────────────────────────────────── */
 
@@ -56,72 +44,34 @@ export type Swing = {
   downswing: number;
   /** Peak rotation speed before impact, ms: pelvis, chest, arms, club. */
   peaks: [number, number, number, number];
-  clubSpeed: number;
-  ballSpeed: number;
-  launch: number;
-  spin: number;
-  carry: number;
-  /** Club path, ° (+ in-to-out, − out-to-in). */
-  clubPath: number;
-  /** Face to target at impact, ° (+ open). */
-  faceAngle: number;
-  /** Yards off line at landing (+ right). */
-  offline: number;
 };
 
 const S = (
   n: number, at: number, chestTurn: number, pelvisTurn: number, pelvisSway: number, headMove: number, spineAddr: number, spineImpact: number,
   pelvisThrust: number, leadWristTop: number, weightLead: number, backswing: number, downswing: number, peaks: Swing["peaks"],
-  clubSpeed: number, ballSpeed: number, launch: number, spin: number, carry: number, clubPath: number, faceAngle: number, offline: number,
-): Swing => ({ n, at, chestTurn, pelvisTurn, pelvisSway, headMove, spineAddr, spineImpact, pelvisThrust, leadWristTop, weightLead, backswing, downswing, peaks, clubSpeed, ballSpeed, launch, spin, carry, clubPath, faceAngle, offline });
+): Swing => ({ n, at, chestTurn, pelvisTurn, pelvisSway, headMove, spineAddr, spineImpact, pelvisThrust, leadWristTop, weightLead, backswing, downswing, peaks });
 
 export const SWINGS: Swing[] = [
-  S(1, 92, 88, 46, 3.1, 4.2, 35, 29, 6.2, 6, 82, 0.98, 0.32, [-95, -70, -48, -12], 78, 106, 18.5, 6900, 152, -2.1, 1.4, 8),
-  S(2, 240, 90, 45, 2.6, 3.8, 35, 30, 5.1, 4, 85, 0.95, 0.31, [-98, -75, -50, -10], 79, 108, 18.0, 6700, 156, -1.0, 0.6, 4),
-  S(3, 395, 84, 50, 6.4, 7.1, 34, 26, 7.8, 12, 68, 1.02, 0.3, [-80, -88, -60, -14], 76, 101, 20.1, 7600, 141, -5.2, 2.8, 19),
-  S(4, 530, 91, 44, 2.2, 3.5, 36, 32, 3.6, 3, 86, 0.96, 0.32, [-100, -76, -52, -11], 80, 110, 17.6, 6500, 159, 0.4, -0.2, -2),
-  S(5, 700, 87, 47, 4.8, 5.6, 35, 28, 6.9, 8, 78, 0.99, 0.3, [-92, -74, -50, -12], 78, 105, 19.0, 7000, 150, -3.6, 1.9, 12),
-  S(6, 860, 92, 44, 2.4, 3.2, 36, 32, 3.2, 2, 88, 0.94, 0.31, [-102, -78, -51, -10], 81, 111, 17.4, 6400, 161, 1.1, 0.3, 3),
-  S(7, 1010, 94, 45, 1.9, 2.8, 36, 33, 2.4, 1, 90, 0.93, 0.31, [-104, -80, -53, -10], 82, 113, 17.2, 6300, 164, 1.6, 0.1, -1),
-  S(8, 1180, 89, 46, 3.4, 4.6, 35, 29, 5.6, 5, 83, 0.97, 0.32, [-96, -72, -49, -11], 79, 107, 18.3, 6800, 154, -2.4, 1.2, 7),
-  S(9, 1340, 86, 48, 5.3, 6.0, 35, 28, 7.0, 9, 76, 1.0, 0.31, [-88, -84, -56, -13], 77, 103, 19.4, 7200, 146, -4.1, 2.2, 15),
-  S(10, 1500, 91, 45, 2.7, 3.6, 36, 31, 4.4, 3, 86, 0.95, 0.31, [-99, -77, -51, -11], 80, 109, 17.8, 6600, 157, -0.6, 0.4, 3),
+  S(1, 92, 88, 46, 3.1, 4.2, 35, 29, 6.2, 6, 82, 0.98, 0.32, [-95, -70, -48, -12]),
+  S(2, 240, 90, 45, 2.6, 3.8, 35, 30, 5.1, 4, 85, 0.95, 0.31, [-98, -75, -50, -10]),
+  S(3, 395, 84, 50, 6.4, 7.1, 34, 26, 7.8, 12, 68, 1.02, 0.3, [-80, -88, -60, -14]),
+  S(4, 530, 91, 44, 2.2, 3.5, 36, 32, 3.6, 3, 86, 0.96, 0.32, [-100, -76, -52, -11]),
+  S(5, 700, 87, 47, 4.8, 5.6, 35, 28, 6.9, 8, 78, 0.99, 0.3, [-92, -74, -50, -12]),
+  S(6, 860, 92, 44, 2.4, 3.2, 36, 32, 3.2, 2, 88, 0.94, 0.31, [-102, -78, -51, -10]),
+  S(7, 1010, 94, 45, 1.9, 2.8, 36, 33, 2.4, 1, 90, 0.93, 0.31, [-104, -80, -53, -10]),
+  S(8, 1180, 89, 46, 3.4, 4.6, 35, 29, 5.6, 5, 83, 0.97, 0.32, [-96, -72, -49, -11]),
+  S(9, 1340, 86, 48, 5.3, 6.0, 35, 28, 7.0, 9, 76, 1.0, 0.31, [-88, -84, -56, -13]),
+  S(10, 1500, 91, 45, 2.7, 3.6, 36, 31, 4.4, 3, 86, 0.95, 0.31, [-99, -77, -51, -11]),
 ];
 
 export const swingByN = (n: number) => SWINGS.find((s) => s.n === n)!;
-
-/* ── Launch monitor ──────────────────────────────────────────────────── */
-
-/** In the "went offline" preview, the launch monitor drops out on this swing. */
-export const MONITOR_OFFLINE_FROM = 7;
-
-/** Whether a swing has ball and club data (speed, carry, launch, spin, path, face). */
-export type HasBall = (s: Swing) => boolean;
-export const ALL_BALL: HasBall = () => true;
-
-export function hasBallFor(mode: DeviceMode): HasBall {
-  if (mode === "none") return () => false;
-  if (mode === "offline") return (s) => s.n < MONITOR_OFFLINE_FROM;
-  return ALL_BALL;
-}
 
 /* Derived per-swing values */
 export const xFactor = (s: Swing) => s.chestTurn - s.pelvisTurn;
 export const spineLost = (s: Swing) => s.spineAddr - s.spineImpact;
 export const tempo = (s: Swing) => s.backswing / s.downswing;
-export const smash = (s: Swing) => s.ballSpeed / s.clubSpeed;
 /** Peaks in the right order: pelvis, then chest, then arms, then club. */
 export const inSequence = (s: Swing) => s.peaks[0] < s.peaks[1] && s.peaks[1] < s.peaks[2] && s.peaks[2] < s.peaks[3];
-
-export type Shape = "Draw" | "Straight" | "Fade" | "Slice" | "Hook";
-export function shapeOf(s: Swing): Shape {
-  const d = s.faceAngle - s.clubPath;
-  if (d > 4) return "Slice";
-  if (d > 1) return "Fade";
-  if (d < -4) return "Hook";
-  if (d < -1) return "Draw";
-  return "Straight";
-}
 
 /* ── Targets ─────────────────────────────────────────────────────────── */
 
@@ -137,7 +87,6 @@ export const TARGET = {
   pelvisThrust: [0, 4],
   tempo: [2.8, 3.3],
   weightLead: [80, 100],
-  clubPath: [-2, 3],
 } as const satisfies Record<string, readonly [number, number]>;
 
 export const inRange = (v: number, [lo, hi]: readonly [number, number]) => v >= lo && v <= hi;
@@ -201,7 +150,7 @@ export function fundamentalsFor(swings: Swing[]) {
 
 /* ── Faults ──────────────────────────────────────────────────────────── */
 
-export type FaultKey = "earlyExtension" | "overTheTop" | "sway" | "sequence" | "reversePivot";
+export type FaultKey = "earlyExtension" | "sway" | "sequence" | "reversePivot";
 export type Confidence = "High" | "Medium" | "Low";
 
 export const FAULTS: Record<FaultKey, { label: string; what: string; drill: string; drillName: string }> = {
@@ -210,12 +159,6 @@ export const FAULTS: Record<FaultKey, { label: string; what: string; drill: stri
     what: "Hips move toward the ball and the chest stands up before impact.",
     drillName: "Chair drill",
     drill: "Set up with your backside touching a chair. Make slow half swings and keep the lead hip on the chair through impact. 3 × 10.",
-  },
-  overTheTop: {
-    label: "Over-the-top",
-    what: "The club comes down outside the line and cuts across the ball (out-to-in path).",
-    drillName: "Headcover gate",
-    drill: "Put a headcover just outside and behind the ball. Swing without touching it so the club approaches from inside. 3 × 10.",
   },
   sway: {
     label: "Sway off the ball",
@@ -239,37 +182,33 @@ export const FAULTS: Record<FaultKey, { label: string; what: string; drill: stri
 
 export type Finding = { key: FaultKey; confidence: Confidence; detail: string };
 
-/** `ball` false: no launch monitor data for the swing, so path-based faults can't be read. */
-export function findingsFor(s: Swing, ball = true): Finding[] {
+export function findingsFor(s: Swing): Finding[] {
   const out: Finding[] = [];
   const lost = spineLost(s);
   if (lost > 5 || s.pelvisThrust > 5)
     out.push({ key: "earlyExtension", confidence: lost > 6.5 ? "High" : "Medium", detail: `Lost ${lost}° of bend · hips ${s.pelvisThrust.toFixed(1)} cm toward ball` });
-  if (ball && s.clubPath < -3) out.push({ key: "overTheTop", confidence: "High", detail: `Path ${s.clubPath.toFixed(1)}° out-to-in` });
   if (s.pelvisSway > 5) out.push({ key: "sway", confidence: s.pelvisSway > 6 ? "High" : "Medium", detail: `Pelvis ${s.pelvisSway.toFixed(1)} cm away from target` });
   if (!inSequence(s)) out.push({ key: "sequence", confidence: "Medium", detail: "Chest peaked before pelvis" });
   if (s.weightLead < 70) out.push({ key: "reversePivot", confidence: "Low", detail: `${s.weightLead}% on lead foot at impact` });
   return out;
 }
 
-/** Faults across the session, most common first, with the carry (from swings
- *  with ball data) and the swing score they cost. */
-export function rankedFaults(swings: Swing[], hasBall: HasBall = ALL_BALL) {
+/** Faults across the session, most common first, with the swing score they cost. */
+export function rankedFaults(swings: Swing[]) {
   const keys = Object.keys(FAULTS) as FaultKey[];
   const cost = (hit: Swing[], clean: Swing[], v: (s: Swing) => number) =>
     hit.length && clean.length ? Math.round(mean(clean.map(v)) - mean(hit.map(v))) : 0;
   return keys
     .map((key) => {
-      const hit = swings.filter((s) => findingsFor(s, hasBall(s)).some((f) => f.key === key));
+      const hit = swings.filter((s) => findingsFor(s).some((f) => f.key === key));
       const clean = swings.filter((s) => !hit.includes(s));
-      const costYd = cost(hit.filter(hasBall), clean.filter(hasBall), (s) => s.carry);
       const costPts = cost(hit, clean, swingScore);
       // The clearest example: the swing it hurt most.
       const example = [...hit].sort((a, b) => swingScore(a) - swingScore(b))[0];
-      return { key, ...FAULTS[key], count: hit.length, costYd, costPts, example: example?.n };
+      return { key, ...FAULTS[key], count: hit.length, costPts, example: example?.n };
     })
     .filter((f) => f.count > 0)
-    .sort((a, b) => b.count - a.count || b.costYd - a.costYd || b.costPts - a.costPts);
+    .sort((a, b) => b.count - a.count || b.costPts - a.costPts);
 }
 
 /* ── Session stats ───────────────────────────────────────────────────── */
@@ -280,33 +219,25 @@ const sd = (xs: number[]) => {
   return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)));
 };
 
-/** 100 = every swing the same. Spread of the key positions, against each target's width.
- *  Club path counts only over swings with launch-monitor data, and drops out with fewer than two. */
-export function consistencyOf(swings: Swing[], hasBall: HasBall = ALL_BALL) {
+/** 100 = every swing the same. Spread of the key positions, against each target's width. */
+export function consistencyOf(swings: Swing[]) {
   if (swings.length < 2) return 0;
-  const paths = swings.filter(hasBall).map((s) => s.clubPath);
   const parts: [number[], readonly [number, number]][] = [
     [swings.map((s) => s.chestTurn), TARGET.chestTurn],
     [swings.map((s) => s.pelvisTurn), TARGET.pelvisTurn],
     [swings.map(spineLost), TARGET.spineLost],
-    ...(paths.length >= 2 ? [[paths, TARGET.clubPath] as [number[], readonly [number, number]]] : []),
     [swings.map(tempo), TARGET.tempo],
   ];
   const spread = mean(parts.map(([xs, [lo, hi]]) => sd(xs) / (hi - lo)));
   return Math.max(0, Math.round(100 - spread * 100));
 }
 
-/** Club speed and carry average only the swings with launch-monitor data (`ballSwings` of them). */
-export function statsFor(swings: Swing[], hasBall: HasBall = ALL_BALL) {
-  const ball = swings.filter(hasBall);
+export function statsFor(swings: Swing[]) {
   return {
     swings: swings.length,
-    ballSwings: ball.length,
     score: Math.round(mean(swings.map(swingScore))),
-    consistency: consistencyOf(swings, hasBall),
+    consistency: consistencyOf(swings),
     tempo: mean(swings.map(tempo)),
-    clubSpeed: mean(ball.map((s) => s.clubSpeed)),
-    carry: mean(ball.map((s) => s.carry)),
     spineLost: mean(swings.map(spineLost)),
     xFactor: mean(swings.map(xFactor)),
     sway: mean(swings.map((s) => s.pelvisSway)),
@@ -325,8 +256,6 @@ export const PREVIOUS = {
   score: 71,
   consistency: 63,
   tempo: 3.4,
-  clubSpeed: 76.4,
-  carry: 143,
   spineLost: 7.2,
   xFactor: 34,
   /** Average pelvis sway at the top, cm. */
@@ -336,11 +265,11 @@ export const PREVIOUS = {
 
 /** Every lesson so far, oldest first. The last row is this one. */
 export const LESSONS = [
-  { date: "13 Sep", score: 58, spineLost: 9.1, xFactor: 29, clubSpeed: 74.2, carry: 136, sway: 6.1 },
-  { date: "27 Sep", score: 63, spineLost: 8.4, xFactor: 31, clubSpeed: 75.0, carry: 139, sway: 5.5 },
-  { date: "11 Oct", score: 67, spineLost: 7.9, xFactor: 33, clubSpeed: 75.8, carry: 141, sway: 5.0 },
-  { date: "25 Oct", score: PREVIOUS.score, spineLost: PREVIOUS.spineLost, xFactor: PREVIOUS.xFactor, clubSpeed: PREVIOUS.clubSpeed, carry: PREVIOUS.carry, sway: PREVIOUS.sway },
-  { date: "8 Nov", score: STATS.score, spineLost: +STATS.spineLost.toFixed(1), xFactor: Math.round(STATS.xFactor), clubSpeed: +STATS.clubSpeed.toFixed(1), carry: Math.round(STATS.carry), sway: +STATS.sway.toFixed(1) },
+  { date: "13 Sep", score: 58, spineLost: 9.1, xFactor: 29, sway: 6.1 },
+  { date: "27 Sep", score: 63, spineLost: 8.4, xFactor: 31, sway: 5.5 },
+  { date: "11 Oct", score: 67, spineLost: 7.9, xFactor: 33, sway: 5.0 },
+  { date: "25 Oct", score: PREVIOUS.score, spineLost: PREVIOUS.spineLost, xFactor: PREVIOUS.xFactor, sway: PREVIOUS.sway },
+  { date: "8 Nov", score: STATS.score, spineLost: +STATS.spineLost.toFixed(1), xFactor: Math.round(STATS.xFactor), sway: +STATS.sway.toFixed(1) },
 ];
 export const GOAL_SCORE = 85;
 

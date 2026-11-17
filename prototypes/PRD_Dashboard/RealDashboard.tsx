@@ -32,7 +32,6 @@ import { MOCK_EVENTS } from "@/mocks/detectionFeed";
 import { MOCK_CASES } from "@/mocks/incidentCases";
 import { MOCK_ACTIVITY_LOGS, ACTIVITY_KIND_LABELS, ACTIVITY_KIND_STYLES } from "@/mocks/activityLogs";
 import { MOCK_NVRS } from "@/mocks/nvr";
-import { SYSTEM_HEALTH_PRESENTATION } from "@/hooks/useSystemStatus";
 
 /** Stable empty list for the forced empty state (keeps memo deps stable). */
 const NO_CAMERAS: CameraData[] = [];
@@ -511,7 +510,6 @@ export default function DashboardPage({
   const showAlertBanner = systemStatus !== "healthy" && !!worstHealth && !alertAcknowledged;
 
   // Same presentation the top-bar status menu uses, so the two always agree.
-  const statusPresentation = SYSTEM_HEALTH_PRESENTATION[systemStatus];
 
   // PROTOTYPE-ONLY: loading & error replace the page; "empty" falls through and
   // renders the full layout with empty data (each section shows its own no-data state).
@@ -577,21 +575,6 @@ export default function DashboardPage({
           <PageHeader.Title>Dashboard</PageHeader.Title>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
-              statusPresentation.pill
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                statusPresentation.dot,
-                systemStatus === "healthy" && "animate-pulse"
-              )}
-            />
-            {statusPresentation.label}
-          </span>
         </PageHeader.Actions>
       </PageHeader>
 

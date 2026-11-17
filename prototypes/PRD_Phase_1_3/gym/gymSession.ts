@@ -1,16 +1,14 @@
-/* One lifter's back-squat workout at a rack: 4 sets × 5 reps at 100 kg, read
-   off one side camera (2D pose, 60 fps) with a bar speed sensor on the bar.
+/* One lifter's back-squat workout in one gym area: 4 sets × 5 reps at 100 kg, read
+   off one side camera (2D pose and bar tracking, 60 fps).
    The unit of analysis is a rep, grouped into sets. Every number on the Lift
    Analysis page is derived from the reps below. Fatigue shows in the last reps
    of the later sets: the bar slows, the torso tips forward and the bar drifts. */
-
-import type { DeviceMode } from "../assessment/deviceState";
 
 export const LIFTER = { name: "Jason Teo", id: "DT-0418", training: "5 yrs training", bodyweight: 82 };
 
 export const SESSION = {
   gym: "Downtown gym",
-  rack: "Rack 5",
+  area: "Area 5",
   lift: "Back squat",
   load: 100,
   plannedSets: 4,
@@ -20,15 +18,14 @@ export const SESSION = {
   date: "10 Nov 2026 · 18:12",
   lengthSec: 1020,
   cameras: "Side · 60 fps",
-  /** Rack 5 has no front camera, so knee tracking isn't measured. */
+  /** Area 5 has no front camera, so knee tracking isn't measured. */
   frontCamera: false,
-  sensor: "BS-2 · connected",
   trackingFps: 60,
   model: "Strength Technique Assessment v1.0",
 };
 
 export const METHOD_NOTE =
-  "Joint angles, depth and bar path come from 2D pose on the side camera at 60 fps. Bar speed comes from the bar speed sensor. Knee tracking needs the optional front camera, which Rack 5 doesn't have.";
+  "Joint angles, depth and bar path come from 2D pose on the side camera at 60 fps. Bar speed is the camera's bar tracking: bar travel ÷ ascent time. Knee tracking needs the optional front camera, which Area 5 doesn't have.";
 
 /* ── Reps ────────────────────────────────────────────────────────────── */
 
@@ -57,7 +54,7 @@ export type Rep = {
   ecc: number;
   pause: number;
   con: number;
-  /** Mean concentric bar speed, m/s (sensor). */
+  /** Mean bar speed on the way up, m/s: bar travel ÷ ascent time, from the camera's bar tracking. */
   meanVel: number;
   /** Bar travel, cm. */
   rom: number;
@@ -282,19 +279,18 @@ const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.le
 
 /** Faults across the workout, ranked by impact: reps hit × how much the fault matters.
     The cost is how much slower (m/s) and lower-scoring (points) the hit reps were than clean reps. */
-export function rankedFaults(reps: Rep[], mode: DeviceMode = "connected") {
+export function rankedFaults(reps: Rep[]) {
   return (Object.keys(FAULTS) as FaultKey[])
     .map((key) => {
       const hit = reps.filter((r) => findingsFor(r).some((f) => f.key === key));
       const clean = reps.filter((r) => !hit.includes(r));
       const both = hit.length > 0 && clean.length > 0;
-      const vel = (r: Rep) => velIn(r, mode);
+      const vel = (r: Rep) => r.meanVel;
       const velCost = both ? +(mean(clean.map(vel)) - mean(hit.map(vel))).toFixed(2) : 0;
-      const velCostEst = both && reps.some((r) => !sensorMeasured(r, mode));
       const scoreCost = both ? Math.round(mean(clean.map(repScore)) - mean(hit.map(repScore))) : 0;
       const example = [...hit].sort((a, b) => repScore(a) - repScore(b))[0];
       const firstSet = hit.length ? Math.min(...hit.map((r) => r.set)) : 0;
-      return { key, ...FAULTS[key], count: hit.length, velCost, velCostEst, scoreCost, impact: hit.length * FAULTS[key].weight, example: example?.id, firstSet };
+      return { key, ...FAULTS[key], count: hit.length, velCost, scoreCost, impact: hit.length * FAULTS[key].weight, example: example?.id, firstSet };
     })
     .filter((f) => f.count > 0)
     .sort((a, b) => b.impact - a.impact);
@@ -310,11 +306,10 @@ export function velLossOf(set: number) {
 /** % slower than the first rep of its set. */
 export const repLoss = (r: Rep) => Math.round((1 - r.meanVel / repsOf(r.set)[0].meanVel) * 100);
 
-/** Load–velocity estimate: ~0.30 m/s at a 1RM, each 0.15 m/s faster ≈ 10% lighter. */
-export const e1rmFrom = (load: number, vel: number) => Math.round(load / (1 - (vel - 0.3) * (0.1 / 0.15)));
+/** Epley: estimated one-rep max from load × reps. */
+export const e1rmEpley = (load: number, reps: number) => Math.round(load * (1 + reps / 30));
 
 export function statsFor(reps: Rep[]) {
-  const firsts = SETS.map((s) => repsOf(s)[0].meanVel);
   const good = reps.filter((r) => findingsFor(r).length === 0).length;
   const sorted = [...reps].sort((a, b) => repScore(b) - repScore(a));
   return {
@@ -324,9 +319,8 @@ export function statsFor(reps: Rep[]) {
     score: Math.round(mean(reps.map(repScore))),
     volume: reps.length * SESSION.load,
     avgVel: mean(reps.map((r) => r.meanVel)),
-    e1rm: e1rmFrom(SESSION.load, mean(firsts)),
+    e1rm: e1rmEpley(SESSION.load, SESSION.plannedReps),
     velLoss: Math.max(...SETS.map(velLossOf)),
-    firstVel: mean(firsts),
     best: sorted[0].id,
     weakest: sorted[sorted.length - 1].id,
   };
@@ -347,16 +341,16 @@ export const PREVIOUS = {
   score: 80,
   volume: 1900,
   avgVel: 0.52,
-  e1rm: 115,
+  e1rm: e1rmEpley(95, 5),
   velLoss: 24,
   fund: { setup: 92, depth: 90, torso: 76, barPath: 81, tempo: 96, lockout: 93 } as Record<FundKey, number>,
 };
 
 /** Every back-squat session so far, oldest first. The last row is this one. */
 export const HISTORY = [
-  { date: "13 Oct", load: 85, volume: 1700, e1rm: 108, avgVel: 0.55, velLoss: 22, goodPct: 70, score: 71 },
-  { date: "20 Oct", load: 90, volume: 1800, e1rm: 111, avgVel: 0.53, velLoss: 25, goodPct: 75, score: 74 },
-  { date: "27 Oct", load: 92.5, volume: 1850, e1rm: 113, avgVel: 0.53, velLoss: 23, goodPct: 80, score: 77 },
+  { date: "13 Oct", load: 85, volume: 1700, e1rm: e1rmEpley(85, 5), avgVel: 0.55, velLoss: 22, goodPct: 70, score: 71 },
+  { date: "20 Oct", load: 90, volume: 1800, e1rm: e1rmEpley(90, 5), avgVel: 0.53, velLoss: 25, goodPct: 75, score: 74 },
+  { date: "27 Oct", load: 92.5, volume: 1850, e1rm: e1rmEpley(92.5, 5), avgVel: 0.53, velLoss: 23, goodPct: 80, score: 77 },
   { date: "3 Nov", load: PREVIOUS.load, volume: PREVIOUS.volume, e1rm: PREVIOUS.e1rm, avgVel: PREVIOUS.avgVel, velLoss: PREVIOUS.velLoss, goodPct: 85, score: PREVIOUS.score },
   {
     date: "10 Nov", load: SESSION.load, volume: STATS.volume, e1rm: STATS.e1rm, avgVel: +STATS.avgVel.toFixed(2), velLoss: STATS.velLoss,
@@ -371,26 +365,17 @@ export const PERSONAL_BESTS = [
   { label: "Fastest rep", value: `${Math.max(...REPS.map((r) => r.meanVel)).toFixed(2)} m/s`, was: "@ 100 kg", isNew: false },
 ];
 
-/** Share of reps with no fault found, %, that a workout needs before the load goes up when there's no bar speed to go on. */
+/** Share of reps with no fault found, %, that a workout needs before the load goes up. */
 export const GOOD_PCT_TO_ADD = 85;
 
-/** Next session's load: hold it while the last set falls apart, add 2.5 kg once it doesn't.
-    With no sensor the call rests on form alone (good reps and the last set's faults). */
-export function nextLoad(mode: DeviceMode = "connected") {
+/** Next session's load, from form: hold it while the last set falls apart, add 2.5 kg once
+    enough reps are clean and the last set holds together. */
+export function nextLoad() {
   const lastSet = repsOf(SETS[SETS.length - 1]);
   const lastSetFaults = lastSet.filter((r) => findingsFor(r).length).length;
   const goodPct = Math.round((STATS.good / STATS.reps) * 100);
-  const velLoss = speedStatsFor(mode).velLoss;
-  const hold = mode === "none" ? goodPct < GOOD_PCT_TO_ADD || lastSetFaults >= 2 : velLoss > TARGET.velLoss || lastSetFaults >= 2;
-  /* Offline: the stop speed comes from the first reps the sensor did measure. */
-  const firsts = SETS.map((s) => repsOf(s)[0]).filter((r) => sensorMeasured(r, mode));
-  return {
-    load: hold ? SESSION.load : SESSION.load + 2.5,
-    hold,
-    goodPct,
-    velLoss,
-    stopVel: +((mode === "connected" ? STATS.firstVel : mean(firsts.map((r) => r.meanVel))) * STOP_AT).toFixed(2),
-  };
+  const hold = goodPct < GOOD_PCT_TO_ADD || lastSetFaults >= 2;
+  return { load: hold ? SESSION.load : SESSION.load + 2.5, hold, goodPct };
 }
 
 /* ── Phases & signals ────────────────────────────────────────────────── */
@@ -471,23 +456,18 @@ export function bodyAt(r: Rep, d: number, up: boolean) {
   };
 }
 
-/** Bar speed, joint angles and lean through the rep, every 50 ms. */
+/** Bar height (cm above the bottom, from the camera's bar tracking), joint angles and lean through the rep, every 50 ms. */
 export function repSeries(r: Rep) {
-  const rows: { t: number; vel: number; hip: number; knee: number; lean: number }[] = [];
+  const rows: { t: number; bar: number; hip: number; knee: number; lean: number }[] = [];
   const dt = 0.05;
-  const height = (t: number) => (1 - depthAt(r, t).d) * r.rom;
   for (let i = 0; i <= Math.round(WINDOW[1] / dt); i++) {
     const t = +(i * dt).toFixed(2);
-    const raw = (height(t + dt / 2) - height(t - dt / 2)) / dt / 100;
     const { d, up } = depthAt(r, t);
     const b = bodyAt(r, d, up);
-    rows.push({ t, vel: +raw.toFixed(2), hip: b.hipAngle, knee: b.kneeAngle, lean: +b.alpha.toFixed(1) });
+    rows.push({ t, bar: +((1 - d) * r.rom).toFixed(1), hip: b.hipAngle, knee: b.kneeAngle, lean: +b.alpha.toFixed(1) });
   }
   return rows;
 }
-
-/** Peak concentric bar speed, m/s. */
-export const peakVelOf = (r: Rep) => Math.max(...repSeries(r).map((p) => p.vel));
 
 /** Bar path of a rep, side view: x = cm ahead of mid-foot, y = cm above the bottom. */
 export function barPathOf(r: Rep, steps = 24) {
@@ -500,85 +480,3 @@ export function barPathOf(r: Rep, steps = 24) {
 export const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
 export const initialsOf = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "?";
-
-
-/* ── Bar speed sensor state ──────────────────────────────────────────── */
-
-/* The page previews three sensor states (see ../assessment/deviceMode.tsx):
-   connected, none at all, or dropping out partway. Without the sensor, the
-   side camera still tracks the bar, so it can time each rep: bar travel ÷
-   ascent time gives a mean speed. That estimate is coarser than the sensor's
-   (frame timing at 60 fps), and peak speed, power and the speed curve still
-   need the sensor. Joint angles, depth and bar path never needed it. */
-
-/** In the "offline" preview the sensor dropped out at the start of this rep. */
-export const SENSOR_LOST_REP = "4.1";
-/** Session clock when the sensor went offline. */
-export const SENSOR_LOST_AT = fmtClock(repById(SENSOR_LOST_REP).at);
-
-/** Mean concentric speed estimated from the side camera's bar tracking: the sensor's value off by up to ±0.02 m/s of frame-timing error. */
-export function videoVelOf(r: Rep) {
-  const err = (((r.n * 3 + r.set) % 5) - 2) * 0.01;
-  return +(r.meanVel + err).toFixed(2);
-}
-
-/** Whether the sensor measured this rep in this state. */
-export const sensorMeasured = (r: Rep, mode: DeviceMode) =>
-  mode === "connected" || (mode === "offline" && r.n < repById(SENSOR_LOST_REP).n);
-
-/** The rep's mean speed: from the sensor when it measured the rep, from video otherwise. */
-export const velIn = (r: Rep, mode: DeviceMode) => (sensorMeasured(r, mode) ? r.meanVel : videoVelOf(r));
-
-/** % slower than the first rep of its set, in this state. */
-export const repLossIn = (r: Rep, mode: DeviceMode) => Math.round((1 - velIn(r, mode) / velIn(repsOf(r.set)[0], mode)) * 100);
-
-/** % slower from the set's first rep to its last, in this state. */
-export function velLossIn(set: number, mode: DeviceMode) {
-  const rs = repsOf(set);
-  return Math.round((1 - velIn(rs[rs.length - 1], mode) / velIn(rs[0], mode)) * 100);
-}
-
-/** Whether any rep of the set had its speed estimated from video. */
-export const setEstimated = (set: number, mode: DeviceMode) => repsOf(set).some((r) => !sensorMeasured(r, mode));
-
-/** Epley: one-rep max from load × reps. Needs no sensor. */
-export const e1rmEpley = (load: number, reps: number) => Math.round(load * (1 + reps / 30));
-
-/** The workout's speed numbers in this state. Est. 1RM falls back to load × reps without the sensor. */
-export function speedStatsFor(mode: DeviceMode) {
-  const fastest = REPS.reduce((a, r) => (velIn(r, mode) > velIn(a, mode) ? r : a));
-  return {
-    avgVel: mode === "connected" ? STATS.avgVel : mean(REPS.map((r) => velIn(r, mode))),
-    velLoss: Math.max(...SETS.map((s) => velLossIn(s, mode))),
-    e1rm: mode === "connected" ? STATS.e1rm : e1rmEpley(SESSION.load, SESSION.plannedReps),
-    fastest: velIn(fastest, mode),
-    fastestEst: !sensorMeasured(fastest, mode),
-  };
-}
-
-/** Session history with today's row in this state. */
-export function historyFor(mode: DeviceMode) {
-  if (mode === "connected") return HISTORY;
-  const sp = speedStatsFor(mode);
-  return HISTORY.map((h, i) => (i === HISTORY.length - 1 ? { ...h, avgVel: +sp.avgVel.toFixed(2), velLoss: sp.velLoss, e1rm: sp.e1rm } : h));
-}
-
-/** Personal bests in this state; `est` marks a value estimated from video. */
-export function personalBestsFor(mode: DeviceMode): { label: string; value: string; was: string; isNew: boolean; est?: boolean }[] {
-  if (mode === "connected") return PERSONAL_BESTS;
-  const sp = speedStatsFor(mode);
-  return PERSONAL_BESTS.map((p) =>
-    p.label === "Est. 1RM" ? { ...p, value: `${sp.e1rm} kg`, isNew: sp.e1rm > PREVIOUS.e1rm }
-      : p.label === "Fastest rep" ? { ...p, value: `${sp.fastest.toFixed(2)} m/s`, est: sp.fastestEst }
-      : p);
-}
-
-/** How the page's numbers were measured, in this state. */
-export function methodNote(mode: DeviceMode) {
-  if (mode === "connected") return METHOD_NOTE;
-  const pose = "Joint angles, depth and bar path come from 2D pose on the side camera at 60 fps.";
-  const knee = "Knee tracking needs the optional front camera, which Rack 5 doesn't have.";
-  return mode === "none"
-    ? `${pose} No bar speed sensor was on the bar, so mean bar speed is estimated from the camera's bar tracking (bar travel ÷ ascent time); peak speed, power and the speed curve need the sensor. Est. 1RM comes from load × reps. ${knee}`
-    : `${pose} Bar speed comes from the bar speed sensor for sets 1–3; it went offline at ${SENSOR_LOST_AT}, so set 4 speeds are estimated from the camera's bar tracking. ${knee}`;
-}

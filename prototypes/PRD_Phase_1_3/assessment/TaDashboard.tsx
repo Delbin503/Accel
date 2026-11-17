@@ -1441,21 +1441,6 @@ export function TaDashboard({
           <PageHeader.Title>Dashboard</PageHeader.Title>
         </PageHeader.Content>
         <PageHeader.Actions>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold",
-              statusPresentation.pill
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                statusPresentation.dot,
-                systemStatus === "healthy" && "animate-pulse"
-              )}
-            />
-            {statusPresentation.label}
-          </span>
           {!editing && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
               <Pencil className="size-3.5" />

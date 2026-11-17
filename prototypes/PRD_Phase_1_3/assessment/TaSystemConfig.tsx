@@ -736,7 +736,7 @@ function CameraDefaultsSection() {
 
       <SectionCard
         title="Assessment Cameras & Pose"
-        description="Pose settings for Training Assessment models, and the cameras each bay, rack or room needs as a result."
+        description="Pose settings for Training Assessment models, and the cameras each area needs as a result."
       >
         <TaPoseDefaults />
       </SectionCard>

@@ -36,7 +36,7 @@ import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/Dat
 
    Non-camera hardware that runs alongside assessment sessions: launch monitors
    in golf bays, bar speed sensors on racks, depth cameras and force plates in
-   clinic rooms. Each device is paired to one bay, rack or room, so Model
+   clinic rooms. Each device is paired to one area, so Model
    Deployment can list it beside that unit's cameras, and its data joins the
    assessment results of whoever is in that unit. Laid out like NVR Devices. */
 
@@ -105,7 +105,7 @@ function DeviceModal({
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()}>
       <ModalContent size="lg">
-        <ModalHeader title={initial ? "Edit External Device" : "Add External Device"} description="Pair a device with a bay, rack or room so its data joins assessment results." icon={Radio} />
+        <ModalHeader title={initial ? "Edit External Device" : "Add External Device"} description="Pair a device with an area so its data joins assessment results." icon={Radio} />
         <ModalBody className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -156,7 +156,7 @@ function DeviceModal({
             <div>
               <label className={LABEL}>Paired To</label>
               <Select value={f.unit} onValueChange={(v) => set({ unit: v })} disabled={!f.areaId}>
-                <SelectTrigger className="h-9 w-full" aria-invalid={!!errors.unit}><SelectValue placeholder="Bay, rack or room" /></SelectTrigger>
+                <SelectTrigger className="h-9 w-full" aria-invalid={!!errors.unit}><SelectValue placeholder="Area" /></SelectTrigger>
                 <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
               </Select>
               {err("unit")}
@@ -495,7 +495,7 @@ export function TaExternalDevices() {
       </KpiGrid>
 
       <Toolbar data-slot="ta-external-devices-page-filters" className="rounded-xl border border-border bg-card px-3 py-2.5">
-        <ToolbarSearch value={search} onChange={setSearch} placeholder="Search by ID, name, model, address or bay…" className="min-w-[220px] flex-1 sm:w-full" />
+        <ToolbarSearch value={search} onChange={setSearch} placeholder="Search by ID, name, model, address or area…" className="min-w-[220px] flex-1 sm:w-full" />
         <FilterDropdown label="All sites" options={TA_SITES.map((s) => ({ value: s.id, label: s.name }))} selected={sites} onChange={setSites} className="w-44" />
         <FilterDropdown label="All types" options={DEVICE_TYPES.map((t) => ({ value: t, label: t }))} selected={types} onChange={setTypes} className="w-44" />
       </Toolbar>
