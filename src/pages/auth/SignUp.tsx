@@ -555,8 +555,9 @@ export default function SignUpPage({
     setError(null);
     if (planChosen && !agreedCheckoutTos)
       return setError("Please accept the Terms of Service and Privacy Policy to confirm checkout.");
-    // Re-check every step: an edit could have left one incomplete.
-    const broken = [accountError(), planChosen ? paymentError() : null, siteError()].find(Boolean);
+    // Re-check the steps review can edit: an edit could have left one incomplete.
+    // (Account is checked on its own step and isn't shown on review.)
+    const broken = [planChosen ? paymentError() : null, siteError()].find(Boolean);
     if (broken) return setError(`${broken} Use Edit to fix it.`);
     if (seatsOver > 0)
       return setError(
@@ -1663,26 +1664,6 @@ export default function SignUpPage({
               notice ? "lg:max-h-[calc(100vh-21rem)]" : "lg:max-h-[calc(100vh-16rem)]"
             )}
           >
-            <ReviewSection title="Account" icon={CircleUser} onEdit={() => editStep("account")}>
-              <DescriptionList columns={2}>
-                <DescriptionItem label="Name">{fullName || "—"}</DescriptionItem>
-                <DescriptionItem label="Department">{departments.join(", ") || "—"}</DescriptionItem>
-                <DescriptionItem label="Work email">
-                  <span className="inline-flex flex-wrap items-center gap-1.5">
-                    {email || "—"}
-                    {email && email.trim() === verifiedEmail && (
-                      <StatusBadge tone="success" dot={false} className="gap-1 px-2">
-                        <Check className="size-3" strokeWidth={3} /> Verified
-                      </StatusBadge>
-                    )}
-                  </span>
-                </DescriptionItem>
-                <DescriptionItem label="Phone" mono>
-                  {phoneNumber ? `${dialCode} ${phoneNumber}` : "—"}
-                </DescriptionItem>
-              </DescriptionList>
-            </ReviewSection>
-
             <ReviewSection title="Plan" icon={PlanIcon} onEdit={() => editStep("plan", "pick")}>
               {planChosen ? (
                 <DescriptionList columns={2}>
