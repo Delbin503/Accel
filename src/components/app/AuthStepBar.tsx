@@ -1,12 +1,13 @@
 import { Stepper } from "@accel/ui/components/shared/Stepper";
 
-export type AuthStepKey = "account" | "plan" | "site" | "team";
+export type AuthStepKey = "account" | "plan" | "site" | "team" | "review";
 
 const STEPS: { id: AuthStepKey; label: string }[] = [
   { id: "account", label: "Create Account" },
   { id: "plan", label: "Subscribe Plan" },
   { id: "site", label: "Create Site" },
   { id: "team", label: "Invite Team" },
+  { id: "review", label: "Review" },
 ];
 
 /** Top step indicator on every sign-up page — the shared Stepper with the sign-up steps. */

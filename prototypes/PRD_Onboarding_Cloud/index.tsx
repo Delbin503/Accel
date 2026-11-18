@@ -11,6 +11,8 @@ import SignInVerifyPage from "@/pages/auth/SignInVerify";
 import SignUpPage from "@/pages/auth/SignUp";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import AccountSuspendedPage from "@/pages/auth/AccountSuspended";
+import DashboardPage from "@/pages/dashboard";
+import { AppLayout } from "@/components/app/AppLayout";
 import { StateTester } from "./StateTester";
 import { CLOUD_SCREENS, type CloudScreen, type AsyncMode } from "./screens";
 import {
@@ -53,12 +55,16 @@ function Shell() {
           <Route path="/signup/payment" element={<SignUpPage key="su-payment" initialStep="payment" />} />
           <Route path="/signup/site" element={<SignUpPage key="su-site" initialStep="site" />} />
           <Route path="/signup/team" element={<SignUpPage key="su-team" initialStep="team" />} />
+          {/* Opens on a filled-in sign-up so every review section has content. */}
+          <Route path="/signup/review" element={<SignUpPage key="su-review" initialStep="review" />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           {/* Sign-in dead end for a suspended account. */}
           <Route path="/account-suspended" element={<AccountSuspendedPage />} />
           <Route path="/done" element={<DonePreview />} />
-          {/* Real pages navigate("/") on completion. */}
-          <Route path="/" element={<DonePreview />} />
+          {/* Sign-up's Confirm Checkout lands on the real dashboard, which shows the welcome modal. */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<DashboardPage />} />
+          </Route>
           <Route path="*" element={<NotInPrototype />} />
         </Routes>
       )}

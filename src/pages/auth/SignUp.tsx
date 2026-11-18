@@ -10,7 +10,6 @@ import {
   Clock,
   MapPin,
   Shapes,
-  AlertCircle,
   AlertTriangle,
   Check,
   CheckCircle2,
@@ -29,8 +28,15 @@ import {
   CircleUser,
   Phone,
   ChevronDown,
+  Users,
+  TriangleAlert,
+  Trash2,
   Lock as LockIcon,
 } from "lucide-react";
+import { Progress } from "@accel/ui/components/ui/progress";
+import { Label } from "@accel/ui/components/ui/label";
+import { StatusBadge } from "@accel/ui/components/shared/StatusBadge";
+import { Banner } from "@accel/ui/components/shared/Banner";
 import { Button } from "@accel/ui/components/ui/button";
 import { Input } from "@accel/ui/components/ui/input";
 import {
@@ -68,8 +74,10 @@ import {
 } from "@/mocks/cloudPlans";
 import { USER_ROLE_DESCRIPTIONS, USER_ROLE_LABELS } from "@/mocks/users";
 import { SeatStrip, type SeatUsage } from "@/pages/user-management";
-import { SetupCompleteModal } from "@/components/app/SetupCompleteModal";
-import { PaymentSuccessModal, type PaymentReceipt } from "@/components/app/PaymentSuccessModal";
+import type { PaymentReceipt } from "@/components/app/PaymentSuccessModal";
+import type { SignUpWelcome } from "./SignUpWelcomeModal";
+import { SectionCard } from "@accel/ui/components/shared/SectionCard";
+import { DescriptionList, DescriptionItem } from "@accel/ui/components/shared/DescriptionList";
 import type { UserRole } from "@/types/users";
 import { makeBlankSite } from "@/mocks/sites";
 import { AuthBackground } from "@/components/app/AuthBackground";
@@ -85,8 +93,37 @@ import { DataTable, type DataTableColumn } from "@accel/ui/components/shared/Dat
 import { ToolbarSearch } from "@accel/ui/components/shared/Toolbar";
 
 /* ── Wizard steps ───────────────────────────────────────────────────── */
-type WizardStep = "account" | "plan" | "site" | "team";
-type PlanSubStep = "pick" | "payment" | "review";
+/* Account (+ verify email) → plan (pick, payment) → site → team → review & checkout.
+   Nothing is charged or created until the review step's Confirm Checkout. */
+type WizardStep = "account" | "plan" | "site" | "team" | "review";
+type PlanSubStep = "pick" | "payment";
+
+function cardBrand(digits: string) {
+  return digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card";
+}
+
+/* Prototype-only: the Review deep link opens on a filled-in sign-up so every section has content. */
+const DEMO_SIGNUP = {
+  firstName: "Delbin",
+  lastName: "Arkar",
+  departments: ["Security Operations"],
+  phoneNumber: "9123 4567",
+  email: "delbin@astra.sg",
+  cardName: "Delbin Arkar",
+  cardNumber: "4242 4242 4242 4242",
+  expiry: "08/29",
+  cvc: "123",
+  billingAddress: "8 Marina Boulevard",
+  billingApt: "#12-01",
+  postalCode: "018984",
+  siteName: "Astra HQ",
+  siteAddress: "8 Marina Boulevard, Singapore 018984",
+  primaryArea: "Lobby",
+  invites: [
+    { id: "inv-demo1", email: "maya@astra.sg", role: "admin", departments: ["Security Operations"] },
+    { id: "inv-demo2", email: "jun@astra.sg", role: "user", departments: ["Facilities"] },
+  ] as InviteRow[],
+};
 
 const PLAN_ICONS: Record<CloudPlanId, React.ElementType> = {
   "starter-cloud": Sparkles,
@@ -136,12 +173,13 @@ interface InviteRow {
 type MemberTableRow = { kind: "owner"; id: string } | (InviteRow & { kind: "invite" });
 
 /* Same role colour palette used in User Management. */
-const ROLE_STYLES: Record<UserRole, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
-  owner: { bg: "bg-success/15 border-success/30", text: "text-success", icon: Crown },
-  admin: { bg: "bg-info/15 border-info/30", text: "text-info", icon: ShieldCheck },
-  user: { bg: "bg-warning/15 border-warning/30", text: "text-warning", icon: CircleUser },
+const ROLE_STYLES: Record<UserRole, { tone: "success" | "info" | "warning"; icon: React.ComponentType<{ className?: string }> }> = {
+  owner: { tone: "success", icon: Crown },
+  admin: { tone: "info", icon: ShieldCheck },
+  user: { tone: "warning", icon: CircleUser },
 };
 
+/** A role pill — the design system's StatusBadge in the role's tone, with the role icon in place of the dot. */
 function RoleBadge({
   role,
   withIcon = true,
@@ -152,16 +190,10 @@ function RoleBadge({
   const s = ROLE_STYLES[role];
   const Icon = s.icon;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-bold uppercase tracking-wider",
-        s.bg,
-        s.text
-      )}
-    >
+    <StatusBadge tone={s.tone} dot={false} className="gap-1 px-2">
       {withIcon && <Icon className="size-3" />}
       {USER_ROLE_LABELS[role]}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -241,7 +273,7 @@ export default function SignUpPage({
   initialStep = "account",
 }: {
   /** Prototype-only deep-link entry: jump the wizard to a specific step. */
-  initialStep?: "account" | "plan" | "payment" | "site" | "team";
+  initialStep?: "account" | "plan" | "payment" | "site" | "team" | "review";
 } = {}) {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.signUp);
@@ -251,6 +283,7 @@ export default function SignUpPage({
   const addSite = useSitesStore((s) => s.addSite);
   const addSubscription = useSubscriptionsStore((s) => s.add);
 
+  const demo = initialStep === "review";
   const [step, setStep] = React.useState<WizardStep>(
     initialStep === "payment" ? "plan" : initialStep
   );
@@ -258,20 +291,35 @@ export default function SignUpPage({
   const [planSubStep, setPlanSubStep] = React.useState<PlanSubStep>(
     initialStep === "payment" ? "payment" : "pick"
   );
+  /* Set when a step was opened from the review page's Edit button: saving it returns to review. */
+  const [editing, setEditing] = React.useState(false);
+  /* False when the plan step was skipped — review then has nothing to charge. */
+  const [planChosen, setPlanChosen] = React.useState(demo || initialStep === "payment");
+  const [checkingOut, setCheckingOut] = React.useState(false);
+  /* The plan as it was when review's Plan → Edit was pressed; review compares against it
+     to show what changed. Cleared when the notice is dismissed. */
+  const [planBefore, setPlanBefore] = React.useState<{
+    picked: CloudPlanId;
+    cycle: "monthly" | "annual";
+    planChosen: boolean;
+    total: number;
+  } | null>(null);
 
   /* Account info */
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [departments, setDepartments] = React.useState<string[]>([]);
+  const [firstName, setFirstName] = React.useState(demo ? DEMO_SIGNUP.firstName : "");
+  const [lastName, setLastName] = React.useState(demo ? DEMO_SIGNUP.lastName : "");
+  const [departments, setDepartments] = React.useState<string[]>(demo ? DEMO_SIGNUP.departments : []);
   const [dialCode, setDialCode] = React.useState("+65");
-  const [phoneNumber, setPhoneNumber] = React.useState("");
+  const [phoneNumber, setPhoneNumber] = React.useState(demo ? DEMO_SIGNUP.phoneNumber : "");
   const fullName = `${firstName} ${lastName}`.trim();
-  const [email, setEmail] = React.useState("");
+  const [email, setEmail] = React.useState(demo ? DEMO_SIGNUP.email : "");
+  /* The address the OTP was confirmed for — editing it from review asks for a new code. */
+  const [verifiedEmail, setVerifiedEmail] = React.useState(demo ? DEMO_SIGNUP.email : "");
   const [password, setPassword] = React.useState("");
   const [confirmPw, setConfirmPw] = React.useState("");
   const [showPw, setShowPw] = React.useState(false);
   const [showConfirmPw, setShowConfirmPw] = React.useState(false);
-  const [agreedTos, setAgreedTos] = React.useState(false);
+  const [agreedTos, setAgreedTos] = React.useState(demo);
 
   /* OTP */
   const [otp, setOtp] = React.useState<string[]>(["", "", "", "", "", ""]);
@@ -280,33 +328,38 @@ export default function SignUpPage({
 
   /* Plan + payment */
   const [picked, setPicked] = React.useState<CloudPlanId>("professional-cloud");
-  /* Set once checkout charges the card; shows the payment-success modal before site setup. */
-  const [receipt, setReceipt] = React.useState<PaymentReceipt | null>(null);
   const [cycle, setCycle] = React.useState<"monthly" | "annual">("annual");
-  const [cardName, setCardName] = React.useState("");
-  const [cardNumber, setCardNumber] = React.useState("");
-  const [expiry, setExpiry] = React.useState("");
-  const [cvc, setCvc] = React.useState("");
-  const [billingAddress, setBillingAddress] = React.useState("");
-  const [billingApt, setBillingApt] = React.useState("");
+  const [cardName, setCardName] = React.useState(demo ? DEMO_SIGNUP.cardName : "");
+  const [cardNumber, setCardNumber] = React.useState(demo ? DEMO_SIGNUP.cardNumber : "");
+  const [expiry, setExpiry] = React.useState(demo ? DEMO_SIGNUP.expiry : "");
+  const [cvc, setCvc] = React.useState(demo ? DEMO_SIGNUP.cvc : "");
+  const [billingAddress, setBillingAddress] = React.useState(demo ? DEMO_SIGNUP.billingAddress : "");
+  const [billingApt, setBillingApt] = React.useState(demo ? DEMO_SIGNUP.billingApt : "");
   const [country, setCountry] = React.useState("Singapore");
   const [city, setCity] = React.useState("Singapore");
-  const [postalCode, setPostalCode] = React.useState("");
+  const [postalCode, setPostalCode] = React.useState(demo ? DEMO_SIGNUP.postalCode : "");
   const [saveCard, setSaveCard] = React.useState(false);
   const [autoRenew, setAutoRenew] = React.useState(true);
   const [agreedCheckoutTos, setAgreedCheckoutTos] = React.useState(false);
 
   /* Site info */
-  const [siteName, setSiteName] = React.useState("");
-  const [siteAddress, setSiteAddress] = React.useState("");
+  const [siteName, setSiteName] = React.useState(demo ? DEMO_SIGNUP.siteName : "");
+  const [siteAddress, setSiteAddress] = React.useState(demo ? DEMO_SIGNUP.siteAddress : "");
   const [timezone, setTimezone] = React.useState(DEFAULT_TIMEZONE);
   const [opFrom, setOpFrom] = React.useState("08:00");
   const [opTo, setOpTo] = React.useState("18:00");
   const [siteDescription, setSiteDescription] = React.useState("");
-  const [primaryArea, setPrimaryArea] = React.useState("");
+  const [primaryArea, setPrimaryArea] = React.useState(demo ? DEMO_SIGNUP.primaryArea : "");
+  const siteSlug = siteName
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 12);
+  const siteId = siteSlug ? `SITE-${siteSlug}` : "SITE-XXXX";
 
   /* Team */
-  const [invites, setInvites] = React.useState<InviteRow[]>([]);
+  const [invites, setInvites] = React.useState<InviteRow[]>(demo ? DEMO_SIGNUP.invites : []);
   const [inviteOpen, setInviteOpen] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
@@ -328,20 +381,69 @@ export default function SignUpPage({
     return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
   }
 
+  /* Each step's checks, shared by its Continue button and — when editing from review — its Back link. */
+  function accountError(): string | null {
+    if (firstName.trim().length < 1) return "Enter your first name.";
+    if (lastName.trim().length < 1) return "Enter your last name.";
+    if (departments.length === 0) return "Enter at least one department.";
+    if (!email.includes("@")) return "Enter a valid email address.";
+    // Password is checked on the account form only; when editing from review a blank one keeps the one already set.
+    if (step === "account" && !(editing && password === "")) {
+      if (password.length < 8) return "Password must be at least 8 characters.";
+      if (!isStrongPassword(password))
+        return "Choose a stronger password (mix upper/lowercase, numbers, or symbols).";
+      if (password !== confirmPw) return "Passwords don't match.";
+    }
+    if (!agreedTos) return "You must accept the Terms to continue.";
+    return null;
+  }
+
+  function paymentError(): string | null {
+    if (cardName.trim().length < 2) return "Enter the card holder name.";
+    if (cardNumber.replace(/\s/g, "").length < 13) return "Enter a valid card number.";
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) return "Expiry must be in MM/YY format.";
+    if (cvc.length < 3) return "Enter the security code.";
+    if (billingAddress.trim().length < 3) return "Enter a billing address.";
+    return null;
+  }
+
+  function siteError(): string | null {
+    if (siteName.trim().length < 2) return "Enter a site name.";
+    if (siteAddress.trim().length < 3) return "Enter a site address.";
+    if (primaryArea.trim().length < 2) return "Enter at least one area to start with.";
+    return null;
+  }
+
+  /* Move on to `next` — or, when the step was opened from review, back to review. */
+  function advance(next: WizardStep) {
+    setError(null);
+    if (editing) {
+      setEditing(false);
+      setStep("review");
+      return;
+    }
+    setStep(next);
+  }
+
+  /* Review → Edit: open a step in edit mode. */
+  function editStep(to: WizardStep, sub?: PlanSubStep) {
+    setError(null);
+    setEditing(true);
+    if (to === "account") setAccountSubStep("form");
+    if (to === "plan") {
+      setPlanSubStep(sub ?? "pick");
+      setPlanBefore({ picked, cycle, planChosen, total: totalDue });
+    }
+    setStep(to);
+  }
+
   function submitAccount(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (firstName.trim().length < 1) return setError("Enter your first name.");
-    if (lastName.trim().length < 1) return setError("Enter your last name.");
-    if (departments.length === 0) return setError("Enter at least one department.");
-    if (!email.includes("@")) return setError("Enter a valid email address.");
-    if (password.length < 8)
-      return setError("Password must be at least 8 characters.");
-    if (!isStrongPassword(password))
-      return setError("Choose a stronger password (mix upper/lowercase, numbers, or symbols).");
-    if (password !== confirmPw) return setError("Passwords don't match.");
-    if (!agreedTos)
-      return setError("You must accept the Terms to continue.");
+    const err = accountError();
+    if (err) return setError(err);
+    // Same address as before — no new code needed.
+    if (editing && email.trim() === verifiedEmail) return advance("plan");
     setOtpSending(true);
     setTimeout(() => {
       setOtpSending(false);
@@ -384,6 +486,8 @@ export default function SignUpPage({
     setError(null);
     if (otp.join("").length < 6)
       return setError("Enter the full 6-digit code.");
+    setVerifiedEmail(email.trim());
+    setOtp(["", "", "", "", "", ""]);
     const initials = fullName
       .split(/\s+/)
       .map((p) => p[0]?.toUpperCase() ?? "")
@@ -398,76 +502,77 @@ export default function SignUpPage({
       notificationCount: 0,
       orgName: "My Workspace",
     });
-    setStep("plan");
+    advance("plan");
     setPlanSubStep("pick");
   }
 
   function selectPlan() {
+    setError(null);
+    setPlanChosen(true);
+    // Editing from review with card details already in — no need to re-enter them.
+    if (editing && paymentError() === null) return advance("site");
     setPlanSubStep("payment");
   }
 
   function skipPlan() {
-    setError(null);
-    setStep("site");
+    setPlanChosen(false);
+    advance("site");
   }
 
+  /* Payment is only collected here; the card is charged on the review step. */
   function submitPayment(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (cardName.trim().length < 2)
-      return setError("Enter the card holder name.");
-    if (cardNumber.replace(/\s/g, "").length < 13)
-      return setError("Enter a valid card number.");
-    if (!/^\d{2}\/\d{2}$/.test(expiry))
-      return setError("Expiry must be in MM/YY format.");
-    if (cvc.length < 3) return setError("Enter the security code.");
-    if (billingAddress.trim().length < 3)
-      return setError("Enter a billing address.");
-    setPlanSubStep("review");
-  }
-
-  function confirmCheckout() {
-    setError(null);
-    if (!agreedCheckoutTos)
-      return setError("Please accept the Terms of Service and Privacy Policy to confirm checkout.");
-    // Same total as the review step's "Total due today".
-    const monthlyPerSite = cycle === "annual" ? Math.round(plan.pricePerYear / 12) : plan.pricePerMonth;
-    const totalDue = monthlyPerSite + additionalSeats * monthlyPerSeat;
-    const digits = cardNumber.replace(/\s/g, "");
-    const brand = digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card";
-    const fmtDay = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const renewal = new Date();
-    if (cycle === "annual") renewal.setFullYear(renewal.getFullYear() + 1);
-    else renewal.setMonth(renewal.getMonth() + 1);
-    setReceipt({
-      amount: `S$${totalDue.toLocaleString()}`,
-      planName: plan.name,
-      cycle,
-      card: `${brand} ···· ${digits.slice(-4)}`,
-      reference: `INV-${new Date().getFullYear()}-${String(totalDue).padStart(4, "0").slice(-4)}${digits.slice(-2)}`,
-      date: fmtDay(new Date()),
-      renews: fmtDay(renewal),
-      email: email.trim() || undefined,
-    });
-  }
-
-  function downloadInvoice(r: PaymentReceipt) {
-    toast.success("Invoice downloaded", { description: `${r.reference}.pdf · ${r.amount}` });
-  }
-
-  function continueAfterPayment() {
-    setReceipt(null);
-    setStep("site");
+    const err = paymentError();
+    if (err) return setError(err);
+    advance("site");
   }
 
   function submitSite(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (siteName.trim().length < 2) return setError("Enter a site name.");
-    if (siteAddress.trim().length < 3)
-      return setError("Enter a site address.");
-    if (primaryArea.trim().length < 2)
-      return setError("Enter at least one area to start with.");
+    const err = siteError();
+    if (err) return setError(err);
+    advance("team");
+  }
+
+  function submitTeam() {
+    setError(null);
+    setEditing(false);
+    setStep("review");
+  }
+
+  const monthlyPerSite = cycle === "annual" ? Math.round(plan.pricePerYear / 12) : plan.pricePerMonth;
+  const totalDue = planChosen ? monthlyPerSite + additionalSeats * monthlyPerSeat : 0;
+  /* Seats: the owner plus everyone invited, against what the chosen plan includes. */
+  const seatsUsed = 1 + invites.length;
+  const seatLimit = planChosen ? plan.seats : null;
+  const seatsOver = seatLimit === null ? 0 : Math.max(0, seatsUsed - seatLimit);
+
+  /* Review → Confirm Checkout: charge the card, create the site and subscription,
+     then land on the dashboard, which shows the welcome modal. */
+  function confirmCheckout() {
+    setError(null);
+    if (planChosen && !agreedCheckoutTos)
+      return setError("Please accept the Terms of Service and Privacy Policy to confirm checkout.");
+    // Re-check every step: an edit could have left one incomplete.
+    const broken = [accountError(), planChosen ? paymentError() : null, siteError()].find(Boolean);
+    if (broken) return setError(`${broken} Use Edit to fix it.`);
+    if (seatsOver > 0)
+      return setError(
+        `${plan.name} includes ${plan.seats} seat${plan.seats === 1 ? "" : "s"}. Remove ${seatsOver} member${seatsOver === 1 ? "" : "s"} or choose a bigger plan.`
+      );
+
+    setCheckingOut(true);
+    setTimeout(() => finishCheckout(), 900);
+  }
+
+  function finishCheckout() {
+    const now = new Date();
+    const fmtDay = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    const renewal = new Date(now);
+    if (cycle === "annual") renewal.setFullYear(renewal.getFullYear() + 1);
+    else renewal.setMonth(renewal.getMonth() + 1);
 
     const site = makeBlankSite(siteName.trim(), "#DD7224");
     site.address = siteAddress.trim();
@@ -476,7 +581,7 @@ export default function SignUpPage({
     site.description = siteDescription.trim() || undefined;
     site.areas = [
       {
-        id: `area-${Math.random().toString(36).slice(2, 6)}`,
+        id: `${site.id}-area-1`,
         name: primaryArea.trim(),
         color: "#DD7224",
         points: [],
@@ -485,29 +590,22 @@ export default function SignUpPage({
     site.status = "setup";
     addSite(site);
 
-    {
-      const now = new Date();
-      const renewsAt = new Date(now);
-      renewsAt.setFullYear(
-        now.getFullYear() + (cycle === "annual" ? 1 : 0)
-      );
-      if (cycle === "monthly") renewsAt.setMonth(now.getMonth() + 1);
+    let receipt: PaymentReceipt | undefined;
+    if (planChosen) {
       const seats = {
         owner: 1,
         admin: adminInvites,
         user: additionalSeats + includedFullSeats,
       };
       const monthlyCost =
-        (cycle === "annual"
-          ? Math.round(plan.pricePerYear / 12)
-          : plan.pricePerMonth) +
+        monthlyPerSite +
         seats.owner * SEAT_PRICING.owner.pricePerMonth +
         seats.admin * SEAT_PRICING.admin.pricePerMonth +
         seats.user * SEAT_PRICING.user.pricePerMonth;
       const fmt = (d: Date) =>
         `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("en-GB", { month: "short" })} ${d.getFullYear()}`;
       addSubscription({
-        id: `SUB-${now.getFullYear()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+        id: `SUB-${now.getFullYear()}-${site.id.replace(/-/g, "").slice(0, 4).toUpperCase()}`,
         siteId: site.id,
         siteName: site.name,
         planTier: CLOUD_PLAN_TO_TIER[picked],
@@ -516,12 +614,34 @@ export default function SignUpPage({
         seats,
         startedAt: now.toISOString().slice(0, 10),
         startedDisplay: fmt(now),
-        renewsAt: renewsAt.toISOString().slice(0, 10),
-        renewsDisplay: fmt(renewsAt),
+        renewsAt: renewal.toISOString().slice(0, 10),
+        renewsDisplay: fmt(renewal),
         monthlyCost,
       });
+      const digits = cardNumber.replace(/\s/g, "");
+      receipt = {
+        amount: `S$${totalDue.toLocaleString()}`,
+        planName: plan.name,
+        cycle,
+        card: `${cardBrand(digits)} ···· ${digits.slice(-4)}`,
+        reference: `INV-${now.getFullYear()}-${String(totalDue).padStart(4, "0").slice(-4)}${digits.slice(-2)}`,
+        date: fmtDay(now),
+        renews: fmtDay(renewal),
+        email: email.trim() || undefined,
+      };
     }
-    setStep("team");
+
+    setHasCreatedSite(true);
+    setHasActiveSubscription(true);
+    completeOnboarding();
+    const welcome: SignUpWelcome = {
+      firstName: firstName.trim(),
+      siteName: site.name,
+      invited: invites.length,
+      receipt,
+    };
+    setCheckingOut(false);
+    navigate("/", { replace: true, state: { signupWelcome: welcome } });
   }
 
   function sendInvites(emails: string[], role: InviteRole, departments: string[]) {
@@ -537,23 +657,6 @@ export default function SignUpPage({
       `Invited ${rows.length} ${rows.length === 1 ? "person" : "people"} as ${USER_ROLE_LABELS[role]}`
     );
   }
-  const [showComplete, setShowComplete] = React.useState(false);
-
-  function finish() {
-    setHasCreatedSite(true);
-    setHasActiveSubscription(true);
-    completeOnboarding();
-    toast.success(`Welcome to Accel, ${fullName.split(" ")[0] || "there"}! 🎉`, {
-      description: "Your workspace is ready.",
-    });
-    setShowComplete(true);
-  }
-
-  function enterDashboard() {
-    setShowComplete(false);
-    navigate("/", { replace: true });
-  }
-
   /* ── Back handler — context-aware ───────────────────────────────── */
   function goBack() {
     setError(null);
@@ -561,8 +664,18 @@ export default function SignUpPage({
       setAccountSubStep("form");
       return;
     }
-    if (step === "plan" && planSubStep === "review") {
-      setPlanSubStep("payment");
+    // Opened from review: go back to it, but only while the step is still valid.
+    if (editing) {
+      let err: string | null = null;
+      if (step === "account")
+        err = email.trim() !== verifiedEmail
+          ? "You changed your email. Continue to verify the new address, or change it back."
+          : accountError();
+      else if (step === "plan" && planSubStep === "payment") err = paymentError();
+      else if (step === "site") err = siteError();
+      if (err) return setError(err);
+      setEditing(false);
+      setStep("review");
       return;
     }
     if (step === "plan" && planSubStep === "payment") {
@@ -576,25 +689,37 @@ export default function SignUpPage({
     }
     if (step === "site") {
       setStep("plan");
-      setPlanSubStep("review");
+      setPlanSubStep(planChosen ? "payment" : "pick");
       return;
     }
     if (step === "team") {
       setStep("site");
       return;
     }
+    if (step === "review") {
+      setStep("team");
+      return;
+    }
     // step === account && form
     navigate("/signin");
   }
+
+  /* While a step is open from review, its Back link and primary button lead back there. */
+  const backLabel = editing ? "Back to review" : undefined;
+  const saveLabel = "Save & return to review";
 
   /* ── Step 1: Account form ───────────────────────────────────────── */
   if (step === "account" && accountSubStep === "form") {
     return (
       <WizardShell onCancel={() => navigate("/signin")} currentStep="account">
-        <BackLink onClick={goBack} label="Back to sign in" />
+        <BackLink onClick={goBack} label={backLabel ?? "Back to sign in"} />
         <Heading
-          title="Create your account"
-          subtitle="Start a free 30-day trial. No credit card needed yet."
+          title={editing ? "Edit your account" : "Create your account"}
+          subtitle={
+            editing
+              ? "Changing your work email sends a new verification code."
+              : "Start a free 30-day trial. No credit card needed yet."
+          }
         />
         <form data-slot="sign-up-page-account-form" onSubmit={submitAccount} className="mt-7 space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -697,16 +822,7 @@ export default function SignUpPage({
           {error && <ErrorBox message={error} />}
           <Button
             type="submit"
-            disabled={
-              otpSending ||
-              firstName.trim().length < 1 ||
-              lastName.trim().length < 1 ||
-              departments.length === 0 ||
-              !email.includes("@") ||
-              !isStrongPassword(password) ||
-              password !== confirmPw ||
-              !agreedTos
-            }
+            disabled={otpSending || accountError() !== null}
             className="h-10 w-full gap-2 text-base"
           >
             {otpSending ? (
@@ -715,12 +831,13 @@ export default function SignUpPage({
               </>
             ) : (
               <>
-                Continue <ArrowRight className="size-3.5" />
+                {editing ? (email.trim() === verifiedEmail ? saveLabel : "Save & verify email") : "Continue"}{" "}
+                <ArrowRight className="size-3.5" />
               </>
             )}
           </Button>
         </form>
-        <p data-slot="sign-up-page-footer" className="mt-6 text-center text-sm text-muted-foreground">
+        {!editing && <p data-slot="sign-up-page-footer" className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
             to="/signin"
@@ -728,7 +845,7 @@ export default function SignUpPage({
           >
             Sign in
           </Link>
-        </p>
+        </p>}
       </WizardShell>
     );
   }
@@ -796,7 +913,7 @@ export default function SignUpPage({
   if (step === "plan" && planSubStep === "pick") {
     return (
       <WizardShell wide onCancel={() => navigate("/signin")} currentStep="plan">
-        <BackLink onClick={goBack} />
+        <BackLink onClick={goBack} label={backLabel} />
         <Heading
           title="Select a Plan"
           subtitle="Pick the plan that fits your needs. Upgrade or add seats any time."
@@ -955,7 +1072,7 @@ export default function SignUpPage({
             Skip
           </Button>
           <Button onClick={selectPlan} className="h-10 gap-2 px-8 text-base">
-            Select this Plan <ArrowRight className="size-3.5" />
+            {editing && paymentError() === null ? saveLabel : "Select this Plan"} <ArrowRight className="size-3.5" />
           </Button>
         </div>
       </WizardShell>
@@ -964,16 +1081,12 @@ export default function SignUpPage({
 
   /* ── Step 2b: Payment ───────────────────────────────────────────── */
   if (step === "plan" && planSubStep === "payment") {
-    const monthlyPerSite =
-      cycle === "annual"
-        ? Math.round(plan.pricePerYear / 12)
-        : plan.pricePerMonth;
     return (
       <WizardShell wide onCancel={() => navigate("/signin")} currentStep="plan">
-        <BackLink onClick={goBack} />
+        <BackLink onClick={goBack} label={backLabel} />
         <Heading
           title="Enter your payment details"
-          subtitle="We'll securely save these for future renewals."
+          subtitle="You won't be charged yet. You'll confirm payment on the review step at the end."
         />
         <form data-slot="sign-up-page-payment-form"
           onSubmit={submitPayment}
@@ -1137,7 +1250,7 @@ export default function SignUpPage({
               </span>
             </div>
             <p className="mt-1 text-2xs text-muted-foreground">
-              Total (incl. taxes) in next step.
+              Total (incl. taxes) and checkout on the review step.
             </p>
           </div>
 
@@ -1149,7 +1262,7 @@ export default function SignUpPage({
 
           <div className="flex items-center justify-end gap-2 lg:col-span-2">
             <Button type="submit" className="h-10 gap-1.5 text-base">
-              Next: Review & Pay <ArrowRight className="size-3.5" />
+              {editing ? saveLabel : "Continue"} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </form>
@@ -1157,151 +1270,11 @@ export default function SignUpPage({
     );
   }
 
-  /* ── Step 2c: Review ────────────────────────────────────────────── */
-  if (step === "plan" && planSubStep === "review") {
-    const monthlyPerSite =
-      cycle === "annual"
-        ? Math.round(plan.pricePerYear / 12)
-        : plan.pricePerMonth;
-    const totalDue = monthlyPerSite + additionalSeats * monthlyPerSeat;
-    return (
-      <WizardShell wide onCancel={() => navigate("/signin")} currentStep="plan">
-        <BackLink onClick={goBack} />
-        <Heading
-          title="Let's make sure everything looks right"
-          subtitle="Review your subscription before we activate it."
-        />
-        <div data-slot="sign-up-page-review" className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
-          <div className="rounded-lg border border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-base font-bold text-foreground">Details</p>
-              <Button
-                variant="link"
-                onClick={() => setPlanSubStep("payment")}
-                className="h-auto gap-1 border-0 p-0 text-sm font-semibold text-primary-ink underline-offset-auto hover:underline"
-              >
-                <Pencil className="size-3" /> Edit Details
-              </Button>
-            </div>
-            <dl className="grid grid-cols-2 gap-3 text-base">
-              <ReviewRow
-                label="Organization"
-                value={fullName ? `${fullName}'s Workspace` : "My Workspace"}
-              />
-              <ReviewRow
-                label="Card Number"
-                value={
-                  cardNumber.length > 0
-                    ? `XXXX XXXX XXXX ${cardNumber.slice(-4)}`
-                    : "—"
-                }
-              />
-              <ReviewRow label="Card Holder Name" value={cardName || "—"} />
-              <ReviewRow
-                label="Billing Address"
-                value={billingAddress || "—"}
-              />
-              <ReviewRow
-                label="Apt, Unit, Suite"
-                value={billingApt || "N/A"}
-              />
-              <ReviewRow label="Country" value={country} />
-            </dl>
-          </div>
-
-          <div className="self-start rounded-lg border border-border/60 bg-card/40 p-6 backdrop-blur-sm">
-            <p className="mb-4 text-base font-bold text-foreground">
-              Overview
-            </p>
-            <div className="space-y-2.5 text-sm">
-              <Line label="1 Owner seat (included)" value="Free" success />
-              <Line
-                label={`${plan.name} plan`}
-                value={plan.free ? "Free" : `S$${monthlyPerSite.toLocaleString()}`}
-                success={plan.free}
-              />
-              {additionalSeats > 0 && (
-                <Line
-                  label={`${additionalSeats} additional seat${additionalSeats === 1 ? "" : "s"}`}
-                  value={`S$${(additionalSeats * monthlyPerSeat).toLocaleString()}`}
-                />
-              )}
-              <div className="flex justify-between border-t border-border/60 pt-2.5">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-mono text-foreground">
-                  S${totalDue.toLocaleString()}
-                </span>
-              </div>
-              <Line label="Tax (0%)" value="S$0.00" />
-              <div className="flex justify-between border-t border-border/60 pt-2.5 text-base font-bold">
-                <span className="text-foreground">Total due today</span>
-                <span className="font-mono text-foreground">
-                  S${totalDue.toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <div className="mt-4 space-y-2.5">
-              <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <Checkbox
-                  checked={autoRenew}
-                  onCheckedChange={(c) => setAutoRenew(c === true)}
-                  className="mt-0.5 size-3.5"
-                />
-                <span>
-                  Auto-renewal of subscription. Your subscription will renew
-                  based on your selected billing cycle.
-                </span>
-              </label>
-              <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <Checkbox
-                  checked={agreedCheckoutTos}
-                  onCheckedChange={(c) => setAgreedCheckoutTos(c === true)}
-                  className="mt-0.5 size-3.5"
-                />
-                <span>
-                  I agree to{" "}
-                  <a href="#" className="text-primary-ink underline">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="text-primary-ink underline">
-                    Privacy Policy
-                  </a>
-                  .
-                </span>
-              </label>
-            </div>
-            {error && (
-              <div className="mt-2">
-                <ErrorBox message={error} />
-              </div>
-            )}
-            <Button
-              onClick={confirmCheckout}
-              className="mt-4 h-10 w-full gap-1.5 text-base"
-            >
-              <CreditCard className="size-3.5" />
-              Confirm Checkout
-            </Button>
-          </div>
-        </div>
-        <PaymentSuccessModal receipt={receipt} onContinue={continueAfterPayment} onDownloadInvoice={downloadInvoice} continueLabel="Continue to site setup" />
-      </WizardShell>
-    );
-  }
-
   /* ── Step 3: Site info ──────────────────────────────────────────── */
   if (step === "site") {
-    const siteSlug = siteName
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 12);
-    const siteId = siteSlug ? `SITE-${siteSlug}` : "SITE-XXXX";
     return (
       <WizardShell onCancel={() => navigate("/signin")} currentStep="site">
-        <BackLink onClick={goBack} />
+        <BackLink onClick={goBack} label={backLabel} />
         <Heading
           title="Create your first site"
           subtitle="A site is a physical location with cameras. You can add more later."
@@ -1332,7 +1305,7 @@ export default function SignUpPage({
               className="h-10 pl-9 text-base"
             />
           </Field>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Timezone
@@ -1354,7 +1327,7 @@ export default function SignUpPage({
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <Clock className="size-3" /> Operating Hours
               </label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <TimeSelect
                   value={opFrom}
                   onChange={setOpFrom}
@@ -1393,7 +1366,7 @@ export default function SignUpPage({
           </div>
           {error && <ErrorBox message={error} />}
           <Button type="submit" className="h-10 w-full gap-1.5 text-base">
-            Continue <ArrowRight className="size-3.5" />
+            {editing ? saveLabel : "Continue"} <ArrowRight className="size-3.5" />
           </Button>
         </form>
       </WizardShell>
@@ -1499,11 +1472,28 @@ export default function SignUpPage({
         headClassName: "",
         cell: (row) => USER_ROLE_DESCRIPTIONS[row.kind === "owner" ? "owner" : row.role],
       },
+      {
+        key: "actions",
+        header: <span className="sr-only">Actions</span>,
+        headClassName: "w-10",
+        cell: (row) =>
+          row.kind === "owner" ? null : (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setInvites((curr) => curr.filter((i) => i.id !== row.id))}
+              aria-label={`Remove ${row.email}`}
+              className="text-muted-foreground hover:text-severity-critical"
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          ),
+      },
     ];
 
     return (
       <WizardShell wide onCancel={() => navigate("/signin")} currentStep="team">
-        <BackLink onClick={goBack} />
+        <BackLink onClick={goBack} label={backLabel} />
         <Heading
           title="Invite your team to collaborate"
           subtitle="Choose the type of access each team member will need. You can adjust later."
@@ -1541,9 +1531,9 @@ export default function SignUpPage({
           </div>
 
           <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-end gap-2 border-t border-border bg-card px-4 py-3.5">
-            <Button onClick={finish} className="h-10 gap-1.5">
-              <CheckCircle2 className="size-3.5" />
-              Finish & Enter Dashboard
+            <Button onClick={submitTeam} className="h-10 gap-1.5">
+              {editing ? saveLabel : "Continue to review"}
+              <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>
@@ -1555,17 +1545,420 @@ export default function SignUpPage({
           siteName={siteName}
           currentInvites={invites}
         />
+      </WizardShell>
+    );
+  }
 
-        <SetupCompleteModal
-          open={showComplete}
-          onEnter={enterDashboard}
-          workspaceName={siteName || undefined}
+  /* ── Step 5: Review & checkout ──────────────────────────────────── */
+  if (step === "review") {
+    const digits = cardNumber.replace(/\s/g, "");
+    const tzLabel = TIMEZONES.find((tz) => tz.value === timezone)?.label ?? timezone;
+    const PlanIcon = PLAN_ICONS[picked];
+    const billingLines = [
+      [billingAddress, billingApt].filter(Boolean).join(", "),
+      [city, postalCode].filter(Boolean).join(" "),
+      country,
+    ].filter(Boolean);
+
+    /* Members table: the owner first, then invites. The owner takes the first seat,
+       so invites past the plan's limit are flagged. */
+    const reviewMemberRows: MemberTableRow[] = [
+      { kind: "owner", id: "__owner" },
+      ...invites.map((inv): MemberTableRow => ({ ...inv, kind: "invite" })),
+    ];
+    const overLimitIds = new Set(
+      seatLimit === null ? [] : invites.filter((_, i) => i + 2 > seatLimit).map((inv) => inv.id)
+    );
+    const reviewMemberColumns: DataTableColumn<MemberTableRow>[] = [
+      {
+        key: "member",
+        header: "MEMBER",
+        cell: (row) => (
+          <div className="min-w-0">
+            <TruncatedText
+              text={row.kind === "owner" ? `${fullName || "You"} (You)` : row.email.split("@")[0]}
+              className="text-sm font-semibold text-foreground"
+            />
+            <TruncatedText text={row.kind === "owner" ? email : row.email} className="text-xs text-muted-foreground" />
+          </div>
+        ),
+      },
+      {
+        key: "role",
+        header: "ROLE",
+        align: "right",
+        cell: (row) => (
+          <div className="flex items-center justify-end gap-1.5">
+            {overLimitIds.has(row.id) && (
+              <StatusBadge tone="warning" dot={false} className="gap-1 px-2">
+                <TriangleAlert className="size-3" /> Over limit
+              </StatusBadge>
+            )}
+            <RoleBadge role={row.kind === "owner" ? "owner" : row.role} />
+          </div>
+        ),
+      },
+    ];
+
+    /* What changed since Plan → Edit was pressed, for the notice above the heading. */
+    const before = planBefore;
+    const planChanged =
+      !!before && (before.picked !== picked || before.cycle !== cycle || before.planChosen !== planChosen);
+    const cycleName = (c: "monthly" | "annual") => (c === "annual" ? "Annual" : "Monthly");
+    let notice: { title: string; detail: string } | null = null;
+    if (before && planChanged) {
+      const beforePlan = getCloudPlan(before.picked);
+      const beforeName = before.planChosen ? beforePlan.name : "Free trial";
+      const afterName = planChosen ? plan.name : "Free trial";
+      const title =
+        beforeName !== afterName
+          ? `Plan changed · ${beforeName} → ${afterName}`
+          : `Billing changed · ${cycleName(before.cycle)} → ${cycleName(cycle)}`;
+      const beforeLimit = before.planChosen ? beforePlan.seats : null;
+      const seatsText =
+        seatLimit === null
+          ? "You'll start on the free trial and can subscribe any time from Billing."
+          : seatsOver > 0
+            ? `${afterName} includes ${seatLimit} seat${seatLimit === 1 ? "" : "s"}, but your team has ${seatsUsed}. Remove ${seatsOver} member${seatsOver === 1 ? "" : "s"} or choose a bigger plan before checking out.`
+            : `Your team now has ${seatLimit} seat${seatLimit === 1 ? "" : "s"} (${seatsUsed} in use)${beforeLimit !== null && beforeLimit !== seatLimit ? `, was ${beforeLimit}` : ""}.`;
+      const totalText =
+        before.total !== totalDue
+          ? ` Total due today S$${before.total.toLocaleString()} → S$${totalDue.toLocaleString()}.`
+          : "";
+      notice = { title, detail: seatsText + totalText };
+    }
+
+    return (
+      <WizardShell wide onCancel={() => navigate("/signin")} currentStep="review">
+        <BackLink onClick={goBack} />
+        {notice && (
+          <Banner
+            data-slot="sign-up-page-plan-change-alert"
+            tone={seatsOver > 0 ? "warning" : "info"}
+            title={notice.title}
+            action={
+              seatsOver > 0 ? (
+                <Button variant="outline" size="sm" onClick={() => editStep("team")} className="h-8 text-sm">
+                  Edit members
+                </Button>
+              ) : undefined
+            }
+            onDismiss={() => setPlanBefore(null)}
+            dismissLabel="Dismiss plan change notice"
+            className="mb-5"
+          >
+            {notice.detail}
+          </Banner>
+        )}
+        <Heading
+          title="Review and confirm"
+          subtitle="Check everything before we activate your workspace. Use Edit to change a section, then come back here to check out."
         />
+        <div data-slot="sign-up-page-review" className="mt-6 grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_340px]">
+          {/* On wide screens only the sections scroll; the checkout panel stays put beside them. */}
+          <div
+            data-slot="sign-up-page-review-sections"
+            className={cn(
+              "space-y-3 lg:overflow-y-auto lg:overscroll-contain lg:pr-2",
+              notice ? "lg:max-h-[calc(100vh-21rem)]" : "lg:max-h-[calc(100vh-16rem)]"
+            )}
+          >
+            <ReviewSection title="Account" icon={CircleUser} onEdit={() => editStep("account")}>
+              <DescriptionList columns={2}>
+                <DescriptionItem label="Name">{fullName || "—"}</DescriptionItem>
+                <DescriptionItem label="Department">{departments.join(", ") || "—"}</DescriptionItem>
+                <DescriptionItem label="Work email">
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    {email || "—"}
+                    {email && email.trim() === verifiedEmail && (
+                      <StatusBadge tone="success" dot={false} className="gap-1 px-2">
+                        <Check className="size-3" strokeWidth={3} /> Verified
+                      </StatusBadge>
+                    )}
+                  </span>
+                </DescriptionItem>
+                <DescriptionItem label="Phone" mono>
+                  {phoneNumber ? `${dialCode} ${phoneNumber}` : "—"}
+                </DescriptionItem>
+              </DescriptionList>
+            </ReviewSection>
+
+            <ReviewSection title="Plan" icon={PlanIcon} onEdit={() => editStep("plan", "pick")}>
+              {planChosen ? (
+                <DescriptionList columns={2}>
+                  <DescriptionItem label="Plan">{plan.name}</DescriptionItem>
+                  <DescriptionItem label="Billing cycle">
+                    {cycle === "annual" ? "Annual (save 17%)" : "Monthly"}
+                  </DescriptionItem>
+                  <DescriptionItem label="Price" mono>
+                    {plan.free
+                      ? "Free"
+                      : cycle === "annual"
+                        ? `S$${plan.pricePerYear.toLocaleString()} / year per site`
+                        : `S$${plan.pricePerMonth.toLocaleString()} / month per site`}
+                  </DescriptionItem>
+                  <DescriptionItem label="Auto-renew">{autoRenew ? "On" : "Off"}</DescriptionItem>
+                </DescriptionList>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No plan selected. You'll start on the free trial and can subscribe any time from Billing.
+                </p>
+              )}
+            </ReviewSection>
+
+            {planChosen && (
+              <ReviewSection title="Payment" icon={CreditCard} onEdit={() => editStep("plan", "payment")}>
+                <DescriptionList columns={2}>
+                  <DescriptionItem label="Card" mono>
+                    {digits ? `${cardBrand(digits)} ···· ${digits.slice(-4)}` : "—"}
+                  </DescriptionItem>
+                  <DescriptionItem label="Expires" mono>{expiry || "—"}</DescriptionItem>
+                  <DescriptionItem label="Card holder">{cardName || "—"}</DescriptionItem>
+                  <DescriptionItem label="Billing address">{billingLines.join(" · ") || "—"}</DescriptionItem>
+                </DescriptionList>
+              </ReviewSection>
+            )}
+
+            <ReviewSection title="Site" icon={Building2} onEdit={() => editStep("site")}>
+              <DescriptionList columns={2}>
+                <DescriptionItem label="Site name">{siteName || "—"}</DescriptionItem>
+                <DescriptionItem label="Site ID" mono>{siteId}</DescriptionItem>
+                <DescriptionItem label="Address" wide>{siteAddress || "—"}</DescriptionItem>
+                <DescriptionItem label="Timezone">{tzLabel}</DescriptionItem>
+                <DescriptionItem label="Operating hours" mono>{`${opFrom} – ${opTo}`}</DescriptionItem>
+                <DescriptionItem label="Primary area">{primaryArea || "—"}</DescriptionItem>
+                {siteDescription.trim() && (
+                  <DescriptionItem label="Description" wide>{siteDescription.trim()}</DescriptionItem>
+                )}
+              </DescriptionList>
+            </ReviewSection>
+
+            <ReviewSection
+              title="Members"
+              description={
+                seatLimit === null
+                  ? `${seatsUsed} seat${seatsUsed === 1 ? "" : "s"} · invitations go out when you confirm`
+                  : `${seatsUsed} of ${seatLimit} seats used on ${plan.name} · invitations go out when you confirm`
+              }
+              icon={Users}
+              onEdit={() => editStep("team")}
+              flushBody
+              tone={seatsOver > 0 ? "warning" : planChanged ? "info" : undefined}
+              badge={
+                seatsOver > 0 ? (
+                  <StatusBadge tone="warning">{seatsOver} over limit</StatusBadge>
+                ) : planChanged ? (
+                  <StatusBadge tone="info">Updated for {planChosen ? plan.name : "free trial"}</StatusBadge>
+                ) : undefined
+              }
+            >
+              {seatLimit !== null && (
+                <div data-slot="sign-up-page-review-seats" className="px-4 pt-3">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Seats</span>
+                    <span className={cn("font-mono font-semibold", seatsOver > 0 ? "text-warning" : "text-foreground")}>
+                      {seatsUsed} / {seatLimit}
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(100, (seatsUsed / seatLimit) * 100)}
+                    aria-label={`${seatsUsed} of ${seatLimit} seats used`}
+                    className={cn(
+                      "h-1.5",
+                      seatsOver > 0 && "bg-warning/20 *:data-[slot=progress-indicator]:bg-warning"
+                    )}
+                  />
+                </div>
+              )}
+              <DataTable
+                variant="list"
+                className="mt-1"
+                columns={reviewMemberColumns}
+                data={reviewMemberRows}
+                getRowId={(row) => row.id}
+                getRowClassName={(row) => (overLimitIds.has(row.id) ? "bg-warning/5" : undefined)}
+              />
+            </ReviewSection>
+          </div>
+
+          <SectionCard
+            data-slot="sign-up-page-checkout"
+            title="Checkout"
+            headingLevel={2}
+            className="border-border/60 bg-card/40 backdrop-blur-sm"
+          >
+            {planChosen ? (
+              <>
+                <DescriptionList layout="inline">
+                  <DescriptionItem label="1 Owner seat (included)">
+                    <span className="text-success">Free</span>
+                  </DescriptionItem>
+                  <DescriptionItem label={`${plan.name} plan${cycle === "annual" ? " (annual)" : ""}`} mono>
+                    {plan.free ? (
+                      <span className="text-success">Free</span>
+                    ) : (
+                      `S$${monthlyPerSite.toLocaleString()}`
+                    )}
+                  </DescriptionItem>
+                  {additionalSeats > 0 && (
+                    <DescriptionItem
+                      label={`${additionalSeats} additional seat${additionalSeats === 1 ? "" : "s"}`}
+                      mono
+                    >
+                      {`S$${(additionalSeats * monthlyPerSeat).toLocaleString()}`}
+                    </DescriptionItem>
+                  )}
+                  <DescriptionItem label="Subtotal" mono>{`S$${totalDue.toLocaleString()}`}</DescriptionItem>
+                  <DescriptionItem label="Tax (0%)" mono>S$0.00</DescriptionItem>
+                  <DescriptionItem
+                    label={<span className="text-base font-bold text-foreground">Total due today</span>}
+                  >
+                    <span className="font-mono text-base font-bold">{`S$${totalDue.toLocaleString()}`}</span>
+                  </DescriptionItem>
+                </DescriptionList>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CreditCard className="size-3.5" />
+                  Charged to {digits ? `${cardBrand(digits)} ···· ${digits.slice(-4)}` : "your card"}
+                </p>
+              </>
+            ) : (
+              <DescriptionList layout="inline">
+                <DescriptionItem label="Free trial">
+                  <span className="text-success">S$0</span>
+                </DescriptionItem>
+                <DescriptionItem label={<span className="text-base font-bold text-foreground">Due today</span>}>
+                  <span className="font-mono text-base font-bold">S$0</span>
+                </DescriptionItem>
+              </DescriptionList>
+            )}
+            {planChosen && (
+              <div className="mt-4 space-y-2.5">
+                <Label className="items-start text-xs leading-normal font-normal text-muted-foreground">
+                  <Checkbox
+                    checked={autoRenew}
+                    onCheckedChange={(c) => setAutoRenew(c === true)}
+                    className="mt-0.5 size-3.5"
+                  />
+                  <span>
+                    Auto-renewal of subscription. Your subscription will renew based on your selected billing cycle.
+                  </span>
+                </Label>
+                <Label className="items-start text-xs leading-normal font-normal text-muted-foreground">
+                  <Checkbox
+                    checked={agreedCheckoutTos}
+                    onCheckedChange={(c) => setAgreedCheckoutTos(c === true)}
+                    className="mt-0.5 size-3.5"
+                  />
+                  <span>
+                    I agree to{" "}
+                    <a href="#" className="text-primary-ink underline">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="#" className="text-primary-ink underline">
+                      Privacy Policy
+                    </a>
+                    .
+                  </span>
+                </Label>
+              </div>
+            )}
+            {seatsOver > 0 && (
+              <p className="mt-3 flex items-start gap-1.5 text-xs text-warning">
+                <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
+                Remove {seatsOver} member{seatsOver === 1 ? "" : "s"} or choose a bigger plan to check out.
+              </p>
+            )}
+            {error && (
+              <div className="mt-3">
+                <ErrorBox message={error} />
+              </div>
+            )}
+            <Button
+              onClick={confirmCheckout}
+              disabled={checkingOut || seatsOver > 0 || (planChosen && !agreedCheckoutTos)}
+              className="mt-4 h-10 w-full gap-1.5 text-base"
+            >
+              {checkingOut ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  {planChosen ? "Processing payment…" : "Setting up…"}
+                </>
+              ) : planChosen ? (
+                <>
+                  <CreditCard className="size-3.5" />
+                  Confirm checkout · S${totalDue.toLocaleString()}
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-3.5" />
+                  Finish setup
+                </>
+              )}
+            </Button>
+          </SectionCard>
+        </div>
       </WizardShell>
     );
   }
 
   return null;
+}
+
+/** One section of the review page: what was entered on a step, with an Edit button back to it. */
+function ReviewSection({
+  title,
+  description,
+  icon: Icon,
+  onEdit,
+  tone,
+  badge,
+  flushBody,
+  children,
+}: {
+  title: string;
+  description?: string;
+  icon: React.ElementType;
+  onEdit: () => void;
+  /** No body padding — for a table that runs edge to edge. */
+  flushBody?: boolean;
+  /** Outline the section when something elsewhere changed it (e.g. a plan change). */
+  tone?: "info" | "warning";
+  badge?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <SectionCard
+      size="sm"
+      headingLevel={2}
+      flushBody={flushBody}
+      title={
+        <span className="inline-flex items-center gap-2">
+          <Icon className="size-4 text-muted-foreground" />
+          {title}
+          {badge}
+        </span>
+      }
+      description={description}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
+          aria-label={`Edit ${title.toLowerCase()}`}
+          className="h-8 gap-1.5 text-sm"
+        >
+          <Pencil className="size-3.5" /> Edit
+        </Button>
+      }
+      className={cn(
+        "bg-card/40 backdrop-blur-sm",
+        tone === "warning" ? "border-warning/40" : tone === "info" ? "border-info/40" : "border-border/60"
+      )}
+    >
+      {children}
+    </SectionCard>
+  );
 }
 
 /* ── Helpers ────────────────────────────────────────────────────────── */
@@ -1761,31 +2154,15 @@ function EyeToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
+/** A form error under the fields — the design system's Banner, compact. */
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-severity-critical/30 bg-severity-critical/[0.08] px-3 py-2 text-sm text-severity-critical">
-      <AlertCircle className="size-3.5 flex-shrink-0" />
+    <Banner tone="critical" size="sm">
       {message}
-    </div>
+    </Banner>
   );
 }
 
-function ReviewRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div>
-      <dt className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-base text-foreground">{value}</dd>
-    </div>
-  );
-}
 
 function Line({
   label,

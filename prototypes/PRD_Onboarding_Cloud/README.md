@@ -5,8 +5,16 @@ from sign-in through site creation and subscription to the dashboard. Renders th
 real auth pages full-screen (no app shell), with a floating dev **Screen** jumper.
 
 ```
-Sign In / Sign Up / Forgot Pw  →  Create Site  →  Choose Plan  →  Payment  →  Done (dashboard)
+Sign Up → Verify email → Choose Plan → Payment details → Create Site → Invite Team
+        → Review & Checkout → Dashboard (welcome modal)
 ```
+
+Nothing is charged or created until **Review & Checkout**. The review page lists
+every step's answers with an **Edit** button per section; editing opens that step
+with "Save & return to review" / "Back to review", so the user comes straight back.
+Changing the work email asks for a new verification code. Skipping the plan step
+drops the Payment section and turns checkout into **Finish setup** (free trial).
+Confirming lands on the real dashboard, which shows the welcome modal once.
 
 ## Run
 
@@ -20,7 +28,8 @@ Open the printed URL and pick **PRD_Onboarding_Cloud** (served at
 ## Dev tester (bottom-right, low opacity, reveals on hover)
 
 - **Screen** — jump to any screen: Sign In · Verify · **Suspended** · Sign Up ·
-  Forgot Pw · Choose Plan · Payment · Create Site · Members. You can also walk
+  Forgot Pw · Choose Plan · Payment · Create Site · Members · Review (opens with
+  demo answers filled in). You can also walk
   the flow naturally with each page's own buttons.
 - **Async** — `Live` (real page) · `Loading` (spinner preview) · `Error` (failure
   preview) for the flow's async actions (sign-in, payment).

@@ -6,6 +6,9 @@ Every pull request that changes `packages/ui/` adds a line under **Unreleased** 
 
 ## [Unreleased]
 
+### Added
+- **Banner** (shared): inline page or form message — `tone` info · success · warning · critical, `size` default · sm, optional `title`, `action` and `onDismiss`. Critical banners use `role="alert"`, the rest `role="status"`. Use it instead of hand-built tinted alert strips.
+
 ## [1.1.0] — 2026-11-16
 
 Backwards compatible: new spacing tokens and a SectionCard prop, plus accessibility fixes. Nothing to change in your code.

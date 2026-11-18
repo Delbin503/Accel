@@ -3,6 +3,8 @@ export { TruncatedText } from "./TruncatedText";
 export { StatusBadge } from "./StatusBadge";
 export { statusBadgeVariants } from "./status-badge-variants";
 export type { StatusBadgeProps } from "./StatusBadge";
+export { Banner } from "./Banner";
+export type { BannerProps } from "./Banner";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 export { SectionCard } from "./SectionCard";

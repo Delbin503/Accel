@@ -10,7 +10,8 @@ export type CloudScreen =
   | "plan"
   | "payment"
   | "site"
-  | "members";
+  | "members"
+  | "review";
 
 /**
  * The suspended screen reads who suspended the account and why off router
@@ -39,6 +40,7 @@ export const CLOUD_SCREENS: { key: CloudScreen; label: string; path: string; sta
   { key: "payment",   label: "Payment",     path: "/signup/payment" },
   { key: "site",      label: "Create Site", path: "/signup/site" },
   { key: "members",   label: "Members",     path: "/signup/team" },
+  { key: "review",    label: "Review",      path: "/signup/review" },
 ];
 
 export type AsyncMode = "idle" | "loading" | "error";

@@ -33,6 +33,7 @@
       "tooltip"
     ],
     "shared": [
+      "Banner",
       "ChoiceDropdown",
       "ConfirmDialog",
       "DataTable",

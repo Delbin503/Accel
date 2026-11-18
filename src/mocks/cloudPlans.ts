@@ -13,6 +13,8 @@ export interface CloudPlan {
   pricePerMonth: number;
   /** Per-site annual price in SGD (≈ 2 months free). 0 for the free tier. */
   pricePerYear: number;
+  /** Seats the plan includes, owner counted — matches the seat line in `features`. */
+  seats: number;
   free?: boolean;
   trialDays?: number;
   /** Small print rendered under the price on the free tier. */
@@ -28,6 +30,7 @@ export const CLOUD_PLANS: CloudPlan[] = [
     tagline: "Evaluation / proof of concept",
     pricePerMonth: 0,
     pricePerYear: 0,
+    seats: 1,
     free: true,
     trialDays: 14,
     footnote: "No credit card required · +14 days when you refer 3 users",
@@ -46,6 +49,7 @@ export const CLOUD_PLANS: CloudPlan[] = [
     tagline: "For a single small site",
     pricePerMonth: 599,
     pricePerYear: 5_990,
+    seats: 5,
     features: [
       "1 site · up to 10 cameras",
       "5 seats (1 owner + 4)",
@@ -62,6 +66,7 @@ export const CLOUD_PLANS: CloudPlan[] = [
     tagline: "For multi-site operations",
     pricePerMonth: 2_499,
     pricePerYear: 24_990,
+    seats: 15,
     highlight: true,
     features: [
       "Up to 5 sites · 50 cameras",

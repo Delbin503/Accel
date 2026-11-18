@@ -1,5 +1,6 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { SignUpWelcomeModal, type SignUpWelcome } from "@/pages/auth/SignUpWelcomeModal";
 import { toast } from "sonner";
 import { BarChart, LineChart } from "@accel/ui/components/charts";
 import {
@@ -17,9 +18,9 @@ import {
   Power,
   Video,
   TriangleAlert,
-  X,
 } from "lucide-react";
 import { PageHeader } from "@accel/ui/components/layout/PageHeader";
+import { Banner } from "@accel/ui/components/shared/Banner";
 import { Button } from "@accel/ui/components/ui/button";
 import { ItemButton } from "@accel/ui/components/ui/item";
 import { SegmentedControl, SegmentedControlItem } from "@accel/ui/components/ui/segmented-control";
@@ -274,6 +275,13 @@ function shiftDate(iso: string, days: number) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  /* Sign-up's Review & Checkout lands here with router state; show the welcome once. */
+  const signupWelcome = (location.state as { signupWelcome?: SignUpWelcome } | null)?.signupWelcome;
+  function closeWelcome() {
+    // Clear the state so a reload or back-navigation doesn't show it again.
+    navigate(location.pathname, { replace: true, state: null });
+  }
   const cameras = useCamerasStore((s) => s.cameras);
   const sites = useSitesStore((s) => s.sites);
 
@@ -489,44 +497,26 @@ export default function DashboardPage() {
 
   return (
     <div data-slot="dashboard-page" className="flex flex-col gap-section">
+      {signupWelcome && (
+        <SignUpWelcomeModal
+          open
+          welcome={signupWelcome}
+          onClose={closeWelcome}
+          onDownloadInvoice={(r) => toast.success("Invoice downloaded", { description: `${r.reference}.pdf · ${r.amount}` })}
+        />
+      )}
       {showAlertBanner && worstHealth && (
-        <div data-slot="dashboard-page-alert"
-          className={cn(
-            "flex items-center gap-3 rounded-xl border px-4 py-3",
-            alertCritical
-              ? "border-severity-critical/40 bg-severity-critical/[0.06]"
-              : "border-warning/40 bg-warning/[0.06]"
-          )}
+        <Banner
+          data-slot="dashboard-page-alert"
+          tone={alertCritical ? "critical" : "warning"}
+          icon={TriangleAlert}
+          title={`Alert · ${worstHealth.label} running ${worstHealth.tone === "crit" ? "critical" : "slow"}`}
+          onDismiss={() => setAlertAcknowledged(true)}
+          dismissLabel="Dismiss alert"
         >
-          <TriangleAlert
-            className={cn(
-              "size-4 flex-shrink-0",
-              alertCritical ? "text-severity-critical" : "text-warning"
-            )}
-          />
-          <div className="min-w-0 flex-1 text-base">
-            <span
-              className={cn(
-                "font-semibold",
-                alertCritical ? "text-severity-critical" : "text-warning"
-              )}
-            >
-              Alert · {worstHealth.label} running {worstHealth.tone === "crit" ? "critical" : "slow"}
-            </span>
-            <span className="ml-1 text-muted-foreground">
-              {worstHealth.label} usage is at{" "}
-              <strong className="text-foreground">{worstHealth.value}</strong>. Contact your
-              administrator immediately.
-            </span>
-          </div>
-          <Button variant="ghost" size="icon-xs"
-            onClick={() => setAlertAcknowledged(true)}
-            className="size-auto border-0 hover:bg-transparent dark:hover:bg-transparent flex-shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Dismiss alert"
-          >
-            <X className="size-3.5" />
-          </Button>
-        </div>
+          {worstHealth.label} usage is at <strong className="text-foreground">{worstHealth.value}</strong>. Contact your
+          administrator immediately.
+        </Banner>
       )}
 
       <PageHeader>
